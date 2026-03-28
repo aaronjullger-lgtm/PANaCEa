@@ -74,6 +74,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
   const [usePearls, setUsePearls] = useState<boolean>(true); // Toggle for pearl vs buzzword mode
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Load data: prioritize pearls, fallback to buzzwords
   useEffect(() => {
@@ -116,6 +117,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         setAllDiagnoses(diagnoses);
       } catch (error) {
         console.error('[RapidRecallDrill] Failed to load data', error);
+        setLoadError(true);
       } finally {
         setIsLoading(false);
       }
@@ -323,6 +325,28 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
     animate: { opacity: 1 },
     exit: { opacity: 0 },
   };
+
+  if (isLoading) {
+    return (
+      <div role="status" aria-label="Loading drill" className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <div aria-hidden="true" className="w-10 h-10 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (loadError || (buzzwordsList.length === 0 && pearlQuestions.length === 0)) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <p className="text-[var(--color-text-primary)] font-medium">Could not load drill content. Please check your connection and try again.</p>
+        <button
+          onClick={onExit}
+          className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+        >
+          Go back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-data-neutral text-[var(--color-text-primary)] flex flex-col">
