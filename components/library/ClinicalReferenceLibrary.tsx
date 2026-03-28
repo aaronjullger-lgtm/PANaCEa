@@ -913,8 +913,10 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     }
                     className={`p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors ${selected && isBookmarked(selected.id!) ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
                     title={selected && isBookmarked(selected.id!) ? 'Remove bookmark' : 'Bookmark condition'}
+                    aria-label={selected && isBookmarked(selected.id!) ? 'Remove bookmark' : 'Bookmark condition'}
                   >
                     <Bookmark
+                      aria-hidden="true"
                       className={`w-5 h-5 ${selected && isBookmarked(selected.id!) ? 'fill-current' : ''}`}
                     />
                   </button>
@@ -923,8 +925,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     onClick={() => setSelected(null)}
                     className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
                     title="Close (Esc)"
+                    aria-label="Close (Esc)"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>

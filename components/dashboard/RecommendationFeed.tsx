@@ -327,16 +327,18 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                     onClick={() => handleAction(rec.id, 'dismiss')}
                     className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     title="Dismiss"
+                    aria-label="Dismiss"
                   >
-                    <X className="w-4 h-4 mx-auto" />
+                    <X className="w-4 h-4 mx-auto" aria-hidden="true" />
                   </button>
 
                   <button
                     onClick={() => handleAction(rec.id, 'complete')}
                     className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/10 transition-colors"
                     title="Mark as Done"
+                    aria-label="Mark as done"
                   >
-                    <Check className="w-4 h-4 mx-auto" />
+                    <Check className="w-4 h-4 mx-auto" aria-hidden="true" />
                   </button>
 
                   <PrimaryButton

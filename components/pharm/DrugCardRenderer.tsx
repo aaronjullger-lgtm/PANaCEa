@@ -86,9 +86,10 @@ export default function DrugCardRenderer({
           {onClose && (
             <button
               onClick={onClose}
+              aria-label="Close"
               className="p-2 rounded-lg hover:bg-[var(--color-text-inverse)]/10 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           )}
         </div>

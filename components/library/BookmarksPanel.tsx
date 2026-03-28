@@ -88,8 +88,9 @@ const BookmarkItem: React.FC<{
               }}
               className="p-1 hover:bg-[var(--color-bg-secondary)] rounded transition-colors"
               title="Add note"
+              aria-label="Add note"
             >
-              <MessageSquare className="w-3 h-3 text-[var(--color-text-muted)]" />
+              <MessageSquare className="w-3 h-3 text-[var(--color-text-muted)]" aria-hidden="true" />
             </button>
           )}
           <button
@@ -99,8 +100,9 @@ const BookmarkItem: React.FC<{
             }}
             className="p-1 hover:bg-data-fail/20 rounded transition-colors"
             title="Remove bookmark"
+            aria-label="Remove bookmark"
           >
-            <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-data-fail" />
+            <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-data-fail" aria-hidden="true" />
           </button>
         </div>
       </button>
@@ -124,9 +126,10 @@ const BookmarkItem: React.FC<{
               />
               <button
                 onClick={handleSaveNote}
+                aria-label="Save note"
                 className="p-1 hover:bg-data-pass/20 rounded transition-colors"
               >
-                <Check className="w-3 h-3 text-data-pass" />
+                <Check className="w-3 h-3 text-data-pass" aria-hidden="true" />
               </button>
             </div>
           ) : (
@@ -172,8 +175,9 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
           onClick={onClearAll}
           className="text-xs text-[var(--color-text-muted)] hover:text-data-fail transition-colors flex items-center gap-1"
           title="Clear all bookmarks"
+          aria-label="Clear all bookmarks"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-3 h-3" aria-hidden="true" />
         </button>
       </div>
 
