@@ -169,6 +169,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
         </div>
         <button
           onClick={onCancel}
+          aria-label="Cancel session setup"
           className="p-2 rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
         >
           <X className="w-5 h-5 text-data-neutral" />

@@ -132,15 +132,15 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
         <div className="flex gap-2 ml-4">
           <button
             onClick={onEdit}
+            aria-label="Edit goal"
             className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
-            title="Edit goal"
           >
             <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
           </button>
           <button
             onClick={onDelete}
+            aria-label="Delete goal"
             className="p-2 hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors"
-            title="Delete goal"
           >
             <Trash2 className="w-4 h-4 text-data-fail" />
           </button>

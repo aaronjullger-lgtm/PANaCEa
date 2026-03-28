@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import {
   User,
@@ -199,6 +200,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       if (isSignedIn) {
         updateProfileApi({ yearInProgram: 'Graduated' }).catch((err: unknown) => {
           console.warn('[Settings] API sync failed for graduation status; local state retained:', err);
+          toast.error('Settings saved locally but failed to sync. Check your connection.');
         });
       }
     }
@@ -249,6 +251,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
         if (Object.keys(apiUpdates).length > 0) {
           updateProfileApi(apiUpdates).catch((err: unknown) => {
             console.warn('[Settings] API sync failed for profile update; local state retained:', err);
+            toast.error('Settings saved locally but failed to sync. Check your connection.');
           });
         }
       }

@@ -95,6 +95,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close goal editor"
               className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
