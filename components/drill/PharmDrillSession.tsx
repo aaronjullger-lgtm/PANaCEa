@@ -277,7 +277,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
             <div className="space-y-2 sm:space-y-3">
               {currentQuestion.options.map((option, index) => (
                 <AnswerOption
-                  key={index}
+                  key={`${currentQuestion.id}-${index}`}
                   index={index}
                   text={option}
                   isSelected={userAnswerIndex === index}
