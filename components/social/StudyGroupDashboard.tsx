@@ -491,7 +491,7 @@ export default function StudyGroupDashboard() {
                 />
               </div>
               {formError && (
-                <div className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
+                <div role="alert" className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
                   <p className="text-[var(--color-data-fail)] text-sm">{formError}</p>
                 </div>
               )}
@@ -538,7 +538,7 @@ export default function StudyGroupDashboard() {
                 />
               </div>
               {formError && (
-                <div className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
+                <div role="alert" className="mb-4 p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)] rounded-lg">
                   <p className="text-[var(--color-data-fail)] text-sm">{formError}</p>
                 </div>
               )}
