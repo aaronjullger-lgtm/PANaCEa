@@ -199,6 +199,7 @@ export function FlagQuestionModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Example: The correct answer should be X because..."
                 rows={4}
+                autoFocus
                 className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent"
                 required
               />
