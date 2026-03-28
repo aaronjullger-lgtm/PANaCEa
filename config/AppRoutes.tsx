@@ -1,7 +1,7 @@
 // AppRoutes.tsx — All <Routes> / <Route> definitions extracted from App.tsx.
 // Imported and rendered by App.tsx inside the provider tree.
 import React, { Suspense, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Link, ScrollRestoration } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
 import { ROUTES } from './routes';
@@ -265,6 +265,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
+    <>
+    <ScrollRestoration />
     <Routes>
       <Route
         path="/practice"
@@ -1303,5 +1305,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         }
       />
     </Routes>
+    </>
   );
 };

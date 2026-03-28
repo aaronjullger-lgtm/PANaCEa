@@ -176,7 +176,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                   </h2>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                    className="p-2 min-h-[44px] min-w-[44px] rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
@@ -237,7 +237,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
                   </h2>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                    className="p-2 min-h-[44px] min-w-[44px] rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />

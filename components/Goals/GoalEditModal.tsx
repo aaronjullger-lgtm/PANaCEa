@@ -175,6 +175,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
               <div className="flex items-center gap-2">
                 <input
                   type="number"
+                  inputMode="numeric"
                   value={formData.currentValue}
                   onChange={(e) =>
                     setFormData({ ...formData, currentValue: parseInt(e.target.value) })

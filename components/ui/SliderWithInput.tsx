@@ -252,7 +252,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
           onClick={stepDown}
           disabled={disabled || value <= min}
           aria-label="Decrease"
-          className="p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 min-h-[44px] min-w-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Minus className="w-4 h-4" />
         </button>
@@ -267,6 +267,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
             onBlur={handleInputBlur}
             onFocus={handleInputFocus}
             disabled={disabled}
+            inputMode="numeric"
             className={`${inputClassName} px-2 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] text-center text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
             aria-label="Value"
           />
@@ -277,7 +278,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
           onClick={stepUp}
           disabled={disabled || value >= max}
           aria-label="Increase"
-          className="p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 min-h-[44px] min-w-[44px] rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Plus className="w-4 h-4" />
         </button>

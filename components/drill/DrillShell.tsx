@@ -107,7 +107,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                 {onBack && (
                   <button
                     onClick={onBack}
-                    className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group"
+                    className="p-2 min-h-[44px] min-w-[44px] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group"
                     aria-label="Go back"
                   >
                     <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:-translate-x-1 transition-all" />
