@@ -598,6 +598,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                 <a
                   href="/docs/SPACING_GUIDELINES.md"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="text-[var(--color-category-practice)] hover:underline"
                 >
                   View Guidelines

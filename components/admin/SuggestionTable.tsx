@@ -138,6 +138,14 @@ export function SuggestionTable({
     taxonomySearch: '',
     systemCode: '' as SystemCode | '',
   });
+  // Uncontrolled display value for taxonomy search — debounced into filters.taxonomySearch
+  const [taxonomyInput, setTaxonomyInput] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, taxonomySearch: taxonomyInput }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [taxonomyInput]);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof MappingSuggestion;
     direction: 'asc' | 'desc';
@@ -340,8 +348,8 @@ export function SuggestionTable({
                   type="text"
                   placeholder="Taxonomy code or name..."
                   className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg pl-10 pr-3 py-2 text-[var(--color-text-primary)]"
-                  value={filters.taxonomySearch}
-                  onChange={e => setFilters(prev => ({ ...prev, taxonomySearch: e.target.value }))}
+                  value={taxonomyInput}
+                  onChange={e => setTaxonomyInput(e.target.value)}
                 />
               </div>
             </div>

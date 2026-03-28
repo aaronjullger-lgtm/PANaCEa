@@ -194,11 +194,15 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
     }
 
     // Load peer benchmark
-    getPeerBenchmark().then(setPeerBenchmark);
+    getPeerBenchmark().then(setPeerBenchmark).catch((err: unknown) => {
+      console.error('[LiveStudySession] Failed to load peer benchmark:', err);
+    });
 
     // Load leaderboard
     if (groupId) {
-      getLiveLeaderboard(groupId).then(setLiveLeaderboard);
+      getLiveLeaderboard(groupId).then(setLiveLeaderboard).catch((err: unknown) => {
+        console.error('[LiveStudySession] Failed to load leaderboard:', err);
+      });
     }
 
     // Start question timer
