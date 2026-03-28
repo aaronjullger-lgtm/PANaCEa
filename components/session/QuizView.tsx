@@ -556,6 +556,31 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
   }, [showSessionEndSummary, clearSavedState]);
 
+  // Flush session state immediately on tab close to prevent data loss in the debounce window
+  const sessionStateRef = useRef({ currentQuestion, queue, selectedAnswerIndex, isAnswered, questionNumber, eliminatedAnswers, localNote });
+  useEffect(() => {
+    sessionStateRef.current = { currentQuestion, queue, selectedAnswerIndex, isAnswered, questionNumber, eliminatedAnswers, localNote };
+  });
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const s = sessionStateRef.current;
+      if (!s.currentQuestion) return;
+      saveState({
+        queue: s.queue,
+        currentQuestionIndex: s.queue.findIndex(q => q.id === s.currentQuestion!.id),
+        selectedAnswerIndex: s.selectedAnswerIndex,
+        isAnswered: s.isAnswered,
+        questionNumber: s.questionNumber,
+        eliminatedAnswers: Array.from(s.eliminatedAnswers),
+        localNote: s.localNote,
+        answerChangeCount: answerChangeCountRef.current,
+        firstSelectedAnswer: firstSelectedAnswerRef.current,
+      });
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveState]);
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -682,6 +707,24 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     return () => clearInterval(interval);
   }, [sessionSettings.timeLimit, handleEndSession]);
+
+  // Pause the exam-mode timer when the user switches tabs so hidden time isn't counted
+  useEffect(() => {
+    if (!sessionSettings.timeLimit) return;
+    let hiddenAt: number | null = null;
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+      } else if (hiddenAt !== null) {
+        // Advance the epoch so elapsed = Date.now() - sessionStartTime.current
+        // stays accurate (hidden time is subtracted automatically)
+        sessionStartTime.current += Date.now() - hiddenAt;
+        hiddenAt = null;
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [sessionSettings.timeLimit]);
 
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
