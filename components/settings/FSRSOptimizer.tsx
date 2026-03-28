@@ -114,8 +114,8 @@ export const FSRSOptimizer: React.FC = () => {
       >
         {isOptimizing ? (
           <>
-            <Loader className="w-4 h-4 animate-spin" />
-            <span>Optimizing...</span>
+            <Loader aria-hidden="true" className="w-4 h-4 animate-spin" />
+            <span role="status" aria-live="polite">Optimizing...</span>
           </>
         ) : (
           <>

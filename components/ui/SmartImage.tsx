@@ -155,7 +155,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
 
             {/* Loading spinner */}
             {showLoader && loadState === 'loading' && (
-              <Loader2 className="w-8 h-8 text-[var(--color-data-neutral)] animate-spin z-10" />
+              <Loader2 role="status" aria-label="Loading image" className="w-8 h-8 text-[var(--color-data-neutral)] animate-spin z-10" />
             )}
           </motion.div>
         )}
