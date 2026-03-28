@@ -429,8 +429,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
                   disabled={isValidating}
                 />
                 {isValidating && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[var(--color-text-secondary)]">
-                    <Loader2 className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
+                  <div role="status" aria-live="polite" className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[var(--color-text-secondary)]">
+                    <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
                     <span className="text-xs font-medium">Verifying...</span>
                   </div>
                 )}

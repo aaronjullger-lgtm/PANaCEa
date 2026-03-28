@@ -120,8 +120,8 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
           </p>
 
           {isLoadingSets ? (
-            <div className="flex items-center justify-center h-48">
-              <Loader2 className="w-6 h-6 animate-spin text-data-neutral" />
+            <div role="status" aria-label="Loading study sets" className="flex items-center justify-center h-48">
+              <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-data-neutral" />
             </div>
           ) : availableSets.length === 0 ? (
             <div className="text-center text-data-neutral py-8">
