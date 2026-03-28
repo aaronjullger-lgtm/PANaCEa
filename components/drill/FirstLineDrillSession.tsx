@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -107,9 +107,6 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     isLoading,
   } = useFirstLineDrill();
 
-  const handleDeepDive = useCallback((_topic: string) => {
-    // TODO: wire to reference library navigation
-  }, []);
 
   if (isLoading) {
     return (
@@ -219,7 +216,6 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
                 currentQuestion.category,
                 currentQuestion.condition,
               ]}
-              onDeepDive={handleDeepDive}
             />
           ) : undefined
         }

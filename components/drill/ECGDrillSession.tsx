@@ -153,7 +153,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
             category="ecg"
             tags={[currentCase.correctDiagnosis, currentCase.category || 'cardiovascular']}
             relatedConceptId={currentCase.correctDiagnosis}
-            onDeepDive={handleDeepDive}
+            onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
           />
         )}
       </AnimatePresence>

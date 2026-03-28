@@ -124,7 +124,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
             category="imaging"
             tags={[currentCase.correctDiagnosis, currentCase.category || 'radiology']}
             relatedConceptId={currentCase.correctDiagnosis}
-            onDeepDive={handleDeepDive}
+            onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
           />
         )}
       </AnimatePresence>

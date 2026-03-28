@@ -92,7 +92,7 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
             category="anatomy"
             tags={drill.currentQuestion.tags || []}
             relatedConceptId={drill.currentQuestion.region}
-            onDeepDive={handleDeepDive}
+            onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
           />
         ) : undefined
       }

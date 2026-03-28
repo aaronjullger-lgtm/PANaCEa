@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -114,9 +114,6 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     onExit?.();
   };
 
-  const handleDeepDive = useCallback((_topic: string) => {
-    // TODO: wire to reference library navigation
-  }, []);
 
   if (isDataLoading) {
     return (
@@ -259,7 +256,6 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
                   ? currentQuestion.drugClass
                   : [currentQuestion.drugClass]),
               ]}
-              onDeepDive={handleDeepDive}
             />
           ) : undefined
         }

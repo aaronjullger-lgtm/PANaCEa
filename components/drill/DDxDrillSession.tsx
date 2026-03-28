@@ -5,7 +5,7 @@
  * and red flags for various presenting complaints.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Stethoscope, AlertTriangle, Activity, Target, Trophy } from 'lucide-react';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
@@ -51,9 +51,6 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
   const stats = getDrillLandingStats('ddx_drill' as DrillType);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
 
-  const handleDeepDive = useCallback((_topic: string) => {
-    // TODO: wire to reference library navigation
-  }, []);
 
   // Landing page
   if (drill.status === 'landing') {
@@ -228,7 +225,6 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
             nextLabel="Next Question"
             category="finding"
             tags={['ddx', question.category, question.presentingComplaint, question.questionType]}
-            onDeepDive={handleDeepDive}
           />
         ) : null
       }

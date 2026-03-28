@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   useMiniLabDrill,
@@ -216,9 +216,6 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     setShowOrderTestMenu(false);
   };
 
-  const handleDeepDive = useCallback((_topic: string) => {
-    // TODO: wire to reference library navigation
-  }, []);
 
   // Animation variants
   const cardVariants = {
@@ -404,7 +401,6 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             nextLabel="Next Case"
             category="lab"
             tags={['lab', currentCase.category, currentCase.correctDiagnosis]}
-            onDeepDive={handleDeepDive}
           />
         )}
       </AnimatePresence>
