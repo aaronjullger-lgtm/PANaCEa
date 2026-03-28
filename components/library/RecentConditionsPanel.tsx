@@ -107,10 +107,11 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
                   e.stopPropagation();
                   onRemove(condition.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-data-fail/20 rounded transition-all"
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 hover:bg-data-fail/20 rounded transition-all"
                 title="Remove from recent"
+                aria-label="Remove from recent"
               >
-                <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-data-fail" />
+                <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-data-fail" aria-hidden="true" />
               </button>
             </button>
           </motion.div>

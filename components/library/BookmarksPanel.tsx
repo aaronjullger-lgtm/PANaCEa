@@ -79,7 +79,7 @@ const BookmarkItem: React.FC<{
         </div>
 
         {/* Actions */}
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
+        <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 flex items-center gap-1 transition-all">
           {onAddNote && (
             <button
               onClick={(e) => {
