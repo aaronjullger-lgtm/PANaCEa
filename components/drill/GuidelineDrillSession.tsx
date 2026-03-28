@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -56,9 +56,6 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   const [showDeepDive, setShowDeepDive] = useState(false);
   const { getToken } = useAuth();
 
-  const handleDeepDive = useCallback((_topic: string) => {
-    // TODO: wire to reference library navigation
-  }, []);
 
   const handleExit = () => {
     exitToMenu();
@@ -514,12 +511,6 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                         Related guidelines and criteria scoring tools can be found in the Clinical
                         Reference Library.
                       </p>
-                      <button
-                        onClick={() => handleDeepDive(currentGuideline.name)}
-                        className="mt-2 text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] underline"
-                      >
-                        View {currentGuideline.name} in Reference Library →
-                      </button>
                     </div>
                   </motion.div>
                 )}
