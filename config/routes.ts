@@ -8,6 +8,7 @@ export const ROUTES = {
   HOME: '/',
   ADMIN: '/admin',
   ADMIN_CURATION: '/admin/curation',
+  ADMIN_REFINERY: '/admin/refinery',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
   /** @deprecated Not yet routed in AppRoutes */
