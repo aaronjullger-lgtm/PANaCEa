@@ -1,6 +1,6 @@
 // AppRoutes.tsx — All <Routes> / <Route> definitions extracted from App.tsx.
 // Imported and rendered by App.tsx inside the provider tree.
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
@@ -263,6 +263,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Scroll to top on route change (replaces ScrollRestoration which requires data router)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <>
