@@ -177,7 +177,7 @@ export function BulkApprovalPanel({
                 key={action}
                 onClick={() => handleBulkAction(action)}
                 disabled={selectedIds.length === 0 || isLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${config.bgColor} ${config.color} disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${config.bgColor} ${config.color} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
                 {config.label}
@@ -187,7 +187,7 @@ export function BulkApprovalPanel({
 
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
             Advanced
