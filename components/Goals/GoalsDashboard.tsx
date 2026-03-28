@@ -301,6 +301,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
             className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] text-sm"
           >
             <option value="all">All</option>

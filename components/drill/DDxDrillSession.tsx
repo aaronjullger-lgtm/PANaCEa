@@ -79,10 +79,11 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       >
         {drill.availableCategories.length > 0 && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+            <label htmlFor="ddx-system-filter" className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
               Filter by System (Optional)
             </label>
             <select
+              id="ddx-system-filter"
               value={selectedCategory || ''}
               onChange={(e) => setSelectedCategory(e.target.value || undefined)}
               className="w-full p-2 border border-[var(--color-border)] rounded-lg 
