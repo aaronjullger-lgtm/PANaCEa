@@ -307,6 +307,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
     <>
       {/* Trigger Button */}
       <StandardButton
+        key="contrast-trigger"
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
@@ -317,7 +318,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
       </StandardButton>
 
       {/* Audit Panel */}
-      <AnimatePresence>
+      <AnimatePresence key="contrast-panel">
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}

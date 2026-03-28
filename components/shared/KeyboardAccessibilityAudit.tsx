@@ -374,6 +374,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
     <>
       {/* Toggle button */}
       <button
+        key="kbd-audit-toggle"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-24 right-4 z-50 p-3 rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-lg hover:bg-[var(--color-bg-tertiary)] transition-colors group"
         aria-label={isOpen ? 'Close accessibility audit' : 'Open accessibility audit'}
@@ -388,7 +389,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
       </button>
 
       {/* Audit Panel */}
-      <AnimatePresence>
+      <AnimatePresence key="kbd-audit-panel">
         {isOpen && (
           <motion.div
             ref={auditRef}

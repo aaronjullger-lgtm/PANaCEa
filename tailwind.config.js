@@ -44,11 +44,18 @@ export default {
     'bg-data-positive',
     'bg-data-negative',
     'bg-data-neutral-bg',
+    'bg-data-success',
     'text-data-fail',
     'text-data-pass',
     'text-data-provisional',
     'text-data-neutral',
     'text-data-warning',
+    'text-data-positive',
+    'text-data-negative',
+    // Opacity modifier variants for data colors (bg, border, text + /5..90)
+    { pattern: /^bg-data-(fail|pass|provisional|warning|neutral|positive|negative|success)\/(5|10|15|20|25|30|40|50|60|70|80|90)$/ },
+    { pattern: /^border-data-(fail|pass|provisional|warning|neutral|positive|negative)\/(5|10|15|20|25|30|40|50|60|70|80|90)$/ },
+    { pattern: /^text-data-(fail|pass|provisional|warning|neutral|positive|negative)\/(5|10|15|20|25|30|40|50|60|70|80|90)$/ },
     // Custom palette colors
     'bg-deep-plum-50',
     'bg-deep-plum-400',
@@ -89,6 +96,10 @@ export default {
     'border-data-fail',
     'border-data-neutral',
     'border-data-pass',
+    'border-data-provisional',
+    'border-data-warning',
+    'border-data-positive',
+    'border-data-negative',
     // Status and error classes
     'bg-error',
     'bg-error-muted',
@@ -299,6 +310,10 @@ export default {
           warning: '#f97316', // Orange 500 - warning/caution (distinct from provisional)
           neutral: 'var(--color-data-neutral)', // Theme-aware: light #64748b, dark #94a3b8
           'neutral-bg': 'var(--color-data-neutral-bg)', // Theme-aware: light #f1f5f9, dark #334155
+          // Semantic aliases used across components
+          positive: '#0a766c', // Alias for pass
+          negative: '#ef4444', // Alias for fail
+          success: '#0a766c', // Alias for pass
         },
 
         // Semantic Design System

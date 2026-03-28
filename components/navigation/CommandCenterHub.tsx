@@ -589,13 +589,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       {/* Sprint 3: Progress Ring Widget (floating, persistent) */}
       {curriculumProgressPercent > 0 && systemProgressData.length > 0 && (
         <ProgressRingWidget
+          key="progress-ring"
           percent={curriculumProgressPercent}
           systemProgress={systemProgressData}
           onSystemClick={(system) => onNavigateToDrillWithSystem?.('system_drill', system)}
         />
       )}
 
-      <div ref={pullToRefreshRef} className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
+      <div key="main-content" ref={pullToRefreshRef} className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Refresh indicator */}
         {isRefreshing && (
           <motion.div
@@ -682,7 +683,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             {/* Growth Areas Chips */}
             {growthAreas.length > 0 && (
               <>
-                <span className="text-[var(--color-text-muted)] text-sm font-medium">Focus on:</span>
+                <span key="focus-label" className="text-[var(--color-text-muted)] text-sm font-medium">Focus on:</span>
                 {growthAreas.slice(0, 3).map((area) => (
                   <div
                     key={area}
@@ -861,6 +862,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             >
               {userProfile?.graduationDate && (
                 <div
+                  key="exam-countdown"
                   className={
                     eorTestDate && currentRotation && isEorRotation(currentRotation)
                       ? ''
@@ -876,12 +878,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               )}
               {eorTestDate && currentRotation && isEorRotation(currentRotation) && (
                 <div
+                  key="eor-countdown"
                   className={`eor-accent ${userProfile?.graduationDate ? '' : 'lg:col-span-2'}`}
                 >
                   <EorCountdownCard examDate={eorTestDate} rotation={currentRotation} />
                 </div>
               )}
-              <div>
+              <div key="time-box">
                 <TimeBoxButtons onStartSession={onStartSession} />
               </div>
             </motion.div>
