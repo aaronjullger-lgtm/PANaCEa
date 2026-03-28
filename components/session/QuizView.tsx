@@ -1867,7 +1867,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
                 return (
                   <OptionHoverTracker
-                    key={index}
+                    key={`${currentQuestion.id}-${index}`}
                     optionIndex={index}
                     optionLabel={optionLabel}
                     className="block"
@@ -2082,7 +2082,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                       {currentQuestion.pearls.map((pearl, index) => (
                         <li
-                          key={index}
+                          key={`${currentQuestion.id}-pearl-${index}`}
                           dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }}
                         />
                       ))}

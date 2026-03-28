@@ -358,7 +358,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
 
           return (
             <button
-              key={index}
+              key={`${question.questionId}-${index}`}
               type="button"
               disabled={submitted || submitting}
               onClick={() => handleSelectOption(index)}
