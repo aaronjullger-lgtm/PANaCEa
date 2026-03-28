@@ -866,4 +866,4 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
   );
 };
 
-export default CompetencyHeatmap;
+export default React.memo(CompetencyHeatmap);
