@@ -39,10 +39,11 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
   const gridClass = getGridClass(columns);
 
   return (
-    <div className={gridClass}>
+    <div role="status" aria-label="Loading content" className={gridClass}>
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
+          aria-hidden="true"
           className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 animate-pulse"
         >
           {/* Header skeleton */}
@@ -213,8 +214,8 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   message = 'Loading content...',
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
-      <Loader2 className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">
+      <Loader2 aria-hidden="true" className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
       <p className="text-[var(--color-text-muted)] text-sm">{message}</p>
     </div>
   );
