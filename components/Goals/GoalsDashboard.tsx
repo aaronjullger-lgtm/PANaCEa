@@ -76,6 +76,9 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
+  // Inline delete confirmation
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   /**
    * Fetch goals from API
    */
@@ -189,8 +192,6 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
    */
   const handleDeleteGoal = useCallback(
     async (goalId: string) => {
-      if (!confirm('Are you sure you want to delete this goal?')) return;
-
       try {
         const token = await getToken();
         if (!token) throw new Error('Not authenticated');
@@ -360,7 +361,13 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
                 key={goal.id}
                 goal={goal}
                 onEdit={() => setEditingGoal(goal)}
-                onDelete={() => handleDeleteGoal(goal.id)}
+                onDelete={() => setPendingDeleteId(goal.id)}
+                confirming={pendingDeleteId === goal.id}
+                onDeleteConfirm={() => {
+                  setPendingDeleteId(null);
+                  void handleDeleteGoal(goal.id);
+                }}
+                onDeleteCancel={() => setPendingDeleteId(null)}
                 onUpdate={(updates) => handleUpdateGoal(goal.id, updates)}
               />
             ))}

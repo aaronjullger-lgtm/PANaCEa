@@ -27,10 +27,21 @@ interface GoalCardProps {
   goal: UserGoal;
   onEdit: () => void;
   onDelete: () => void;
+  onDeleteConfirm?: () => void;
+  onDeleteCancel?: () => void;
+  confirming?: boolean;
   onUpdate: (updates: Partial<UserGoal>) => void;
 }
 
-export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUpdate }) => {
+export const GoalCard: React.FC<GoalCardProps> = ({
+  goal,
+  onEdit,
+  onDelete,
+  onDeleteConfirm,
+  onDeleteCancel,
+  confirming = false,
+  onUpdate,
+}) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -129,21 +140,42 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           )}
         </div>
 
-        <div className="flex gap-2 ml-4">
-          <button
-            onClick={onEdit}
-            aria-label="Edit goal"
-            className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
-          >
-            <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
-          </button>
-          <button
-            onClick={onDelete}
-            aria-label="Delete goal"
-            className="p-2 hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-data-fail" />
-          </button>
+        <div className="flex gap-2 ml-4 items-center">
+          {confirming ? (
+            <>
+              <button
+                onClick={onDeleteConfirm}
+                aria-label="Confirm delete goal"
+                className="px-2 py-1 text-xs font-medium bg-data-fail text-white rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Delete
+              </button>
+              <button
+                onClick={onDeleteCancel}
+                aria-label="Cancel delete"
+                className="px-2 py-1 text-xs font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg hover:bg-[var(--color-border)] transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onEdit}
+                aria-label="Edit goal"
+                className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
+              >
+                <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
+              </button>
+              <button
+                onClick={onDelete}
+                aria-label="Delete goal"
+                className="p-2 hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4 text-data-fail" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 

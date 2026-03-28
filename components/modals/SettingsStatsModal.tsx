@@ -379,6 +379,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
   const [clearConfirmText, setClearConfirmText] = useState('');
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const [exportStatus, setExportStatus] = useState<'csv' | 'json' | null>(null);
 
   // Widget preferences state
@@ -1002,10 +1003,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       toast.success('No performance data to archive');
       return;
     }
-    const confirmed = window.confirm(
-      'This will download a full archive and then clear performance, missed, and flagged data. Continue?'
-    );
-    if (!confirmed) return;
+    if (!confirmArchive) {
+      setConfirmArchive(true);
+      return;
+    }
+    setConfirmArchive(false);
     exportArchive(performanceData);
     clearPerformanceData();
     clearMissedQuestionsData();
@@ -2725,6 +2727,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           </div>
                         )}
                       </div>
+                      {confirmArchive && (
+                        <p className="text-xs text-[var(--color-data-provisional)] mb-2">
+                          This will download a full archive and then clear performance, missed, and flagged data. Click confirm to proceed.
+                        </p>
+                      )}
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -2733,13 +2740,29 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             performanceData.length === 0
                               ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                              : 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90'
+                              : confirmArchive
+                                ? 'bg-data-fail text-white hover:opacity-90'
+                                : 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90'
                           }`}
-                          aria-label="Archive and reset: download backup then clear performance data"
+                          aria-label={
+                            confirmArchive
+                              ? 'Confirm archive and reset: this will clear all performance data'
+                              : 'Archive and reset: download backup then clear performance data'
+                          }
                         >
                           <Download className="w-4 h-4 inline-block mr-1" aria-hidden />
-                          {ARCHIVE_AND_RESET}
+                          {confirmArchive ? 'Confirm Archive & Reset' : ARCHIVE_AND_RESET}
                         </button>
+                        {confirmArchive && (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmArchive(false)}
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] transition-colors"
+                            aria-label="Cancel archive and reset"
+                          >
+                            Cancel
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => handleClear('performance')}
