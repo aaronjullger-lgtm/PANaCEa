@@ -84,7 +84,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
         </div>
       )}
 
-      {error && <p className="text-xs text-[var(--color-error)]">{error}</p>}
+      {error && <p role="alert" className="text-xs text-[var(--color-error)]">{error}</p>}
 
       {!isLoading && !error && rankedPairs.length === 0 && (
         <p className="text-xs text-[var(--color-text-muted)]">

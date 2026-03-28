@@ -153,9 +153,10 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
             initial={{ y: -10 }}
             animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
+            role="alert"
             className="flex items-center gap-2 mb-4 px-4 py-3 bg-data-fail/10 border border-data-fail/30 rounded-lg"
           >
-            <AlertCircle className="w-5 h-5 text-data-fail" />
+            <AlertCircle className="w-5 h-5 text-data-fail" aria-hidden="true" />
             <span className="text-data-fail text-sm">{conflictWarning}</span>
           </motion.div>
         )}
