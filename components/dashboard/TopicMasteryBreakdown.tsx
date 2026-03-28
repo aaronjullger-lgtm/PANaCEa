@@ -21,10 +21,12 @@ interface TopicMasteryBreakdownProps {
 export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMasteryBreakdownProps) {
   const [data, setData] = useState<TopicProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
+      setError(null);
       try {
         const token = await getToken();
         const response = await fetch(`/api/user/topic-progress/${conditionId}`, {
@@ -33,9 +35,11 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
         if (response.ok) {
           const result = (await response.json()) as TopicProgress;
           setData(result);
+        } else {
+          setError('Unable to load topic mastery data.');
         }
-      } catch (error) {
-        console.error('Failed to fetch topic progress', error);
+      } catch {
+        setError('Unable to load topic mastery data.');
       } finally {
         setLoading(false);
       }
@@ -46,7 +50,8 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
     }
   }, [conditionId, getToken]);
 
-  if (loading) return <div>Loading mastery...</div>;
+  if (loading) return <div className="text-sm text-[var(--color-text-muted)] py-4 text-center">Loading mastery...</div>;
+  if (error) return <div className="text-sm text-[var(--color-text-muted)] py-4 text-center">{error}</div>;
   if (!data) return null;
 
   const taskTypeLabels: Record<string, string> = {

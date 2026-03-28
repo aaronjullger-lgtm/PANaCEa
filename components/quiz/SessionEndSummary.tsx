@@ -8,6 +8,7 @@
 
 import React, { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
 import {
   Trophy,
@@ -816,9 +817,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               if (!response.ok) {
                 const errorText = await response.text();
                 console.error('[SessionEndSummary] Failed to save reflection:', response.status, errorText);
+                toast.error('Reflection could not be saved. Please try again.');
               }
             } catch (error) {
               console.error('[SessionEndSummary] Error saving reflection:', error);
+              toast.error('Reflection could not be saved. Check your connection.');
             }
             setShowReflection(false);
           }}

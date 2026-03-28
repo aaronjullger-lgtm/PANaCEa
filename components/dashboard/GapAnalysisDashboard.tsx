@@ -342,6 +342,13 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
   return (
     <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Partial data warning */}
+        {error && (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 text-sm text-[var(--color-data-provisional)]">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
         {/* Header */}
         <motion.div
           initial={{ y: -20 }}
