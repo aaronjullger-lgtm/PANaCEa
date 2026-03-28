@@ -347,7 +347,7 @@ export default function StudyGroupDashboard() {
                   <Trophy className="w-5 h-5 text-[var(--color-accent)]" />
                   Global Rankings
                 </h3>
-                <select className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-md text-sm px-2 py-1 text-[var(--color-text-primary)]">
+                <select aria-label="Leaderboard time range" className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-md text-sm px-2 py-1 text-[var(--color-text-primary)]">
                   <option>This Week</option>
                   <option>All Time</option>
                 </select>
