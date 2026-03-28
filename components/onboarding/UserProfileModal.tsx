@@ -3,7 +3,7 @@
  * First sign-in onboarding flow to collect user information
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Calendar, School, CheckCircle, ChevronRight, X } from 'lucide-react';
 import { RotationSelector } from './RotationSelector';
@@ -57,6 +57,15 @@ export function UserProfileModal({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && canSkip) handleSkip();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, canSkip]);
+
   if (!isOpen) return null;
 
   const canProceedStep1 = school.trim() || yearInProgram;
@@ -69,6 +78,9 @@ export function UserProfileModal({
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Set up your profile"
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         >
           {/* Header */}

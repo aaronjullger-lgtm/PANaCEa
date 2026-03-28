@@ -4,7 +4,7 @@
  * Shows detailed view of a character with unlockable variants and accessories
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Lock, Check } from 'lucide-react';
 import type { SystemCode } from '@/types';
@@ -46,6 +46,14 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
     isAccessoryCompatible(acc.id, system)
   );
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!character) return null;
 
   const unlockedVariants = variants.filter((v) => progress.unlockedVariants.has(v.id));
@@ -58,6 +66,9 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
       <motion.div
         initial={{ scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Character details"
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >
         {/* Header */}
