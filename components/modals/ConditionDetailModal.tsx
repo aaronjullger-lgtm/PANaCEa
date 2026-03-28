@@ -308,7 +308,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   return (
     <div className="condition-modal-overlay">
-      <div className="condition-modal">
+      <div className="condition-modal" role="dialog" aria-modal="true" aria-label={condition.condition}>
         <header className="condition-modal-header">
           <div>
             <h2 className="condition-title">{condition.condition}</h2>

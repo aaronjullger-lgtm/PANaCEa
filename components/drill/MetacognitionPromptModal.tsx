@@ -99,6 +99,9 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Metacognition reflection"
           className="w-full max-w-lg bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Header with gradient */}

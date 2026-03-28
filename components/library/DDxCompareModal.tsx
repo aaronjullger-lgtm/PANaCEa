@@ -247,9 +247,10 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 

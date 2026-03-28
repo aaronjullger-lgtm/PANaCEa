@@ -102,6 +102,7 @@ const FlagItem: React.FC<{ flag: FlaggedQuestion }> = ({ flag }) => {
     <div className="border-b border-[var(--color-border)] last:border-b-0">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
         className="w-full p-3 flex items-start gap-3 hover:bg-[var(--color-bg-tertiary)] transition-colors text-left"
       >
         <Flag
@@ -351,6 +352,9 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
           <motion.div
             initial={{ y: 20 }}
             animate={{ y: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Flag feedback"
             className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col"
           >
             {/* Header */}
@@ -363,9 +367,10 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
               </div>
               <button
                 onClick={() => setIsOpen(false)}
+                aria-label="Close"
                 className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden="true" />
               </button>
             </div>
 

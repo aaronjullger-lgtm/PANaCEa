@@ -241,6 +241,9 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
         <motion.div
           initial={{ y: 20 }}
           animate={{ y: 0 }}
+          role={compact ? undefined : 'dialog'}
+          aria-modal={compact ? undefined : true}
+          aria-label="Mnemonic generator"
           className={`bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] ${
             compact ? 'w-full' : 'w-full max-w-md'
           }`}
@@ -253,9 +256,10 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
             </div>
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Close mnemonic generator"
               className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+              <X className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden="true" />
             </button>
           </div>
 

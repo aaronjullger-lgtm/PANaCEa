@@ -76,6 +76,8 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
           ${className}
         `}
         aria-label={`Curriculum progress: ${Math.round(percent)}%`}
+        aria-expanded={isExpanded}
+        aria-haspopup="dialog"
       >
         <div className="relative w-16 h-16 p-2">
           {/* Background circle */}

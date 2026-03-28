@@ -161,6 +161,8 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
           </div>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Collapse confusion pairs' : 'Expand confusion pairs'}
             className="p-1 rounded hover:bg-[var(--color-bg-secondary)] transition-colors"
           >
             {isExpanded ? (

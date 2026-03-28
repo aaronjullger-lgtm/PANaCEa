@@ -155,6 +155,8 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
         {/* Quick Stats Bar */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? 'Collapse session stats' : 'Expand session stats'}
           className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
         >
           <div className="flex items-center gap-4">
