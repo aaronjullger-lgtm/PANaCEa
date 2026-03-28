@@ -127,6 +127,7 @@ export function FlagQuestionModal({
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
             aria-label="Close"

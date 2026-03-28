@@ -188,6 +188,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
               Create New Goal
             </h2>
             <button
+              type="button"
               onClick={onClose}
               className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
               aria-label="Close modal"
