@@ -276,6 +276,16 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
     }
   }, []);
 
+  // Close modal on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   // Compact notification badge
   if (compact) {
     if (newResolvedCount === 0) return null;

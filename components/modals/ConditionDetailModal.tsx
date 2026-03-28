@@ -196,10 +196,15 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = 'auto';
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onClose]);
 
   useEffect(() => {
     const container = contentRef.current;

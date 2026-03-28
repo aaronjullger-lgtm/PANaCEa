@@ -1,6 +1,6 @@
 // components/TopicDetailModal.tsx
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { TopicStats, PerformanceRecord } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -35,6 +35,14 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
   onStartSession,
 }) => {
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const systemCode = topicStats.topic; // e.g. "NEURO"
   const systemLabel = ABBREVIATION_TO_TOPIC_MAP[systemCode] || `${systemCode} System`;
