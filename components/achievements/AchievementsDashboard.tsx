@@ -68,12 +68,24 @@ export function AchievementsDashboard({
     return true;
   });
 
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <>
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Achievements"
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
         >
           {/* Header */}
@@ -91,9 +103,10 @@ export function AchievementsDashboard({
               {onClose && (
                 <button
                   onClick={onClose}
+                  aria-label="Close"
                   className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

@@ -10,7 +10,7 @@
  * - Progress milestones
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3,
@@ -79,6 +79,15 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
   const [expandedDrill, setExpandedDrill] = useState<DrillType | null>(null);
   const [view, setView] = useState<'overview' | 'details'>('overview');
 
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const allStats = getAllDrillStats();
   const summary = getDrillPerformanceSummary();
   const dueForReview = getDrillsDueForReview();
@@ -129,6 +138,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Drill performance dashboard"
         className="w-full max-w-6xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >
         {/* Header */}
