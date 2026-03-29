@@ -256,9 +256,10 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               {onClose && (
                 <button
                   onClick={onClose}
+                  aria-label="Close"
                   className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
                 >
-                  <X className="w-6 h-6 text-[var(--color-text-muted)]" />
+                  <X className="w-6 h-6 text-[var(--color-text-muted)]" aria-hidden="true" />
                 </button>
               )}
             </div>

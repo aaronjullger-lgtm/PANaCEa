@@ -20,6 +20,15 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (isOpen) {
       const items = getDeadLetterQueue();
       setFailedItems(items);
@@ -55,6 +64,9 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Failed sync items"
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[80vh] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Header */}
@@ -72,6 +84,7 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close"
                 className="text-[var(--color-data-fail)] hover:text-[var(--color-data-fail)]/80 transition-colors"
               >
                 <X className="w-6 h-6" />

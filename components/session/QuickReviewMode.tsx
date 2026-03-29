@@ -4,7 +4,7 @@
  * Fetches concept variants via due-siblings API so the same question is not repeated.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, CheckCircle2, XCircle, Clock, Target } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -160,6 +160,14 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <motion.div
       initial={false}
@@ -173,6 +181,9 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick review"
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
       >
         {/* Header */}

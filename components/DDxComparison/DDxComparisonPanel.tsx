@@ -6,7 +6,7 @@
  * Slides in from the bottom after an incorrect answer.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Layers } from 'lucide-react';
 import type { DDxComparison } from '@/lib/services/confusionService';
@@ -32,6 +32,15 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
   onClose,
   onDrillBoth,
 }) => {
+  useEffect(() => {
+    if (!isVisible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible, onClose]);
+
   if (!comparison) return null;
 
   const handleDrillBoth = () => {
@@ -60,6 +69,9 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`DDx comparison: ${comparison.conditionA} vs ${comparison.conditionB}`}
             className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)] rounded-t-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[85vh] overflow-hidden border-t border-[var(--color-border)]"
           >
             {/* Header */}

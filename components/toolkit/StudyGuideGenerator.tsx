@@ -3,7 +3,7 @@
  * Creates printable study guides from missed questions and bookmarks
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Printer, Download, CheckSquare, XSquare, Settings } from 'lucide-react';
 import type { Question } from '@/types';
@@ -342,6 +342,14 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <motion.div
       initial={false}
@@ -355,6 +363,9 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Study guide generator"
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full border border-[var(--color-border)]"
       >
         {/* Header */}

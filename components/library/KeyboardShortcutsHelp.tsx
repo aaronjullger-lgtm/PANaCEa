@@ -71,6 +71,9 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Keyboard shortcuts"
             className="relative w-full max-w-md bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden"
           >
             {/* Header */}
@@ -81,9 +84,10 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
               </h2>
               <button
                 onClick={onClose}
+                aria-label="Close"
                 className="p-1.5 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
