@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ZoomIn, ZoomOut, RotateCw, Move, Maximize2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -56,6 +56,14 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleSubmitInterpretation = () => {
     if (userInterpretation.trim()) {
       onInterpret(userInterpretation);
@@ -65,7 +73,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
-      <div className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] flex flex-col border border-[var(--color-border)]">
+      <div role="dialog" aria-modal="true" aria-label={`${getModalityLabel(image.type)} viewer: ${image.bodyPart}`} className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] flex flex-col border border-[var(--color-border)]">
         {/* Header */}
         <div className="bg-data-neutral border-b border-data-neutral p-4 flex items-center justify-between">
           <div>

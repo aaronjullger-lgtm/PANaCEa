@@ -5,7 +5,7 @@
  * conditionId is available. Falls back to legacy layout for content without conditionId.
  */
 
-import React, { useMemo, Suspense, lazy } from 'react';
+import React, { useMemo, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -155,6 +155,15 @@ const PillListField: React.FC<{ label: string; value: unknown; color?: string }>
 };
 
 export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClose }) => {
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const conditionId = content.conditionId ?? (content as { id?: string }).id ?? null;
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
 
@@ -174,6 +183,9 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.97, y: 20 }}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Condition details"
             className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           >
             <Suspense
@@ -219,6 +231,9 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.97, y: 20 }}
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Condition details: ${normalized.condition}`}
           className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         >
           {/* Header */}

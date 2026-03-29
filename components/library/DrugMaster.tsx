@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -222,6 +222,14 @@ const Section: React.FC<{
 };
 
 const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   if (!drug) return null;
 
   const displayName = drug.displayName || drug.genericName;
@@ -245,6 +253,9 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Drug details: ${drug.displayName || drug.genericName}`}
           className="relative w-full max-w-5xl max-h-[90vh] mx-4 bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >

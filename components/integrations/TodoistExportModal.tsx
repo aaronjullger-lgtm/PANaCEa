@@ -55,6 +55,15 @@ export default function TodoistExportModal({
   const [generatedTasks, setGeneratedTasks] = useState<TodoistTask[]>([]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (isOpen) {
       checkConnection();
       generatePreview();
@@ -141,7 +150,7 @@ export default function TodoistExportModal({
 
   return (
     <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div role="dialog" aria-modal="true" aria-label="Export to Todoist" className="bg-[var(--color-bg-primary)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
           <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
             Export to Todoist

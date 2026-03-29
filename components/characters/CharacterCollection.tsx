@@ -159,12 +159,24 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
     saveCharacterCustomization(updated);
   };
 
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <>
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Character collection"
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
         >
           {/* Header */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Check, Clock, Target, TrendingUp, Zap, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import type { StudyPlan } from '@/types';
@@ -20,6 +20,15 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
   alternatives,
   currentPlan,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSelectAlternative = (planId: string) => {
@@ -45,7 +54,7 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm">
-      <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-[var(--color-bg-card)] rounded-2xl shadow-2xl border border-[var(--color-border)]">
+      <div role="dialog" aria-modal="true" aria-label="Plan alternatives" className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-[var(--color-bg-card)] rounded-2xl shadow-2xl border border-[var(--color-border)]">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-card)]">
           <div>

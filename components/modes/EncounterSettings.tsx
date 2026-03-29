@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Settings, User, Clock, Stethoscope, Globe, Zap, BrainCircuit } from 'lucide-react';
 
 export interface EncounterSettings {
@@ -79,6 +79,14 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
   onClose,
   onStart,
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const updateSetting = <K extends keyof EncounterSettings>(
     key: K,
     value: EncounterSettings[K]
@@ -88,7 +96,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
-      <div className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
+      <div role="dialog" aria-modal="true" aria-label="Encounter settings" className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
         {/* Header */}
         <div className="sticky top-0 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6 z-10">
           <div className="flex items-center justify-between">
