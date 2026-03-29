@@ -135,6 +135,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                 Focus on Organ System (Optional)
               </label>
               <select
+                aria-label="Focus organ system"
                 value={selectedSystem}
                 onChange={(e) => setSelectedSystem(e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] dark:border-data-neutral focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"

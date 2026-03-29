@@ -260,6 +260,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                       <span>Weak only (&lt;80%)</span>
                     </label>
                     <select
+                      aria-label="Sort order"
                       className="border border-[var(--color-border)] rounded-md bg-[var(--color-bg-primary)] text-[11px] px-2 py-1 text-[var(--color-text-secondary)]"
                       value={sortMode}
                       onChange={(e) => setSortMode(e.target.value as 'weakest' | 'alpha' | 'most')}

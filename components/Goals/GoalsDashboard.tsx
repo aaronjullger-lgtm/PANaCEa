@@ -315,6 +315,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         <div className="flex items-center gap-2">
           <span className="text-sm text-data-neutral dark:text-data-neutral">Type:</span>
           <select
+            aria-label="Filter by goal type"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] text-sm"
