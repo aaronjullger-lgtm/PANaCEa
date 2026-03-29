@@ -202,8 +202,9 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             onClick={handleRefreshPreview}
             className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             title="Refresh preview"
+            aria-label="Refresh preview"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         <div className="border border-[var(--color-border)] rounded-lg overflow-hidden bg-[var(--color-bg-secondary)]">

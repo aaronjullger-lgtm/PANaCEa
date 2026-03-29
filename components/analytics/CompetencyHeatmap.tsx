@@ -868,8 +868,9 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         <button
           onClick={() => handleNavigate(drilldownLevel === 'condition' ? 'category' : 'system')}
           className="md:hidden fixed bottom-6 left-6 p-3 bg-[var(--color-bg-primary)] rounded-full shadow-lg border border-[var(--color-border)]"
+          aria-label="Go back"
         >
-          <ChevronLeft className="w-6 h-6 text-[var(--color-text-muted)]" />
+          <ChevronLeft className="w-6 h-6 text-[var(--color-text-muted)]" aria-hidden="true" />
         </button>
       )}
     </div>

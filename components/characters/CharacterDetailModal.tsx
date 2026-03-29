@@ -91,8 +91,9 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
             <button
               onClick={onClose}
               className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors p-2 rounded-lg hover:bg-[var(--color-bg-primary)]"
+              aria-label="Close"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
         </div>

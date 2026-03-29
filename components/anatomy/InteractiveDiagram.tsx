@@ -260,8 +260,9 @@ export function InteractiveDiagram({
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
               }`}
               title={showLabels ? 'Hide Labels' : 'Show Labels'}
+              aria-label={showLabels ? 'Hide labels' : 'Show labels'}
             >
-              {showLabels ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              {showLabels ? <Eye className="h-5 w-5" aria-hidden="true" /> : <EyeOff className="h-5 w-5" aria-hidden="true" />}
             </button>
           )}
 
@@ -277,8 +278,9 @@ export function InteractiveDiagram({
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           >
-            {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+            {isFullscreen ? <Minimize2 className="h-5 w-5" aria-hidden="true" /> : <Maximize2 className="h-5 w-5" aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -440,23 +442,26 @@ export function InteractiveDiagram({
               onClick={handleZoomOut}
               className="p-1.5 hover:bg-[var(--color-bg-secondary)] rounded"
               disabled={zoom <= 0.5}
+              aria-label="Zoom out"
             >
-              <ZoomOut className="h-4 w-4" />
+              <ZoomOut className="h-4 w-4" aria-hidden="true" />
             </button>
             <span className="text-sm font-medium w-12 text-center">{Math.round(zoom * 100)}%</span>
             <button
               onClick={handleZoomIn}
               className="p-1.5 hover:bg-[var(--color-bg-secondary)] rounded"
               disabled={zoom >= 3}
+              aria-label="Zoom in"
             >
-              <ZoomIn className="h-4 w-4" />
+              <ZoomIn className="h-4 w-4" aria-hidden="true" />
             </button>
             <div className="w-px h-6 bg-[var(--color-border)]" />
             <button
               onClick={handleReset}
               className="p-1.5 hover:bg-[var(--color-bg-secondary)] rounded"
+              aria-label="Reset view"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
 
