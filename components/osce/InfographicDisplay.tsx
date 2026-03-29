@@ -5,7 +5,7 @@
  * Shows comparison infographics when student confuses concepts.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, Download, Maximize2, X } from 'lucide-react';
 import type { GeneratedInfographic } from '@/types/smart-scribe-system';
 
@@ -16,6 +16,15 @@ interface InfographicDisplayProps {
 
 export function InfographicDisplay({ infographics, className = '' }: InfographicDisplayProps) {
   const [selectedInfographic, setSelectedInfographic] = useState<GeneratedInfographic | null>(null);
+
+  useEffect(() => {
+    if (!selectedInfographic) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedInfographic(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedInfographic]);
 
   if (infographics.length === 0) {
     return null;
@@ -109,6 +118,9 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
           onClick={() => setSelectedInfographic(null)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Infographic: ${selectedInfographic.title}`}
             className="bg-[var(--color-bg-primary)] rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >

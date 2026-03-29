@@ -78,6 +78,24 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
     const [showBundles, setShowBundles] = useState(true);
     const [alerts, setAlerts] = useState<OrderAlert[]>([]);
 
+    useEffect(() => {
+      if (!isOpen) return;
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
+    useEffect(() => {
+      if (!isOpen) return;
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
     // Fetch orderable items from API
     useEffect(() => {
       if (!isOpen) return;
@@ -254,6 +272,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
             initial={{ scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Order entry"
             className="bg-[var(--color-bg-primary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-[var(--color-border)]"
             onClick={(e) => e.stopPropagation()}
           >
