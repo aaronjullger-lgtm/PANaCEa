@@ -310,6 +310,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command palette"
           className="relative w-full max-w-2xl bg-[var(--color-bg-primary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Search Input */}

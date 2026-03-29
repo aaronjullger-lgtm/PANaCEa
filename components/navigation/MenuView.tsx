@@ -140,6 +140,15 @@ const MenuView: React.FC<MenuViewProps> = ({
 
   const { user } = useUser();
 
+  useEffect(() => {
+    if (!showLeaderboard) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowLeaderboard(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showLeaderboard]);
+
   // Mobile navigation state
   const [activeTab, setActiveTab] = useState<'home' | 'stats' | 'drills' | 'settings'>('home');
   const isMobile = useIsMobile();
@@ -1060,6 +1069,9 @@ const MenuView: React.FC<MenuViewProps> = ({
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Leaderboard"
             className="bg-[var(--color-bg-secondary)] rounded-xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
