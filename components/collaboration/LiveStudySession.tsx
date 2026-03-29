@@ -377,7 +377,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              icon={<X className="w-4 h-4" />}
+              aria-label="Close"
+              icon={<X className="w-4 h-4" aria-hidden="true" />}
             />
           )}
         </div>
