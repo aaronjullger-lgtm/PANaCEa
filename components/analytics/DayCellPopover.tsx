@@ -5,7 +5,7 @@
  * Shows detailed statistics for the selected day.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, TrendingUp, Clock, AlertCircle } from 'lucide-react';
 
@@ -51,6 +51,13 @@ function formatDate(dateStr: string): string {
 }
 
 const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
   if (!data) return null;
 
   return (
