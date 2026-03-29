@@ -136,6 +136,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Age Group
                 </label>
                 <select
+                  aria-label="Age group"
                   value={settings.patientAge}
                   onChange={(e) =>
                     updateSetting('patientAge', e.target.value as EncounterSettings['patientAge'])
@@ -154,6 +155,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Sex
                 </label>
                 <select
+                  aria-label="Patient sex"
                   value={settings.patientSex}
                   onChange={(e) =>
                     updateSetting('patientSex', e.target.value as EncounterSettings['patientSex'])
@@ -171,6 +173,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Acuity
                 </label>
                 <select
+                  aria-label="Acuity level"
                   value={settings.acuity}
                   onChange={(e) =>
                     updateSetting('acuity', e.target.value as EncounterSettings['acuity'])
@@ -201,6 +204,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   System/Specialty
                 </label>
                 <select
+                  aria-label="System or specialty"
                   value={settings.focusArea}
                   onChange={(e) =>
                     updateSetting('focusArea', e.target.value as EncounterSettings['focusArea'])
@@ -227,6 +231,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Complexity
                 </label>
                 <select
+                  aria-label="Case complexity"
                   value={settings.complexity}
                   onChange={(e) =>
                     updateSetting('complexity', e.target.value as EncounterSettings['complexity'])
@@ -330,6 +335,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Patient Language
                 </label>
                 <select
+                  aria-label="Patient language"
                   value={settings.patientLanguage}
                   onChange={(e) =>
                     updateSetting(
@@ -350,6 +356,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   Communication Style
                 </label>
                 <select
+                  aria-label="Communication style"
                   value={settings.communicationStyle}
                   onChange={(e) =>
                     updateSetting(
