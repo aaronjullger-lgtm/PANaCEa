@@ -543,15 +543,77 @@ function getSuitableConditionsFromContent(conditionContent: Record<string, unkno
   });
 }
 
+// System inference from condition key for targetSystem field
+const SYSTEM_KEYWORD_MAP: Array<{ system: string; keywords: RegExp }> = [
+  { system: 'cardiovascular', keywords: /heart|cardiac|acs|mi|coronary|chf|dvt|thrombosis|embol|atrial|aortic/ },
+  { system: 'pulmonary', keywords: /lung|pulmonary|copd|asthma|pneumon|dyspnea|pe|wheez|pleural/ },
+  { system: 'gastrointestinal', keywords: /gi|abdominal|hepat|pancreat|appendic|bowel|colitis|gerd|cirrhosis/ },
+  { system: 'neurological', keywords: /neuro|stroke|seizure|headache|meningit|tia|aphasia|neuropath/ },
+  { system: 'nephrology', keywords: /renal|kidney|aki|ckd|urosepsis|nephrit/ },
+  { system: 'infectious_disease', keywords: /sepsis|uti|cellulitis|meningit|endocard|osteomyelit/ },
+  { system: 'endocrine', keywords: /diabet|dka|ketoacidosis|thyroid|adrenal|cushings|addison/ },
+  { system: 'reproductive', keywords: /ectopic|pregnan|obstetric|gynecolog|ovarian|testicular/ },
+  { system: 'psychiatry', keywords: /psych|depression|anxiety|suicid|bipolar|schizo/ },
+  { system: 'hematology', keywords: /anemia|leukemia|lymphoma|coagul|thrombocytop|sickle/ },
+  { system: 'musculoskeletal', keywords: /fracture|orthoped|musculoskel|joint|back_pain|osteop/ },
+  { system: 'dermatology', keywords: /dermat|rash|skin|wound|burn|melanoma/ },
+];
+
+function inferTargetSystem(conditionKey: string): string {
+  const lower = conditionKey.toLowerCase();
+  for (const entry of SYSTEM_KEYWORD_MAP) {
+    if (entry.keywords.test(lower)) return entry.system;
+  }
+  return 'general';
+}
+
+// Difficulty scaling: age range, vital sign abnormality, and question complexity
+type DifficultyLevel = 'easy' | 'moderate' | 'hard' | 'very_hard';
+
+interface DifficultyParams {
+  ageRange: [number, number];
+  vitalAbnormality: number; // 0-1 multiplier for how abnormal vitals should be
+  essentialQuestionsMin: number;
+  extraDistractors: number; // Additional unnecessary questions to add
+}
+
+const DIFFICULTY_PARAMS: Record<DifficultyLevel, DifficultyParams> = {
+  easy: { ageRange: [30, 55], vitalAbnormality: 0.5, essentialQuestionsMin: 3, extraDistractors: 0 },
+  moderate: { ageRange: [25, 65], vitalAbnormality: 0.7, essentialQuestionsMin: 4, extraDistractors: 2 },
+  hard: { ageRange: [18, 75], vitalAbnormality: 0.9, essentialQuestionsMin: 5, extraDistractors: 4 },
+  very_hard: { ageRange: [16, 85], vitalAbnormality: 1.0, essentialQuestionsMin: 6, extraDistractors: 6 },
+};
+
+const EXTRA_DISTRACTORS = [
+  'recent dental work', 'pet ownership', 'sleep position preference',
+  'favorite foods', 'horoscope sign', 'shoe size', 'hair color change',
+  'last vacation destination', 'preferred hand', 'screen time habits',
+];
+
 /**
- * Generate a patient encounter case from condition content
+ * Generate a patient encounter case from condition content.
+ * Supports optional difficulty and system filtering.
  */
-export async function generatePatientEncounterFromCondition(): Promise<PatientEncounterCase> {
+export async function generatePatientEncounterFromCondition(opts?: {
+  difficulty?: DifficultyLevel;
+  targetSystem?: string;
+}): Promise<PatientEncounterCase> {
   const conditionContent = await getConditionContent();
-  const suitableConditions = await getSuitableConditionsFromContent(conditionContent);
+  let suitableConditions = await getSuitableConditionsFromContent(conditionContent);
 
   if (suitableConditions.length === 0) {
     throw new Error('No suitable conditions found in database');
+  }
+
+  // Filter by target system if specified
+  if (opts?.targetSystem) {
+    const systemFiltered = suitableConditions.filter(
+      (key) => inferTargetSystem(key) === opts.targetSystem
+    );
+    if (systemFiltered.length > 0) {
+      suitableConditions = systemFiltered;
+    }
+    // If no matches, fall through to all conditions (graceful degradation)
   }
 
   const conditionKey = suitableConditions[Math.floor(Math.random() * suitableConditions.length)];
@@ -560,11 +622,20 @@ export async function generatePatientEncounterFromCondition(): Promise<PatientEn
   }
 
   const data = (conditionContent as Record<string, ConditionData>)[conditionKey] ?? {};
+  const difficulty = opts?.difficulty ?? 'moderate';
+  const params = DIFFICULTY_PARAMS[difficulty];
 
   const sex: 'M' | 'F' = Math.random() > 0.5 ? 'M' : 'F';
-  const age = 25 + Math.floor(Math.random() * 50); // 25-75
+  const [minAge, maxAge] = params.ageRange;
+  const age = minAge + Math.floor(Math.random() * (maxAge - minAge));
 
   const conditionName = conditionKey.split('__').pop()?.replace(/_/g, ' ') ?? 'unknown condition';
+  const targetSystem = inferTargetSystem(conditionKey);
+
+  // Build unnecessary questions with extra distractors based on difficulty
+  const baseUnnecessary = getUnnecessaryQuestions();
+  const shuffled = [...EXTRA_DISTRACTORS].sort(() => Math.random() - 0.5);
+  const extraUnnecessary = shuffled.slice(0, params.extraDistractors);
 
   const encounterCase: PatientEncounterCase = {
     id: `gen-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -578,11 +649,13 @@ export async function generatePatientEncounterFromCondition(): Promise<PatientEn
     labData: extractLabData(data),
     essentialQuestions: extractEssentialQuestions(conditionKey, data),
     helpfulQuestions: extractHelpfulQuestions(conditionKey, data),
-    unnecessaryQuestions: getUnnecessaryQuestions(),
+    unnecessaryQuestions: [...baseUnnecessary, ...extraUnnecessary],
     correctDiagnosis: conditionName.charAt(0).toUpperCase() + conditionName.slice(1),
     differentialDiagnoses: [],
     idealWorkup: extractIdealWorkup(data),
     teachingPoints: extractTeachingPoints(conditionKey, data),
+    targetSystem,
+    difficulty,
   };
 
   return encounterCase;
@@ -593,10 +666,14 @@ export async function generatePatientEncounterFromCondition(): Promise<PatientEn
  * Database-First: Always generates from database content.
  *
  * @param useGenerated - Whether to force fresh AI generation (default: false)
+ * @param difficulty - Optional difficulty level
+ * @param targetSystem - Optional organ system filter
  */
 export async function getFreshPatientEncounter(
-  useGenerated: boolean = false
+  useGenerated: boolean = false,
+  difficulty?: DifficultyLevel,
+  targetSystem?: string
 ): Promise<PatientEncounterCase> {
   // Always generate from database content
-  return await generatePatientEncounterFromCondition();
+  return await generatePatientEncounterFromCondition({ difficulty, targetSystem });
 }

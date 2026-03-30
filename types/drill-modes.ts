@@ -178,6 +178,14 @@ export interface PatientEncounterCase {
   // Feedback
   idealWorkup: string[];
   teachingPoints: string[];
+
+  // Classification (optional — populated when stored in DB)
+  targetSystem?: string;
+  difficulty?: 'easy' | 'moderate' | 'hard' | 'very_hard';
+
+  // Condition linkage (optional)
+  conditionId?: string;
+  condition?: string;
 }
 
 export interface PatientQuestion {
