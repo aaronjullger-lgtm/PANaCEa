@@ -204,6 +204,8 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   });
 
   // Persist filters to localStorage
+  useEffect(() => { document.title = 'Practice | PANaCEa'; }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem('practice.search', searchQuery);

@@ -72,6 +72,8 @@ export default function DrillHub(): JSX.Element {
   const [overviewError, setOverviewError] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
+  useEffect(() => { document.title = 'Drill Hub | PANaCEa'; }, []);
+
   // Fetch drill overview on mount
   useEffect(() => {
     if (!user?.id) return;

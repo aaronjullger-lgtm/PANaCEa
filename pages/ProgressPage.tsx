@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, Target, User, Layers } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
@@ -26,6 +26,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 }) => {
   const navigate = useNavigate();
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
+
+  useEffect(() => { document.title = 'Progress | PANaCEa'; }, []);
 
   const schedulerBlocks: ScheduleBlock[] = React.useMemo(() => {
     if (dueCount <= 0) return [];

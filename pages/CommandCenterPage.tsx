@@ -5,7 +5,7 @@
  * Replaces the modal flow with a dedicated route at /training/command-center
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 // ChevronLeft removed — back navigation handled by NavRail home icon in this view
 import { CommandCenterHub } from '../components/navigation/CommandCenterHub';
@@ -48,6 +48,8 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
   onNavigateToSrsReview,
   onBack: _onBack,
 }) => {
+  useEffect(() => { document.title = 'Command Center | PANaCEa'; }, []);
+
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
       <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>

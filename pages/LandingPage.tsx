@@ -33,6 +33,8 @@ export function LandingPage() {
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
   const prefersReducedMotion = useReducedMotion();
 
+  useEffect(() => { document.title = 'PANaCEa — PANCE & PANRE Prep'; }, []);
+
   // Disable body scroll when modal is open
   useEffect(() => {
     if (showAuth) {
