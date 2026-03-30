@@ -1,6 +1,7 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SectionHeaderProps {
   title: string;
@@ -36,14 +37,15 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   variant = 'brand',
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const iconColorClass =
     variant === 'brand' ? 'text-[var(--color-accent)]' : 'text-[var(--color-data-provisional)]';
 
   return (
     <motion.div
-      initial={{ y: -10 }}
+      initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
       className={`mt-8 mb-4 flex items-center justify-between ${className}`}
     >
       <div className="flex items-center gap-3">

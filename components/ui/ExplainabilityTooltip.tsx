@@ -31,6 +31,7 @@ export function ExplainabilityTooltip({
       role="button"
       tabIndex={0}
       aria-label={ariaLabel}
+      aria-expanded={visible}
       className={`relative inline-flex items-center cursor-help ${className}`}
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}

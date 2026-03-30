@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Inbox,
   Search,
@@ -107,6 +108,7 @@ export function EmptyState({
   animate = true,
   compact = false,
 }: EmptyStateProps) {
+  const prefersReducedMotion = useReducedMotion();
   const config = VARIANT_CONFIG[variant];
   const IconComponent = icon || config.icon;
   const displayTitle = title || config.defaultTitle;
@@ -193,7 +195,7 @@ export function EmptyState({
     </div>
   );
 
-  if (!animate) {
+  if (!animate || prefersReducedMotion) {
     return content;
   }
 

@@ -290,13 +290,20 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
           <p className="text-[var(--color-text-secondary)] mb-4">
             Creating clinical vignettes for the Top 50 High-Yield Conditions...
           </p>
-          <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2 mb-2">
+          <div
+            className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2 mb-2"
+            role="progressbar"
+            aria-valuenow={loadingProgress.completed}
+            aria-valuemin={0}
+            aria-valuemax={loadingProgress.total}
+            aria-label="Loading questions"
+          >
             <div
               className="bg-[var(--color-data-provisional)]/100 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(loadingProgress.completed / loadingProgress.total) * 100}%` }}
             />
           </div>
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">
             {loadingProgress.completed} / {loadingProgress.total} questions
           </p>
         </div>

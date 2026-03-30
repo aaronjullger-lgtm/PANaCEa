@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Shield, Sparkles, CheckCircle2 } from 'lucide-react';
 
 // Accept string to be flexible with Question type's source field
@@ -51,15 +52,17 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   size = 'sm',
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const sizes = sizeClasses[size];
+  const motionProps = prefersReducedMotion
+    ? {}
+    : { initial: { scale: 0.9 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 0.2, ease: 'easeOut' as const } };
 
   // Staging lake: beta / peer review (not yet fully vetted)
   if (fromStaging || source === 'staging') {
     return (
       <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        {...motionProps}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
           bg-data-provisional/10
@@ -81,9 +84,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   if (source === 'database' || source === 'pool') {
     return (
       <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        {...motionProps}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
           bg-data-pass/10
@@ -105,9 +106,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   if (source === 'ai_fallback' || source === 'ai' || source === 'generated') {
     return (
       <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        {...motionProps}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
           bg-data-provisional/10

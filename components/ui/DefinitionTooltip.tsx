@@ -93,7 +93,7 @@ interface HighlightableTermProps {
 export const HighlightableTerm: React.FC<HighlightableTermProps> = ({ children, term }) => {
   const { showTooltip, hideTooltip } = useTooltip();
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLSpanElement>) => {
+  const handleShow = (e: { currentTarget: HTMLSpanElement }) => {
     const termToShow = term || children;
     const rect = e.currentTarget.getBoundingClientRect();
     showTooltip(termToShow, rect.left + rect.width / 2, rect.bottom);
@@ -101,8 +101,13 @@ export const HighlightableTerm: React.FC<HighlightableTermProps> = ({ children, 
 
   return (
     <span
-      onMouseEnter={handleMouseEnter}
+      tabIndex={0}
+      role="button"
+      aria-label={`Definition: ${term || children}`}
+      onMouseEnter={handleShow}
       onMouseLeave={hideTooltip}
+      onFocus={handleShow}
+      onBlur={hideTooltip}
       className="border-b border-dotted border-[var(--color-accent)]/50 cursor-help hover:text-[var(--color-accent)] transition-colors"
     >
       {children}

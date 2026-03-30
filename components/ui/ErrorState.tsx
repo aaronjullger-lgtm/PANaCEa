@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createAppError, getUserFacingError } from '@/lib/utils/errorHandlingUtils';
 
 interface ErrorStateProps {
@@ -35,19 +36,20 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   showIcon = true,
   secondaryAction,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={`flex flex-col items-center justify-center text-center ${className}`}
     >
       <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 shadow-sm">
         {showIcon && (
           <motion.div
-            initial={{ scale: 0 }}
+            initial={prefersReducedMotion ? false : { scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', delay: 0.1 }}
           >
             <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mb-4 mx-auto" />
           </motion.div>
