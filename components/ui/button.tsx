@@ -86,9 +86,9 @@ export function Button({
         </span>
       ) : (
         <span className="flex items-center gap-2">
-          {renderedIcon}
+          {renderedIcon && <span aria-hidden="true">{renderedIcon}</span>}
           {children}
-          {renderedIconRight}
+          {renderedIconRight && <span aria-hidden="true">{renderedIconRight}</span>}
         </span>
       )}
     </button>

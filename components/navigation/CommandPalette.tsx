@@ -329,6 +329,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search modes, conditions, drugs..."
               aria-label="Search modes, conditions, drugs"
+              autoComplete="off"
               className="flex-1 bg-transparent text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none text-lg"
             />
             <button
