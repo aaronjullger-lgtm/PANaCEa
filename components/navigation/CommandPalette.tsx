@@ -88,9 +88,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   useEffect(() => {
     if (isOpen && inputRef.current) {
       // Use setTimeout to ensure focus happens after render
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

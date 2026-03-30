@@ -87,15 +87,6 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
       return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, onClose]);
 
-    useEffect(() => {
-      if (!isOpen) return;
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
-
     // Fetch orderable items from API
     useEffect(() => {
       if (!isOpen) return;

@@ -92,7 +92,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
           </div>
           <button
             onClick={handleDismiss}
-            className="flex-shrink-0 p-1 rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors"
+            className="flex-shrink-0 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             title="Dismiss"
             aria-label="Dismiss"
           >

@@ -96,9 +96,9 @@ export const LibraryFilters: React.FC<LibraryFiltersProps> = ({
       {hasActiveFilters && (
         <button
           onClick={handleClearFilters}
-          className="px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors flex items-center gap-2"
+          className="px-4 py-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
           <span className="hidden md:inline">Clear</span>
         </button>
       )}

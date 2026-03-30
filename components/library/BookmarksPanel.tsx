@@ -86,7 +86,7 @@ const BookmarkItem: React.FC<{
                 e.stopPropagation();
                 setIsEditingNote(true);
               }}
-              className="p-1 hover:bg-[var(--color-bg-secondary)] rounded transition-colors"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[var(--color-bg-secondary)] rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
               title="Add note"
               aria-label="Add note"
             >
@@ -98,7 +98,7 @@ const BookmarkItem: React.FC<{
               e.stopPropagation();
               onRemove();
             }}
-            className="p-1 hover:bg-data-fail/20 rounded transition-colors"
+            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-data-fail/20 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             title="Remove bookmark"
             aria-label="Remove bookmark"
           >
