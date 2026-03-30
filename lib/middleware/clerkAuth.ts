@@ -44,7 +44,7 @@ export async function requireAuth(
 
     if (!authHeader) {
       if (debug) {
-        logger.debug(LOG_SCOPE, No authorization header present');
+        logger.debug(LOG_SCOPE, `No authorization header present`);
       }
       res.status(401).json({
         error: 'Unauthorized',
@@ -89,7 +89,7 @@ export async function requireAuth(
 
     if (!verifiedToken || !verifiedToken.sub) {
       if (debug) {
-        logger.debug(LOG_SCOPE, Token verification returned invalid or missing subject');
+        logger.debug(LOG_SCOPE, `Token verification returned invalid or missing subject`);
       }
       res.status(401).json({
         error: 'Unauthorized',
@@ -100,7 +100,7 @@ export async function requireAuth(
     }
 
     if (debug) {
-      logger.debug(LOG_SCOPE, Token verified successfully for user:', verifiedToken.sub);
+      logger.debug(LOG_SCOPE, `Token verified successfully for user: ${verifiedToken.sub}`);
     }
 
     // Attach auth context to request
@@ -111,7 +111,7 @@ export async function requireAuth(
 
     next();
   } catch (error: any) {
-    logger.error(LOG_SCOPE, Token verification failed:', {
+    logger.error(LOG_SCOPE, `Token verification failed: ${error.message}`, {
       message: error.message,
       name: error.name,
       stack: debug ? error.stack : undefined,
@@ -140,7 +140,7 @@ export async function requireAuth(
     }
 
     if (debug) {
-      logger.error(LOG_SCOPE, Full error details:', {
+      logger.error(LOG_SCOPE, `Full error details: ${error.message}`, {
         reason,
         message: error.message,
         serverTime: new Date().toISOString(),

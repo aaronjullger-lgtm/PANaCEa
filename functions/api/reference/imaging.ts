@@ -24,6 +24,9 @@ const GetImagingSchema = z.object({
   query: z
     .object({
       modality: z.string().optional(),
+      bodyRegion: z.string().optional(),
+      query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -50,10 +53,25 @@ export const onRequestGet = authenticatedEndpoint(
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       const modality = validated?.query?.modality;
+      const bodyRegion = validated?.query?.bodyRegion;
+      const searchQuery = validated?.query?.query;
+      const highYield = validated?.query?.highYield === 'true';
+
+      const where: any = {};
+      if (modality) where.modality = modality;
+      if (bodyRegion) where.bodyRegion = bodyRegion;
+      if (highYield) where.isHighYield = true;
+      if (searchQuery) {
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { modality: { contains: searchQuery, mode: 'insensitive' } },
+        ];
+      }
 
       const results = await prisma.imagingStudy.findMany({
-        where: modality ? { modality } : undefined,
-        orderBy: { name: 'asc' },
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
       });
 
       log.info('Imaging studies fetched successfully', { count: results.length });

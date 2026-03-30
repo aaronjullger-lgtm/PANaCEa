@@ -25,6 +25,7 @@ const ECGQuerySchema = z.object({
     .object({
       category: z.string().max(100).optional(),
       query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -51,30 +52,24 @@ export const onRequestGet = authenticatedEndpoint(
       const url = new URL(request.url);
       const category = url.searchParams.get('category');
       const query = url.searchParams.get('query');
+      const highYield = url.searchParams.get('highYield');
 
-      let results;
+      const where: any = {};
+      if (category) where.category = category;
+      if (highYield === 'true') where.isHighYield = true;
 
       if (query) {
-        // Search mode
-        log.info('Searching ECG patterns', { query });
-        results = await prisma.eCGPattern.findMany({
-          where: {
-            OR: [
-              { name: { contains: query, mode: 'insensitive' } },
-              { category: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          orderBy: { name: 'asc' },
-          take: 20,
-        });
-      } else {
-        // List mode with optional category filter
-        log.info('Listing ECG patterns', { category });
-        results = await prisma.eCGPattern.findMany({
-          where: category ? { category } : undefined,
-          orderBy: { name: 'asc' },
-        });
+        where.OR = [
+          { name: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+        ];
       }
+
+      log.info('Listing ECG patterns', { category, highYield: highYield || 'false' });
+      const results = await prisma.eCGPattern.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+      });
 
       log.info('ECG patterns fetch successful', { count: results.length });
 

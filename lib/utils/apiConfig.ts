@@ -44,6 +44,8 @@ export const API_ENDPOINTS = {
   USER_SESSION: '/api/user/session',
   USER_PROFILE: '/api/user/profile',
   OSCE_ANALYSIS_GRADE: '/api/osce/analysis/grade',
+  OSCE_STATS: '/api/osce/stats',
+  OSCE_ANALYTICS: '/api/osce/analytics',
   // Analytics (use getApiEndpoint for base URL consistency)
   ANALYTICS_CALIBRATION: '/api/analytics/calibration',
   ANALYTICS_PERFORMANCE_DELTAS: '/api/analytics/performance-deltas',

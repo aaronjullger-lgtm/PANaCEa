@@ -24,6 +24,23 @@ const OSCECompleteBodySchema = z.object({
     soapComparison: z.record(z.string(), z.unknown()).optional(),
     timingAnalytics: z.record(z.string(), z.unknown()).optional(),
     infographics: z.array(z.string()).optional(),
+    // OSCE telemetry from useOSCEMetrics hook
+    osceTelemetry: z.object({
+      totalTimeMs: z.number().optional(),
+      clinicalConfidenceIndex: z.number().min(1).max(4).optional(),
+      redFlagsMissed: z.number().optional(),
+      unnecessaryOrders: z.number().optional(),
+      implicitRating: z.object({
+        rating: z.number(),
+        confidence: z.number(),
+        components: z.record(z.string(), z.number()).optional(),
+      }).optional(),
+      efficiencyScore: z.number().optional(),
+      speechMetrics: z.record(z.string(), z.unknown()).optional(),
+      diagnosticEfficiency: z.record(z.string(), z.unknown()).optional(),
+      rapportMetrics: z.record(z.string(), z.unknown()).optional(),
+      actionCount: z.number().optional(),
+    }).optional(),
   }),
 });
 
@@ -36,7 +53,7 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const { sessionId, diagnosis, treatmentPlan, soapComparison, timingAnalytics, infographics } =
+      const { sessionId, diagnosis, treatmentPlan, soapComparison, timingAnalytics, infographics, osceTelemetry } =
         validated.body;
       log.info('Completing OSCE session', { sessionId });
 
@@ -71,29 +88,13 @@ export const onRequestPost = authenticatedEndpoint(
           treatmentPlan,
           completedAt: new Date(),
           updatedAt: new Date(),
+          // Persist OSCE telemetry for use in grading and analytics
+          ...(osceTelemetry ? { osceTelemetry: osceTelemetry as unknown as object } : {}),
         },
       });
 
-      // NEW: Create CaseFile if analytics provided (Module 4)
-      if (soapComparison || timingAnalytics) {
-        try {
-          await prisma.caseFile.create({
-            data: {
-              sessionId,
-              soapComparison: soapComparison || {},
-              timingAnalytics: timingAnalytics || {},
-              infographics: infographics || [],
-            },
-          });
-          log.info('CaseFile created', { sessionId });
-        } catch (caseFileError) {
-          // Non-blocking: log but don't fail the request
-          log.warn('Failed to create CaseFile', {
-            error: caseFileError instanceof Error ? caseFileError.message : String(caseFileError),
-            sessionId
-          });
-        }
-      }
+      // NOTE: CaseFile model removed — analytics data (soapComparison, timingAnalytics)
+      // is now tracked via osceTelemetry on the session itself.
 
       log.info('OSCE session completed successfully', { sessionId });
       return { data: { success: true } };

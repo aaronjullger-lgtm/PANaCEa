@@ -16,6 +16,17 @@ import type {
 import type { PatientEncounterCase } from '@/types/drill-modes';
 
 // =============================================================================
+// DANGEROUS ACTION INTERFACE
+// =============================================================================
+
+interface DangerousAction {
+  id: string;
+  description: string;
+  penalty: number; // score points deducted
+  category: 'medication_error' | 'missed_emergency' | 'inappropriate_test' | 'safety_violation';
+}
+
+// =============================================================================
 // CRITICAL ACTION DEFINITIONS
 // =============================================================================
 
@@ -326,6 +337,546 @@ const CONDITION_CRITICAL_ACTIONS: Record<string, CriticalAction[]> = {
       weight: 9,
       triggered: false,
       missedPenalty: 12,
+    },
+  ],
+
+  // Diabetic Ketoacidosis
+  'diabetic ketoacidosis': [
+    {
+      id: 'dka_fluids',
+      category: 'procedure',
+      description: 'Initiate aggressive IV fluid resuscitation (NS 1-1.5L/hr)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Critical for DKA management',
+    },
+    {
+      id: 'dka_insulin',
+      category: 'procedure',
+      description: 'Start continuous insulin drip (0.1 units/kg/hr)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'After potassium replacement initiated',
+    },
+    {
+      id: 'dka_potassium',
+      category: 'safety',
+      description: 'Check and replace potassium before/with insulin',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Prevents hypokalemia complications',
+    },
+    {
+      id: 'dka_gap',
+      category: 'diagnosis',
+      description: 'Monitor anion gap and bicarbonate serially',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Track resolution of metabolic acidosis',
+    },
+  ],
+  'dka': [
+    {
+      id: 'dka_fluids',
+      category: 'procedure',
+      description: 'Initiate aggressive IV fluid resuscitation (NS 1-1.5L/hr)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Critical for DKA management',
+    },
+    {
+      id: 'dka_insulin',
+      category: 'procedure',
+      description: 'Start continuous insulin drip (0.1 units/kg/hr)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'After potassium replacement initiated',
+    },
+    {
+      id: 'dka_potassium',
+      category: 'safety',
+      description: 'Check and replace potassium before/with insulin',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Prevents hypokalemia complications',
+    },
+    {
+      id: 'dka_gap',
+      category: 'diagnosis',
+      description: 'Monitor anion gap and bicarbonate serially',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Track resolution of metabolic acidosis',
+    },
+  ],
+
+  // Ectopic Pregnancy
+  'ectopic pregnancy': [
+    {
+      id: 'ectopic_hcg',
+      category: 'diagnosis',
+      description: 'Order quantitative beta-hCG',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Confirms pregnancy',
+    },
+    {
+      id: 'ectopic_us',
+      category: 'diagnosis',
+      description: 'Order transvaginal ultrasound',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Locates pregnancy, rules out intrauterine',
+    },
+    {
+      id: 'ectopic_type_screen',
+      category: 'safety',
+      description: 'Type and screen/crossmatch',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Prepare for emergency surgery if needed',
+    },
+    {
+      id: 'ectopic_obgyn',
+      category: 'procedure',
+      description: 'Emergent OB/GYN consultation',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'For management/surgical intervention',
+    },
+  ],
+
+  // Asthma Exacerbation
+  'asthma exacerbation': [
+    {
+      id: 'asthma_saba',
+      category: 'procedure',
+      description: 'Administer continuous nebulized albuterol',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Rapid bronchodilation critical',
+    },
+    {
+      id: 'asthma_steroids',
+      category: 'procedure',
+      description: 'Administer systemic corticosteroids early',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Reduces inflammation and recurrence',
+    },
+    {
+      id: 'asthma_o2',
+      category: 'procedure',
+      description: 'Provide supplemental oxygen targeting SpO2 >92%',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Maintain oxygenation',
+    },
+    {
+      id: 'asthma_severity',
+      category: 'diagnosis',
+      description: 'Assess severity (peak flow, accessory muscle use, speech)',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 6,
+      context: 'Determines need for intensive care',
+    },
+  ],
+  'asthma': [
+    {
+      id: 'asthma_saba',
+      category: 'procedure',
+      description: 'Administer continuous nebulized albuterol',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Rapid bronchodilation critical',
+    },
+    {
+      id: 'asthma_steroids',
+      category: 'procedure',
+      description: 'Administer systemic corticosteroids early',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Reduces inflammation and recurrence',
+    },
+    {
+      id: 'asthma_o2',
+      category: 'procedure',
+      description: 'Provide supplemental oxygen targeting SpO2 >92%',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Maintain oxygenation',
+    },
+    {
+      id: 'asthma_severity',
+      category: 'diagnosis',
+      description: 'Assess severity (peak flow, accessory muscle use, speech)',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 6,
+      context: 'Determines need for intensive care',
+    },
+  ],
+
+  // Heart Failure
+  'heart failure': [
+    {
+      id: 'chf_diuretic',
+      category: 'procedure',
+      description: 'Administer IV loop diuretic (furosemide)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Reduces volume overload',
+    },
+    {
+      id: 'chf_bnp',
+      category: 'diagnosis',
+      description: 'Order BNP/NT-proBNP',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Confirms heart failure diagnosis',
+    },
+    {
+      id: 'chf_o2',
+      category: 'procedure',
+      description: 'Provide supplemental oxygen/NIPPV if needed',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Supports oxygenation in pulmonary edema',
+    },
+    {
+      id: 'chf_daily_weight',
+      category: 'diagnosis',
+      description: 'Assess fluid status (weight, I&O, JVD, edema)',
+      weight: 7,
+      triggered: false,
+      missedPenalty: 5,
+      context: 'Monitor fluid management response',
+    },
+  ],
+  'chf': [
+    {
+      id: 'chf_diuretic',
+      category: 'procedure',
+      description: 'Administer IV loop diuretic (furosemide)',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Reduces volume overload',
+    },
+    {
+      id: 'chf_bnp',
+      category: 'diagnosis',
+      description: 'Order BNP/NT-proBNP',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Confirms heart failure diagnosis',
+    },
+    {
+      id: 'chf_o2',
+      category: 'procedure',
+      description: 'Provide supplemental oxygen/NIPPV if needed',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Supports oxygenation in pulmonary edema',
+    },
+    {
+      id: 'chf_daily_weight',
+      category: 'diagnosis',
+      description: 'Assess fluid status (weight, I&O, JVD, edema)',
+      weight: 7,
+      triggered: false,
+      missedPenalty: 5,
+      context: 'Monitor fluid management response',
+    },
+  ],
+
+  // Deep Vein Thrombosis
+  'deep vein thrombosis': [
+    {
+      id: 'dvt_wells',
+      category: 'diagnosis',
+      description: 'Calculate Wells score for DVT',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 6,
+      context: 'Stratifies risk and guides testing',
+    },
+    {
+      id: 'dvt_us',
+      category: 'diagnosis',
+      description: 'Order compression/duplex ultrasonography',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Gold standard imaging for DVT',
+    },
+    {
+      id: 'dvt_anticoag',
+      category: 'procedure',
+      description: 'Initiate anticoagulation therapy',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Prevents clot extension and embolization',
+    },
+    {
+      id: 'dvt_pe_assess',
+      category: 'diagnosis',
+      description: 'Assess for concurrent PE symptoms',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Rule out pulmonary embolism',
+    },
+  ],
+  'dvt': [
+    {
+      id: 'dvt_wells',
+      category: 'diagnosis',
+      description: 'Calculate Wells score for DVT',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 6,
+      context: 'Stratifies risk and guides testing',
+    },
+    {
+      id: 'dvt_us',
+      category: 'diagnosis',
+      description: 'Order compression/duplex ultrasonography',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Gold standard imaging for DVT',
+    },
+    {
+      id: 'dvt_anticoag',
+      category: 'procedure',
+      description: 'Initiate anticoagulation therapy',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Prevents clot extension and embolization',
+    },
+    {
+      id: 'dvt_pe_assess',
+      category: 'diagnosis',
+      description: 'Assess for concurrent PE symptoms',
+      weight: 8,
+      triggered: false,
+      missedPenalty: 8,
+      context: 'Rule out pulmonary embolism',
+    },
+  ],
+
+  // Urosepsis
+  'urosepsis': [
+    {
+      id: 'urosepsis_cultures',
+      category: 'diagnosis',
+      description: 'Obtain blood cultures x2 AND urine culture before antibiotics',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Critical for organism identification',
+    },
+    {
+      id: 'urosepsis_abx',
+      category: 'procedure',
+      description: 'Start empiric broad-spectrum antibiotics within 1 hour',
+      weight: 10,
+      triggered: false,
+      missedPenalty: 15,
+      context: 'Sepsis bundle compliance',
+    },
+    {
+      id: 'urosepsis_fluids',
+      category: 'procedure',
+      description: 'Aggressive fluid resuscitation (30mL/kg crystalloid)',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 12,
+      context: 'Critical for sepsis management',
+    },
+    {
+      id: 'urosepsis_lactate',
+      category: 'diagnosis',
+      description: 'Order serum lactate and monitor',
+      weight: 9,
+      triggered: false,
+      missedPenalty: 10,
+      context: 'Marker of tissue perfusion and sepsis severity',
+    },
+  ],
+};
+
+// =============================================================================
+// DANGEROUS ACTIONS TRACKING
+// =============================================================================
+
+/**
+ * Dangerous actions that result in point deductions
+ * Keyed by condition name
+ */
+const DANGEROUS_ACTIONS: Record<string, DangerousAction[]> = {
+  // Acute Coronary Syndrome
+  'acute coronary syndrome': [
+    {
+      id: 'acs_beta_blocker_in_hf',
+      description: 'Giving beta-blockers in decompensated heart failure',
+      penalty: 20,
+      category: 'medication_error',
+    },
+    {
+      id: 'acs_missed_aspirin',
+      description: 'Missing aspirin administration in ACS',
+      penalty: 25,
+      category: 'missed_emergency',
+    },
+  ],
+
+  // Stroke
+  'stroke': [
+    {
+      id: 'stroke_tpa_after_window',
+      description: 'Administering tPA after 4.5 hour window',
+      penalty: 30,
+      category: 'safety_violation',
+    },
+    {
+      id: 'stroke_no_glucose_check',
+      description: 'Not checking glucose before thrombolytics',
+      penalty: 25,
+      category: 'missed_emergency',
+    },
+  ],
+
+  // Diabetic Ketoacidosis
+  'diabetic ketoacidosis': [
+    {
+      id: 'dka_insulin_before_potassium',
+      description: 'Giving insulin before checking potassium',
+      penalty: 30,
+      category: 'safety_violation',
+    },
+    {
+      id: 'dka_inappropriate_bicarb',
+      description: 'Giving bicarbonate inappropriately in DKA',
+      penalty: 20,
+      category: 'medication_error',
+    },
+  ],
+  'dka': [
+    {
+      id: 'dka_insulin_before_potassium',
+      description: 'Giving insulin before checking potassium',
+      penalty: 30,
+      category: 'safety_violation',
+    },
+    {
+      id: 'dka_inappropriate_bicarb',
+      description: 'Giving bicarbonate inappropriately in DKA',
+      penalty: 20,
+      category: 'medication_error',
+    },
+  ],
+
+  // Sepsis
+  'sepsis': [
+    {
+      id: 'sepsis_delayed_antibiotics',
+      description: 'Delaying antibiotics more than 1 hour',
+      penalty: 25,
+      category: 'missed_emergency',
+    },
+    {
+      id: 'sepsis_no_cultures',
+      description: 'Not obtaining blood cultures before antibiotics',
+      penalty: 15,
+      category: 'inappropriate_test',
+    },
+  ],
+
+  // Pulmonary Embolism
+  'pulmonary embolism': [
+    {
+      id: 'pe_missed_anticoagulation',
+      description: 'Missing anticoagulation in confirmed PE',
+      penalty: 30,
+      category: 'missed_emergency',
+    },
+    {
+      id: 'pe_inappropriate_thrombolytics',
+      description: 'Inappropriate thrombolytics in submassive PE',
+      penalty: 20,
+      category: 'medication_error',
+    },
+  ],
+  'pe': [
+    {
+      id: 'pe_missed_anticoagulation',
+      description: 'Missing anticoagulation in confirmed PE',
+      penalty: 30,
+      category: 'missed_emergency',
+    },
+    {
+      id: 'pe_inappropriate_thrombolytics',
+      description: 'Inappropriate thrombolytics in submassive PE',
+      penalty: 20,
+      category: 'medication_error',
+    },
+  ],
+
+  // Asthma Exacerbation
+  'asthma exacerbation': [
+    {
+      id: 'asthma_sedatives',
+      description: 'Giving sedatives in acute asthma',
+      penalty: 25,
+      category: 'medication_error',
+    },
+    {
+      id: 'asthma_beta_blockers',
+      description: 'Giving beta-blockers in acute asthma',
+      penalty: 25,
+      category: 'medication_error',
+    },
+  ],
+  'asthma': [
+    {
+      id: 'asthma_sedatives',
+      description: 'Giving sedatives in acute asthma',
+      penalty: 25,
+      category: 'medication_error',
+    },
+    {
+      id: 'asthma_beta_blockers',
+      description: 'Giving beta-blockers in acute asthma',
+      penalty: 25,
+      category: 'medication_error',
     },
   ],
 };
@@ -777,6 +1328,174 @@ export class OSCEScoringEngine {
   }
 }
 
+// =============================================================================
+// PHYSICAL EXAM THOROUGHNESS SCORING
+// =============================================================================
+
+/**
+ * Maps condition names to expected physical exam maneuvers
+ * Used for calculating exam thoroughness scores
+ */
+const CONDITION_EXPECTED_EXAMS: Record<string, string[]> = {
+  'acute coronary syndrome': [
+    'cardiac auscultation',
+    'lung auscultation',
+    'peripheral pulses',
+    'JVD assessment',
+    'peripheral edema',
+  ],
+  'stroke': [
+    'neurological exam',
+    'cranial nerves',
+    'motor strength',
+    'sensation',
+    'reflexes',
+    'NIHSS',
+  ],
+  'pneumonia': [
+    'lung auscultation',
+    'respiratory rate',
+    'oxygen saturation',
+    'percussion',
+  ],
+  'appendicitis': [
+    'abdominal palpation',
+    'McBurney point',
+    'rebound tenderness',
+    'Rovsing sign',
+    'psoas sign',
+  ],
+  'diabetic ketoacidosis': [
+    'mental status',
+    'mucous membranes',
+    'skin turgor',
+    'Kussmaul breathing',
+    'abdominal exam',
+  ],
+  'heart failure': [
+    'cardiac auscultation',
+    'lung auscultation',
+    'JVD assessment',
+    'peripheral edema',
+    'hepatojugular reflux',
+  ],
+  'deep vein thrombosis': [
+    'calf palpation',
+    'Homan sign',
+    'calf circumference',
+    'lower extremity inspection',
+    'popliteal fossa',
+  ],
+  'sepsis': [
+    'vitals assessment',
+    'skin assessment',
+    'mental status',
+    'capillary refill',
+    'source identification',
+  ],
+};
+
+interface ExamThoroughnessResult {
+  score: number;
+  performed: string[];
+  missed: string[];
+  extra: string[];
+}
+
+/**
+ * Calculate physical exam thoroughness for a given condition
+ * Uses fuzzy matching (substring matching) to compare performed exams against expected
+ * 
+ * @param condition - The clinical condition/diagnosis
+ * @param performedExams - Array of exam maneuvers the student performed
+ * @returns Object containing thoroughness score (0-100%) and exam breakdown
+ */
+export function calculateExamThoroughness(
+  condition: string,
+  performedExams: string[]
+): ExamThoroughnessResult {
+  // Find matching condition (case-insensitive with basic alias support)
+  let matchedCondition: string | undefined;
+  const conditionLower = condition.toLowerCase().trim();
+
+  for (const key of Object.keys(CONDITION_EXPECTED_EXAMS)) {
+    if (
+      conditionLower.includes(key) ||
+      key.includes(conditionLower) ||
+      conditionLower === key
+    ) {
+      matchedCondition = key;
+      break;
+    }
+  }
+
+  // If no match found, return default result
+  if (!matchedCondition) {
+    return {
+      score: 0,
+      performed: performedExams,
+      missed: [],
+      extra: performedExams,
+    };
+  }
+
+  const expectedExams = CONDITION_EXPECTED_EXAMS[matchedCondition];
+  const performedLower = performedExams.map((exam) => exam.toLowerCase().trim());
+
+  // Helper function for fuzzy matching using substring matching
+  const fuzzyMatch = (performed: string, expected: string): boolean => {
+    // Exact match or substring match (either direction)
+    if (performed === expected) return true;
+    if (performed.includes(expected)) return true;
+    if (expected.includes(performed)) return true;
+    
+    // Check for significant word overlap
+    const performedWords = performed.split(/\s+/);
+    const expectedWords = expected.split(/\s+/);
+    const overlap = performedWords.filter((word) =>
+      expectedWords.some((expWord) => expWord.includes(word) || word.includes(expWord))
+    );
+    
+    return overlap.length >= Math.max(1, Math.ceil(performedWords.length * 0.5));
+  };
+
+  // Find performed and missed exams
+  const performed: string[] = [];
+  const missed: string[] = [];
+
+  expectedExams.forEach((expected) => {
+    const foundPerformed = performedLower.find((perf) => fuzzyMatch(perf, expected.toLowerCase()));
+    if (foundPerformed) {
+      performed.push(expected);
+    } else {
+      missed.push(expected);
+    }
+  });
+
+  // Find extra exams (performed but not expected)
+  const extra: string[] = [];
+  performedExams.forEach((perf) => {
+    const isExpected = expectedExams.some(
+      (exp) => fuzzyMatch(perf.toLowerCase(), exp.toLowerCase())
+    );
+    if (!isExpected) {
+      extra.push(perf);
+    }
+  });
+
+  // Calculate score as percentage of expected exams performed
+  const score = expectedExams.length > 0 
+    ? Math.round((performed.length / expectedExams.length) * 100)
+    : 0;
+
+  return {
+    score,
+    performed,
+    missed,
+    extra,
+  };
+}
+
 /**
  * Create a new scoring engine instance
  */
@@ -797,4 +1516,68 @@ export function getCriticalActionsForCondition(diagnosis: string): CriticalActio
   });
 
   return actions;
+}
+
+/**
+ * Get all dangerous actions for a specific condition
+ */
+export function getDangerousActionsForCondition(condition: string): DangerousAction[] {
+  const actions: DangerousAction[] = [];
+
+  Object.entries(DANGEROUS_ACTIONS).forEach(([condKey, dangerousActionsList]) => {
+    if (condition.toLowerCase().includes(condKey.toLowerCase())) {
+      actions.push(...dangerousActionsList);
+    }
+  });
+
+  return actions;
+}
+
+/**
+ * Check if student actions triggered any dangerous actions for a given condition
+ * Uses fuzzy keyword matching to identify dangerous actions in student behavior
+ */
+export function checkForDangerousActions(
+  condition: string,
+  studentActions: string[]
+): { triggered: DangerousAction[]; totalPenalty: number } {
+  const dangerousActionsForCondition = getDangerousActionsForCondition(condition);
+  const triggered: DangerousAction[] = [];
+
+  // Helper function to extract keywords from dangerous action description
+  const getKeywords = (description: string): string[] => {
+    return description
+      .toLowerCase()
+      .split(/[\s\-,]+/)
+      .filter((word) => word.length > 2);
+  };
+
+  // Check each dangerous action against student actions
+  dangerousActionsForCondition.forEach((dangerousAction) => {
+    const keywords = getKeywords(dangerousAction.description);
+
+    studentActions.forEach((studentAction) => {
+      const studentActionLower = studentAction.toLowerCase();
+
+      // Fuzzy match: check if student action contains key terms from dangerous action
+      const matchedKeywords = keywords.filter((keyword) => studentActionLower.includes(keyword));
+
+      // If we find a significant match (at least 2 keywords or 50% of keywords), trigger
+      if (
+        matchedKeywords.length >= 2 ||
+        (keywords.length > 0 && matchedKeywords.length / keywords.length >= 0.5)
+      ) {
+        if (!triggered.some((d) => d.id === dangerousAction.id)) {
+          triggered.push(dangerousAction);
+        }
+      }
+    });
+  });
+
+  const totalPenalty = triggered.reduce((sum, action) => sum + action.penalty, 0);
+
+  return {
+    triggered,
+    totalPenalty,
+  };
 }

@@ -1,0 +1,45 @@
+/**
+ * quickref-print.css
+ *
+ * Print-optimized styles for Quick Reference Cards.
+ * Import this in QuickRefHub or individual card components.
+ * 
+ * Usage: <link rel="stylesheet" href="..." media="print" />
+ * Or: import './quickref-print.css';
+ */
+
+@media print {
+  /* Hide non-essential UI */
+  nav, header, footer,
+  [data-print-hide],
+  .animate-spin,
+  .quickref-no-print,
+  button:not([data-print-show]) {
+    display: none !important;
+  }
+
+  /* Reset backgrounds for print */
+  body, html {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+  }
+
+  /* Card grid: 2 columns on print */
+  [data-quickref-grid] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    page-break-inside: avoid;
+  }
+
+  /* Card styling for print */
+  [data-quickref-card] {
+    border: 1px solid #ccc !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    background: white !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

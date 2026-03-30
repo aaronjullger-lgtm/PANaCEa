@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'SessionService';
 import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
 import { withTimeout } from '../../timeout';
 import type { Env } from '../../../functions/api/_shared/auth';
@@ -138,7 +141,7 @@ export class SessionService {
         }),
       ]);
     } catch (error) {
-      console.error('[SessionService] Failed to fetch seen records or pool count:', error);
+      logger.error(`[${LOG_SCOPE}] Failed to fetch seen records or pool count`, { error });
       // Continue with defaults (empty seen records, zero pool count)
     }
     
@@ -268,7 +271,7 @@ export class SessionService {
           }
         }
       } catch (err) {
-        console.error('[SessionService] generateNewQuestions fallback failed:', err);
+        logger.error(`[${LOG_SCOPE}] generateNewQuestions fallback failed`, { error: err });
       }
     }
 
@@ -631,7 +634,7 @@ export class SessionService {
       for (const [key, values] of Object.entries(variables)) {
         // Skip empty values arrays to avoid replacing with "undefined"
         if (!Array.isArray(values) || values.length === 0) {
-          console.warn(`[Session] Seed ${seed.id} has empty values for variable ${key}`);
+          logger.warn(`[${LOG_SCOPE}] Seed ${seed.id} has empty values for variable ${key}`);
           continue;
         }
         const randomValue = values[Math.floor(Math.random() * values.length)];
@@ -660,7 +663,7 @@ export class SessionService {
         metadata: { seedId: seed.id },
       };
     } catch (error) {
-      console.error('[Session] Failed to expand seed:', error);
+      logger.error(`[${LOG_SCOPE}] Failed to expand seed`, { error });
       return null;
     }
   }
@@ -729,7 +732,7 @@ export class SessionService {
 
       const options = normalizeOptionsToArray(q.options);
       if (options.length === 0) {
-        console.warn(`[SessionService] Skipping question ${q.id} - no valid options`);
+        logger.warn(`[${LOG_SCOPE}] Skipping question ${q.id} - no valid options`);
         continue;
       }
       const correctIndex = options.findIndex((opt) => opt === q.correctAnswer);
@@ -819,7 +822,7 @@ export class SessionService {
           });
         }
       } catch (error) {
-        console.error('[Session] Failed to generate question:', error);
+        logger.error(`[${LOG_SCOPE}] Failed to generate question`, { error });
       }
     }
 

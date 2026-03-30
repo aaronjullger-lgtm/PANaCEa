@@ -21,11 +21,78 @@ const GradeSoapBodySchema = z.object({
   body: z.object({
     sessionId: IDSchema,
     soapNote: z.string().min(1).max(30000),
+    differentials: z.array(z.string()).max(10).optional(),
   }),
 });
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const GEMINI_MODEL = 'gemini-2.0-flash';
+
+// Dangerous actions that should never be performed for specific conditions
+const DANGEROUS_ACTIONS_MAP: Record<
+  string,
+  Array<{ keywords: string[]; description: string; penalty: number }>
+> = {
+  'acute coronary syndrome': [
+    {
+      keywords: ['beta-blocker', 'metoprolol', 'atenolol', 'decompensated'],
+      description: 'Beta-blocker in decompensated HF',
+      penalty: 15,
+    },
+  ],
+  'stroke': [
+    {
+      keywords: ['tpa', 'alteplase', 'thrombolytic', 'late', '>4.5'],
+      description: 'tPA outside treatment window',
+      penalty: 20,
+    },
+  ],
+  'diabetic ketoacidosis': [
+    {
+      keywords: ['insulin', 'before', 'potassium', 'hypokalemia'],
+      description: 'Insulin before checking potassium',
+      penalty: 20,
+    },
+  ],
+  'sepsis': [
+    {
+      keywords: ['delay', 'antibiotic', 'wait', 'hold'],
+      description: 'Delayed antibiotics in sepsis',
+      penalty: 15,
+    },
+  ],
+  'asthma': [
+    {
+      keywords: ['sedative', 'benzodiazepine', 'morphine', 'beta-blocker'],
+      description: 'Contraindicated medication in acute asthma',
+      penalty: 15,
+    },
+  ],
+};
+
+function checkDangerousActions(
+  diagnosis: string,
+  soapNote: string
+): Array<{ description: string; penalty: number }> {
+  const normalizedDiag = diagnosis.toLowerCase().trim();
+  const actions = DANGEROUS_ACTIONS_MAP[normalizedDiag];
+  if (!actions) return [];
+
+  const detected: Array<{ description: string; penalty: number }> = [];
+  const normalizedNote = soapNote.toLowerCase();
+
+  for (const action of actions) {
+    const found = action.keywords.some((kw) => normalizedNote.includes(kw.toLowerCase()));
+    if (found) {
+      detected.push({
+        description: action.description,
+        penalty: action.penalty,
+      });
+    }
+  }
+
+  return detected;
+}
 
 type ChecklistItem = { item: string; status: 'PASS' | 'FAIL'; feedback: string };
 /** Rubric: support both "item" and "concept" (schema can use either). */
@@ -147,14 +214,29 @@ Use semantic matching: e.g. "Dad died young" matches "Family history of sudden d
 For each rubric item, mark PASS if the student's note addresses that concept (same meaning); otherwise mark FAIL.
 If a rubric item is marked [RED FLAG] and the student did NOT address it, mark that item as FAIL and in feedback write "CRITICAL: Red flag item missing."
 Compute an overall clinicalReasoningScore 0-100 based on completeness and accuracy.
+If the student submitted differential diagnoses, evaluate them:
+- Are the key differentials for this presentation included?
+- Is the correct diagnosis in the list?
+- Are there any dangerous "cannot-miss" diagnoses missing?
+Include a "differentialScore" (0-100) in your JSON response if differentials were provided.
+Additionally, evaluate the student's communication quality:
+- Did they use open-ended questions before closed-ended questions?
+- Did they show empathy (acknowledging patient emotions, concerns)?
+- Did they explain their clinical reasoning to the patient?
+- Did they ask about the patient's perspective and concerns?
+- Did they introduce themselves and explain their role?
+Rate communication quality as "communicationScore" (0-100) in your JSON response.
 Respond with ONLY a JSON object in this exact shape (no markdown, no code fence):
-{"checklist": [{"item": "exact rubric item/concept text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "clinicalReasoningScore": number 0-100}`;
+{"checklist": [{"item": "exact rubric item/concept text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "clinicalReasoningScore": number 0-100, "differentialScore": number 0-100 (optional), "communicationScore": number 0-100}`;
 
+    const differentialsSection = validated.body.differentials && validated.body.differentials.length > 0
+      ? `\nStudent's Differential Diagnoses:\n${validated.body.differentials.map((d) => `- ${d}`).join('\n')}`
+      : '';
     const soapUserPrompt = `Rubric checklist:
 ${checklistText}
 
 Student SOAP note:
-${soapNote}
+${soapNote}${differentialsSection}
 
 Output your grading as a single JSON object only.`;
 
@@ -171,9 +253,9 @@ Output your grading as a single JSON object only.`;
     }
 
     const stripped = rawText.replaceAll(/```json|```/gi, '').trim();
-    let parsed: { checklist?: unknown[]; clinicalReasoningScore?: number };
+    let parsed: { checklist?: unknown[]; clinicalReasoningScore?: number; differentialScore?: number; communicationScore?: number };
     try {
-      parsed = JSON.parse(stripped) as { checklist?: unknown[]; clinicalReasoningScore?: number };
+      parsed = JSON.parse(stripped) as { checklist?: unknown[]; clinicalReasoningScore?: number; differentialScore?: number; communicationScore?: number };
     } catch {
       log.error('Failed to parse Gemini SOAP JSON', { raw: stripped.slice(0, 300) });
       return { status: 502, error: 'Invalid grading response format' };
@@ -183,12 +265,33 @@ Output your grading as a single JSON object only.`;
       ? validateChecklistResponse(parsed.checklist)
       : [];
     const clinicalReasoningScore = Number(parsed.clinicalReasoningScore);
-    const score =
+    const differentialScore = Number(parsed.differentialScore);
+    const communicationScore = Number(parsed.communicationScore);
+    
+    // Check for dangerous actions in the SOAP note
+    const caseDiagnosis = session.PatientEncounterCase?.correctDiagnosis || '';
+    const dangerousActionsDetected = checkDangerousActions(caseDiagnosis, soapNote);
+    const dangerousActionsPenalty = dangerousActionsDetected.reduce(
+      (sum, action) => sum + action.penalty,
+      0
+    );
+    
+    // Base score from clinical reasoning rubric
+    const rubricScore =
       typeof clinicalReasoningScore === 'number' &&
       clinicalReasoningScore >= 0 &&
       clinicalReasoningScore <= 100
         ? clinicalReasoningScore
         : 0;
+    
+    // If differentials were provided and scored, blend with rubric score (70% rubric, 30% differentials)
+    const hasDifferentials = validated.body.differentials && validated.body.differentials.length > 0;
+    const scoreBeforeDangerousActions = (hasDifferentials && typeof differentialScore === 'number' && differentialScore >= 0 && differentialScore <= 100)
+      ? Math.round(0.7 * rubricScore + 0.3 * differentialScore)
+      : rubricScore;
+    
+    // Apply dangerous actions penalty
+    const score = Math.max(0, scoreBeforeDangerousActions - dangerousActionsPenalty);
 
     const redFlagsMissed = rubricItems
       .filter((r) => r.isRedFlag)
@@ -208,6 +311,13 @@ Output your grading as a single JSON object only.`;
       checklist: checklist as unknown as object,
       redFlagsMissed,
       clinicalReasoningScore: finalClinicalReasoning,
+      differentialScore: hasDifferentials && typeof differentialScore === 'number' && differentialScore >= 0 && differentialScore <= 100
+        ? Math.round(differentialScore)
+        : null,
+      communicationScore: typeof communicationScore === 'number' && communicationScore >= 0 && communicationScore <= 100
+        ? Math.round(communicationScore)
+        : null,
+      dangerousActionsDetected: dangerousActionsDetected as unknown as object,
       billingCodeSuggestion: null as string | null,
     };
     if (existingResult) {
@@ -220,6 +330,7 @@ Output your grading as a single JSON object only.`;
       sessionId,
       score: finalScore,
       redFlagsMissed: redFlagsMissed.length,
+      dangerousActionsDetected: dangerousActionsDetected.length,
     });
     return {
       data: {
@@ -228,6 +339,9 @@ Output your grading as a single JSON object only.`;
         clinicalReasoningScore: finalClinicalReasoning,
         score: finalScore,
         redFlagsMissed,
+        differentialScore: data.differentialScore,
+        communicationScore: data.communicationScore,
+        dangerousActionsDetected,
       },
     };
   } catch (e) {

@@ -43,7 +43,6 @@ export interface ImplicitBehaviorMetrics {
   /** Optional: Hover oscillation count (A↔B revisits). Micro-kinetics. */
   hoverOscillationCount?: number;
 }
-
 /**
  * Session-level latency statistics for variance calculation
  */
@@ -107,15 +106,37 @@ export interface ImplicitRatingConfig {
     hard: number; // Below this = Hard
     // Above hard threshold = Again (if correct) or Again (if incorrect)
   };
+  /** Penalty weights for deriveContinuousRating (correct answers) */
+  penalties: {
+    perSwitch: number;           // Per answer switch
+    latencyExcessMultiplier: number; // Applied to excess latency
+    commitmentGapPerSec: number; // Per second of commitment gap
+    entropyAboveOne: number;     // Per unit of entropy above 1.0
+    perOscillation: number;      // Per hover oscillation
+  };
+  /** Speed bonus thresholds (latency ratio → bonus) for deriveContinuousRating */
+  speedBonusTiers: Array<{ maxRatio: number; bonus: number }>;
+  /** Clean-answer bonus: no hesitation signals → additional boost */
+  cleanBonus: {
+    full: number;       // All clean signals + fast
+    partial: number;    // No switches + moderately fast
+    maxGapMs: number;   // Max commitment gap for full bonus
+    maxRatio: number;   // Max latency ratio for full bonus
+    partialMaxRatio: number; // Max latency ratio for partial bonus
+  };
+  /** Confidence calculation parameters */
+  confidenceParams: {
+    baseCorrect: number;
+    baseIncorrect: number;
+    perSwitchPenalty: number;
+    longGapThresholdMs: number;
+    longGapPenalty: number;
+    highEntropyThreshold: number;
+    highEntropyPenalty: number;
+    min: number;
+    max: number;
+  };
 }
-
-/**
- * Maximum effective duration for rating calculation.
- * Durations above this are capped to prevent outliers (e.g., user left browser open).
- * Raw duration is still stored for analytics and flagging purposes.
- */
-export const DURATION_CAP_MS = 60000; // 60 seconds
-
 /**
  * Default configuration based on cognitive research
  */
@@ -127,7 +148,36 @@ export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
     easy: 0.5, // Under 50% of par time = Easy
     good: 0.85, // Under 85% of par time = Good
     hard: 1.3, // Under 130% of par time = Hard
-    // Above 130% = borderline, combined with switches
+  },
+  penalties: {
+    perSwitch: 0.15,              // Each answer change costs 0.15 grade
+    latencyExcessMultiplier: 0.3, // Latency above 85% par × this
+    commitmentGapPerSec: 0.02,    // Each second of hesitation before submit
+    entropyAboveOne: 0.2,         // Cursor wandering penalty per unit
+    perOscillation: 0.1,          // Each A↔B hover revisit
+  },
+  speedBonusTiers: [
+    { maxRatio: 0.35, bonus: 0.5 },  // Instant recall
+    { maxRatio: 0.5, bonus: 0.35 },  // Fast recall
+    { maxRatio: 0.7, bonus: 0.15 },  // Smooth recall
+  ],
+  cleanBonus: {
+    full: 0.25,           // No switches, fast, no oscillation
+    partial: 0.1,         // No switches, moderately fast
+    maxGapMs: 1500,       // Max commitment gap for full bonus
+    maxRatio: 0.7,        // Max latency ratio for full bonus
+    partialMaxRatio: 0.85, // Max latency ratio for partial bonus
+  },
+  confidenceParams: {
+    baseCorrect: 0.7,
+    baseIncorrect: 0.95,
+    perSwitchPenalty: 0.1,
+    longGapThresholdMs: 3000,
+    longGapPenalty: 0.1,
+    highEntropyThreshold: 1.5,
+    highEntropyPenalty: 0.1,
+    min: 0.5,
+    max: 0.95,
   },
 };
 
@@ -179,7 +229,6 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
   const percentile = 1 / (1 + Math.exp(-0.7 * zScore));
   return Math.max(0, Math.min(1, percentile));
 }
-
 /**
  * @deprecated Use `deriveContinuousRating` instead. This function is no longer
  * called in production (drillReviewService uses deriveContinuousRating since the
@@ -318,7 +367,6 @@ export function deriveImplicitRating(
     flagReason,
   };
 }
-
 /**
  * Derive continuous FSRS grade (1.0–4.0) from behavioral metrics.
  * Standard correct (no red flags) = 3.0. Deviations toward 4.0 or 1.0 driven by behavior.
@@ -334,28 +382,50 @@ export function deriveContinuousRating(
   config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
 ): ContinuousRatingResult {
   const parTime = metrics.parTimeMs ?? 30000;
-  // Cap effective duration to prevent outliers from inflating latency ratio
-  const cappedTimeToFirstClick = Math.min(metrics.timeToFirstClick, DURATION_CAP_MS);
   const effectiveLatency =
-    cappedTimeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
+    metrics.timeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
   const latencyRatio = effectiveLatency / parTime;
 
   const base = metrics.isCorrect ? 3.0 : 1.0;
   let grade = base;
 
   if (metrics.isCorrect) {
-    // Red-flag penalties
-    const penaltySwitch = metrics.answerSwitches * 0.15;
-    const latencyExcess = Math.max(0, Math.min(2, latencyRatio - 0.85));
-    const penaltyLatency = latencyExcess * 0.3;
-    const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
-    const penaltyCommitment = commitmentGapSec * 0.02;
-    const entropy = metrics.cursorEntropy ?? 0;
-    const penaltyEntropy = entropy > 1 ? (entropy - 1) * 0.2 : 0;
-    const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * 0.1;
+    const p = config.penalties;
 
-    // Bonuses for fast, clean response
-    const bonusFast = latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
+    // Red-flag penalties (from config)
+    const penaltySwitch = metrics.answerSwitches * p.perSwitch;
+    const latencyExcess = Math.max(0, Math.min(2, latencyRatio - config.ratingThresholds.good));
+    const penaltyLatency = latencyExcess * p.latencyExcessMultiplier;
+    const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
+    const penaltyCommitment = commitmentGapSec * p.commitmentGapPerSec;
+    const entropy = metrics.cursorEntropy ?? 0;
+    const penaltyEntropy = entropy > 1 ? (entropy - 1) * p.entropyAboveOne : 0;
+    const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * p.perOscillation;
+
+    // Tiered speed bonus (from config tiers)
+    // Research: retrieval fluency is the strongest predictor of long-term retention
+    // (Benjamin et al., 1998; Kelley & Lindsay, 1993)
+    let bonusSpeed = 0;
+    for (const tier of config.speedBonusTiers) {
+      if (latencyRatio < tier.maxRatio) {
+        bonusSpeed = tier.bonus;
+        break;
+      }
+    }
+
+    // Clean-answer bonus: no switches + fast = strong retrieval signal
+    const cb = config.cleanBonus;
+    const bonusClean =
+      metrics.answerSwitches === 0 &&
+      (metrics.commitmentGapMs ?? 0) < cb.maxGapMs &&
+      (metrics.hoverOscillationCount ?? 0) === 0 &&
+      latencyRatio < cb.maxRatio
+        ? cb.full
+        : metrics.answerSwitches === 0 && latencyRatio < cb.partialMaxRatio
+          ? cb.partial
+          : 0;
+
+    const bonusFast = Math.min(bonusSpeed + bonusClean, 1.0);
 
     grade =
       base -
@@ -370,13 +440,13 @@ export function deriveContinuousRating(
   grade = Math.max(1.0, Math.min(4.0, grade));
 
   // Confidence: high commitment gap / entropy → lower confidence
-  let confidence = 0.7;
-  if (!metrics.isCorrect) confidence = 0.95;
-  else {
-    confidence -= metrics.answerSwitches * 0.1;
-    if ((metrics.commitmentGapMs ?? 0) > 3000) confidence -= 0.1;
-    if ((metrics.cursorEntropy ?? 0) > 1.5) confidence -= 0.1;
-    confidence = Math.max(0.5, Math.min(0.95, confidence));
+  const cp = config.confidenceParams;
+  let confidence = metrics.isCorrect ? cp.baseCorrect : cp.baseIncorrect;
+  if (metrics.isCorrect) {
+    confidence -= metrics.answerSwitches * cp.perSwitchPenalty;
+    if ((metrics.commitmentGapMs ?? 0) > cp.longGapThresholdMs) confidence -= cp.longGapPenalty;
+    if ((metrics.cursorEntropy ?? 0) > cp.highEntropyThreshold) confidence -= cp.highEntropyPenalty;
+    confidence = Math.max(cp.min, Math.min(cp.max, confidence));
   }
 
   const discreteRating = gradeToRating(grade);
@@ -436,7 +506,6 @@ export function estimateParTime(params: {
   // Clamp to reasonable bounds
   return Math.max(15000, Math.min(120000, totalParTime));
 }
-
 /**
  * Analyze session-level metrics for quality indicators
  */

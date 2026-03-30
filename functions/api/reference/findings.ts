@@ -23,6 +23,9 @@ const FindingsQuerySchema = z.object({
   query: z
     .object({
       system: z.string().optional(),
+      category: z.string().optional(),
+      query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
   body: z.object({}).optional(),
@@ -44,14 +47,29 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       const url = new URL(request.url);
       const system = url.searchParams.get('system');
+      const category = url.searchParams.get('category');
+      const searchQuery = url.searchParams.get('query');
+      const highYield = url.searchParams.get('highYield') === 'true';
 
-      log.info('Fetching physical exam findings', { system: system || 'all' });
+      log.info('Fetching physical exam findings', { system: system || 'all', highYield });
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+      const where: any = {};
+      if (system) where.system = system;
+      if (category) where.category = category;
+      if (highYield) where.isHighYield = true;
+      if (searchQuery) {
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { eponymousName: { contains: searchQuery, mode: 'insensitive' } },
+        ];
+      }
+
       const results = await prisma.physicalExamFinding.findMany({
-        where: system ? { system } : undefined,
-        orderBy: { name: 'asc' },
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
       });
 
       log.info('Successfully fetched findings', { count: results.length });

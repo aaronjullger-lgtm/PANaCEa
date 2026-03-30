@@ -45,6 +45,7 @@ import {
   IntegrationsHub,
   PANRELASimulator,
   MediaApproval,
+  CoreAdaptiveSession,
 } from '@/config/lazyComponents';
 import type { View } from '@/config/appViews';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
@@ -70,7 +71,6 @@ interface DrillViewRouterProps {
   initialDrillSystem: string | null;
   missedQuestions: QuizQuestion[];
 }
-
 export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   view,
   setView,
@@ -164,7 +164,6 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           </Suspense>
         </WithGeminiErrorBoundary>
       )}
-
       {view === 'ddx_compare' && (
         <WithGeminiErrorBoundary viewName="ddx_compare" onRetry={() => setView('ddx_compare')}>
           <Suspense fallback={<Loader />}>
@@ -277,7 +276,6 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           </Suspense>
         </WithGeminiErrorBoundary>
       )}
-
       {view === 'fluid_electrolyte' && (
         <WithGeminiErrorBoundary
           viewName="fluid_electrolyte"
@@ -387,7 +385,6 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           </Suspense>
         </WithGeminiErrorBoundary>
       )}
-
       {view === 'polypharmacy_puzzle' && (
         <WithGeminiErrorBoundary
           viewName="polypharmacy_puzzle"
@@ -458,6 +455,14 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
         >
           <Suspense fallback={<Loader />}>
             <FullSitDownTestMode onExit={exit} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
+      {view === 'core_adaptive' && (
+        <WithGeminiErrorBoundary viewName="core_adaptive" onRetry={() => setView('core_adaptive')}>
+          <Suspense fallback={<Loader />}>
+            <CoreAdaptiveSession onExit={exit} {...sharedQuizProps} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

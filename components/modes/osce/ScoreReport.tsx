@@ -281,47 +281,103 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
   );
 };
 
-// Critical Actions List
-const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions }) => (
-  <div className="space-y-2">
-    {actions.map((action) => (
-      <div
-        key={action.id}
-        className={`flex items-center gap-3 p-2 rounded-lg ${
-          action.triggered ? 'bg-data-pass dark:bg-data-pass/20' : 'bg-data-fail dark:bg-data-fail/20'
-        }`}
-      >
-        {action.triggered ? (
-          <CheckCircle className="w-5 h-5 text-data-pass flex-shrink-0" />
-        ) : (
-          <XCircle className="w-5 h-5 text-data-fail flex-shrink-0" />
+// Critical Actions List — grouped by category with condition-specific context
+const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions }) => {
+  // Group by category
+  const grouped = actions.reduce<Record<string, CriticalAction[]>>((acc, action) => {
+    const cat = action.category || 'other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(action);
+    return acc;
+  }, {});
+
+  const categoryOrder: CriticalActionCategory[] = ['safety', 'diagnosis', 'procedure', 'communication'];
+  const categoryLabels: Record<string, string> = {
+    safety: 'Patient Safety',
+    diagnosis: 'Diagnostic Actions',
+    procedure: 'Procedures',
+    communication: 'Communication',
+    other: 'Other',
+  };
+  const categoryIcons: Record<string, React.ReactNode> = {
+    safety: <AlertTriangle className="w-4 h-4" />,
+    diagnosis: <Target className="w-4 h-4" />,
+    procedure: <CheckCircle className="w-4 h-4" />,
+    communication: <BookOpen className="w-4 h-4" />,
+    other: <CheckCircle className="w-4 h-4" />,
+  };
+
+  const sortedCategories = [...categoryOrder, 'other'].filter(cat => grouped[cat]?.length);
+
+  // Summary stats
+  const completed = actions.filter(a => a.triggered).length;
+  const safetyMissed = (grouped['safety'] || []).filter(a => !a.triggered);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary bar */}
+      <div className="flex items-center justify-between p-3 bg-data-neutral-bg rounded-lg border border-data-neutral">
+        <div className="text-sm text-data-neutral">
+          Completed <span className="font-bold text-white">{completed}/{actions.length}</span> critical actions
+        </div>
+        {safetyMissed.length > 0 && (
+          <div className="flex items-center gap-1 text-xs text-data-fail font-medium">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {safetyMissed.length} safety action{safetyMissed.length > 1 ? 's' : ''} missed
+          </div>
         )}
-        <span
-          className={`text-sm ${
-            action.triggered
-              ? 'text-data-pass dark:text-data-pass'
-              : 'text-data-fail dark:text-data-fail'
-          }`}
-        >
-          {action.description}
-        </span>
-        <span
-          className={`ml-auto text-xs px-2 py-0.5 rounded ${
-            action.category === 'safety'
-              ? 'bg-data-fail text-data-fail'
-              : action.category === 'diagnosis'
-                ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)]'
-                : action.category === 'communication'
-                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'
-                  : 'bg-data-neutral text-data-neutral'
-          }`}
-        >
-          {action.category}
-        </span>
       </div>
-    ))}
-  </div>
-);
+
+      {/* Grouped actions */}
+      {sortedCategories.map(cat => (
+        <div key={cat}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-data-neutral">{categoryIcons[cat]}</span>
+            <h5 className="text-sm font-semibold text-data-neutral uppercase tracking-wider">
+              {categoryLabels[cat] || cat}
+            </h5>
+            <span className="text-xs text-data-neutral ml-auto">
+              {grouped[cat].filter(a => a.triggered).length}/{grouped[cat].length}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {grouped[cat].map((action) => (
+              <div
+                key={action.id}
+                className={`flex items-center gap-3 p-2.5 rounded-lg ${
+                  action.triggered ? 'bg-data-pass/10 dark:bg-data-pass/20' : 'bg-data-fail/10 dark:bg-data-fail/20'
+                }`}
+              >
+                {action.triggered ? (
+                  <CheckCircle className="w-4.5 h-4.5 text-data-pass flex-shrink-0" />
+                ) : (
+                  <XCircle className="w-4.5 h-4.5 text-data-fail flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`text-sm ${
+                      action.triggered ? 'text-data-pass' : 'text-data-fail'
+                    }`}
+                  >
+                    {action.description}
+                  </span>
+                  {action.context && (
+                    <span className="block text-xs text-data-neutral mt-0.5">{action.context}</span>
+                  )}
+                </div>
+                {!action.triggered && action.missedPenalty > 0 && (
+                  <span className="text-xs text-data-fail font-medium whitespace-nowrap">
+                    -{action.missedPenalty} pts
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // Timeline View
 const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (

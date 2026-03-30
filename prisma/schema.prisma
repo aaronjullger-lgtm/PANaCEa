@@ -1893,17 +1893,20 @@ model NormalVitalSign {
 }
 
 model OsceResult {
-  id                      String                  @id
-  sessionId               String                  @unique
-  score                   Float
-  checklist               Json
-  redFlagsMissed          String[]
-  clinicalReasoningScore  Float
-  implicitRating          Float?
-  billingCodeSuggestion   String?
-  softSkillsReport        Json?
-  createdAt               DateTime                @default(now())
-  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id                        String                  @id
+  sessionId                 String                  @unique
+  score                     Float
+  checklist                 Json
+  redFlagsMissed            String[]
+  clinicalReasoningScore    Float
+  implicitRating            Float?
+  billingCodeSuggestion     String?
+  softSkillsReport          Json?
+  differentialScore         Float?
+  communicationScore        Float?
+  dangerousActionsDetected  Json?
+  createdAt                 DateTime                @default(now())
+  PatientEncounterSession   PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model PatientEncounterCase {
@@ -2551,6 +2554,8 @@ model ReviewLog {
   errorConfidence           Float?
   grade_continuous          Float?
   implicit_confidence       Float?
+  blueprintExamType         String?
+  blueprintStage            String?
   MedicalContent            MedicalContent? @relation(fields: [medicalContentId], references: [id])
   Question                  Question?       @relation(fields: [questionFkId], references: [id])
   User                      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2920,6 +2925,9 @@ model StudySession {
   sessionType            String?
   systemsTargeted        String[]          @default([])
   questionIds            String[]          @default([])
+  blueprintStage         String?
+  blueprintExamTypes     String[]          @default([])
+  blueprintLabel         String?
   thinkingTimeMs         Int?
   SessionAnalytics       SessionAnalytics?
   Reflection             Reflection?

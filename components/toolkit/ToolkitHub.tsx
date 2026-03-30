@@ -19,6 +19,8 @@ import {
   Lightbulb,
   FileText,
   FileImage,
+  ClipboardCheck,
+  BookMarked,
 } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
@@ -30,6 +32,8 @@ import { StudyGuideGenerator } from './StudyGuideGenerator';
 import { ClinicalMotionFlashcards } from './ClinicalMotionFlashcards';
 import { LectureConverter } from './LectureConverter';
 import { ABGInterpreter, EKGInterpreter } from './interpreters';
+import { ScoringSystemBrowser } from './calculators/scoring';
+import { QuickRefHub } from './quickref';
 
 // ============================================================================
 // Types & Interfaces
@@ -40,7 +44,7 @@ interface ToolkitHubProps {
   onClose: () => void;
 }
 
-type TabId = 'calculators' | 'generators' | 'interpreters' | 'imaging';
+type TabId = 'calculators' | 'generators' | 'interpreters' | 'imaging' | 'scoring' | 'quickref';
 
 /** Calculator card type (registry entries used in ToolkitHub grid) */
 type Calculator = (typeof REGISTRY_CALCULATORS)[number];
@@ -60,6 +64,8 @@ const NAV_TABS: NavTab[] = [
   { id: 'calculators', label: 'Calculators', icon: CalculatorIcon },
   { id: 'generators', label: 'Generators', icon: Lightbulb },
   { id: 'interpreters', label: 'Interpretation Assistants', icon: Activity },
+  { id: 'scoring', label: 'Scoring Systems', icon: ClipboardCheck },
+  { id: 'quickref', label: 'Quick Reference', icon: BookMarked },
 ];
 
 /** Single source of truth: use shared registry */
@@ -268,7 +274,7 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({
 // Main Component
 // ============================================================================
 
-const VALID_UTILITY_TAB_IDS: TabId[] = ['calculators', 'generators', 'interpreters'];
+const VALID_UTILITY_TAB_IDS: TabId[] = ['calculators', 'generators', 'interpreters', 'scoring', 'quickref'];
 
 const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) => {
   const [searchParams] = useSearchParams();
@@ -391,6 +397,14 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
     imaging: {
       title: 'Radiology Scroll',
       description: 'Classic imaging findings and diagnostic radiology atlas',
+    },
+    scoring: {
+      title: 'Scoring Systems',
+      description: 'All 56 clinical scoring calculators — data-driven from your database',
+    },
+    quickref: {
+      title: 'Quick Reference Cards',
+      description: 'Antibiotic guides, ACLS algorithms, lab values, and vital sign ranges',
     },
   };
 
@@ -777,6 +791,30 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* SCORING SYSTEMS TAB */}
+            {activeTab === 'scoring' && (
+              <motion.div
+                key="scoring"
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <ScoringSystemBrowser />
+              </motion.div>
+            )}
+
+            {/* QUICK REFERENCE TAB */}
+            {activeTab === 'quickref' && (
+              <motion.div
+                key="quickref"
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <QuickRefHub />
               </motion.div>
             )}
 

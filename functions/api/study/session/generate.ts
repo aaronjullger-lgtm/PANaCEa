@@ -32,6 +32,16 @@ const SessionGenerationSchema = z.object({
   size: z.number().int().min(1).max(300).default(20),
   systemFocus: z.string().optional(),
   initialDifficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  // Blueprint-driven constraints from CoreAdaptiveSession
+  blueprintWeights: z.record(z.string(), z.number()).optional(),
+  gatedSystems: z.array(z.string()).optional(),
+  boostSystems: z.array(z.string()).optional(),
+  suppressSystems: z.array(z.string()).optional(),
+  perSystemCaps: z.record(z.string(), z.number()).optional(),
+  // Blueprint metadata for session tracking
+  blueprintStage: z.string().optional(),
+  blueprintExamTypes: z.array(z.string()).optional(),
+  blueprintLabel: z.string().optional(),
 });
 
 export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, async (context) => {
@@ -39,7 +49,12 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
   const logger = createEndpointLogger('/api/study/session/generate');
 
   try {
-    const { mode, size, systemFocus, initialDifficulty } = validated;
+    const {
+      mode, size, systemFocus, initialDifficulty,
+      blueprintWeights, gatedSystems, boostSystems,
+      suppressSystems, perSystemCaps,
+      blueprintStage, blueprintExamTypes, blueprintLabel,
+    } = validated;
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -64,9 +79,15 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
             systemDistribution: {},
           };
         } else {
-          // Standard mode: Use the existing selector
+          // Standard mode: Use the existing selector with optional blueprint constraints
           const selector = new MainSessionQuestionSelector(prisma);
-          result = await selector.generateSession(auth.userId, size);
+          result = await selector.generateSession(auth.userId, size, {
+            blueprintWeights,
+            gatedSystems,
+            boostSystems,
+            suppressSystems,
+            perSystemCaps,
+          });
         }
 
         // Create StudySession record
@@ -90,6 +111,9 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
               )
             ),
             questionIds: result.questionIds,
+            blueprintStage: blueprintStage ?? null,
+            blueprintExamTypes: blueprintExamTypes ?? [],
+            blueprintLabel: blueprintLabel ?? null,
           },
         });
 

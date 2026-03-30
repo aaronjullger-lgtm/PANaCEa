@@ -58,7 +58,8 @@ export type View =
   | 'commuter_mode'
   | 'study_path_dashboard'
   | 'live_collaboration'
-  | 'cross_system_explorer';
+  | 'cross_system_explorer'
+  | 'core_adaptive';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {
@@ -90,6 +91,7 @@ export const DRILL_MODE_IDS = {
   DIAGNOSTIC_PUZZLE: 'diagnostic_puzzle' as TrainingModeId,
   COMMUTER: 'commuter_mode' as TrainingModeId,
   FULL_SIT_DOWN_TEST: 'full_sit_down_test' as TrainingModeId,
+  CORE_ADAPTIVE: 'core_adaptive' as TrainingModeId,
 } as const;
 
 /** Static animation variants for view transitions */

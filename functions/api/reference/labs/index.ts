@@ -24,6 +24,7 @@ const LabsQuerySchema = z.object({
     .object({
       category: z.string().optional(),
       query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
   body: z.object({}).optional(),
@@ -46,32 +47,33 @@ export const onRequestGet = authenticatedEndpoint(
       const url = new URL(request.url);
       const category = url.searchParams.get('category');
       const query = url.searchParams.get('query');
+      const highYield = url.searchParams.get('highYield');
 
       log.info('Fetching lab tests', {
         category: category || 'all',
         searchQuery: query || 'none',
+        highYield: highYield || 'false',
       });
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      let results;
-
+      // Unified where builder
+      const where: Record<string, unknown> = {};
+      if (category) where.category = category;
+      if (highYield === 'true') where.isHighYield = true;
       if (query) {
-        // Search mode
-        results = await prisma.labTest.findMany({
-          where: {
-            name: { contains: query, mode: 'insensitive' },
-          },
-          orderBy: { name: 'asc' },
-          take: 20,
-        });
-      } else {
-        // List mode with optional category filter
-        results = await prisma.labTest.findMany({
-          where: category ? { category } : undefined,
-          orderBy: { name: 'asc' },
-        });
+        where.OR = [
+          { name: { contains: query, mode: 'insensitive' } },
+          { typicalUse: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+        ];
       }
+
+      const results = await prisma.labTest.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        take: query ? 20 : undefined,
+      });
 
       log.info('Successfully fetched lab tests', { count: results.length });
 

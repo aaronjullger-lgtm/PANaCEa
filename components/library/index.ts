@@ -65,5 +65,25 @@ export {
   type PageDimensions,
 } from './SmartPDFViewer';
 
+// Generic Reference System
+export { default as GenericReferenceView } from './GenericReferenceView';
+export type { ReferenceViewConfig, FilterField } from './GenericReferenceView';
+export { default as ReferenceHub } from './ReferenceHub';
+export { default as HighYieldSummary } from './HighYieldSummary';
+export {
+  procedureConfig,
+  imagingConfig,
+  ecgConfig,
+  anatomyConfig,
+  specialTestConfig,
+  physiologyConfig,
+  findingsConfig,
+  guidelinesConfig,
+  historyConfig,
+  labTestConfig,
+  scoringSystemConfig,
+  allReferenceConfigs,
+} from './referenceConfigs';
+
 // Re-export types for convenience
 export type { MasteryLevel } from './MasteryBadge';

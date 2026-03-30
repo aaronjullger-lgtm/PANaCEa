@@ -107,3 +107,171 @@ export function getAIDifficultyPrompt(difficulty: OSCEConfiguration['aiDifficult
       return 'The patient is cooperative and provides clear, relevant answers to questions.';
   }
 }
+
+/**
+ * Get a random cultural competency scenario for injection into an OSCE encounter.
+ * Returns the scenario object or null if cultural competency is disabled.
+ */
+export function getRandomCulturalScenario(): (typeof CULTURAL_COMPETENCY_SCENARIOS)[number] | null {
+  if (CULTURAL_COMPETENCY_SCENARIOS.length === 0) return null;
+  const index = Math.floor(Math.random() * CULTURAL_COMPETENCY_SCENARIOS.length);
+  return CULTURAL_COMPETENCY_SCENARIOS[index];
+}
+
+/**
+ * Build a cultural competency prompt modifier for the AI patient simulator.
+ * This gets appended to the patient persona system prompt when cultural competency is enabled.
+ */
+export function getCulturalCompetencyPrompt(scenarioId?: string): string {
+  const scenario = scenarioId
+    ? CULTURAL_COMPETENCY_SCENARIOS.find(s => s.id === scenarioId)
+    : getRandomCulturalScenario();
+
+  if (!scenario) return '';
+
+  return `\n\nCULTURAL COMPETENCY LAYER: ${scenario.title}
+${scenario.description}
+The patient (or their family) has cultural beliefs that affect their care decisions. You should:
+- Express these beliefs naturally during the conversation when relevant topics arise
+- Do not volunteer the cultural concern immediately — let it emerge as the student asks appropriate questions
+- React positively to culturally sensitive approaches and negatively to dismissive or pressuring behavior
+- If the student acknowledges and respects the cultural perspective, become more cooperative
+Teaching context (do not reveal to student): ${scenario.teachingPoints.join('; ')}`;
+}
+
+/**
+ * Build a resource-limited prompt modifier for the AI patient simulator.
+ * Appended to system prompt when resource-limited mode is enabled.
+ */
+export function getResourceLimitedPrompt(): string {
+  return `\n\nRESOURCE-LIMITED SETTING: ${RESOURCE_LIMITED_SETTINGS.scenario}
+${RESOURCE_LIMITED_SETTINGS.description}
+The following tests are NOT available: ${RESOURCE_LIMITED_SETTINGS.disabledTests.join(', ')}.
+Available diagnostics: ${RESOURCE_LIMITED_SETTINGS.availableTests.join(', ')}.
+If the student orders an unavailable test, respond: "I'm sorry, that test is not available at this facility. What alternative would you like to consider?"`;
+}
+
+/**
+ * OSCE Quick-Start Presets
+ * Predefined configurations for focused organ-system practice sessions
+ */
+export interface OSCEQuickStartPreset {
+  id: string;
+  label: string;
+  description: string;
+  icon: string; // lucide icon name
+  targetSystems: string[]; // organ systems to filter cases by
+  difficulty: 'cooperative' | 'difficult' | 'very_difficult';
+  enableCulturalCompetency: boolean;
+  enableResourceLimited: boolean;
+}
+
+export const OSCE_QUICK_START_PRESETS: OSCEQuickStartPreset[] = [
+  {
+    id: 'cardio_basics',
+    label: 'Cardiovascular Essentials',
+    description: 'Master ACS, CHF, and DVT/PE management with supportive patients.',
+    icon: 'Heart',
+    targetSystems: ['cardiovascular'],
+    difficulty: 'cooperative',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'neuro_emergencies',
+    label: 'Neuro Emergencies',
+    description: 'Handle acute stroke and seizure presentations with increased complexity.',
+    icon: 'Brain',
+    targetSystems: ['neurological'],
+    difficulty: 'difficult',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'endo_crisis',
+    label: 'Endocrine Crises',
+    description: 'Manage DKA, HHS, and thyroid storm in cooperative patient encounters.',
+    icon: 'Zap',
+    targetSystems: ['endocrine'],
+    difficulty: 'cooperative',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'infectious_workup',
+    label: 'Infectious Disease Workup',
+    description: 'Work through sepsis, pneumonia, and UTI diagnostics with clear histories.',
+    icon: 'Bug',
+    targetSystems: ['infectious_disease'],
+    difficulty: 'cooperative',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'surgical_abdomen',
+    label: 'Surgical Abdomen',
+    description: 'Evaluate acute appendicitis, pancreatitis, and other surgical emergencies.',
+    icon: 'Knife',
+    targetSystems: ['gastrointestinal'],
+    difficulty: 'difficult',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'rural_clinic',
+    label: 'Rural Clinic Challenge',
+    description: 'Mixed complex cases with limited diagnostic resources and delayed referrals.',
+    icon: 'MapPin',
+    targetSystems: [
+      'cardiovascular',
+      'neurological',
+      'endocrine',
+      'infectious_disease',
+      'gastrointestinal',
+    ],
+    difficulty: 'difficult',
+    enableCulturalCompetency: false,
+    enableResourceLimited: true,
+  },
+  {
+    id: 'cultural_sensitivity',
+    label: 'Cultural Sensitivity Practice',
+    description: 'Navigate cultural beliefs, language barriers, and health system mistrust.',
+    icon: 'Users',
+    targetSystems: [
+      'cardiovascular',
+      'neurological',
+      'endocrine',
+      'infectious_disease',
+      'gastrointestinal',
+    ],
+    difficulty: 'cooperative',
+    enableCulturalCompetency: true,
+    enableResourceLimited: false,
+  },
+  {
+    id: 'pance_rapid_fire',
+    label: 'PANCE Rapid Fire',
+    description: 'High-difficulty multi-system cases simulating board exam intensity.',
+    icon: 'Zap',
+    targetSystems: [
+      'cardiovascular',
+      'neurological',
+      'endocrine',
+      'infectious_disease',
+      'gastrointestinal',
+    ],
+    difficulty: 'difficult',
+    enableCulturalCompetency: false,
+    enableResourceLimited: false,
+  },
+];
+
+/**
+ * Retrieve a quick-start preset by ID
+ * @param id The preset ID
+ * @returns The preset object or undefined if not found
+ */
+export function getPresetById(id: string): OSCEQuickStartPreset | undefined {
+  return OSCE_QUICK_START_PRESETS.find((preset) => preset.id === id);
+}

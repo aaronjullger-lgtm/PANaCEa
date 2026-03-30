@@ -234,6 +234,64 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       });
     }
 
+    // Sync to UserProgress (condition-level source of truth for FSRS)
+    if (conditionId && reviewState) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { clerkId: auth.userId },
+          select: { id: true },
+        });
+        if (dbUser) {
+          await prisma.userProgress.upsert({
+            where: { userId_conditionId: { userId: dbUser.id, conditionId } },
+            create: {
+              id: `${dbUser.id}_${conditionId}`,
+              userId: dbUser.id,
+              conditionId,
+              fsrsCard: {
+                stability: reviewState.stability,
+                difficulty: reviewState.difficulty,
+                state: reviewState.state,
+                elapsed_days: 0,
+                scheduled_days: reviewState.scheduled_days ?? 0,
+                reps: reviewState.reps,
+                lapses: reviewState.lapses,
+                last_review: now.toISOString(),
+              },
+              totalAttempts: 1,
+              correctCount: isCorrect ? 1 : 0,
+              accuracy: isCorrect ? 1.0 : 0.0,
+              lastReviewAt: now,
+              nextReviewAt: nextReviewDate,
+              updatedAt: now,
+            },
+            update: {
+              fsrsCard: {
+                stability: reviewState.stability,
+                difficulty: reviewState.difficulty,
+                state: reviewState.state,
+                elapsed_days: 0,
+                scheduled_days: reviewState.scheduled_days ?? 0,
+                reps: reviewState.reps,
+                lapses: reviewState.lapses,
+                last_review: now.toISOString(),
+              },
+              totalAttempts: { increment: 1 },
+              correctCount: isCorrect ? { increment: 1 } : undefined,
+              lastReviewAt: now,
+              nextReviewAt: nextReviewDate,
+              updatedAt: now,
+            },
+          });
+        }
+      } catch (e) {
+        // Non-fatal: UserTopicProgress is already updated
+        logger.warn('UserProgress sync from srs/submit failed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
     // Update SRSItem (Legacy/Specific Question tracking)
     if (srsItemId) {
       const item = await prisma.sRSItem.findUnique({ where: { id: srsItemId } });

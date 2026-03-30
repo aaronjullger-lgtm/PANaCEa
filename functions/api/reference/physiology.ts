@@ -24,6 +24,9 @@ const GetPhysiologySchema = z.object({
   query: z
     .object({
       category: z.string().optional(),
+      system: z.string().optional(),
+      query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -50,10 +53,25 @@ export const onRequestGet = authenticatedEndpoint(
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       const category = validated?.query?.category;
+      const system = validated?.query?.system;
+      const searchQuery = validated?.query?.query;
+      const highYield = validated?.query?.highYield === 'true';
+
+      const where: any = {};
+      if (category) where.category = category;
+      if (system) where.system = system;
+      if (highYield) where.isHighYield = true;
+      if (searchQuery) {
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { mechanism: { contains: searchQuery, mode: 'insensitive' } },
+        ];
+      }
 
       const results = await prisma.physiologyConcept.findMany({
-        where: category ? { category } : undefined,
-        orderBy: { name: 'asc' },
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
       });
 
       log.info('Physiology concepts fetched successfully', { count: results.length });

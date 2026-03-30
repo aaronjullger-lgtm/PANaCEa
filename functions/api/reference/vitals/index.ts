@@ -22,6 +22,7 @@ const VitalsQuerySchema = z.object({
   query: z
     .object({
       ageGroup: z.string().max(50).optional(),
+      query: z.string().max(200).optional(),
     })
     .optional(),
 });
@@ -34,19 +35,35 @@ export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   VitalsQuerySchema,
-  async ({ env, auth, validated }) => {
+  async ({ env, auth, validated, request }) => {
     const log = createEndpointLogger('/api/reference/vitals', auth.userId);
     let prisma: EdgePrismaClient | null = null;
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      const ageGroup = validated?.query?.ageGroup;
+      const url = new URL(request.url);
+      const ageGroup = url.searchParams.get('ageGroup') || validated?.query?.ageGroup;
+      const query = url.searchParams.get('query');
 
-      log.info('Fetching vital sign ranges', { ageGroup: ageGroup || 'all' });
+      log.info('Fetching vital sign ranges', {
+        ageGroup: ageGroup || 'all',
+        searchQuery: query || 'none',
+      });
+
+      // Unified where builder
+      const where: Record<string, unknown> = {};
+      if (ageGroup) where.category = ageGroup;
+      if (query) {
+        where.OR = [
+          { vitalSign: { contains: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+        ];
+      }
 
       const results = await prisma.vitalSignRange.findMany({
-        where: ageGroup ? { category: ageGroup } : undefined,
+        where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: { vitalSign: 'asc' },
       });
 

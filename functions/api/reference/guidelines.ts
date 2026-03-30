@@ -23,7 +23,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 const GetGuidelinesSchema = z.object({
   query: z
     .object({
-      category: z.string().optional(),
+      query: z.string().max(200).optional(),
     })
     .optional(),
 });
@@ -49,10 +49,19 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-      const category = validated?.query?.category;
+      const searchQuery = validated?.query?.query;
+
+      const where: any = {};
+      if (searchQuery) {
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { clinicalContext: { contains: searchQuery, mode: 'insensitive' } },
+        ];
+      }
 
       const results = await prisma.clinicalGuideline.findMany({
-        where: category ? { name: { contains: category, mode: 'insensitive' } } : undefined,
+        where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: { name: 'asc' },
       });
 

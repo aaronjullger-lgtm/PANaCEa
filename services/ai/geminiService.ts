@@ -1581,7 +1581,8 @@ export async function chatWithPatientSimulator(
   caseData: PatientEncounterCase,
   chatHistory: ChatMessage[],
   userMessage: string,
-  persona?: PatientPersona | null
+  persona?: PatientPersona | null,
+  scenarioModifiers?: string
 ): Promise<string> {
   const personaHeader = persona
     ? `
@@ -1638,7 +1639,7 @@ INSTRUCTIONS:
 6. LANGUAGE: If the user speaks Spanish, respond in Spanish.
 7. RED HERRINGS: Occasionally include one irrelevant or tangential detail when answering (e.g. an unrelated past event, complaint, or aside) to simulate a real patient who goes off-topic. Do not overdo it; keep it consistent with the persona and the flow of the encounter.
 8. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
-
+${scenarioModifiers || ''}
 Current conversation history is provided below. Respond to the last user message.
 `;
 

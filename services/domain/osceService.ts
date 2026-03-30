@@ -104,11 +104,25 @@ export async function saveOSCEChat(
 /**
  * Complete session
  */
+export interface OSCETelemetryPayload {
+  totalTimeMs?: number;
+  clinicalConfidenceIndex?: number;
+  redFlagsMissed?: number;
+  unnecessaryOrders?: number;
+  implicitRating?: { rating: number; confidence: number; components?: Record<string, number> };
+  efficiencyScore?: number;
+  speechMetrics?: Record<string, unknown>;
+  diagnosticEfficiency?: Record<string, unknown>;
+  rapportMetrics?: Record<string, unknown>;
+  actionCount?: number;
+}
+
 export async function completeOSCESession(
   sessionId: string,
   diagnosis: string,
   treatmentPlan: string,
-  token?: string | null
+  token?: string | null,
+  osceTelemetry?: OSCETelemetryPayload
 ): Promise<boolean> {
   try {
     const response = await fetch('/api/osce/complete', {
@@ -117,7 +131,14 @@ export async function completeOSCESession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ body: { sessionId, diagnosis, treatmentPlan } }),
+      body: JSON.stringify({
+        body: {
+          sessionId,
+          diagnosis,
+          treatmentPlan,
+          ...(osceTelemetry ? { osceTelemetry } : {}),
+        },
+      }),
     });
 
     return response.ok;
@@ -144,6 +165,9 @@ export interface OsceGradeResult {
   billingCodeSuggestion: string;
   softSkillsReport?: SoftSkillsReport | null;
   conceptGapCreated?: boolean;
+  communicationScore?: number;
+  differentialScore?: number;
+  dangerousActionsDetected?: Array<{ description: string; penalty: number }>;
 }
 
 /**
@@ -152,16 +176,21 @@ export interface OsceGradeResult {
  */
 export async function gradeOSCESession(
   sessionId: string,
-  token?: string | null
+  token?: string | null,
+  differentials?: string[]
 ): Promise<OsceGradeResult | null> {
   try {
+    const bodyPayload: Record<string, unknown> = { sessionId };
+    if (differentials && differentials.length > 0) {
+      bodyPayload.differentials = differentials;
+    }
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.OSCE_ANALYSIS_GRADE), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ body: { sessionId } }),
+      body: JSON.stringify({ body: bodyPayload }),
     });
 
     if (!response.ok) return null;

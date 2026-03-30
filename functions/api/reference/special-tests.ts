@@ -24,6 +24,9 @@ const GetSpecialTestsSchema = z.object({
   query: z
     .object({
       system: z.string().optional(),
+      region: z.string().optional(),
+      query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -50,11 +53,26 @@ export const onRequestGet = authenticatedEndpoint(
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       const system = validated?.query?.system;
+      const region = validated?.query?.region;
+      const searchQuery = validated?.query?.query;
+      const highYield = validated?.query?.highYield;
+
+      const where: any = {};
+      if (system) where.system = system;
+      if (region) where.region = region;
+      if (highYield === 'true') where.isHighYield = true;
+      if (searchQuery) {
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { region: { contains: searchQuery, mode: 'insensitive' } },
+        ];
+      }
 
       const results = await prisma.specialTest.findMany({
-        where: system ? { system } : undefined,
+        where: Object.keys(where).length > 0 ? where : undefined,
         include: { Condition: { select: { id: true, name: true } } },
-        orderBy: { name: 'asc' },
+        orderBy: [{ name: 'asc' }],
       });
 
       log.info('Special tests fetched successfully', { count: results.length });

@@ -30,6 +30,7 @@ const GEMINI_GRADE_MODEL = 'gemini-2.5-pro';
 const GradeBodySchema = z.object({
   body: z.object({
     sessionId: IDSchema,
+    differentials: z.array(z.string()).max(10).optional(),
   }),
 });
 
@@ -46,6 +47,8 @@ type GradePayload = {
   redFlagsMissed: string[];
   clinicalReasoningScore: number;
   billingCodeSuggestion: string;
+  communicationScore?: number;
+  differentialScore?: number;
 };
 
 type SoftSkillsReport = {
@@ -76,6 +79,56 @@ const GradePayloadSchema = z.object({
   billingCodeSuggestion: z.string().default('N/A'),
 });
 
+
+// =============================================================================
+// DANGEROUS ACTION DETECTION (inline for Edge compatibility)
+// =============================================================================
+
+type DetectedDangerousAction = { description: string; penalty: number };
+
+const DANGEROUS_ACTIONS_MAP: Record<string, Array<{ keywords: string[]; description: string; penalty: number }>> = {
+  'acute coronary syndrome': [
+    { keywords: ['beta-blocker', 'metoprolol', 'atenolol', 'decompensated'], description: 'Beta-blocker in decompensated heart failure', penalty: 15 },
+    { keywords: ['missed', 'aspirin', 'no aspirin', 'without aspirin'], description: 'Missed aspirin administration', penalty: 15 },
+  ],
+  'stroke': [
+    { keywords: ['tpa', 'alteplase', 'thrombolytic', 'late', '4.5 hour', 'window'], description: 'tPA considered outside treatment window', penalty: 20 },
+    { keywords: ['no glucose', 'skip glucose', 'without glucose'], description: 'Failed to check glucose before treatment', penalty: 15 },
+  ],
+  'diabetic ketoacidosis': [
+    { keywords: ['insulin', 'before potassium', 'without potassium', 'hypokalemia'], description: 'Insulin before verifying potassium level', penalty: 20 },
+    { keywords: ['bicarbonate', 'bicarb', 'nahco3'], description: 'Inappropriate bicarbonate in DKA', penalty: 10 },
+  ],
+  'sepsis': [
+    { keywords: ['delay', 'antibiotic', 'wait', 'hold antibiotics'], description: 'Delayed antibiotics in sepsis', penalty: 15 },
+    { keywords: ['no cultures', 'skip cultures', 'without cultures'], description: 'Antibiotics without obtaining cultures first', penalty: 10 },
+  ],
+  'asthma': [
+    { keywords: ['sedative', 'benzodiazepine', 'morphine'], description: 'Sedative in acute asthma exacerbation', penalty: 15 },
+    { keywords: ['beta-blocker', 'propranolol', 'metoprolol'], description: 'Beta-blocker in acute asthma', penalty: 15 },
+  ],
+  'pulmonary embolism': [
+    { keywords: ['no anticoag', 'skip heparin', 'without anticoag'], description: 'Missed anticoagulation in PE', penalty: 20 },
+  ],
+};
+
+function detectDangerousActions(diagnosis: string, transcript: unknown): DetectedDangerousAction[] {
+  const diagLower = diagnosis.toLowerCase();
+  const transcriptStr = typeof transcript === 'string' ? transcript : JSON.stringify(transcript ?? '');
+  const tLower = transcriptStr.toLowerCase();
+
+  const detected: DetectedDangerousAction[] = [];
+  for (const [condition, actions] of Object.entries(DANGEROUS_ACTIONS_MAP)) {
+    if (!diagLower.includes(condition) && !condition.split(' ').every(w => diagLower.includes(w))) continue;
+    for (const action of actions) {
+      const matches = action.keywords.filter(kw => tLower.includes(kw));
+      if (matches.length >= 2 || (matches.length >= 1 && action.keywords.length <= 2)) {
+        detected.push({ description: action.description, penalty: action.penalty });
+      }
+    }
+  }
+  return detected;
+}
 
 function validateGradeChecklist(
   items: unknown[],
@@ -110,13 +163,19 @@ function parseRubricChecklist(checklist: unknown): RubricItem[] {
 
 function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): string {
   const text = `${chiefComplaint} ${correctDiagnosis}`.toLowerCase();
-  if (/\b(heart|cardiac|chest pain|acs|mi|coronary)\b/.test(text)) return 'cardiovascular';
-  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe)\b/.test(text)) return 'pulmonary';
-  if (/\b(gi|abdominal|hepatic|pancreat)\b/.test(text)) return 'gastrointestinal';
-  if (/\b(neuro|stroke|seizure|headache)\b/.test(text)) return 'neurological';
-  if (/\b(renal|kidney|aki|ckd)\b/.test(text)) return 'nephrology';
-  if (/\b(infection|sepsis|uti|pneumonia)\b/.test(text)) return 'infectious_disease';
-  if (/\b(psych|depression|anxiety|suicid)\b/.test(text)) return 'psychiatry';
+  if (/\b(heart|cardiac|chest pain|acs|mi|coronary|chf|heart failure|decompensated)\b/.test(text)) return 'cardiovascular';
+  if (/\b(dvt|deep vein|thrombosis|embol)\b/.test(text)) return 'cardiovascular';
+  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe|wheez)\b/.test(text)) return 'pulmonary';
+  if (/\b(gi|abdominal|hepatic|pancreat|appendic)\b/.test(text)) return 'gastrointestinal';
+  if (/\b(neuro|stroke|seizure|headache|weakness|slurred|aphasia|tia)\b/.test(text)) return 'neurological';
+  if (/\b(renal|kidney|aki|ckd|urosepsis)\b/.test(text)) return 'nephrology';
+  if (/\b(infection|sepsis|uti|pneumonia|cellulitis|meningit)\b/.test(text)) return 'infectious_disease';
+  if (/\b(diabetes|diabetic|dka|ketoacidosis|hyperglycemi)\b/.test(text)) return 'endocrine';
+  if (/\b(ectopic|pregnan|obstetric|gynecolog|ovarian)\b/.test(text)) return 'reproductive';
+  if (/\b(psych|depression|anxiety|suicid|bipolar|schizo)\b/.test(text)) return 'psychiatry';
+  if (/\b(anemia|leukemia|lymphoma|coagul|thrombocytop)\b/.test(text)) return 'hematology';
+  if (/\b(fracture|orthoped|musculoskel|joint|back pain)\b/.test(text)) return 'musculoskeletal';
+  if (/\b(dermat|rash|skin|wound|burn)\b/.test(text)) return 'dermatology';
   return 'general';
 }
 
@@ -205,6 +264,10 @@ function parseGradePayload(
   const rawRedFlags = Array.isArray((parsed as any).redFlagsMissed) ? (parsed as any).redFlagsMissed : [];
   const redFlagsMissed = rawRedFlags.filter((x): x is string => typeof x === 'string');
   
+  // Extract optional new scoring fields
+  const rawCommScore = Number((parsed as any).communicationScore);
+  const rawDiffScore = Number((parsed as any).differentialScore);
+
   const cleaned = {
     score: Number((parsed as any).score) || 0,
     checklist,
@@ -214,10 +277,19 @@ function parseGradePayload(
       ? (parsed as any).billingCodeSuggestion
       : 'N/A',
   };
-  
+
   // Validate with Zod schema to enforce ranges and types
   try {
-    return GradePayloadSchema.parse(cleaned);
+    const validated = GradePayloadSchema.parse(cleaned);
+    // Attach optional scores after Zod validation (not in schema since they're optional)
+    const result: GradePayload = { ...validated };
+    if (!isNaN(rawCommScore) && rawCommScore >= 0 && rawCommScore <= 100) {
+      result.communicationScore = Math.round(rawCommScore);
+    }
+    if (!isNaN(rawDiffScore) && rawDiffScore >= 0 && rawDiffScore <= 100) {
+      result.differentialScore = Math.round(rawDiffScore);
+    }
+    return result;
   } catch (error) {
     // If validation fails, log and rethrow (caller will handle)
     if (log) {
@@ -318,10 +390,11 @@ async function persistGradeAndConceptGap(
     User?: { id: string } | null;
     PatientEncounterCase: { chiefComplaint: string; correctDiagnosis: string };
   },
-  softSkillsReport: SoftSkillsReport | null
+  softSkillsReport: SoftSkillsReport | null,
+  dangerousActions?: DetectedDangerousAction[]
 ): Promise<{ resultId: string; conceptGapCreated: boolean }> {
   const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
-  const data = {
+  const data: Record<string, unknown> = {
     score: payload.score,
     checklist: payload.checklist as unknown as object,
     redFlagsMissed: payload.redFlagsMissed,
@@ -329,6 +402,16 @@ async function persistGradeAndConceptGap(
     billingCodeSuggestion: payload.billingCodeSuggestion || null,
     softSkillsReport: softSkillsReport ? (softSkillsReport as unknown as object) : undefined,
   };
+  // Persist new optional fields
+  if (typeof payload.differentialScore === 'number') {
+    data.differentialScore = payload.differentialScore;
+  }
+  if (typeof payload.communicationScore === 'number') {
+    data.communicationScore = payload.communicationScore;
+  }
+  if (dangerousActions && dangerousActions.length > 0) {
+    data.dangerousActionsDetected = dangerousActions as unknown as object;
+  }
   if (existingResult) {
     await prisma.osceResult.update({ where: { sessionId }, data });
   } else {
@@ -403,6 +486,20 @@ export const onRequestPost = authenticatedEndpoint(GradeBodySchema, async (conte
   }
 
   const { session, caseRecord, checklistText, transcript, caseLabel } = resolved;
+
+  // Build telemetry context if available (from useOSCEMetrics via complete endpoint)
+  const telemetry = (session as { osceTelemetry?: Record<string, unknown> }).osceTelemetry;
+  const telemetryContext = telemetry
+    ? `\n\nBehavioral Telemetry (use to inform your assessment):
+- Total encounter time: ${telemetry.totalTimeMs ? Math.round(Number(telemetry.totalTimeMs) / 1000) + 's' : 'unknown'}
+- Clinical confidence index: ${telemetry.clinicalConfidenceIndex ?? 'N/A'} (1.0-4.0 scale)
+- Red flags missed by tracker: ${telemetry.redFlagsMissed ?? 'N/A'}
+- Unnecessary orders placed: ${telemetry.unnecessaryOrders ?? 'N/A'}
+- Efficiency score: ${telemetry.efficiencyScore ?? 'N/A'}
+- Total clinical actions: ${telemetry.actionCount ?? 'N/A'}
+Note: Factor efficiency and clinical decision-making speed into your overall assessment.`
+    : '';
+
   const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
 
 Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall score):
@@ -411,8 +508,30 @@ Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall sc
 - Differential Diagnosis (18%)
 - Clinical Intervention (16%)
 
+Also consider: time management, clinical efficiency, and decision-making quality when behavioral telemetry is available.
+
+Additionally, evaluate the student's communication quality:
+- Did they use open-ended questions before closed-ended questions?
+- Did they show empathy (acknowledging patient emotions, concerns)?
+- Did they explain their clinical reasoning to the patient?
+- Did they ask about the patient's perspective and concerns?
+- Did they introduce themselves and explain their role?
+Rate communication quality as "communicationScore" (0-100).
+
+If the student submitted differential diagnoses, evaluate them:
+- Are the key differentials for this presentation included?
+- Is the correct diagnosis in the list?
+- Are there any dangerous "cannot-miss" diagnoses missing?
+Rate differential quality as "differentialScore" (0-100). Omit if no differentials were provided.
+
 Respond with ONLY a single JSON object (no markdown, no code fence), in this exact shape:
-{"score": number 0-100, "checklist": [{"item": "exact rubric item text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "redFlagsMissed": ["list of red flag items the student missed"], "clinicalReasoningScore": number 0-100, "billingCodeSuggestion": "ICD-10 code or N/A"}`;
+{"score": number 0-100, "checklist": [{"item": "exact rubric item text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "redFlagsMissed": ["list of red flag items the student missed"], "clinicalReasoningScore": number 0-100, "billingCodeSuggestion": "ICD-10 code or N/A", "communicationScore": number 0-100, "differentialScore": number 0-100 (only if differentials provided)}`;
+
+  // Build differentials section if provided
+  const differentials = validated.body.differentials;
+  const differentialsSection = differentials && differentials.length > 0
+    ? `\n\nStudent's Differential Diagnoses:\n${differentials.map(d => `- ${d}`).join('\n')}`
+    : '';
 
   const userPrompt = `Case: ${caseLabel}
 
@@ -420,7 +539,7 @@ Clinical Checklist:
 ${checklistText}
 
 Transcript (Speaker A = Student, Speaker B = Simulated Patient):
-${JSON.stringify(transcript)}
+${JSON.stringify(transcript)}${telemetryContext}${differentialsSection}
 
 Output your grading as a single JSON object only.`;
 
@@ -468,6 +587,19 @@ Output your grading as a single JSON object only.`;
       log.warn('Soft skills analysis skipped or failed', { sessionId });
     }
 
+    // Dangerous action detection: check transcript for condition-specific contraindications
+    const dangerousActions = detectDangerousActions(caseRecord.correctDiagnosis, transcript);
+    if (dangerousActions.length > 0) {
+      const totalPenalty = dangerousActions.reduce((sum, a) => sum + a.penalty, 0);
+      payload.score = Math.max(0, payload.score - totalPenalty);
+      log.info('Dangerous actions detected', {
+        sessionId,
+        count: dangerousActions.length,
+        totalPenalty,
+        actions: dangerousActions.map(a => a.description),
+      });
+    }
+
     const sessionForPersist = {
       User: session.User,
       PatientEncounterCase: {
@@ -480,7 +612,8 @@ Output your grading as a single JSON object only.`;
       sessionId,
       payload,
       sessionForPersist,
-      softSkillsReport
+      softSkillsReport,
+      dangerousActions
     );
     if (conceptGapCreated) {
       log.info('ConceptGap created for Tutor', {
@@ -512,6 +645,9 @@ Output your grading as a single JSON object only.`;
         billingCodeSuggestion: payload.billingCodeSuggestion,
         softSkillsReport: softSkillsReport ?? undefined,
         conceptGapCreated,
+        ...(payload.communicationScore != null ? { communicationScore: payload.communicationScore } : {}),
+        ...(payload.differentialScore != null ? { differentialScore: payload.differentialScore } : {}),
+        ...(dangerousActions.length > 0 ? { dangerousActionsDetected: dangerousActions } : {}),
       },
     };
   } catch (err) {

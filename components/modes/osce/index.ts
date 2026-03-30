@@ -9,3 +9,5 @@ export { RapportMeter, RapportChangeNotification, RapportIndicator } from './Rap
 export { OSCELiveSession } from './OSCELiveSession';
 export { OSCEResultsView } from './OSCEResultsView';
 export type { OSCEResultsViewProps, OSCEScore } from './OSCEResultsView';
+export { OSCEHistoryPanel } from './OSCEHistoryPanel';
+export { EncounterTimer } from './EncounterTimer';

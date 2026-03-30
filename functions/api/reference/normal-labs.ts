@@ -19,9 +19,13 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 const NormalLabsQuerySchema = z.object({
   category: z.string().max(50).optional(),
   limit: z.string().regex(/^\d+$/).optional(),
+  query: z.string().max(200).optional(),
+  highYield: z.string().optional(),
 }).transform((v) => ({
   category: v.category ?? undefined,
   limit: v.limit ? Math.min(500, Math.max(1, Number.parseInt(v.limit, 10))) : 200,
+  query: v.query ?? undefined,
+  highYield: v.highYield ?? undefined,
 }));
 
 export const onRequestOptions = withCors();
@@ -36,9 +40,20 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+      const where: any = {};
+      if (validated.category) where.category = validated.category;
+      if (validated.highYield === 'true') where.isHighYield = true;
+      if (validated.query) {
+        where.OR = [
+          { labTestName: { contains: validated.query, mode: 'insensitive' } },
+          { category: { contains: validated.query, mode: 'insensitive' } },
+          { clinicalNotes: { contains: validated.query, mode: 'insensitive' } },
+        ];
+      }
+
       const results = await prisma.normalLabValue.findMany({
-        where: validated.category ? { category: validated.category } : undefined,
-        orderBy: [{ category: 'asc' }, { labTestName: 'asc' }, { sex: 'asc' }, { ageGroup: 'asc' }],
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { category: 'asc' }, { labTestName: 'asc' }, { sex: 'asc' }, { ageGroup: 'asc' }],
         take: validated.limit,
         select: {
           id: true,
@@ -64,7 +79,7 @@ export const onRequestGet = authenticatedEndpoint(
       return {
         data: {
           success: true,
-          labs: results,
+          data: results,
         },
       };
     } catch (error) {

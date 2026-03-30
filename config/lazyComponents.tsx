@@ -89,6 +89,7 @@ export const OnboardingYourPlan = lazy(() =>
   }))
 );
 export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
+export const CoreAdaptiveSession = lazy(() => import('../components/session/CoreAdaptiveSession'));
 export const StudyGroupDashboard = lazy(() => import('../components/social/StudyGroupDashboard'));
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
 export const GapAnalysisDashboard = lazy(() =>

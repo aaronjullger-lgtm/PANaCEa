@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, DURATION_CAP_MS } from '../implicit-metrics';
+import { deriveContinuousRating } from '../implicit-metrics';
 import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
@@ -62,7 +62,6 @@ interface OptionPoolItem {
   conditionName?: string;
   id?: string;
 }
-
 export function findSelectedOption(
   pool: Array<OptionPoolItem> | string[] | undefined,
   selectedAnswer: string
@@ -124,7 +123,6 @@ export function resolveCorrectAnswer(qData: QuestionData): string | null {
 
   return correctAnswer;
 }
-
 /** Input validated by API route */
 export interface SubmitDrillReviewInput {
   questionId: string;
@@ -135,8 +133,8 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
-  sessionType?: 'main' | 'drill' | 'cram' | 'rapid_recall';
+  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'cram' | 'rapid_recall';
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -185,7 +183,6 @@ export interface DrillReviewLogger {
   info?(msg: string, data?: Record<string, unknown>): void;
   warn?(msg: string, data?: Record<string, unknown>): void;
 }
-
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
@@ -265,7 +262,6 @@ export async function submitDrillReview(
   const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
   const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
   const hoverOscillationCount = (telemetry?.hover_oscillations as number | undefined) ?? 0;
-
   // When timeToFirstClick is missing, substitute a neutral value (parTimeMs * 0.85)
   // rather than totalDwellTime. Total dwell includes rationale-reading time and
   // inflates the latency ratio by 2-5x, systematically downgrading ratings for
@@ -331,7 +327,6 @@ export async function submitDrillReview(
   // Hard and Easy ratings are deprecated; mapping remains for historical data.
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
-
   updateReviewOutcome(
     userId,
     questionId,
@@ -340,19 +335,19 @@ export async function submitDrillReview(
       timeToAnswer: numericTime,
       baselineTime: parTimeMs,
     },
-    prisma
+    prisma as any
   );
 
   try {
-    await applyAttemptToUserStatistics(prisma, userId, {
-      system: question.system || undefined,
+    await applyAttemptToUserStatistics(prisma as any, userId, {
+      system: question.system || (qData as any).system || undefined,
       isCorrect,
       timeSpentMs: numericTime,
       selectedCondition: selectedMeta?.conditionId ?? selectedMeta?.label ?? null,
       correctCondition: question.conditionId ?? null,
       timestamp: new Date(),
     });
-    await updateTimingAggregates(prisma, userId, { refreshPeakHours: true });
+    await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
   } catch (statsError) {
     logger?.warn?.('Failed to update user statistics after review', {
       error: statsError instanceof Error ? statsError.message : String(statsError),
@@ -360,10 +355,6 @@ export async function submitDrillReview(
   }
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
-  // Flag reviews with excessive duration before capping
-  const durationExceedsCap = effectiveDurationMs > DURATION_CAP_MS;
-  // Cap effective duration for FSRS calculation (but keep raw for analytics)
-  const cappedDurationMs = Math.min(effectiveDurationMs, DURATION_CAP_MS);
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -399,21 +390,19 @@ export async function submitDrillReview(
           isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
           selectedAnswer: normalizedSelectedAnswer,
           wasCorrect: isCorrect,
-          durationMs: effectiveDurationMs, // Keep raw duration for analytics/history
+          durationMs: effectiveDurationMs,
           implicitConfidence,
           telemetryJson: telemetry
             ? {
                 ...telemetry,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: cappedDurationMs / parTimeMs, // Use capped duration for ratio
+                  latency_ratio: effectiveDurationMs / parTimeMs,
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
                   circadian_phase: circadianContext.circadianPhase,
                   is_rapid_guess: isRapidGuess,
-                  raw_duration_ms: effectiveDurationMs, // Store raw for debugging
-                  duration_capped: durationExceedsCap,
                 },
               }
             : {
@@ -429,14 +418,12 @@ export async function submitDrillReview(
                 hint_view_duration_ms: null,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: Math.min(numericTime, DURATION_CAP_MS) / parTimeMs, // Use capped duration
+                  latency_ratio: numericTime / parTimeMs,
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
                   circadian_phase: circadianContext.circadianPhase,
                   is_rapid_guess: isRapidGuess,
-                  raw_duration_ms: numericTime, // Store raw for debugging
-                  duration_capped: numericTime > DURATION_CAP_MS,
                 },
               },
         },
@@ -444,8 +431,7 @@ export async function submitDrillReview(
     }
     // Ensure attemptId variable used later matches the final attempt ID
     attemptId = finalAttemptId;
-    const weCreatedAttempt = !existingAttempt;
-    // Update peer validation statistics
+    const weCreatedAttempt = !existingAttempt;    // Update peer validation statistics
     try {
       await prisma.preGeneratedQuestion.update({
         where: { id: questionId },
@@ -502,7 +488,7 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'DRILL' | 'CRAM' | 'RAPID_RECALL';
+  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
 
   // Helper function to create full telemetry object with server_computed key
   const buildReviewLogTelemetry = (
@@ -511,14 +497,12 @@ export async function submitDrillReview(
     ...(telemetry ?? {}),
     server_computed: {
       par_time_ms: parTimeMs,
-      latency_ratio: cappedDurationMs / parTimeMs, // Use capped duration for ratio
+      latency_ratio: effectiveDurationMs / parTimeMs,
       implicit_confidence: implicitConfidence,
       grade_continuous: gradeContinuous,
       answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
       circadian_phase: circadianContext.circadianPhase,
       rapid_guess: isRapidGuess,
-      raw_duration_ms: effectiveDurationMs, // Store raw for debugging
-      duration_capped: durationExceedsCap,
       ...(currentCard && {
         state: currentCard.state as number,
         stability: currentCard.stability as number,
@@ -527,10 +511,9 @@ export async function submitDrillReview(
       }),
     },
   });
-
   // DEV-001 FIX: Split rapid-guess ReviewLog from FSRS block
   if (question.conditionId && shouldLogReview) {
-    logger?.debug?.('Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
+    console.log('[DEBUG] Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     
     // For rapid guesses: create ReviewLog only, skip FSRS calculation
     if (isRapidGuess) {
@@ -545,13 +528,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
-        logger?.debug?.('Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
-        // Determine review_type marker for flagged rapid guesses
-        let reviewTypeMarker = 'rapid_guess';
-        if (durationExceedsCap) {
-          reviewTypeMarker = 'rapid_guess:duration_exceeded';
-        }
-
+        console.log('[DEBUG] Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -568,8 +545,8 @@ export async function submitDrillReview(
             implicit_confidence: implicitConfidence,
             scheduledAt: new Date(), // Placeholder - not used for rapid guesses
             reviewedAt: reviewDate,
-            responseTimeMs: cappedDurationMs, // Use capped duration
-            review_type: reviewTypeMarker,
+            responseTimeMs: effectiveDurationMs,
+            review_type: 'rapid_guess',
             elapsedDays: 0,
             wasCorrect: isCorrect,
             sessionType: logSessionType,
@@ -583,7 +560,7 @@ export async function submitDrillReview(
           },
         });
       } catch (reviewLogError) {
-        logger?.error?.('Rapid-guess ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
+        console.error('[DEBUG] Rapid-guess ReviewLog creation failed:', reviewLogError);
         logger?.warn?.('Failed to write rapid-guess ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
@@ -616,7 +593,6 @@ export async function submitDrillReview(
               ? new Date(fsrsCardData.last_review)
               : new Date(),
         };
-
         const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
         let modifiedStability = rawCard.stability;
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
@@ -640,7 +616,7 @@ export async function submitDrillReview(
         };
 
         // DEV-002 FIX: Store full telemetry with server_computed key
-        logger?.debug?.('Creating normal ReviewLog with full telemetry');
+        console.log('[DEBUG] Creating normal ReviewLog with full telemetry');
         try {
           const reviewDate = new Date();
           const hoverOscillations =
@@ -652,13 +628,7 @@ export async function submitDrillReview(
             timeToFirstClick ??
             undefined;
 
-          // Determine review_type marker: 'real' for normal, 'real:duration_exceeded' if flagged
-          let reviewTypeMarker = 'real';
-          if (durationExceedsCap) {
-            reviewTypeMarker = 'real:duration_exceeded';
-          }
-
-          logger?.debug?.('About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, durationExceedsCap });
+          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
           await prisma.reviewLog.create({
             data: {
               userId,
@@ -677,8 +647,8 @@ export async function submitDrillReview(
                 currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
               ),
               reviewedAt: reviewDate,
-              responseTimeMs: cappedDurationMs, // Use capped duration for FSRS
-              review_type: reviewTypeMarker,
+              responseTimeMs: effectiveDurationMs,
+              review_type: 'real',
               elapsedDays: currentCard.elapsed_days,
               wasCorrect: isCorrect,
               sessionType: logSessionType,
@@ -692,7 +662,7 @@ export async function submitDrillReview(
             },
           });
         } catch (reviewLogError) {
-          logger?.error?.('ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
+          console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
           logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
             error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
           });
@@ -708,48 +678,6 @@ export async function submitDrillReview(
           nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
         });
 
-        // ── Card dual-write (non-blocking) ──
-        // Creates per-question FSRS Card alongside condition-level UserProgress.
-        // Enables future per-question scheduling without breaking current flow.
-        try {
-          await prisma.card.upsert({
-            where: {
-              userId_questionId: { userId, questionId },
-            },
-            create: {
-              id: `${userId}_${questionId}`,
-              userId,
-              questionId,
-              due: clampedNextDue,
-              stability: updatedCard.stability,
-              difficulty: updatedCard.difficulty,
-              elapsed_days: updatedCard.elapsed_days,
-              scheduled_days: updatedCard.scheduled_days,
-              reps: updatedCard.reps,
-              lapses: updatedCard.lapses,
-              state: updatedCard.state,
-              last_review: new Date(),
-            },
-            update: {
-              due: clampedNextDue,
-              stability: updatedCard.stability,
-              difficulty: updatedCard.difficulty,
-              elapsed_days: updatedCard.elapsed_days,
-              scheduled_days: updatedCard.scheduled_days,
-              reps: updatedCard.reps,
-              lapses: updatedCard.lapses,
-              state: updatedCard.state,
-              last_review: new Date(),
-              updatedAt: new Date(),
-            },
-          });
-        } catch (cardError) {
-          // Non-blocking: Card dual-write failure should not break the main pipeline
-          logger?.warn?.('Card dual-write failed (non-fatal)', {
-            error: cardError instanceof Error ? cardError.message : String(cardError),
-          });
-        }
-
         try {
           const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
           if (siblingBoosts.length > 0) {
@@ -764,14 +692,13 @@ export async function submitDrillReview(
           });
         }
       } catch (progressError) {
-        logger?.error?.('Failed to update UserProgress', { error: progressError instanceof Error ? progressError.message : String(progressError) });
+        console.error('[DEBUG] Failed to update UserProgress', progressError);
         logger?.warn?.('Failed to update UserProgress', {
           error: progressError instanceof Error ? progressError.message : String(progressError),
         });
       }
     }
   }
-
   if (!isCorrect) {
     try {
       const correctWhere: Array<Record<string, unknown>> = [];

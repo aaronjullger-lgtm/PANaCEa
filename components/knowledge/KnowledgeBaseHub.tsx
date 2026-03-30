@@ -10,7 +10,7 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Pill, Beaker, Menu, X } from 'lucide-react';
+import { BookOpen, Pill, Beaker, Library, Menu, X } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
 import { NavRailProvider } from '@/contexts/NavRailContext';
@@ -18,6 +18,7 @@ import { ContextNavRail } from '@/components/layout/ContextNavRail';
 import { PharmacopeiaView } from './PharmacopeiaView';
 import { LabReferenceView } from './LabReferenceView';
 import { NormalLabsLibraryView } from './NormalLabsLibraryView';
+import ReferenceHub from '@/components/library/ReferenceHub';
 
 // Lazy-load ClinicalReferenceLibrary to break circular chunk initialization (TDZ crash)
 const ClinicalReferenceLibrary = lazy(() =>
@@ -30,7 +31,7 @@ interface KnowledgeBaseHubProps {
   onClose: () => void;
 }
 
-type TabId = 'conditions' | 'pharmacopeia' | 'labs';
+type TabId = 'conditions' | 'pharmacopeia' | 'labs' | 'reference';
 
 interface NavTab {
   id: TabId;
@@ -57,6 +58,12 @@ const NAV_TABS: NavTab[] = [
     label: 'Lab Reference',
     icon: Beaker,
     description: 'Normal values, clinical differentials, and interpretation',
+  },
+  {
+    id: 'reference',
+    label: 'Reference Library',
+    icon: Library,
+    description: 'Procedures, imaging, ECG, anatomy, special tests, and more',
   },
 ];
 
@@ -93,7 +100,7 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
   );
 };
 
-const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs'];
+const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs', 'reference'];
 
 type LabSubTab = 'tests' | 'normal-ranges';
 
@@ -318,6 +325,17 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
                   </button>
                 </div>
                 {labSubTab === 'tests' ? <LabReferenceView /> : <NormalLabsLibraryView />}
+              </motion.div>
+            )}
+
+            {activeTab === 'reference' && (
+              <motion.div
+                key="reference"
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <ReferenceHub />
               </motion.div>
             )}
           </AnimatePresence>

@@ -24,6 +24,7 @@ const ProceduresQuerySchema = z.object({
       category: z.string().max(100).optional(),
       system: z.string().max(100).optional(),
       query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -46,35 +47,26 @@ export const onRequestGet = authenticatedEndpoint(
       const category = validated?.query?.category;
       const system = validated?.query?.system;
       const searchQuery = validated?.query?.query;
+      const highYield = validated?.query?.highYield;
 
-      let results;
+      const where: any = {};
+      if (category) where.category = category;
+      if (system) where.system = system;
+      if (highYield === 'true') where.isHighYield = true;
 
       if (searchQuery) {
-        // Search mode
-        log.info('Searching procedures', { searchQuery });
-        results = await prisma.procedure.findMany({
-          where: {
-            OR: [
-              { name: { contains: searchQuery, mode: 'insensitive' } },
-              { description: { contains: searchQuery, mode: 'insensitive' } },
-            ],
-          },
-          orderBy: { name: 'asc' },
-          take: 20,
-        });
-      } else {
-        // List mode with optional filters
-        log.info('Listing procedures', { category: category || 'all', system: system || 'all' });
-
-        const where: any = {};
-        if (category) where.category = category;
-        if (system) where.system = system;
-
-        results = await prisma.procedure.findMany({
-          where: Object.keys(where).length > 0 ? where : undefined,
-          orderBy: { name: 'asc' },
-        });
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+        ];
       }
+
+      log.info('Listing procedures', { category: category || 'all', system: system || 'all', highYield: highYield || 'false' });
+
+      const results = await prisma.procedure.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+      });
 
       log.info('Procedures fetched', { count: results.length });
       return { data: { success: true, data: results } };

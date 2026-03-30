@@ -25,6 +25,7 @@ const AnatomyQuerySchema = z.object({
     .object({
       system: z.string().max(100).optional(),
       query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -51,30 +52,25 @@ export const onRequestGet = authenticatedEndpoint(
       const url = new URL(request.url);
       const system = url.searchParams.get('system');
       const query = url.searchParams.get('query');
+      const highYield = url.searchParams.get('highYield');
 
-      let results;
+      const where: any = {};
+      if (system) where.system = system;
+      if (highYield === 'true') where.isHighYield = true;
 
       if (query) {
-        // Search mode
-        log.info('Searching anatomy structures', { query });
-        results = await prisma.anatomyStructure.findMany({
-          where: {
-            OR: [
-              { name: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          take: 10,
-        });
-      } else {
-        // List mode with optional system filter
-        log.info('Listing anatomy structures', { system });
-        results = await prisma.anatomyStructure.findMany({
-          where: system ? { system } : undefined,
-          include: { Condition: { select: { id: true, name: true } } },
-          orderBy: { name: 'asc' },
-        });
+        where.OR = [
+          { name: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+        ];
       }
+
+      log.info('Listing anatomy structures', { system, highYield: highYield || 'false' });
+      const results = await prisma.anatomyStructure.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        include: { Condition: { select: { id: true, name: true } } },
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+      });
 
       log.info('Anatomy fetch successful', { count: results.length });
 

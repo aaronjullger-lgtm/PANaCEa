@@ -37,8 +37,11 @@ import {
   ScoreReport,
   OSCELiveSession,
   OSCEResultsView,
+  OSCEHistoryPanel,
+  EncounterTimer,
 } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
+import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
 import {
   getRandomEncounterCase,
   calculateEncounterScore,
@@ -52,7 +55,7 @@ import {
   type SpanishMode,
   generatePatientCase,
 } from '@/services/domain';
-import type { OsceGradeResult } from '@/services/domain';
+import type { OsceGradeResult, OSCETelemetryPayload } from '@/services/domain';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { toast } from '@/lib/toast';
 import {
@@ -89,6 +92,15 @@ import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';
 
 import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
+import {
+  getCulturalCompetencyPrompt,
+  getResourceLimitedPrompt,
+  getAIDifficultyPrompt,
+  OSCE_QUICK_START_PRESETS,
+  type OSCEQuickStartPreset,
+} from '@/config/osce-settings';
+import { generateOSCEMarkdown, downloadOSCEReport } from '@/lib/utils/osceExport';
+import { updateConditionSchedule } from '@/lib/osce-spaced-repetition';
 
 // Module 1 & Integration Imports
 import { useSystemIntegration } from '@/contexts/SystemIntegrationContext';
@@ -169,11 +181,33 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const { settings: clinicalFidelity } = useClinicalFidelitySettings();
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
 
+  // OSCE scenario modifiers: cultural competency + resource-limited + difficulty
+  const [enableCulturalCompetency, setEnableCulturalCompetency] = useState(false);
+  const [enableResourceLimited, setEnableResourceLimited] = useState(false);
+  const [aiDifficulty, setAiDifficulty] = useState<'cooperative' | 'difficult' | 'very_difficult'>('cooperative');
+
+  // Build scenario modifiers string for AI patient simulator
+  const scenarioModifiers = useMemo(() => {
+    let modifiers = '';
+    if (aiDifficulty !== 'cooperative') {
+      modifiers += '\n' + getAIDifficultyPrompt(aiDifficulty);
+    }
+    if (enableCulturalCompetency) {
+      modifiers += getCulturalCompetencyPrompt();
+    }
+    if (enableResourceLimited) {
+      modifiers += getResourceLimitedPrompt();
+    }
+    return modifiers || undefined;
+  }, [aiDifficulty, enableCulturalCompetency, enableResourceLimited]);
+
   // Enhanced OSCE Panel States
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [showExamPanel, setShowExamPanel] = useState(false);
   const [showRapportMeter, setShowRapportMeter] = useState(true);
   const [showLiveSession, setShowLiveSession] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [encounterStartTime, setEncounterStartTime] = useState<number>(Date.now());
   const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
   const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
   const [gradeResultLoading, setGradeResultLoading] = useState(false);
@@ -216,6 +250,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     enabled: viewState === 'active',
   });
 
+  // OSCE Metrics: tracks clinical decisions, speech, rapport for implicit rating + FSRS telemetry
+  const osceMetrics = useOSCEMetrics();
+
   // Refs for cleanup: diagnosis timing metric id; debrief stream abort
   const diagnosisMetricIdRef = useRef<string | null>(null);
   const debriefAbortRef = useRef<AbortController | null>(null);
@@ -227,6 +264,39 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       debriefAbortRef.current = null;
     };
   }, []);
+
+  // Fetch OSCE stats for landing page sparkline
+  const [osceStats, setOsceStats] = useState<{
+    totalEncounters: number;
+    passRate: number | null;
+    averageScore: number | null;
+    trend: number[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (viewState !== 'landing') return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch('/api/osce/stats', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const d = json.data ?? json;
+        if (d && typeof d.totalEncounters === 'number') {
+          setOsceStats({
+            totalEncounters: d.totalEncounters,
+            passRate: d.passRate,
+            averageScore: d.averageScore,
+            trend: (d.trend || []).map((t: any) => t.score as number),
+          });
+        }
+      } catch {
+        // silent — stats are optional
+      }
+    })();
+  }, [viewState, getToken]);
 
   // NEW: State machine for Module 1
   const [avEngine, setAVEngine] = useState<PatientAVEngine | null>(null);
@@ -528,12 +598,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         toast.error('Session could not be recorded. Your encounter will still run locally.');
       }
 
+      const startTs = Date.now();
       setSession({
         id: sessionId,
         caseId: newCase.id,
         questions: [],
-        startTime: Date.now(),
+        startTime: startTs,
       });
+      setEncounterStartTime(startTs);
       setViewState('active');
     } catch (err) {
       console.error('Failed to start encounter', err);
@@ -551,7 +623,30 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsTyping(true);
     detectInterventionIntent(currentQuestion);
 
-    // Track question in scoring engine
+    // Track question in scoring engine + OSCE metrics
+    osceMetrics.logAction('communication', currentQuestion);
+    osceMetrics.logSpeech(currentQuestion);
+
+    // Auto-detect rapport behaviors from question text
+    const qLower = currentQuestion.toLowerCase();
+    if (/\b(sorry|understand|must be|that sounds|i can see|how are you feeling|concerned)\b/.test(qLower)) {
+      osceMetrics.logRapportBehavior('empathyStatements');
+    }
+    if (/\b(let me explain|this means|the reason|what this test|i'd like to tell you)\b/.test(qLower)) {
+      osceMetrics.logRapportBehavior('educationStatements');
+    }
+    if (/^(tell me|describe|how|what|can you explain|walk me through)\b/.test(qLower)) {
+      osceMetrics.logRapportBehavior('openEndedQuestions');
+    } else if (/\?$/.test(currentQuestion.trim())) {
+      osceMetrics.logRapportBehavior('closedEndedQuestions');
+    }
+    if (/\b(my name is|i'm (dr|doctor|your (pa|provider|nurse)))\b/.test(qLower)) {
+      osceMetrics.logRapportBehavior('introducedSelf', true);
+    }
+    if (/\b(what do you think|your perspective|your concerns|what worries you|what matters to you)\b/.test(qLower)) {
+      osceMetrics.logRapportBehavior('askedForPerspective', true);
+    }
+
     if (enhancedOSCE.state.isSessionActive) {
       enhancedOSCE.processMessage(currentQuestion);
     }
@@ -575,7 +670,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         currentCase,
         chatHistory,
         currentQuestion,
-        patientPersona
+        patientPersona,
+        scenarioModifiers
       );
 
       // NEW: Forward to SOAP generator
@@ -658,6 +754,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
       setDiagnosisFeedback(feedback);
 
+      // Track diagnosis in OSCE metrics
+      osceMetrics.logAction('diagnosis', userDiagnosis, { isCorrect: feedback.isCorrect });
+
       // NEW: Emit DIAGNOSIS_MADE event for coordination
       const isCorrect = feedback.isCorrect;
       const timeElapsed = Date.now() - new Date(session.startTime).getTime();
@@ -700,6 +799,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
   };
 
+  // Apply a quick-start preset and immediately start encounter
+  const applyPreset = (preset: OSCEQuickStartPreset) => {
+    setAiDifficulty(preset.difficulty);
+    setEnableCulturalCompetency(preset.enableCulturalCompetency);
+    setEnableResourceLimited(preset.enableResourceLimited);
+    // Start encounter with preset applied
+    handleStartEncounter();
+  };
+
   const handleNewCase = () => {
     setCurrentCase(null);
     setSession(null);
@@ -719,6 +827,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setTreatmentPlan('');
     setAar('');
     setPreceptorFeedback(null);
+    osceMetrics.reset();
   };
 
   const handlePhysicalExam = async () => {
@@ -726,6 +835,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     try {
       const result = await performPhysicalExam(examAction, currentCase);
+      // Track exam in OSCE metrics
+      osceMetrics.logAction('exam', examAction);
       // Track exam finding in scoring engine
       if (enhancedOSCE.state.isSessionActive) {
         const finding: ExamFinding = {
@@ -750,7 +861,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleOrderTest = async () => {
     if (!diagnosticOrder.trim() || !currentCase) return;
     setIsLoading(true);
-    // Track order in scoring engine
+    // Track order in OSCE metrics + scoring engine
+    osceMetrics.logAction('order', diagnosticOrder);
     if (enhancedOSCE.state.isSessionActive) {
       const category: OrderCategory = diagnosticOrder.toLowerCase().includes('ct') || diagnosticOrder.toLowerCase().includes('mri') || diagnosticOrder.toLowerCase().includes('xray') ? 'imaging' : 'labs';
       const order: PlacedOrder = {
@@ -797,6 +909,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       const feedback = await evaluateTreatmentPlan(treatmentPlan, currentCase);
       setTreatmentFeedback(feedback);
+      // Track treatment in OSCE metrics
+      osceMetrics.logAction('treatment', treatmentPlan);
 
       // Complete session in backend
       if (session?.id) {
@@ -849,15 +963,37 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
 
     try {
+      // Calculate OSCE metrics telemetry to persist with session completion
+      const metrics = osceMetrics.calculateMetrics();
+      const telemetryPayload: OSCETelemetryPayload = {
+        totalTimeMs: metrics.totalTime,
+        clinicalConfidenceIndex: metrics.clinicalConfidenceIndex,
+        redFlagsMissed: metrics.redFlagsMissed,
+        unnecessaryOrders: metrics.unnecessaryOrders,
+        implicitRating: metrics.implicitRating
+          ? { rating: metrics.implicitRating.continuousRating, confidence: metrics.implicitRating.confidence }
+          : undefined,
+        efficiencyScore: metrics.efficiencyScore,
+        speechMetrics: metrics.speechMetrics as unknown as Record<string, unknown>,
+        diagnosticEfficiency: metrics.diagnosticEfficiency as unknown as Record<string, unknown>,
+        rapportMetrics: metrics.rapportMetrics as unknown as Record<string, unknown>,
+        actionCount: metrics.actions.length,
+      };
+
       // Complete session first so grade API can run (requires status === 'completed')
       const completed = await completeOSCESession(
         sessionId,
         userDiagnosis,
         treatmentPlan || '',
-        authToken
+        authToken,
+        telemetryPayload
       );
       if (!completed) toast.error('Session could not be saved. Your results may not be recorded.');
-      const rubricResult = await gradeOSCESession(sessionId, authToken);
+      const rubricResult = await gradeOSCESession(
+        sessionId,
+        authToken,
+        differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined
+      );
       if (rubricResult) {
         setGradeResult(rubricResult);
 
@@ -879,6 +1015,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             isMainSession: false,
             rating: isPass ? 3 : 1, // FSRS: Good(3) if pass, Again(1) if fail
           });
+
+          // Update OSCE condition-level spaced repetition schedule
+          try {
+            updateConditionSchedule(
+              currentCase.conditionId || currentCase.id,
+              currentCase.correctDiagnosis || currentCase.condition || 'Unknown',
+              currentCase.system || 'general',
+              osceScore
+            );
+          } catch {
+            // Non-critical — don't block results
+          }
         }
       }
     } catch (e) {
@@ -999,16 +1147,52 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
   }, [session?.id, getToken]);
 
+  // Phase ordering for validation
+  const PHASE_ORDER: EncounterPhase[] = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'];
+
+  const canAdvancePhase = (from: EncounterPhase, to: EncounterPhase): { allowed: boolean; reason?: string } => {
+    const fromIdx = PHASE_ORDER.indexOf(from);
+    const toIdx = PHASE_ORDER.indexOf(to);
+
+    // Can always go back
+    if (toIdx <= fromIdx) return { allowed: true };
+
+    // Validate minimum requirements before advancing
+    if (from === 'history' && (session?.questions.length ?? 0) < 2) {
+      return { allowed: false, reason: 'Ask at least 2 history questions before moving on.' };
+    }
+    // Skipping more than one phase forward requires confirmation
+    if (toIdx - fromIdx > 1) {
+      return { allowed: true, reason: `Skipping ${toIdx - fromIdx - 1} phase(s). Some scoring categories may be affected.` };
+    }
+    return { allowed: true };
+  };
+
   const advancePhase = (target?: EncounterPhase) => {
-    if (target) {
-      setPhase(target);
+    const nextPhase = target || (() => {
+      if (phase === 'history') return 'physical' as EncounterPhase;
+      if (phase === 'physical') return 'diagnostic' as EncounterPhase;
+      if (phase === 'diagnostic') return 'diagnosis' as EncounterPhase;
+      return null;
+    })();
+
+    if (!nextPhase) {
+      if (phase === 'diagnosis') handleSubmitDiagnosis();
       return;
     }
 
-    if (phase === 'history') setPhase('physical');
-    else if (phase === 'physical') setPhase('diagnostic');
-    else if (phase === 'diagnostic') setPhase('diagnosis');
-    else if (phase === 'diagnosis') handleSubmitDiagnosis();
+    const validation = canAdvancePhase(phase, nextPhase);
+    if (!validation.allowed) {
+      toast.error(validation.reason || 'Cannot advance yet.');
+      return;
+    }
+    if (validation.reason) {
+      // Show warning but still allow
+      toast.info(validation.reason);
+    }
+
+    setPhase(nextPhase);
+    recordMilestone(`phase_${nextPhase}`);
   };
 
   const determineCategory = (question: string): PatientQuestion['category'] => {
@@ -1117,6 +1301,50 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 Practice clinical reasoning in a realistic patient interview simulation. Gather
                 history, perform exams, order tests, and make your diagnosis.
               </p>
+
+              {/* Performance Mini-Dashboard */}
+              {osceStats && osceStats.totalEncounters > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-center gap-6 mt-4 p-3 rounded-xl bg-data-neutral-bg border border-data-neutral max-w-md mx-auto"
+                >
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-white">{osceStats.totalEncounters}</p>
+                    <p className="text-[10px] text-data-neutral uppercase tracking-wider">Encounters</p>
+                  </div>
+                  {osceStats.averageScore !== null && (
+                    <div className="text-center">
+                      <p className={`text-lg font-bold ${osceStats.averageScore >= 70 ? 'text-data-pass' : 'text-data-provisional'}`}>
+                        {osceStats.averageScore}%
+                      </p>
+                      <p className="text-[10px] text-data-neutral uppercase tracking-wider">Avg Score</p>
+                    </div>
+                  )}
+                  {osceStats.passRate !== null && (
+                    <div className="text-center">
+                      <p className={`text-lg font-bold ${osceStats.passRate >= 70 ? 'text-data-pass' : 'text-data-provisional'}`}>
+                        {osceStats.passRate}%
+                      </p>
+                      <p className="text-[10px] text-data-neutral uppercase tracking-wider">Pass Rate</p>
+                    </div>
+                  )}
+                  {osceStats.trend.length >= 2 && (
+                    <div className="flex flex-col items-center">
+                      <Sparkline
+                        data={osceStats.trend}
+                        width={80}
+                        height={28}
+                        color={osceStats.trend[osceStats.trend.length - 1] >= 70 ? 'var(--color-data-pass)' : 'var(--color-data-provisional)'}
+                        strokeWidth={1.5}
+                        min={0}
+                        max={100}
+                      />
+                      <p className="text-[10px] text-data-neutral uppercase tracking-wider">Trend</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </div>
 
             {/* What You'll Practice */}
@@ -1262,6 +1490,147 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <span>Typical encounter: 10-20 minutes</span>
               </div>
             </div>
+
+            {/* Scenario Settings */}
+            <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral shadow-md space-y-5">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Shield className="w-5 h-5 text-data-neutral" />
+                Encounter Settings
+              </h3>
+
+              {/* AI Difficulty */}
+              <div>
+                <label className="text-sm font-medium text-data-neutral block mb-2">Patient Difficulty</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['cooperative', 'difficult', 'very_difficult'] as const).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setAiDifficulty(level)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
+                        aiDifficulty === level
+                          ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                          : 'bg-data-neutral-bg text-data-neutral border-data-neutral hover:border-[var(--color-accent)]/50'
+                      }`}
+                    >
+                      {level === 'cooperative' ? 'Cooperative' : level === 'difficult' ? 'Difficult' : 'Very Difficult'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-data-neutral mt-1">
+                  {aiDifficulty === 'cooperative' && 'Patient provides clear, direct answers.'}
+                  {aiDifficulty === 'difficult' && 'Patient gives vague answers and needs redirection.'}
+                  {aiDifficulty === 'very_difficult' && 'Patient is hostile, in pain, or cognitively impaired.'}
+                </p>
+              </div>
+
+              {/* Toggle Row */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Cultural Competency */}
+                <button
+                  onClick={() => setEnableCulturalCompetency(prev => !prev)}
+                  className={`flex items-start gap-3 p-4 rounded-xl border transition-all text-left ${
+                    enableCulturalCompetency
+                      ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/40'
+                      : 'bg-data-neutral-bg border-data-neutral hover:border-[var(--color-accent)]/30'
+                  }`}
+                >
+                  <Globe className={`w-5 h-5 mt-0.5 flex-shrink-0 ${enableCulturalCompetency ? 'text-[var(--color-accent)]' : 'text-data-neutral'}`} />
+                  <div>
+                    <span className={`text-sm font-medium block ${enableCulturalCompetency ? 'text-[var(--color-accent)]' : 'text-white'}`}>
+                      Cultural Competency
+                    </span>
+                    <span className="text-xs text-data-neutral">
+                      Patient has cultural beliefs affecting care decisions
+                    </span>
+                  </div>
+                </button>
+
+                {/* Resource-Limited */}
+                <button
+                  onClick={() => setEnableResourceLimited(prev => !prev)}
+                  className={`flex items-start gap-3 p-4 rounded-xl border transition-all text-left ${
+                    enableResourceLimited
+                      ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/40'
+                      : 'bg-data-neutral-bg border-data-neutral hover:border-[var(--color-accent)]/30'
+                  }`}
+                >
+                  <FlaskConical className={`w-5 h-5 mt-0.5 flex-shrink-0 ${enableResourceLimited ? 'text-[var(--color-accent)]' : 'text-data-neutral'}`} />
+                  <div>
+                    <span className={`text-sm font-medium block ${enableResourceLimited ? 'text-[var(--color-accent)]' : 'text-white'}`}>
+                      Resource-Limited
+                    </span>
+                    <span className="text-xs text-data-neutral">
+                      Rural clinic — no CT, MRI, or advanced imaging
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick-Start Presets */}
+            <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-data-neutral" />
+                Quick Start — Focused Practice
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {OSCE_QUICK_START_PRESETS.slice(0, 8).map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => applyPreset(preset)}
+                    disabled={isLoading}
+                    className="p-3 rounded-xl border border-data-neutral bg-data-neutral-bg hover:border-[var(--color-accent)]/50
+                             transition-all text-left group disabled:opacity-50"
+                  >
+                    <span className="text-sm font-medium text-white group-hover:text-[var(--color-accent)] transition-colors block mb-1">
+                      {preset.label}
+                    </span>
+                    <span className="text-xs text-data-neutral line-clamp-2">{preset.description}</span>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        preset.difficulty === 'cooperative' ? 'bg-data-pass/20 text-data-pass'
+                          : preset.difficulty === 'difficult' ? 'bg-data-provisional/20 text-data-provisional'
+                          : 'bg-data-fail/20 text-data-fail'
+                      }`}>
+                        {preset.difficulty === 'cooperative' ? 'Easy' : preset.difficulty === 'difficult' ? 'Hard' : 'Expert'}
+                      </span>
+                      {preset.enableCulturalCompetency && (
+                        <Globe className="w-3 h-3 text-data-neutral" />
+                      )}
+                      {preset.enableResourceLimited && (
+                        <FlaskConical className="w-3 h-3 text-data-neutral" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Past Encounters Toggle */}
+            <div className="text-center">
+              <button
+                onClick={() => setShowHistoryPanel(prev => !prev)}
+                className="text-sm text-data-neutral hover:text-[var(--color-accent)] transition-colors flex items-center gap-1.5 mx-auto"
+              >
+                <Clock className="w-4 h-4" />
+                {showHistoryPanel ? 'Hide Past Encounters' : 'View Past Encounters'}
+              </button>
+            </div>
+
+            {/* History Panel */}
+            <AnimatePresence>
+              {showHistoryPanel && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <OSCEHistoryPanel token={null} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Start Button */}
             <div className="text-center space-y-4">
@@ -1470,6 +1839,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Encounter Timer */}
+              <EncounterTimer
+                startTime={encounterStartTime}
+                isActive={viewState === 'active'}
+                isPaused={isPaused}
+                targetMinutes={15}
+                compact
+              />
+
               {/* Enhanced OSCE Panel Toggles */}
               <div className="hidden md:flex items-center gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1 border border-[var(--color-border)]">
                 <button
@@ -2962,6 +3340,32 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 <MessageSquare className="w-5 h-5" />
                 Try Another Case
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  const md = generateOSCEMarkdown({
+                    caseName: currentCase.chiefComplaint || currentCase.correctDiagnosis || 'Unknown Case',
+                    correctDiagnosis: currentCase.correctDiagnosis,
+                    userDiagnosis,
+                    date: new Date().toLocaleDateString(),
+                    score: gradeResult?.score,
+                    clinicalReasoningScore: gradeResult?.clinicalReasoningScore,
+                    checklist: gradeResult?.checklist,
+                    redFlagsMissed: gradeResult?.redFlagsMissed,
+                    strengths: preceptorFeedback?.strengths,
+                    areasForImprovement: preceptorFeedback?.areasForImprovement,
+                    teachingPoints: currentCase.teachingPoints,
+                    totalTimeMs: Date.now() - encounterStartTime,
+                  });
+                  downloadOSCEReport(md, `OSCE_${currentCase.correctDiagnosis?.replace(/\s+/g, '_') || 'Report'}_${new Date().toISOString().slice(0, 10)}`);
+                }}
+                className="px-6 py-4 bg-data-neutral-bg hover:bg-data-neutral-bg rounded-xl font-semibold
+                       text-white transition-colors border border-data-neutral flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <FileText className="w-5 h-5" />
+                Export
               </motion.button>
               {onExit && (
                 <motion.button

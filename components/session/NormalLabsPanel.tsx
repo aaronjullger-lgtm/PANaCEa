@@ -72,8 +72,8 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as { data?: { labs?: NormalLabEntry[] } };
-      setLabs(json?.data?.labs ?? []);
+      const json = (await res.json()) as { data?: { data?: NormalLabEntry[]; labs?: NormalLabEntry[] } };
+      setLabs(json?.data?.data ?? json?.data?.labs ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load normal labs');
       setLabs([]);
