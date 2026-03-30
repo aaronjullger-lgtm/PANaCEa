@@ -1246,6 +1246,7 @@ export interface UseMiniLabDrillReturn {
   orderTest: (testName: string) => void;
   /** Available orderable tests for current case */
   availableTests: string[];
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -1275,7 +1276,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const questionStartTimeRef = useRef<number>(Date.now());
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'mini-lab',
   });
 
@@ -1549,5 +1550,6 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     showCategoryMenu,
     orderTest,
     availableTests,
+    fsrsNextReview,
   };
 }

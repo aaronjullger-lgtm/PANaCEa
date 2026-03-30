@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating } from '../implicit-metrics';
+import { deriveContinuousRating, DURATION_CAP_MS } from '../implicit-metrics';
 import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
@@ -360,6 +360,10 @@ export async function submitDrillReview(
   }
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
+  // Flag reviews with excessive duration before capping
+  const durationExceedsCap = effectiveDurationMs > DURATION_CAP_MS;
+  // Cap effective duration for FSRS calculation (but keep raw for analytics)
+  const cappedDurationMs = Math.min(effectiveDurationMs, DURATION_CAP_MS);
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -395,19 +399,21 @@ export async function submitDrillReview(
           isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
           selectedAnswer: normalizedSelectedAnswer,
           wasCorrect: isCorrect,
-          durationMs: effectiveDurationMs,
+          durationMs: effectiveDurationMs, // Keep raw duration for analytics/history
           implicitConfidence,
           telemetryJson: telemetry
             ? {
                 ...telemetry,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: effectiveDurationMs / parTimeMs,
+                  latency_ratio: cappedDurationMs / parTimeMs, // Use capped duration for ratio
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
                   circadian_phase: circadianContext.circadianPhase,
                   is_rapid_guess: isRapidGuess,
+                  raw_duration_ms: effectiveDurationMs, // Store raw for debugging
+                  duration_capped: durationExceedsCap,
                 },
               }
             : {
@@ -423,12 +429,14 @@ export async function submitDrillReview(
                 hint_view_duration_ms: null,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: numericTime / parTimeMs,
+                  latency_ratio: Math.min(numericTime, DURATION_CAP_MS) / parTimeMs, // Use capped duration
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
                   circadian_phase: circadianContext.circadianPhase,
                   is_rapid_guess: isRapidGuess,
+                  raw_duration_ms: numericTime, // Store raw for debugging
+                  duration_capped: numericTime > DURATION_CAP_MS,
                 },
               },
         },
@@ -503,12 +511,14 @@ export async function submitDrillReview(
     ...(telemetry ?? {}),
     server_computed: {
       par_time_ms: parTimeMs,
-      latency_ratio: effectiveDurationMs / parTimeMs,
+      latency_ratio: cappedDurationMs / parTimeMs, // Use capped duration for ratio
       implicit_confidence: implicitConfidence,
       grade_continuous: gradeContinuous,
       answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
       circadian_phase: circadianContext.circadianPhase,
       rapid_guess: isRapidGuess,
+      raw_duration_ms: effectiveDurationMs, // Store raw for debugging
+      duration_capped: durationExceedsCap,
       ...(currentCard && {
         state: currentCard.state as number,
         stability: currentCard.stability as number,
@@ -536,6 +546,12 @@ export async function submitDrillReview(
           undefined;
 
         console.log('[DEBUG] Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
+        // Determine review_type marker for flagged rapid guesses
+        let reviewTypeMarker = 'rapid_guess';
+        if (durationExceedsCap) {
+          reviewTypeMarker = 'rapid_guess:duration_exceeded';
+        }
+
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -552,8 +568,8 @@ export async function submitDrillReview(
             implicit_confidence: implicitConfidence,
             scheduledAt: new Date(), // Placeholder - not used for rapid guesses
             reviewedAt: reviewDate,
-            responseTimeMs: effectiveDurationMs,
-            review_type: 'rapid_guess',
+            responseTimeMs: cappedDurationMs, // Use capped duration
+            review_type: reviewTypeMarker,
             elapsedDays: 0,
             wasCorrect: isCorrect,
             sessionType: logSessionType,
@@ -636,7 +652,13 @@ export async function submitDrillReview(
             timeToFirstClick ??
             undefined;
 
-          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
+          // Determine review_type marker: 'real' for normal, 'real:duration_exceeded' if flagged
+          let reviewTypeMarker = 'real';
+          if (durationExceedsCap) {
+            reviewTypeMarker = 'real:duration_exceeded';
+          }
+
+          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, durationExceedsCap });
           await prisma.reviewLog.create({
             data: {
               userId,
@@ -655,8 +677,8 @@ export async function submitDrillReview(
                 currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
               ),
               reviewedAt: reviewDate,
-              responseTimeMs: effectiveDurationMs,
-              review_type: 'real',
+              responseTimeMs: cappedDurationMs, // Use capped duration for FSRS
+              review_type: reviewTypeMarker,
               elapsedDays: currentCard.elapsed_days,
               wasCorrect: isCorrect,
               sessionType: logSessionType,

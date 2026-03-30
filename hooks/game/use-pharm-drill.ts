@@ -51,6 +51,7 @@ export interface UsePharmDrillReturn {
   startSession: (category: PharmCategory) => void;
   exitToMenu: () => void;
   showCategoryMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 const INITIAL_QUEUE_SIZE = 10; // Fetch multiple questions at once
@@ -70,7 +71,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'pharm',
   });
 
@@ -277,5 +278,6 @@ export function usePharmDrill(): UsePharmDrillReturn {
     startSession,
     exitToMenu,
     showCategoryMenu,
+    fsrsNextReview,
   };
 }

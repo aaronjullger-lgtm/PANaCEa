@@ -110,6 +110,13 @@ export interface ImplicitRatingConfig {
 }
 
 /**
+ * Maximum effective duration for rating calculation.
+ * Durations above this are capped to prevent outliers (e.g., user left browser open).
+ * Raw duration is still stored for analytics and flagging purposes.
+ */
+export const DURATION_CAP_MS = 60000; // 60 seconds
+
+/**
  * Default configuration based on cognitive research
  */
 export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
@@ -327,8 +334,10 @@ export function deriveContinuousRating(
   config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
 ): ContinuousRatingResult {
   const parTime = metrics.parTimeMs ?? 30000;
+  // Cap effective duration to prevent outliers from inflating latency ratio
+  const cappedTimeToFirstClick = Math.min(metrics.timeToFirstClick, DURATION_CAP_MS);
   const effectiveLatency =
-    metrics.timeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
+    cappedTimeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
   const latencyRatio = effectiveLatency / parTime;
 
   const base = metrics.isCorrect ? 3.0 : 1.0;

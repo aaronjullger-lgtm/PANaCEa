@@ -45,6 +45,7 @@ export interface UseFirstLineDrillReturn {
   startSession: (category: FirstLineCategory) => void;
   exitToMenu: () => void;
   showCategoryMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 function getRandomTreatments(
@@ -127,7 +128,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
   const questionStartTimeRef = useRef<number>(Date.now());
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'first-line',
   });
 
@@ -306,5 +307,6 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     startSession,
     exitToMenu,
     showCategoryMenu,
+    fsrsNextReview,
   };
 }

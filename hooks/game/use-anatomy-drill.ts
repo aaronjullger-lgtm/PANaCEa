@@ -35,6 +35,7 @@ export interface UseAnatomyDrillReturn {
   reset: () => void;
   startSession: () => void;
   exitToMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 export function useAnatomyDrill(): UseAnatomyDrillReturn {
@@ -57,7 +58,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
   const questionStartTimeRef = useRef<number>(Date.now());
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'anatomy',
   });
 
@@ -254,5 +255,6 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    fsrsNextReview,
   };
 }

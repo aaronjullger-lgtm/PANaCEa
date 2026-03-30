@@ -105,6 +105,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     startSession,
     exitToMenu,
     isLoading,
+    fsrsNextReview,
   } = useFirstLineDrill();
 
 
@@ -216,6 +217,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
                 currentQuestion.category,
                 currentQuestion.condition,
               ]}
+              nextReview={fsrsNextReview}
             />
           ) : undefined
         }

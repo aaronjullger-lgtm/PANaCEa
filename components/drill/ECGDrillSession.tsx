@@ -39,6 +39,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
     startSession,
     exitToMenu,
     validDiagnoses,
+    fsrsNextReview,
   } = usePhotoDrill();
 
   const [useEnhancedFeedback, setUseEnhancedFeedback] = useState(true);
@@ -154,6 +155,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
             tags={[currentCase.correctDiagnosis, currentCase.category || 'cardiovascular']}
             relatedConceptId={currentCase.correctDiagnosis}
             onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
+            nextReview={fsrsNextReview}
           />
         )}
       </AnimatePresence>

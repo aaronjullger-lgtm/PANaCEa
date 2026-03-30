@@ -105,6 +105,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     exitToMenu,
     showCategoryMenu,
     isLoading: isDataLoading,
+    fsrsNextReview,
   } = usePharmDrill();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -257,6 +258,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
                   ? currentQuestion.drugClass
                   : [currentQuestion.drugClass]),
               ]}
+              nextReview={fsrsNextReview}
             />
           ) : undefined
         }

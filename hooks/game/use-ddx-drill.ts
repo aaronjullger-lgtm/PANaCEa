@@ -53,6 +53,7 @@ export interface UseDDxDrillReturn {
   reset: () => void;
   startSession: (category?: string) => void;
   exitToMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 /**
@@ -258,7 +259,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'ddx',
   });
 
@@ -470,5 +471,6 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    fsrsNextReview,
   };
 }

@@ -408,6 +408,7 @@ export interface UsePhotoDrillReturn {
   fetchError: string | null;
   /** Retry loading cases for current category (e.g. after empty or error) */
   retryLoadCases: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 /** Initial queue size when starting a session */
@@ -449,7 +450,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   const questionStartTimeRef = useRef<number>(Date.now());
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'photo',
   });
 
@@ -783,6 +784,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     exitToMenu,
     fetchError,
     retryLoadCases,
+    fsrsNextReview,
   };
 }
 

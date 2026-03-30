@@ -60,6 +60,7 @@ export interface UseVentilatorDrillReturn {
   reset: () => void;
   startSession: () => void;
   exitToMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 // ============================================================================
@@ -78,7 +79,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'ventilator',
   });
 
@@ -286,5 +287,6 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    fsrsNextReview,
   };
 }

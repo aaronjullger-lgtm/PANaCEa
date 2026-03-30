@@ -37,6 +37,7 @@ export interface UseGuidelineDrillReturn {
   reset: () => void;
   exitToMenu: () => void;
   backToSelection: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 export function useGuidelineDrill(): UseGuidelineDrillReturn {
@@ -52,7 +53,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'guideline',
   });
 
@@ -228,5 +229,6 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     reset,
     exitToMenu,
     backToSelection,
+    fsrsNextReview,
   };
 }

@@ -176,6 +176,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     availableTests,
     isLoading: isDataLoading,
     loadError,
+    fsrsNextReview,
   } = useMiniLabDrill();
 
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
@@ -402,6 +403,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             nextLabel="Next Case"
             category="lab"
             tags={['lab', currentCase.category, currentCase.correctDiagnosis]}
+            nextReview={fsrsNextReview}
           />
         )}
       </AnimatePresence>

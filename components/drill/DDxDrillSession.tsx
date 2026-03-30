@@ -226,6 +226,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
             nextLabel="Next Question"
             category="finding"
             tags={['ddx', question.category, question.presentingComplaint, question.questionType]}
+            nextReview={drill.fsrsNextReview}
           />
         ) : null
       }

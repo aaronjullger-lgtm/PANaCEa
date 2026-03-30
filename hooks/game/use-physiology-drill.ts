@@ -35,6 +35,7 @@ export interface UsePhysiologyDrillReturn {
   reset: () => void;
   startSession: () => void;
   exitToMenu: () => void;
+  fsrsNextReview: import('@/hooks/useDrillFSRS').FSRSNextReview | null;
 }
 
 export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
@@ -49,7 +50,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Initialize unified FSRS submission hook
-  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
     drillType: 'physiology',
   });
 
@@ -254,5 +255,6 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    fsrsNextReview,
   };
 }

@@ -91,6 +91,7 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
             tags={drill.currentQuestion.tags || []}
             relatedConceptId={drill.currentQuestion.system}
             onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
+            nextReview={drill.fsrsNextReview}
           />
         ) : undefined
       }

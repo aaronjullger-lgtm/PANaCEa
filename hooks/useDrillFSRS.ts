@@ -100,6 +100,16 @@ export interface DrillFSRSResponse {
 }
 
 /**
+ * Normalized shape for EnhancedFeedbackPanel's nextReview prop
+ */
+export interface FSRSNextReview {
+  intervalDays: number;
+  nextDueDate: string;
+  stability: number;
+  difficulty: number;
+}
+
+/**
  * Hook return type
  */
 export interface UseDrillFSRSReturn {
@@ -115,6 +125,10 @@ export interface UseDrillFSRSReturn {
   isSubmitting: boolean;
   /** Last submission error, if any */
   error: Error | null;
+  /** Last FSRS response received, or null if not yet submitted */
+  lastFSRSResponse: DrillFSRSResponse | null;
+  /** Normalized FSRS next review data for EnhancedFeedbackPanel */
+  fsrsNextReview: FSRSNextReview | null;
 }
 
 /**
@@ -143,6 +157,7 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
   // State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [lastFSRSResponse, setLastFSRSResponse] = useState<DrillFSRSResponse | null>(null);
 
   /**
    * Start tracking for a new question
@@ -235,6 +250,9 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
 
         const result = (await response.json()) as DrillFSRSResponse;
 
+        // Store the response for access by session components
+        setLastFSRSResponse(result);
+
         if (import.meta.env.DEV) {
           console.debug(`[useDrillFSRS:${drillType}] Submitted answer:`, {
             questionId,
@@ -272,6 +290,7 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
     answerSwitchesRef.current = 0;
     totalDwellTimeRef.current = 0;
     questionStartTimeRef.current = Date.now();
+    setLastFSRSResponse(null);
   }, []);
 
   // Cleanup on unmount
@@ -283,6 +302,16 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
     };
   }, []);
 
+  // Compute normalized nextReview for EnhancedFeedbackPanel
+  const fsrsNextReview: FSRSNextReview | null = lastFSRSResponse?.nextReview
+    ? {
+        intervalDays: lastFSRSResponse.nextReview.intervalDays ?? 0,
+        nextDueDate: lastFSRSResponse.nextReview.nextDueDate ?? new Date().toISOString(),
+        stability: lastFSRSResponse.nextReview.stability ?? 0,
+        difficulty: lastFSRSResponse.nextReview.difficulty ?? 0,
+      }
+    : null;
+
   return {
     startQuestion,
     recordAnswerChange,
@@ -290,6 +319,8 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
     reset,
     isSubmitting,
     error,
+    lastFSRSResponse,
+    fsrsNextReview,
   };
 }
 

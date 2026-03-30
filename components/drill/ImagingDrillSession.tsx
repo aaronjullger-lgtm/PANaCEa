@@ -37,6 +37,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
     startSession,
     exitToMenu,
     validDiagnoses,
+    fsrsNextReview,
   } = usePhotoDrill();
 
   useEffect(() => {
@@ -125,6 +126,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
             tags={[currentCase.correctDiagnosis, currentCase.category || 'radiology']}
             relatedConceptId={currentCase.correctDiagnosis}
             onDeepDive={onNavigateToReference ? handleDeepDive : undefined}
+            nextReview={fsrsNextReview}
           />
         )}
       </AnimatePresence>
