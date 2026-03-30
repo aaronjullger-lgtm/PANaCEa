@@ -864,7 +864,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </button>
             <button
               onClick={handleStart}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
             >
               <Play className="w-5 h-5" />
               Start Challenge
@@ -999,7 +999,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
                           selectedAnswer === index
-                            ? 'bg-muted-amber-500 text-white'
+                            ? 'bg-muted-amber-500 text-[var(--color-text-inverse)]'
                             : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                         }`}
                       >
@@ -1018,7 +1018,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   className={`px-8 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                     selectedAnswer === null || isSubmitting
                       ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                      : 'bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white'
+                      : 'bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-[var(--color-text-inverse)]'
                   }`}
                 >
                   {isSubmitting ? (
@@ -1201,7 +1201,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <button
             onClick={onExit}
-            className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white rounded-lg font-semibold transition-all"
+            className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all"
           >
             Back to Menu
           </button>

@@ -52,7 +52,7 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
               href="https://dashboard.clerk.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-opacity w-fit"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-opacity w-fit"
             >
               <ExternalLink className="w-4 h-4" />
               Open Clerk Dashboard

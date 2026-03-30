@@ -141,7 +141,7 @@ export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshK
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"
         >
-          <div className="px-4 py-2 rounded-full bg-[var(--color-data-pass)] text-white text-sm font-medium shadow-lg">
+          <div className="px-4 py-2 rounded-full bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] text-sm font-medium shadow-lg">
             {message}
           </div>
         </motion.div>

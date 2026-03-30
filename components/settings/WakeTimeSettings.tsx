@@ -137,26 +137,26 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
     <div className="space-y-6">
       {/* Current Status Banner */}
       {showCurrentStatus && currentStatus && (
-        <div className={`rounded-xl p-4 text-white ${STATE_COLORS[currentStatus.cognitiveState]}`}>
+        <div className={`rounded-xl p-4 text-[var(--color-text-inverse)] ${STATE_COLORS[currentStatus.cognitiveState]}`}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-lg">
                 {currentStatus.isOptimal ? 'Optimal Study Time' : 'Current Status'}
               </h3>
-              <p className="text-white/90 text-sm mt-1">{currentStatus.recommendation}</p>
+              <p className="text-[var(--color-text-inverse)]/90 text-sm mt-1">{currentStatus.recommendation}</p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold capitalize">
                 {currentStatus.cognitiveState.replace('_', ' ')}
               </div>
-              <div className="text-white/70 text-sm">
+              <div className="text-[var(--color-text-inverse)]/70 text-sm">
                 Stability: {Math.round((currentStatus.stabilityModifier - 1) * 100)}%
                 {currentStatus.stabilityModifier > 1 ? ' bonus' : ''}
               </div>
             </div>
           </div>
           {currentStatus.hoursUntilOptimal && !currentStatus.isOptimal && (
-            <div className="mt-3 text-sm text-white/80">
+            <div className="mt-3 text-sm text-[var(--color-text-inverse)]/80">
               ⏰ Next optimal window in ~{currentStatus.hoursUntilOptimal} hours
             </div>
           )}
