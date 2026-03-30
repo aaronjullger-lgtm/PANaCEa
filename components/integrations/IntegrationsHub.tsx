@@ -88,7 +88,7 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         </div>
 
         {/* Tab Content */}
-        <div className="transition-all duration-300">
+        <div role="tabpanel" aria-label={activeTab} className="transition-all duration-300">
           {activeTab === 'anki' && (
             <div className="animate-fadeIn">
               <AnkiExportPanel

@@ -75,6 +75,7 @@ export default function DrillHub(): JSX.Element {
   // Fetch drill overview on mount
   useEffect(() => {
     if (!user?.id) return;
+    let cancelled = false;
 
     const fetchOverview = async () => {
       try {
@@ -83,16 +84,19 @@ export default function DrillHub(): JSX.Element {
           throw new Error(`HTTP ${response.status}`);
         }
         const data = await response.json();
-        setOverview(data);
+        if (!cancelled) setOverview(data);
       } catch (error) {
-        console.error('Failed to fetch drill overview:', error);
-        setOverviewError(true);
+        if (!cancelled) {
+          console.error('Failed to fetch drill overview:', error);
+          setOverviewError(true);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchOverview();
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   const drillModes: DrillMode[] = [

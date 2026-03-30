@@ -707,6 +707,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             <button
               key={tab.id}
               type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
@@ -725,6 +727,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'overview' && (
           <motion.div
             key="overview"
+            role="tabpanel"
+            aria-label="Overview"
             initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -958,6 +962,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'insights' && (
           <motion.div
             key="insights"
+            role="tabpanel"
+            aria-label="Insights"
             initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -1058,6 +1064,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'systems' && (
           <motion.div
             key="systems"
+            role="tabpanel"
+            aria-label="Systems"
             initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
