@@ -60,57 +60,31 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          <button
-            onClick={() => setActiveTab('anki')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
-              activeTab === 'anki'
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
-            }`}
-          >
-            <Diamond className="w-4 h-4" /> Anki Export
-          </button>
-          <button
-            onClick={() => setActiveTab('calendar')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
-              activeTab === 'calendar'
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
-            }`}
-          >
-            <Calendar className="w-4 h-4" /> Calendar Sync
-          </button>
-          <button
-            onClick={() => setActiveTab('todoist')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
-              activeTab === 'todoist'
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
-            }`}
-          >
-            <CheckCircle className="w-4 h-4" /> Todoist
-          </button>
-          <button
-            onClick={() => setActiveTab('trello')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
-              activeTab === 'trello'
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
-            }`}
-          >
-            <ClipboardList className="w-4 h-4" /> Trello
-          </button>
-          <button
-            onClick={() => setActiveTab('widgets')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
-              activeTab === 'widgets'
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
-                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
-            }`}
-          >
-            <Link className="w-4 h-4" /> Widgets
-          </button>
+        <div role="tablist" aria-label="Integration options" className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {([
+            { id: 'anki' as const, label: 'Anki Export', icon: Diamond },
+            { id: 'calendar' as const, label: 'Calendar Sync', icon: Calendar },
+            { id: 'todoist' as const, label: 'Todoist', icon: CheckCircle },
+            { id: 'trello' as const, label: 'Trello', icon: ClipboardList },
+            { id: 'widgets' as const, label: 'Widgets', icon: Link },
+          ]).map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
+                  activeTab === tab.id
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-lg'
+                    : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
+                }`}
+              >
+                <Icon className="w-4 h-4" aria-hidden="true" /> {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab Content */}

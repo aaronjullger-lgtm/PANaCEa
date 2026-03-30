@@ -428,6 +428,16 @@ a,
   --color-data-neutral: #64748b; /* slate-500 - text/borders */
   --color-data-neutral-bg: #f1f5f9; /* slate-100 - card surfaces */
 
+  /* Semantic status aliases (used by 50+ components) */
+  --color-success: var(--color-data-pass);
+  --color-error: var(--color-data-fail);
+  --color-warning: var(--color-data-provisional);
+  --color-info: var(--color-accent);
+  --color-bg-card: var(--color-card-bg);
+  --color-text-tertiary: var(--color-text-muted);
+  --color-btn-primary-text: var(--color-text-inverse);
+  --color-border-hover: var(--color-border);
+
   /* Semantic aliases for design system docs */
   --surface-canvas: var(--color-bg-primary);
   --content-primary-on-canvas: var(--color-text-primary);
@@ -616,6 +626,16 @@ a,
   --color-data-provisional: #64748b; /* slate-500 */
   --color-data-neutral: #94a3b8; /* slate-400 - readable text on dark surfaces */
   --color-data-neutral-bg: #334155; /* slate-700 - card surface in dark mode */
+
+  /* Semantic status aliases (dark mode) */
+  --color-success: var(--color-data-pass);
+  --color-error: var(--color-data-fail);
+  --color-warning: var(--color-data-provisional);
+  --color-info: var(--color-accent);
+  --color-bg-card: var(--color-card-bg);
+  --color-text-tertiary: var(--color-text-muted);
+  --color-btn-primary-text: var(--color-text-inverse);
+  --color-border-hover: var(--color-border);
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */

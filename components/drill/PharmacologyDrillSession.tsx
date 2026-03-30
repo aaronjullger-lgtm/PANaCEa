@@ -199,28 +199,33 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
 
   // Load initial questions when drug class is selected (or on "All Drug Classes")
   useEffect(() => {
-    if ((selectedDrugClass || selectedDrugClass === 'all') && queue.length === 0) {
-      setIsLoading(true);
-      setError(null);
+    if (!(selectedDrugClass || selectedDrugClass === 'all') || queue.length > 0) return;
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
-      const drugClassParam = selectedDrugClass === 'all' ? undefined : selectedDrugClass;
+    const drugClassParam = selectedDrugClass === 'all' ? undefined : selectedDrugClass;
 
-      // Load 3 questions initially
-      Promise.all([
-        fetchPharmQuestion(drugClassParam),
-        fetchPharmQuestion(drugClassParam),
-        fetchPharmQuestion(drugClassParam),
-      ])
-        .then((questions) => {
+    // Load 3 questions initially
+    Promise.all([
+      fetchPharmQuestion(drugClassParam),
+      fetchPharmQuestion(drugClassParam),
+      fetchPharmQuestion(drugClassParam),
+    ])
+      .then((questions) => {
+        if (!cancelled) {
           setQueue(questions);
           setIsLoading(false);
-        })
-        .catch((err) => {
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
           console.error('Error loading questions:', err);
           setError(err.message || 'Failed to load questions');
           setIsLoading(false);
-        });
-    }
+        }
+      });
+    return () => { cancelled = true; };
   }, [selectedDrugClass, fetchPharmQuestion, queue.length]);
 
   // Replenish queue when running low

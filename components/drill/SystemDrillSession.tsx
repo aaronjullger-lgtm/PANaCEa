@@ -216,26 +216,31 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
 
   // Load initial questions when system is selected
   useEffect(() => {
-    if (selectedSystem && queue.length === 0) {
-      setIsLoading(true);
-      setError(null);
+    if (!selectedSystem || queue.length > 0) return;
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
-      // Load 3 questions initially
-      Promise.all([
-        fetchSystemQuestion(selectedSystem),
-        fetchSystemQuestion(selectedSystem),
-        fetchSystemQuestion(selectedSystem),
-      ])
-        .then((questions) => {
+    // Load 3 questions initially
+    Promise.all([
+      fetchSystemQuestion(selectedSystem),
+      fetchSystemQuestion(selectedSystem),
+      fetchSystemQuestion(selectedSystem),
+    ])
+      .then((questions) => {
+        if (!cancelled) {
           setQueue(questions);
           setIsLoading(false);
-        })
-        .catch((err) => {
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
           console.error('Error loading questions:', err);
           setError(err.message || 'Failed to load questions');
           setIsLoading(false);
-        });
-    }
+        }
+      });
+    return () => { cancelled = true; };
   }, [selectedSystem, fetchSystemQuestion, queue.length]);
 
   // Replenish queue when running low

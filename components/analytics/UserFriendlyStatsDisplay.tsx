@@ -315,7 +315,7 @@ const ReadinessGauge: React.FC<{
               cy="48"
               r="40"
               fill="none"
-              stroke="var(--color-surface-primary)"
+              stroke="var(--color-bg-tertiary)"
               strokeWidth="8"
             />
             <motion.circle
