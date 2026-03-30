@@ -1297,11 +1297,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                   )}
                 </Suspense>
 
-                {/* Post-onboarding product tour */}
-                <ProductTour
-                  isOpen={showProductTour}
-                  onClose={() => setShowProductTour(false)}
-                />
+                {/* Post-onboarding product tour — never render during onboarding */}
+                {!isOnboardingModalOpen && (
+                  <ProductTour
+                    isOpen={showProductTour}
+                    onClose={() => setShowProductTour(false)}
+                  />
+                )}
 
                 {/* One-time pro tip after onboarding */}
                 {showProTip && (

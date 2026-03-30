@@ -197,6 +197,8 @@ const App: React.FC = () => {
 
   // Show product tour on first visit to command center (when not from onboarding)
   const hasScheduledTour = useRef(false);
+  const isOnboardingOpenRef = useRef(isOnboardingModalOpen);
+  isOnboardingOpenRef.current = isOnboardingModalOpen;
   useEffect(() => {
     if (
       view === 'command_center' &&
@@ -206,7 +208,15 @@ const App: React.FC = () => {
       !hasScheduledTour.current
     ) {
       hasScheduledTour.current = true;
-      const timer = setTimeout(() => setShowProductTour(true), 1500);
+      const timer = setTimeout(() => {
+        // Re-check onboarding state at fire time to prevent race condition
+        if (!isOnboardingOpenRef.current) {
+          setShowProductTour(true);
+        } else {
+          // Onboarding opened while timer was pending — don't show tour
+          hasScheduledTour.current = false;
+        }
+      }, 1500);
       return () => clearTimeout(timer);
     }
     return undefined;

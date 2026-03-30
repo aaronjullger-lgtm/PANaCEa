@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, Sparkles, LayoutDashboard, Command } from 'lucide-react';
+import { hasCompletedOnboarding } from '@/services/analytics';
 
 /** Get focusable elements within a container */
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
@@ -48,6 +49,11 @@ export function useProductTourShouldShow(): boolean {
 
   useEffect(() => {
     try {
+      // Never show product tour if onboarding hasn't been completed yet
+      if (!hasCompletedOnboarding()) {
+        setShouldShow(false);
+        return;
+      }
       const completed = localStorage.getItem(STORAGE_KEY) === 'true';
       setShouldShow(!completed);
     } catch {
