@@ -52,7 +52,7 @@ import {
 import { useMicroKinetics } from '@/hooks/useMicroKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
-import ErrorTagger from '@/components/quiz/ErrorTagger';
+// ErrorTagger moved to AnswerFeedback component
 import { Loader, ClinicalSkeleton, DrillLoadingState } from '@/components/loading';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 
@@ -61,42 +61,27 @@ import {
   SessionStatsOverlay,
   SessionEndSummary,
   SocraticTutorChat,
-  QuestionTimer,
-  MomentumBadge,
-  StreakBadge,
 } from '@/components/quiz';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
-import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 
 // Sprint 10: Trust badges for question source indication
 import { TrustBadge } from '@/components/ui/TrustBadge';
-import { Progress } from '@/components/ui/progress';
+// Progress moved to QuizToolbar component
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
 
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
-import { FlagIcon } from '@/components/icons/FlagIcon';
-import {
-  AlertTriangle,
-  BarChart3,
-  Beaker,
-  Calculator,
-  MessageCircle,
-  Clock,
-  MoreHorizontal,
-  ChevronDown,
-  PenLine,
-} from 'lucide-react';
-import { BackLink } from '@/components/navigation/BackLink';
-import { ROUTES } from '@/config/routes';
-import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
+// FlagIcon, ClearHighlightIcon, lucide icons moved to QuizToolbar/AnswerFeedback
+// ROUTES moved to QuizToolbar
 
 // Types
 import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
 import type { SRSScheduleResult } from '@/lib/services/srsService';
-import ExplanationPanel from '@/components/questions/ExplanationPanel';
+// ExplanationPanel moved to AnswerFeedback component
+import QuizToolbar from '@/components/session/QuizToolbar';
+import AnswerFeedback from '@/components/session/AnswerFeedback';
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
@@ -479,9 +464,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
   const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
 
-  // Fix #6a: Overflow menu for secondary header actions
-  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
-  const overflowMenuRef = useRef<HTMLDivElement>(null);
+  // Fix #6a: Overflow menu moved to QuizToolbar component
   // Fix #6b: Collapsible detailed explanation
   // Fix #6c: Notes textarea toggle
   const [showNotes, setShowNotes] = useState(false);
@@ -600,17 +583,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     document.documentElement.style.setProperty('--font-size-adj', `${fontSizeAdjustment * 0.1}rem`);
   }, [fontSizeAdjustment]);
 
-  // Close overflow menu on click outside
-  useEffect(() => {
-    if (!showOverflowMenu) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (overflowMenuRef.current && !overflowMenuRef.current.contains(e.target as Node)) {
-        setShowOverflowMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showOverflowMenu]);
+  // Close overflow menu on click outside — moved to QuizToolbar
 
   // Reset collapsible states when question changes
   useEffect(() => {
@@ -1512,8 +1485,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     [currentQuestion]
   );
 
-  const getBarColor = (score: number): string => getAccuracyBarClass(score);
-
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
     // In continuous mode, show loading while waiting for questions
@@ -1601,215 +1572,39 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
   return (
     <div className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}>
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4 mt-1">
-          <div className="flex items-center space-x-3 min-w-0">
-            {/* Back to Practice */}
-            {!isFullSitDownTest && (
-              <BackLink to={ROUTES.PRACTICE} label="Back to Practice" className="rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex-shrink-0" />
-            )}
-            {modeLabel && (
-              <span className="text-sm text-[var(--color-text-muted)] truncate hidden sm:inline" aria-hidden>
-                {modeLabel}
-              </span>
-            )}
-            <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
-                Question {questionNumber}
-              </p>
-              {/* Sprint 4: Momentum Badge (compact) */}
-              {questionNumber > 3 && <MomentumBadge refreshKey={behavioralRefreshKey} />}
-              {/* Sprint 4: Streak Badge */}
-              {currentStreak >= 3 && <StreakBadge streak={currentStreak} />}
-              {/* Sprint 4: Question Timer — hidden in Commuter Mode per audit */}
-              {currentQuestion && !commuter?.isCommuterMode && (
-                <QuestionTimer
-                  startTime={questionStartTime}
-                  parTimeMs={parTimeMs}
-                  isAnswered={isAnswered}
-                  isVisible={showTimerVisible}
-                  compact
-                />
-              )}
-              {/* Quick Wins: Time-box session timer — hidden in Commuter Mode */}
-              {!commuter?.isCommuterMode && timeRemainingMs !== null && timeRemainingMs > 0 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
-                  <Clock className="w-3.5 h-3.5 text-[var(--color-text-primary)]" />
-                  <span className="text-xs font-semibold text-[var(--color-text-primary)]">
-                    {Math.ceil(timeRemainingMs / 60000)} min
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Primary actions — always visible, with 44px touch targets */}
-
-            {/* Session Stats Toggle */}
-            <button
-              onClick={() => setShowStatsOverlay((prev) => !prev)}
-              title="Toggle session stats (S)"
-              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
-                showStatsOverlay
-                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-text-primary)] hover:border-[var(--color-accent)]'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5" />
-            </button>
-
-            {/* Flag for personal review */}
-            <button
-              onClick={toggleFlag}
-              title={isFlagged ? 'Unflag for review' : 'Flag for review'}
-              aria-label={isFlagged ? 'Unflag for review' : 'Flag for review'}
-              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
-                isFlagged
-                  ? 'bg-data-provisional/10 text-data-provisional border-data-provisional'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
-              }`}
-            >
-              <FlagIcon className="w-5 h-5" />
-            </button>
-
-            {/* Normal Labs reference (slide-out panel) */}
-            <button
-              onClick={() => setShowNormalLabsPanel((prev) => !prev)}
-              title="Normal Labs reference"
-              aria-label="Normal Labs reference"
-              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
-                showNormalLabsPanel
-                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
-              }`}
-              aria-label="Toggle Normal Labs reference"
-            >
-              <Beaker className="w-5 h-5" />
-            </button>
-
-            {/* Overflow menu — secondary actions collapsed behind "more" */}
-            <div className="relative" ref={overflowMenuRef}>
-              <button
-                onClick={() => setShowOverflowMenu((prev) => !prev)}
-                title="More actions"
-                className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
-                  showOverflowMenu
-                    ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
-                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
-                }`}
-              >
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              {showOverflowMenu && (
-                <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
-                  {/* Report Issue */}
-                  <button
-                    onClick={() => {
-                      setShowReportModal(true);
-                      setShowOverflowMenu(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-data-fail" />
-                    Report Issue
-                  </button>
-                  {/* Clear Highlights */}
-                  <button
-                    onClick={() => {
-                      const container = document.getElementById('question-container');
-                      if (!container) return;
-                      const spans = container.querySelectorAll('span.user-highlight');
-                      spans.forEach((s) => {
-                        const parent = s.parentNode;
-                        if (!parent) return;
-                        while (s.firstChild) {
-                          parent.insertBefore(s.firstChild, s);
-                        }
-                        parent.removeChild(s);
-                      });
-                      setShowOverflowMenu(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-                  >
-                    <ClearHighlightIcon className="w-4 h-4" />
-                    Clear Highlights
-                  </button>
-                  {/* Lab Calculators */}
-                  <button
-                    onClick={() => {
-                      setShowLabCalcModal(true);
-                      setShowOverflowMenu(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-                  >
-                    <Calculator className="w-4 h-4 text-[var(--color-text-primary)]" />
-                    Lab Calculators
-                  </button>
-                  {/* Font size controls */}
-                  <div className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-                    <span className="text-[var(--color-text-muted)]">Font Size</span>
-                    <div className="ml-auto flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-bg-secondary)]">
-                      <button
-                        onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-l-md text-sm font-medium"
-                        aria-label="Decrease font size"
-                      >
-                        A−
-                      </button>
-                      <div className="w-px h-5 bg-[var(--color-border)]"></div>
-                      <button
-                        onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm font-medium"
-                        aria-label="Increase font size"
-                      >
-                        A+
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* End session */}
-            {!isFullSitDownTest && (
-              <button
-                onClick={handleEndSession}
-                title="End Session"
-                aria-label="End Session"
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
-              >
-                <CloseIcon className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-        {isFullSitDownTest && (
-          <div className="mt-4 mb-4">
-            <Progress value={((questionNumber - 1) / (totalQuestions || 300)) * 100} />
-            <div className="flex justify-between text-sm text-[var(--color-text-muted)] mt-1">
-              <span>Question {questionNumber} of {totalQuestions || 300}</span>
-              <span>{Math.round(((questionNumber - 1) / (totalQuestions || 300)) * 100)}%</span>
-            </div>
-          </div>
-        )}
-        {replenishmentError && (
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-data-provisional/50 bg-data-provisional/10 px-3 py-2 text-sm text-[var(--color-text-secondary)]">
-            <span>{replenishmentError}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setReplenishmentError(null);
-                setError(null);
-                void replenishQueue();
-              }}
-              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/10"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-        <SplitPaneDrillLayout
+      <QuizToolbar
+        questionNumber={questionNumber}
+        isFullSitDownTest={isFullSitDownTest}
+        totalQuestions={totalQuestions}
+        modeLabel={modeLabel}
+        behavioralRefreshKey={behavioralRefreshKey}
+        currentStreak={currentStreak}
+        questionStartTime={questionStartTime}
+        parTimeMs={parTimeMs}
+        isAnswered={isAnswered}
+        showTimerVisible={showTimerVisible}
+        isCommuterMode={!!commuter?.isCommuterMode}
+        timeRemainingMs={timeRemainingMs}
+        showStatsOverlay={showStatsOverlay}
+        onToggleStatsOverlay={() => setShowStatsOverlay((prev) => !prev)}
+        isFlagged={isFlagged}
+        onToggleFlag={toggleFlag}
+        showNormalLabsPanel={showNormalLabsPanel}
+        onToggleNormalLabs={() => setShowNormalLabsPanel((prev) => !prev)}
+        onShowReportModal={() => setShowReportModal(true)}
+        onShowLabCalcModal={() => setShowLabCalcModal(true)}
+        fontSizeAdjustment={fontSizeAdjustment}
+        setFontSizeAdjustment={setFontSizeAdjustment}
+        onEndSession={handleEndSession}
+        replenishmentError={replenishmentError}
+        onRetryReplenish={() => {
+          setReplenishmentError(null);
+          setError(null);
+          void replenishQueue();
+        }}
+        currentQuestion={currentQuestion}
+      />
+      <SplitPaneDrillLayout
           vignette={useSplitPane ? currentQuestion.vignette : null}
           className="mb-6"
         >
@@ -1941,182 +1736,24 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           )}
 
           {/* FEEDBACK / RATIONALE */}
-          {isAnswered && !isExamSimulator && (
-            <div className="mt-6 animate-fade-in space-y-4">
-              {topicStats && (
-                <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
-                  <div className="flex justify-between items-center mb-1 text-sm">
-                    <span className="font-semibold text-[var(--color-text-secondary)]">
-                      {currentQuestion.topic}
-                    </span>
-                    <span className="font-medium text-[var(--color-text-muted)]">
-                      {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
-                    </span>
-                  </div>
-                  <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
-                    <div
-                      className={`h-2.5 rounded-full ${getBarColor(
-                        topicStats.score
-                      )} transition-all duration-500 ease-out`}
-                      style={{ width: `${topicStats.score}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-
-              <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg feedback-content">
-                {/* Error Tagger - Only show when incorrect */}
-                {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                  <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
-                    <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
-                  </div>
-                )}
-
-                {/* Peer selection stats: "42% of students also chose B" — Wisdom of the Crowds (especially when wrong) */}
-                {selectedAnswerIndex !== null &&
-                  answerDistribution &&
-                  (() => {
-                    const letter = ['A', 'B', 'C', 'D'][selectedAnswerIndex];
-                    const entry = answerDistribution.find((d) => d.optionLetter === letter);
-                    if (!entry || entry.count === 0) return null;
-                    return (
-                      <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-                        <span className="font-medium text-[var(--color-text-secondary)]">
-                          {entry.percent}% of students also chose {letter}.
-                        </span>
-                        {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                          <> This was a tricky distractor — you&apos;re not alone.</>
-                        )}
-                      </p>
-                    );
-                  })()}
-
-                {/* Core PANCE: rationale – structured (5-section) or legacy, via ExplanationPanel */}
-                <ExplanationPanel
-                  rationale={(() => {
-                    const r = currentQuestion.rationale;
-                    if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r;
-                    if (typeof r === 'string') {
-                      try {
-                        const parsed = JSON.parse(r) as unknown;
-                        if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
-                          return parsed;
-                      } catch {
-                        /* not JSON */
-                      }
-                      return r;
-                    }
-                    return '';
-                  })()}
-                  condition={currentQuestion.condition ?? 'Unknown'}
-                  conditionSlug={currentQuestion.conditionId}
-                  isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex}
-                  correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex] ?? ''}
-                  userAnswer={
-                    selectedAnswerIndex != null
-                      ? (currentQuestion.options[selectedAnswerIndex] ?? '')
-                      : ''
-                  }
-                  correctAnswerIndex={currentQuestion.correctAnswerIndex}
-                  userAnswerIndex={selectedAnswerIndex ?? -1}
-                  options={currentQuestion.options}
-                  questionId={currentQuestion.id}
-                  fontSizeAdjustment={fontSizeAdjustment}
-                  contentSource={currentQuestion.contentSource}
-                  contentSourceTitle={currentQuestion.contentSourceTitle}
-                />
-
-
-                {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      onClick={handleExplainDifferently}
-                      disabled={isExplainerLoading}
-                      className="btn-glass px-4 py-2 text-sm"
-                    >
-                      {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowSocraticTutor(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] font-medium text-sm hover:bg-[var(--color-accent)]/20 transition-colors"
-                    >
-                      <MessageCircle className="h-4 w-4" aria-hidden />
-                      Tutor Me
-                    </button>
-                  </div>
-                )}
-
-                {isExplainerLoading && (
-                  <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
-                    <div className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"></div>
-                    <div
-                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
-                      style={{ animationDelay: '0.2s' }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
-                      style={{ animationDelay: '0.4s' }}
-                    ></div>
-                    <span className="text-sm">Generating new explanation...</span>
-                  </div>
-                )}
-
-                {alternateRationale && !isExplainerLoading && (
-                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
-                    <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
-                      Alternate Explanation
-                    </h4>
-                    <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-                      {alternateRationale}
-                    </p>
-                  </div>
-                )}
-
-                {/* Clinical Pearls Section */}
-                {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                    <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                      Key Pearls: {currentQuestion.condition}
-                    </h3>
-                    <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
-                      {currentQuestion.pearls.map((pearl, index) => (
-                        <li
-                          key={`${currentQuestion.id}-pearl-${index}`}
-                          dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }}
-                        />
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                  {!showNotes && !localNote ? (
-                    <button
-                      onClick={() => setShowNotes(true)}
-                      className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors py-1"
-                    >
-                      <PenLine className="w-4 h-4" />
-                      Add Note
-                    </button>
-                  ) : (
-                    <>
-                      <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                        My Notes
-                      </h3>
-                      <textarea
-                        value={localNote}
-                        onChange={handleNoteChange}
-                        placeholder="Type your notes here... They will be saved automatically."
-                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
-                        rows={3}
-                        autoFocus={showNotes && !localNote}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+          {isAnswered && selectedAnswerIndex !== null && (
+            <AnswerFeedback
+              currentQuestion={currentQuestion}
+              selectedAnswerIndex={selectedAnswerIndex}
+              isExamSimulator={isExamSimulator}
+              fontSizeAdjustment={fontSizeAdjustment}
+              topicStats={topicStats}
+              answerDistribution={answerDistribution}
+              updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+              onExplainDifferently={handleExplainDifferently}
+              isExplainerLoading={isExplainerLoading}
+              alternateRationale={alternateRationale}
+              onShowSocraticTutor={() => setShowSocraticTutor(true)}
+              localNote={localNote}
+              showNotes={showNotes}
+              setShowNotes={setShowNotes}
+              onNoteChange={handleNoteChange}
+            />
           )}
 
           {isAnswered && (
@@ -2137,8 +1774,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               </button>
             </div>
           )}
-        </SplitPaneDrillLayout>
-      </div>
+      </SplitPaneDrillLayout>
 
       {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
 

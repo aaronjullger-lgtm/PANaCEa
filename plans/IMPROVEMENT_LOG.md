@@ -137,6 +137,32 @@ Migrated the remaining 7 drill session components to DrillShell, completing Phas
 - `SubcategoryDrillSession`, `SystemDrillSession`, `PharmacologyDrillSession` — these delegate to other drill components that already use DrillShell
 
 ### Next priority
-- **Phase 4:** QuizView decomposition — extract HeaderBar, QuestionAnswerSection, RationalePanel, useAnswerSubmission hook
+- Phase 4: QuizView decomposition
+
+---
+
+## 2026-03-30 — Phase 4 Started: QuizView Decomposition
+
+### What was done
+Extracted two major components from the 2,274-line QuizView.tsx monolith, reducing it to 1,910 lines (16% reduction). Both extractions are pure UI components with clean prop interfaces — no behavioral changes.
+
+### Changes
+- **Created** `components/session/QuizToolbar.tsx` (323 lines) — Extracted the entire header bar: back link, question number, momentum/streak badges, question timer, session timer, toolbar buttons (stats, flag, labs, overflow menu with report/highlights/calc/font-size), end session button, progress bar (full sit-down test), and replenishment error banner
+- **Created** `components/session/AnswerFeedback.tsx` (238 lines) — Extracted the post-answer feedback panel: topic accuracy stats, error tagger, peer selection stats, ExplanationPanel (structured rationale), "Explain Differently" / "Tutor Me" buttons, alternate rationale, clinical pearls, notes section
+- **Modified** `components/session/QuizView.tsx` — Replaced 364 lines of inline JSX with `<QuizToolbar>` and `<AnswerFeedback>` component usage. Cleaned up 12 unused imports (icons, components moved to extracted files)
+
+### Before → After
+| Metric | Before | After |
+|--------|--------|-------|
+| QuizView.tsx line count | 2,274 | 1,910 |
+| Toolbar lines in QuizView | ~190 inline | 0 (in QuizToolbar) |
+| Feedback lines in QuizView | ~177 inline | 0 (in AnswerFeedback) |
+| Unused imports cleaned | 0 | 12 (icons, components) |
+
+### Remaining Phase 4 targets
+- `useAnswerSubmission` hook — 388-line handleSubmitAnswer function (lines 922-1309), tightly coupled to 10+ analytics services
+- `QuestionAndAnswers` component — question display + answer options rendering
+
+### Next priority
 - **Phase 5:** Question data normalization + content backfill
 - Daily task handles: accessibility fixes, empty states, dark mode consistency, test coverage
