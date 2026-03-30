@@ -632,7 +632,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       }}
                     >
                       <div
-                        className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
+                        className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-6 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
                       >
                         {isLoading &&
                           (sessionSettings ? (

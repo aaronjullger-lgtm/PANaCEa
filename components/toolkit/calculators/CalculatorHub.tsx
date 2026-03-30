@@ -26,6 +26,7 @@ import { AnionGapCalculator } from './lab/AnionGapCalculator';
 import type { Calculator, CalculatorSystem } from './types';
 
 interface CalculatorHubProps {
+  initialCalculatorId?: string;
   onClose: () => void;
 }
 
@@ -128,10 +129,10 @@ const CALCULATOR_CATEGORIES: Array<{
   { id: 'pediatric', label: 'Pediatric', icon: Baby, calculatorIds: ['pediatric_dosing'] },
 ];
 
-export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
+export const CalculatorHub: React.FC<CalculatorHubProps> = ({ initialCalculatorId, onClose }) => {
   const [activeCategory, setActiveCategory] = useState<string>('cardiac');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
+  const [selectedCalculator, setSelectedCalculator] = useState<string | null>(initialCalculatorId ?? null);
 
   // Filter calculators by system and search
   const filteredCalculators = useMemo(() => {

@@ -348,25 +348,30 @@ a,
   /* Content max-width - consistent across main content pages */
   --content-max-width: 72rem; /* 1152px = max-w-6xl */
 
-  /* ===== UNIFIED COLORWAY: COOLER GOLD + SLATE (same family, light-optimized) ===== */
-  /* Gold: one family in both modes; light mode uses darker shade for contrast on white */
-  --color-action: #9a8f72; /* Cooler gold - accent (same hue as dark, darker for light bg) */
-  --color-action-hover: #8a7f62;
-  --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
-  --color-action-text: #f8fafc; /* Off-white on gold (continuity with dark) */
+  /* ===== UNIFIED COLORWAY: MEDICAL TEAL + SLATE (prestigious, clinical) ===== */
+  /* Teal-blue: trustworthy medical aesthetic; dark shade for WCAG AA on white */
+  --color-action: #0f766e; /* Teal-700 — primary action, 5.2:1 on white */
+  --color-action-hover: #0d6560;
+  --color-action-light: #f0fdfa; /* Teal-50 — subtle tinted backgrounds */
+  --color-action-text: #f8fafc; /* Off-white on teal */
   --color-label-primary: #0f172a; /* Slate-900 */
   --color-label-secondary: #475569; /* Slate-600 */
 
-  /* Navy / Gold palette tokens (same family) */
+  /* Primary palette tokens */
   --color-navy: #0f172a;
   --color-canvas: #f8fafc; /* slate-50 */
   --color-surface: #ffffff;
-  --color-gold: #9a8f72;
-  --color-gold-hover: #8a7f62;
+  --color-gold: #0f766e; /* Legacy alias → teal primary */
+  --color-gold-hover: #0d6560;
   --color-gold-text: #f8fafc;
-  /* Gold dark tokens for exam mode and accents */
-  --color-gold-dark: #7a6f52;
-  --color-gold-dark-hover: #6a5f42;
+  /* Dark tokens for exam mode and primary CTAs */
+  --color-gold-dark: #115e59; /* Teal-800 — 7:1+ contrast on white */
+  --color-gold-dark-hover: #134e4a; /* Teal-900 */
+
+  /* Warm accent for CTAs and highlights */
+  --color-warm-accent: #d97706; /* Amber-600 — warm CTA highlight */
+  --color-warm-accent-hover: #b45309;
+  --color-warm-accent-light: #fffbeb; /* Amber-50 */
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
@@ -378,8 +383,8 @@ a,
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  /* Primary brand - same gold family */
-  --primary: #9a8f72;
+  /* Primary brand — teal family */
+  --primary: #0f766e;
   --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
@@ -399,16 +404,16 @@ a,
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: var(--color-gold-dark); /* Darker gold (Stormy Slate) — WCAG AA with bg-primary */
+  --color-accent: var(--color-gold-dark); /* Teal-800 — WCAG AA on bg-primary */
   --color-accent-hover: var(--color-gold-dark-hover);
-  --color-accent-button: var(--color-gold-dark); /* Darker gold for buttons — 4.5:1+ with white text */
-  --color-accent-border: var(--color-gold); /* Lighter gold for borders to improve contrast */
-  --color-accent-cta: var(--color-gold-dark); /* Darker gold for primary CTAs only (one per screen) */
-  --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
-  --color-accent-light: #f5f2ec;
+  --color-accent-button: var(--color-gold-dark); /* Teal-800 for buttons — 7:1+ with white text */
+  --color-accent-border: var(--color-gold); /* Teal-700 for borders */
+  --color-accent-cta: var(--color-warm-accent); /* Amber-600 for primary CTAs — warm, inviting */
+  --color-accent-secondary: #2563eb; /* Blue-600 — charts, secondary CTAs */
+  --color-accent-light: #f0fdfa; /* Teal-50 */
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: var(--color-gold-dark); /* Darker gold for focus indicators */
+  --color-focus-ring: var(--color-gold-dark); /* Teal-800 for focus indicators */
 
   /* Text on accent - off-white in both modes for continuity */
   --color-text-inverse: #f8fafc;
@@ -421,17 +426,21 @@ a,
   /* Card background for table content */
   --color-card-bg: #ffffff;
 
-  /* Semantic data colors - slate gray variants for Stormy Slate aesthetic */
-  --color-data-pass: #475569; /* slate-600 */
-  --color-data-fail: #1e293b; /* slate-800 */
-  --color-data-provisional: #94a3b8; /* slate-400 */
-  --color-data-neutral: #64748b; /* slate-500 - text/borders */
-  --color-data-neutral-bg: #f1f5f9; /* slate-100 - card surfaces */
+  /* Semantic data colors — proper meaningful colors */
+  --color-data-pass: #059669; /* Emerald-600 — correct/success */
+  --color-data-fail: #dc2626; /* Red-600 — incorrect/error */
+  --color-data-provisional: #d97706; /* Amber-600 — warning/due */
+  --color-data-neutral: #64748b; /* Slate-500 — text/borders */
+  --color-data-neutral-bg: #f1f5f9; /* Slate-100 — card surfaces */
+  --color-data-success: #059669; /* Emerald-600 */
+  --color-data-warning: #d97706; /* Amber-600 */
+  --color-data-positive: #059669;
+  --color-data-negative: #dc2626;
 
   /* Semantic status aliases (used by 50+ components) */
-  --color-success: var(--color-data-pass);
-  --color-error: var(--color-data-fail);
-  --color-warning: var(--color-data-provisional);
+  --color-success: #059669; /* Emerald-600 */
+  --color-error: #dc2626; /* Red-600 */
+  --color-warning: #d97706; /* Amber-600 */
   --color-info: var(--color-accent);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);
@@ -553,22 +562,27 @@ a,
 }
 
 .dark {
-  /* ===== UNIFIED COLORWAY: SAME GOLD + SLATE FAMILY (dark-optimized) ===== */
-  /* Gold: same hue as light, lighter shade for contrast on navy */
-  --color-action: #a89b7a; /* Same gold family, lighter for dark bg */
-  --color-action-hover: #b8ab8a;
+  /* ===== UNIFIED COLORWAY: MEDICAL TEAL + SLATE (dark-optimized) ===== */
+  /* Teal: lighter shade for contrast on dark navy */
+  --color-action: #2dd4bf; /* Teal-400 — vibrant on dark bg */
+  --color-action-hover: #5eead4;
   --color-action-light: #1e293b;
-  --color-action-text: #f8fafc; /* Same as light - continuity */
+  --color-action-text: #0f172a; /* Dark text on bright teal */
   --color-label-primary: #f1f5f9;
   --color-label-secondary: #94a3b8;
 
-  /* Gold palette tokens (same family, dark-appropriate) */
-  --color-gold: #a89b7a;
-  --color-gold-hover: #b8ab8a;
-  --color-gold-text: #f8fafc;
-  /* Gold dark tokens for exam mode and accents (dark mode lighter variant) */
-  --color-gold-dark: #c4b78a;
-  --color-gold-dark-hover: #b4a77a;
+  /* Primary palette tokens (dark-appropriate) */
+  --color-gold: #2dd4bf; /* Teal-400 */
+  --color-gold-hover: #5eead4;
+  --color-gold-text: #0f172a;
+  /* Dark tokens for exam mode and accents (dark mode lighter variant) */
+  --color-gold-dark: #5eead4; /* Teal-300 — high contrast on dark */
+  --color-gold-dark-hover: #99f6e4; /* Teal-200 */
+
+  /* Warm accent */
+  --color-warm-accent: #fbbf24; /* Amber-400 */
+  --color-warm-accent-hover: #f59e0b;
+  --color-warm-accent-light: #1e293b;
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
@@ -580,9 +594,9 @@ a,
   --card: #1e293b;
   --card-foreground: #f1f5f9;
 
-  /* Primary brand - same gold family */
-  --primary: #a89b7a;
-  --primary-foreground: #f8fafc;
+  /* Primary brand — teal family */
+  --primary: #2dd4bf;
+  --primary-foreground: #0f172a;
 
   /* Muted/Secondary */
   --muted: #334155;
@@ -601,18 +615,18 @@ a,
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: var(--color-gold); /* Lighter gold on dark background (Stormy Slate) */
+  --color-accent: var(--color-gold); /* Teal-400 on dark background */
   --color-accent-hover: var(--color-gold-dark);
-  --color-accent-button: #8a7f62; /* Gold for buttons — 4.5:1 with white text on dark */
-  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders to improve visibility */
-  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
-  --color-accent-cta-dark: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
-  --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
+  --color-accent-button: #14b8a6; /* Teal-500 for buttons — 4.5:1+ on dark bg */
+  --color-accent-border: var(--color-gold-dark); /* Teal-300 for borders on dark */
+  --color-accent-cta: var(--color-warm-accent); /* Amber-400 for primary CTAs in dark mode */
+  --color-accent-cta-dark: var(--color-warm-accent);
+  --color-accent-secondary: #60a5fa; /* Blue-400 — charts, secondary CTAs */
   --color-accent-light: #1e293b;
-  --color-text-inverse: #f8fafc;
+  --color-text-inverse: #f8fafc; /* Light text for buttons on colored backgrounds */
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: var(--color-gold); /* Gold for dark mode focus */
+  --color-focus-ring: var(--color-gold); /* Teal for dark mode focus */
 
   --color-modal-bg: #475569;
   --color-glass-bg: rgba(30, 41, 59, 0.7);
@@ -620,17 +634,21 @@ a,
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
   --color-card-bg: #1e293b;
 
-  /* Semantic data - slate gray variants for Stormy Slate aesthetic */
-  --color-data-pass: #94a3b8; /* slate-400 */
-  --color-data-fail: #cbd5e1; /* slate-300 */
-  --color-data-provisional: #64748b; /* slate-500 */
-  --color-data-neutral: #94a3b8; /* slate-400 - readable text on dark surfaces */
-  --color-data-neutral-bg: #334155; /* slate-700 - card surface in dark mode */
+  /* Semantic data — proper colors, dark mode adjusted */
+  --color-data-pass: #34d399; /* Emerald-400 */
+  --color-data-fail: #f87171; /* Red-400 */
+  --color-data-provisional: #fbbf24; /* Amber-400 */
+  --color-data-neutral: #94a3b8; /* Slate-400 */
+  --color-data-neutral-bg: #334155; /* Slate-700 */
+  --color-data-success: #34d399;
+  --color-data-warning: #fbbf24;
+  --color-data-positive: #34d399;
+  --color-data-negative: #f87171;
 
   /* Semantic status aliases (dark mode) */
-  --color-success: var(--color-data-pass);
-  --color-error: var(--color-data-fail);
-  --color-warning: var(--color-data-provisional);
+  --color-success: #34d399; /* Emerald-400 */
+  --color-error: #f87171; /* Red-400 */
+  --color-warning: #fbbf24; /* Amber-400 */
   --color-info: var(--color-accent);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);

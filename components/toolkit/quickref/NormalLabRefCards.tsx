@@ -56,7 +56,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
         const token = await getToken();
         const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
         const payload = json.data ?? json;
         const items = Array.isArray(payload) ? payload : (payload?.data ?? payload?.labs ?? []);
         if (!cancelled) setData(Array.isArray(items) ? items : []);

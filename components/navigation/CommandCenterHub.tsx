@@ -651,31 +651,38 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0)}
-          className="mb-6"
+          className="mb-8"
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
-            {greeting}, {user?.firstName || 'Student'}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">
+                {greeting}, {user?.firstName || 'Student'}
+              </h1>
+              <p className="text-base text-[var(--color-text-secondary)] mt-1.5">
+                Ready to advance your clinical knowledge?
+              </p>
+            </div>
+          </div>
 
           {/* Status chips row */}
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap items-center gap-2 mt-4">
             {/* Due Count Chip */}
             {(propDueCount ?? 0) > 0 && (
               <button
                 type="button"
                 onClick={onNavigateToSrsReview}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium hover:bg-data-fail/20 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--color-error)]/10 border border-[var(--color-error)]/25 text-sm font-semibold hover:bg-[var(--color-error)]/15 transition-colors cursor-pointer"
                 title="Open Due Review — variant PANCE questions"
               >
-                <span className="text-data-fail">{propDueCount}</span>
+                <span className="text-[var(--color-error)]">{propDueCount}</span>
                 <span className="text-[var(--color-text-secondary)]">due</span>
               </button>
             )}
 
             {/* Flagged Count Chip */}
             {flaggedQuestions.length > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-provisional/10 border border-data-provisional/30 text-sm font-medium">
-                <span className="text-data-provisional">{flaggedQuestions.length}</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/25 text-sm font-semibold">
+                <span className="text-[var(--color-warning)]">{flaggedQuestions.length}</span>
                 <span className="text-[var(--color-text-secondary)]">flagged</span>
               </div>
             )}
@@ -683,11 +690,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             {/* Growth Areas Chips */}
             {growthAreas.length > 0 && (
               <>
-                <span key="focus-label" className="text-[var(--color-text-muted)] text-sm font-medium">Focus on:</span>
+                <span key="focus-label" className="text-[var(--color-text-muted)] text-sm font-medium ml-1">Focus:</span>
                 {growthAreas.slice(0, 3).map((area) => (
                   <div
                     key={area}
-                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 text-sm font-medium text-[var(--color-accent)]"
+                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 text-sm font-semibold text-[var(--color-accent)]"
                   >
                     {area}
                   </div>
@@ -695,10 +702,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </>
             )}
           </div>
-
-          <p className="text-[var(--color-text-muted)] mt-3">
-            Ready to advance your clinical knowledge?
-          </p>
         </motion.div>
 
         {/* Getting started — first actions after onboarding when little or no activity */}
@@ -712,12 +715,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               className="mb-6"
             >
               <div className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 md:p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">
+                <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">
                   <Sparkles className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
-                  Getting started
+                  Getting Started
                 </h2>
-                <p className="text-sm text-[var(--color-text-muted)] mb-4">
-                  Start your first practice session or try today&apos;s daily challenge.
+                <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                  Start your first practice session or try today&apos;s daily challenge to begin building your study profile.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {onNavigateToSimulation && (
@@ -775,30 +778,36 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             transition={sectionTransition(0)}
             className="mb-6"
           >
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="relative overflow-hidden rounded-2xl border border-[var(--color-accent)]/20 bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-bg-secondary)] to-[var(--color-accent-secondary)]/5 p-5 md:p-6 shadow-sm hover:shadow-lg transition-shadow">
+              {/* Subtle decorative element */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent)]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
-                      Daily Challenge
-                    </h2>
-                    {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-data-success/20 text-data-success">
-                        Completed today
-                      </span>
-                    )}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/15">
+                      <Trophy className="w-6 h-6 text-[var(--color-accent)]" aria-hidden />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                        Daily Challenge
+                      </h2>
+                      {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-semibold bg-[var(--color-success)]/15 text-[var(--color-success)]">
+                          Completed today
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[var(--color-text-secondary)] text-sm">
-                    Try today&apos;s Grand Rounds challenge to expand your clinical knowledge.
+                  <p className="text-[var(--color-text-secondary)] text-sm mt-1">
+                    Today&apos;s Grand Rounds — expand your clinical knowledge with curated cases.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => onNavigateToDrillMode('grand_rounds')}
-                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
+                  className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
                 >
-                  <Play className="w-4 h-4" aria-hidden />
+                  <Play className="w-5 h-5" aria-hidden />
                   {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 ? 'View Results' : 'Start Challenge'}
                 </button>
               </div>

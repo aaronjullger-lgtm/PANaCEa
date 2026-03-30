@@ -46,7 +46,7 @@ export default function AntibioticRefCards() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
         if (!cancelled) setData(json.data || []);
       } catch { /* error state handled by empty data */ }
       finally { if (!cancelled) setLoading(false); }

@@ -39,10 +39,10 @@ export const onRequestPost = authenticatedEndpoint(
         return { status: 404, error: 'User not found' };
       }
 
-      // NEW: Load case data to check for state machine
+      // Load case data for session features
       const caseData = await prisma.patientEncounterCase.findUnique({
         where: { id: caseId },
-        select: { id: true, stateMachine: true },
+        select: { id: true },
       });
 
       // Check for existing active session for this case
@@ -107,7 +107,7 @@ export const onRequestPost = authenticatedEndpoint(
           features: {
             // NEW: Available features for this session
             voiceModeAvailable: !!env.VOICE_WEBSOCKET_URL,
-            stateMachineAvailable: !!caseData?.stateMachine,
+            stateMachineAvailable: false,
             realtimeSOAPAvailable: true,
             timingAnalyticsAvailable: true,
           },

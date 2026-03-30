@@ -140,7 +140,7 @@ function parseScoreRange(range: string): { min: number; max: number } {
   }
   if (trimmed.includes('-')) {
     const [minStr, maxStr] = trimmed.split('-').map((s) => s.trim());
-    return { min: parseInt(minStr, 10), max: parseInt(maxStr, 10) };
+    return { min: parseInt(minStr ?? '0', 10), max: parseInt(maxStr ?? '0', 10) };
   }
 
   const val = parseInt(trimmed, 10);
@@ -251,7 +251,7 @@ export default function DynamicScoringCalculator({
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
 
         if (!cancelled) {
           setData(json.data);

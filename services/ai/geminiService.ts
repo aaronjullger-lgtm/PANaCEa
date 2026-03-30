@@ -478,7 +478,7 @@ export async function callGeminiText(
         // Non-retryable or out of retries
         let errorDetails = '';
         try {
-          const errorData = await response.json();
+          const errorData: any = await response.json();
           errorDetails = errorData.error || errorData.details || response.statusText;
         } catch {
           errorDetails = response.statusText;
@@ -499,7 +499,7 @@ export async function callGeminiText(
         );
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
       const text = typeof data === 'string' ? data : (data.data?.text ?? data.text);
 
       if (!text || !text.trim()) {

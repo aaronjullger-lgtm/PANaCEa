@@ -47,7 +47,7 @@ export default function ACLSRefCards() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
         if (!cancelled) setData(json.data || []);
       } catch { /* handled by empty state */ }
       finally { if (!cancelled) setLoading(false); }

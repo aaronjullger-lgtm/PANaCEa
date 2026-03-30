@@ -57,6 +57,27 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.aCLSAlgorithm.findMany({
         where,
         orderBy: [{ isHighYield: 'desc' }, { algorithmName: 'asc' }, { algorithmStep: 'asc' }],
+        select: {
+          id: true,
+          algorithmName: true,
+          algorithmStep: true,
+          category: true,
+          rhythm: true,
+          rhythmDescription: true,
+          correctIntervention: true,
+          drugDose: true,
+          drugTiming: true,
+          energyDose: true,
+          cprGuidance: true,
+          criticalActions: true,
+          clinicalPearls: true,
+          boardYieldFacts: true,
+          isHighYield: true,
+          ecgFindings: true,
+          commonMistakes: true,
+          mnemonics: true,
+          panceYield: true,
+        },
       });
 
       log.info('Fetched ACLS algorithms', { count: results.length });

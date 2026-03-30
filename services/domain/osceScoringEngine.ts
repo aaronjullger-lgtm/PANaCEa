@@ -1440,6 +1440,14 @@ export function calculateExamThoroughness(
   }
 
   const expectedExams = CONDITION_EXPECTED_EXAMS[matchedCondition];
+  if (!expectedExams) {
+    return {
+      score: 0,
+      performed: performedExams,
+      missed: [],
+      extra: performedExams,
+    };
+  }
   const performedLower = performedExams.map((exam) => exam.toLowerCase().trim());
 
   // Helper function for fuzzy matching using substring matching
@@ -1448,14 +1456,14 @@ export function calculateExamThoroughness(
     if (performed === expected) return true;
     if (performed.includes(expected)) return true;
     if (expected.includes(performed)) return true;
-    
+
     // Check for significant word overlap
     const performedWords = performed.split(/\s+/);
     const expectedWords = expected.split(/\s+/);
     const overlap = performedWords.filter((word) =>
       expectedWords.some((expWord) => expWord.includes(word) || word.includes(expWord))
     );
-    
+
     return overlap.length >= Math.max(1, Math.ceil(performedWords.length * 0.5));
   };
 

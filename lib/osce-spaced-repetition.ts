@@ -24,7 +24,7 @@ export interface OSCEConditionSchedule {
  * Get today's date as ISO string (YYYY-MM-DD)
  */
 function getTodayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0] ?? '';
 }
 
 /**
@@ -33,7 +33,7 @@ function getTodayISO(): string {
 function addDays(dateISO: string, days: number): string {
   const date = new Date(dateISO);
   date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 /**

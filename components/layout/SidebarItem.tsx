@@ -76,7 +76,7 @@ function SidebarItemContent({
   if (collapsed && Icon != null) {
     return (
       <span
-        className={`inline-flex flex-col w-10 shrink-0 items-center justify-center gap-1 overflow-hidden transition-colors ${
+        className={`inline-flex w-10 h-10 shrink-0 items-center justify-center overflow-hidden transition-colors ${
           active
             ? 'text-[var(--color-accent)]'
             : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)]'
@@ -90,9 +90,6 @@ function SidebarItemContent({
           }`}
         >
           <Icon className="h-5 w-5" aria-hidden />
-        </span>
-        <span className="text-[10px] leading-none font-medium text-center truncate max-w-full px-0.5">
-          {label}
         </span>
       </span>
     );

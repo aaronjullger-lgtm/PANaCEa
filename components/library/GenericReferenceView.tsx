@@ -164,7 +164,7 @@ export default function GenericReferenceView<T>({
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
         // Normalize response: endpoints return { data: { success, data: [] } } or { data: { success, labs: [] } }
         const payload = json.data ?? json;
         const items = Array.isArray(payload) ? payload : (payload.data ?? payload.labs ?? []);

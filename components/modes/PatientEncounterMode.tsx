@@ -282,7 +282,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!res.ok) return;
-        const json = await res.json();
+        const json: any = await res.json();
         const d = json.data ?? json;
         if (d && typeof d.totalEncounters === 'number') {
           setOsceStats({
@@ -845,6 +845,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           region: 'chest_anterior', // default region
           finding: result,
           isAbnormal: false,
+          performedAt: Date.now(),
         };
         enhancedOSCE.recordExamFinding(finding);
       }
@@ -999,19 +1000,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
         // Sync OSCE performance to FSRS scheduling via attempt endpoint
         // Derive correctness from rubric score (pass threshold: 60%)
-        const osceScore = rubricResult.overallScore ?? rubricResult.score ?? 0;
-        const maxScore = rubricResult.maxScore ?? 100;
-        const scorePct = maxScore > 0 ? osceScore / maxScore : 0;
+        const osceScore = rubricResult.score ?? 0;
+        const scorePct = osceScore / 100;
         const isPass = scorePct >= 0.6;
 
-        if (currentCase?.conditionId || currentCase?.condition) {
+        if (currentCase) {
           syncManager.queueAnswer({
             questionId: sessionId,
             selectedAnswer: 0,
             isCorrect: isPass,
             timeSpentMs: Date.now() - (session?.startTime || Date.now()),
-            system: currentCase?.system ?? undefined,
-            conditionId: currentCase?.conditionId ?? undefined,
+            system: undefined,
+            conditionId: undefined,
             isMainSession: false,
             rating: isPass ? 3 : 1, // FSRS: Good(3) if pass, Again(1) if fail
           });
@@ -1019,9 +1019,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           // Update OSCE condition-level spaced repetition schedule
           try {
             updateConditionSchedule(
-              currentCase.conditionId || currentCase.id,
-              currentCase.correctDiagnosis || currentCase.condition || 'Unknown',
-              currentCase.system || 'general',
+              currentCase.id,
+              currentCase.correctDiagnosis || 'Unknown',
+              'general',
               osceScore
             );
           } catch {
@@ -1335,7 +1335,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         data={osceStats.trend}
                         width={80}
                         height={28}
-                        color={osceStats.trend[osceStats.trend.length - 1] >= 70 ? 'var(--color-data-pass)' : 'var(--color-data-provisional)'}
+                        color={(osceStats.trend[osceStats.trend.length - 1] ?? 0) >= 70 ? 'var(--color-data-pass)' : 'var(--color-data-provisional)'}
                         strokeWidth={1.5}
                         min={0}
                         max={100}
@@ -2711,7 +2711,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   )}
 
                   {/* Loading state with smooth skeleton */}
-                  {isLoading && <ChatSkeleton messages={2} className="mt-4" />}
+                  {isLoading && <ChatSkeleton messageCount={2} className="mt-4" />}
 
                   {/* Typing indicator with rotating status (latency masking so user knows system is thinking) */}
                   {isTyping && !isLoading && (

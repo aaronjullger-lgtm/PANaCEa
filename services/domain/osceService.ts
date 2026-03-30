@@ -261,7 +261,7 @@ export async function getSessionHistory(
 
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data: any = await response.json();
     return data.history || [];
   } catch (error) {
     console.error('Error fetching session history:', error);

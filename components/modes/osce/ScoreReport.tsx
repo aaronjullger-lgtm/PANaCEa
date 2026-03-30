@@ -19,6 +19,7 @@ import type {
   OSCEScoreReport,
   CompetencyScore,
   CriticalAction,
+  CriticalActionCategory,
   TimelineEntry,
   LearningGap,
 } from '@/types/osce-enhanced';
@@ -337,11 +338,11 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
               {categoryLabels[cat] || cat}
             </h5>
             <span className="text-xs text-data-neutral ml-auto">
-              {grouped[cat].filter(a => a.triggered).length}/{grouped[cat].length}
+              {(grouped[cat] ?? []).filter(a => a.triggered).length}/{(grouped[cat] ?? []).length}
             </span>
           </div>
           <div className="space-y-1.5">
-            {grouped[cat].map((action) => (
+            {(grouped[cat] ?? []).map((action) => (
               <div
                 key={action.id}
                 className={`flex items-center gap-3 p-2.5 rounded-lg ${

@@ -48,7 +48,7 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
           throw new Error('Failed to fetch OSCE stats');
         }
 
-        const json = await response.json();
+        const json: any = await response.json();
         setStats(json.data);
         setError(null);
       } catch (err) {

@@ -78,16 +78,18 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
 
     // Calculate overdue days for each item
     type DueItem = (typeof dueItems)[0];
-    const enrichedItems = dueItems.map((item: DueItem) => {
-      const overdueDays = Math.floor(
-        (now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      return {
-        ...item,
-        overdueDays,
-        priority: overdueDays * item.difficulty, // Higher = more urgent
-      };
-    });
+    const enrichedItems = dueItems
+      .filter((item: DueItem) => item.dueDate != null)
+      .map((item: DueItem) => {
+        const overdueDays = Math.floor(
+          (now.getTime() - item.dueDate!.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return {
+          ...item,
+          overdueDays: Math.max(0, overdueDays),
+          priority: overdueDays * (item.difficulty ?? 0.3), // Default difficulty if null
+        };
+      });
 
     logger.info('SRS due items retrieved', {
       userId: userId.substring(0, 10),
@@ -103,11 +105,20 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
       },
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     logger.error('SRS due items error', {
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
       userId: auth.userId.substring(0, 10),
     });
-    throw new Error('Failed to fetch due items');
+    // Return empty result instead of 500 for resilience
+    return {
+      data: {
+        items: [],
+        totalDue: 0,
+        timestamp: new Date().toISOString(),
+        error: 'Unable to load due items. Please try again.',
+      },
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

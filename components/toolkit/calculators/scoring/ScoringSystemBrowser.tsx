@@ -64,7 +64,7 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json: any = await res.json();
         if (!cancelled) setSystems(json.data || []);
       } catch (err: any) {
         if (!cancelled) setError(err.message);

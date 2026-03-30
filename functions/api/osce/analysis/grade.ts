@@ -262,7 +262,7 @@ function parseGradePayload(
   const rawChecklist = Array.isArray((parsed as any).checklist) ? (parsed as any).checklist : [];
   const checklist = validateGradeChecklist(rawChecklist, log);
   const rawRedFlags = Array.isArray((parsed as any).redFlagsMissed) ? (parsed as any).redFlagsMissed : [];
-  const redFlagsMissed = rawRedFlags.filter((x): x is string => typeof x === 'string');
+  const redFlagsMissed = rawRedFlags.filter((x: unknown): x is string => typeof x === 'string');
   
   // Extract optional new scoring fields
   const rawCommScore = Number((parsed as any).communicationScore);
@@ -415,7 +415,7 @@ async function persistGradeAndConceptGap(
   if (existingResult) {
     await prisma.osceResult.update({ where: { sessionId }, data });
   } else {
-    await prisma.osceResult.create({ data: { sessionId, ...data } });
+    await prisma.osceResult.create({ data: { sessionId, ...data } as any });
   }
   const savedResult = await prisma.osceResult.findUnique({ where: { sessionId } });
   if (!savedResult) throw new Error('Failed to persist OsceResult');
@@ -433,7 +433,7 @@ async function persistGradeAndConceptGap(
     });
     if (!existingGap) {
       await prisma.conceptGap.create({
-        data: { userId: session.User.id, system, sourceType: 'osce', sourceId: savedResult.id },
+        data: { id: crypto.randomUUID(), userId: session.User.id, system, sourceType: 'osce', sourceId: savedResult.id },
       });
       conceptGapCreated = true;
     }

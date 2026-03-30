@@ -39,7 +39,7 @@ interface CoreAdaptiveSessionProps {
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   performanceData: PerformanceRecord[];
   fontSizeAdjustment: number;
-  setFontSizeAdjustment: (n: number) => void;
+  setFontSizeAdjustment: React.Dispatch<React.SetStateAction<number>>;
   flaggedQuestions: QuizQuestion[];
   addFlaggedQuestion: (q: QuizQuestion) => void;
   removeFlaggedQuestion: (q: QuizQuestion) => void;
@@ -132,7 +132,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Blueprint resolution failed: ${bpResponse.status}`);
         }
 
-        const bp = await bpResponse.json();
+        const bp: any = await bpResponse.json();
         if (cancelled) return;
 
         setBlueprint({
@@ -202,7 +202,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Session generation failed: ${sessionResponse.status}`);
         }
 
-        const session = await sessionResponse.json();
+        const session: any = await sessionResponse.json();
         if (cancelled) return;
 
         setSessionId(session.sessionId);

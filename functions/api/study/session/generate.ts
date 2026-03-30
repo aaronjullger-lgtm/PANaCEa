@@ -71,7 +71,7 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
           }
           result = {
             questionIds: questions.map((q) => q.id),
-            questions,
+            questions: questions as any,
             priorityBreakdown: { A: 0, B: 0, C: size }, // Simplified for adaptive
             deficitsAddressed: [],
             interleavingEnforced: true,

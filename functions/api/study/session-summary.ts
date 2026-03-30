@@ -75,7 +75,7 @@ export const onRequestPost = authenticatedEndpoint(
         },
         select: {
           system: true,
-          isCorrect: true,
+          wasCorrect: true,
           rating: true,
         },
       });
@@ -96,12 +96,13 @@ export const onRequestPost = authenticatedEndpoint(
           sessionBreakdown[sys] = { count: 0, correct: 0, accuracy: 0, fraction: 0 };
         }
         sessionBreakdown[sys].count += 1;
-        if (review.isCorrect) sessionBreakdown[sys].correct += 1;
+        if (review.wasCorrect) sessionBreakdown[sys].correct += 1;
       }
 
       // Calculate fractions and accuracy
       for (const sys of Object.keys(sessionBreakdown)) {
         const entry = sessionBreakdown[sys];
+        if (!entry) continue;
         entry.fraction = totalReviews > 0 ? entry.count / totalReviews : 0;
         entry.accuracy = entry.count > 0 ? entry.correct / entry.count : 0;
       }
@@ -148,7 +149,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Find weakest system by accuracy in this session (min 2 questions)
       const weakSystems = Object.entries(sessionBreakdown)
-        .filter(([, v]) => v.count >= 2 && v.accuracy < 0.6)
+        .filter(([, v]) => v != null && v.count >= 2 && v.accuracy < 0.6)
         .sort((a, b) => a[1].accuracy - b[1].accuracy);
 
       if (weakSystems.length > 0) {

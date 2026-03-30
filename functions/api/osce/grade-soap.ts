@@ -323,7 +323,7 @@ Output your grading as a single JSON object only.`;
     if (existingResult) {
       await prisma.osceResult.update({ where: { sessionId }, data });
     } else {
-      await prisma.osceResult.create({ data: { sessionId, ...data } });
+      await prisma.osceResult.create({ data: { sessionId, ...data } as any });
     }
 
     log.info('SOAP grade saved', {

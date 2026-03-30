@@ -54,7 +54,7 @@ export const onRequestGet = authenticatedEndpoint(
           ScoringSystemConditionLink: {
             select: {
               conditionId: true,
-              condition: {
+              Condition: {
                 select: {
                   id: true,
                   canonicalName: true,

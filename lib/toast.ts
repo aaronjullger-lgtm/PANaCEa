@@ -20,6 +20,8 @@
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
 export interface ToastOptions {
+  /** Dedupe key – if a toast with this id is already visible, skip */
+  id?: string;
   /** Duration in ms; 0 = no auto-dismiss */
   duration?: number;
   /** Optional action button */

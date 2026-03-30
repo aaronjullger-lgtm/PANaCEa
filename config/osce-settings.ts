@@ -115,7 +115,7 @@ export function getAIDifficultyPrompt(difficulty: OSCEConfiguration['aiDifficult
 export function getRandomCulturalScenario(): (typeof CULTURAL_COMPETENCY_SCENARIOS)[number] | null {
   if (CULTURAL_COMPETENCY_SCENARIOS.length === 0) return null;
   const index = Math.floor(Math.random() * CULTURAL_COMPETENCY_SCENARIOS.length);
-  return CULTURAL_COMPETENCY_SCENARIOS[index];
+  return CULTURAL_COMPETENCY_SCENARIOS[index] ?? null;
 }
 
 /**

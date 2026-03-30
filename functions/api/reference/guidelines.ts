@@ -24,6 +24,7 @@ const GetGuidelinesSchema = z.object({
   query: z
     .object({
       query: z.string().max(200).optional(),
+      category: z.string().optional(),
     })
     .optional(),
 });
