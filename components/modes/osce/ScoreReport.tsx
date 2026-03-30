@@ -14,6 +14,8 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  MessageSquare,
+  Shield,
 } from 'lucide-react';
 import type {
   OSCEScoreReport,
@@ -109,6 +111,68 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         >
           <CriticalActionsList actions={report.criticalActions} />
         </CollapsibleSection>
+
+        {/* Communication & Differential Scores */}
+        {(report.communicationScore != null || report.differentialScore != null) && (
+          <CollapsibleSection
+            title="Scoring Dimensions"
+            icon={<MessageSquare className="w-5 h-5" />}
+            isExpanded={expandedSection === 'dimensions'}
+            onToggle={() => toggleSection('dimensions')}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {report.communicationScore != null && (
+                <div className={`rounded-xl p-4 border ${getGradeBg(report.communicationScore)}`}>
+                  <p className="text-xs uppercase tracking-wider text-data-neutral mb-1">Communication</p>
+                  <p className={`text-3xl font-bold ${getGradeColor(report.communicationScore)}`}>
+                    {report.communicationScore}%
+                  </p>
+                  <p className="text-xs text-data-neutral mt-1">Empathy, clarity, patient-centered approach</p>
+                </div>
+              )}
+              {report.differentialScore != null && (
+                <div className={`rounded-xl p-4 border ${getGradeBg(report.differentialScore)}`}>
+                  <p className="text-xs uppercase tracking-wider text-data-neutral mb-1">Differential Diagnosis</p>
+                  <p className={`text-3xl font-bold ${getGradeColor(report.differentialScore)}`}>
+                    {report.differentialScore}%
+                  </p>
+                  <p className="text-xs text-data-neutral mt-1">Breadth, accuracy, cannot-miss diagnoses</p>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
+        )}
+
+        {/* Dangerous Actions */}
+        {report.dangerousActionsDetected && report.dangerousActionsDetected.length > 0 && (
+          <CollapsibleSection
+            title="Patient Safety Alerts"
+            icon={<Shield className="w-5 h-5 text-data-fail" />}
+            isExpanded={expandedSection === 'safety'}
+            onToggle={() => toggleSection('safety')}
+            badge={`${report.dangerousActionsDetected.length} alert${report.dangerousActionsDetected.length > 1 ? 's' : ''}`}
+          >
+            <div className="space-y-2">
+              {report.dangerousActionsDetected.map((action, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 bg-data-fail/10 border border-data-fail/30 rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-data-fail flex-shrink-0" />
+                    <span className="text-sm text-[var(--color-text-primary)]">{action.description}</span>
+                  </div>
+                  <span className="text-sm font-bold text-data-fail whitespace-nowrap ml-3">
+                    -{action.penalty} pts
+                  </span>
+                </div>
+              ))}
+              <p className="text-xs text-data-neutral mt-2 italic">
+                Dangerous actions represent clinical decisions that could harm the patient. Review these carefully.
+              </p>
+            </div>
+          </CollapsibleSection>
+        )}
 
         {/* Timeline */}
         <CollapsibleSection

@@ -93,10 +93,10 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           </h3>
           <button
             onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            className={`px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
               showAdvancedAnalytics
                 ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
             }`}
           >
             {showAdvancedAnalytics ? '✦ Advanced View' : 'Switch to Advanced'}
@@ -134,7 +134,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           <button
             onClick={() => navigate('/clinical-profile')}
-            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
@@ -151,7 +151,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
           <button
             onClick={() => navigate('/gap-analysis')}
-            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">

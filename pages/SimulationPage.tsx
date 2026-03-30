@@ -221,7 +221,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           transition={{ delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-4 border border-[var(--color-border)] transition-all duration-200">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-data-pass" />
               <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
@@ -231,7 +231,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-4 border border-[var(--color-border)] transition-all duration-200">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4 text-[var(--color-accent)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Today</span>
@@ -241,7 +241,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-4 border border-[var(--color-border)] transition-all duration-200">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-data-provisional" />
               <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
@@ -251,7 +251,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-4 border border-[var(--color-border)] transition-all duration-200">
             <div className="flex items-center gap-2 mb-1">
               <Flag className="w-4 h-4 text-data-fail" />
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
@@ -284,7 +284,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   type="button"
                   key={option.id}
                   onClick={() => setSelectedFocus(option.id)}
-                  className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center ${
+                  className={`relative flex min-h-[88px] p-5 rounded-2xl border-2 transition-all duration-200 text-left items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                     isSelected
                       ? `${tone.border} ${tone.bg}`
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'

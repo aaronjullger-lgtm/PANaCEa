@@ -100,11 +100,10 @@ function BottomTabBar({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
-      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom shadow-[0_-2px_12px_rgba(15,23,42,0.06)]"
       aria-label="Main navigation"
     >
-      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
+      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto list-none m-0 p-0">
         {tabs.map((item) => {
           const Icon = item.icon;
           const isActive = item.href ? isPathActive(item.href, pathname, search) : false;

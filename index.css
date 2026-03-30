@@ -42,6 +42,40 @@ html.theme-transitioning * {
 }
 
 /* -----------------------------------------------------
+   GLOBAL INTERACTIVE ELEMENT POLISH
+------------------------------------------------------ */
+
+/* Consistent focus-visible ring for all interactive elements */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-focus-ring, var(--color-accent));
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Subtle hover lift for card-like interactive containers */
+.hover-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--color-shadow-soft, rgba(15, 23, 42, 0.08));
+}
+
+/* Smooth transition baseline for common interactive states */
+a,
+button,
+[role="button"] {
+  transition-property: color, background-color, border-color, opacity, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* -----------------------------------------------------
    PREVENT HORIZONTAL SCROLLING ON MOBILE
 ------------------------------------------------------ */
 
@@ -348,30 +382,25 @@ a,
   /* Content max-width - consistent across main content pages */
   --content-max-width: 72rem; /* 1152px = max-w-6xl */
 
-  /* ===== UNIFIED COLORWAY: MEDICAL TEAL + SLATE (prestigious, clinical) ===== */
-  /* Teal-blue: trustworthy medical aesthetic; dark shade for WCAG AA on white */
-  --color-action: #0f766e; /* Teal-700 — primary action, 5.2:1 on white */
-  --color-action-hover: #0d6560;
-  --color-action-light: #f0fdfa; /* Teal-50 — subtle tinted backgrounds */
-  --color-action-text: #f8fafc; /* Off-white on teal */
+  /* ===== UNIFIED COLORWAY: COOLER GOLD + SLATE (same family, light-optimized) ===== */
+  /* Gold: one family in both modes; light mode uses darker shade for contrast on white */
+  --color-action: #9a8f72; /* Cooler gold - accent (same hue as dark, darker for light bg) */
+  --color-action-hover: #8a7f62;
+  --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
+  --color-action-text: #f8fafc; /* Off-white on gold (continuity with dark) */
   --color-label-primary: #0f172a; /* Slate-900 */
   --color-label-secondary: #475569; /* Slate-600 */
 
-  /* Primary palette tokens */
+  /* Navy / Gold palette tokens (same family) */
   --color-navy: #0f172a;
   --color-canvas: #f8fafc; /* slate-50 */
   --color-surface: #ffffff;
-  --color-gold: #0f766e; /* Legacy alias → teal primary */
-  --color-gold-hover: #0d6560;
+  --color-gold: #9a8f72;
+  --color-gold-hover: #8a7f62;
   --color-gold-text: #f8fafc;
-  /* Dark tokens for exam mode and primary CTAs */
-  --color-gold-dark: #115e59; /* Teal-800 — 7:1+ contrast on white */
-  --color-gold-dark-hover: #134e4a; /* Teal-900 */
-
-  /* Warm accent for CTAs and highlights */
-  --color-warm-accent: #d97706; /* Amber-600 — warm CTA highlight */
-  --color-warm-accent-hover: #b45309;
-  --color-warm-accent-light: #fffbeb; /* Amber-50 */
+  /* Gold dark tokens for exam mode and accents */
+  --color-gold-dark: #7a6f52;
+  --color-gold-dark-hover: #6a5f42;
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
@@ -383,8 +412,8 @@ a,
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  /* Primary brand — teal family */
-  --primary: #0f766e;
+  /* Primary brand - same gold family */
+  --primary: #9a8f72;
   --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
@@ -404,16 +433,16 @@ a,
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: var(--color-gold-dark); /* Teal-800 — WCAG AA on bg-primary */
+  --color-accent: var(--color-gold-dark); /* Darker gold (Stormy Slate) — WCAG AA with bg-primary */
   --color-accent-hover: var(--color-gold-dark-hover);
-  --color-accent-button: var(--color-gold-dark); /* Teal-800 for buttons — 7:1+ with white text */
-  --color-accent-border: var(--color-gold); /* Teal-700 for borders */
-  --color-accent-cta: var(--color-warm-accent); /* Amber-600 for primary CTAs — warm, inviting */
-  --color-accent-secondary: #2563eb; /* Blue-600 — charts, secondary CTAs */
-  --color-accent-light: #f0fdfa; /* Teal-50 */
+  --color-accent-button: var(--color-gold-dark); /* Darker gold for buttons — 4.5:1+ with white text */
+  --color-accent-border: var(--color-gold); /* Lighter gold for borders to improve contrast */
+  --color-accent-cta: var(--color-gold-dark); /* Darker gold for primary CTAs only (one per screen) */
+  --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
+  --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: var(--color-gold-dark); /* Teal-800 for focus indicators */
+  --color-focus-ring: var(--color-gold-dark); /* Darker gold for focus indicators */
 
   /* Text on accent - off-white in both modes for continuity */
   --color-text-inverse: #f8fafc;
@@ -562,27 +591,22 @@ a,
 }
 
 .dark {
-  /* ===== UNIFIED COLORWAY: MEDICAL TEAL + SLATE (dark-optimized) ===== */
-  /* Teal: lighter shade for contrast on dark navy */
-  --color-action: #2dd4bf; /* Teal-400 — vibrant on dark bg */
-  --color-action-hover: #5eead4;
+  /* ===== STORMY SLATE + GOLD ACCENT (dark-optimized) ===== */
+  /* Gold: lighter shade for contrast on dark navy */
+  --color-action: #a89b7a; /* Gold — vibrant on dark bg */
+  --color-action-hover: #c4b78a;
   --color-action-light: #1e293b;
-  --color-action-text: #0f172a; /* Dark text on bright teal */
+  --color-action-text: #f8fafc; /* Light text on gold backgrounds */
   --color-label-primary: #f1f5f9;
   --color-label-secondary: #94a3b8;
 
   /* Primary palette tokens (dark-appropriate) */
-  --color-gold: #2dd4bf; /* Teal-400 */
-  --color-gold-hover: #5eead4;
-  --color-gold-text: #0f172a;
+  --color-gold: #a89b7a; /* Gold — dark mode */
+  --color-gold-hover: #c4b78a;
+  --color-gold-text: #f8fafc;
   /* Dark tokens for exam mode and accents (dark mode lighter variant) */
-  --color-gold-dark: #5eead4; /* Teal-300 — high contrast on dark */
-  --color-gold-dark-hover: #99f6e4; /* Teal-200 */
-
-  /* Warm accent */
-  --color-warm-accent: #fbbf24; /* Amber-400 */
-  --color-warm-accent-hover: #f59e0b;
-  --color-warm-accent-light: #1e293b;
+  --color-gold-dark: #c4b78a; /* Lighter gold — high contrast on dark */
+  --color-gold-dark-hover: #b4a77a;
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
@@ -594,9 +618,9 @@ a,
   --card: #1e293b;
   --card-foreground: #f1f5f9;
 
-  /* Primary brand — teal family */
-  --primary: #2dd4bf;
-  --primary-foreground: #0f172a;
+  /* Primary brand — gold family */
+  --primary: #a89b7a;
+  --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
   --muted: #334155;
@@ -615,18 +639,18 @@ a,
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: var(--color-gold); /* Teal-400 on dark background */
+  --color-accent: var(--color-gold); /* Gold on dark background */
   --color-accent-hover: var(--color-gold-dark);
-  --color-accent-button: #14b8a6; /* Teal-500 for buttons — 4.5:1+ on dark bg */
-  --color-accent-border: var(--color-gold-dark); /* Teal-300 for borders on dark */
-  --color-accent-cta: var(--color-warm-accent); /* Amber-400 for primary CTAs in dark mode */
-  --color-accent-cta-dark: var(--color-warm-accent);
-  --color-accent-secondary: #60a5fa; /* Blue-400 — charts, secondary CTAs */
+  --color-accent-button: #8a7f62; /* Darker gold for buttons — good contrast on dark bg */
+  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders on dark */
+  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode */
+  --color-accent-cta-dark: var(--color-gold-dark);
+  --color-accent-secondary: #91a6bd; /* Steel blue — charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc; /* Light text for buttons on colored backgrounds */
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: var(--color-gold); /* Teal for dark mode focus */
+  --color-focus-ring: var(--color-gold); /* Gold for dark mode focus */
 
   --color-modal-bg: #475569;
   --color-glass-bg: rgba(30, 41, 59, 0.7);

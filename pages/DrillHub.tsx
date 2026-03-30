@@ -173,10 +173,36 @@ export default function DrillHub(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div className="text-center">
-          <Brain className="w-16 h-16 text-[var(--color-accent)] animate-pulse mx-auto mb-4" />
-          <p className="text-[var(--color-text-muted)]">Loading Drill Hub...</p>
+      <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Skeleton header */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse" />
+              <div className="h-10 w-64 rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
+            </div>
+            <div className="h-5 w-80 mx-auto rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+          </div>
+          {/* Skeleton stat cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)]">
+                <div className="h-4 w-24 rounded bg-[var(--color-bg-tertiary)] animate-pulse mb-3" />
+                <div className="h-8 w-16 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+              </div>
+            ))}
+          </div>
+          {/* Skeleton drill cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-2xl p-8 bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse mb-6" />
+                <div className="h-6 w-32 rounded bg-[var(--color-bg-tertiary)] animate-pulse mb-2" />
+                <div className="h-4 w-full rounded bg-[var(--color-bg-tertiary)] animate-pulse mb-6" />
+                <div className="h-4 w-20 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -219,40 +245,48 @@ export default function DrillHub(): JSX.Element {
             transition={{ delay: 0.1 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
           >
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] transition-all duration-200 hover:border-[var(--color-data-provisional)]/40">
               <div className="flex items-center gap-3 mb-2">
-                <Trophy className="w-6 h-6 text-data-provisional" />
-                <span className="text-[var(--color-text-muted)] text-sm">Total Sessions</span>
+                <div className="p-2 rounded-xl bg-[var(--color-data-provisional)]/10">
+                  <Trophy className="w-5 h-5 text-[var(--color-data-provisional)]" />
+                </div>
+                <span className="text-[var(--color-text-muted)] text-sm font-medium">Total Sessions</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)]">
                 {overview.totalSessions}
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] transition-all duration-200 hover:border-[var(--color-data-pass)]/40">
               <div className="flex items-center gap-3 mb-2">
-                <Target className="w-6 h-6 text-data-pass" />
-                <span className="text-[var(--color-text-muted)] text-sm">Overall Accuracy</span>
+                <div className="p-2 rounded-xl bg-[var(--color-data-pass)]/10">
+                  <Target className="w-5 h-5 text-[var(--color-data-pass)]" />
+                </div>
+                <span className="text-[var(--color-text-muted)] text-sm font-medium">Overall Accuracy</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)]">
                 {(overview.overallAccuracy * 100).toFixed(1)}%
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] transition-all duration-200 hover:border-[var(--color-accent)]/40">
               <div className="flex items-center gap-3 mb-2">
-                <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
-                <span className="text-[var(--color-text-muted)] text-sm">Current Streak</span>
+                <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
+                  <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
+                </div>
+                <span className="text-[var(--color-text-muted)] text-sm font-medium">Current Streak</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)]">
                 {overview.currentStreak} days
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] transition-all duration-200 hover:border-[var(--color-data-provisional)]/40">
               <div className="flex items-center gap-3 mb-2">
-                <Award className="w-6 h-6 text-data-provisional" />
-                <span className="text-[var(--color-text-muted)] text-sm">Best Streak</span>
+                <div className="p-2 rounded-xl bg-[var(--color-data-provisional)]/10">
+                  <Award className="w-5 h-5 text-[var(--color-data-provisional)]" />
+                </div>
+                <span className="text-[var(--color-text-muted)] text-sm font-medium">Best Streak</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)]">
                 {overview.bestStreak} days
@@ -360,7 +394,7 @@ export default function DrillHub(): JSX.Element {
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[var(--color-bg-secondary)] rounded-xl p-8 border border-[var(--color-border)]"
+            className="bg-[var(--color-bg-secondary)] rounded-2xl p-8 border border-[var(--color-border)]"
           >
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />

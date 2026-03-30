@@ -524,45 +524,44 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return `${text}\n\n—\n${translated}`;
   };
 
-  const generateTrendData = (currentValueStr: string): number[] | null => {
-    // Extract first number found in string
+  // Deterministic pseudo-random using a simple hash of the input string
+  // Avoids unstable sparkline data on every re-render
+  const generateTrendData = useCallback((currentValueStr: string): number[] | null => {
     const match = currentValueStr.match(/(\d+(\.\d+)?)/);
     if (!match) return null;
 
     const currentVal = parseFloat(match[0]);
     if (isNaN(currentVal)) return null;
 
-    // Generate 5-7 historical points
+    // Simple deterministic seed from the string
+    let seed = 0;
+    for (let i = 0; i < currentValueStr.length; i++) {
+      seed = ((seed << 5) - seed + currentValueStr.charCodeAt(i)) | 0;
+    }
+    const seededRandom = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return (seed % 1000) / 1000;
+    };
+
     const points = 6;
     const data: number[] = [];
-
-    // Create a trend that leads to the current value
-    // Randomly decide if trend is stable, rising, or falling
-    const trendType = Math.random();
-
+    const trendType = seededRandom();
     let val = currentVal;
 
-    // Work backwards
     for (let i = 0; i < points; i++) {
       data.unshift(val);
-
-      // Add noise
-      const noise = (Math.random() - 0.5) * (currentVal * 0.1); // 10% variance
-
+      const noise = (seededRandom() - 0.5) * (currentVal * 0.1);
       if (trendType < 0.6) {
-        // Stable
         val = val + noise;
       } else if (trendType < 0.8) {
-        // Rising (so previous was lower)
         val = val - currentVal * 0.05 + noise;
       } else {
-        // Falling (so previous was higher)
         val = val + currentVal * 0.05 + noise;
       }
     }
 
     return data;
-  };
+  }, []);
 
   const handleStartEncounter = async () => {
     setIsLoading(true);
@@ -1022,7 +1021,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               currentCase.id,
               currentCase.correctDiagnosis || 'Unknown',
               'general',
-              osceScore
+              osceScore,
+              {
+                communicationScore: rubricResult.communicationScore,
+                differentialScore: rubricResult.differentialScore,
+                hadDangerousActions: (rubricResult.dangerousActionsDetected?.length ?? 0) > 0,
+              }
             );
           } catch {
             // Non-critical — don't block results
@@ -3138,6 +3142,54 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <p className="text-xs text-data-neutral">out of 100</p>
                     </div>
                   </div>
+
+                  {/* Extended scoring dimensions */}
+                  {(gradeResult.communicationScore != null || gradeResult.differentialScore != null) && (
+                    <div className="flex items-center gap-4 mb-4 p-3 bg-data-neutral-bg rounded-lg border border-data-neutral">
+                      {gradeResult.communicationScore != null && (
+                        <div className="flex-1 text-center">
+                          <p className="text-xs text-data-neutral uppercase tracking-wider">Communication</p>
+                          <p className={`text-xl font-bold ${
+                            gradeResult.communicationScore >= 80 ? 'text-data-pass' :
+                            gradeResult.communicationScore >= 60 ? 'text-data-provisional' : 'text-data-fail'
+                          }`}>{gradeResult.communicationScore}</p>
+                          <p className="text-xs text-data-neutral">out of 100</p>
+                        </div>
+                      )}
+                      {gradeResult.communicationScore != null && gradeResult.differentialScore != null && (
+                        <div className="h-10 w-px bg-data-neutral-bg" />
+                      )}
+                      {gradeResult.differentialScore != null && (
+                        <div className="flex-1 text-center">
+                          <p className="text-xs text-data-neutral uppercase tracking-wider">Differentials</p>
+                          <p className={`text-xl font-bold ${
+                            gradeResult.differentialScore >= 80 ? 'text-data-pass' :
+                            gradeResult.differentialScore >= 60 ? 'text-data-provisional' : 'text-data-fail'
+                          }`}>{gradeResult.differentialScore}</p>
+                          <p className="text-xs text-data-neutral">out of 100</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Dangerous actions alert */}
+                  {gradeResult.dangerousActionsDetected && gradeResult.dangerousActionsDetected.length > 0 && (
+                    <div className="mb-4 p-3 bg-red-900/20 rounded-lg border border-red-500/40">
+                      <p className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        Dangerous Actions Detected ({gradeResult.dangerousActionsDetected.length})
+                      </p>
+                      <ul className="space-y-1">
+                        {gradeResult.dangerousActionsDetected.map((action, idx) => (
+                          <li key={idx} className="text-sm text-red-300 flex items-center gap-2">
+                            <Shield className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                            {action.description}
+                            <span className="text-xs text-red-400/70 ml-auto">-{action.penalty} pts</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Checklist if any */}
                   {gradeResult.checklist?.length > 0 ? (

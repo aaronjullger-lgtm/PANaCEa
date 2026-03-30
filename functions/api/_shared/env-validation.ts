@@ -44,7 +44,7 @@ export type EnvRequirement = keyof typeof ENV_REQUIREMENTS;
  */
 export class MissingEnvError extends Error {
   public readonly missingVars: string[];
-  public readonly statusCode = 500;
+  public readonly statusCode = 503;
   private readonly env?: Record<string, unknown>;
 
   constructor(missingVars: string[], env?: Record<string, unknown>) {
@@ -74,7 +74,7 @@ export class MissingEnvError extends Error {
         },
       }),
       {
-        status: 500,
+        status: 503,
         headers: { 'Content-Type': 'application/json' },
       }
     );

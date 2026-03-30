@@ -73,7 +73,7 @@ export interface UseEnhancedOSCEReturn {
   // Orders
   placeOrder: (order: PlacedOrder) => void;
   cancelOrder: (orderId: string) => void;
-  getOrderAlerts: () => void;
+  getOrderAlerts: () => import('@/types/osce-enhanced').OrderAlert[];
 
   // Physical Exam
   recordExamFinding: (finding: ExamFinding) => void;
@@ -383,10 +383,101 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
     }));
   }, []);
 
-  // Get order alerts (placeholder)
-  const getOrderAlerts = useCallback(() => {
-    // Logic would check for duplicates, allergies, etc.
-  }, []);
+  // Get order alerts — checks duplicates, contraindications, and redundancy
+  const getOrderAlerts = useCallback((): import('@/types/osce-enhanced').OrderAlert[] => {
+    const alerts: import('@/types/osce-enhanced').OrderAlert[] = [];
+    const activeOrders = state.orders.filter((o) => o.status !== 'cancelled');
+
+    // 1. Duplicate detection: same item ordered twice
+    const seen = new Map<string, number>();
+    for (const order of activeOrders) {
+      const key = order.itemName.toLowerCase();
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    }
+    for (const [name, count] of seen) {
+      if (count > 1) {
+        alerts.push({
+          type: 'duplicate',
+          severity: 'warning',
+          message: `"${name}" ordered ${count} times`,
+          recommendation: 'Cancel duplicate orders to reduce cost and avoid confusion.',
+        });
+      }
+    }
+
+    // 2. Contraindication checks using case historyData (allergies, conditions)
+    const caseData = caseDataRef.current;
+    if (caseData) {
+      const historyText = Object.values(caseData.historyData).join(' ').toLowerCase();
+      const diagnosis = (caseData.correctDiagnosis ?? '').toLowerCase();
+
+      // Common drug-allergy pairs
+      const ALLERGY_PAIRS: Array<{ allergyKeyword: string; drugKeywords: string[]; msg: string }> = [
+        { allergyKeyword: 'penicillin allergy', drugKeywords: ['amoxicillin', 'ampicillin', 'augmentin', 'penicillin'], msg: 'Patient has documented penicillin allergy' },
+        { allergyKeyword: 'sulfa allergy', drugKeywords: ['sulfamethoxazole', 'bactrim', 'tmp-smx', 'sulfonamide'], msg: 'Patient has documented sulfa allergy' },
+        { allergyKeyword: 'nsaid', drugKeywords: ['ibuprofen', 'naproxen', 'ketorolac', 'toradol'], msg: 'Patient has NSAID sensitivity' },
+        { allergyKeyword: 'aspirin allergy', drugKeywords: ['aspirin', 'asa'], msg: 'Patient has aspirin allergy' },
+      ];
+
+      for (const order of activeOrders) {
+        if (order.category !== 'medications') continue;
+        const drugName = order.itemName.toLowerCase();
+
+        for (const pair of ALLERGY_PAIRS) {
+          if (historyText.includes(pair.allergyKeyword) && pair.drugKeywords.some((kw) => drugName.includes(kw))) {
+            alerts.push({
+              type: 'allergy',
+              severity: 'critical',
+              message: `${pair.msg} — "${order.itemName}" may cause reaction`,
+              recommendation: 'Consider alternative medication.',
+            });
+          }
+        }
+
+        // Condition-specific contraindications
+        const CONTRA: Array<{ condition: string; drugKeywords: string[]; msg: string }> = [
+          { condition: 'asthma', drugKeywords: ['metoprolol', 'propranolol', 'atenolol', 'beta-blocker'], msg: 'Beta-blocker contraindicated in acute asthma' },
+          { condition: 'renal', drugKeywords: ['nsaid', 'ibuprofen', 'naproxen', 'ketorolac'], msg: 'NSAIDs contraindicated in renal impairment' },
+          { condition: 'gi bleed', drugKeywords: ['aspirin', 'ibuprofen', 'naproxen', 'heparin', 'warfarin'], msg: 'Anticoagulant/NSAID risk with active GI bleed' },
+        ];
+
+        for (const c of CONTRA) {
+          if ((diagnosis.includes(c.condition) || historyText.includes(c.condition)) &&
+              c.drugKeywords.some((kw) => drugName.includes(kw))) {
+            alerts.push({
+              type: 'contraindication',
+              severity: 'critical',
+              message: `${c.msg} — "${order.itemName}"`,
+              recommendation: 'Review clinical appropriateness.',
+            });
+          }
+        }
+      }
+
+      // 3. Redundant lab orders (e.g., BMP + CMP = redundant BMP)
+      const labNames = activeOrders
+        .filter((o) => o.category === 'labs')
+        .map((o) => o.itemName.toLowerCase());
+      if (labNames.some((n) => n.includes('basic metabolic')) && labNames.some((n) => n.includes('comprehensive metabolic'))) {
+        alerts.push({
+          type: 'duplicate',
+          severity: 'info',
+          message: 'BMP is included within CMP — ordering both is redundant',
+          recommendation: 'Cancel the BMP and keep the CMP.',
+        });
+      }
+      if (labNames.some((n) => n.includes('cbc')) && labNames.filter((n) => n.includes('cbc')).length > 1) {
+        alerts.push({
+          type: 'duplicate',
+          severity: 'info',
+          message: 'Multiple CBC orders detected',
+          recommendation: 'One CBC with differential is sufficient.',
+        });
+      }
+    }
+
+    return alerts;
+  }, [state.orders]);
 
   // Record exam finding
   const recordExamFinding = useCallback((finding: ExamFinding) => {

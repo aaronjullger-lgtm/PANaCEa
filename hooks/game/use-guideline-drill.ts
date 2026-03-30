@@ -54,6 +54,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
   const [sessionResults, setSessionResults] = useState<GuidelineSessionResult['cases']>([]);
   const [allGuidelines, setAllGuidelines] = useState<Guideline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Initialize unified FSRS submission hook
   const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS, fsrsNextReview } = useDrillFSRS({
@@ -69,6 +70,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
         setAllGuidelines(data);
       } catch (error) {
         logger.error(`[${LOG_SCOPE}] Failed to load guidelines`, { error });
+        setLoadError('Failed to load guidelines. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -226,6 +228,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     allGuidelines,
     sessionResult,
     isLoading,
+    loadError,
     selectGuideline,
     submitScore,
     nextVignette,

@@ -71,12 +71,16 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
           select: {
             chiefComplaint: true,
             correctDiagnosis: true,
+            targetSystem: true,
           },
         },
         OsceResult: {
           select: {
             score: true,
             clinicalReasoningScore: true,
+            communicationScore: true,
+            differentialScore: true,
+            dangerousActionsDetected: true,
           },
         },
       },
@@ -97,43 +101,59 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
     });
 
     // Group by system
-    const bySystemMap = new Map<
-      string,
-      { scores: number[]; clinicalScores: number[]; passed: number; total: number }
-    >();
+    type SystemEntry = {
+      scores: number[];
+      clinicalScores: number[];
+      commScores: number[];
+      diffScores: number[];
+      dangerousActionCount: number;
+      passed: number;
+      total: number;
+    };
+    const bySystemMap = new Map<string, SystemEntry>();
 
     for (const session of withScores) {
-      const system = inferSystemFromCase(
-        session.PatientEncounterCase!.chiefComplaint,
-        session.PatientEncounterCase!.correctDiagnosis
-      );
+      const pec = session.PatientEncounterCase!;
+      // Prefer stored targetSystem; fall back to regex inference
+      const system = (pec as { targetSystem?: string | null }).targetSystem
+        || inferSystemFromCase(pec.chiefComplaint, pec.correctDiagnosis);
 
-      const score = session.OsceResult?.score ?? 0;
-      const clinicalScore = session.OsceResult?.clinicalReasoningScore ?? 0;
+      const result = session.OsceResult;
+      const score = result?.score ?? 0;
+      const clinicalScore = result?.clinicalReasoningScore ?? 0;
       const isPassed = score >= PASS_THRESHOLD ? 1 : 0;
 
       if (!bySystemMap.has(system)) {
-        bySystemMap.set(system, { scores: [], clinicalScores: [], passed: 0, total: 0 });
+        bySystemMap.set(system, {
+          scores: [], clinicalScores: [], commScores: [], diffScores: [],
+          dangerousActionCount: 0, passed: 0, total: 0,
+        });
       }
 
       const entry = bySystemMap.get(system)!;
       entry.scores.push(score);
       entry.clinicalScores.push(clinicalScore);
+      if (typeof result?.communicationScore === 'number') entry.commScores.push(result.communicationScore);
+      if (typeof result?.differentialScore === 'number') entry.diffScores.push(result.differentialScore);
+      if (Array.isArray(result?.dangerousActionsDetected)) {
+        entry.dangerousActionCount += (result.dangerousActionsDetected as unknown[]).length;
+      }
       entry.passed += isPassed;
       entry.total += 1;
     }
+
+    const avg = (arr: number[]) => arr.length > 0 ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10 : null;
 
     // Build bySystem array
     const bySystem = Array.from(bySystemMap.entries())
       .map(([system, data]) => ({
         system,
         count: data.total,
-        averageScore:
-          data.total > 0 ? Math.round((data.scores.reduce((a, b) => a + b, 0) / data.total) * 10) / 10 : 0,
-        averageClinicalReasoning:
-          data.total > 0
-            ? Math.round((data.clinicalScores.reduce((a, b) => a + b, 0) / data.total) * 10) / 10
-            : 0,
+        averageScore: avg(data.scores) ?? 0,
+        averageClinicalReasoning: avg(data.clinicalScores) ?? 0,
+        averageCommunicationScore: avg(data.commScores),
+        averageDifferentialScore: avg(data.diffScores),
+        dangerousActionCount: data.dangerousActionCount,
         passRate: data.total > 0 ? Math.round((data.passed / data.total) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count);
@@ -141,14 +161,15 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
     // Build recent trend (last 10 sessions)
     const recentTrend = withScores
       .slice(-10)
-      .map((s) => ({
-        date: s.startTime.toISOString(),
-        score: s.OsceResult?.score ?? 0,
-        system: inferSystemFromCase(
-          s.PatientEncounterCase!.chiefComplaint,
-          s.PatientEncounterCase!.correctDiagnosis
-        ),
-      }));
+      .map((s) => {
+        const pc = s.PatientEncounterCase!;
+        return {
+          date: s.startTime.toISOString(),
+          score: s.OsceResult?.score ?? 0,
+          system: (pc as { targetSystem?: string | null }).targetSystem
+            || inferSystemFromCase(pc.chiefComplaint, pc.correctDiagnosis),
+        };
+      });
 
     // Find weakest and strongest systems
     let weakestSystem: string | null = null;

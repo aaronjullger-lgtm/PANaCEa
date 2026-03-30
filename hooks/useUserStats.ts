@@ -149,6 +149,7 @@ export function useUserStats(): UseUserStatsResult {
 
   // Track sync retry attempts for exponential backoff
   const syncRetryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [performanceData, setPerformanceDataState] = useState<PerformanceRecord[]>(() =>
     safeParse<PerformanceRecord[]>(localStorage.getItem(PERFORMANCE_KEY), [])
@@ -367,8 +368,8 @@ export function useUserStats(): UseUserStatsResult {
           `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
         );
         
-        // Schedule retry with exponential backoff
-        setTimeout(() => {
+        // Schedule retry with exponential backoff (cancel on unmount via ref)
+        retryTimeoutRef.current = setTimeout(() => {
           if (debouncedSyncRef.current) {
             debouncedSyncRef.current.debounced();
           }
@@ -504,8 +505,8 @@ export function useUserStats(): UseUserStatsResult {
           `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
         );
         
-        // Schedule retry with exponential backoff
-        setTimeout(() => {
+        // Schedule retry with exponential backoff (cancel on unmount via ref)
+        retryTimeoutRef.current = setTimeout(() => {
           if (debouncedSyncRef.current) {
             debouncedSyncRef.current.debounced();
           }
@@ -530,6 +531,10 @@ export function useUserStats(): UseUserStatsResult {
       if (debouncedSyncRef.current) {
         debouncedSyncRef.current.cancel();
       }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
     };
   }, [syncToCloud, syncFromCloud, getToken, user, isSignedIn]); // Include all auth dependencies
 
@@ -541,6 +546,10 @@ export function useUserStats(): UseUserStatsResult {
       setIsSyncing(false);
       setSyncError(null);
       syncRetryCountRef.current = 0;
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
     }
   }, [isSignedIn, user]);
 

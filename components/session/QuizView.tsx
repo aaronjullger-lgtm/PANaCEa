@@ -1818,10 +1818,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       <SessionStatsOverlay
         isVisible={showStatsOverlay}
         onToggle={() => setShowStatsOverlay((prev) => !prev)}
-        performanceData={performanceData.map((p) => ({
-          topic: p.system || 'Unknown',
-          correct: p.isCorrect,
-        }))}
+        performanceData={sessionStatsData}
         currentQuestionNumber={questionNumber}
       />
 

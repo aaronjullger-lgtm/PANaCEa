@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { History, TrendingUp, Award, Loader } from 'lucide-react';
+import { History, TrendingUp, Award, Loader, MessageSquare, AlertTriangle, Stethoscope } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 interface StatsData {
@@ -8,11 +8,17 @@ interface StatsData {
   passRate: number;
   averageScore: number;
   averageClinicalReasoningScore: number;
+  averageCommunicationScore: number | null;
+  averageDifferentialScore: number | null;
+  totalDangerousActions: number;
   trend: Array<{
     sessionId: string;
     date: string;
     score: number;
     clinicalReasoningScore: number;
+    communicationScore: number | null;
+    differentialScore: number | null;
+    dangerousActionCount: number;
   }>;
 }
 
@@ -192,6 +198,60 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
             {stats.averageClinicalReasoningScore.toFixed(1)}
           </p>
         </motion.div>
+
+        {stats.averageCommunicationScore != null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-data-neutral/5 border border-data-neutral/30 rounded p-4"
+          >
+            <p className="text-data-neutral/60 text-sm mb-1 flex items-center gap-1">
+              <MessageSquare className="w-3 h-3" /> Avg Communication
+            </p>
+            <p className={`text-2xl font-bold ${
+              stats.averageCommunicationScore >= 80 ? 'text-green-400' :
+              stats.averageCommunicationScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+            }`}>
+              {stats.averageCommunicationScore.toFixed(1)}
+            </p>
+          </motion.div>
+        )}
+
+        {stats.averageDifferentialScore != null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="bg-data-neutral/5 border border-data-neutral/30 rounded p-4"
+          >
+            <p className="text-data-neutral/60 text-sm mb-1 flex items-center gap-1">
+              <Stethoscope className="w-3 h-3" /> Avg Differentials
+            </p>
+            <p className={`text-2xl font-bold ${
+              stats.averageDifferentialScore >= 80 ? 'text-green-400' :
+              stats.averageDifferentialScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+            }`}>
+              {stats.averageDifferentialScore.toFixed(1)}
+            </p>
+          </motion.div>
+        )}
+
+        {stats.totalDangerousActions > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-red-900/10 border border-red-500/30 rounded p-4"
+          >
+            <p className="text-red-400/80 text-sm mb-1 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Safety Alerts
+            </p>
+            <p className="text-2xl font-bold text-red-400">
+              {stats.totalDangerousActions}
+            </p>
+          </motion.div>
+        )}
       </div>
 
       {/* Session List */}

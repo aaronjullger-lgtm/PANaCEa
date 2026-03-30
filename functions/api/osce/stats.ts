@@ -36,7 +36,13 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
         id: true,
         startTime: true,
         OsceResult: {
-          select: { score: true, clinicalReasoningScore: true }
+          select: {
+            score: true,
+            clinicalReasoningScore: true,
+            communicationScore: true,
+            differentialScore: true,
+            dangerousActionsDetected: true,
+          }
         }
       },
       orderBy: { startTime: 'asc' },
@@ -65,11 +71,34 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
           total
         : null;
 
+    // Aggregate new scoring dimensions (skip nulls)
+    const withComm = withScores.filter((s) => typeof s.OsceResult?.communicationScore === 'number');
+    const avgCommunication =
+      withComm.length > 0
+        ? withComm.reduce((sum, s) => sum + (s.OsceResult?.communicationScore ?? 0), 0) / withComm.length
+        : null;
+
+    const withDiff = withScores.filter((s) => typeof s.OsceResult?.differentialScore === 'number');
+    const avgDifferential =
+      withDiff.length > 0
+        ? withDiff.reduce((sum, s) => sum + (s.OsceResult?.differentialScore ?? 0), 0) / withDiff.length
+        : null;
+
+    const totalDangerousActions = withScores.reduce((sum, s) => {
+      const da = s.OsceResult?.dangerousActionsDetected;
+      return sum + (Array.isArray(da) ? da.length : 0);
+    }, 0);
+
     const trend = withScores.map((s) => ({
       sessionId: s.id,
       date: s.startTime.toISOString(),
       score: s.OsceResult?.score ?? 0,
       clinicalReasoningScore: s.OsceResult?.clinicalReasoningScore ?? 0,
+      communicationScore: s.OsceResult?.communicationScore ?? null,
+      differentialScore: s.OsceResult?.differentialScore ?? null,
+      dangerousActionCount: Array.isArray(s.OsceResult?.dangerousActionsDetected)
+        ? (s.OsceResult?.dangerousActionsDetected as unknown[]).length
+        : 0,
     }));
 
     return {
@@ -79,6 +108,11 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
         averageScore: typeof avgScore === 'number' ? Math.round(avgScore) : null,
         averageClinicalReasoningScore:
           typeof avgClinicalReasoning === 'number' ? Math.round(avgClinicalReasoning) : null,
+        averageCommunicationScore:
+          typeof avgCommunication === 'number' ? Math.round(avgCommunication) : null,
+        averageDifferentialScore:
+          typeof avgDifferential === 'number' ? Math.round(avgDifferential) : null,
+        totalDangerousActions,
         trend,
       },
     };

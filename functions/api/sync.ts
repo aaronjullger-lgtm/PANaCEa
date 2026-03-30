@@ -377,6 +377,12 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Resolve clerkId to internal userId
       const internalUserId = await resolveUserId(prisma, context.auth.userId);
+      if (!internalUserId) {
+        return {
+          data: { success: false, error: 'User not found. Please sign out and back in.' },
+          status: 404,
+        };
+      }
 
       // Fetch all user data in parallel
       const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
@@ -418,7 +424,7 @@ export const onRequestGet = authenticatedEndpoint(
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      return { status: 500, error: `Sync GET failed: ${errorMessage}` };
+      return { status: 500, error: 'Data synchronization failed. Please try again.' };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -709,7 +715,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       error: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
     });
-    return { status: 500, error: `Sync POST failed: ${errorMessage}` };
+    return { status: 500, error: 'Data synchronization failed. Please try again.' };
   } finally {
     await safePrismaDisconnect(prisma);
   }

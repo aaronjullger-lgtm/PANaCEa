@@ -17,9 +17,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, Dispatch<S
 
   useEffect(() => {
     try {
-      const valueToStore =
-        typeof storedValue === 'function' ? storedValue(storedValue) : storedValue;
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
       console.error('Failed to save to localStorage. Data might be too large.', error);
     }

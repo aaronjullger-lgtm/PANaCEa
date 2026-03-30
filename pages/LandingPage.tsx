@@ -110,8 +110,7 @@ export function LandingPage() {
                 setAuthMode('sign-in');
                 setShowAuth(true);
               }}
-              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
-              style={{ padding: '0.625rem 1.5rem', border: '2px solid var(--color-text-primary, #e2e8f0)', color: 'var(--color-text-primary, #e2e8f0)', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
+              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-text-primary)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Sign in to your account"
@@ -170,8 +169,7 @@ export function LandingPage() {
                 setAuthMode('sign-up');
                 setShowAuth(true);
               }}
-              className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px]"
-              style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: 'var(--color-text-inverse, #f8fafc)', borderRadius: '0.75rem', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Get started with a free account"
@@ -204,7 +202,7 @@ export function LandingPage() {
                     ·
                   </span>
                 )}
-                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '9999px', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}>
+                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]">
                   {pill}
                 </span>
               </React.Fragment>
@@ -230,10 +228,7 @@ export function LandingPage() {
 
         {/* Inline style is belt-and-suspenders: the CSS utility class may be
             purged or not apply if the bundle is partially stale. */}
-        <div
-          className="grid md:grid-cols-2 gap-8"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem' }}
-        >
+        <div className="grid md:grid-cols-2 gap-8">
           {features.map((feature, idx) => (
             <motion.article
               key={feature.title}
@@ -242,11 +237,9 @@ export function LandingPage() {
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
-              style={{ padding: '2rem', borderRadius: '1rem', backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}
             >
               <div
-                className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg border border-[var(--color-border)]"
-                style={{ width: '3.5rem', height: '3.5rem', flexShrink: 0 }}
+                className="w-14 h-14 shrink-0 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg border border-[var(--color-border)]"
                 aria-hidden
               >
                 <feature.icon className="w-7 h-7 text-[var(--color-accent)]" />
@@ -264,11 +257,8 @@ export function LandingPage() {
 
       {/* Benefits Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
-        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1.5rem', padding: '3rem', border: '1px solid var(--color-border)' }}>
-          <div
-            className="grid lg:grid-cols-2 gap-12 items-center"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '3rem', alignItems: 'center' }}
-          >
+        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-8 sm:p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ x: -20 }}
               whileInView={{ x: 0 }}
@@ -310,7 +300,6 @@ export function LandingPage() {
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.35, delay: idx * 0.04 }}
                   className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', borderRadius: '0.75rem', padding: '1rem', backgroundColor: 'var(--color-bg-tertiary)' }}
                 >
                   <CheckCircle2
                     className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5"
@@ -368,7 +357,6 @@ export function LandingPage() {
       {showAuth && (
           <div
             className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
             onClick={() => setShowAuth(false)}
             role="dialog"
             aria-modal="true"
@@ -377,20 +365,18 @@ export function LandingPage() {
             <div
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md my-8"
-              style={{ width: '100%', maxWidth: '28rem', margin: '2rem 0' }}
             >
-              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
-                <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]" style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '1.25rem 1.5rem' }}>
-                  <div className="flex items-center justify-between mb-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]">
+                  <div className="flex items-center justify-between mb-2">
                     <h3 id="auth-modal-title" className="text-2xl font-bold">
                       {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
                     </h3>
                     <button
                       type="button"
                       onClick={() => setShowAuth(false)}
-                      className="p-2 hover:bg-[var(--color-bg-secondary)]/60 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      style={{ padding: '0.5rem', borderRadius: '0.5rem', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      className="p-2 hover:bg-[var(--color-bg-secondary)]/60 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                       aria-label="Close sign in"
                     >
                       <svg

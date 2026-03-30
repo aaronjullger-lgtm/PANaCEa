@@ -274,9 +274,10 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const overallAccuracy =
       totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
 
+    const rawTimeAvg = aggregates._avg?.timeSpentMs;
     const avgTimeMs =
-      aggregates._avg.timeSpentMs != null && aggregates._avg.timeSpentMs > 0
-        ? Math.round(aggregates._avg.timeSpentMs)
+      rawTimeAvg != null && Number(rawTimeAvg) > 0
+        ? Math.round(Number(rawTimeAvg))
         : null;
 
     // Speed by question type: Recall (rapid_recall) vs Clinical Reasoning (vignette/main)
@@ -308,9 +309,10 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       },
     };
 
+    const rawAvg = aggregates._avg?.answerChangedCount;
     const avgAnswerChanges =
-      aggregates._avg.answerChangedCount != null
-        ? Number(aggregates._avg.answerChangedCount.toFixed(2))
+      rawAvg != null
+        ? Number(Number(rawAvg).toFixed(2))
         : null;
 
     // Build system counts from groupBy; add timing/lastAttempt from recentAttempts
@@ -466,7 +468,9 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Calculate study streak (days with at least 1 attempt)
     const attemptDates = new Set(
-      allAttempts.map((a: (typeof allAttempts)[0]) => a.createdAt.toISOString().split('T')[0])
+      allAttempts
+        .filter((a: (typeof allAttempts)[0]) => a.createdAt instanceof Date || typeof a.createdAt === 'string')
+        .map((a: (typeof allAttempts)[0]) => new Date(a.createdAt).toISOString().split('T')[0])
     );
     const sortedDates = Array.from(attemptDates).sort().reverse() as string[];
 

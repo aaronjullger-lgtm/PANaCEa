@@ -295,6 +295,14 @@ export interface OSCEScoreReport {
   strengths: string[];
   areasForImprovement: string[];
   acgmeMilestoneLevel?: number; // 1-5
+  /** Gemini-graded communication quality (0-100) */
+  communicationScore?: number;
+  /** Gemini-graded differential diagnosis quality (0-100) */
+  differentialScore?: number;
+  /** Dangerous clinical actions detected during encounter */
+  dangerousActionsDetected?: Array<{ description: string; penalty: number }>;
+  /** Student-submitted differential diagnoses */
+  submittedDifferentials?: string[];
 }
 
 // =============================================================================

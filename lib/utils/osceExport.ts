@@ -11,6 +11,8 @@ export interface OSCEExportParams {
   score?: number;
   clinicalReasoningScore?: number;
   differentialScore?: number;
+  communicationScore?: number;
+  dangerousActionsDetected?: Array<{ description: string; penalty: number }>;
   competencies?: {
     historyTaking?: number;
     physicalExam?: number;
@@ -34,6 +36,8 @@ export function generateOSCEMarkdown(params: OSCEExportParams): string {
     score,
     clinicalReasoningScore,
     differentialScore,
+    communicationScore,
+    dangerousActionsDetected,
     competencies,
     checklist,
     redFlagsMissed,
@@ -51,6 +55,7 @@ export function generateOSCEMarkdown(params: OSCEExportParams): string {
   if (score !== undefined) md += `**Overall Score:** ${score}%\n`;
   if (clinicalReasoningScore !== undefined) md += `**Clinical Reasoning Score:** ${clinicalReasoningScore}%\n`;
   if (differentialScore !== undefined) md += `**Differential Diagnosis Score:** ${differentialScore}%\n`;
+  if (communicationScore !== undefined) md += `**Communication Score:** ${communicationScore}%\n`;
   md += '\n---\n\n';
 
   // Diagnosis Result
@@ -92,6 +97,17 @@ export function generateOSCEMarkdown(params: OSCEExportParams): string {
     md += `## Red Flags Missed\n\n`;
     redFlagsMissed.forEach((flag) => {
       md += `- ⚠️ ${flag}\n`;
+    });
+    md += '\n';
+  }
+
+  // Dangerous Actions
+  if (dangerousActionsDetected && dangerousActionsDetected.length > 0) {
+    const totalPenalty = dangerousActionsDetected.reduce((sum, a) => sum + a.penalty, 0);
+    md += `## Dangerous Actions Detected\n\n`;
+    md += `> **Total penalty: -${totalPenalty} points**\n\n`;
+    dangerousActionsDetected.forEach((action) => {
+      md += `- 🚨 ${action.description} (-${action.penalty} pts)\n`;
     });
     md += '\n';
   }

@@ -70,7 +70,7 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={`
-        rounded-lg font-medium transition-colors
+        rounded-xl font-semibold transition-all duration-200
         disabled:opacity-50 disabled:cursor-not-allowed
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${variantClasses[variant]}

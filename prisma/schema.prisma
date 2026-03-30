@@ -1926,6 +1926,8 @@ model PatientEncounterCase {
   differentialDiagnoses   String[]
   idealWorkup             String[]
   teachingPoints          String[]
+  targetSystem            String?                   /// Organ system (cardiovascular, pulmonary, etc.)
+  difficulty              String?                   /// Difficulty level (easy, moderate, hard, very_hard)
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime
   CaseRubric              CaseRubric?

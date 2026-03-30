@@ -74,11 +74,25 @@ function saveSchedules(schedules: Record<string, OSCEConditionSchedule>): void {
  * Pass: stability increases (spaced further out)
  * Fail: stability decreases (reviewed sooner)
  */
+/**
+ * Update or create a condition schedule based on performance.
+ *
+ * Core scoring uses `score` (0-100) with pass >= 70.
+ * Optional enrichment signals further modulate scheduling:
+ * - `communicationScore` < 60 adds a communication penalty (harder to master)
+ * - `differentialScore` < 60 adds a differential penalty
+ * - `hadDangerousActions` forces a safety-critical review within 1-2 days
+ */
 export function updateConditionSchedule(
   conditionId: string,
   conditionName: string,
   system: string,
-  score: number // 0-100
+  score: number, // 0-100
+  opts?: {
+    communicationScore?: number;
+    differentialScore?: number;
+    hadDangerousActions?: boolean;
+  }
 ): void {
   const schedules = loadSchedules();
   const today = getTodayISO();
@@ -114,6 +128,27 @@ export function updateConditionSchedule(
     entry.stability = Math.max(1, entry.stability * 0.3);
     // Increase difficulty on fail
     entry.difficulty = Math.min(1, entry.difficulty + 0.15);
+  }
+
+  // Enrichment signal modulation
+  if (opts) {
+    // Weak communication: reduce stability by 20% and increase difficulty
+    if (typeof opts.communicationScore === 'number' && opts.communicationScore < 60) {
+      entry.stability = Math.max(1, entry.stability * 0.8);
+      entry.difficulty = Math.min(1, entry.difficulty + 0.05);
+    }
+
+    // Weak differentials: reduce stability by 25% (clinical reasoning gap)
+    if (typeof opts.differentialScore === 'number' && opts.differentialScore < 60) {
+      entry.stability = Math.max(1, entry.stability * 0.75);
+      entry.difficulty = Math.min(1, entry.difficulty + 0.08);
+    }
+
+    // Dangerous actions: force urgent review (1-2 days) — patient safety priority
+    if (opts.hadDangerousActions) {
+      entry.stability = Math.min(entry.stability, 2);
+      entry.difficulty = Math.min(1, entry.difficulty + 0.2);
+    }
   }
 
   entry.nextReviewDate = addDays(today, Math.ceil(entry.stability));

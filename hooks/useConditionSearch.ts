@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { searchConditions, type ConditionSearchResult } from '@src/lib/conditionSearch';
 
 interface UseConditionSearchOptions {
@@ -121,10 +121,10 @@ export function useConditionSearch(options: UseConditionSearchOptions = {}): Use
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useState(() => {
+  // Clean up debounce timer and abort controller on unmount
+  useEffect(() => {
     return () => cleanup();
-  });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     query,

@@ -39,6 +39,7 @@ export interface UseFirstLineDrillReturn {
   status: FirstLineDrillStatus;
   selectedCategory: FirstLineCategory;
   isLoading: boolean;
+  loadError: string | null;
   submitAnswer: (answerIndex: number) => void;
   nextQuestion: () => void;
   reset: () => void;
@@ -113,6 +114,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<FirstLineCategory>('random');
   const [allTreatments, setAllTreatments] = useState<FirstLineTreatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [queue, setQueue] = useState<FirstLineQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -144,6 +146,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
         setAllTreatments(validData);
       } catch (error) {
         console.error('Failed to load first line treatments', error);
+        setLoadError('Failed to load treatments. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -301,6 +304,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     status,
     selectedCategory,
     isLoading,
+    loadError,
     submitAnswer,
     nextQuestion,
     reset,

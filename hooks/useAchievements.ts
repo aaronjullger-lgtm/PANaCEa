@@ -64,12 +64,12 @@ export function useAchievements() {
       const stored = localStorage.getItem(key);
       if (stored) {
         const data = JSON.parse(stored);
-        setState({
+        setState((prev) => ({
           achievements: data.achievements || [],
-          streak: data.streak || state.streak,
+          streak: data.streak || prev.streak,
           recentUnlocks: [],
           isLoading: false,
-        });
+        }));
       } else {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
@@ -182,17 +182,7 @@ export function useAchievements() {
 
       saveAchievements(state.achievements, updatedStreak);
 
-      // Check for streak achievements
-      checkStreakAchievements(newStreak);
-    },
-    [state.streak, state.achievements, saveAchievements]
-  );
-
-  /**
-   * Check and unlock streak-based achievements
-   */
-  const checkStreakAchievements = useCallback(
-    (currentStreak: number) => {
+      // Inline streak achievement checks (avoids stale closure from separate useCallback)
       const streakMilestones = [
         { id: 'perfect_10', value: 10 },
         { id: 'flawless_20', value: 20 },
@@ -202,14 +192,13 @@ export function useAchievements() {
         { id: 'daily_dedication_30', value: 30 },
         { id: 'daily_dedication_100', value: 100 },
       ];
-
       streakMilestones.forEach((milestone) => {
-        if (currentStreak >= milestone.value) {
+        if (newStreak >= milestone.value) {
           unlockAchievement(milestone.id);
         }
       });
     },
-    [unlockAchievement]
+    [state.streak, state.achievements, saveAchievements, unlockAchievement]
   );
 
   /**

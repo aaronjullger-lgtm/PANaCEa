@@ -122,4 +122,4 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

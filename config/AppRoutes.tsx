@@ -432,7 +432,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                 </a>
                 {/* Header - fixed height so NavRail (sidebar) starts below it; z-50 above rail */}
                 <header
-                  className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
+                  className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)]/95 border-b border-[var(--color-border)] transition-all duration-300 shadow-[0_1px_3px_rgba(15,23,42,0.06)] backdrop-blur-md"
                   style={{ height: 'var(--header-height, 4rem)' }}
                 >
                   <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
