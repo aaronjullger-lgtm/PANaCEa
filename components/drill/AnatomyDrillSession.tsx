@@ -14,6 +14,8 @@ import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { useAnatomyDrill } from '@/hooks/game/use-anatomy-drill';
 import { getDrillLandingStats } from '@/services/analytics';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface AnatomyDrillSessionProps {
   onExit?: () => void;
@@ -40,28 +42,36 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
   // Landing page
   if (drill.status === 'landing') {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Anatomy Review"
-        description="Master regional anatomy with clinical correlates"
-        icon={Bone}
-        accentColor="slate"
-        stats={stats}
-        onStart={drill.startSession}
-        onExit={onExit}
-        instructions={[
-          'Review anatomical structures by region',
-          'Connect anatomy to clinical presentations',
-          'Master high-yield anatomical relationships',
-          'Apply anatomical knowledge to patient care',
-        ]}
-        objectives={[
-          'Solidify regional anatomy knowledge',
-          'Understand clinically relevant structures',
-          'Recognize anatomical landmarks',
-          'Prepare for PANCE anatomy questions',
-        ]}
-        estimatedMinutes={10}
-      />
+        breadcrumb={['Drills', 'Anatomy']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
+      >
+        <DrillLandingPage
+          title="Anatomy Review"
+          description="Master regional anatomy with clinical correlates"
+          icon={Bone}
+          accentColor="slate"
+          stats={stats}
+          onStart={drill.startSession}
+          onExit={onExit}
+          instructions={[
+            'Review anatomical structures by region',
+            'Connect anatomy to clinical presentations',
+            'Master high-yield anatomical relationships',
+            'Apply anatomical knowledge to patient care',
+          ]}
+          objectives={[
+            'Solidify regional anatomy knowledge',
+            'Understand clinically relevant structures',
+            'Recognize anatomical landmarks',
+            'Prepare for PANCE anatomy questions',
+          ]}
+          estimatedMinutes={10}
+        />
+      </DrillShell>
     );
   }
 

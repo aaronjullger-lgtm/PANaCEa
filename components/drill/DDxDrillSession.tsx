@@ -13,6 +13,8 @@ import { DrillLandingPage } from './DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import { useDifferentialDrill } from '@/hooks/game/use-ddx-drill';
 import { getDrillLandingStats, DrillType } from '@/services/analytics';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface DDxDrillSessionProps {
   onExit?: () => void;
@@ -55,50 +57,58 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
   // Landing page
   if (drill.status === 'landing') {
     return (
-      <DrillLandingPage
-        title="Differential Diagnosis Drill"
-        description="Master the differential diagnosis for common presenting complaints"
-        icon={Stethoscope}
-        accentColor="indigo"
-        stats={stats}
-        onStart={() => drill.startSession(selectedCategory)}
-        onExit={onExit}
-        instructions={[
-          'Identify must-not-miss diagnoses',
-          'Recognize the most common causes',
-          'Learn distinguishing features between conditions',
-          'Spot red flags requiring urgent evaluation',
-        ]}
-        objectives={[
-          'Build systematic DDx approach',
-          'Prioritize dangerous diagnoses',
-          'Recognize clinical patterns',
-          'Prepare for PANCE clinical scenarios',
-        ]}
-        estimatedMinutes={12}
+      <DrillShell
+        title="DDx Drill"
+        breadcrumb={['Drills', 'Differential Diagnosis']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {drill.availableCategories.length > 0 && (
-          <div className="mt-4">
-            <label htmlFor="ddx-system-filter" className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-              Filter by System (Optional)
-            </label>
-            <select
-              id="ddx-system-filter"
-              value={selectedCategory || ''}
-              onChange={(e) => setSelectedCategory(e.target.value || undefined)}
-              className="w-full p-2 border border-[var(--color-border)] rounded-lg 
-                         bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
-            >
-              <option value="">All Systems</option>
-              {drill.availableCategories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Differential Diagnosis Drill"
+          description="Master the differential diagnosis for common presenting complaints"
+          icon={Stethoscope}
+          accentColor="indigo"
+          stats={stats}
+          onStart={() => drill.startSession(selectedCategory)}
+          onExit={onExit}
+          instructions={[
+            'Identify must-not-miss diagnoses',
+            'Recognize the most common causes',
+            'Learn distinguishing features between conditions',
+            'Spot red flags requiring urgent evaluation',
+          ]}
+          objectives={[
+            'Build systematic DDx approach',
+            'Prioritize dangerous diagnoses',
+            'Recognize clinical patterns',
+            'Prepare for PANCE clinical scenarios',
+          ]}
+          estimatedMinutes={12}
+        >
+          {drill.availableCategories.length > 0 && (
+            <div className="mt-4">
+              <label htmlFor="ddx-system-filter" className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                Filter by System (Optional)
+              </label>
+              <select
+                id="ddx-system-filter"
+                value={selectedCategory || ''}
+                onChange={(e) => setSelectedCategory(e.target.value || undefined)}
+                className="w-full p-2 border border-[var(--color-border)] rounded-lg
+                           bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+              >
+                <option value="">All Systems</option>
+                {drill.availableCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </DrillLandingPage>
+      </DrillShell>
     );
   }
 
@@ -155,17 +165,13 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       drill.totalAttempts > 0 ? Math.round((drill.score / drill.totalAttempts) * 100) : 0;
 
     return (
-      <MiniDrillLayout
-        title="DDx Drill"
-        score={drill.score}
-        totalAttempts={drill.totalAttempts}
-        streak={drill.streak}
-        isFeedback={false}
-        isCorrect={null}
-        onExit={drill.exitToMenu}
-        onReset={drill.reset}
+      <DrillShell
+        title="DDx Drill — Complete"
+        breadcrumb={['Drills', 'Differential Diagnosis', 'Results']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
       >
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="mb-4">
               <Trophy className="w-16 h-16 text-[var(--color-accent)] mx-auto" />
@@ -185,7 +191,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
               </button>
               <button
                 onClick={drill.exitToMenu}
-                className="px-6 py-2 border border-[var(--color-border)] rounded-lg 
+                className="px-6 py-2 border border-[var(--color-border)] rounded-lg
                            text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
               >
                 Exit
@@ -193,7 +199,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
             </div>
           </div>
         </div>
-      </MiniDrillLayout>
+      </DrillShell>
     );
   }
 

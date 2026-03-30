@@ -15,6 +15,8 @@ import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './Min
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface PharmDrillSessionProps {
   onExit?: () => void;
@@ -139,34 +141,30 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   // =========================================================================
   if (status === 'landing') {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Pharmacology Quiz"
-        description="High-yield drug mechanisms, side effects, and interactions"
-        icon={Beaker}
-        accentColor="purple"
-        onStart={handleStart}
-        isLoading={isLoading}
-        instructions={[
-          'PANCE high-yield medications',
-          'Multiple question types (MOA, side effects, antidotes)',
-          'Mechanisms of action at the molecular level',
-          'Drug interactions and contraindications',
-          'Detailed explanations with clinical pearls',
-        ]}
+        breadcrumb={['Drills', 'Pharmacology']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {/* Exit button overlay */}
-        {onExit && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onExit}
-              aria-label="Exit drill"
-              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Pharmacology Quiz"
+          description="High-yield drug mechanisms, side effects, and interactions"
+          icon={Beaker}
+          accentColor="purple"
+          onStart={handleStart}
+          onExit={onExit}
+          isLoading={isLoading}
+          instructions={[
+            'PANCE high-yield medications',
+            'Multiple question types (MOA, side effects, antidotes)',
+            'Mechanisms of action at the molecular level',
+            'Drug interactions and contraindications',
+            'Detailed explanations with clinical pearls',
+          ]}
+        />
+      </DrillShell>
     );
   }
 
@@ -175,25 +173,13 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-          <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
-            Pharmacology Quiz
-          </h1>
-          <div className="w-12 sm:w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <DrillShell
+        title="Pharmacology Quiz"
+        breadcrumb={['Drills', 'Pharmacology', 'Select Category']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
             initial={{ y: -20 }}
             animate={{ y: 0 }}
@@ -223,8 +209,8 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
               />
             ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 

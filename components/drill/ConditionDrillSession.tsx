@@ -10,6 +10,8 @@ import MiniDrillLayout, {
 } from './MiniDrillLayout';
 import { QuestionSkeleton } from '../loading';
 import MetacognitionPromptModal from './MetacognitionPromptModal';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface ConditionDrillSessionProps {
   onExit?: () => void;
@@ -123,28 +125,13 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
   // =========================================================================
   if (status === 'menu' || status === 'landing') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
-              {drillTitle}
-            </h1>
-          </div>
-          <div className="w-12 sm:w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <DrillShell
+        title={drillTitle}
+        breadcrumb={['Drills', 'Conditions', 'Select Type']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
             initial={{ y: -20 }}
             animate={{ y: 0 }}
@@ -174,8 +161,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
               />
             ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 
@@ -362,28 +349,13 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
   // =========================================================================
   if (status === 'completed') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
-              {drillTitle}
-            </h1>
-          </div>
-          <div className="w-12 sm:w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+      <DrillShell
+        title={`${drillTitle} — Complete`}
+        breadcrumb={['Drills', 'Conditions', 'Results']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <motion.div
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
@@ -434,8 +406,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
               </button>
             </div>
           </motion.div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 
