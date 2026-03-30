@@ -6,6 +6,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ACHIEVEMENTS, getAchievementById } from '../../config/achievements';
 import { prisma } from '../prisma';
+import { logger } from '../logger';
 
 export interface AchievementProgress {
   achievementId: string;
@@ -54,7 +55,7 @@ export async function unlockAchievement(
 
     return true;
   } catch (error) {
-    console.error('Failed to unlock achievement:', error);
+    logger.error('Failed to unlock achievement', { error });
     return false;
   }
 }
@@ -79,8 +80,8 @@ export async function getUserAchievements(userId: string): Promise<AchievementPr
     return {
       achievementId: def.id,
       isUnlocked: !!unlocked,
-      progress: (unlocked as any)?.progress || 0,
-      unlockedAt: (unlocked as any)?.unlockedAt,
+      progress: unlocked?.progress || 0,
+      unlockedAt: unlocked?.unlockedAt,
     };
   });
 }

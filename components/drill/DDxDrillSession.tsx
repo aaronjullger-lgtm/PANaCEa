@@ -150,6 +150,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
             <button
               onClick={() => drill.startSession(selectedCategory)}
               className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+              aria-label="Retry DDx drill after error"
             >
               Try Again
             </button>
@@ -186,6 +187,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
               <button
                 onClick={() => drill.startSession(selectedCategory)}
                 className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+                aria-label="Start a new DDx drill session"
               >
                 Play Again
               </button>
@@ -193,6 +195,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
                 onClick={drill.exitToMenu}
                 className="px-6 py-2 border border-[var(--color-border)] rounded-lg
                            text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
+                aria-label="Exit to drill menu"
               >
                 Exit
               </button>

@@ -154,7 +154,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl" role="list" aria-label="First-line treatment categories">
             {CATEGORY_CARDS.map((card, index) => (
               <CategoryCard
                 key={card.id}
@@ -216,7 +216,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
             />
 
             {/* Answer Options */}
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 sm:space-y-3" role="radiogroup" aria-label="Answer options">
               {currentQuestion.options.map((option, index) => (
                 <AnswerOption
                   key={`${currentQuestion.id}-${index}`}

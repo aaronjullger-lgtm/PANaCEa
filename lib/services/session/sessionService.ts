@@ -951,7 +951,7 @@ Return ONLY valid JSON (PANCE uses 5 options):
         source: 'generated',
       };
     } catch (error) {
-      console.error('[Session] AI generation failed:', error);
+      logger.error(`[${LOG_SCOPE}] AI generation failed`, { error });
       return null;
     }
   }
@@ -969,7 +969,7 @@ Return ONLY valid JSON (PANCE uses 5 options):
     try {
       contentMap = await this.contentService.getConditionsContent(conditionIds);
     } catch (error) {
-      console.error('[SessionService] Failed to enrich with medical content:', error);
+      logger.error(`[${LOG_SCOPE}] Failed to enrich with medical content`, { error });
       // Return original questions without enrichment
       return questions;
     }
@@ -1037,7 +1037,7 @@ Return ONLY valid JSON (PANCE uses 5 options):
       await Promise.all(upsertPromises);
     } catch (error) {
       // Log error but do not fail the session
-      console.error('[SessionService] Failed to record seen questions:', error);
+      logger.error(`[${LOG_SCOPE}] Failed to record seen questions`, { error });
       // Continue without throwing
     }
   }

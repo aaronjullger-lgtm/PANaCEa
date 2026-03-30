@@ -11,6 +11,9 @@
  */
 
 import { StorageKeys } from '../storage/storageRegistry';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'ExplanationCompression';
 
 /**
  * User bias profile for adaptive explanations.
@@ -427,14 +430,14 @@ export async function storeUserReaction(
       });
 
       if (!response.ok) {
-        console.warn('Failed to sync reaction to backend:', response.statusText);
+        logger.warn(`[${LOG_SCOPE}] Failed to sync reaction to backend: ${response.statusText}`);
       }
     } catch (syncError) {
       // Backend not available, data is safe in localStorage
       console.debug('Backend sync not available, stored locally');
     }
   } catch (error) {
-    console.error('Failed to store reaction:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to store reaction`, { error });
   }
 }
 
@@ -466,14 +469,14 @@ export async function updateWeaknessMap(conditionId: string, wasCorrect: boolean
       });
 
       if (!response.ok) {
-        console.warn('Failed to sync weakness data to backend:', response.statusText);
+        logger.warn(`[${LOG_SCOPE}] Failed to sync weakness data to backend: ${response.statusText}`);
       }
     } catch (syncError) {
       // Backend not available, data is safe in localStorage
       console.debug('Backend sync not available, stored locally');
     }
   } catch (error) {
-    console.error('Failed to update weakness map:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to update weakness map`, { error });
   }
 }
 
@@ -508,14 +511,14 @@ export async function updateConfusionGraph(
       });
 
       if (!response.ok) {
-        console.warn('Failed to sync confusion data to backend:', response.statusText);
+        logger.warn(`[${LOG_SCOPE}] Failed to sync confusion data to backend: ${response.statusText}`);
       }
     } catch (syncError) {
       // Backend not available, data is safe in localStorage
       console.debug('Backend sync not available, stored locally');
     }
   } catch (error) {
-    console.error('Failed to update confusion graph:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to update confusion graph`, { error });
   }
 }
 

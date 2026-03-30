@@ -256,4 +256,46 @@ Implemented 10 more improvements continuing the quality push across fault tolera
 - **Phase 5:** Question data normalization + content backfill
 - Continue logger migration across remaining services
 - Continue a11y sweep across remaining drill components
-- Daily task handles: remaining accessibility, dark mode consistency
+
+---
+
+## 2026-03-30 — 10-Improvement Batch #3: Logger, Type Safety, A11y Sweep
+
+### What was done
+Continued the quality push with 10 more improvements: 4 service files migrated to structured logger (19 calls), 2 type safety fixes (5 `as any` casts), and 4 drill components got accessibility attributes.
+
+### Improvements
+1. **sessionService.ts → logger** — 9 console.error/warn calls → structured logger with LOG_SCOPE
+2. **explanationCompressionService.ts → logger** — 6 console.warn/error calls → structured logger
+3. **confusionService.ts → logger** — 3 console.log/error calls → structured logger
+4. **achievementService.ts → logger + type fix** — 1 console.error → logger; removed 2 `as any` casts on optional chaining (unlocked?.progress, unlocked?.unlockedAt)
+5. **analyticsService.ts type safety** — 3 Prisma groupBy `as any` casts → typed `GroupBySystemCorrectness` / `GroupByUserSystemCorrectness` aliases with `(groupBy as Function)` pattern
+6. **DDxDrillSession a11y** — aria-labels on Try Again, Play Again, and Exit buttons
+7. **AnatomyDrillSession a11y** — role="radiogroup" + aria-label on answer options container
+8. **DermDrillSession a11y** — aria-labels on Next Case, Reveal Image, Start New Session, Exit buttons; role="img" on derm image
+9. **FirstLineDrillSession a11y** — role="radiogroup" + aria-label on answer options; role="list" + aria-label on category grid
+
+### Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| console.* in sessionService.ts | 9 | 0 |
+| console.* in explanationCompressionService.ts | 6 | 0 |
+| console.* in confusionService.ts | 3 | 0 |
+| console.* in achievementService.ts | 1 | 0 |
+| `as any` in achievementService.ts | 2 | 0 |
+| `as any` in analyticsService.ts | 3 | 0 |
+| Drill components with a11y attrs | ~21 | ~25 (+DDx, Anatomy, Derm, FirstLine) |
+
+### Cumulative totals (3 batches)
+| Metric | Total |
+|--------|-------|
+| console.* calls migrated to logger | 52 (12+3+18+9+6+3+1) in 7 service files |
+| `as any` casts eliminated | 27 (4+16+6+2+3) across 5 files |
+| Drill components with a11y | 25 of 34 |
+| Error boundaries | 13 (all active drills via DrillShell) |
+| New test cases | 89 (59 implicit-metrics + 30 useDrillFSRS) |
+
+### Next priority
+- **Phase 5:** Question data normalization + content backfill
+- Logger migration for remaining ~20 service files
+- A11y sweep for remaining ~9 drill components

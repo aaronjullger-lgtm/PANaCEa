@@ -7,6 +7,9 @@
  */
 
 import { StorageKeys } from '../storage/storageRegistry';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'ConfusionMap';
 
 // ============================================================================
 // Types & Interfaces
@@ -99,7 +102,7 @@ function loadConfusionRecords(): Map<string, ConfusionRecord> {
 
     const data = JSON.parse(stored);
     if (data.version !== CONFUSION_VERSION) {
-      console.log('[ConfusionMap] Version mismatch, clearing old data');
+      logger.info(`[${LOG_SCOPE}] Version mismatch, clearing old data`);
       return new Map();
     }
 
@@ -113,7 +116,7 @@ function loadConfusionRecords(): Map<string, ConfusionRecord> {
     }
     return records;
   } catch (error) {
-    console.error('[ConfusionMap] Failed to load records:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to load records`, { error });
     return new Map();
   }
 }
@@ -129,7 +132,7 @@ function saveConfusionRecords(records: Map<string, ConfusionRecord>): void {
     };
     localStorage.setItem(CONFUSION_STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('[ConfusionMap] Failed to save records:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to save records`, { error });
   }
 }
 

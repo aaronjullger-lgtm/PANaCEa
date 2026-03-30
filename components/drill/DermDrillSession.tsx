@@ -144,6 +144,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                 <button
                   onClick={nextCase}
                   className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
+                  aria-label="Proceed to next dermatology case"
                 >
                   Next Case <ArrowRight className="w-4 h-4" />
                 </button>
@@ -198,8 +199,9 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                 {imageRevealed ? (
                   <img
                     src={currentCase.imageUrl}
-                    alt="Dermatological finding"
+                    alt="Dermatological finding for diagnosis"
                     className="w-full h-auto object-contain"
+                    role="img"
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -207,6 +209,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                     <button
                       onClick={() => setImageRevealed(true)}
                       className="px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+                      aria-label="Reveal dermatology image"
                     >
                       Reveal Image
                     </button>
@@ -247,12 +250,14 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
               <button
                 onClick={handleReset}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+                aria-label="Start a new dermatology session"
               >
                 <RotateCcw className="w-4 h-4" /> Start New Session
               </button>
               <button
                 onClick={handleExit}
                 className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+                aria-label="Exit to drill menu"
               >
                 Exit to Menu
               </button>

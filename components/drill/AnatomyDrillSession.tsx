@@ -117,7 +117,7 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
       )}
 
       {/* Answer Options */}
-      <div className="space-y-3 mt-6">
+      <div className="space-y-3 mt-6" role="radiogroup" aria-label="Answer options">
         {drill.currentQuestion?.options.map((option, index) => (
           <AnswerOption
             key={index}

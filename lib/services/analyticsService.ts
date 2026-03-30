@@ -7,6 +7,16 @@
 
 import { prisma } from '@/lib/prisma';
 
+// Prisma groupBy with multi-field `by` arrays produces complex conditional types
+// that TypeScript can't narrow. Using Prisma.$queryRaw would add complexity,
+// so we widen the groupBy call and assert the known result shape.
+type GroupBySystemCorrectness = {
+  system: string | null;
+  wasCorrect: boolean;
+  _count: { id: number };
+};
+type GroupByUserSystemCorrectness = GroupBySystemCorrectness & { userId: string };
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -46,18 +56,14 @@ export interface PeerComparison {
  */
 export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
-  const groupedData = (await prisma.questionAttempt.groupBy({
+  const groupedData = await (prisma.questionAttempt.groupBy as Function)({
     by: ['system', 'wasCorrect'],
     where: {
       userId,
       system: { not: null },
     },
     _count: { id: true },
-  } as any)) as Array<{
-    system: string | null;
-    wasCorrect: boolean;
-    _count: { id: number };
-  }>;
+  }) as GroupBySystemCorrectness[];
 
   // Organize data by system
   const systemMap = new Map<string, { correct: number; total: number }>();
@@ -116,19 +122,14 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
   }
 
   // Group by userId and system to get individual user stats
-  const userSystemData = (await prisma.questionAttempt.groupBy({
+  const userSystemData = await (prisma.questionAttempt.groupBy as Function)({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
       ...(targetUserIds && { userId: { in: targetUserIds } }),
     },
     _count: { id: true },
-  } as any)) as Array<{
-    userId: string;
-    system: string | null;
-    wasCorrect: boolean;
-    _count: { id: number };
-  }>;
+  }) as GroupByUserSystemCorrectness[];
 
   // Calculate per-user, per-system accuracy
   interface UserSystemStat {
@@ -260,19 +261,14 @@ export async function generatePeerComparison(
   }
 
   // Get cohort distribution data for percentile calculation
-  const cohortData = (await prisma.questionAttempt.groupBy({
+  const cohortData = await (prisma.questionAttempt.groupBy as Function)({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
       ...(targetUserIds && { userId: { in: targetUserIds } }),
     },
     _count: { id: true },
-  } as any)) as Array<{
-    userId: string;
-    system: string | null;
-    wasCorrect: boolean;
-    _count: { id: number };
-  }>;
+  }) as GroupByUserSystemCorrectness[];
 
   // Build cohort accuracy distribution by system
   const cohortSystemMap = new Map<string, Map<string, { correct: number; total: number }>>();
