@@ -286,6 +286,7 @@ export function CohortLeaderboard({
                         src={entry.avatarUrl}
                         alt={entry.displayName}
                         className={`rounded-full ${compact ? 'h-6 w-6' : 'h-8 w-8'}`}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : (
                       <div
@@ -439,6 +440,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
               ${position === 1 ? 'h-16 w-16' : 'h-12 w-12'}
               ${isCurrentUser ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}
             `}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
         ) : (
           <div

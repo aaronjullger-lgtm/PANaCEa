@@ -131,6 +131,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
         disabled={disabled}
         autoFocus={autoFocus}
         placeholder="Type a diagnosis..."
+        maxLength={200}
         className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         role="combobox"
         aria-label="Diagnosis input"

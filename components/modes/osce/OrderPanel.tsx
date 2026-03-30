@@ -335,6 +335,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={`Search ${CATEGORY_LABELS[activeTab].toLowerCase()}...`}
+                  autoComplete="off"
+                  aria-label={`Search ${CATEGORY_LABELS[activeTab].toLowerCase()}`}
                   className="w-full pl-10 pr-4 py-2.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg
                          text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]
                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"

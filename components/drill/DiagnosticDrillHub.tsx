@@ -269,6 +269,7 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             aria-label="Search drills"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
             className="w-full px-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all"
           />
           {searchQuery && (

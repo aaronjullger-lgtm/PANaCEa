@@ -222,6 +222,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                 }`}
                 placeholder="e.g., Complete 40 questions daily"
+                maxLength={100}
                 aria-invalid={messages.some(
                   (m) => m.fieldId === 'goal-title' && m.severity === 'error'
                 )}
@@ -249,6 +250,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 rows={2}
                 placeholder="Optional details about this goal"
+                maxLength={500}
               />
             </div>
 

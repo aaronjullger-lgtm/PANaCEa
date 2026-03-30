@@ -39,7 +39,12 @@ export const DataExport: React.FC = () => {
    * Fetch complete review history from API
    */
   const fetchReviewHistory = async (): Promise<ReviewExportData[]> => {
-    const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch review history: ${response.statusText}`);

@@ -173,6 +173,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
                 src={currentCase.imageUrl}
                 alt="Radiological finding"
                 className="w-full h-auto object-contain"
+                onError={(e) => { e.currentTarget.alt = 'Image failed to load'; }}
               />
             </div>
           </motion.div>

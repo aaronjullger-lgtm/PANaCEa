@@ -111,6 +111,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           onLoad={() => setImageLoaded(true)}
+          onError={() => setImageLoaded(true)}
         />
 
         {/* Loading Indicator */}

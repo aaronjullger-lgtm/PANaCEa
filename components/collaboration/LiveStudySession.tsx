@@ -859,6 +859,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                       onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
                       placeholder="Type a message..."
                       aria-label="Chat message"
+                      maxLength={500}
                       className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-accent)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     <StandardButton
