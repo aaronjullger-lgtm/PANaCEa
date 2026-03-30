@@ -269,6 +269,25 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Dynamic document.title per route (pages may override with their own useEffect)
+  useEffect(() => {
+    const titleMap: Record<string, string> = {
+      '/practice': 'Practice | PANaCEa',
+      '/progress': 'Progress | PANaCEa',
+      '/daily-challenges': 'Daily Challenges | PANaCEa',
+      '/clinical-eye': 'Clinical Eye | PANaCEa',
+      '/visualizer': 'Visualizer | PANaCEa',
+      '/commuter-mode': 'Commuter Mode | PANaCEa',
+      '/lecture-converter': 'Lecture Converter | PANaCEa',
+      '/technique-check': 'Technique Check | PANaCEa',
+    };
+    const path = location.pathname;
+    const title = titleMap[path]
+      || (path.startsWith('/admin') ? 'Admin | PANaCEa' : null)
+      || (path.startsWith('/study') ? 'Study | PANaCEa' : null);
+    if (title) document.title = title;
+  }, [location.pathname]);
+
   return (
     <>
 
