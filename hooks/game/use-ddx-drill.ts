@@ -9,6 +9,9 @@ import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { recordDrillSession } from '@/services/analytics';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'DDxDrill';
 
 export type DDxDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'complete' | 'error';
 
@@ -340,7 +343,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         // Start FSRS tracking for the first question
         startQuestionFSRS();
       } catch (err) {
-        console.error('DDx drill error:', err);
+        logger.error(`[${LOG_SCOPE}] Drill error`, { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load differential diagnosis data');
         setStatus('error');
       }
@@ -382,7 +385,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         selectedAnswer,
         timeSpentMs,
       }).catch((err) => {
-        console.error('[useDifferentialDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');

@@ -8,6 +8,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { recordDrillSession } from '@/services/analytics';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'VentilatorDrill';
 
 export type VentMode = 'AC' | 'SIMV' | 'PRVC' | 'PS' | 'CPAP';
 export type VentilatorDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';
@@ -141,7 +144,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
       caseStartTimeRef.current = Date.now();
       startQuestionFSRS();
     } catch (err) {
-      console.error('Error fetching ventilator questions:', err);
+      logger.error(`[${LOG_SCOPE}] Failed to fetch questions`, { error: err });
       setError(err instanceof Error ? err.message : 'Failed to load questions');
       setStatus('error');
     }
@@ -183,7 +186,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
         selectedAnswer: action,
         timeSpentMs,
       }).catch((err) => {
-        console.error('[useVentilatorDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');

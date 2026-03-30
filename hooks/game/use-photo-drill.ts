@@ -3,6 +3,9 @@ import { useAuth } from '@clerk/clerk-react';
 import { submitDrillResult } from '@/services/core';
 import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/analytics';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'PhotoDrill';
 
 // Static fallbacks used in tests/offline mode (database-first in production)
 export const MASTER_CONDITION_LIST: string[] = [
@@ -270,7 +273,7 @@ async function fetchPhotoCases(
     // In production, return empty array so UI can show "No questions available" instead of mocks
     return cases as PhotoCase[];
   } catch (error) {
-    console.error('[Photo Drill] Failed to fetch cases:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to fetch cases`, { error });
     if (isTestEnv) {
       return Array.from({ length: count }).map(() =>
         generateRandomCase((modality as CategoryType) || 'random')
@@ -478,7 +481,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
       const cases = await fetchPhotoCases(modality, count);
       return cases;
     } catch (error) {
-      console.error('[Photo Drill] Failed to fetch cases:', error);
+      logger.error(`[${LOG_SCOPE}] Failed to fetch cases`, { error });
       throw error;
     }
   }, []);
@@ -518,7 +521,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
           setQueue(initialQueue.length > 0 ? initialQueue : []);
         })
         .catch((error) => {
-          console.error('[Photo Drill] Failed to start session:', error);
+          logger.error(`[${LOG_SCOPE}] Failed to start session`, { error });
           setFetchError(error instanceof Error ? error.message : 'Failed to load questions');
           setQueue([]);
         });
@@ -545,7 +548,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
           setQueue((prev) => [...prev, ...newCases]);
         })
         .catch((error) => {
-          console.error('[Photo Drill] Background refill failed:', error);
+          logger.error(`[${LOG_SCOPE}] Background refill failed`, { error });
           // Fail silently - user can continue with existing queue
         });
     }
@@ -644,7 +647,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
         selectedAnswer: answer,
         timeSpentMs,
       }).catch((err) => {
-        console.error('[usePhotoDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');
@@ -755,7 +758,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
       void fetchMoreCases(selectedCategory, INITIAL_QUEUE_SIZE)
         .then((newQueue) => setQueue(newQueue))
         .catch((error) => {
-          console.error('[Photo Drill] Failed to reset:', error);
+          logger.error(`[${LOG_SCOPE}] Failed to reset`, { error });
         });
     } else {
       setStatus('playing');

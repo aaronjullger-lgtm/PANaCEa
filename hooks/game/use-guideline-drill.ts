@@ -2,6 +2,9 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { guidelineService } from '@/services/domain';
 import type { Guideline, GuidelineCase } from '@/types/guidelines';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'GuidelineDrill';
 
 export type GuidelineDrillStatus = 'menu' | 'selecting' | 'playing' | 'feedback' | 'summary';
 
@@ -65,7 +68,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
         const data = await guidelineService.getAllGuidelines();
         setAllGuidelines(data);
       } catch (error) {
-        console.error('Failed to load guidelines', error);
+        logger.error(`[${LOG_SCOPE}] Failed to load guidelines`, { error });
       } finally {
         setIsLoading(false);
       }
@@ -150,7 +153,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
         selectedAnswer: submittedScore.toString(),
         timeSpentMs,
       }).catch((err) => {
-        console.error('[useGuidelineDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');

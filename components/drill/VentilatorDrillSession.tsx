@@ -138,12 +138,13 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
               <p className="text-sm text-[var(--color-text-secondary)] mb-4 text-center font-medium">
                 What is the most appropriate action?
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" role="radiogroup" aria-label="Ventilator action options">
                 {currentCase?.options.map((option) => (
                   <button
                     key={option}
                     onClick={() => submitAction(option)}
                     className="group p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] transition-all text-left"
+                    aria-label={`Select action: ${option}`}
                   >
                     <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-category-practice)] group-hovertext-[var(--color-category-practice)]">
                       {option}
@@ -194,6 +195,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                       ? 'bg-data-pass hover:bg-data-pass text-white'
                       : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                   }`}
+                  aria-label="Proceed to next ventilator case"
                 >
                   Next Case <ArrowRight className="w-4 h-4" />
                 </button>
@@ -411,12 +413,14 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
               <button
                 onClick={handleReset}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg font-medium transition-colors"
+                aria-label="Start a new ventilator session"
               >
                 <RotateCcw className="w-4 h-4" /> Start New Session
               </button>
               <button
                 onClick={handleExit}
                 className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+                aria-label="Exit to drill menu"
               >
                 Exit to Menu
               </button>

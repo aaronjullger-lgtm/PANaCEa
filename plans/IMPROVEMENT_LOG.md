@@ -299,3 +299,42 @@ Continued the quality push with 10 more improvements: 4 service files migrated t
 - **Phase 5:** Question data normalization + content backfill
 - Logger migration for remaining ~20 service files
 - A11y sweep for remaining ~9 drill components
+
+---
+
+## 2026-03-30 — 10-Improvement Batch #4: A11y Sweep Finale + Hook Logger Migration
+
+### What was done
+Completed the accessibility sweep across the final 3 drill components and migrated all 7 game drill hooks from console.error to the structured logger system with LOG_SCOPE pattern.
+
+### Improvements
+1. **GuidelineDrillSession a11y** — aria-labels on Submit Score, Next Case/View Summary, Try Again, Choose Another Guideline buttons; role="group" + aria-label on scoring criteria checklist
+2. **PhysiologyDrillSession a11y** — role="radiogroup" + aria-label on answer options container
+3. **VentilatorDrillSession a11y** — role="radiogroup" + aria-label on action grid; aria-label on each action button; aria-labels on Next Case, Start New Session, Exit buttons
+4. **use-photo-drill.ts → logger** — 6 console.error calls → logger.error with LOG_SCOPE='PhotoDrill'
+5. **use-ddx-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='DDxDrill'
+6. **use-anatomy-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='AnatomyDrill'
+7. **use-pharm-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='PharmDrill'
+8. **use-physiology-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='PhysiologyDrill'
+9. **use-guideline-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='GuidelineDrill'
+10. **use-ventilator-drill.ts → logger** — 2 console.error calls → logger.error with LOG_SCOPE='VentilatorDrill'
+
+### Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| console.error in game drill hooks | 18 (across 7 hooks) | 0 |
+| Drill components with a11y attrs | ~25 | ~28 (+Guideline, Physiology, Ventilator) |
+
+### Cumulative totals (4 batches)
+| Metric | Total |
+|--------|-------|
+| console.* calls migrated to logger | 70 (52 services + 18 hooks) across 14 files |
+| `as any` casts eliminated | 27 across 5 files |
+| Drill components with a11y | 28 of 34 |
+| Error boundaries | 13 (all active drills via DrillShell) |
+| New test cases | 89 (59 implicit-metrics + 30 useDrillFSRS) |
+
+### Next priority
+- **Phase 5:** Question data normalization + content backfill
+- Logger migration for remaining ~13 service files
+- Extract `useAnswerSubmission` hook from QuizView.tsx

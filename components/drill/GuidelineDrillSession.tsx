@@ -250,6 +250,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           <button
             onClick={handleSubmitScore}
             className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white font-semibold rounded-lg transition-colors"
+            aria-label="Submit calculated score"
           >
             Submit Score
           </button>
@@ -297,7 +298,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-4">
               Select criteria that are met:
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-2" role="group" aria-label="Scoring criteria checklist">
               {currentGuideline.components.map((criterion, index) => (
                 <motion.button
                   key={criterion.id}
@@ -383,6 +384,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                 ? 'bg-data-pass hover:bg-data-pass text-white'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
+            aria-label={currentVignetteIndex < totalVignettes - 1 ? 'Proceed to next clinical vignette' : 'View session summary'}
           >
             {currentVignetteIndex < totalVignettes - 1 ? 'Next Case' : 'View Summary'}
             <ArrowRight className="w-4 h-4" />
@@ -542,12 +544,14 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               <button
                 onClick={handleReset}
                 className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors"
+                aria-label="Retry the same guideline"
               >
                 Try Again
               </button>
               <button
                 onClick={backToSelection}
                 className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 rounded-lg font-medium transition-colors"
+                aria-label="Choose a different guideline"
               >
                 Choose Another Guideline
               </button>

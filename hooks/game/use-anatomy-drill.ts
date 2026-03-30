@@ -8,6 +8,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { recordDrillSession } from '@/services/analytics';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'AnatomyDrill';
 
 export type AnatomyDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';
 
@@ -110,7 +113,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
       questionStartTimeRef.current = Date.now();
       startQuestionFSRS();
     } catch (err) {
-      console.error('Error fetching anatomy questions:', err);
+      logger.error(`[${LOG_SCOPE}] Failed to fetch questions`, { error: err });
       setError(err instanceof Error ? err.message : 'Failed to load questions');
       setStatus('error');
     }
@@ -152,7 +155,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
         selectedAnswer,
         timeSpentMs,
       }).catch((err) => {
-        console.error('[useAnatomyDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');

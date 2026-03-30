@@ -1,5 +1,8 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'PharmDrill';
 
 // Import type definitions from the API endpoint
 export interface PharmQuestion {
@@ -116,7 +119,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';
         setError(errorMessage);
-        console.error('Error fetching pharm questions:', err);
+        logger.error(`[${LOG_SCOPE}] Failed to fetch questions`, { error: err });
         return [];
       } finally {
         setIsLoading(false);
@@ -218,7 +221,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
         selectedAnswer,
         timeSpentMs,
       }).catch((err) => {
-        console.error('[usePharmDrill] FSRS submission failed:', err);
+        logger.error(`[${LOG_SCOPE}] FSRS submission failed`, { error: err });
       });
 
       setStatus('feedback');
