@@ -38,7 +38,7 @@ const ALLOWED_TAGS = new Set([
 
 /** Safe attributes per tag - only these are preserved */
 const SAFE_ATTRIBUTES: Record<string, Set<string>> = {
-  a: new Set(['href', 'title', 'target', 'rel']),
+  a: new Set(['href', 'title', 'target', 'rel', 'class']),
   td: new Set(['colspan', 'rowspan']),
   th: new Set(['colspan', 'rowspan', 'scope']),
   span: new Set(['class']),
@@ -88,6 +88,14 @@ function sanitizeTag(tagMatch: string): string {
       } else {
         attrs.push(`${attrName}="${attrValue}"`);
       }
+    }
+  }
+
+  // Enforce rel="noopener noreferrer" on links with target="_blank"
+  if (tagName === 'a' && attrs.some(a => a.includes('target="'))) {
+    const hasRel = attrs.some(a => a.startsWith('rel='));
+    if (!hasRel) {
+      attrs.push('rel="noopener noreferrer"');
     }
   }
 
