@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { guidelineService } from '@/services/domain';
 import type { Guideline, GuidelineCase } from '@/types/guidelines';
 
@@ -50,6 +51,13 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
   const [allGuidelines, setAllGuidelines] = useState<Guideline[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'guideline',
+  });
+
+  const vignetteStartTimeRef = useRef<number>(Date.now());
+
   useEffect(() => {
     const loadGuidelines = async () => {
       try {
@@ -97,14 +105,19 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
       setStreak(0);
       setSessionResults([]);
       setStatus('playing');
+
+      // Start FSRS tracking for the first vignette
+      vignetteStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     },
-    [allGuidelines]
+    [allGuidelines, startQuestionFSRS]
   );
 
   const submitScore = useCallback(
     (submittedScore: number) => {
       if (!currentVignette || status !== 'playing') return;
 
+      recordAnswerChange();
       setUserScore(submittedScore);
 
       const correct = submittedScore === currentVignette.correctScore;
@@ -127,9 +140,21 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
         },
       ]);
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - vignetteStartTimeRef.current;
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentVignette.id,
+        selectedAnswer: submittedScore.toString(),
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useGuidelineDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentVignette, status]
+    [currentVignette, status, recordAnswerChange, submitAnswerFSRS]
   );
 
   const nextVignette = useCallback(() => {
@@ -144,7 +169,11 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     setUserScore(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [currentGuideline, currentVignetteIndex]);
+
+    // Start FSRS tracking for the new vignette
+    vignetteStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [currentGuideline, currentVignetteIndex, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     if (!currentGuideline) return;

@@ -4085,6 +4085,7 @@ enum CohortRole {
 
 enum SessionType {
   MAIN
+  DRILL
   CRAM
   RAPID_RECALL
 }

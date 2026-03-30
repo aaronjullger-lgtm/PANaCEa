@@ -5,7 +5,8 @@
  * Practice adjusting ventilator settings based on clinical scenarios and ABG results.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { recordDrillSession } from '@/services/analytics';
 
 export type VentMode = 'AC' | 'SIMV' | 'PRVC' | 'PS' | 'CPAP';
@@ -76,8 +77,14 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
   const [status, setStatus] = useState<VentilatorDrillStatus>('landing');
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'ventilator',
+  });
+
   // Track session for statistics
   const sessionStartRef = useRef<number>(Date.now());
+  const caseStartTimeRef = useRef<number>(Date.now());
   const sessionDataRef = useRef({
     questionsAttempted: 0,
     correctAnswers: 0,
@@ -128,6 +135,10 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
       setCases(shuffled);
       setCurrentCaseIndex(0);
       setStatus('playing');
+
+      // Start FSRS tracking for the first case
+      caseStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } catch (err) {
       console.error('Error fetching ventilator questions:', err);
       setError(err instanceof Error ? err.message : 'Failed to load questions');
@@ -139,6 +150,7 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
     (action: string) => {
       if (!currentCase || status !== 'playing') return;
 
+      recordAnswerChange();
       setUserAction(action);
       const correct = action === currentCase.correctAnswer;
       setIsCorrect(correct);
@@ -161,9 +173,21 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - caseStartTimeRef.current;
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentCase.id,
+        selectedAnswer: action,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useVentilatorDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentCase, status]
+    [currentCase, status, recordAnswerChange, submitAnswerFSRS]
   );
 
   const nextCase = useCallback(() => {
@@ -172,11 +196,15 @@ export function useVentilatorDrill(): UseVentilatorDrillReturn {
       setUserAction(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the new case
+      caseStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } else {
       // End of questions - fetch more or reset
       fetchQuestions();
     }
-  }, [currentCaseIndex, cases.length, fetchQuestions]);
+  }, [currentCaseIndex, cases.length, fetchQuestions, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     // Record session before reset

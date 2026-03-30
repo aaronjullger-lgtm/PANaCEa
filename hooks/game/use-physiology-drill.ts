@@ -5,7 +5,8 @@
  * Practice core physiology concepts essential for clinical reasoning.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { recordDrillSession } from '@/services/analytics';
 
 export type PhysiologyDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';
@@ -47,7 +48,13 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
   const [status, setStatus] = useState<PhysiologyDrillStatus>('landing');
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'physiology',
+  });
+
   const sessionStartRef = useRef<number>(Date.now());
+  const questionStartTimeRef = useRef<number>(Date.now());
   const sessionDataRef = useRef({
     questionsAttempted: 0,
     correctAnswers: 0,
@@ -97,6 +104,10 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
       setQuestions(shuffled);
       setCurrentQuestionIndex(0);
       setStatus('playing');
+
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } catch (err) {
       console.error('Error fetching physiology questions:', err);
       setError(err instanceof Error ? err.message : 'Failed to load questions');
@@ -108,6 +119,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
     (index: number) => {
       if (!currentQuestion || status !== 'playing') return;
 
+      recordAnswerChange();
       setUserAnswerIndex(index);
       const correct = index === currentQuestion.correctIndex;
       setIsCorrect(correct);
@@ -130,9 +142,22 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+      const selectedAnswer = currentQuestion.options[index];
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[usePhysiologyDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentQuestion, status]
+    [currentQuestion, status, recordAnswerChange, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {
@@ -141,11 +166,15 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the new question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } else {
       // End of questions - fetch more
       fetchQuestions();
     }
-  }, [currentQuestionIndex, questions.length, fetchQuestions]);
+  }, [currentQuestionIndex, questions.length, fetchQuestions, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     // Record session before reset

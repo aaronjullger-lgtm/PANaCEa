@@ -5,7 +5,8 @@
  * Manages case loading, deprescribing evaluation, and progress tracking.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import type { PolypharmacyCase, PolypharmacyAttempt, Medication } from '@/types/drill-modes';
 
 export interface PolypharmacyDrillState {
@@ -49,6 +50,13 @@ export function usePolypharmacyDrill(
     },
   });
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'polypharmacy',
+  });
+
+  const caseStartTimeRef = useRef<number>(Date.now());
+
   /**
    * Load a new polypharmacy case from the database
    */
@@ -77,6 +85,10 @@ export function usePolypharmacyDrill(
         currentCase: cases[0]!,
         loading: false,
       }));
+
+      // Start FSRS tracking for the new case
+      caseStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -144,50 +156,64 @@ export function usePolypharmacyDrill(
   /**
    * Submit deprescribing decision and get feedback
    */
-  const submitDeprescribingDecision = async (
-    medicationIds: string[]
-  ): Promise<{ correct: boolean; partialCredit: number; feedback: string }> => {
-    if (!state.currentCase) {
-      return {
-        correct: false,
-        partialCredit: 0,
-        feedback: 'No active case',
+  const submitDeprescribingDecision = useCallback(
+    async (medicationIds: string[]): Promise<{ correct: boolean; partialCredit: number; feedback: string }> => {
+      if (!state.currentCase) {
+        return {
+          correct: false,
+          partialCredit: 0,
+          feedback: 'No active case',
+        };
+      }
+
+      recordAnswerChange();
+      const result = evaluateDeprescribingDecision(
+        medicationIds,
+        state.currentCase.correctMedicationsToStop
+      );
+
+      // Record attempt
+      const attempt: PolypharmacyAttempt = {
+        caseId: state.currentCase.id,
+        selectedMedications: medicationIds,
+        correct: result.correct,
+        partialCredit: result.partialCredit,
+        feedback: result.feedback,
+        timestamp: Date.now(),
       };
-    }
 
-    const result = evaluateDeprescribingDecision(
-      medicationIds,
-      state.currentCase.correctMedicationsToStop
-    );
+      // Update state
+      setState((prev) => ({
+        ...prev,
+        attempts: [...prev.attempts, attempt],
+        score: {
+          correct: prev.score.correct + (result.correct ? 1 : 0),
+          total: prev.score.total + 1,
+          partialCreditTotal: prev.score.partialCreditTotal + result.partialCredit,
+        },
+      }));
 
-    // Record attempt
-    const attempt: PolypharmacyAttempt = {
-      caseId: state.currentCase.id,
-      selectedMedications: medicationIds,
-      correct: result.correct,
-      partialCredit: result.partialCredit,
-      feedback: result.feedback,
-      timestamp: Date.now(),
-    };
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - caseStartTimeRef.current;
 
-    // Update state
-    setState((prev) => ({
-      ...prev,
-      attempts: [...prev.attempts, attempt],
-      score: {
-        correct: prev.score.correct + (result.correct ? 1 : 0),
-        total: prev.score.total + 1,
-        partialCreditTotal: prev.score.partialCreditTotal + result.partialCredit,
-      },
-    }));
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: state.currentCase.id,
+        selectedAnswer: medicationIds.join(','),
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[usePolypharmacyDrill] FSRS submission failed:', err);
+      });
 
-    return result;
-  };
+      return result;
+    },
+    [state.currentCase, recordAnswerChange, submitAnswerFSRS]
+  );
 
   /**
    * Reset the drill session
    */
-  const reset = (): void => {
+  const reset = useCallback((): void => {
     setState({
       currentCase: null,
       loading: false,
@@ -199,7 +225,7 @@ export function usePolypharmacyDrill(
         partialCreditTotal: 0,
       },
     });
-  };
+  }, []);
 
   return {
     state,

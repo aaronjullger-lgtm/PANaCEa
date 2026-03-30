@@ -8,6 +8,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { recordDrillSession } from '@/services/analytics';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 export type DDxDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'complete' | 'error';
 
@@ -256,7 +257,13 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
   const [error, setError] = useState<string | null>(null);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'ddx',
+  });
+
   const sessionStartRef = useRef<number>(Date.now());
+  const questionStartTimeRef = useRef<number>(Date.now());
   const sessionDataRef = useRef({
     questionsAttempted: 0,
     correctAnswers: 0,
@@ -322,22 +329,26 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         setCurrentQuestionIndex(0);
         setStatus('playing');
         sessionStartRef.current = Date.now();
+        questionStartTimeRef.current = Date.now();
         sessionDataRef.current = {
           questionsAttempted: 0,
           correctAnswers: 0,
           bestStreak: 0,
         };
+        
+        // Start FSRS tracking for the first question
+        startQuestionFSRS();
       } catch (err) {
         console.error('DDx drill error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load differential diagnosis data');
         setStatus('error');
       }
     },
-    [getToken]
+    [getToken, startQuestionFSRS]
   );
 
   const submitAnswer = useCallback(
-    (index: number) => {
+    async (index: number) => {
       if (status !== 'playing' || !currentQuestion || userAnswerIndex !== null) return;
 
       setUserAnswerIndex(index);
@@ -360,9 +371,22 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+      const selectedAnswer = currentQuestion.options[index];
+      
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useDifferentialDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [status, currentQuestion, userAnswerIndex]
+    [status, currentQuestion, userAnswerIndex, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {
@@ -371,6 +395,10 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
+      
+      // Start FSRS tracking for the new question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } else {
       // End of session
       setStatus('complete');
@@ -396,7 +424,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         bestStreak: sessionDataRef.current.bestStreak,
       });
     }
-  }, [currentQuestionIndex, questions.length]);
+  }, [currentQuestionIndex, questions.length, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     setCurrentQuestionIndex(0);
@@ -407,6 +435,7 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
     setIsCorrect(null);
     setStatus('landing');
     setQuestions([]);
+    questionStartTimeRef.current = Date.now();
     sessionDataRef.current = {
       questionsAttempted: 0,
       correctAnswers: 0,

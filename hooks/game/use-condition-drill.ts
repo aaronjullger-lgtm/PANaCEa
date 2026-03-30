@@ -12,6 +12,7 @@ import {
 import { getBrowserTimezone } from '@/lib/circadian';
 import { useSession } from '@/contexts/SessionContext';
 import type { SubmitReviewResponse } from '@/services/analytics';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 export type ConditionDrillStatus =
   | 'landing'
@@ -140,6 +141,11 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
   const { getToken, isSignedIn } = useAuth();
   const { initialSystem, initialSubcategory } = options;
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'condition',
+  });
+
   // Store current filter state
   const [currentFilters, setCurrentFilters] = useState<{
     system?: string;
@@ -213,7 +219,9 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
     questionDisplayedAtRef.current = new Date().toISOString();
     previousSelectedAnswerRef.current = null;
     setCurrentImplicitMetrics(createInitialImplicitMetrics());
-  }, []);
+    // Start FSRS telemetry tracking
+    startQuestionFSRS();
+  }, [startQuestionFSRS]);
 
   /**
    * Record when user selects/changes answer (for implicit metrics)
@@ -237,7 +245,9 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         totalDwellTime: now - questionStartTimeRef.current,
       };
     });
-  }, []);
+    // Track answer change in FSRS hook
+    recordAnswerChange(answerIndex);
+  }, [recordAnswerChange]);
 
   const fetchQuestionsFromAPI = useCallback(
     async (
@@ -385,13 +395,9 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
       }
 
       try {
-        // Get auth token for authenticated request
-        const token = isSignedIn ? await getToken() : null;
-
         // Build telemetry object with full client metrics
         const now = Date.now();
         const durationMs = finalMetrics.totalDwellTime;
-        const isRapidGuess = durationMs < 500;
         
         // Map ConditionQuestionType to API question_type enum
         const questionTypeMap: Record<string, 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown'> = {
@@ -403,53 +409,17 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         };
         const questionType = questionTypeMap[currentQuestion.type] || 'recall';
 
-        // Submit to correct FSRS endpoint with implicit metrics
-        const response = await fetch('/api/drills/submit-review', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            questionId: currentQuestion.id,
-            selectedAnswer,
-            timeSpentMs: durationMs,
-            // Implicit behavior metrics for FSRS rating derivation
-            timeToFirstClick: finalMetrics.timeToFirstClick,
-            answerSwitches: finalMetrics.answerSwitches,
-            totalDwellTime: durationMs,
-            timezone: finalMetrics.timezone,
-            // Full telemetry object for server-side analytics
-            telemetry: {
-              duration_ms: durationMs,
-              time_to_first_interaction_ms: finalMetrics.timeToFirstClick,
-              rapid_guess: isRapidGuess,
-              question_type: questionType,
-              mvrt_threshold_ms: 500,
-              question_displayed_at: questionDisplayedAtRef.current,
-              answer_submitted_at: new Date(now).toISOString(),
-              answer_changes: finalMetrics.answerSwitches,
-              hint_viewed: attemptNumber === 2,
-            },
-          }),
+        // Submit to FSRS pipeline via unified hook
+        const result = await submitAnswerFSRS({
+          questionId: currentQuestion.id,
+          selectedAnswer,
+          timeSpentMs: durationMs,
         });
 
-        if (!response.ok) {
-          const errData = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errData.error || 'Failed to submit answer');
+        if (!result) {
+          throw new Error('Failed to submit answer to FSRS pipeline');
         }
 
-        const result = (await response.json()) as {
-          isCorrect?: boolean;
-          implicitMetrics?: { rating?: number; confidence?: number };
-          isRapidGuess?: boolean;
-          nextReview?: {
-            intervalDays: number;
-            nextDueDate: string;
-            stability: number;
-            difficulty: number;
-          } | null;
-        };
         setIsCorrect(result.isCorrect ?? null);
         
         // DEV-003 Item 5: Extract feedback data from API response
@@ -596,10 +566,9 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
       isSubmitting,
       attemptNumber,
       currentImplicitMetrics,
-      isSignedIn,
-      getToken,
       streak,
       metacognitionPrompt,
+      submitAnswerFSRS,
     ]
   );
 

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 // Import type definitions from the API endpoint
 export interface PharmQuestion {
@@ -68,8 +69,14 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'pharm',
+  });
+
   // Track if we're currently fetching to prevent duplicate requests
   const isFetchingRef = useRef(false);
+  const questionStartTimeRef = useRef<number>(Date.now());
 
   const currentQuestion = queue[currentIndex] ?? null;
 
@@ -160,8 +167,12 @@ export function usePharmDrill(): UsePharmDrillReturn {
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
+      
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     },
-    [fetchQuestions]
+    [fetchQuestions, startQuestionFSRS]
   );
 
   const showCategoryMenu = useCallback(() => {
@@ -180,7 +191,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   }, []);
 
   const submitAnswer = useCallback(
-    (answerIndex: number) => {
+    async (answerIndex: number) => {
       if (!currentQuestion || status !== 'playing') return;
 
       setUserAnswerIndex(answerIndex);
@@ -196,9 +207,22 @@ export function usePharmDrill(): UsePharmDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+      const selectedAnswer = currentQuestion.options[answerIndex];
+      
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[usePharmDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentQuestion, status]
+    [currentQuestion, status, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {
@@ -206,7 +230,11 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, []);
+    
+    // Start FSRS tracking for the new question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [startQuestionFSRS]);
 
   const reset = useCallback(async () => {
     setIsLoading(true);
@@ -227,7 +255,11 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, fetchQuestions]);
+    
+    // Start FSRS tracking for the first question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [selectedCategory, fetchQuestions, startQuestionFSRS]);
 
   return {
     isLoading,

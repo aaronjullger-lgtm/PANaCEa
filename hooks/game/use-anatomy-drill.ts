@@ -5,8 +5,9 @@
  * Practice regional anatomy, landmarks, and clinical correlates.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { recordDrillSession } from '@/services/analytics';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 export type AnatomyDrillStatus = 'landing' | 'loading' | 'playing' | 'feedback' | 'error';
 
@@ -53,6 +54,12 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
     correctAnswers: 0,
     bestStreak: 0,
   });
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'anatomy',
+  });
 
   const currentQuestion = questions[currentQuestionIndex] || null;
 
@@ -97,6 +104,10 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
       setQuestions(shuffled);
       setCurrentQuestionIndex(0);
       setStatus('playing');
+
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } catch (err) {
       console.error('Error fetching anatomy questions:', err);
       setError(err instanceof Error ? err.message : 'Failed to load questions');
@@ -130,9 +141,22 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+      const selectedAnswer = currentQuestion.options[index];
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useAnatomyDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentQuestion, status]
+    [currentQuestion, status, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {
@@ -141,11 +165,15 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the new question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } else {
       // End of questions - fetch more
       fetchQuestions();
     }
-  }, [currentQuestionIndex, questions.length, fetchQuestions]);
+  }, [currentQuestionIndex, questions.length, fetchQuestions, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     // Record session before reset
@@ -189,8 +217,9 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
       correctAnswers: 0,
       bestStreak: 0,
     };
+    questionStartTimeRef.current = Date.now();
     fetchQuestions();
-  }, [fetchQuestions]);
+  }, [fetchQuestions, startQuestionFSRS]);
 
   const exitToMenu = useCallback(() => {
     if (sessionDataRef.current.questionsAttempted > 0) {

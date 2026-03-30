@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react';
-// Assuming useToast or similar exists in the codebase, if not we'll omit or use simple console/alert for now
-// or import toast from a UI library if visible in file list (I saw utils/ but not explicit toast)
+import { useState, useCallback, useRef } from 'react';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 export interface ContrastiveSet {
   id: string;
@@ -22,6 +21,13 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
   const [isDrillComplete, setIsDrillComplete] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<ContrastiveQuestion | null>(null);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  const {
+    startQuestion: startQuestionFSRS,
+    recordAnswerChange,
+    submitAnswer: submitAnswerFSRS,
+  } = useDrillFSRS({ drillType: 'contrastive' });
 
   // We need fetchers or API calls. In Remix we might use useFetcher.
   // For simplicity I'll assume we can call fetch directly or use a helper,
@@ -40,19 +46,22 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
         });
         const data = (await res.json()) as ContrastiveQuestion | null;
         setCurrentQuestion(data);
+        startQuestionFSRS();
+        questionStartTimeRef.current = Date.now();
       } catch (e) {
         console.error('Failed to generate', e);
       } finally {
         setIsLoadingQuestion(false);
       }
     },
-    [set]
+    [set, startQuestionFSRS]
   );
 
   const submitAnswer = useCallback(
     async (selectedCondition: string, timeSpentMs: number) => {
       if (!drillId || !currentQuestion) return null;
 
+      // Submit to existing contrastive endpoint
       const res = await fetch('/api/drills/contrastive/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,9 +78,17 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
       if (result.isCorrect) setStats((s) => ({ ...s, correct: s.correct + 1 }));
       setStats((s) => ({ ...s, total: s.total + 1 }));
 
+      // Fire-and-forget FSRS submission
+      recordAnswerChange();
+      submitAnswerFSRS({
+        questionId: drillId ? `contrastive_${drillId}_${currentQuestionIndex}` : `contrastive_${currentQuestionIndex}_${Date.now()}`,
+        selectedAnswer: selectedCondition,
+        timeSpentMs: Date.now() - questionStartTimeRef.current,
+      }).catch((err) => console.error('[useContrastiveDrill] FSRS submission failed:', err));
+
       return result;
     },
-    [drillId, currentQuestion]
+    [drillId, currentQuestion, currentQuestionIndex, recordAnswerChange, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {

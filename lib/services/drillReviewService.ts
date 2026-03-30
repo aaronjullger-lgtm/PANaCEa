@@ -135,8 +135,8 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
-  sessionType?: 'main' | 'cram' | 'rapid_recall';
+  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'drill' | 'cram' | 'rapid_recall';
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -494,7 +494,7 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
+  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'DRILL' | 'CRAM' | 'RAPID_RECALL';
 
   // Helper function to create full telemetry object with server_computed key
   const buildReviewLogTelemetry = (

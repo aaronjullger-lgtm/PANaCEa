@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchLabCases, getCachedDiagnoses } from '@/services/domain';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 // ============================================================================
 // INTERFACES
@@ -1271,6 +1272,12 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
 
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'mini-lab',
+  });
 
   // Fetch cases and diagnoses on mount - DATABASE FIRST, no static fallback
   useEffect(() => {
@@ -1388,8 +1395,12 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       setUserAnswer(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     },
-    [generateNewCase, dbCases.length]
+    [generateNewCase, dbCases.length, startQuestionFSRS]
   );
 
   const showCategoryMenu = useCallback(() => {
@@ -1423,9 +1434,21 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentCase.id,
+        selectedAnswer: answer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useMiniLabDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentCase, status]
+    [currentCase, status, submitAnswerFSRS]
   );
 
   const nextCase = useCallback(() => {
@@ -1437,7 +1460,11 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewCase]);
+
+    // Start FSRS tracking for the new question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [selectedCategory, generateNewCase, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     recentDiagnosesRef.current.clear(); // Clear history on reset
@@ -1456,7 +1483,11 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewCase]);
+
+    // Start FSRS tracking for the first question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [selectedCategory, generateNewCase, startQuestionFSRS]);
 
   const orderTest = useCallback(
     (testName: string): boolean => {

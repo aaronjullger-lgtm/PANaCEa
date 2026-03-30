@@ -77,8 +77,8 @@ export const DrillSubmitReviewSchema = z.object({
   timezone: z.string().optional(),
   wakeTimeHHMM: z.string().optional(),
   telemetry: TelemetrySchema.optional(),
-  /** When 'main' or omitted, review is counted for FSRS (UserProgress.reviewHistory). When 'cram' or 'rapid_recall', FSRS is not updated and Card/UserTopicProgress are not modified. */
-  sessionType: z.enum(['main', 'cram', 'rapid_recall']).optional(),
+  /** When 'main', 'drill', or omitted, review is counted for FSRS (UserProgress.reviewHistory). When 'cram' or 'rapid_recall', FSRS is not updated and Card/UserTopicProgress are not modified. */
+  sessionType: z.enum(['main', 'drill', 'cram', 'rapid_recall']).optional(),
 });
 
 export const onRequestOptions = async (context: any) => {

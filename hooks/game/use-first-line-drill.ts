@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { firstLineService } from '@/services/domain';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import type { FirstLineTreatmentDTO } from '@/types/question-bank';
 
 // Use client-safe DTO type instead of Prisma type
@@ -123,6 +124,12 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
 
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'first-line',
+  });
 
   useEffect(() => {
     const loadTreatments = async () => {
@@ -191,8 +198,12 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
       setUserAnswerIndex(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     },
-    [generateNewQuestion, allTreatments]
+    [generateNewQuestion, allTreatments, startQuestionFSRS]
   );
 
   const showCategoryMenu = useCallback(() => {
@@ -227,9 +238,22 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
         setStreak(0);
       }
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+      const selectedAnswer = currentQuestion.options[answerIndex];
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentQuestion.id,
+        selectedAnswer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[useFirstLineDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentQuestion, status]
+    [currentQuestion, status, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {
@@ -239,7 +263,11 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewQuestion]);
+
+    // Start FSRS tracking for the new question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [selectedCategory, generateNewQuestion, startQuestionFSRS]);
 
   const reset = useCallback(() => {
     recentConditionsRef.current.clear(); // Clear history on reset
@@ -256,7 +284,11 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewQuestion]);
+
+    // Start FSRS tracking for the first question
+    questionStartTimeRef.current = Date.now();
+    startQuestionFSRS();
+  }, [selectedCategory, generateNewQuestion, startQuestionFSRS]);
 
   return {
     currentQuestion,

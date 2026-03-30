@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { submitDrillResult } from '@/services/core';
 import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/analytics';
+import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 // Static fallbacks used in tests/offline mode (database-first in production)
 export const MASTER_CONDITION_LIST: string[] = [
@@ -445,6 +446,12 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     correctAnswers: 0,
     bestStreak: 0,
   });
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  // Initialize unified FSRS submission hook
+  const { startQuestion: startQuestionFSRS, recordAnswerChange, submitAnswer: submitAnswerFSRS } = useDrillFSRS({
+    drillType: 'photo',
+  });
 
   // Current case from queue (all cases are dynamically generated)
   const currentCase = queue.length > 0 ? (queue[currentCaseIndex] ?? null) : null;
@@ -500,6 +507,10 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
       setIsCorrect(null);
       setStatus('playing');
 
+      // Start FSRS tracking for the first question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
+
       void fetchMoreCases(category, INITIAL_QUEUE_SIZE)
         .then((initialQueue) => {
           setFetchError(null);
@@ -511,7 +522,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
           setQueue([]);
         });
     },
-    [fetchMoreCases]
+    [fetchMoreCases, startQuestionFSRS]
   );
 
   const retryLoadCases = useCallback(() => {
@@ -623,9 +634,21 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
         getToken
       );
 
+      // Submit to FSRS pipeline
+      const timeSpentMs = Date.now() - questionStartTimeRef.current;
+
+      // Fire-and-forget FSRS submission (don't block UI)
+      submitAnswerFSRS({
+        questionId: currentCase.id,
+        selectedAnswer: answer,
+        timeSpentMs,
+      }).catch((err) => {
+        console.error('[usePhotoDrill] FSRS submission failed:', err);
+      });
+
       setStatus('feedback');
     },
-    [currentCase, status, getToken]
+    [currentCase, status, getToken, submitAnswerFSRS]
   );
 
   /**
@@ -654,6 +677,10 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
       setUserAnswer(null);
       setIsCorrect(null);
       setStatus('playing');
+
+      // Start FSRS tracking for the new question
+      questionStartTimeRef.current = Date.now();
+      startQuestionFSRS();
     } else {
       // Legacy mode - finite cases
       if (currentCaseIndex >= totalCases - 1) {
@@ -663,9 +690,13 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
         setUserAnswer(null);
         setIsCorrect(null);
         setStatus('playing');
+
+        // Start FSRS tracking for the new question
+        questionStartTimeRef.current = Date.now();
+        startQuestionFSRS();
       }
     }
-  }, [currentCaseIndex, totalCases, selectedCategory]);
+  }, [currentCaseIndex, totalCases, selectedCategory, startQuestionFSRS]);
 
   /**
    * Skip the current case (counts as incorrect).
