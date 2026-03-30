@@ -182,9 +182,9 @@ export const NavRail: React.FC<NavRailProps> = ({
   const [collapsed, setCollapsed] = useState(() => {
     try {
       const saved = localStorage.getItem('navrail.collapsed');
-      // Default to expanded (false) on desktop; respect saved preference
-      return saved !== null ? saved === 'true' : false;
-    } catch { return false; }
+      // Default to collapsed; respect saved preference if user has explicitly toggled
+      return saved !== null ? saved === 'true' : true;
+    } catch { return true; }
   });
   const [hidden, setHidden] = useState(() => {
     try {
@@ -350,7 +350,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="space-y-1">{items.map(renderItem)}</ul>
+      <ul className="space-y-1 list-none m-0 p-0">{items.map(renderItem)}</ul>
     </div>
   );
 
