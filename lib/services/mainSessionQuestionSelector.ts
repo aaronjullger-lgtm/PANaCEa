@@ -18,6 +18,9 @@
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'MainSessionSelector';
 import { defaultParameters } from '../fsrs';
 import {
   Rolling360Service,
@@ -44,6 +47,23 @@ export const MAX_SINGLE_SYSTEM_CAP = getMaxSingleSystemCap();
 
 /** Deficit threshold (%) before prioritizing a system */
 export const DEFICIT_THRESHOLD = 2.0;
+
+/**
+ * External constraints from the blueprint resolver + anti-gaming system.
+ * All fields are optional — when omitted, the selector uses its defaults.
+ */
+export interface BlueprintConstraints {
+  /** Override blueprint weights (system → fraction 0-1) */
+  blueprintWeights?: Record<string, number>;
+  /** Systems to exclude entirely (didactic gating) */
+  gatedSystems?: string[];
+  /** Systems to prioritize (under-represented in rolling window) */
+  boostSystems?: string[];
+  /** Systems to deprioritize (over-represented in rolling window) */
+  suppressSystems?: string[];
+  /** Per-system maximum questions for this session */
+  perSystemCaps?: Record<string, number>;
+}
 
 /** Accuracy threshold (%) below which deficit is multiplied */
 export const ACCURACY_DEFICIT_THRESHOLD = 75.0;
@@ -110,9 +130,29 @@ export interface SessionGenerationResult {
 
 export class MainSessionQuestionSelector {
   private rolling360Service: Rolling360Service;
+  private _activeConstraints?: BlueprintConstraints;
 
   constructor(private prisma: PrismaClient) {
     this.rolling360Service = new Rolling360Service(prisma);
+  }
+
+  /** Get effective per-system cap, respecting external constraints */
+  private getEffectiveSystemCap(system: string, sessionSize: number): number {
+    const defaultCap = getMaxSingleSystemCap(sessionSize);
+    const externalCap = this._activeConstraints?.perSystemCaps?.[system];
+    if (externalCap !== undefined) {
+      return Math.min(externalCap, defaultCap);
+    }
+    // Suppress over-represented systems by halving their cap
+    if (this._activeConstraints?.suppressSystems?.includes(system)) {
+      return Math.max(1, Math.floor(defaultCap * 0.5));
+    }
+    return defaultCap;
+  }
+
+  /** Check if a system is gated (excluded from selection) */
+  private isSystemGated(system: string): boolean {
+    return this._activeConstraints?.gatedSystems?.includes(system) ?? false;
   }
 
   /**
@@ -124,11 +164,33 @@ export class MainSessionQuestionSelector {
    */
   async generateSession(
     userId: string,
-    sessionSize: number = DEFAULT_SESSION_SIZE
+    sessionSize: number = DEFAULT_SESSION_SIZE,
+    constraints?: BlueprintConstraints
   ): Promise<SessionGenerationResult> {
     // Step 1: Get user's Rolling 360 stats and blueprint
     const stats = await this.rolling360Service.getRolling360Stats(userId);
-    const blueprint = await this.getActiveBlueprint();
+    let blueprint = await this.getActiveBlueprint();
+
+    // Apply external blueprint weight overrides if provided
+    if (constraints?.blueprintWeights && Object.keys(constraints.blueprintWeights).length > 0) {
+      blueprint = { ...constraints.blueprintWeights };
+    }
+
+    // Gate systems: zero out gated systems and renormalize
+    if (constraints?.gatedSystems && constraints.gatedSystems.length > 0) {
+      for (const sys of constraints.gatedSystems) {
+        delete blueprint[sys];
+      }
+      const total = Object.values(blueprint).reduce((s, v) => s + v, 0);
+      if (total > 0) {
+        for (const sys of Object.keys(blueprint)) {
+          blueprint[sys] /= total;
+        }
+      }
+    }
+
+    // Store constraints for use by selection methods
+    this._activeConstraints = constraints;
 
     // Step 2: Calculate system deficits (with cap applied)
     const deficits = this.calculateSystemDeficits(stats, blueprint, sessionSize);
@@ -199,9 +261,11 @@ export class MainSessionQuestionSelector {
       const priorityBQuestions = await this.selectPriorityB(userId, selectedIds, remainingSlots);
 
       for (const q of priorityBQuestions) {
+        // Skip gated systems
+        if (this.isSystemGated(q.system)) continue;
         const pool = systemPools.get(q.system) || [];
-        // Enforce per-system cap
-        if (pool.length < getMaxSingleSystemCap(sessionSize)) {
+        // Enforce per-system cap (constraint-aware)
+        if (pool.length < this.getEffectiveSystemCap(q.system, sessionSize)) {
           pool.push(q);
           systemPools.set(q.system, pool);
           selectedIds.add(q.questionId);
@@ -223,9 +287,11 @@ export class MainSessionQuestionSelector {
       );
 
       for (const q of priorityCQuestions) {
+        // Skip gated systems
+        if (this.isSystemGated(q.system)) continue;
         const pool = systemPools.get(q.system) || [];
-        // Enforce per-system cap
-        if (pool.length < getMaxSingleSystemCap(sessionSize)) {
+        // Enforce per-system cap (constraint-aware)
+        if (pool.length < this.getEffectiveSystemCap(q.system, sessionSize)) {
           pool.push(q);
           systemPools.set(q.system, pool);
           selectedIds.add(q.questionId);
@@ -291,7 +357,7 @@ export class MainSessionQuestionSelector {
       return first.weights as BlueprintWeights;
     } catch (error) {
       // Table may not exist yet or other error - use defaults
-      console.warn('[MainSessionSelector] Blueprint query failed, using defaults:', error);
+      logger.warn(`[${LOG_SCOPE}] Blueprint query failed, using defaults`, { error });
     }
 
     // Fallback to default 2025 PANCE weights (Official NCCPA)
@@ -369,8 +435,8 @@ export class MainSessionQuestionSelector {
           targetPercent,
           actualPercent,
           deficitPercent: adjustedDeficitPercent,
-          // CONSTRAINT 1: Cap at getMaxSingleSystemCap(sessionSize)
-          deficitQuestions: Math.min(idealQuestions, getMaxSingleSystemCap(sessionSize)),
+          // CONSTRAINT 1: Cap at effective system cap (constraint-aware)
+          deficitQuestions: Math.min(idealQuestions, this.getEffectiveSystemCap(system, sessionSize)),
         });
       }
     }
@@ -533,7 +599,7 @@ export class MainSessionQuestionSelector {
       return questions;
     } catch (error) {
       // Fallback if raw query fails (e.g., missing fsrsCard data)
-      console.warn('[MainSessionSelector] Raw query failed, using fallback:', error);
+      logger.warn(`[${LOG_SCOPE}] Raw query failed, using fallback`, { error });
       return [];
     }
   }
@@ -737,10 +803,7 @@ export class MainSessionQuestionSelector {
         };
         violations.push(violation);
 
-        console.warn(
-          `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
-          `- this indicates a selection phase issue or cold start scenario`
-        );
+        logger.warn(`[${LOG_SCOPE}] FORCED REPEAT: ${forcedSystem} at position ${result.length} - selection phase issue or cold start`);
       }
     }
 

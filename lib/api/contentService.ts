@@ -5,6 +5,7 @@
 
 import type { MedicalContent } from '../../types/admin-cms';
 import { getApiEndpoint, API_ENDPOINTS } from '../utils/apiConfig';
+import { logger } from '../logger';
 
 /**
  * Load all medical content from the database
@@ -33,9 +34,9 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
         id: record.id,
         conditionId: record.conditionId,
         condition: record.condition,
-        system: record.system as any,
+        system: record.system as MedicalContent['system'],
         subcategory: record.subcategory,
-        status: record.status as any,
+        status: record.status as MedicalContent['status'],
         version: record.version,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
@@ -52,49 +53,67 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
             : undefined,
         symptoms: Array.isArray(record.symptoms) ? record.symptoms : undefined,
         examFindings: Array.isArray(record.physicalExam) ? record.physicalExam : undefined,
-        diagnostics: record.diagnostics as any,
+        diagnostics: record.diagnostics as MedicalContent['diagnostics'],
         treatment: Array.isArray(record.treatment) ? (record.treatment as string[]) : undefined,
         complications: Array.isArray(record.complications) ? record.complications : undefined,
         prognosis: record.prognosis || undefined,
       }));
     }
   } catch (error) {
-    console.error('Error loading content from database:', error);
+    logger.error('Error loading content from database', { error });
   }
 
   return [];
 }
 
+/** Shape of a raw condition record from the API response */
+interface RawConditionRecord {
+  name?: string;
+  system?: string;
+  subcategory?: string;
+  overview?: string;
+  etiology?: string;
+  epidemiology?: string;
+  riskFactors?: string[];
+  symptoms?: string[];
+  physicalExam?: string[];
+  diagnostics?: unknown;
+  treatment?: string[];
+  complications?: string[];
+  prognosis?: string;
+}
+
 /**
  * Transform raw data object to MedicalContent array
  */
-function transformToMedicalContent(data: Record<string, any>): MedicalContent[] {
+function transformToMedicalContent(data: Record<string, unknown>): MedicalContent[] {
   const content: MedicalContent[] = [];
 
-  for (const [conditionId, condition] of Object.entries(data)) {
-    if (typeof condition === 'object' && condition !== null) {
+  for (const [conditionId, raw] of Object.entries(data)) {
+    if (typeof raw === 'object' && raw !== null) {
+      const condition = raw as RawConditionRecord;
       const item: MedicalContent = {
         id: conditionId,
         conditionId: conditionId,
-        condition: (condition as any).name || conditionId,
-        system: ((condition as any).system || 'GENERAL') as any,
-        subcategory: (condition as any).subcategory || 'General',
+        condition: condition.name || conditionId,
+        system: (condition.system || 'GENERAL') as MedicalContent['system'],
+        subcategory: condition.subcategory || 'General',
         status: 'published',
         version: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: 'system',
         updatedBy: 'system',
-        overview: (condition as any).overview,
-        etiologyPathophysiology: (condition as any).etiology,
-        epidemiology: (condition as any).epidemiology,
-        riskFactors: (condition as any).riskFactors,
-        symptoms: (condition as any).symptoms,
-        examFindings: (condition as any).physicalExam,
-        diagnostics: (condition as any).diagnostics,
-        treatment: (condition as any).treatment,
-        complications: (condition as any).complications,
-        prognosis: (condition as any).prognosis,
+        overview: condition.overview,
+        etiologyPathophysiology: condition.etiology,
+        epidemiology: condition.epidemiology,
+        riskFactors: condition.riskFactors,
+        symptoms: condition.symptoms,
+        examFindings: condition.physicalExam,
+        diagnostics: condition.diagnostics as MedicalContent['diagnostics'],
+        treatment: condition.treatment,
+        complications: condition.complications,
+        prognosis: condition.prognosis,
       };
       content.push(item);
     }

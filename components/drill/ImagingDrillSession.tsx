@@ -172,8 +172,9 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
             <div className="w-full max-w-4xl bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
               <img
                 src={currentCase.imageUrl}
-                alt="Radiological finding"
+                alt="Radiological image for diagnosis"
                 className="w-full h-auto object-contain"
+                role="img"
                 onError={(e) => { e.currentTarget.alt = 'Image failed to load'; }}
               />
             </div>
@@ -210,12 +211,14 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
               <button
                 onClick={handleReset}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-medium transition-colors"
+                aria-label="Start a new radiology session"
               >
                 <RotateCcw className="w-4 h-4" /> Start New Session
               </button>
               <button
                 onClick={handleExit}
                 className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+                aria-label="Exit to drill menu"
               >
                 Exit to Menu
               </button>

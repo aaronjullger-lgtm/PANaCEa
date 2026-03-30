@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
+import { DrillErrorBoundary } from '@/components/error/DrillErrorBoundary';
 import { ROUTES } from '@/config/routes';
 
 interface DrillShellProps {
@@ -126,7 +127,11 @@ const DrillShell: React.FC<DrillShellProps> = ({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 relative">{children}</main>
+      <main className="flex-1 relative">
+        <DrillErrorBoundary drillName={title}>
+          {children}
+        </DrillErrorBoundary>
+      </main>
 
       {/* Optional Footer - can be added by child components if needed */}
     </div>

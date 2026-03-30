@@ -495,17 +495,21 @@ async function getFromPreGeneratedPool(
     if (category) where.questionType = category;
     logger.info('Fetching pre-generated pool', { systems, system, difficulty, category, fetchCount });
 
-    const dbResults = await (prisma.preGeneratedQuestion.findMany as any)({
+    // Prisma Accelerate cacheStrategy requires type widening (not in base Prisma types)
+    const findManyWithCache = prisma.preGeneratedQuestion.findMany as (args: Record<string, unknown>) => Promise<unknown[]>;
+    const countWithCache = prisma.preGeneratedQuestion.count as (args: Record<string, unknown>) => Promise<number>;
+
+    const dbResults = await findManyWithCache({
       where,
       take: fetchCount,
       orderBy: { generatedAt: 'asc' },
-      ...(CACHE_STRATEGY.QUESTIONS as any), // 5min cache for question pool
+      ...CACHE_STRATEGY.QUESTIONS, // 5min cache for question pool
     });
-    preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
+    preGenQuestions = (dbResults as Array<Record<string, unknown>>).map(mapToPreGeneratedQuestion);
     logger.info('Pre-generated pool fetched', { dbResultsCount: dbResults.length, preGenQuestionsCount: preGenQuestions.length });
-    remaining = await (prisma.preGeneratedQuestion.count as any)({
+    remaining = await countWithCache({
       where,
-      ...(CACHE_STRATEGY.AGGREGATE as any),
+      ...CACHE_STRATEGY.AGGREGATE,
     });
   }
 
@@ -767,7 +771,7 @@ async function generateAndAddToPool(
       name: condition.condition,
       system: condition.system,
       subcategory: condition.subcategory,
-      content: condition.content as any,
+      content: condition.content as Record<string, unknown> | null,
     };
   } catch (error) {
     logger.error('Failed to fetch random condition', { error: String(error) });
@@ -838,7 +842,7 @@ async function generateAndAddToPool(
         conditionId: conditionData.id,
         system: conditionData.system,
         difficulty: difficultyStr,
-        questionData: questionData as any,
+        questionData: questionData as unknown as Record<string, unknown>,
         generatedAt: new Date(),
         usedAt: null,
         questionType: category || 'general',

@@ -222,4 +222,38 @@ Implemented 10 targeted improvements across error handling, logging hygiene, acc
 ### Next priority
 - **Phase 5:** Question data normalization + content backfill
 - Wrap drill sessions in DrillErrorBoundary
+
+---
+
+## 2026-03-30 — 10-Improvement Batch #2: Error Boundaries, Logger, Type Safety, A11y
+
+### What was done
+Implemented 10 more improvements continuing the quality push across fault tolerance, logging consistency, type safety, and accessibility.
+
+### Improvements
+1. **DrillShell + DrillErrorBoundary integration** — DrillShell now wraps all children in DrillErrorBoundary, giving all 13 drill types automatic error boundaries with zero per-drill changes
+2. **srsService.ts → fsrsLogger** — Migrated 12 console.log/warn/error calls to structured fsrsLogger (scoped logger from lib/logger)
+3. **mainSessionQuestionSelector.ts → logger** — Migrated 3 console.warn calls to structured logger with LOG_SCOPE
+4. **offlineSyncService.ts → syncLogger** — Migrated 18 console.* calls to structured syncLogger; DEBUG_OFFLINE_SYNC guards now use syncLogger.debug()
+5. **contentService.ts type safety** — Eliminated all 16 `as any` casts. Created `RawConditionRecord` interface for API data shape. Changed function signature from `Record<string, any>` to `Record<string, unknown>`. Used `MedicalContent['system']` indexed access types instead of `as any`
+6. **pool.ts type safety** — Replaced 6 `as any` casts. Prisma Accelerate cache strategy casts → typed function aliases with explicit signatures. `content` and `questionData` JSON fields → `Record<string, unknown>`
+7. **ECGDrillSession a11y** — Added aria-labels to Start New Session, Exit to Menu, and Exit buttons; added role="img" to ECG image
+8. **ImagingDrillSession a11y** — Added aria-labels to Start New Session and Exit to Menu buttons; added role="img" to imaging display
+9. **PharmDrillSession a11y** — Added role="list" + aria-label to category grid; added role="radiogroup" + aria-label to answer options container
+
+### Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| console.* in srsService.ts | 12 | 0 |
+| console.* in mainSessionQuestionSelector.ts | 3 | 0 |
+| console.* in offlineSyncService.ts | 18 | 0 |
+| `as any` in contentService.ts | 16 | 0 |
+| `as any` in pool.ts (data casts) | 6 | 2 (Accelerate cache wrappers only) |
+| Drill types with error boundaries | 0 | 13 (all, via DrillShell) |
+| Drill components with aria-labels | ~18 | ~21 (+ECG, Imaging, Pharm) |
+
+### Next priority
+- **Phase 5:** Question data normalization + content backfill
+- Continue logger migration across remaining services
+- Continue a11y sweep across remaining drill components
 - Daily task handles: remaining accessibility, dark mode consistency

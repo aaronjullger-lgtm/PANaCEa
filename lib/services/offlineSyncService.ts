@@ -5,6 +5,7 @@
  */
 
 import { StorageKeys } from '../storage/storageRegistry';
+import { syncLogger } from '../logger';
 
 // Debug logging - set to true to re-enable verbose logs
 const DEBUG_OFFLINE_SYNC = false;
@@ -73,9 +74,9 @@ export function queueSyncOperation(
     pending.push(op);
     savePendingOperations(pending);
 
-    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Queued ${operation} ${type} operation`);
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug(`Queued ${operation} ${type} operation`);
   } catch (error) {
-    console.error('[OfflineSync] Failed to queue operation:', error);
+    syncLogger.error('Failed to queue operation', { error });
   }
 }
 
@@ -87,7 +88,7 @@ function getPendingOperations(): SyncOperation[] {
     const data = localStorage.getItem(STORAGE_KEYS.PENDING_OPS);
     return data ? JSON.parse(data) : [];
   } catch (error) {
-    console.error('[OfflineSync] Failed to get pending operations:', error);
+    syncLogger.error('Failed to get pending operations', { error });
     return [];
   }
 }
@@ -99,7 +100,7 @@ function savePendingOperations(operations: SyncOperation[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.PENDING_OPS, JSON.stringify(operations));
   } catch (error) {
-    console.error('[OfflineSync] Failed to save pending operations:', error);
+    syncLogger.error('Failed to save pending operations', { error });
   }
 }
 
@@ -135,7 +136,7 @@ export function setOfflineMode(offline: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEYS.OFFLINE_MODE, offline.toString());
   } catch (error) {
-    console.error('[OfflineSync] Failed to set offline mode:', error);
+    syncLogger.error('Failed to set offline mode', { error });
   }
 }
 
@@ -155,19 +156,19 @@ export async function syncPendingOperations(
 
   try {
     if (!isOnline()) {
-      if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Cannot sync - device is offline');
+      if (DEBUG_OFFLINE_SYNC) syncLogger.debug('Cannot sync - device is offline');
       return { ...result, success: false };
     }
 
     const pending = getPendingOperations();
 
     if (pending.length === 0) {
-      if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] No pending operations to sync');
+      if (DEBUG_OFFLINE_SYNC) syncLogger.debug('No pending operations to sync');
       return result;
     }
 
     if (DEBUG_OFFLINE_SYNC)
-      console.log(`[OfflineSync] Syncing ${pending.length} pending operations...`);
+      syncLogger.debug(`Syncing ${pending.length} pending operations...`);
 
     // Process in batches
     const batches = chunkArray(pending, BATCH_SIZE);
@@ -188,11 +189,11 @@ export async function syncPendingOperations(
               remaining.push(op);
             } else {
               result.failed++;
-              console.error(`[OfflineSync] Operation ${op.id} failed after ${MAX_RETRIES} retries`);
+              syncLogger.error(`Operation ${op.id} failed after ${MAX_RETRIES} retries`);
             }
           }
         } catch (error) {
-          console.error(`[OfflineSync] Error syncing operation ${op.id}:`, error);
+          syncLogger.error(`Error syncing operation ${op.id}`, { error });
           op.retries++;
 
           if (op.retries < MAX_RETRIES) {
@@ -211,13 +212,13 @@ export async function syncPendingOperations(
     localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
 
     if (DEBUG_OFFLINE_SYNC)
-      console.log(
-        `[OfflineSync] Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`
+      syncLogger.debug(
+        `Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`
       );
 
     return result;
   } catch (error) {
-    console.error('[OfflineSync] Sync failed:', error);
+    syncLogger.error('Sync failed', { error });
     return { ...result, success: false };
   }
 }
@@ -254,9 +255,7 @@ async function syncSingleOperation(
 
     // Handle 401 Unauthorized - do NOT retry, mark as failed
     if (response.status === 401) {
-      console.warn(
-        `[OfflineSync] Operation ${op.id} failed with 401 Unauthorized - authentication required`
-      );
+      syncLogger.warn(`Operation ${op.id} failed with 401 Unauthorized - authentication required`);
       // Mark as permanently failed by setting retries to max
       op.retries = MAX_RETRIES;
       return false;
@@ -275,10 +274,10 @@ async function syncSingleOperation(
       return false;
     }
 
-    console.error(`[OfflineSync] Operation ${op.id} failed with status ${response.status}`);
+    syncLogger.error(`Operation ${op.id} failed with status ${response.status}`);
     return false;
   } catch (error) {
-    console.error(`[OfflineSync] Error syncing operation ${op.id}:`, error);
+    syncLogger.error(`Error syncing operation ${op.id}`, { error });
     return false;
   }
 }
@@ -396,9 +395,9 @@ export function getSyncStatus(): {
 export function clearPendingOperations(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.PENDING_OPS);
-    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Cleared all pending operations');
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug('Cleared all pending operations');
   } catch (error) {
-    console.error('[OfflineSync] Failed to clear pending operations:', error);
+    syncLogger.error('Failed to clear pending operations', { error });
   }
 }
 
@@ -408,7 +407,7 @@ export function clearPendingOperations(): void {
  */
 export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
   const handleOnline = async () => {
-    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection restored, syncing...');
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug('Connection restored, syncing...');
     setOfflineMode(false);
 
     // Get fresh token if function provided
@@ -418,7 +417,7 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
         const token = await getToken();
         authToken = token || undefined;
       } catch (error) {
-        console.error('[OfflineSync] Failed to get auth token:', error);
+        syncLogger.error('Failed to get auth token', { error });
       }
     }
 
@@ -426,7 +425,7 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
   };
 
   const handleOffline = () => {
-    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection lost, entering offline mode');
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug('Connection lost, entering offline mode');
     setOfflineMode(true);
   };
 
@@ -460,8 +459,8 @@ export function importPendingOperations(data: string): void {
   try {
     const operations = JSON.parse(data);
     savePendingOperations(operations);
-    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Imported ${operations.length} operations`);
+    if (DEBUG_OFFLINE_SYNC) syncLogger.debug(`Imported ${operations.length} operations`);
   } catch (error) {
-    console.error('[OfflineSync] Failed to import operations:', error);
+    syncLogger.error('Failed to import operations', { error });
   }
 }

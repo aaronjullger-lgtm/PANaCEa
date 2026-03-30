@@ -183,8 +183,9 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
               <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
                 <img
                   src={currentCase.imageUrl}
-                  alt="ECG for diagnosis"
+                  alt="ECG strip for diagnosis interpretation"
                   className="w-full h-auto object-contain"
+                  role="img"
                 />
               </div>
             </div>
@@ -249,6 +250,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
               <button
                 onClick={handleReset}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-data-fail)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+                aria-label="Start a new ECG interpretation session"
               >
                 <RotateCcw className="w-4 h-4" />
                 Start New Session
@@ -256,6 +258,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
               <button
                 onClick={handleExit}
                 className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+                aria-label="Exit to drill menu"
               >
                 Exit to Menu
               </button>
@@ -271,7 +274,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
       <div className="text-center">
         <p className="text-[var(--color-text-secondary)] mb-4">Loading ECG drill...</p>
-        <button onClick={handleExit} className="text-[var(--color-accent)] hover:opacity-90">
+        <button onClick={handleExit} className="text-[var(--color-accent)] hover:opacity-90" aria-label="Exit ECG drill">
           Exit
         </button>
       </div>

@@ -13,6 +13,7 @@
 
 import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters, FSRSParameters } from '../fsrs';
 import { queueOperation } from './sync/offlineSync';
+import { fsrsLogger } from '../logger';
 
 const fsrs = new FSRS();
 
@@ -55,7 +56,7 @@ async function loadUserFSRSConfig(
       };
     }
   } catch (error) {
-    console.warn('[SRS] Failed to load user config, using defaults:', error);
+    fsrsLogger.warn('Failed to load user config, using defaults', { error });
   }
 
   return defaultParameters;
@@ -183,7 +184,7 @@ function loadSRSItems(): Map<string, SRSItem> {
 
     const data = JSON.parse(stored);
     if (data.version !== SRS_VERSION) {
-      console.log('[SRS] Version mismatch, clearing old data');
+      fsrsLogger.info('Version mismatch, clearing old data');
       return new Map();
     }
 
@@ -199,7 +200,7 @@ function loadSRSItems(): Map<string, SRSItem> {
     }
     return items;
   } catch (error) {
-    console.error('[SRS] Failed to load items:', error);
+    fsrsLogger.error('Failed to load items', { error });
     return new Map();
   }
 }
@@ -215,7 +216,7 @@ function saveSRSItems(items: Map<string, SRSItem>): void {
     };
     localStorage.setItem(SRS_STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('[SRS] Failed to save items:', error);
+    fsrsLogger.error('Failed to save items', { error });
   }
 }
 
@@ -782,7 +783,7 @@ export async function updateReviewOutcomeAsync(
       const allItems = getAllSRSItems(userId);
       await syncToCloud(allItems);
     } catch (error) {
-      console.error('Failed to sync SRS data to cloud:', error);
+      fsrsLogger.error('Failed to sync SRS data to cloud', { error });
       // Continue even if sync fails - data is saved locally
     }
   }
@@ -1260,17 +1261,17 @@ export async function fetchNextVariantCard(
 
     if (!response.ok) {
       if (response.status === 401) {
-        console.warn('[SRS] User not authenticated for variant fetch');
+        fsrsLogger.warn('User not authenticated for variant fetch');
         return null;
       }
       const errorData = await response.json().catch(() => ({}));
-      console.error('[SRS] Failed to fetch next card:', errorData);
+      fsrsLogger.error('Failed to fetch next card', { errorData });
       return null;
     }
 
     return await response.json();
   } catch (error) {
-    console.error('[SRS] Error fetching next variant card:', error);
+    fsrsLogger.error('Error fetching next variant card', { error });
     return null;
   }
 }
@@ -1304,11 +1305,11 @@ export async function submitVariantReview(
 
     if (!response.ok) {
       if (response.status === 401) {
-        console.warn('[SRS] User not authenticated for variant submit');
+        fsrsLogger.warn('User not authenticated for variant submit');
         return null;
       }
       const errorData = await response.json().catch(() => ({}));
-      console.error('[SRS] Failed to submit review:', errorData);
+      fsrsLogger.error('Failed to submit review', { errorData });
       return null;
     }
 
@@ -1317,7 +1318,7 @@ export async function submitVariantReview(
     const data = json && typeof json === 'object' && 'data' in json ? json.data : json;
     return data as VariantSubmitResponse;
   } catch (error) {
-    console.error('[SRS] Error submitting variant review:', error);
+    fsrsLogger.error('Error submitting variant review', { error });
     return null;
   }
 }
@@ -1384,7 +1385,7 @@ export async function requestMnemonicImage(
     }
     return { data: data as GenerateVisualResponse };
   } catch (error) {
-    console.error('[SRS] Error requesting mnemonic image:', error);
+    fsrsLogger.error('Error requesting mnemonic image', { error });
     return null;
   }
 }
