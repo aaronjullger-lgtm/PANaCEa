@@ -41,6 +41,7 @@ export function OpenStaxAttributionFooter({
             >
               OpenStax: {title}
               <ExternalLink className="w-3 h-3" aria-hidden="true" />
+              <span className="sr-only"> (opens in new tab)</span>
             </a>
             <span>. Licensed under </span>
             <a
@@ -49,7 +50,7 @@ export function OpenStaxAttributionFooter({
               rel="noreferrer"
               className="text-[var(--color-accent)] hover:underline"
             >
-              {licenseName}
+              {licenseName}<span className="sr-only"> (opens in new tab)</span>
             </a>
             <span>.</span>
           </div>

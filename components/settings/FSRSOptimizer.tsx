@@ -132,7 +132,14 @@ export const FSRSOptimizer: React.FC = () => {
             <span className="text-[var(--color-text-secondary)]">{progress.message}</span>
             <span className="font-mono text-[var(--color-text-primary)]">{progress.progress}%</span>
           </div>
-          <div className="w-full h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
+          <div
+            className="w-full h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={progress.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Optimization progress"
+          >
             <div
               className="h-full bg-[var(--color-accent)] transition-all duration-300"
               style={{ width: `${progress.progress}%` }}

@@ -144,7 +144,14 @@ export const MasteryBadge: React.FC<MasteryBadgeProps> = ({
             <p className="text-[10px] text-[var(--color-text-muted)] mb-2">{config.description}</p>
 
             {/* Progress bar */}
-            <div className="h-1.5 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
+            <div
+              className="h-1.5 bg-[var(--color-bg-primary)] rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={config.progressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Mastery: ${config.label}`}
+            >
               <div
                 className={`h-full ${config.progressColor} rounded-full transition-all`}
                 style={{ width: `${config.progressPercent}%` }}

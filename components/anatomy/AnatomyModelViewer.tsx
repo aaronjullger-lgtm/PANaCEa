@@ -213,7 +213,7 @@ const CitationPanel: React.FC<{
             rel="noopener noreferrer"
             className="text-[var(--color-data-pass)] hover:text-[var(--color-data-pass)]/80 underline"
           >
-            View source
+            View source<span className="sr-only"> (opens in new tab)</span>
           </a>
         </div>
       </div>

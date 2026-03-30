@@ -412,8 +412,8 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                           rel="noopener noreferrer"
                           className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] flex items-center gap-1"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                          View Source
+                          <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                          View Source<span className="sr-only"> (opens in new tab)</span>
                         </a>
                         <StandardButton
                           variant="ghost"
