@@ -21,6 +21,8 @@ export const BuzzwordBanner: React.FC<BuzzwordBannerProps> = ({ conditionName })
     loadBuzzwords().then(() => {
       const loaded = getBuzzword(conditionName);
       setInfo(loaded);
+    }).catch(() => {
+      // Buzzword data unavailable — component renders nothing via null check below
     });
   }, [conditionName]);
 

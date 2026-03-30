@@ -130,15 +130,6 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     };
   }, [isInView, src, onLoadSuccess, onLoadError]);
 
-  useEffect(() => {
-    if (!isZoomed) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsZoomed(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isZoomed]);
-
   const aspectRatioStyle = aspectRatio ? { aspectRatio } : {};
 
   return (
@@ -214,6 +205,15 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
   ...props
 }) => {
   const [isZoomed, setIsZoomed] = useState(false);
+
+  useEffect(() => {
+    if (!isZoomed) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsZoomed(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isZoomed]);
 
   if (!enableZoom) {
     return <SmartImage {...props} />;

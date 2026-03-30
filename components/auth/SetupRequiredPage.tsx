@@ -29,6 +29,8 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
     navigator.clipboard.writeText('cp env.example .env').then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Clipboard API unavailable (e.g. insecure context) — silently ignore
     });
   };
 

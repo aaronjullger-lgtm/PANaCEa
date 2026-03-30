@@ -58,7 +58,9 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
       setResolvedToken(tokenProp);
       return;
     }
-    getToken?.().then((t) => setResolvedToken(t ?? ''));
+    getToken?.().then((t) => setResolvedToken(t ?? '')).catch(() => {
+      // Token fetch failed — collaboration features will use empty token
+    });
   }, [tokenProp, getToken]);
   const token = tokenProp ?? resolvedToken;
   const [activeTab, setActiveTab] = useState<'session' | 'leaderboard' | 'chat' | 'benchmark'>(
