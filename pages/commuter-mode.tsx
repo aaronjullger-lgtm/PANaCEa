@@ -4,13 +4,14 @@
  * Renders the CommuterMode component with appropriate layout and navigation.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CommuterMode } from '@/config/lazyComponents';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/config/routes';
 
 const CommuterModePage: React.FC = () => {
   const navigate = useNavigate();
+  useEffect(() => { document.title = 'Commuter Mode | PANaCEa'; }, []);
 
   const handleExit = () => {
     navigate(ROUTES.STUDY);

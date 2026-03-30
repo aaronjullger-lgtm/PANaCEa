@@ -3,7 +3,7 @@
  * Upload image, enter prompt, view reasoning + final answer; optional SVG overlay for bounding box.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Loader2, Eye } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -21,6 +21,7 @@ interface AnalyzeResponse {
 
 export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
+  useEffect(() => { document.title = 'Clinical Eye | PANaCEa'; }, []);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>('image/png');
   const [prompt, setPrompt] = useState('');

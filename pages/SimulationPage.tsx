@@ -46,6 +46,8 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
     return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
   });
 
+  useEffect(() => { document.title = 'Simulation | PANaCEa'; }, []);
+
   useEffect(() => {
     const handler = () => {
       try {

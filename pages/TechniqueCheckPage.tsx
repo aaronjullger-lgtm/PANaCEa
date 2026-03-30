@@ -2,7 +2,7 @@
  * Technique Check – Upload video of physical exam maneuver; get critique and optional bounding boxes.
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Loader2, Video, Upload } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -28,6 +28,7 @@ const PRESETS = [
 
 export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
+  useEffect(() => { document.title = 'Technique Check | PANaCEa'; }, []);
   const [file, setFile] = useState<File | null>(null);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);

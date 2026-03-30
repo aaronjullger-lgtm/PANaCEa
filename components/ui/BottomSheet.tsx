@@ -185,7 +185,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               )}
 
               {/* Content */}
-              <div className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
+              <div tabIndex={0} className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
             </motion.div>
           </>
         )}
@@ -246,7 +246,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               )}
 
               {/* Content */}
-              <div className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
+              <div tabIndex={0} className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
             </motion.div>
           </motion.div>
         </>

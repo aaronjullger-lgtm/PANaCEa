@@ -3,7 +3,7 @@
  * Modes: Lecture script (Q&A Dr. Smith / Sarah) or Deep Dive conversation (Alex / Jordan).
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Loader2, FileText, Headphones, Mic } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -23,6 +23,7 @@ interface GenerateResponse {
 
 export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
+  useEffect(() => { document.title = 'Lecture Converter | PANaCEa'; }, []);
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<'lecture' | 'deep-dive'>('lecture');
   const [topic, setTopic] = useState('');

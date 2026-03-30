@@ -24,6 +24,7 @@ interface GenerateResponse {
 
 export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
+  useEffect(() => { document.title = 'Visualizer | PANaCEa'; }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse['data'] | null>(null);
