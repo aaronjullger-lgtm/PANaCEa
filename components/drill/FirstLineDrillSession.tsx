@@ -16,6 +16,8 @@ import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-firs
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface FirstLineDrillSessionProps {
   onExit?: () => void;
@@ -131,28 +133,13 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Pill className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
-              First Line Treatment
-            </h1>
-          </div>
-          <div className="w-12 sm:w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <DrillShell
+        title="First Line Treatment"
+        breadcrumb={['Drills', 'First Line', 'Select Category']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
             initial={{ y: -20 }}
             animate={{ y: 0 }}
@@ -167,7 +154,6 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
             </p>
           </motion.div>
 
-          {/* Category Grid - Responsive */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl">
             {CATEGORY_CARDS.map((card, index) => (
               <CategoryCard
@@ -182,8 +168,8 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
               />
             ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 

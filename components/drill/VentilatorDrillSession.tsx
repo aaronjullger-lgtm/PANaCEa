@@ -13,6 +13,8 @@ import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import { getDrillLandingStats } from '@/services/analytics';
 import { EmptyState } from '@/components/ui/EmptyState';
+import DrillShell from '@/components/drill/DrillShell';
+import { ROUTES } from '@/config/routes';
 
 // Action options for ventilator adjustments
 const ACTION_OPTIONS = [
@@ -63,40 +65,37 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
   // Landing page
   if (status === 'landing') {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Ventilator Management"
-        description="Master mechanical ventilation settings and troubleshooting"
-        icon={Wind}
-        accentColor="blue"
-        stats={stats}
-        onStart={startSession}
-        instructions={[
-          'Review patient info and current vent settings',
-          'Analyze ABG results',
-          'Select the most appropriate management',
-          'Learn from detailed explanations',
-        ]}
-        objectives={[
-          'Master AC, SIMV, PRVC, and PS modes',
-          'Interpret ABGs in ventilated patients',
-          'Recognize volutrauma and barotrauma',
-          'Know when to wean and extubate',
-        ]}
-        estimatedMinutes={15}
-        categories={['Critical Care', 'Pulmonary']}
+        breadcrumb={['Drills', 'Ventilator']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {onExit && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onExit}
-              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-              aria-label="Exit"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Ventilator Management"
+          description="Master mechanical ventilation settings and troubleshooting"
+          icon={Wind}
+          accentColor="blue"
+          stats={stats}
+          onStart={startSession}
+          onExit={onExit}
+          instructions={[
+            'Review patient info and current vent settings',
+            'Analyze ABG results',
+            'Select the most appropriate management',
+            'Learn from detailed explanations',
+          ]}
+          objectives={[
+            'Master AC, SIMV, PRVC, and PS modes',
+            'Interpret ABGs in ventilated patients',
+            'Recognize volutrauma and barotrauma',
+            'Know when to wean and extubate',
+          ]}
+          estimatedMinutes={15}
+          categories={['Critical Care', 'Pulmonary']}
+        />
+      </DrillShell>
     );
   }
 
@@ -385,41 +384,46 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
   // Summary state
   if (status === 'summary') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
-        >
-          <Wind className="w-16 h-16 text-[var(--color-category-practice)] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">
-            Excellent work managing ventilators!
-          </p>
-
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-data-pass">{score}</div>
-              <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+      <DrillShell
+        title="Ventilator — Complete"
+        breadcrumb={['Drills', 'Ventilator', 'Results']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
+          >
+            <Wind className="w-16 h-16 text-[var(--color-category-practice)] mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+            <p className="text-[var(--color-text-secondary)] mb-6">
+              Excellent work managing ventilators!
+            </p>
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-data-pass">{score}</div>
+                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg font-medium transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" /> Start New Session
-            </button>
-            <button
-              onClick={handleExit}
-              className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-            >
-              Exit to Menu
-            </button>
-          </div>
-        </motion.div>
-      </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg font-medium transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" /> Start New Session
+              </button>
+              <button
+                onClick={handleExit}
+                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+              >
+                Exit to Menu
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </DrillShell>
     );
   }
 

@@ -11,6 +11,8 @@ import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading';
+import DrillShell from '@/components/drill/DrillShell';
+import { ROUTES } from '@/config/routes';
 import {
   X,
   ArrowRight,
@@ -269,34 +271,30 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     }
 
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Mini Lab Mode"
-        description="Diagnose conditions from real lab values and clinical context"
-        icon={FlaskConical}
-        accentColor="green"
-        onStart={handleStart}
-        isLoading={isStarting}
-        instructions={[
-          'Realistic clinical vignettes with patient demographics',
-          'Multiple lab panels (CBC, CMP, specific panels)',
-          'Order additional tests as needed',
-          'Highlighted abnormal and critical values',
-          'Detailed explanations of key findings',
-        ]}
+        breadcrumb={['Drills', 'Lab Interpretation']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {/* Exit button overlay */}
-        {onExit && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onExit}
-              aria-label="Exit drill"
-              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Mini Lab Mode"
+          description="Diagnose conditions from real lab values and clinical context"
+          icon={FlaskConical}
+          accentColor="green"
+          onStart={handleStart}
+          onExit={onExit}
+          isLoading={isStarting}
+          instructions={[
+            'Realistic clinical vignettes with patient demographics',
+            'Multiple lab panels (CBC, CMP, specific panels)',
+            'Order additional tests as needed',
+            'Highlighted abnormal and critical values',
+            'Detailed explanations of key findings',
+          ]}
+        />
+      </DrillShell>
     );
   }
 
@@ -305,23 +303,13 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium">Exit</span>
-          </button>
-          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Mini Lab Mode</h1>
-          <div className="w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
+      <DrillShell
+        title="Mini Lab Mode"
+        breadcrumb={['Drills', 'Lab Interpretation', 'Select Category']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
           <motion.div
             initial={{ y: -20 }}
             animate={{ y: 0 }}
@@ -336,7 +324,6 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             </p>
           </motion.div>
 
-          {/* Category Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
             {CATEGORY_CARDS.map((card, index) => (
               <motion.button
@@ -351,19 +338,17 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 className={`relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
               >
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                 <div className="relative z-10">
                   <div className="mb-3 p-2.5 bg-white/20 rounded-xl w-fit">{card.icon}</div>
                   <h3 className="text-lg font-bold text-white mb-1">{card.title}</h3>
                   <p className="text-white/80 text-sm">{card.description}</p>
                 </div>
-
                 <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </motion.button>
             ))}
           </div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 
@@ -513,44 +498,49 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'summary') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
-        >
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-            Session Complete
-          </h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">
-            Great work on your lab interpretation training!
-          </p>
-
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-data-pass">{score}</div>
-              <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+      <DrillShell
+        title="Mini Lab — Complete"
+        breadcrumb={['Drills', 'Lab Interpretation', 'Results']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
+          >
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+              Session Complete
+            </h2>
+            <p className="text-[var(--color-text-secondary)] mb-6">
+              Great work on your lab interpretation training!
+            </p>
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-data-pass">{score}</div>
+                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-medium transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Start New Session
-            </button>
-            <button
-              onClick={handleExit}
-              className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-            >
-              Exit to Menu
-            </button>
-          </div>
-        </motion.div>
-      </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-medium transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Start New Session
+              </button>
+              <button
+                onClick={handleExit}
+                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+              >
+                Exit to Menu
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </DrillShell>
     );
   }
 

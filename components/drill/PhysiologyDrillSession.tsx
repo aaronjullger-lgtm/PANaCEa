@@ -12,6 +12,8 @@ import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { usePhysiologyDrill } from '@/hooks/game/use-physiology-drill';
 import { getDrillLandingStats } from '@/services/analytics';
+import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface PhysiologyDrillSessionProps {
   onExit?: () => void;
@@ -38,28 +40,36 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
   // Landing page
   if (drill.status === 'landing') {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Physiology Review"
-        description="Master organ system physiology"
-        icon={Activity}
-        accentColor="purple"
-        stats={stats}
-        onStart={drill.startSession}
-        onExit={onExit}
-        instructions={[
-          'Review fundamental physiology concepts',
-          'Cover all major organ systems',
-          'Connect structure to function',
-          'Apply physiologic principles clinically',
-        ]}
-        objectives={[
-          'Master key physiologic mechanisms',
-          'Understand organ system interactions',
-          'Build foundation for clinical reasoning',
-          'Prepare for PANCE physiology questions',
-        ]}
-        estimatedMinutes={10}
-      />
+        breadcrumb={['Drills', 'Physiology']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
+      >
+        <DrillLandingPage
+          title="Physiology Review"
+          description="Master organ system physiology"
+          icon={Activity}
+          accentColor="purple"
+          stats={stats}
+          onStart={drill.startSession}
+          onExit={onExit}
+          instructions={[
+            'Review fundamental physiology concepts',
+            'Cover all major organ systems',
+            'Connect structure to function',
+            'Apply physiologic principles clinically',
+          ]}
+          objectives={[
+            'Master key physiologic mechanisms',
+            'Understand organ system interactions',
+            'Build foundation for clinical reasoning',
+            'Prepare for PANCE physiology questions',
+          ]}
+          estimatedMinutes={10}
+        />
+      </DrillShell>
     );
   }
 

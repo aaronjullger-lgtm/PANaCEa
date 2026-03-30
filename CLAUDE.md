@@ -112,10 +112,10 @@ The #1 goal is making all drill types feed into the FSRS pipeline consistently. 
 - Current: `['main', 'cram', 'rapid_recall']` — no way to distinguish drill submissions from main session
 - Fix: add `'drill'` to the enum, make drills pass it, update FSRS gating logic
 
-### DrillShell: 6 of 16 drill components now use it
-- `ContrastiveDrillSession`, `PharmDrillSession`, `DDxDrillSession`, `ConditionDrillSession`, `AnatomyDrillSession`, `ECGDrillSession` use DrillShell
+### DrillShell: 13 of 13 active drill components now use it ✅
+- All active drill sessions use DrillShell: Contrastive, Pharm, DDx, Condition, Anatomy, ECG, FirstLine, Imaging, Physiology, MiniLab, Guideline, Ventilator, Derm
 - DrillShell wraps landing, menu, and completion views; MiniDrillLayout stays for active quiz (immersive full-screen)
-- Remaining 10 drill sessions still need migration
+- 3 delegation wrappers (SubcategoryDrill, SystemDrill, PharmacologyDrill) inherit DrillShell from their target components
 
 ### Build environment notes
 - `tsc --noEmit` requires `NODE_OPTIONS="--max-old-space-size=4096"` (6189 TS files)

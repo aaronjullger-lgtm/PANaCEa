@@ -16,6 +16,8 @@ import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
+import DrillShell from '@/components/drill/DrillShell';
+import { ROUTES } from '@/config/routes';
 import { useAuth } from '@clerk/clerk-react';
 
 interface GuidelineDrillSessionProps {
@@ -117,33 +119,29 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (!hasStarted) {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Guideline Mode"
-        description="Practice PANCE high-yield clinical scoring systems and criteria"
-        icon={FileCheck}
-        accentColor="blue"
-        onStart={handleStart}
-        instructions={[
-          'Master clinical scoring systems like CURB-65, Wells Criteria, GCS',
-          'Practice with realistic clinical vignettes',
-          'Learn which criteria apply to each case',
-          'Instant feedback with detailed explanations',
-          'Track your accuracy across different guidelines',
-        ]}
+        breadcrumb={['Drills', 'Guidelines']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {/* Exit button overlay */}
-        {onExit && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onExit}
-              aria-label="Exit drill"
-              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Guideline Mode"
+          description="Practice PANCE high-yield clinical scoring systems and criteria"
+          icon={FileCheck}
+          accentColor="blue"
+          onStart={handleStart}
+          onExit={onExit}
+          instructions={[
+            'Master clinical scoring systems like CURB-65, Wells Criteria, GCS',
+            'Practice with realistic clinical vignettes',
+            'Learn which criteria apply to each case',
+            'Instant feedback with detailed explanations',
+            'Track your accuracy across different guidelines',
+          ]}
+        />
+      </DrillShell>
     );
   }
 
@@ -175,25 +173,13 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     );
 
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-          >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <FileCheck className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold">Guideline Mode</h1>
-          </div>
-          <div className="w-12 sm:w-16" />
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <DrillShell
+        title="Guideline Mode"
+        breadcrumb={['Drills', 'Guidelines', 'Select Guideline']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
             <motion.div
               initial={{ y: -20 }}
@@ -245,8 +231,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               ))}
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 
@@ -533,20 +519,13 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         : 0;
 
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            aria-label="Exit session"
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </button>
-          <h1 className="text-base sm:text-lg font-semibold">Session Complete</h1>
-          <div className="w-12" />
-        </header>
-
-        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+      <DrillShell
+        title="Guideline Mode — Complete"
+        breadcrumb={['Drills', 'Guidelines', 'Results']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
@@ -574,8 +553,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               </button>
             </div>
           </motion.div>
-        </main>
-      </div>
+        </div>
+      </DrillShell>
     );
   }
 

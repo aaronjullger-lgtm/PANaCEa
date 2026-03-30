@@ -11,6 +11,8 @@ import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import DrillShell from '@/components/drill/DrillShell';
+import { ROUTES } from '@/config/routes';
 import { Scan, X, ArrowRight, RotateCcw, Eye, EyeOff } from 'lucide-react';
 
 interface DermDrillSessionProps {
@@ -61,40 +63,37 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
 
   if (status === 'menu') {
     return (
-      <DrillLandingPage
+      <DrillShell
         title="Derm Recognition"
-        description="Identify skin lesions and rashes"
-        icon={Scan}
-        accentColor="pink"
-        onStart={() => startSession('derm')}
-        instructions={[
-          'Read clinical presentation first',
-          'Reveal image when ready',
-          'Identify skin lesions and rashes',
-          'Master dermatological patterns',
-          'Practice PANCE high-yield derm',
-        ]}
-        objectives={[
-          'Recognize common skin lesions',
-          'Identify rashes by morphology',
-          'Differentiate bacterial vs viral vs fungal',
-          'Master PANCE dermatology buzzwords',
-        ]}
-        estimatedMinutes={10}
-        categories={['Dermatology', 'Infectious Disease']}
+        breadcrumb={['Drills', 'Dermatology']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+        hideBreadcrumb
       >
-        {onExit && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onExit}
-              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-              aria-label="Exit"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-      </DrillLandingPage>
+        <DrillLandingPage
+          title="Derm Recognition"
+          description="Identify skin lesions and rashes"
+          icon={Scan}
+          accentColor="pink"
+          onStart={() => startSession('derm')}
+          onExit={onExit}
+          instructions={[
+            'Read clinical presentation first',
+            'Reveal image when ready',
+            'Identify skin lesions and rashes',
+            'Master dermatological patterns',
+            'Practice PANCE high-yield derm',
+          ]}
+          objectives={[
+            'Recognize common skin lesions',
+            'Identify rashes by morphology',
+            'Differentiate bacterial vs viral vs fungal',
+            'Master PANCE dermatology buzzwords',
+          ]}
+          estimatedMinutes={10}
+          categories={['Dermatology', 'Infectious Disease']}
+        />
+      </DrillShell>
     );
   }
 
@@ -223,37 +222,44 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
 
   if (status === 'summary') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
-        >
-          <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">Great work on dermatology!</p>
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
-              <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+      <DrillShell
+        title="Derm Recognition — Complete"
+        breadcrumb={['Drills', 'Dermatology', 'Results']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <div className="flex-1 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
+          >
+            <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+            <p className="text-[var(--color-text-secondary)] mb-6">Great work on dermatology!</p>
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
+                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" /> Start New Session
-            </button>
-            <button
-              onClick={handleExit}
-              className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-            >
-              Exit to Menu
-            </button>
-          </div>
-        </motion.div>
-      </div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" /> Start New Session
+              </button>
+              <button
+                onClick={handleExit}
+                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+              >
+                Exit to Menu
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </DrillShell>
     );
   }
 

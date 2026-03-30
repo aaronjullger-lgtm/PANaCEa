@@ -108,7 +108,35 @@ Migrated the 5 highest-priority drill session components to use the DrillShell w
 - This matches the ContrastiveDrillSession reference pattern established earlier
 
 ### Next priority
-- **Phase 4:** QuizView decomposition — extract QuestionRenderer, PostAnswerFeedback
+- Phase 3 batch 2: remaining 7 drill sessions
+
+---
+
+## 2026-03-30 — Phase 3 Batch 2: DrillShell Migration (Remaining 7 Drills)
+
+### What was done
+Migrated the remaining 7 drill session components to DrillShell, completing Phase 3. All non-quiz views across every drill type now use standardized breadcrumb navigation and back-to-hub structure.
+
+### Changes
+- **Modified** `components/drill/FirstLineDrillSession.tsx` — Wrapped category menu in DrillShell; removed custom fixed div + header
+- **Modified** `components/drill/ImagingDrillSession.tsx` — Wrapped landing page and summary view in DrillShell; removed custom exit button overlay
+- **Modified** `components/drill/PhysiologyDrillSession.tsx` — Wrapped landing page in DrillShell
+- **Modified** `components/drill/MiniLabDrillSession.tsx` — Wrapped landing page, category menu, and summary view in DrillShell; removed custom exit button overlay and custom header from menu
+- **Modified** `components/drill/GuidelineDrillSession.tsx` — Wrapped landing page, guideline selection menu, and summary view in DrillShell; removed custom exit button overlay and custom headers
+- **Modified** `components/drill/VentilatorDrillSession.tsx` — Wrapped landing page and summary view in DrillShell; removed custom exit button overlay
+- **Modified** `components/drill/DermDrillSession.tsx` — Wrapped landing page and summary view in DrillShell; removed custom exit button overlay
+
+### Before → After
+| Metric | Before | After |
+|--------|--------|-------|
+| Drill sessions using DrillShell | 6 | 13 (all active drill types) |
+| Drill views with breadcrumb nav | 14 | 30+ (all non-quiz views) |
+| Custom one-off headers remaining | 0 | 0 |
+
+### Remaining delegation wrappers (no changes needed)
+- `SubcategoryDrillSession`, `SystemDrillSession`, `PharmacologyDrillSession` — these delegate to other drill components that already use DrillShell
+
+### Next priority
+- **Phase 4:** QuizView decomposition — extract HeaderBar, QuestionAnswerSection, RationalePanel, useAnswerSubmission hook
 - **Phase 5:** Question data normalization + content backfill
-- **Remaining DrillShell migrations:** Photo, MiniLab, Physiology, Guideline, Ventilator, Polypharmacy, Imaging, Derm
 - Daily task handles: accessibility fixes, empty states, dark mode consistency, test coverage
