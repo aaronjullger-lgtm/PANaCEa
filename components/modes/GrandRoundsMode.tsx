@@ -843,12 +843,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             )}
           </div>
 
-          <div className="bg-muted-amber-500/10 border border-muted-amber-500/30 rounded-lg p-4">
+          <div className="bg-muted-amber-500/20 border-2 border-muted-amber-500/50 rounded-xl p-4" role="alert">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-muted-amber-500 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-[var(--color-text-muted)]">
-                <strong className="text-muted-amber-500">One Attempt Per Day:</strong> You can only
-                complete this challenge once. New challenges available daily at midnight UTC.
+              <AlertCircle className="w-6 h-6 text-muted-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="text-sm text-[var(--color-text-primary)]">
+                <strong className="text-muted-amber-500 text-base">One Attempt Per Day</strong>
+                <p className="mt-1 text-[var(--color-text-secondary)]">
+                  You can only complete this challenge once. Choose your answers carefully — there are no retries. New challenges available daily at midnight UTC.
+                </p>
               </div>
             </div>
           </div>

@@ -179,12 +179,30 @@ export const NavRail: React.FC<NavRailProps> = ({
   const commuterContext = useCommuter();
   const { status: pwaStatus, showInstallPrompt } = usePWAEnhancer();
   const isMobile = useIsMobile();
-  const [collapsed, setCollapsed] = useState(true);
-  const [hidden, setHidden] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('navrail.collapsed');
+      // Default to expanded (false) on desktop; respect saved preference
+      return saved !== null ? saved === 'true' : false;
+    } catch { return false; }
+  });
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem('navrail.hidden') === 'true';
+    } catch { return false; }
+  });
   const location = useLocation();
   const { pathname, search } = location;
   const showPwaInstall =
     pwaStatus.hasInstallPrompt && !pwaStatus.isInstalled && !pwaStatus.isStandalone;
+
+  // Persist sidebar state to localStorage
+  useEffect(() => {
+    try { localStorage.setItem('navrail.collapsed', String(collapsed)); } catch {}
+  }, [collapsed]);
+  useEffect(() => {
+    try { localStorage.setItem('navrail.hidden', String(hidden)); } catch {}
+  }, [hidden]);
 
   // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
