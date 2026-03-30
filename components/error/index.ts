@@ -24,5 +24,8 @@ export type {
   AIDependentView,
 } from './ErrorBoundary';
 
+// Drill-specific error boundary
+export { DrillErrorBoundary } from './DrillErrorBoundary';
+
 // Config/maintenance error page
 export { MaintenancePage } from './MaintenancePage';

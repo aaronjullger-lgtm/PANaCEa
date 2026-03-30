@@ -19,12 +19,13 @@ const fsrs = new FSRS();
 /**
  * Minimal Prisma-like contract for FSRS config (edge-safe; no lib/prisma import).
  * Callers from Edge pass createEdgePrismaClient(); callers from Node can pass lib/prisma.
+ * Accepts PrismaClient or a narrowly-typed interface with userSRSConfig.
  */
 type FSRSConfigPrismaLike = {
   userSRSConfig: {
     findUnique: (args: { where: { userId: string } }) => Promise<{
       requestRetention: number;
-      wWeights: number[] | null;
+      wWeights: unknown; // JsonValue in Prisma, but may be number[] | null
     } | null>;
   };
 } | null;

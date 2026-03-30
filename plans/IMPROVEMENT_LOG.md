@@ -164,5 +164,62 @@ Extracted two major components from the 2,274-line QuizView.tsx monolith, reduci
 - `QuestionAndAnswers` component — question display + answer options rendering
 
 ### Next priority
+- 10-improvement batch: error boundaries, logging, accessibility, tests, type safety
+
+---
+
+## 2026-03-30 — 10-Improvement Batch: Quality, Safety, and Testing
+
+### What was done
+Implemented 10 targeted improvements across error handling, logging hygiene, accessibility, design system consistency, empty states, type safety, and test coverage.
+
+### 1. DrillErrorBoundary component (NEW)
+- **Created** `components/error/DrillErrorBoundary.tsx` — Class-based React error boundary for drill sessions with graceful error UI, "Try Again" button, and "Back to Practice" link
+- **Updated** `components/error/index.ts` — Added DrillErrorBoundary export
+
+### 2. Logger standardization: clerkAuth.ts
+- **Modified** `lib/middleware/clerkAuth.ts` — Replaced all 16 `console.log`/`console.warn`/`console.error` calls with `logger.debug`/`logger.warn`/`logger.error` from `@/src/lib/logger`
+
+### 3. Logger standardization: verified-question-generator.ts
+- **Modified** `lib/verified-question-generator.ts` — Replaced 7 `console.warn`/`console.error` calls with structured logger calls
+
+### 4. Design system: GapAnalysisDashboard hex colors
+- **Modified** `components/dashboard/GapAnalysisDashboard.tsx` — Centralized 8 hardcoded hex color values into a `CHART_COLORS` constant with semantic names mapped to design tokens. Recharts requires actual hex strings (can't use CSS var()), so colors are documented with their token equivalents.
+
+### 5. Accessibility: DrillLandingPage
+- **Modified** `components/drill/DrillLandingPage.tsx` — Added 6 accessibility improvements:
+  - `aria-label` on Start Drill, Back, and View History buttons
+  - `role="list"` + `aria-label` on objectives and instructions lists
+  - `aria-live="polite"` on stats container for dynamic announcements
+
+### 6. Empty state: DiagnosticDrillHub
+- **Modified** `components/drill/DiagnosticDrillHub.tsx` — Added no-results empty state for both "All Categories" and per-category views with search icon, contextual message, and "Clear search" button
+
+### 7. Type safety: drillReviewService
+- **Modified** `lib/services/drillReviewService.ts` — Removed 4 `as any` casts by using proper PrismaClient types
+- **Modified** `lib/services/userStatisticsService.ts` — Changed function signatures from `any` to `PrismaClient`
+- **Modified** `lib/services/srsService.ts` — Fixed `FSRSConfigPrismaLike` type for Prisma's JsonValue compatibility
+
+### 8. Test coverage: implicit-metrics.ts
+- **Created** `tests/implicit-metrics.test.ts` (902 lines, 59 tests) — Comprehensive tests for deriveContinuousRating, deriveImplicitRating, updateSessionLatencyStats, isRapidGuess, isFlaggedResponse, estimateParTime, analyzeSessionMetrics, applyStabilityModifierFromGrade, plus integration tests
+
+### 9. Test coverage: useDrillFSRS.ts
+- **Created** `tests/useDrillFSRS.test.ts` (1031 lines, 30 tests) — Tests for hook initialization, startQuestion, recordAnswerChange, submitAnswer payload validation (sessionType='drill'), error handling, FSRS response normalization, state management, and edge cases
+
+### Before → After
+| Metric | Before | After |
+|--------|--------|-------|
+| console.log/warn/error in clerkAuth | 16 | 0 (all logger) |
+| console.warn/error in verified-question-generator | 7 | 0 (all logger) |
+| `as any` casts in drillReviewService | 4 | 0 |
+| Hardcoded hex colors in GapAnalysis | 8 inline | 0 (centralized constant) |
+| aria-labels in DrillLandingPage | 0 | 6 |
+| Empty states in DiagnosticDrillHub | 0 | 2 (all-categories + per-category) |
+| Error boundary for drills | 0 | 1 (DrillErrorBoundary) |
+| Test files for FSRS pipeline | 1 (fsrs.test.ts) | 3 (+implicit-metrics, +useDrillFSRS) |
+| Test cases for FSRS pipeline | ~50 | ~139 (+59 +30) |
+
+### Next priority
 - **Phase 5:** Question data normalization + content backfill
-- Daily task handles: accessibility fixes, empty states, dark mode consistency, test coverage
+- Wrap drill sessions in DrillErrorBoundary
+- Daily task handles: remaining accessibility, dark mode consistency

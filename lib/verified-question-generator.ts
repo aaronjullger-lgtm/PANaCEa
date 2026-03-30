@@ -20,9 +20,16 @@ import {
   type CoVeConfig,
 } from './cove-verification';
 import { callGeminiText, fetchNewQuestion } from '@/services/ai/geminiService';
+import { logger } from '@/src/lib/logger';
 // Note: Gemini response sanitization (strip ```json / ```) and JSON parse error handling
 // live in geminiService.fetchNewQuestion so fallback generation works when the main API returns 500.
 import { GEMINI_FLASH_MODEL } from '../src/constants';
+
+// ============================================================================
+// Logger Scope
+// ============================================================================
+
+const LOG_SCOPE = 'VerifiedQuestionGen';
 
 // ============================================================================
 // Types
@@ -170,10 +177,9 @@ export async function fetchVerifiedQuestion(
         }
 
         // Log why verification failed
-        console.warn(
-          `[VerifiedQuestion] Attempt ${attempts} failed verification:`,
-          verification.recommendation,
-          verification.flags.map((f) => f.message).join('; ')
+        logger.warn(
+          LOG_SCOPE,
+          `Attempt ${attempts} failed verification: ${verification.recommendation} | ${verification.flags.map((f) => f.message).join('; ')}`
         );
       } else {
         // Quick verification
@@ -193,19 +199,20 @@ export async function fetchVerifiedQuestion(
           };
         }
 
-        console.warn(
-          `[VerifiedQuestion] Attempt ${attempts} failed quick verification:`,
-          quickResult.criticalIssues.join('; ')
+        logger.warn(
+          LOG_SCOPE,
+          `Attempt ${attempts} failed quick verification: ${quickResult.criticalIssues.join('; ')}`
         );
       }
     } catch (error) {
-      console.error(`[VerifiedQuestion] Attempt ${attempts} error:`, error);
+      logger.error(LOG_SCOPE, `Attempt ${attempts} error:`, error);
     }
   }
 
   // All attempts exhausted - return last question with verification results
-  console.warn(
-    `[VerifiedQuestion] Max attempts (${maxAttempts}) reached, returning best available question`
+  logger.warn(
+    LOG_SCOPE,
+    `Max attempts (${maxAttempts}) reached, returning best available question`
   );
 
   if (!lastQuestion) {
@@ -294,7 +301,7 @@ async function buildVerificationContext(question: Question): Promise<Verificatio
       };
     }
   } catch (error) {
-    console.warn(`[VerifiedQuestion] Could not load database content for ${conditionName}:`, error);
+    logger.warn(LOG_SCOPE, `Could not load database content for ${conditionName}:`, error);
   }
 
   return {
@@ -327,7 +334,7 @@ export async function verifyQuestionBatch(
 
     // Type guard: skip if question is undefined (shouldn't happen with valid array)
     if (!question) {
-      console.warn(`[VerifyBatch] Skipping undefined question at index ${i}`);
+      logger.warn(LOG_SCOPE, `Skipping undefined question at index ${i}`);
       continue;
     }
 
@@ -371,7 +378,7 @@ export async function verifyQuestionBatch(
         onProgress?.(i + 1, questions.length, partialResult);
       }
     } catch (error) {
-      console.error(`[VerifyBatch] Error verifying question ${i}:`, error);
+      logger.error(LOG_SCOPE, `Error verifying question ${i}:`, error);
       results.push({ question, result: null, passed: false });
       onProgress?.(i + 1, questions.length, null);
     }

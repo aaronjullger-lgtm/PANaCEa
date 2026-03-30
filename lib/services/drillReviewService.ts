@@ -340,19 +340,19 @@ export async function submitDrillReview(
       timeToAnswer: numericTime,
       baselineTime: parTimeMs,
     },
-    prisma as any
+    prisma
   );
 
   try {
-    await applyAttemptToUserStatistics(prisma as any, userId, {
-      system: question.system || (qData as any).system || undefined,
+    await applyAttemptToUserStatistics(prisma, userId, {
+      system: question.system || undefined,
       isCorrect,
       timeSpentMs: numericTime,
       selectedCondition: selectedMeta?.conditionId ?? selectedMeta?.label ?? null,
       correctCondition: question.conditionId ?? null,
       timestamp: new Date(),
     });
-    await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
+    await updateTimingAggregates(prisma, userId, { refreshPeakHours: true });
   } catch (statsError) {
     logger?.warn?.('Failed to update user statistics after review', {
       error: statsError instanceof Error ? statsError.message : String(statsError),
@@ -530,7 +530,7 @@ export async function submitDrillReview(
 
   // DEV-001 FIX: Split rapid-guess ReviewLog from FSRS block
   if (question.conditionId && shouldLogReview) {
-    console.log('[DEBUG] Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
+    logger?.debug?.('Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     
     // For rapid guesses: create ReviewLog only, skip FSRS calculation
     if (isRapidGuess) {
@@ -545,7 +545,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
-        console.log('[DEBUG] Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
+        logger?.debug?.('Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
         // Determine review_type marker for flagged rapid guesses
         let reviewTypeMarker = 'rapid_guess';
         if (durationExceedsCap) {
@@ -583,7 +583,7 @@ export async function submitDrillReview(
           },
         });
       } catch (reviewLogError) {
-        console.error('[DEBUG] Rapid-guess ReviewLog creation failed:', reviewLogError);
+        logger?.error?.('Rapid-guess ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
         logger?.warn?.('Failed to write rapid-guess ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
@@ -640,7 +640,7 @@ export async function submitDrillReview(
         };
 
         // DEV-002 FIX: Store full telemetry with server_computed key
-        console.log('[DEBUG] Creating normal ReviewLog with full telemetry');
+        logger?.debug?.('Creating normal ReviewLog with full telemetry');
         try {
           const reviewDate = new Date();
           const hoverOscillations =
@@ -658,7 +658,7 @@ export async function submitDrillReview(
             reviewTypeMarker = 'real:duration_exceeded';
           }
 
-          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, durationExceedsCap });
+          logger?.debug?.('About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, durationExceedsCap });
           await prisma.reviewLog.create({
             data: {
               userId,
@@ -692,7 +692,7 @@ export async function submitDrillReview(
             },
           });
         } catch (reviewLogError) {
-          console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
+          logger?.error?.('ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
           logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
             error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
           });
@@ -708,6 +708,48 @@ export async function submitDrillReview(
           nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
         });
 
+        // ── Card dual-write (non-blocking) ──
+        // Creates per-question FSRS Card alongside condition-level UserProgress.
+        // Enables future per-question scheduling without breaking current flow.
+        try {
+          await prisma.card.upsert({
+            where: {
+              userId_questionId: { userId, questionId },
+            },
+            create: {
+              id: `${userId}_${questionId}`,
+              userId,
+              questionId,
+              due: clampedNextDue,
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              elapsed_days: updatedCard.elapsed_days,
+              scheduled_days: updatedCard.scheduled_days,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              state: updatedCard.state,
+              last_review: new Date(),
+            },
+            update: {
+              due: clampedNextDue,
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              elapsed_days: updatedCard.elapsed_days,
+              scheduled_days: updatedCard.scheduled_days,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              state: updatedCard.state,
+              last_review: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+        } catch (cardError) {
+          // Non-blocking: Card dual-write failure should not break the main pipeline
+          logger?.warn?.('Card dual-write failed (non-fatal)', {
+            error: cardError instanceof Error ? cardError.message : String(cardError),
+          });
+        }
+
         try {
           const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
           if (siblingBoosts.length > 0) {
@@ -722,7 +764,7 @@ export async function submitDrillReview(
           });
         }
       } catch (progressError) {
-        console.error('[DEBUG] Failed to update UserProgress', progressError);
+        logger?.error?.('Failed to update UserProgress', { error: progressError instanceof Error ? progressError.message : String(progressError) });
         logger?.warn?.('Failed to update UserProgress', {
           error: progressError instanceof Error ? progressError.message : String(progressError),
         });

@@ -105,6 +105,7 @@ export function DrillLandingPage({
             initial={{ x: -20 }}
             animate={{ x: 0 }}
             onClick={onExit}
+            aria-label="Go back to training hub"
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -156,6 +157,7 @@ export function DrillLandingPage({
             whileTap={{ scale: 0.98 }}
             onClick={onStart}
             disabled={isLoading}
+            aria-label={isLoading ? 'Starting drill...' : `Start ${title} drill`}
             className={`w-full ${colors.button} text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isLoading ? (
@@ -181,7 +183,7 @@ export function DrillLandingPage({
                 Learning Objectives
               </h2>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-2" role="list" aria-label="Learning objectives">
               {objectives.map((objective, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <div
@@ -198,7 +200,7 @@ export function DrillLandingPage({
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" aria-live="polite" aria-label="Drill statistics">
             {stats.totalAttempts !== undefined && (
               <motion.div
                 initial={{ y: 20 }}
@@ -281,7 +283,7 @@ export function DrillLandingPage({
               <BookOpen className={`w-5 h-5 ${colors.text}`} />
               <h2 className="text-lg font-bold text-[var(--color-text-primary)]">How it Works</h2>
             </div>
-            <ul className="space-y-3">
+            <ul className="space-y-3" role="list" aria-label="Instructions">
               {instructions.map((instruction, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <span className={`${colors.text} font-bold text-lg mt-0.5`}>{index + 1}.</span>
@@ -311,7 +313,7 @@ export function DrillLandingPage({
             transition={{ delay: 0.45 }}
             className="text-center"
           >
-            <button onClick={onViewHistory} className="btn-ghost">
+            <button onClick={onViewHistory} aria-label={`View ${title} history and statistics`} className="btn-ghost">
               View History and Stats
             </button>
           </motion.div>

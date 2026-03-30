@@ -18,6 +18,7 @@ import {
   Target,
   Sparkles,
   ChevronRight,
+  Search,
 } from 'lucide-react';
 
 interface DiagnosticDrillHubProps {
@@ -329,51 +330,71 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
               exit={{ opacity: 0, y: -20 }}
               className="space-y-12"
             >
-              {(Object.keys(CATEGORY_INFO) as DrillCategory[]).map((category) => {
-                const info = CATEGORY_INFO[category];
-                const Icon = info.icon;
-                const categoryDrills = filteredDrills.filter(
-                  (drill) => drill.category === category
-                );
+              {filteredDrills.length === 0 && searchQuery ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                  <Search className="w-16 h-16 text-[var(--color-text-muted)] mb-6 opacity-50" />
+                  <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-3">
+                    No drill modes found
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] max-w-md mb-8">
+                    No drill modes match "{searchQuery}". Try a different search term.
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="px-6 py-3 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/10 transition-colors font-medium"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {(Object.keys(CATEGORY_INFO) as DrillCategory[]).map((category) => {
+                    const info = CATEGORY_INFO[category];
+                    const Icon = info.icon;
+                    const categoryDrills = filteredDrills.filter(
+                      (drill) => drill.category === category
+                    );
 
-                if (categoryDrills.length === 0 && searchQuery) return null;
+                    if (categoryDrills.length === 0 && searchQuery) return null;
 
-                return (
-                  <div key={category} className="space-y-4">
-                    {/* Category Header */}
-                    <div
-                      className={`flex items-center gap-4 p-6 rounded-xl bg-gradient-to-r ${info.gradient} text-white shadow-lg`}
-                    >
-                      <div className="p-4 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <Icon className="w-8 h-8" />
+                    return (
+                      <div key={category} className="space-y-4">
+                        {/* Category Header */}
+                        <div
+                          className={`flex items-center gap-4 p-6 rounded-xl bg-gradient-to-r ${info.gradient} text-white shadow-lg`}
+                        >
+                          <div className="p-4 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <Icon className="w-8 h-8" />
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-2xl font-bold">{info.title}</h2>
+                            <p className="text-white/90">{info.description}</p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedCategory(category)}
+                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all flex items-center gap-2"
+                          >
+                            <span>View All</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Drill Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {categoryDrills.map((drill) => (
+                            <DrillCard
+                              key={drill.id}
+                              drill={drill}
+                              onSelect={() => onNavigateToDrill?.(drill.id)}
+                              getDifficultyColor={getDifficultyColor}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold">{info.title}</h2>
-                        <p className="text-white/90">{info.description}</p>
-                      </div>
-                      <button
-                        onClick={() => setSelectedCategory(category)}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all flex items-center gap-2"
-                      >
-                        <span>View All</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Drill Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {categoryDrills.map((drill) => (
-                        <DrillCard
-                          key={drill.id}
-                          drill={drill}
-                          onSelect={() => onNavigateToDrill?.(drill.id)}
-                          getDifficultyColor={getDifficultyColor}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+                    );
+                  })}
+                </>
+              )}
             </motion.div>
           ) : (
             // Show only selected category
@@ -393,22 +414,36 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredDrills.map((drill) => (
-                  <DrillCard
-                    key={drill.id}
-                    drill={drill}
-                    onSelect={() => onNavigateToDrill?.(drill.id)}
-                    getDifficultyColor={getDifficultyColor}
-                  />
-                ))}
-              </div>
-
-              {filteredDrills.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-[var(--color-text-muted)]">
-                    No drills found matching "{searchQuery}"
+              {filteredDrills.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Search className="w-16 h-16 text-[var(--color-text-muted)] mb-6 opacity-50" />
+                  <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-3">
+                    No drill modes found
+                  </h3>
+                  <p className="text-[var(--color-text-secondary)] max-w-md mb-8">
+                    {searchQuery
+                      ? `No drill modes match "${searchQuery}". Try a different search term.`
+                      : 'No drill modes available in this category.'}
                   </p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="px-6 py-3 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/10 transition-colors font-medium"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredDrills.map((drill) => (
+                    <DrillCard
+                      key={drill.id}
+                      drill={drill}
+                      onSelect={() => onNavigateToDrill?.(drill.id)}
+                      getDifficultyColor={getDifficultyColor}
+                    />
+                  ))}
                 </div>
               )}
             </motion.div>

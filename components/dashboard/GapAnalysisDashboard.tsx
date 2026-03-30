@@ -20,6 +20,19 @@ import ChartContainer from '../shared/ChartContainer';
 import { ErrorBoundary } from '../error/ErrorBoundary';
 
 // ============================================================================
+// Chart Color Constants
+// ============================================================================
+// Recharts requires actual color strings, not CSS var() at runtime.
+// These semantic constants map to the design system's color tokens.
+const CHART_COLORS = {
+  weakness: '#f59e0b',   // Amber-500 — matches var(--color-data-provisional)
+  average: '#3b82f6',    // Blue-500 — matches var(--color-accent)
+  strength: '#10b981',   // Emerald-500 — matches var(--color-data-pass)
+  muted: '#6b7280',      // Gray-500 — matches var(--color-text-muted)
+  chartMuted: '#9ca3af', // Gray-400 — for chart annotations
+} as const;
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -329,13 +342,13 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
     switch (status) {
       case 'critical':
       case 'weakness':
-        return '#f59e0b'; // Amber
+        return CHART_COLORS.weakness;
       case 'average':
-        return '#3b82f6'; // Blue
+        return CHART_COLORS.average;
       case 'strength':
-        return '#10b981'; // Green
+        return CHART_COLORS.strength;
       default:
-        return '#6b7280'; // Gray
+        return CHART_COLORS.muted;
     }
   };
 
@@ -487,17 +500,17 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                   ))}
 
                   {/* Cohort Average Markers (Small Tick) */}
-                  <Scatter dataKey="cohortAverage" shape={<TickShape />} fill="#9ca3af" />
+                  <Scatter dataKey="cohortAverage" shape={<TickShape />} fill={CHART_COLORS.chartMuted} />
 
                   {/* User Accuracy Markers (Large Circle) */}
-                  <Scatter dataKey="accuracy" fill="#3b82f6">
+                  <Scatter dataKey="accuracy" fill={CHART_COLORS.average}>
                     {chartData.map((entry) => (
-                      <Cell key={`cell-user-${entry.name}`} fill="#3b82f6" />
+                      <Cell key={`cell-user-${entry.name}`} fill={CHART_COLORS.average} />
                     ))}
                   </Scatter>
 
                   {/* Top 10% Markers (Star) */}
-                  <Scatter dataKey="cohortP90" shape={<StarShape />} fill="#f59e0b" />
+                  <Scatter dataKey="cohortP90" shape={<StarShape />} fill={CHART_COLORS.weakness} />
                 </ComposedChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -513,7 +526,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                 <span>Average</span>
               </div>
               <div className="flex items-center gap-2">
-                <StarShape cx={6} cy={6} fill="#f59e0b" />
+                <StarShape cx={6} cy={6} fill={CHART_COLORS.weakness} />
                 <span className="ml-2">Top 10%</span>
               </div>
             </div>

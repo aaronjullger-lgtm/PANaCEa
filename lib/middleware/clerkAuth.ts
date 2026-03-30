@@ -7,6 +7,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
+import { logger } from '@/src/lib/logger';
+
+const LOG_SCOPE = 'Auth';
 
 export interface AuthenticatedRequest extends Request {
   auth?: {
@@ -31,9 +34,8 @@ export async function requireAuth(
     // Log all request headers (sanitized) for debugging
     if (debug) {
       const headerKeys = Object.keys(req.headers);
-      console.log('[Auth Debug] Request headers present:', headerKeys);
-      console.log(
-        '[Auth Debug] Authorization header:',
+      logger.debug(LOG_SCOPE, 'Request headers present:', headerKeys);
+      logger.debug(LOG_SCOPE, 'Authorization header:',
         req.headers.authorization ? 'PRESENT (redacted)' : 'MISSING'
       );
     }
@@ -42,7 +44,7 @@ export async function requireAuth(
 
     if (!authHeader) {
       if (debug) {
-        console.log('[Auth Debug] No authorization header present');
+        logger.debug(LOG_SCOPE, No authorization header present');
       }
       res.status(401).json({
         error: 'Unauthorized',
@@ -54,8 +56,7 @@ export async function requireAuth(
 
     if (!authHeader.startsWith('Bearer ')) {
       if (debug) {
-        console.log(
-          '[Auth Debug] Invalid authorization header format:',
+        logger.debug(LOG_SCOPE, 'Invalid authorization header format:',
           authHeader.substring(0, 20)
         );
       }
@@ -75,10 +76,8 @@ export async function requireAuth(
     }
 
     if (debug) {
-      console.log(
-        '[Auth Debug] Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)'
-      );
-      console.log('[Auth Debug] Current server time:', new Date().toISOString());
+      logger.debug(LOG_SCOPE, 'Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
+      logger.debug(LOG_SCOPE, 'Current server time:', new Date().toISOString());
     }
 
     // Verify the token using Clerk's standalone verifyToken function
@@ -90,7 +89,7 @@ export async function requireAuth(
 
     if (!verifiedToken || !verifiedToken.sub) {
       if (debug) {
-        console.log('[Auth Debug] Token verification returned invalid or missing subject');
+        logger.debug(LOG_SCOPE, Token verification returned invalid or missing subject');
       }
       res.status(401).json({
         error: 'Unauthorized',
@@ -101,7 +100,7 @@ export async function requireAuth(
     }
 
     if (debug) {
-      console.log('[Auth Debug] Token verified successfully for user:', verifiedToken.sub);
+      logger.debug(LOG_SCOPE, Token verified successfully for user:', verifiedToken.sub);
     }
 
     // Attach auth context to request
@@ -112,7 +111,7 @@ export async function requireAuth(
 
     next();
   } catch (error: any) {
-    console.error('[Auth] Token verification failed:', {
+    logger.error(LOG_SCOPE, Token verification failed:', {
       message: error.message,
       name: error.name,
       stack: debug ? error.stack : undefined,
@@ -141,7 +140,7 @@ export async function requireAuth(
     }
 
     if (debug) {
-      console.error('[Auth Debug] Full error details:', {
+      logger.error(LOG_SCOPE, Full error details:', {
         reason,
         message: error.message,
         serverTime: new Date().toISOString(),
@@ -173,9 +172,7 @@ export async function optionalAuth(
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // No auth provided, continue without auth context
       if (debug) {
-        console.log(
-          '[Auth Debug] Optional auth: No valid authorization header, continuing without auth'
-        );
+        logger.debug(LOG_SCOPE, 'Optional auth: No valid authorization header, continuing without auth');
       }
       next();
       return;
@@ -186,7 +183,7 @@ export async function optionalAuth(
 
     if (!secretKey) {
       if (debug) {
-        console.log('[Auth Debug] Optional auth: CLERK_SECRET_KEY not configured');
+        logger.debug(LOG_SCOPE, 'Optional auth: CLERK_SECRET_KEY not configured');
       }
       next();
       return;
@@ -194,9 +191,7 @@ export async function optionalAuth(
 
     try {
       if (debug) {
-        console.log(
-          '[Auth Debug] Optional auth: Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)'
-        );
+        logger.debug(LOG_SCOPE, 'Optional auth: Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
       }
 
       const verifiedToken = await verifyToken(token, {
@@ -210,21 +205,18 @@ export async function optionalAuth(
           sessionId: verifiedToken.sid || undefined,
         };
         if (debug) {
-          console.log(
-            '[Auth Debug] Optional auth: Token verified successfully for user:',
-            verifiedToken.sub
-          );
+          logger.debug(LOG_SCOPE, 'Optional auth: Token verified successfully for user:', verifiedToken.sub);
         }
       }
     } catch (error: any) {
       // Ignore token verification errors for optional auth
       if (debug) {
-        console.warn('[Auth Debug] Optional auth token verification failed:', {
+        logger.warn(LOG_SCOPE, 'Optional auth token verification failed:', {
           message: error.message,
           reason: error.message?.includes('not active') ? 'token-not-active-yet' : 'unknown',
         });
       } else {
-        console.warn('[Auth] Optional auth token verification failed');
+        logger.warn(LOG_SCOPE, 'Optional auth token verification failed');
       }
     }
 
@@ -232,7 +224,7 @@ export async function optionalAuth(
   } catch (error) {
     // Never fail on optional auth
     if (debug) {
-      console.log('[Auth Debug] Optional auth: Unexpected error, continuing without auth');
+      logger.debug(LOG_SCOPE, 'Optional auth: Unexpected error, continuing without auth');
     }
     next();
   }

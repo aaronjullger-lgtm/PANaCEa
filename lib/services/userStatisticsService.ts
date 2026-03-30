@@ -1,3 +1,4 @@
+import type { PrismaClient } from '@prisma/client';
 import {
   AttemptPayload,
   calculateProfile,
@@ -7,7 +8,7 @@ import {
 } from '../clinicalProfileCalculator';
 
 export async function applyAttemptToUserStatistics(
-  prisma: any,
+  prisma: PrismaClient,
   userId: string,
   payload: AttemptPayload
 ) {
@@ -73,7 +74,7 @@ export async function applyAttemptToUserStatistics(
   return record;
 }
 
-export async function recomputePeakStudyHours(prisma: any, userId: string) {
+export async function recomputePeakStudyHours(prisma: PrismaClient, userId: string) {
   const rows = await prisma.$queryRaw<{ hour: number; count: bigint }[]>`
     SELECT EXTRACT(HOUR FROM "createdAt")::int AS hour, COUNT(*)::bigint AS count
     FROM "QuestionAttempt"
@@ -86,7 +87,7 @@ export async function recomputePeakStudyHours(prisma: any, userId: string) {
   return rows.map((row: { hour: unknown }) => Number(row.hour));
 }
 
-export async function recomputeAvgSessionLength(prisma: any, userId: string) {
+export async function recomputeAvgSessionLength(prisma: PrismaClient, userId: string) {
   const sessions = await prisma.studySession.findMany({
     where: { userId, endedAt: { not: null } },
     select: { startedAt: true, endedAt: true },
@@ -108,7 +109,7 @@ export async function recomputeAvgSessionLength(prisma: any, userId: string) {
 }
 
 export async function updateTimingAggregates(
-  prisma: any,
+  prisma: PrismaClient,
   userId: string,
   options: { refreshPeakHours?: boolean; refreshAvgSessionLength?: boolean } = {}
 ) {
