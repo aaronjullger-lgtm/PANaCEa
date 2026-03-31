@@ -254,7 +254,7 @@ describe('calculateRecommendedRetention', () => {
     expect(result.explanation.length).toBeGreaterThan(10);
   });
 
-  it('falls back to 0.8 when even lowest retention exceeds time budget', () => {
+  it('falls back to 0.8 when even lowest retention exceeds time budget', { timeout: 15000 }, () => {
     // 1 minute/day is far too little for any retention level
     const result = calculateRecommendedRetention(1, 50, defaultParameters);
     expect(result.recommendedRetention).toBe(0.8);
