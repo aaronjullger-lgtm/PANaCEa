@@ -26,7 +26,7 @@ body {
   --header-height: 4rem;
   --nav-rail-width: 56px;
 
-  /* Light mode colors */
+  /* Light mode colors — gold accent system */
   --color-bg-primary: #f8fafc;
   --color-bg-secondary: #ffffff;
   --color-bg-tertiary: #f1f5f9;
@@ -35,10 +35,15 @@ body {
   --color-text-muted: #64748b;
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
-  --color-accent: #64748b;
-  --color-accent-hover: #475569;
-  --color-accent-light: #e2e8f0;
-  --color-accent-very-light: #f1f5f9;
+  --color-gold: #9a8f72;
+  --color-gold-dark: #7a6f52;
+  --color-gold-dark-hover: #6a5f42;
+  --color-accent: #7a6f52;
+  --color-accent-hover: #6a5f42;
+  --color-accent-button: #7a6f52;
+  --color-accent-border: #9a8f72;
+  --color-accent-light: #e8e4d8;
+  --color-accent-very-light: #f5f3ed;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
@@ -46,6 +51,7 @@ body {
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-canvas: #f8fafc;
   --color-text-inverse: #ffffff;
+  --color-shadow-soft: rgba(15, 23, 42, 0.06);
 
   /* Semantic tokens */
   --color-action-primary: var(--color-accent);
@@ -61,7 +67,7 @@ body {
   --color-border-action: var(--color-border);
 }
 
-/* Dark mode colors */
+/* Dark mode colors — gold accent system */
 .dark {
   --color-bg-primary: #101729;
   --color-bg-secondary: #1f283a;
@@ -71,10 +77,15 @@ body {
   --color-text-muted: #94a3b8;
   --color-border: #334155;
   --color-border-light: #475569;
-  --color-accent: #94a3b8;
-  --color-accent-hover: #cbd5e1;
-  --color-accent-light: #e2e8f0;
-  --color-accent-very-light: #f1f5f9;
+  --color-gold: #a89b7a;
+  --color-gold-dark: #c4b78a;
+  --color-gold-dark-hover: #b4a77a;
+  --color-accent: #a89b7a;
+  --color-accent-hover: #c4b78a;
+  --color-accent-button: #8a7f62;
+  --color-accent-border: #c4b78a;
+  --color-accent-light: #3d3828;
+  --color-accent-very-light: #2a2518;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
@@ -82,6 +93,7 @@ body {
   --color-overlay: rgba(0, 0, 0, 0.7);
   --color-canvas: #0f172a;
   --color-text-inverse: #ffffff;
+  --color-shadow-soft: rgba(15, 23, 42, 0.4);
 }
 
 /* Initial loading state */

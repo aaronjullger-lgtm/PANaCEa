@@ -96,8 +96,8 @@ export function LandingPage() {
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       <SkipNavigation mainContentId="landing-main" />
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-        <PageContainer maxWidth="7xl" className="py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300" style={{ backgroundColor: 'rgba(248,250,252,0.9)', backdropFilter: 'blur(16px)' }}>
+        <PageContainer maxWidth="7xl" className="py-3 flex items-center justify-between">
           <AppBrand size="lg" animate>
             <ThemeToggleButton />
             <motion.button
@@ -108,8 +108,8 @@ export function LandingPage() {
                 setAuthMode('sign-in');
                 setShowAuth(true);
               }}
-              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
-              style={{ padding: '0.625rem 1.5rem', border: '2px solid var(--color-text-primary, #e2e8f0)', color: 'var(--color-text-primary, #e2e8f0)', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
+              className="px-5 py-2 bg-[var(--color-accent-button)] text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all duration-200 hover:opacity-90 min-h-[44px] min-w-[44px] shadow-sm"
+              style={{ padding: '0.5rem 1.25rem', backgroundColor: 'var(--color-accent-button, #7a6f52)', color: '#fff', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Sign in to your account"
@@ -124,92 +124,97 @@ export function LandingPage() {
       <main id="landing-main">
 
       {/* Hero Section */}
-      <PageContainer
-        as="section"
-        maxWidth="7xl"
-        className="pt-20 pb-16"
+      <section
         aria-label="Introduction"
+        className="relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-accent-very-light, #f5f3ed) 50%, var(--color-bg-primary) 100%)',
+        }}
       >
-        <div className="text-center space-y-8">
-          {/*
-           * LCP optimisation: the h1 is the Largest Contentful Paint element.
-           * Animating opacity from 0 → 1 delays the LCP measurement until the
-           * transition completes (~600ms after JS execution).  Using only a
-           * transform (y) keeps the entrance effect while letting the browser
-           * paint — and measure LCP — as soon as React renders the element.
-           */}
-          <motion.div
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              <span className="text-[var(--color-text-primary)]">Your Complete </span>
-              <span className="bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-border)] to-[var(--color-text-secondary)] bg-clip-text text-transparent">
-                PA School Resource
-              </span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Comprehensive study platform for PA students—medical database, performance tracking,
-              clinical image training, and 15+ specialized modes. Aligned with the PANCE &amp; PANRE
-              blueprint.
-            </p>
-          </motion.div>
+        {/* Subtle decorative elements */}
+        <div
+          className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle, var(--color-accent-border, #9a8f72) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
+          aria-hidden
+        />
+        <div
+          className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-15 blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle, var(--color-accent-border, #9a8f72) 0%, transparent 70%)', transform: 'translate(-30%, 30%)' }}
+          aria-hidden
+        />
 
-          <motion.div
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <motion.button
-              type="button"
-              onClick={() => {
-                setAuthMode('sign-up');
-                setShowAuth(true);
-              }}
-              className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px]"
-              style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: 'var(--color-text-inverse, #f8fafc)', borderRadius: '0.75rem', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-              aria-label="Get started with a free account"
+        <PageContainer maxWidth="7xl" className="pt-24 pb-20 relative z-10">
+          <div className="text-center space-y-10">
+            <motion.div
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              Get Started
-              <ArrowRight
-                className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-                aria-hidden
-              />
-            </motion.button>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Free to start • No credit card required
-            </p>
-          </motion.div>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6 tracking-tight">
+                <span className="text-[var(--color-text-primary)]">Your Complete</span>
+                <br />
+                <span
+                  className="bg-gradient-to-r from-[var(--color-accent,#7a6f52)] via-[var(--color-accent-border,#9a8f72)] to-[var(--color-text-secondary)] bg-clip-text text-transparent"
+                  style={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundImage: 'linear-gradient(to right, var(--color-accent, #7a6f52), var(--color-accent-border, #9a8f72), var(--color-text-secondary, #475569))' }}
+                >
+                  PA School Resource
+                </span>
+              </h1>
+              <p className="text-lg sm:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto leading-relaxed">
+                Medical database, performance tracking, clinical image training, and 15+
+                specialized modes — aligned with the PANCE &amp; PANRE blueprint.
+              </p>
+            </motion.div>
 
-          {/* Feature Pills */}
-          <motion.div
-            initial={{ y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap gap-3 justify-center mt-12"
-          >
-            {FEATURE_PILLS.map((pill, idx) => (
-              <React.Fragment key={pill}>
-                {idx > 0 && (
-                  <span
-                    aria-hidden="true"
-                    className="text-[var(--color-text-muted)] self-center select-none"
-                  >
-                    ·
-                  </span>
-                )}
-                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '9999px', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}>
+            <motion.div
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <motion.button
+                type="button"
+                onClick={() => {
+                  setAuthMode('sign-up');
+                  setShowAuth(true);
+                }}
+                className="group px-10 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 min-h-[48px]"
+                style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: '#fff', borderRadius: '0.75rem', padding: '1rem 2.5rem', boxShadow: '0 10px 25px -5px rgba(122,111,82,0.3)' }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.03 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                aria-label="Get started with a free account"
+              >
+                Get Started
+                <ArrowRight
+                  className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  aria-hidden
+                />
+              </motion.button>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Free to start · No credit card required
+              </p>
+            </motion.div>
+
+            {/* Feature Pills */}
+            <motion.div
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-wrap gap-3 justify-center pt-4"
+            >
+              {FEATURE_PILLS.map((pill) => (
+                <span
+                  key={pill}
+                  className="px-4 py-2 bg-white/80 dark:bg-[var(--color-bg-secondary)]/80 backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] shadow-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '9999px', border: '1px solid var(--color-border)', padding: '0.5rem 1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+                >
                   {pill}
                 </span>
-              </React.Fragment>
-            ))}
-          </motion.div>
-        </div>
-      </PageContainer>
+              ))}
+            </motion.div>
+          </div>
+        </PageContainer>
+      </section>
 
       {/* Features Grid */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
@@ -218,19 +223,17 @@ export function LandingPage() {
           whileInView={{ y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          className="text-center mb-14"
         >
-          <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">Key Features</h2>
-          <p className="text-xl text-[var(--color-text-secondary)]">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] mb-3">Key Features</h2>
+          <p className="text-lg text-[var(--color-text-secondary)]">
             Essential tools for PA school success and exam preparation
           </p>
         </motion.div>
 
-        {/* Inline style is belt-and-suspenders: the CSS utility class may be
-            purged or not apply if the bundle is partially stale. */}
         <div
-          className="grid md:grid-cols-2 gap-8"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem' }}
+          className="grid md:grid-cols-2 gap-6"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.5rem' }}
         >
           {features.map((feature, idx) => (
             <motion.article
@@ -239,20 +242,20 @@ export function LandingPage() {
               whileInView={{ y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
-              className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
-              style={{ padding: '2rem', borderRadius: '1rem', backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}
+              className="group p-7 bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] hover:border-[var(--color-accent-border)] hover:shadow-lg transition-all duration-300"
+              style={{ padding: '1.75rem', borderRadius: '1rem', backgroundColor: 'var(--color-bg-secondary, #fff)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
               <div
-                className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg border border-[var(--color-border)]"
-                style={{ width: '3.5rem', height: '3.5rem', flexShrink: 0 }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-105 transition-transform"
+                style={{ width: '3rem', height: '3rem', flexShrink: 0, backgroundColor: 'var(--color-accent-very-light, #f5f3ed)', border: '1px solid var(--color-accent-light, #e8e4d8)', borderRadius: '0.75rem' }}
                 aria-hidden
               >
-                <feature.icon className="w-7 h-7 text-[var(--color-accent)]" />
+                <feature.icon className="w-6 h-6 text-[var(--color-accent)]" style={{ color: 'var(--color-accent, #7a6f52)' }} />
               </div>
-              <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
                 {feature.title}
               </h3>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed">
+              <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
                 {feature.description}
               </p>
             </motion.article>
@@ -261,68 +264,78 @@ export function LandingPage() {
       </PageContainer>
 
       {/* Benefits Section */}
-      <PageContainer as="section" maxWidth="7xl" className="py-20">
-        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1.5rem', padding: '3rem', border: '1px solid var(--color-border)' }}>
+      <section
+        className="relative overflow-hidden"
+        style={{ background: 'linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-accent-very-light, #f5f3ed) 100%)' }}
+      >
+        <PageContainer maxWidth="7xl" className="py-20">
           <div
-            className="grid lg:grid-cols-2 gap-12 items-center"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '3rem', alignItems: 'center' }}
+            className="bg-[var(--color-bg-secondary)] rounded-2xl p-10 sm:p-12 border border-[var(--color-border)] shadow-md"
+            style={{ backgroundColor: 'var(--color-bg-secondary, #fff)', borderRadius: '1rem', padding: '2.5rem', border: '1px solid var(--color-border)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
           >
-            <motion.div
-              initial={{ x: -20 }}
-              whileInView={{ x: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.5 }}
+            <div
+              className="grid lg:grid-cols-2 gap-10 items-center"
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2.5rem', alignItems: 'center' }}
             >
-              <h2 className="text-4xl font-bold mb-6">Comprehensive Study Tools</h2>
-              <p className="text-xl text-[var(--color-text-secondary)] mb-8">
-                Track your performance, identify knowledge gaps, and focus your study time
-                effectively.
-              </p>
-              <motion.button
-                type="button"
-                onClick={() => {
-                  setAuthMode('sign-up');
-                  setShowAuth(true);
-                }}
-                className="px-8 py-4 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-lg hover:bg-[var(--color-accent)]/10 transition-all duration-300 min-h-[48px]"
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                aria-label="Start studying with a free account"
+              <motion.div
+                initial={{ x: -20 }}
+                whileInView={{ x: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.5 }}
               >
-                Start Studying
-              </motion.button>
-            </motion.div>
-
-            <motion.div
-              initial={{ x: 20 }}
-              whileInView={{ x: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-4"
-            >
-              {benefits.map((benefit, idx) => (
-                <motion.div
-                  key={benefit}
-                  initial={{ x: 20 }}
-                  whileInView={{ x: 0 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.35, delay: idx * 0.04 }}
-                  className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', borderRadius: '0.75rem', padding: '1rem', backgroundColor: 'var(--color-bg-tertiary)' }}
+                <h2 className="text-3xl sm:text-4xl font-bold mb-4">Comprehensive Study Tools</h2>
+                <p className="text-lg text-[var(--color-text-secondary)] mb-8 leading-relaxed">
+                  Track your performance, identify knowledge gaps, and focus your study time
+                  effectively.
+                </p>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('sign-up');
+                    setShowAuth(true);
+                  }}
+                  className="px-8 py-3 bg-[var(--color-accent-button)] text-white rounded-xl font-bold text-base hover:opacity-90 transition-all duration-300 min-h-[48px] shadow-md"
+                  style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: '#fff', borderRadius: '0.75rem', boxShadow: '0 4px 12px rgba(122,111,82,0.25)' }}
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  aria-label="Start studying with a free account"
                 >
-                  <CheckCircle2
-                    className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5"
-                    aria-hidden
-                  />
-                  <span className="text-lg font-medium leading-relaxed text-[var(--color-text-secondary)]">
-                    {benefit}
-                  </span>
-                </motion.div>
-              ))}
-            </motion.div>
+                  Start Studying
+                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ x: 20 }}
+                whileInView={{ x: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-3"
+              >
+                {benefits.map((benefit, idx) => (
+                  <motion.div
+                    key={benefit}
+                    initial={{ x: 20 }}
+                    whileInView={{ x: 0 }}
+                    viewport={{ once: true, amount: 0.1 }}
+                    transition={{ duration: 0.35, delay: idx * 0.04 }}
+                    className="flex items-start gap-3 rounded-lg p-3"
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', borderRadius: '0.5rem', padding: '0.75rem', backgroundColor: 'var(--color-bg-tertiary, #f1f5f9)' }}
+                  >
+                    <CheckCircle2
+                      className="w-5 h-5 flex-shrink-0 mt-0.5"
+                      style={{ color: 'var(--color-accent, #7a6f52)' }}
+                      aria-hidden
+                    />
+                    <span className="text-base font-medium leading-relaxed text-[var(--color-text-secondary)]">
+                      {benefit}
+                    </span>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </section>
 
       {/* CTA Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20 text-center">
@@ -331,12 +344,12 @@ export function LandingPage() {
           whileInView={{ y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
+          className="space-y-6"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text-primary)]">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)]">
             Ready to Start?
           </h2>
-          <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+          <p className="text-lg text-[var(--color-text-secondary)] max-w-xl mx-auto">
             Access all study modes and features with a free account.
           </p>
           <motion.button
@@ -345,13 +358,14 @@ export function LandingPage() {
               setAuthMode('sign-up');
               setShowAuth(true);
             }}
-            className="px-10 py-5 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-xl hover:bg-[var(--color-accent)]/10 transition-all duration-300 flex items-center gap-3 mx-auto min-h-[48px]"
-            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+            className="px-10 py-4 bg-[var(--color-accent-button)] text-white rounded-xl font-bold text-lg hover:opacity-90 transition-all duration-300 flex items-center gap-3 mx-auto min-h-[48px] shadow-lg"
+            style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: '#fff', borderRadius: '0.75rem', boxShadow: '0 10px 25px -5px rgba(122,111,82,0.3)' }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.03 }}
             whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             aria-label="Sign up for free"
           >
             Sign Up Free
-            <ArrowRight className="w-6 h-6" aria-hidden />
+            <ArrowRight className="w-5 h-5" aria-hidden />
           </motion.button>
         </motion.div>
       </PageContainer>
