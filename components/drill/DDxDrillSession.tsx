@@ -263,7 +263,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       <QuestionCard question={question.questionText} />
 
       {/* Answer Options */}
-      <div className="space-y-3">
+      <div className="space-y-3" role="radiogroup" aria-label="Answer options">
         {question.options.map((option, index) => (
           <AnswerOption
             key={index}

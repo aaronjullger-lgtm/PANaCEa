@@ -340,11 +340,11 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
   // Loading / error state
   if (isLoading || !puzzle) {
     return (
-      <div className="fixed inset-0 z-50 bg-data-neutral dark:bg-data-neutral flex items-center justify-center">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
         {error ? (
           <div className="text-center space-y-3">
-            <p className="text-lg font-semibold text-data-neutral">Daily diagnostic unavailable</p>
-            <p className="text-sm text-data-neutral">{error}</p>
+            <p className="text-lg font-semibold text-[var(--color-text-primary)]">Daily diagnostic unavailable</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">{error}</p>
             <button
               onClick={() => fetchDailyPuzzle()}
               className="px-4 py-2 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold"

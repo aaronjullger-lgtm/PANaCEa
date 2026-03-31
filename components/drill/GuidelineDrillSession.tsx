@@ -381,7 +381,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             onClick={handleNextVignette}
             className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors ${
               isCorrect
-                ? 'bg-data-pass hover:bg-data-pass text-white'
+                ? 'bg-data-pass hover:brightness-110 text-white'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
             aria-label={currentVignetteIndex < totalVignettes - 1 ? 'Proceed to next clinical vignette' : 'View session summary'}

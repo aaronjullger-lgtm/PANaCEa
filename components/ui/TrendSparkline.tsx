@@ -178,7 +178,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
         aria-label={ariaLabel || 'No trend data available'}
       >
         <div
-          className="bg-[var(--color-bg-secondary)] rounded-md flex items-center justify-center border-2 border-dashed border-[var(--color-border-muted)]"
+          className="bg-[var(--color-bg-secondary)] rounded-md flex items-center justify-center border-2 border-dashed border-[var(--color-border)]"
           style={{ width, height }}
         >
           <span className="text-xs text-[var(--color-text-muted)]">No trend data</span>

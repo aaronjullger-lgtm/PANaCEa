@@ -1065,7 +1065,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
               <h2
                 id="settings-modal-title"
-                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-data-neutral truncate"
+                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] truncate"
               >
                 {activeTab === 'stats'
                   ? 'Statistics'
@@ -1081,7 +1081,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               onClick={onClose}
               aria-label="Close modal and return to dashboard"
               title="Close"
-              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-data-neutral hover:text-[var(--color-text-primary)] dark:hover:bg-data-neutral dark:hover:text-data-neutral transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               <X className="w-5 h-5" aria-hidden />
             </button>
@@ -1159,8 +1159,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
                 <div className="card-premium-glass p-4 rounded-xl">
-                  <p className="text-sm text-[var(--color-text-secondary)] dark:text-data-neutral leading-relaxed">
-                    <strong className="text-[var(--color-text-primary)] dark:text-data-neutral">
+                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    <strong className="text-[var(--color-text-primary)]">
                       Focus on your current form.
                     </strong>{' '}
                     Your recent effort matters more than past mistakes—every session is a fresh
@@ -1379,7 +1379,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* System Breakdown */}
                 {stats.systemBreakdown.length > 0 && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-data-neutral mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)] mb-3">
                       Performance by System
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -2074,13 +2074,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
+                      className="px-4 py-2 text-sm font-medium bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors border border-[var(--color-border)]"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
+                      className="px-4 py-2 text-sm font-medium bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors border border-[var(--color-border)]"
                     >
                       Disable All
                     </button>

@@ -143,9 +143,9 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
  */
 const LabPanelCard: React.FC<{ panel: LabPanel }> = ({ panel }) => {
   return (
-    <div className="bg-data-neutral rounded-xl border border-data-neutral overflow-hidden">
-      <div className="px-4 py-3 bg-data-neutral border-b border-data-neutral">
-        <h3 className="text-white font-semibold">{panel.name}</h3>
+    <div className="bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div className="px-4 py-3 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+        <h3 className="text-[var(--color-text-primary)] font-semibold">{panel.name}</h3>
       </div>
       <div>
         {panel.values.map((value, index) => (
@@ -526,7 +526,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleReset}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:brightness-110 text-white rounded-lg font-medium transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
                 Start New Session

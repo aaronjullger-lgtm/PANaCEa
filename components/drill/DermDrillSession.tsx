@@ -27,6 +27,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
     userAnswer,
     isCorrect,
     status,
+    totalAttempts,
     submitAnswer,
     nextCase,
     reset,
@@ -167,7 +168,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
       <MiniDrillLayout
         title="Derm Recognition"
         score={score}
-        totalAttempts={0}
+        totalAttempts={totalAttempts}
         streak={streak}
         isFeedback={status === 'feedback'}
         isCorrect={isCorrect}

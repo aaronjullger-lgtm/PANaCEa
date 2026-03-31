@@ -412,7 +412,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
 
       {/* Score report overlay */}
       {showScore && scoreReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg-overlay)] p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
           <div className="max-w-2xl w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6">
             <ScoreReport
               report={scoreReport}

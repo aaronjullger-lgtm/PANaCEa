@@ -210,7 +210,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleReset}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
                 aria-label="Start a new radiology session"
               >
                 <RotateCcw className="w-4 h-4" /> Start New Session

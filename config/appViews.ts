@@ -96,9 +96,9 @@ export const DRILL_MODE_IDS = {
 
 /** Static animation variants for view transitions */
 export const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+  initial: { y: 12 },
+  animate: { y: 0 },
+  exit: { y: -8 },
 };
 
 /** Stagger config for list/card entrance animations */
@@ -109,8 +109,8 @@ export const staggerContainer = {
 };
 
 export const staggerItem = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
+  initial: { y: 12 },
+  animate: { y: 0 },
 };
 
 /** Spring config for snappy, premium feel */

@@ -179,7 +179,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
           {onDrill && (
             <button
               onClick={(e) => handleActionClick(e, onDrill)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-colors"
             >
               <Target className="w-3.5 h-3.5" />
               <span>Drill</span>
@@ -189,7 +189,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
           {onBookmark && (
             <button
               onClick={(e) => handleActionClick(e, onBookmark)}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-colors"
             >
               <BookmarkPlus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Save</span>

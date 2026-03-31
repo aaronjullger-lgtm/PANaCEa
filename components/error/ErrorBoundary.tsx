@@ -471,7 +471,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {canRetry && (
-            <button onClick={this.handleRetry} disabled={isRetrying} className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50">
+            <button onClick={this.handleRetry} disabled={isRetrying} className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50">
               <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Retrying...' : primaryAction}
             </button>

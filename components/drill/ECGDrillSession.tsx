@@ -32,6 +32,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
     currentCase,
     score,
     streak,
+    totalAttempts,
     userAnswer,
     isCorrect,
     status,
@@ -164,7 +165,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
       <MiniDrillLayout
         title="ECG Interpretation"
         score={score}
-        totalAttempts={0}
+        totalAttempts={totalAttempts}
         streak={streak}
         isFeedback={status === 'feedback'}
         isCorrect={isCorrect}

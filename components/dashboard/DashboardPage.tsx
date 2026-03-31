@@ -119,7 +119,7 @@ const QuickStat: React.FC<QuickStatProps> = ({
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
         <div
-          className={`p-3 rounded-lg ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-[var(--color-bg-tertiary)]`}
+          className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]"
         >
           {icon}
         </div>
@@ -228,6 +228,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
   };
 
+  const currentStreak = useMemo(() => {
+    const { current } = calculateDayStreak(performanceData ?? []);
+    return current;
+  }, [performanceData]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
@@ -281,10 +286,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     );
   }
 
-  const currentStreak = useMemo(() => {
-    const { current } = calculateDayStreak(performanceData ?? []);
-    return current;
-  }, [performanceData]);
   const totalCardsLearned = data.totalCards || 0;
 
   return (

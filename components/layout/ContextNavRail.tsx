@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useNavRailContext } from '@/hooks/useNavRailContext';
 import { X, Pill, Beaker, BookOpen } from 'lucide-react';
 
@@ -33,12 +34,12 @@ export const ContextNavRail = () => {
         <ul>
           {relatedModules.map((module) => (
             <li key={module.id} className="mb-2">
-              <a href={module.href} className="flex items-center p-2 rounded-md hover:bg-[var(--color-bg-secondary)]">
+              <Link to={module.href} className="flex items-center p-2 rounded-md hover:bg-[var(--color-bg-secondary)]">
                 {module.type === 'drug' && <Pill size={16} className="mr-2" />}
                 {module.type === 'lab' && <Beaker size={16} className="mr-2" />}
                 {module.type === 'condition' && <BookOpen size={16} className="mr-2" />}
                 <span className="text-sm">{module.label}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

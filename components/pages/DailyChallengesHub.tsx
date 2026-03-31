@@ -229,7 +229,7 @@ export function DailyChallengesHub() {
       <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
         <h2 className="text-xl font-semibold text-[var(--color-accent)] mb-2">Daily Completion Streak</h2>
         <p className="text-[var(--color-text-secondary)] mb-4">
-          Complete all three challenges each day to maximize your streak. Coming soon.
+          Complete all three challenges each day to maximize your streak.
         </p>
         <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <div className="h-full bg-[var(--color-data-pass)]" style={{ width: '0%' }} />

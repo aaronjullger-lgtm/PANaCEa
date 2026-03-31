@@ -11,7 +11,6 @@ const ThemeToggleButton: React.FC = () => {
     <motion.button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className="relative p-2.5 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)] transition-all duration-200 shadow-sm hover:shadow-md"
-      style={{ padding: '0.625rem', borderRadius: '9999px', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}
       aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       aria-pressed={theme === 'dark'}
       whileHover={{ scale: 1.05 }}

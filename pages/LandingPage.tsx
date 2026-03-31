@@ -63,12 +63,12 @@ export function LandingPage() {
   const fadeUp = (delay = 0) =>
     prefersReducedMotion
       ? {}
-      : { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay } };
+      : { initial: { y: 24 }, animate: { y: 0 }, transition: { duration: 0.6, delay } };
 
   const fadeUpView = (delay = 0) =>
     prefersReducedMotion
       ? {}
-      : { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.15 }, transition: { duration: 0.55, delay } };
+      : { initial: { y: 20 }, whileInView: { y: 0 }, viewport: { once: true, amount: 0.15 }, transition: { duration: 0.55, delay } };
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
@@ -78,7 +78,7 @@ export function LandingPage() {
       <header
         className="sticky top-0 z-40 border-b border-[var(--color-border)] transition-all duration-300"
         style={{
-          backgroundColor: 'rgba(248,250,252,0.85)',
+          backgroundColor: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
         }}

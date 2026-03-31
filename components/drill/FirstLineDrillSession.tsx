@@ -113,7 +113,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-data-neutral p-6">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
         <div className="max-w-4xl mx-auto">
           <QuestionSkeleton />
         </div>
@@ -239,7 +239,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
 
   // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-data-neutral flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
       <div className="max-w-3xl w-full">
         <QuestionSkeleton />
       </div>

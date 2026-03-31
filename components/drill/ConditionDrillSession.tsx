@@ -87,6 +87,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
     isLoadingHint,
     attemptNumber,
     metacognitionPrompt,
+    isRapidGuess,
+    nextReview,
     recordAnswerSelection,
     submitAnswer,
     retryAfterHint,

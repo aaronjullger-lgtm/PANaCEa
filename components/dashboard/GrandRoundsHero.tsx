@@ -159,15 +159,16 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
       `}
       >
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-radial from-[var(--color-bg-tertiary)]/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-radial from-[var(--color-bg-tertiary)]/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-bg-tertiary)]/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[var(--color-bg-tertiary)]/10 rounded-full translate-y-1/2 -translate-x-1/2" />
 
         {/* Dismiss button */}
         {onDismiss && userStatus === 'completed' && (
           <button
             onClick={onDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all z-10"
+            className="absolute top-4 right-4 p-1.5 rounded-lg bg-[var(--color-bg-tertiary)]/30 hover:bg-[var(--color-bg-tertiary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all z-10"
             title="Minimize"
+            aria-label="Minimize Grand Rounds hero"
           >
             <X className="w-4 h-4" />
           </button>
@@ -194,11 +195,11 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                 )}
               </div>
 
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{content.headline}</h2>
-              <p className="text-lg text-white/70 mb-4">{content.subtext}</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] mb-2">{content.headline}</h2>
+              <p className="text-lg text-[var(--color-text-secondary)] mb-4">{content.subtext}</p>
 
               {/* Quick stats row */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/60 mb-6">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-text-muted)] mb-6">
                 <div className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
                   <span>{participantCount.toLocaleString()} participants today</span>

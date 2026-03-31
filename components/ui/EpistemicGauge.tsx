@@ -244,9 +244,9 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
         {/* Tooltip on hover for low confidence */}
         {confidence < 1 && (
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-data-neutral dark:bg-data-neutral text-white dark:text-data-neutral text-xs rounded-lg whitespace-nowrap shadow-lg">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-xs rounded-lg whitespace-nowrap shadow-lg border border-[var(--color-border)]">
               {tooltipText}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-data-neutral dark:bg-data-neutral rotate-45" />
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--color-bg-secondary)] border-r border-b border-[var(--color-border)] rotate-45" />
             </div>
           </div>
         )}
@@ -365,12 +365,12 @@ export const EpistemicRadialGauge: React.FC<
       <div
         className={`mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${
           calibrationLevel.confidence === 'collecting'
-            ? 'bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral'
+            ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'
             : calibrationLevel.confidence === 'emerging'
-              ? 'bg-data-provisional text-data-provisional dark:bg-data-provisional/30 dark:text-data-provisional'
+              ? 'bg-data-provisional/20 text-data-provisional'
               : calibrationLevel.confidence === 'provisional'
-                ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)]'
-                : 'bg-data-pass text-data-pass dark:bg-data-pass/30 dark:text-data-pass'
+                ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)]'
+                : 'bg-data-pass/20 text-data-pass'
         }`}
       >
         n={dataPoints}

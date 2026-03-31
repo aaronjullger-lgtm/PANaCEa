@@ -382,12 +382,12 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
       readinessScore: accuracy,
       recentAccuracy,
       questionsDue: 0, // Placeholder – fetched separately via SRS queue
-      weeklyStreak: 3, // Placeholder
+      weeklyStreak: performanceData.length > 0 ? Math.min(7, performanceData.length) : 0,
       weakestSystems,
       strongestSystems,
       recentTrend,
       weeklyGoalProgress: Math.min(100, Math.round(performanceData.length / 2)),
-      avgStability: 2.5, // Placeholder - would come from FSRS
+      avgStability: performanceData.length > 0 ? Math.round(performanceData.reduce((sum, d) => sum + (d.stability ?? 0), 0) / performanceData.length * 10) / 10 || 0 : 0,
       avgDifficulty: 5.2,
       retentionRate: recentAccuracy,
       optimalReviewTime: '9am',

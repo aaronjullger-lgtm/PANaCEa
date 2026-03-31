@@ -143,10 +143,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   <button
                     key={option}
                     onClick={() => submitAction(option)}
-                    className="group p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] transition-all text-left"
+                    className="group p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] transition-all text-left"
                     aria-label={`Select action: ${option}`}
                   >
-                    <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-category-practice)] group-hovertext-[var(--color-category-practice)]">
+                    <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-category-practice)]">
                       {option}
                     </div>
                   </button>
@@ -192,7 +192,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   onClick={nextCase}
                   className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                     isCorrect
-                      ? 'bg-data-pass hover:bg-data-pass text-white'
+                      ? 'bg-data-pass hover:brightness-110 text-white'
                       : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                   }`}
                   aria-label="Proceed to next ventilator case"

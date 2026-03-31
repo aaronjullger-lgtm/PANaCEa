@@ -175,7 +175,7 @@ export function EmptyState({
                 ${
                   action.variant === 'secondary'
                     ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'
-                    : 'bg-[var(--color-brand-primary)] text-[var(--color-text-inverse)] hover:opacity-90'
+                    : 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90'
                 }
               `}
             >

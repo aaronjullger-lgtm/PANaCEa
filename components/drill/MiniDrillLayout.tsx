@@ -54,7 +54,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-data-neutral text-[var(--color-text-primary)] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {isFeedback && isCorrect !== null && (
@@ -327,7 +327,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             onClick={onNext}
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
-                ? 'bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)]'
+                ? 'bg-data-pass hover:brightness-110 text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
