@@ -279,6 +279,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
       </div>
 
       {/* Search consolidated to header for single source of truth - sidebar no longer has duplicate search input */}
+      {/* eslint-disable-next-line no-constant-binary-expression -- dead code kept for potential reuse */}
       {false && (
       <div className="p-3 border-b border-[var(--color-border)]">
         <div className="relative">

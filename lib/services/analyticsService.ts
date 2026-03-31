@@ -56,7 +56,7 @@ export interface PeerComparison {
  */
 export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
-  const groupedData = await (prisma.questionAttempt.groupBy as Function)({
+  const groupedData = await (prisma.questionAttempt.groupBy as (...args: unknown[]) => Promise<unknown>)({
     by: ['system', 'wasCorrect'],
     where: {
       userId,
@@ -122,7 +122,7 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
   }
 
   // Group by userId and system to get individual user stats
-  const userSystemData = await (prisma.questionAttempt.groupBy as Function)({
+  const userSystemData = await (prisma.questionAttempt.groupBy as (...args: unknown[]) => Promise<unknown>)({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
@@ -261,7 +261,7 @@ export async function generatePeerComparison(
   }
 
   // Get cohort distribution data for percentile calculation
-  const cohortData = await (prisma.questionAttempt.groupBy as Function)({
+  const cohortData = await (prisma.questionAttempt.groupBy as (...args: unknown[]) => Promise<unknown>)({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },

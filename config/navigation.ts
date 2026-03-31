@@ -236,6 +236,7 @@ export const getNavigationWithIcons = (): NavigationCategory[] => {
 export const getKnownPaths = (): string[] => {
   // Import here to avoid circular dependency at module load time
   // (navigation.ts is imported early, training-modes may import from navigation)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy require to break circular dependency
   const { TRAINING_MODES } = require('./training-modes');
 
   const paths = new Set<string>(CANONICAL_PATHS);

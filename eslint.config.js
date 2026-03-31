@@ -11,6 +11,7 @@ export default tseslint.config(
       'node_modules',
       'playwright-report',
       '.wrangler',
+      '.claude',
       '*.config.js',
       '*.config.ts',
       'scripts/**', // Scripts: prefer-const and one-off patterns; lint when editing
