@@ -219,6 +219,11 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
+      // Drain the microtask queue so the fire-and-forget immediate sync (from queueReview)
+      // runs and fails cleanly (no mock set up yet → fetch returns undefined → TypeError).
+      // This ensures the mock below is consumed by syncAll(), not the immediate sync.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       // Mock fetch to return success for batch
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -255,6 +260,9 @@ describe('SyncManager', () => {
         timeSpentMs: 1200,
       });
 
+      // Drain microtask queue so the immediate syncs (from queueReview) fail first
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -280,6 +288,10 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
+      // Drain microtask queue: the immediate sync (from queueReview) runs and fails
+      // with a TypeError (no mock yet), incrementing syncAttempts to 1.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       // Mock fetch to return HTTP error
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -288,7 +300,8 @@ describe('SyncManager', () => {
 
       const result = await syncManager.syncAll();
       expect(result.reviews).toBe(0); // none synced
-      // Verify syncAttempts increased
+      // Verify syncAttempts increased twice: once by the immediate-sync failure (TypeError)
+      // and once by syncAll's failure (HTTP 500).
       const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
       expect(stored[0].syncAttempts).toBe(2);
       expect(stored[0].synced).toBe(false);
@@ -349,6 +362,9 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
+      // Drain microtask queue so the immediate sync (from queueReview) fails first
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       // Mock fetch to throw network error
       mockFetch.mockRejectedValueOnce(new Error('Network failure'));
 
@@ -377,6 +393,10 @@ describe('SyncManager', () => {
         pearlId: 'pearl1',
         action: 'mark_mastered',
       });
+
+      // Drain microtask queue so the immediate syncs (from queueAnswer/queuePearlAction)
+      // fail first (no mock set up yet → TypeError), incrementing their syncAttempts.
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Mock fetch for answers endpoint
       mockFetch.mockImplementation((url) => {

@@ -74,7 +74,7 @@ interface ClinicalReferenceLibraryProps {
 }
 
 export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit }) => {
-  const { getToken, isSignedIn } = useAuth();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Navigation state
@@ -134,6 +134,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Fetch systems
   const fetchSystems = useCallback(async () => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
       setSystems([]);
       setSystemsLoading(false);
@@ -169,10 +170,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     } finally {
       setSystemsLoading(false);
     }
-  }, [getToken, isSignedIn]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   // Fetch content
   const fetchContent = useCallback(async () => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
       const msg = 'Please sign in to access clinical content';
       setError(msg);
@@ -248,11 +250,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     } finally {
       setLoading(false);
     }
-  }, [activeSystem, activeSubcategory, highYieldOnly, searchQueryDebounced, getToken, isSignedIn]);
+  }, [activeSystem, activeSubcategory, highYieldOnly, searchQueryDebounced, getToken, isLoaded, isSignedIn]);
 
   // Fetch user progress map (stability & last review) for retrievability computation
   const fetchProgressMap = useCallback(async () => {
-    if (!isSignedIn) {
+    if (!isLoaded || !isSignedIn) {
       setProgressMap({});
       return;
     }
@@ -276,7 +278,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       console.error('[ClinicalReferenceLibrary] progress map fetch failed', err);
       // Silent fail - retrievability badges will just not appear
     }
-  }, [getToken, isSignedIn]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   // Initial load
   useEffect(() => {

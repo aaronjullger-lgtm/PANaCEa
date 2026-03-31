@@ -354,6 +354,15 @@ a,
   --color-action-hover: #8a7f62;
   --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
   --color-action-text: #f8fafc; /* Off-white on gold (continuity with dark) */
+  /* Action semantic tokens (admin/interactive buttons) */
+  --color-action-primary: #7a6f52;        /* Same as gold-dark — WCAG AA on white */
+  --color-action-primary-hover: #6a5f42;  /* Darker on hover */
+  --color-action-secondary: #728ba6;      /* Steel blue */
+  --color-action-secondary-hover: #5e7a96;
+  --color-action-bg: #f5f2ec;             /* Gold tint background */
+  --color-action-border: #c4b89a;         /* Light gold border */
+  --color-action-icon: #7a6f52;           /* Same as action-primary */
+  --color-action-muted: #f0ede6;          /* Very light gold for gesture indicators */
   --color-label-primary: #0f172a; /* Slate-900 */
   --color-label-secondary: #475569; /* Slate-600 */
 
@@ -559,6 +568,15 @@ a,
   --color-action-hover: #b8ab8a;
   --color-action-light: #1e293b;
   --color-action-text: #f8fafc; /* Same as light - continuity */
+  /* Action semantic tokens (admin/interactive buttons) - dark mode */
+  --color-action-primary: #c4b78a;        /* Lighter gold for dark bg — WCAG AA */
+  --color-action-primary-hover: #d4c79a;
+  --color-action-secondary: #91a6bd;      /* Steel blue (lighter on dark) */
+  --color-action-secondary-hover: #7e96b0;
+  --color-action-bg: #1e293b;             /* Dark surface for action areas */
+  --color-action-border: #475569;         /* Slate border */
+  --color-action-icon: #c4b78a;           /* Same as action-primary in dark */
+  --color-action-muted: #334155;          /* Slate tint for gesture indicators */
   --color-label-primary: #f1f5f9;
   --color-label-secondary: #94a3b8;
 
