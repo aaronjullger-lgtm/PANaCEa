@@ -100,10 +100,11 @@ function BottomTabBar({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom shadow-[0_-2px_12px_rgba(15,23,42,0.06)]"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}
       aria-label="Main navigation"
     >
-      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto list-none m-0 p-0">
+      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
         {tabs.map((item) => {
           const Icon = item.icon;
           const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
@@ -178,30 +179,12 @@ export const NavRail: React.FC<NavRailProps> = ({
   const commuterContext = useCommuter();
   const { status: pwaStatus, showInstallPrompt } = usePWAEnhancer();
   const isMobile = useIsMobile();
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      const saved = localStorage.getItem('navrail.collapsed');
-      // Default to collapsed; respect saved preference if user has explicitly toggled
-      return saved !== null ? saved === 'true' : true;
-    } catch { return true; }
-  });
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return localStorage.getItem('navrail.hidden') === 'true';
-    } catch { return false; }
-  });
+  const [collapsed, setCollapsed] = useState(true);
+  const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const { pathname, search } = location;
   const showPwaInstall =
     pwaStatus.hasInstallPrompt && !pwaStatus.isInstalled && !pwaStatus.isStandalone;
-
-  // Persist sidebar state to localStorage
-  useEffect(() => {
-    try { localStorage.setItem('navrail.collapsed', String(collapsed)); } catch {}
-  }, [collapsed]);
-  useEffect(() => {
-    try { localStorage.setItem('navrail.hidden', String(hidden)); } catch {}
-  }, [hidden]);
 
   // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
@@ -349,7 +332,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="space-y-1 list-none m-0 p-0">{items.map(renderItem)}</ul>
+      <ul className="space-y-1">{items.map(renderItem)}</ul>
     </div>
   );
 

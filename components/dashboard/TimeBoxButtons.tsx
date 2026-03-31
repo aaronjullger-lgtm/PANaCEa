@@ -29,21 +29,21 @@ const TIME_PRESETS: TimeBoxPreset[] = [
     label: '5 min',
     questionEstimate: 3,
     icon: Zap,
-    gradient: 'from-[var(--color-accent)]/12 to-[var(--color-accent)]/4',
+    gradient: 'from-[var(--color-accent)]/15 to-[var(--color-accent)]/5',
   },
   {
     minutes: 10,
     label: '10 min',
     questionEstimate: 6,
     icon: Clock,
-    gradient: 'from-[var(--color-accent-secondary)]/10 to-[var(--color-accent-secondary)]/3',
+    gradient: 'from-[var(--color-accent)]/12 to-[var(--color-accent-light)]/50',
   },
   {
     minutes: 20,
     label: '20 min',
     questionEstimate: 13,
     icon: Clock,
-    gradient: 'from-[var(--color-warning)]/8 to-[var(--color-warning)]/2',
+    gradient: 'from-[var(--color-accent)]/10 to-[var(--color-accent-light)]/30',
   },
 ];
 
@@ -63,16 +63,15 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="text-base font-bold text-[var(--color-text-primary)]">Quick Start</h3>
-        <span className="text-xs text-[var(--color-text-muted)]">— pick a time window</span>
+        <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">Quick Start</h3>
       </div>
 
       {/* Time preset buttons */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {TIME_PRESETS.map((preset, index) => {
           const Icon = preset.icon;
           return (
@@ -82,34 +81,34 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
               initial={{ y: 10 }}
               animate={{ y: 0 }}
               transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.03, y: -3 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
               className={`
                 relative overflow-hidden
-                p-5 rounded-2xl border border-[var(--color-border)]
+                p-4 rounded-xl border border-[var(--color-border)]
                 bg-gradient-to-br ${preset.gradient}
-                bg-[var(--color-bg-secondary)]
-                hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-200
+                hover:shadow-md transition-all duration-200
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-                group cursor-pointer
+                group
               `}
             >
               {/* Icon */}
-              <div className="flex items-center justify-center mb-3">
-                <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/10 group-hover:bg-[var(--color-accent)]/15 transition-colors">
-                  <Icon className="w-6 h-6 text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
-                </div>
+              <div className="flex items-center justify-center mb-2">
+                <Icon className="w-6 h-6 text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
               </div>
 
               {/* Label */}
               <div className="text-center">
-                <div className="font-bold text-[var(--color-text-primary)] text-lg">
+                <div className="font-bold text-[var(--color-text-primary)] text-sm">
                   {preset.label}
                 </div>
-                <div className="text-sm text-[var(--color-text-muted)] mt-1">
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">
                   ~{preset.questionEstimate} questions
                 </div>
               </div>
+
+              {/* Hover indicator */}
+              <div className="absolute inset-0 bg-[var(--color-accent)]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
           );
         })}
@@ -117,7 +116,7 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
 
       {/* Info text */}
       <p className="text-xs text-[var(--color-text-muted)] text-center">
-        Sessions auto-end at the time limit with a full summary
+        Sessions auto-end at time limit with summary
       </p>
     </div>
   );

@@ -127,7 +127,7 @@ const S_MIN = 0.01;
  */
 function ensureDate(value: Date | string | null | undefined): Date {
   if (!value) {
-    logger.warn('fsrs.ensureDate', 'last_review is null/undefined — substituting now()', { value });
+    logger.warn('[fsrs.ensureDate] last_review is null/undefined — substituting now()', { value });
     return new Date();
   }
   return value instanceof Date ? value : new Date(value);

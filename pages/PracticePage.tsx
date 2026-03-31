@@ -117,7 +117,7 @@ const ModeCard: React.FC<{
       whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
-      className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
+      className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group ${
         mode.isComingSoon
           ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-tertiary)] border-dashed'
           : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg'
@@ -204,8 +204,6 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   });
 
   // Persist filters to localStorage
-  useEffect(() => { document.title = 'Practice | PANaCEa'; }, []);
-
   useEffect(() => {
     try {
       localStorage.setItem('practice.search', searchQuery);
@@ -319,10 +317,10 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             <button
               key={filter}
               onClick={() => setTimeFilter(filter)}
-              className={`px-4 py-2 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 timeFilter === filter
                   ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
               {filter === 'all' && 'All Modes'}

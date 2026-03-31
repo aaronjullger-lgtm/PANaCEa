@@ -42,40 +42,6 @@ html.theme-transitioning * {
 }
 
 /* -----------------------------------------------------
-   GLOBAL INTERACTIVE ELEMENT POLISH
------------------------------------------------------- */
-
-/* Consistent focus-visible ring for all interactive elements */
-a:focus-visible,
-button:focus-visible,
-[role="button"]:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--color-focus-ring, var(--color-accent));
-  outline-offset: 2px;
-  border-radius: inherit;
-}
-
-/* Subtle hover lift for card-like interactive containers */
-.hover-lift {
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--color-shadow-soft, rgba(15, 23, 42, 0.08));
-}
-
-/* Smooth transition baseline for common interactive states */
-a,
-button,
-[role="button"] {
-  transition-property: color, background-color, border-color, opacity, box-shadow;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
-}
-
-/* -----------------------------------------------------
    PREVENT HORIZONTAL SCROLLING ON MOBILE
 ------------------------------------------------------ */
 
@@ -455,21 +421,17 @@ a,
   /* Card background for table content */
   --color-card-bg: #ffffff;
 
-  /* Semantic data colors — proper meaningful colors */
-  --color-data-pass: #059669; /* Emerald-600 — correct/success */
-  --color-data-fail: #dc2626; /* Red-600 — incorrect/error */
-  --color-data-provisional: #d97706; /* Amber-600 — warning/due */
-  --color-data-neutral: #64748b; /* Slate-500 — text/borders */
-  --color-data-neutral-bg: #f1f5f9; /* Slate-100 — card surfaces */
-  --color-data-success: #059669; /* Emerald-600 */
-  --color-data-warning: #d97706; /* Amber-600 */
-  --color-data-positive: #059669;
-  --color-data-negative: #dc2626;
+  /* Semantic data colors - slate gray variants for Stormy Slate aesthetic */
+  --color-data-pass: #475569; /* slate-600 */
+  --color-data-fail: #1e293b; /* slate-800 */
+  --color-data-provisional: #94a3b8; /* slate-400 */
+  --color-data-neutral: #64748b; /* slate-500 - text/borders */
+  --color-data-neutral-bg: #f1f5f9; /* slate-100 - card surfaces */
 
   /* Semantic status aliases (used by 50+ components) */
-  --color-success: #059669; /* Emerald-600 */
-  --color-error: #dc2626; /* Red-600 */
-  --color-warning: #d97706; /* Amber-600 */
+  --color-success: var(--color-data-pass);
+  --color-error: var(--color-data-fail);
+  --color-warning: var(--color-data-provisional);
   --color-info: var(--color-accent);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);
@@ -591,21 +553,21 @@ a,
 }
 
 .dark {
-  /* ===== STORMY SLATE + GOLD ACCENT (dark-optimized) ===== */
-  /* Gold: lighter shade for contrast on dark navy */
-  --color-action: #a89b7a; /* Gold — vibrant on dark bg */
-  --color-action-hover: #c4b78a;
+  /* ===== UNIFIED COLORWAY: SAME GOLD + SLATE FAMILY (dark-optimized) ===== */
+  /* Gold: same hue as light, lighter shade for contrast on navy */
+  --color-action: #a89b7a; /* Same gold family, lighter for dark bg */
+  --color-action-hover: #b8ab8a;
   --color-action-light: #1e293b;
-  --color-action-text: #f8fafc; /* Light text on gold backgrounds */
+  --color-action-text: #f8fafc; /* Same as light - continuity */
   --color-label-primary: #f1f5f9;
   --color-label-secondary: #94a3b8;
 
-  /* Primary palette tokens (dark-appropriate) */
-  --color-gold: #a89b7a; /* Gold — dark mode */
-  --color-gold-hover: #c4b78a;
+  /* Gold palette tokens (same family, dark-appropriate) */
+  --color-gold: #a89b7a;
+  --color-gold-hover: #b8ab8a;
   --color-gold-text: #f8fafc;
-  /* Dark tokens for exam mode and accents (dark mode lighter variant) */
-  --color-gold-dark: #c4b78a; /* Lighter gold — high contrast on dark */
+  /* Gold dark tokens for exam mode and accents (dark mode lighter variant) */
+  --color-gold-dark: #c4b78a;
   --color-gold-dark-hover: #b4a77a;
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
@@ -618,7 +580,7 @@ a,
   --card: #1e293b;
   --card-foreground: #f1f5f9;
 
-  /* Primary brand — gold family */
+  /* Primary brand - same gold family */
   --primary: #a89b7a;
   --primary-foreground: #f8fafc;
 
@@ -639,15 +601,15 @@ a,
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: var(--color-gold); /* Gold on dark background */
+  --color-accent: var(--color-gold); /* Lighter gold on dark background (Stormy Slate) */
   --color-accent-hover: var(--color-gold-dark);
-  --color-accent-button: #8a7f62; /* Darker gold for buttons — good contrast on dark bg */
-  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders on dark */
-  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode */
-  --color-accent-cta-dark: var(--color-gold-dark);
-  --color-accent-secondary: #91a6bd; /* Steel blue — charts, secondary CTAs */
+  --color-accent-button: #8a7f62; /* Gold for buttons — 4.5:1 with white text on dark */
+  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders to improve visibility */
+  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
+  --color-accent-cta-dark: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
+  --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
-  --color-text-inverse: #f8fafc; /* Light text for buttons on colored backgrounds */
+  --color-text-inverse: #f8fafc;
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
   --color-focus-ring: var(--color-gold); /* Gold for dark mode focus */
@@ -658,21 +620,17 @@ a,
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
   --color-card-bg: #1e293b;
 
-  /* Semantic data — proper colors, dark mode adjusted */
-  --color-data-pass: #34d399; /* Emerald-400 */
-  --color-data-fail: #f87171; /* Red-400 */
-  --color-data-provisional: #fbbf24; /* Amber-400 */
-  --color-data-neutral: #94a3b8; /* Slate-400 */
-  --color-data-neutral-bg: #334155; /* Slate-700 */
-  --color-data-success: #34d399;
-  --color-data-warning: #fbbf24;
-  --color-data-positive: #34d399;
-  --color-data-negative: #f87171;
+  /* Semantic data - slate gray variants for Stormy Slate aesthetic */
+  --color-data-pass: #94a3b8; /* slate-400 */
+  --color-data-fail: #cbd5e1; /* slate-300 */
+  --color-data-provisional: #64748b; /* slate-500 */
+  --color-data-neutral: #94a3b8; /* slate-400 - readable text on dark surfaces */
+  --color-data-neutral-bg: #334155; /* slate-700 - card surface in dark mode */
 
   /* Semantic status aliases (dark mode) */
-  --color-success: #34d399; /* Emerald-400 */
-  --color-error: #f87171; /* Red-400 */
-  --color-warning: #fbbf24; /* Amber-400 */
+  --color-success: var(--color-data-pass);
+  --color-error: var(--color-data-fail);
+  --color-warning: var(--color-data-provisional);
   --color-info: var(--color-accent);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);

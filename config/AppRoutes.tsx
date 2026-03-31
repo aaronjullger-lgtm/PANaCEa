@@ -269,25 +269,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Dynamic document.title per route (pages may override with their own useEffect)
-  useEffect(() => {
-    const titleMap: Record<string, string> = {
-      '/practice': 'Practice | PANaCEa',
-      '/progress': 'Progress | PANaCEa',
-      '/daily-challenges': 'Daily Challenges | PANaCEa',
-      '/clinical-eye': 'Clinical Eye | PANaCEa',
-      '/visualizer': 'Visualizer | PANaCEa',
-      '/commuter-mode': 'Commuter Mode | PANaCEa',
-      '/lecture-converter': 'Lecture Converter | PANaCEa',
-      '/technique-check': 'Technique Check | PANaCEa',
-    };
-    const path = location.pathname;
-    const title = titleMap[path]
-      || (path.startsWith('/admin') ? 'Admin | PANaCEa' : null)
-      || (path.startsWith('/study') ? 'Study | PANaCEa' : null);
-    if (title) document.title = title;
-  }, [location.pathname]);
-
   return (
     <>
 
@@ -295,117 +276,117 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route
         path="/practice"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading practice modes..." />}>
+          <Suspense fallback={<Loader message="Loading practice modes..." />}>
+            <ErrorBoundary variant="page">
               <PracticePage
                 onNavigateToDrillMode={handleNavigateToDrillMode}
                 onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
               />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/progress"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading analytics..." />}>
+          <Suspense fallback={<Loader message="Loading analytics..." />}>
+            <ErrorBoundary variant="page">
               <ProgressPage
                 performanceData={heatmapPerformance}
                 dueCount={dueQuestionsCount}
               />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/daily-challenges"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading daily challenges..." />}>
+          <Suspense fallback={<Loader message="Loading daily challenges..." />}>
+            <ErrorBoundary variant="page">
               <DailyChallengesHub />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading admin…" />}>
+          <Suspense fallback={<Loader message="Loading admin…" />}>
+            <ErrorBoundary variant="page">
               <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin/curation"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading curation…" />}>
+          <Suspense fallback={<Loader message="Loading curation…" />}>
+            <ErrorBoundary variant="page">
               <QuestionCurationPanel />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin/refinery"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading refinery…" />}>
+          <Suspense fallback={<Loader message="Loading refinery…" />}>
+            <ErrorBoundary variant="page">
               <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin/taxonomies"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading taxonomies…" />}>
+          <Suspense fallback={<Loader message="Loading taxonomies…" />}>
+            <ErrorBoundary variant="page">
               <TaxonomiesPage />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin/system-mappings"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading system mappings…" />}>
+          <Suspense fallback={<Loader message="Loading system mappings…" />}>
+            <ErrorBoundary variant="page">
               <SystemMappingsPage />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/admin/question-generator"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading question generator…" />}>
+          <Suspense fallback={<Loader message="Loading question generator…" />}>
+            <ErrorBoundary variant="page">
               <QuestionGeneratorPage />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/clinical-eye"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
+          <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
+            <ErrorBoundary variant="page">
               <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
         path="/visualizer"
         element={
-          <ErrorBoundary variant="page">
-            <Suspense fallback={<Loader message="Loading visualizer…" />}>
+          <Suspense fallback={<Loader message="Loading visualizer…" />}>
+            <ErrorBoundary variant="page">
               <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
-            </Suspense>
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
         }
       />
       <Route
@@ -432,7 +413,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                 </a>
                 {/* Header - fixed height so NavRail (sidebar) starts below it; z-50 above rail */}
                 <header
-                  className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)]/95 border-b border-[var(--color-border)] transition-all duration-300 shadow-[0_1px_3px_rgba(15,23,42,0.06)] backdrop-blur-md"
+                  className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
                   style={{ height: 'var(--header-height, 4rem)' }}
                 >
                   <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
@@ -574,16 +555,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     className="w-full min-w-0 overflow-hidden flex-1"
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
-                    <ErrorBoundary variant="inline">
-                      <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                    <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                      <ErrorBoundary variant="inline">
                         <KnowledgeBaseHub
                           onClose={() => {
                             setView('command_center');
                             navigate('/study');
                           }}
                         />
-                      </Suspense>
-                    </ErrorBoundary>
+                      </ErrorBoundary>
+                    </Suspense>
                   </div>
                 )}
 
@@ -592,11 +573,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     className="w-full min-w-0 overflow-hidden flex-1"
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
-                    <ErrorBoundary variant="inline">
-                      <Suspense fallback={<Loader message="Loading library…" />}>
+                    <Suspense fallback={<Loader message="Loading library…" />}>
+                      <ErrorBoundary variant="inline">
                         <MyLibraryPage onExit={() => setView('command_center')} />
-                      </Suspense>
-                    </ErrorBoundary>
+                      </ErrorBoundary>
+                    </Suspense>
                   </div>
                 )}
 
@@ -605,14 +586,14 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     className="w-full min-w-0 overflow-hidden flex-1"
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
-                    <ErrorBoundary variant="inline">
-                      <Suspense fallback={<Loader message="Loading pearl deck…" />}>
+                    <Suspense fallback={<Loader message="Loading pearl deck…" />}>
+                      <ErrorBoundary variant="inline">
                         <MyPearlsPanel
                           onClose={() => setView('command_center')}
                           initialFilter="saved"
                         />
-                      </Suspense>
-                    </ErrorBoundary>
+                      </ErrorBoundary>
+                    </Suspense>
                   </div>
                 )}
 
@@ -632,7 +613,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       }}
                     >
                       <div
-                        className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 pt-6 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
+                        className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
                       >
                         {isLoading &&
                           (sessionSettings ? (
@@ -671,8 +652,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               exit="exit"
                               transition={pageTransition}
                             >
-                              <ErrorBoundary variant="page">
-                                <Suspense fallback={<CommandCenterSkeleton />}>
+                              <Suspense fallback={<CommandCenterSkeleton />}>
+                                <ErrorBoundary variant="page">
                                 <CommandCenterHub
                                   performanceData={heatmapPerformance}
                                   missedQuestions={missedQuestions}
@@ -728,8 +709,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                       : undefined
                                   }
                                 />
-                                </Suspense>
-                              </ErrorBoundary>
+                                </ErrorBoundary>
+                              </Suspense>
                             </motion.div>
                           )}
 
@@ -1297,13 +1278,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                   )}
                 </Suspense>
 
-                {/* Post-onboarding product tour — never render during onboarding */}
-                {!isOnboardingModalOpen && (
-                  <ProductTour
-                    isOpen={showProductTour}
-                    onClose={() => setShowProductTour(false)}
-                  />
-                )}
+                {/* Post-onboarding product tour */}
+                <ProductTour
+                  isOpen={showProductTour}
+                  onClose={() => setShowProductTour(false)}
+                />
 
                 {/* One-time pro tip after onboarding */}
                 {showProTip && (
