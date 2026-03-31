@@ -29,7 +29,7 @@ interface SyncStatus {
 
 export function OfflineSyncIndicator() {
   const { getToken } = useAuth();
-  const { status: syncManagerStatus, syncNow } = useSyncManager();
+  const { status: syncManagerStatus, syncNow } = useSyncManager(getToken);
   // Lazy initializer reads current sync state immediately, avoiding a flash of "nothing to show"
   // on the first render when offline or with pending items.
   const [offlineStatus, setOfflineStatus] = useState<SyncStatus>(() => getSyncStatus());

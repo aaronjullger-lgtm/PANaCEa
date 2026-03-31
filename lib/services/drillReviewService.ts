@@ -133,7 +133,7 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram', 'rapid_recall', or 'drill', FSRS is not updated. */
+  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
   sessionType?: 'main' | 'cram' | 'rapid_recall' | 'drill';
   telemetry?: {
     duration_ms: number;
@@ -356,7 +356,7 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
-  const isMainSession = sessionType === 'main' || sessionType === undefined;
+  const isMainSession = sessionType === 'main' || sessionType === 'drill' || sessionType === undefined;
   let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
@@ -478,7 +478,7 @@ export async function submitDrillReview(
     });
   }
 
-  // Only update FSRS (UserProgress.reviewHistory) for main study sessions; exclude cram/rapid_recall
+  // Only update FSRS (UserProgress.reviewHistory) for main/drill sessions; exclude cram/rapid_recall
   // Rapid guesses are logged to ReviewLog but do NOT update FSRS state (accidental taps must not pollute SRS scheduling)
   const countForFSRS = isMainSession;
   const shouldLogReview = countForFSRS || isRapidGuess; // Log all main-session reviews, including rapid guesses
@@ -488,10 +488,10 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  // Map drill sessions to CRAM for ReviewLog enum (DRILL is not in the enum)
+  // Map sessionType to ReviewLog enum
   const logSessionType = (
-    sessionType === 'drill' ? 'CRAM' : (sessionType ? sessionType.toUpperCase() : 'MAIN')
-  ) as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
+    sessionType ? sessionType.toUpperCase() : 'MAIN'
+  ) as 'MAIN' | 'DRILL' | 'CRAM' | 'RAPID_RECALL';
 
   // Helper function to create full telemetry object with server_computed key
   const buildReviewLogTelemetry = (

@@ -114,6 +114,8 @@ class SyncManager {
   private listeners: Map<SyncEventType, Set<SyncEventCallback>> = new Map();
   private isSyncing = false;
   private syncRetryTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** Async token provider (e.g., Clerk's getToken). Called before each sync to get a fresh JWT. */
+  private tokenProvider: (() => Promise<string | null>) | null = null;
 
   constructor() {
     // Set up online/offline listeners
@@ -121,6 +123,33 @@ class SyncManager {
       window.addEventListener('online', () => this.handleOnline());
       window.addEventListener('offline', () => this.handleOffline());
     }
+  }
+
+  /**
+   * Register an async token provider (e.g., Clerk's getToken).
+   * Called automatically before each sync to obtain a fresh auth token.
+   * This fixes the critical bug where immediate syncs and auto-retries
+   * sent requests without Authorization headers, causing silent 401s.
+   */
+  public setTokenProvider(provider: (() => Promise<string | null>) | null): void {
+    this.tokenProvider = provider;
+  }
+
+  /**
+   * Get a fresh auth token from the registered provider, or fall back to the explicit token.
+   * Returns null if no provider is registered and no explicit token was given.
+   */
+  private async resolveToken(explicitToken?: string | null): Promise<string | null> {
+    if (explicitToken) return explicitToken;
+    if (this.tokenProvider) {
+      try {
+        return await this.tokenProvider();
+      } catch (err) {
+        logger.warn(SCOPE, 'Token provider failed, proceeding without auth', err);
+        return null;
+      }
+    }
+    return null;
   }
 
   // ===========================================================================
@@ -382,6 +411,7 @@ class SyncManager {
   }
 
   private async syncAnswers(token?: string | null): Promise<number> {
+    const resolvedToken = await this.resolveToken(token);
     const answers = this.getOfflineAnswers();
     const pending = answers.filter((a) => !a.synced && a.syncAttempts < 5);
 
@@ -395,7 +425,7 @@ class SyncManager {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {}),
           },
           body: JSON.stringify({
             questionId: answer.questionId,
@@ -450,6 +480,7 @@ class SyncManager {
   }
 
   private async syncPearlActions(token?: string | null): Promise<number> {
+    const resolvedToken = await this.resolveToken(token);
     const actions = this.getOfflinePearlActions();
     const pending = actions.filter((a) => !a.synced && a.syncAttempts < 5);
 
@@ -479,7 +510,7 @@ class SyncManager {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {}),
           },
           body: JSON.stringify({
             action: action.action,
@@ -511,6 +542,7 @@ class SyncManager {
   }
 
   private async syncReviews(token?: string | null): Promise<number> {
+    const resolvedToken = await this.resolveToken(token);
     const reviews = this.getOfflineReviews();
     const pending = reviews.filter((r) => !r.synced && r.syncAttempts < 5);
 
@@ -536,7 +568,7 @@ class SyncManager {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(resolvedToken ? { Authorization: `Bearer ${resolvedToken}` } : {}),
         },
         body: JSON.stringify(batch),
       });
@@ -689,13 +721,34 @@ export const syncManager = new SyncManager();
 // REACT HOOK
 // ============================================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * React hook for sync status and operations
+ * React hook for sync status and operations.
+ *
+ * @param tokenProvider - Optional async function that returns a fresh auth token
+ *   (e.g., Clerk's `getToken`). When provided, the SyncManager will call it
+ *   before every sync so that immediate syncs, auto-retries, and online-recovery
+ *   syncs all include the Authorization header. This fixes the critical bug where
+ *   answers were queued to localStorage but never reached the database.
  */
-export function useSyncManager() {
+export function useSyncManager(tokenProvider?: () => Promise<string | null>) {
   const [status, setStatus] = useState<SyncStatus>(syncManager.getStatus());
+
+  // Keep the token provider ref stable to avoid re-registering on every render
+  const tokenProviderRef = useRef(tokenProvider);
+  tokenProviderRef.current = tokenProvider;
+
+  useEffect(() => {
+    // Register token provider so ALL sync paths (immediate, retry, online-recovery) are authenticated
+    if (tokenProviderRef.current) {
+      syncManager.setTokenProvider(() => tokenProviderRef.current!());
+    }
+    return () => {
+      // Clean up on unmount — don't leave a stale provider
+      syncManager.setTokenProvider(null);
+    };
+  }, []); // Intentionally empty: ref tracks latest provider without re-running effect
 
   useEffect(() => {
     const unsubOnline = syncManager.on('online', setStatus);

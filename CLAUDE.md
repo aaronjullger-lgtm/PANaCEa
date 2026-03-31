@@ -35,17 +35,15 @@ The spaced repetition system is the core differentiator. Key files:
 ### Implicit Rating Inputs (from PDFs)
 The `deriveImplicitRating` function uses: `timeToFirstClick`, `answerSwitches`, `totalDwellTime`, `isCorrect`, `parTimeMs`, and optionally `trajectory` (micro-kinetics). These are stored in `ReviewLog.telemetry` as: `par_time_ms`, `latency_ratio`, `implicit_confidence`, `answer_changes`, `circadian_phase`.
 
-### FSRS Pipeline Consumers (CRITICAL GAP)
-Currently only these components submit to the FSRS pipeline:
-- `components/session/QuizView.tsx` (main session) → `/api/drills/submit-review`
+### FSRS Pipeline Consumers
+All drill and session types now submit to FSRS:
+- `components/session/QuizView.tsx` (main session) → `syncManager.queueAnswer()` → `/api/questions/attempt`
 - `components/modes/SmartReviewMode.tsx` → `/api/drills/submit-review`
-- `hooks/game/use-condition-drill.ts` → `/api/drills/submit-review`
-
-**30+ other drill types do NOT feed into FSRS.** This is the #1 consistency problem. Drill types like PharmDrill, DDxDrill, AnatomyDrill, ECGDrill, ImagingDrill, etc. are standalone and don't update spaced repetition scheduling.
+- All 11 drill hooks (`hooks/game/use-*.ts`) → `useDrillFSRS` → `/api/drills/submit-review` with `sessionType: 'drill'`
 
 ### Main Session UI
 - `components/session/QuizView.tsx` (2274 lines) — The main study session. Has: question rendering, answer selection, ExplanationPanel (structured rationale), NormalLabsPanel (slide-out lab reference), implicit metrics collection, FSRS submission.
-- `components/drill/DrillShell.tsx` — Reusable drill wrapper, but only used by ContrastiveDrillSession. Should be the standard wrapper for all drills.
+- `components/drill/DrillShell.tsx` — Standard drill wrapper used by all 13 active drill components.
 
 ## Key Patterns
 
@@ -94,23 +92,24 @@ plans/               → Implementation plans
 
 ## Important Constraints
 - Binary FSRS rating only (Again=1, Good=3). Hard/Easy are deprecated and normalized.
-- Only `review_type: 'real'` MAIN sessions count for FSRS. Cram and rapid_recall are excluded.
+- Only `review_type: 'real'` MAIN and DRILL sessions count for FSRS. Cram and rapid_recall are excluded.
 - Rapid-guess filtering: responses below MVRT (minimum valid response time) are flagged.
 - The optimizer sidecar (`gcp-fsrs-optimizer/`) uses review_time, review_rating, review_state, review_duration from ReviewLog to fit personalized FSRS weights.
 
-## Current Priority: Consistency
-The #1 goal is making all drill types feed into the FSRS pipeline consistently. Every answered question should: (1) collect implicit behavioral metrics, (2) submit to `/api/drills/submit-review`, (3) update the learner's spaced repetition schedule. The `DrillShell` component should be the standard wrapper providing this behavior.
+## Current Priority: Content & Polish
+All drill types now feed into the FSRS pipeline. The remaining priorities are: (1) generate more questions for under-represented PANCE blueprint areas (CV, PULM), (2) fix Knowledge Base content loading, (3) UI/UX polish from audit findings.
 
-## Verified Issues (2026-03-30 Audit)
+## Verified Issues (2026-03-31 Audit)
 
-### FSRS Pipeline: 1 of 14 drill hooks submits (and it's broken)
-- `use-condition-drill.ts` submits to `/api/drills/submit-review` but WITHOUT `sessionType` → defaults to 'main' → contaminates FSRS data
-- 13 other drill hooks (pharm, ddx, anatomy, first-line, photo, mini-lab, physiology, guideline, ventilator, polypharmacy, contrastive, ecg, derm) do NOT submit
-- `useImplicitMetrics` (300-line hook) exists and works but is ONLY used by `QuizView.tsx` — no drill uses it
+### FSRS Pipeline: FIXED ✅
+- **syncManager auth bug (FIXED):** `syncManager.queueAnswer()` triggered immediate syncs without a Clerk JWT → every POST to `/api/questions/attempt` got 401'd silently. Fix: token provider pattern in `syncManager.ts` + `useSyncManager(getToken)` in `OfflineSyncIndicator.tsx`.
+- **drillReviewService FSRS gating (FIXED):** `sessionType='drill'` was excluded from FSRS updates (treated like cram). Fix: `isMainSession` now includes `'drill'`.
+- **ReviewLog session type mapping (FIXED):** Drills were incorrectly mapped to `CRAM` in ReviewLog. Now correctly mapped to `DRILL` enum value.
+- All 11 drill hooks use `useDrillFSRS` which correctly gets Clerk tokens and submits to `/api/drills/submit-review` with `sessionType: 'drill'`.
+- `useImplicitMetrics` (300-line hook) exists but is superseded by `useDrillFSRS` for drills — only used by `QuizView.tsx`.
 
-### sessionType enum missing 'drill'
-- Current: `['main', 'cram', 'rapid_recall']` — no way to distinguish drill submissions from main session
-- Fix: add `'drill'` to the enum, make drills pass it, update FSRS gating logic
+### sessionType enum: Present ✅
+- `SessionType` enum has `{MAIN, DRILL, CRAM, RAPID_RECALL}` — migration already applied.
 
 ### DrillShell: 13 of 13 active drill components now use it ✅
 - All active drill sessions use DrillShell: Contrastive, Pharm, DDx, Condition, Anatomy, ECG, FirstLine, Imaging, Physiology, MiniLab, Guideline, Ventilator, Derm
