@@ -1014,6 +1014,10 @@ const App: React.FC = () => {
   const showGuestModeBanner = isGuestMode;
 
   // Main authenticated app (or guest mode)
+  const devAuditEnabled =
+    process.env.NODE_ENV === 'development' &&
+    new URLSearchParams(location.search).get('devAudit') === '1';
+
   return (
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
@@ -1125,7 +1129,7 @@ const App: React.FC = () => {
           showGuestModeBanner={showGuestModeBanner}
         />
         {/* Accessibility Audit Components (Development Tools) */}
-        {process.env.NODE_ENV === 'development' && (
+        {devAuditEnabled && (
           <>
             <KeyboardAccessibilityAudit defaultOpen={false} />
             <ContrastRatioAudit defaultOpen={false} />
