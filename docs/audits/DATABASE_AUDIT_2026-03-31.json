@@ -1,0 +1,143 @@
+{
+    "q1_by_status": [
+        {
+            "validationStatus": "approved",
+            "count": 1359
+        }
+    ],
+    "q2_by_system": [
+        {
+            "system": "HEENT",
+            "count": 155
+        },
+        {
+            "system": "DERM",
+            "count": 123
+        },
+        {
+            "system": "NEURO",
+            "count": 121
+        },
+        {
+            "system": "MSK",
+            "count": 102
+        },
+        {
+            "system": "RENAL",
+            "count": 99
+        },
+        {
+            "system": "CV",
+            "count": 97
+        },
+        {
+            "system": "GI",
+            "count": 95
+        },
+        {
+            "system": "ENDO",
+            "count": 92
+        },
+        {
+            "system": "REPRO",
+            "count": 88
+        },
+        {
+            "system": "HEME",
+            "count": 88
+        },
+        {
+            "system": "PULM",
+            "count": 84
+        },
+        {
+            "system": "GU",
+            "count": 78
+        },
+        {
+            "system": "PSYCH",
+            "count": 76
+        },
+        {
+            "system": "ID",
+            "count": 61
+        }
+    ],
+    "q3_conditions_with_questions": [
+        {
+            "count": 586
+        }
+    ],
+    "q4_total_conditions": [
+        {
+            "count": 1293
+        }
+    ],
+    "q5_user_progress": [
+        {
+            "total": 0,
+            "with_next_review": 0
+        }
+    ],
+    "q6_review_log": [
+        {
+            "total": 0,
+            "first_review": null,
+            "last_review": null
+        }
+    ],
+    "q7_attempts": [
+        {
+            "total": 0,
+            "correct": 0
+        }
+    ],
+    "q8_drugs": [
+        {
+            "count": 1000
+        }
+    ],
+    "q9_orphaned": [
+        {
+            "count": 0
+        }
+    ],
+    "q10_by_difficulty": [
+        {
+            "difficulty": "medium",
+            "count": 816
+        },
+        {
+            "difficulty": "easy",
+            "count": 272
+        },
+        {
+            "difficulty": "hard",
+            "count": 271
+        }
+    ],
+    "q11_empty_questions": [
+        {
+            "count": 0
+        }
+    ],
+    "q12_fsrs_params": {
+        "error": "Table does not exist",
+        "code": "relation_not_exist"
+    },
+    "q13_session_type": [],
+    "q14_question_types": [
+        {
+            "questionType": "clinical-vignette",
+            "count": 860
+        },
+        {
+            "questionType": "general",
+            "count": 436
+        },
+        {
+            "questionType": "mcq",
+            "count": 63
+        }
+    ]
+}

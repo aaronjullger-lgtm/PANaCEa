@@ -34,6 +34,7 @@ export default function ACLSRefCards() {
   const { getToken } = useAuth();
   const [data, setData] = useState<ACLSStep[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function ACLSRefCards() {
     let cancelled = false;
     async function fetch_() {
       try {
+        setError(null);
         const token = await getToken();
         const res = await fetch('/api/reference/acls-algorithms', {
           headers: { Authorization: `Bearer ${token}` },
@@ -49,7 +51,9 @@ export default function ACLSRefCards() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
         if (!cancelled) setData(json.data || []);
-      } catch { /* handled by empty state */ }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || 'Failed to load ACLS algorithms');
+      }
       finally { if (!cancelled) setLoading(false); }
     }
     fetch_();
@@ -88,6 +92,20 @@ export default function ACLSRefCards() {
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading ACLS algorithms...</div>;
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 60, textAlign: 'center' }}>
+        <Heart size={24} style={{ color: '#ef4444', marginBottom: 8 }} />
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>{error}</p>
+        <button onClick={() => window.location.reload()} style={{
+          marginTop: 8, padding: '6px 16px', borderRadius: 8, fontSize: 13,
+          border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)',
+          cursor: 'pointer', color: 'var(--color-text-primary)',
+        }}>Retry</button>
+      </div>
+    );
   }
 
   return (

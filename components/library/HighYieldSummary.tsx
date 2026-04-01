@@ -15,12 +15,7 @@ import {
 import type { ReferenceViewConfig } from './GenericReferenceView';
 import { allReferenceConfigs } from './referenceConfigs';
 
-/** Normalize API responses — handles nested { data: { data: [] } }, { data: { labs: [] } }, etc. */
-function normalizeApiItems(json: any): any[] {
-  const payload = json?.data ?? json;
-  const items = Array.isArray(payload) ? payload : (payload?.data ?? payload?.labs ?? []);
-  return Array.isArray(items) ? items : [];
-}
+import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 
 interface EntityGroup {
   config: ReferenceViewConfig<any>;
@@ -54,10 +49,10 @@ export default function HighYieldSummary({ onBack }: HighYieldSummaryProps) {
           if (!res.ok) return { slug: config.entitySlug, items: [] as any[] };
           const json = await res.json();
           const arr = normalizeApiItems(json);
-          // Double-check client-side for endpoints that may not support highYield param
+          // Client-side filter: safety net for endpoints where the model lacks isHighYield
           const highYield = config.isHighYield
             ? arr.filter((item: any) => config.isHighYield!(item))
-            : arr;
+            : arr.filter((item: any) => item.isHighYield);
           return { slug: config.entitySlug, items: highYield };
         } catch {
           return { slug: config.entitySlug, items: [] as any[] };

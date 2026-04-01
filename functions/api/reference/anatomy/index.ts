@@ -68,8 +68,19 @@ export const onRequestGet = authenticatedEndpoint(
       log.info('Listing anatomy structures', { system, highYield: highYield || 'false' });
       const results = await prisma.anatomyStructure.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
-        include: { Condition: { select: { id: true, name: true } } },
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, system: true, region: true,
+          type: true, description: true, function: true,
+          innervation: true, bloodSupply: true,
+          clinicalSignificance: true, isHighYield: true, panceYield: true,
+          origin: true, insertion: true,
+          nerveRoots: true, dermatome: true, myotome: true,
+          commonPathology: true, surfaceLandmarks: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, mnemonics: true, boardYieldFacts: true,
+          Condition: { select: { id: true, name: true } },
+        },
       });
 
       log.info('Anatomy fetch successful', { count: results.length });

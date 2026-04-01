@@ -332,7 +332,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="space-y-1">{items.map(renderItem)}</ul>
+      <ul className="list-none m-0 p-0 space-y-1">{items.map(renderItem)}</ul>
     </div>
   );
 

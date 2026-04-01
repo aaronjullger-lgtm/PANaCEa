@@ -60,7 +60,7 @@ export const onRequestGet = authenticatedEndpoint(
       const where: any = {};
       if (system) where.system = system;
       if (region) where.region = region;
-      if (highYield === 'true') where.isHighYield = true;
+      // Note: SpecialTest model does not have isHighYield field — param accepted but not filterable
       if (searchQuery) {
         where.OR = [
           { name: { contains: searchQuery, mode: 'insensitive' } },

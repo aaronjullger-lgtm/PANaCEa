@@ -27,6 +27,7 @@ const DifferentialsQuerySchema = z.object({
       category: z.string().max(100).optional(),
       query: z.string().max(200).optional(),
       presentingComplaint: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -54,39 +55,33 @@ export const onRequestGet = authenticatedEndpoint(
       const category = url.searchParams.get('category');
       const query = url.searchParams.get('query');
       const presentingComplaint = url.searchParams.get('presentingComplaint');
+      const highYield = url.searchParams.get('highYield');
 
-      let results;
+      log.info('Fetching differentials', {
+        category: category || 'all',
+        query: query || 'none',
+        highYield: highYield || 'false',
+      });
 
-      if (query) {
-        // Search mode
-        log.info('Searching differentials', { query });
-        results = await prisma.differentialDiagnosis.findMany({
-          where: {
-            OR: [
-              { presentingComplaint: { contains: query, mode: 'insensitive' } },
-              { category: { contains: query, mode: 'insensitive' } },
-            ],
-          },
-          orderBy: { presentingComplaint: 'asc' },
-          take: 30,
-        });
-      } else if (presentingComplaint) {
-        // Find DDx by presenting complaint
-        log.info('Finding DDx by presenting complaint', { presentingComplaint });
-        results = await prisma.differentialDiagnosis.findMany({
-          where: {
-            presentingComplaint: { contains: presentingComplaint, mode: 'insensitive' },
-          },
-          orderBy: { presentingComplaint: 'asc' },
-        });
-      } else {
-        // List mode with optional category filter
-        log.info('Listing differentials', { category });
-        results = await prisma.differentialDiagnosis.findMany({
-          where: category ? { category } : undefined,
-          orderBy: { presentingComplaint: 'asc' },
-        });
+      // Unified where builder
+      const where: Record<string, unknown> = {};
+      if (category) where.category = category;
+      if (highYield === 'true') where.isHighYield = true;
+      if (presentingComplaint) {
+        where.presentingComplaint = { contains: presentingComplaint, mode: 'insensitive' };
       }
+      if (query) {
+        where.OR = [
+          { presentingComplaint: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+        ];
+      }
+
+      const results = await prisma.differentialDiagnosis.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { presentingComplaint: 'asc' }],
+        take: query ? 30 : undefined,
+      });
 
       log.info('Differentials fetch successful', { count: results.length });
 

@@ -114,14 +114,64 @@
       })();
     </script>
     <style>
+      /* Critical inline CSS — available before index.css loads.
+         Prevents FOUC when Cloudflare CSS optimizer delays stylesheet delivery.
+         Must stay in sync with index.css color tokens + Tailwind preflight resets. */
       :root {
         --header-height: 4rem;
         --nav-rail-width: 56px;
+        /* Light mode color tokens (critical subset) */
+        --color-bg-primary: #f8fafc;
+        --color-bg-secondary: #ffffff;
+        --color-bg-tertiary: #f1f5f9;
+        --color-text-primary: #0f172a;
+        --color-text-secondary: #475569;
+        --color-text-muted: #64748b;
+        --color-border: #e2e8f0;
+        --color-border-light: #f1f5f9;
+        --color-accent: #9a8f72;
+        --color-accent-hover: #8a7f62;
+        --color-accent-light: #f5f2ec;
+        --color-card-bg: #ffffff;
+        --color-text-inverse: #f8fafc;
+        --color-btn-primary-text: #f8fafc;
+        --color-overlay: rgba(15, 23, 42, 0.5);
+        --color-glass-bg: rgba(255, 255, 255, 0.85);
+        --color-glass-border: rgba(226, 232, 240, 0.6);
+        --color-shadow-soft: rgba(0, 0, 0, 0.08);
+      }
+      .dark {
+        --color-bg-primary: #0f172a;
+        --color-bg-secondary: #1e293b;
+        --color-bg-tertiary: #334155;
+        --color-text-primary: #f1f5f9;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #94a3b8;
+        --color-border: #475569;
+        --color-border-light: #334155;
+        --color-accent: #a89b7a;
+        --color-accent-hover: #b8ab8a;
+        --color-accent-light: rgba(30, 41, 59, 0.8);
+        --color-card-bg: #1e293b;
+        --color-text-inverse: #0f172a;
+        --color-btn-primary-text: #f8fafc;
+        --color-overlay: rgba(0, 0, 0, 0.6);
+        --color-glass-bg: rgba(15, 23, 42, 0.85);
+        --color-glass-border: rgba(71, 85, 105, 0.6);
+        --color-shadow-soft: rgba(0, 0, 0, 0.3);
       }
 
-      body {
-        margin: 0;
-      }
+      /* Tailwind preflight-equivalent resets (prevent raw browser bullets/spacing) */
+      *, *::before, *::after { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+      ul, ol, menu { list-style: none; margin: 0; padding: 0; }
+      img, svg, video, canvas { display: block; max-width: 100%; }
+      h1, h2, h3, h4, h5, h6, p { margin: 0; }
+      a { color: inherit; text-decoration: inherit; }
+      button, input, select, textarea { font: inherit; color: inherit; }
+
+      /* Background color to prevent white flash in dark mode */
+      body { background-color: var(--color-bg-primary); color: var(--color-text-primary); }
     </style>
     <link rel="stylesheet" href="/index.css" />
     <script>
@@ -133,11 +183,14 @@
           if (!node || node.tagName !== 'LINK') return;
           if (node.rel !== 'stylesheet') return;
           if (!node.href) return;
-          // Scope this guard to the primary app stylesheet only so that
-          // other stylesheets can be managed by services/initialLoadOptimizer.ts
+          // Scope to the app's own stylesheets only (not third-party fonts etc.)
+          // so that other stylesheets can be managed by services/initialLoadOptimizer.ts
           // without fighting over media="print".
+          // In dev: /index.css  |  In production: /assets/index-HASH.css
           var href = node.href;
-          if (!/\/index\.css(\?|$)/.test(href)) return;
+          var isAppCSS = /\/index[^/]*\.css(\?|$)/.test(href) ||
+                         /\/assets\/(?:index|component)-[^/]*\.css(\?|$)/.test(href);
+          if (!isAppCSS) return;
           if (node.media === 'print') {
             node.media = 'all';
           }

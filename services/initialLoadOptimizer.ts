@@ -263,18 +263,12 @@ export class InitialLoadOptimizer {
   optimizeCriticalPath(): void {
     if (typeof document === 'undefined') return;
 
-    // Defer non-critical CSS
-    const nonCriticalLinks = document.querySelectorAll<HTMLLinkElement>(
-      'link[rel="stylesheet"]:not([media="print"])'
-    );
-    nonCriticalLinks.forEach((link) => {
-      if (!link.media || link.media === 'all') {
-        link.media = 'print';
-        link.onload = () => {
-          link.media = 'all';
-        };
-      }
-    });
+    // NOTE: Non-critical CSS deferral removed.
+    // The previous implementation set ALL stylesheets to media="print" and
+    // relied on an onload handler to flip them back to "all". This is fatally
+    // broken when the stylesheet is already cached (onload never fires) or
+    // when Cloudflare strips the handler — the entire app loses its styles.
+    // Vite already code-splits CSS per route; no additional deferral is needed.
 
     // Lazy load images below the fold
     const images = document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]');

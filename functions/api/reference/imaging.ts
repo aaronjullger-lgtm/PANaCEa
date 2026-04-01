@@ -72,6 +72,18 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.imagingStudy.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, modality: true, bodyRegion: true,
+          description: true, isHighYield: true, panceYield: true,
+          usesContrast: true, usesRadiation: true,
+          indications: true, contraindications: true,
+          classicSigns: true, firstLineFor: true,
+          limitations: true, advantages: true,
+          normalFindings: true, preparation: true,
+          scanDuration: true, radiationDose: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, boardYieldFacts: true,
+        },
       });
 
       log.info('Imaging studies fetched successfully', { count: results.length });

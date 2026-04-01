@@ -23,6 +23,7 @@ const HistoryComponentsQuerySchema = z.object({
     .object({
       type: z.string().max(100).optional(),
       query: z.string().max(200).optional(),
+      highYield: z.string().optional(),
     })
     .optional(),
 });
@@ -35,39 +36,41 @@ export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   HistoryComponentsQuerySchema,
-  async ({ env, auth, validated }) => {
+  async ({ env, auth, validated, request }) => {
     const log = createEndpointLogger('/api/reference/history-components', auth.userId);
     let prisma: EdgePrismaClient | null = null;
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-      const type = validated?.query?.type;
-      const searchQuery = validated?.query?.query;
+      const url = new URL(request.url);
+      const type = url.searchParams.get('type') || validated?.query?.type;
+      const searchQuery = url.searchParams.get('query') || validated?.query?.query;
+      const highYield = url.searchParams.get('highYield');
 
-      let results;
+      log.info('Fetching history components', {
+        type: type || 'all',
+        searchQuery: searchQuery || 'none',
+        highYield: highYield || 'false',
+      });
 
+      // Unified where builder
+      const where: Record<string, unknown> = {};
+      if (type) where.category = type;
+      if (highYield === 'true') where.isHighYield = true;
       if (searchQuery) {
-        // Search mode
-        log.info('Searching history components', { searchQuery });
-        results = await prisma.historyComponent.findMany({
-          where: {
-            OR: [
-              { name: { contains: searchQuery, mode: 'insensitive' } },
-              { description: { contains: searchQuery, mode: 'insensitive' } },
-            ],
-          },
-          orderBy: { name: 'asc' },
-          take: 20,
-        });
-      } else {
-        // List mode with optional type filter
-        log.info('Listing history components', { type: type || 'all' });
-        results = await prisma.historyComponent.findMany({
-          where: type ? { category: type } : undefined,
-          orderBy: { name: 'asc' },
-        });
+        where.OR = [
+          { name: { contains: searchQuery, mode: 'insensitive' } },
+          { description: { contains: searchQuery, mode: 'insensitive' } },
+          { category: { contains: searchQuery, mode: 'insensitive' } },
+        ];
       }
+
+      const results = await prisma.historyComponent.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        take: searchQuery ? 20 : undefined,
+      });
 
       log.info('History components fetched', { count: results.length });
       return { data: { success: true, data: results } };

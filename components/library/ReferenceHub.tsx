@@ -98,12 +98,7 @@ function EntityCard({ config, count, onClick }: EntityCardProps) {
   );
 }
 
-/** Normalize API responses — handles { data: { data: [] } }, { data: { labs: [] } }, { data: [] }, etc. */
-function normalizeApiItems(json: any): any[] {
-  const payload = json?.data ?? json;
-  const items = Array.isArray(payload) ? payload : (payload?.data ?? payload?.labs ?? []);
-  return Array.isArray(items) ? items : [];
-}
+import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 
 /** Hook to fetch entity counts from all APIs */
 function useEntityCounts(configs: readonly ReferenceViewConfig<any>[], token: string | null) {
@@ -111,19 +106,33 @@ function useEntityCounts(configs: readonly ReferenceViewConfig<any>[], token: st
 
   useEffect(() => {
     if (!token) return;
-    configs.forEach(async (config) => {
-      try {
-        const res = await fetch(config.apiEndpoint, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const json = await res.json();
-        const arr = normalizeApiItems(json);
-        setCounts((prev) => ({ ...prev, [config.entitySlug]: arr.length }));
-      } catch {
-        // Silent — card just won't show count
+    let cancelled = false;
+
+    async function fetchCounts() {
+      const results = await Promise.allSettled(
+        configs.map(async (config) => {
+          const res = await fetch(config.apiEndpoint, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) return { slug: config.entitySlug, count: null };
+          const json = await res.json();
+          const arr = normalizeApiItems(json);
+          return { slug: config.entitySlug, count: arr.length };
+        })
+      );
+
+      if (cancelled) return;
+      const newCounts: Record<string, number | null> = {};
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          newCounts[result.value.slug] = result.value.count;
+        }
       }
-    });
+      setCounts(newCounts);
+    }
+
+    fetchCounts();
+    return () => { cancelled = true; };
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return counts;

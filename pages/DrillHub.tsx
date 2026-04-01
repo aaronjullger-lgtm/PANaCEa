@@ -206,7 +206,7 @@ export default function DrillHub(): JSX.Element {
         </motion.div>
 
         {/* Overview Stats */}
-        {overview && (
+        {overview && overview.totalSessions > 0 ? (
           <motion.div
             initial={{ y: 20 }}
             animate={{ y: 0 }}
@@ -253,7 +253,20 @@ export default function DrillHub(): JSX.Element {
               </p>
             </div>
           </motion.div>
-        )}
+        ) : !loading && !overviewError ? (
+          <motion.div
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-12 p-8 text-center bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+          >
+            <Trophy className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" />
+            <p className="text-[var(--color-text-secondary)] font-medium mb-1">No drill sessions yet</p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Complete your first drill below to start tracking your stats here.
+            </p>
+          </motion.div>
+        ) : null}
 
         {/* Drill Mode Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -349,7 +362,7 @@ export default function DrillHub(): JSX.Element {
         </div>
 
         {/* Recent Activity */}
-        {overview && overview.recentActivity.length > 0 && (
+        {overview && overview.recentActivity.length > 0 ? (
           <motion.div
             initial={{ y: 20 }}
             animate={{ y: 0 }}
@@ -392,7 +405,14 @@ export default function DrillHub(): JSX.Element {
               ))}
             </div>
           </motion.div>
-        )}
+        ) : overview ? (
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] text-center mb-6">
+            <BarChart3 className="w-8 h-8 text-[var(--color-text-muted)] mx-auto mb-2" />
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Your recent drill activity will appear here after your first session.
+            </p>
+          </div>
+        ) : null}
 
         {/* Info Footer */}
         <motion.div

@@ -2042,3 +2042,132 @@ a,
   transform: translateX(-110%);
   opacity: 0.6;
 }
+
+/* =============================================
+   GLASS CARD & WIDGET CLASSES
+   (previously in index.html inline <style>)
+   ============================================= */
+
+/* Premium Glass Card - Sophisticated depth */
+.card-premium-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-top: 1px solid rgba(255, 255, 255, 0.85);
+  border-left: 1px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.65);
+  border-right: 1px solid rgba(148, 163, 184, 0.65);
+  box-shadow:
+    0 10px 40px rgba(148, 163, 184, 0.28),
+    0 4px 12px rgba(148, 163, 184, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-premium-glass:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 14px 48px rgba(148, 163, 184, 0.3),
+    0 6px 16px rgba(148, 163, 184, 0.18);
+}
+.dark .card-premium-glass {
+  background: rgba(30, 41, 59, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(71, 85, 105, 0.45);
+  border-right: 1px solid rgba(71, 85, 105, 0.45);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Premium Glass Widget */
+.widget-premium-glass {
+  background: var(--color-bg-secondary);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 24px var(--color-shadow-soft, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.widget-premium-glass:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--color-shadow-soft, rgba(0, 0, 0, 0.12));
+}
+
+/* Gold Celebration Animation */
+@keyframes gold-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes gold-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 24px rgba(154, 143, 114, 0.35), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(212, 175, 55, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+.gold-achievement {
+  background: var(--color-gold-gradient, linear-gradient(135deg, #c4b896, #9a8f72, #8a7f62));
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite, gold-glow-pulse 2s ease-in-out infinite;
+  color: #1a1410;
+  font-weight: 700;
+}
+html:not(.dark) .gold-achievement {
+  background: rgb(255 251 235);
+  background-size: auto;
+  border: 1px solid rgb(217 119 6);
+  animation: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: rgb(120 53 15);
+}
+
+/* Clinical achievement */
+.clinical-achievement {
+  background: linear-gradient(135deg, rgb(20 184 166 / 0.15), rgb(16 185 129 / 0.12));
+  border: 1px solid rgb(20 184 166 / 0.35);
+  color: rgb(15 118 110);
+  font-weight: 600;
+}
+html:not(.dark) .clinical-achievement {
+  background: rgb(240 253 250);
+  border-color: rgb(153 246 228);
+  color: rgb(19 78 74);
+}
+.dark .clinical-achievement {
+  background: rgb(19 78 74 / 0.35);
+  border-color: rgb(20 184 166 / 0.4);
+  color: rgb(94 234 212);
+}
+
+/* Smooth animations */
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-down {
+  animation: fade-in-down 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

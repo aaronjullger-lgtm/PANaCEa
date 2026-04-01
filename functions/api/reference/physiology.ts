@@ -72,6 +72,17 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.physiologyConcept.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, displayName: true,
+          system: true, category: true, description: true,
+          mechanism: true, clinicalSignificance: true,
+          pathophysiology: true, normalValues: true,
+          feedbackLoops: true, isHighYield: true, panceYield: true,
+          relatedConditions: true, relatedDrugs: true,
+          compensatoryMechanisms: true, decompensationSigns: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, mnemonics: true, boardYieldFacts: true,
+        },
       });
 
       log.info('Physiology concepts fetched successfully', { count: results.length });

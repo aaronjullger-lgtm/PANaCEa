@@ -18,6 +18,14 @@ import {
   ClipboardList,
   Stethoscope as StethoscopeIcon,
   Phone,
+  Activity,
+  Stethoscope,
+  Microscope,
+  FileText,
+  Pill,
+  ChevronRight,
+  FlaskConical,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type {
@@ -26,14 +34,13 @@ import type {
   EncounterSession,
   PatientPersona,
 } from '@/types/drill-modes';
-import type { PlacedOrder, ExamFinding, OSCEScoreReport, BodyRegion, OrderCategory } from '@/types/osce-enhanced';
+import type { PlacedOrder, ExamFinding, OSCEScoreReport, OrderCategory } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
 import {
   OrderPanel,
   ExamPanel,
   RapportMeter,
-  RapportIndicator,
   ScoreReport,
   OSCELiveSession,
   OSCEResultsView,
@@ -44,9 +51,6 @@ import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
 import {
   getRandomEncounterCase,
-  calculateEncounterScore,
-  getSessionHistory,
-  clearSession,
   startOSCESession,
   saveOSCEChat,
   completeOSCESession,
@@ -72,20 +76,6 @@ import {
   type PreceptorFeedback,
 } from '@/services/ai';
 import { streamGeminiText } from '@/lib/utils/streamingClient';
-import {
-  Activity,
-  Stethoscope,
-  Microscope,
-  FileText,
-  Pill,
-  ChevronRight,
-  PauseCircle,
-  PlayCircle,
-  FlaskConical,
-  Scan,
-  TestTube,
-  AlertTriangle,
-} from 'lucide-react';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { ChatSkeleton } from '@/components/loading';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
@@ -100,7 +90,7 @@ import {
   type OSCEQuickStartPreset,
 } from '@/config/osce-settings';
 import { generateOSCEMarkdown, downloadOSCEReport } from '@/lib/utils/osceExport';
-import { updateConditionSchedule } from '@/lib/osce-spaced-repetition';
+import { updateConditionSchedule, getDueConditions, getConditionStats, type OSCEConditionSchedule } from '@/lib/osce-spaced-repetition';
 
 // Module 1 & Integration Imports
 import { useSystemIntegration } from '@/contexts/SystemIntegrationContext';
@@ -212,6 +202,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
   const [gradeResultLoading, setGradeResultLoading] = useState(false);
   const [emrTab, setEmrTab] = useState<'hpi' | 'pmh' | 'meds' | 'vitals' | 'labs'>('hpi');
+  const [dueConditions, setDueConditions] = useState<OSCEConditionSchedule[]>([]);
+  const [conditionStats, setConditionStats] = useState<{ total: number; due: number; mastered: number; struggling: number } | null>(null);
+  const [presetFilters, setPresetFilters] = useState<{ targetSystems?: string[]; difficulty?: string } | null>(null);
 
   // Initialize Enhanced OSCE Hook
   const enhancedOSCE = useEnhancedOSCE({
@@ -297,6 +290,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       }
     })();
   }, [viewState, getToken]);
+
+  // Load spaced-repetition due conditions for landing page
+  useEffect(() => {
+    if (viewState !== 'landing') return;
+    try {
+      setDueConditions(getDueConditions());
+      setConditionStats(getConditionStats());
+    } catch {
+      // localStorage-based — silent on error
+    }
+  }, [viewState]);
 
   // NEW: State machine for Module 1
   const [avEngine, setAVEngine] = useState<PatientAVEngine | null>(null);
@@ -563,7 +567,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return data;
   }, []);
 
-  const handleStartEncounter = async () => {
+  const handleStartEncounter = async (filters?: { targetSystems?: string[]; difficulty?: string } | null) => {
     setIsLoading(true);
     setLoadError(null);
     setViewState('loading_encounter');
@@ -571,7 +575,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       const token = await getToken();
 
-      const newCase = await getRandomEncounterCase(token);
+      const newCase = await getRandomEncounterCase(token, filters ?? presetFilters ?? undefined);
 
       if (!newCase) {
         console.error('Failed to load case');
@@ -803,8 +807,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setAiDifficulty(preset.difficulty);
     setEnableCulturalCompetency(preset.enableCulturalCompetency);
     setEnableResourceLimited(preset.enableResourceLimited);
-    // Start encounter with preset applied
-    handleStartEncounter();
+    // Store system filters so handleStartEncounter can use them
+    const filters = preset.targetSystems.length > 0
+      ? { targetSystems: preset.targetSystems }
+      : null;
+    setPresetFilters(filters);
+    // Start encounter with preset applied (pass filters directly since setState is async)
+    handleStartEncounter(filters);
   };
 
   const handleNewCase = () => {
@@ -818,6 +827,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setDiagnosisFeedback(null);
     setTreatmentFeedback(null);
     setGradeResult(null);
+    setPresetFilters(null);
     setPhysicalFindings([]);
     setDiagnosticResults([]);
     setPatientPersona(null);
@@ -1350,6 +1360,64 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </motion.div>
               )}
             </div>
+
+            {/* Spaced Repetition — Due for Review */}
+            {conditionStats && conditionStats.total > 0 && (
+              <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-data-neutral" />
+                    Spaced Repetition
+                  </h3>
+                  <div className="flex items-center gap-3 text-xs text-data-neutral">
+                    <span>{conditionStats.total} tracked</span>
+                    <span className="text-data-pass">{conditionStats.mastered} mastered</span>
+                    {conditionStats.struggling > 0 && (
+                      <span className="text-data-fail">{conditionStats.struggling} struggling</span>
+                    )}
+                  </div>
+                </div>
+
+                {dueConditions.length > 0 ? (
+                  <>
+                    <p className="text-sm text-data-neutral">
+                      {dueConditions.length} condition{dueConditions.length !== 1 ? 's' : ''} due for review:
+                    </p>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {dueConditions.slice(0, 6).map((cond) => {
+                        const daysOverdue = Math.max(0, Math.floor((Date.now() - new Date(cond.nextReviewDate).getTime()) / 86400000));
+                        return (
+                          <div
+                            key={cond.conditionId}
+                            className="flex items-center justify-between p-3 rounded-xl border border-data-neutral bg-data-neutral-bg"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-white truncate">{cond.conditionName}</p>
+                              <div className="flex items-center gap-2 text-xs text-data-neutral mt-0.5">
+                                {cond.system && <span className="capitalize">{cond.system}</span>}
+                                <span>Last: {cond.lastScore}%</span>
+                              </div>
+                            </div>
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ml-2 ${
+                              daysOverdue > 7 ? 'bg-data-fail/20 text-data-fail' : 'bg-data-provisional/20 text-data-provisional'
+                            }`}>
+                              {daysOverdue === 0 ? 'Today' : `${daysOverdue}d overdue`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {dueConditions.length > 6 && (
+                      <p className="text-xs text-data-neutral text-center">
+                        +{dueConditions.length - 6} more due
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-data-pass">All caught up — no conditions due for review right now.</p>
+                )}
+              </div>
+            )}
 
             {/* What You'll Practice */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -2505,10 +2573,70 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     placeholder="Enter your primary diagnosis..."
                     aria-label="Enter your primary diagnosis"
                     className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg mb-4
-                             text-data-neutral placeholder-data-neutral 
+                             text-data-neutral placeholder-data-neutral
                              focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
                     autoComplete="off"
                   />
+
+                  {/* Differential Diagnoses */}
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-data-neutral/80 mb-2 block">
+                      Differential Diagnoses <span className="text-data-neutral/50">(optional, up to 10)</span>
+                    </label>
+                    {differentialDiagnoses.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {differentialDiagnoses.map((dx, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm
+                                     bg-data-neutral/10 border border-data-neutral/30 text-data-neutral"
+                          >
+                            {dx}
+                            <button
+                              type="button"
+                              onClick={() => setDifferentialDiagnoses((prev) => prev.filter((_, i) => i !== idx))}
+                              className="ml-1 text-data-neutral/50 hover:text-data-fail transition-colors"
+                              aria-label={`Remove ${dx}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {differentialDiagnoses.length < 10 && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newDifferential}
+                          onChange={(e) => setNewDifferential(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newDifferential.trim()) {
+                              e.preventDefault();
+                              handleAddDifferential();
+                            }
+                          }}
+                          placeholder="Add a differential..."
+                          aria-label="Add a differential diagnosis"
+                          className="flex-1 px-3 py-2 bg-data-neutral-bg border border-data-neutral/40 rounded-lg text-sm
+                                   text-data-neutral placeholder-data-neutral/50
+                                   focus:outline-none focus:ring-1 focus:ring-data-neutral focus:border-transparent"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddDifferential}
+                          disabled={!newDifferential.trim()}
+                          className="px-3 py-2 bg-data-neutral/10 border border-data-neutral/30 rounded-lg text-sm
+                                   text-data-neutral hover:bg-data-neutral/20 disabled:opacity-40
+                                   disabled:cursor-not-allowed transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <button
                     onClick={handleSubmitDiagnosis}
                     disabled={!userDiagnosis.trim() || isLoading}
@@ -3307,6 +3435,27 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </motion.div>
             )}
 
+            {/* Enhanced Score Report (local engine + API data merged) */}
+            {enhancedScoreReport && (
+              <motion.div
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.55 }}
+              >
+                <ScoreReport
+                  report={{
+                    ...enhancedScoreReport,
+                    // Merge API grading data into local report when available
+                    ...(gradeResult?.communicationScore != null ? { communicationScore: gradeResult.communicationScore } : {}),
+                    ...(gradeResult?.differentialScore != null ? { differentialScore: gradeResult.differentialScore } : {}),
+                    ...(gradeResult?.dangerousActionsDetected ? { dangerousActionsDetected: gradeResult.dangerousActionsDetected } : {}),
+                    ...(gradeResult?.score != null ? { overallScore: gradeResult.score } : {}),
+                    ...(differentialDiagnoses.length > 0 ? { submittedDifferentials: differentialDiagnoses } : {}),
+                  }}
+                />
+              </motion.div>
+            )}
+
             {/* Differential Diagnoses to Consider */}
             {preceptorFeedback.differentialDiagnosis.length > 0 && (
               <motion.div
@@ -3402,6 +3551,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     date: new Date().toLocaleDateString(),
                     score: gradeResult?.score,
                     clinicalReasoningScore: gradeResult?.clinicalReasoningScore,
+                    communicationScore: gradeResult?.communicationScore,
+                    differentialScore: gradeResult?.differentialScore,
+                    dangerousActionsDetected: gradeResult?.dangerousActionsDetected,
                     checklist: gradeResult?.checklist,
                     redFlagsMissed: gradeResult?.redFlagsMissed,
                     strengths: preceptorFeedback?.strengths,

@@ -31,9 +31,20 @@ async function parseJsonResponse(response: Response): Promise<any | null> {
 /**
  * Fetch a random patient encounter case
  */
-export async function getRandomEncounterCase(token?: string | null): Promise<any | null> {
+export async function getRandomEncounterCase(
+  token?: string | null,
+  filters?: { targetSystems?: string[]; difficulty?: string }
+): Promise<any | null> {
   try {
-    const response = await fetch('/api/osce/cases/random', {
+    const params = new URLSearchParams();
+    if (filters?.targetSystems?.length) {
+      params.set('targetSystem', filters.targetSystems.join(','));
+    }
+    if (filters?.difficulty) {
+      params.set('difficulty', filters.difficulty);
+    }
+    const qs = params.toString();
+    const response = await fetch(`/api/osce/cases/random${qs ? `?${qs}` : ''}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 

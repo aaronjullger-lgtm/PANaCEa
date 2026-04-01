@@ -22,6 +22,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 import {
   ArrowLeft,
   ChevronDown,
@@ -165,10 +166,7 @@ export default function GenericReferenceView<T>({
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json: any = await res.json();
-        // Normalize response: endpoints return { data: { success, data: [] } } or { data: { success, labs: [] } }
-        const payload = json.data ?? json;
-        const items = Array.isArray(payload) ? payload : (payload.data ?? payload.labs ?? []);
-        if (!cancelled) setData(Array.isArray(items) ? items : []);
+        if (!cancelled) setData(normalizeApiItems(json));
       } catch (err: any) {
         if (!cancelled) setError(err.message || 'Failed to load data');
       } finally {

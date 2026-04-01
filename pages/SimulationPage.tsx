@@ -128,22 +128,25 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   const focusOptions: Array<{
     id: FocusOption;
     label: string;
+    subtitle: string;
     icon: React.ElementType;
     color: string;
     stat?: number;
   }> = [
-    { id: 'all', label: 'All Topics', icon: Brain, color: 'blue', stat: stats.totalQuestions },
+    { id: 'all', label: 'All Topics', subtitle: 'Strict NCCPA blueprint weighting', icon: Brain, color: 'blue', stat: stats.totalQuestions },
     {
       id: 'growth',
       label: 'Growth Areas',
+      subtitle: 'Target your weakest systems',
       icon: TrendingUp,
       color: 'amber',
       stat: stats.growthAreasCount,
     },
-    { id: 'flagged', label: 'Flagged', icon: Flag, color: 'purple', stat: stats.flaggedCount },
+    { id: 'flagged', label: 'Flagged', subtitle: 'Questions you marked for later', icon: Flag, color: 'purple', stat: stats.flaggedCount },
     {
       id: 'due',
       label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review',
+      subtitle: 'Spaced repetition reviews',
       icon: Clock,
       color: 'emerald',
     },
@@ -282,7 +285,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   type="button"
                   key={option.id}
                   onClick={() => setSelectedFocus(option.id)}
-                  className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center ${
+                  className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none ${
                     isSelected
                       ? `${tone.border} ${tone.bg}`
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'
@@ -299,7 +302,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                       <Icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-semibold text-[var(--color-text-primary)]">
                           {option.label}
                         </span>
@@ -315,6 +318,9 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                           </span>
                         )}
                       </div>
+                      <p className="text-xs text-[var(--color-text-muted)] leading-snug">
+                        {option.subtitle}
+                      </p>
                     </div>
                   </div>
                   {isSelected && (

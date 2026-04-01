@@ -66,6 +66,17 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.procedure.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, displayName: true, category: true,
+          type: true, system: true, description: true,
+          isHighYield: true, panceYield: true,
+          indications: true, complications: true,
+          technique: true, preparation: true, duration: true,
+          absoluteContraindications: true, relativeContraindications: true,
+          equipment: true, postProcedureCare: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, mnemonics: true, boardYieldFacts: true,
+        },
       });
 
       log.info('Procedures fetched', { count: results.length });

@@ -70,6 +70,18 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.physicalExamFinding.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, system: true, category: true,
+          findingType: true, description: true,
+          clinicalSignificance: true, isHighYield: true, panceYield: true,
+          eponymousName: true, howToElicit: true, howToDocument: true,
+          sensitivity: true, specificity: true,
+          positiveLR: true, negativeLR: true,
+          positiveIndicates: true, negativeIndicates: true,
+          differentialFor: true, equipmentNeeded: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, mnemonics: true, boardYieldFacts: true,
+        },
       });
 
       log.info('Successfully fetched findings', { count: results.length });

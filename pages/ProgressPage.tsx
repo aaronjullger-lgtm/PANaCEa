@@ -91,7 +91,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           </h3>
           <button
             onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all min-h-[36px] ${
               showAdvancedAnalytics
                 ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
@@ -132,7 +132,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           <button
             onClick={() => navigate('/clinical-profile')}
-            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
@@ -149,7 +149,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
           <button
             onClick={() => navigate('/gap-analysis')}
-            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
@@ -166,7 +166,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
           <button
             onClick={() => navigate('/clinical-profile')}
-            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group md:col-span-2"
+            className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] border-l-2 border-l-[var(--color-accent)] hover:border-[var(--color-accent)]/50 hover:border-l-[var(--color-accent)] hover:shadow-lg transition-all group md:col-span-2 focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">

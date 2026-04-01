@@ -69,6 +69,18 @@ export const onRequestGet = authenticatedEndpoint(
       const results = await prisma.eCGPattern.findMany({
         where: Object.keys(where).length > 0 ? where : undefined,
         orderBy: [{ isHighYield: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true, name: true, displayName: true, category: true,
+          subcategory: true, isHighYield: true, panceYield: true,
+          isEmergency: true, rate: true, rhythm: true,
+          pWave: true, prInterval: true, qrsComplex: true,
+          stSegment: true, tWave: true,
+          diagnosticCriteria: true, pathognomonic: true,
+          etiology: true, symptoms: true,
+          acuteManagement: true, medications: true, mimics: true,
+          clinicalPearls: true, testQuestionTips: true,
+          commonMistakes: true, mnemonics: true, boardYieldFacts: true,
+        },
       });
 
       log.info('ECG patterns fetch successful', { count: results.length });
