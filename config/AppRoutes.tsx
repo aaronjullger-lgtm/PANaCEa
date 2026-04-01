@@ -270,9 +270,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   }, [location.pathname]);
 
   return (
-    <>
-
-    <Routes>
+    <ErrorBoundary key={location.key} variant="global">
+      <Routes>
       <Route
         path="/practice"
         element={
@@ -1309,7 +1308,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           </>
         }
       />
-    </Routes>
-    </>
+      </Routes>
+    </ErrorBoundary>
   );
 };
