@@ -20,7 +20,7 @@ import {
 import DecayCurve from './charts/DecayCurve';
 import StabilityPyramid from './charts/StabilityPyramid';
 import AlgorithmStatusWidget from './AlgorithmStatusWidget';
-import { ClinicalSkeleton } from '../ui/ClinicalSkeleton';
+import { ClinicalSkeleton } from '@/components/loading';
 import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
 import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
