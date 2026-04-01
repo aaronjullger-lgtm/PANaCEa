@@ -25,6 +25,7 @@
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
+import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
 
 const QuizView = lazy(() => import('@/components/session/QuizView'));
 
@@ -39,12 +40,13 @@ interface CoreAdaptiveSessionProps {
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   performanceData: PerformanceRecord[];
   fontSizeAdjustment: number;
-  setFontSizeAdjustment: React.Dispatch<React.SetStateAction<number>>;
+  setFontSizeAdjustment: (n: number) => void;
   flaggedQuestions: QuizQuestion[];
   addFlaggedQuestion: (q: QuizQuestion) => void;
   removeFlaggedQuestion: (q: QuizQuestion) => void;
   updateQuestionNote: (q: QuizQuestion, note: string) => void;
 }
+
 interface BlueprintState {
   label: string;
   stage: string;
@@ -106,12 +108,14 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     suppressSystems: [],
     perSystemCaps: {},
   });
+
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rotationNotice, setRotationNotice] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // ── Initialize: resolve blueprint + check distribution + fetch questions ──
   useEffect(() => {
@@ -132,7 +136,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Blueprint resolution failed: ${bpResponse.status}`);
         }
 
-        const bp: any = await bpResponse.json();
+        const bp = await bpResponse.json();
         if (cancelled) return;
 
         setBlueprint({
@@ -186,7 +190,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           },
           body: JSON.stringify({
             mode: 'mainSession',
-            size: Math.round(20 * (bp.urgencyMultiplier ?? 1)),
+            size: Math.min(50, Math.max(10, Math.round(DEFAULT_SESSION_SIZE * (bp.urgencyMultiplier ?? 1)))),
             blueprintWeights: bp.weights,
             gatedSystems: bp.gatedSystems,
             boostSystems: distData?.constraints?.boostSystems,
@@ -195,6 +199,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             blueprintStage: bp.stage,
             blueprintExamTypes: bp.examTypes,
             blueprintLabel: bp.label,
+            urgencyMultiplier: bp.urgencyMultiplier,
           }),
         });
 
@@ -202,7 +207,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Session generation failed: ${sessionResponse.status}`);
         }
 
-        const session: any = await sessionResponse.json();
+        const session = await sessionResponse.json();
         if (cancelled) return;
 
         setSessionId(session.sessionId);
@@ -221,7 +226,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
     initialize();
     return () => { cancelled = true; };
-  }, [getToken]);
+  }, [getToken, retryCount]);
   // ── Session end: fetch summary, then exit ──
   const [sessionSummary, setSessionSummary] = useState<any>(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -289,6 +294,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     examTypes: blueprint.examTypes,
     stage: blueprint.stage,
   }), [blueprint]);
+
   // ── Render ──
   if (isLoading) {
     return (
@@ -309,12 +315,25 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             Session Error
           </h3>
           <p className="text-red-600 text-sm mb-4">{error}</p>
-          <button
-            onClick={onExit}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-          >
-            Back to Menu
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => {
+                setError(null);
+                setIsLoading(true);
+                // Re-trigger initialization by toggling a retry key
+                setRetryCount(c => c + 1);
+              }}
+              className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors text-sm font-medium"
+            >
+              Retry
+            </button>
+            <button
+              onClick={onExit}
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+            >
+              Back to Menu
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -430,6 +449,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {blueprint.daysToExam !== null && blueprint.daysToExam > 0 && (
             <span className="text-xs text-stone-400">
               {blueprint.daysToExam}d to exam
+            </span>
+          )}
+          {blueprint.daysToExam !== null && blueprint.daysToExam <= 0 && (
+            <span className="text-xs text-red-500 font-medium">
+              Exam day{blueprint.daysToExam < 0 ? ` was ${Math.abs(blueprint.daysToExam)}d ago` : '!'}
             </span>
           )}
           {urgencyBadge && (

@@ -29,6 +29,8 @@ export const ROUTES = {
   STUDY_PATH: '/study/path',
   DAILY_CHALLENGES: '/daily-challenges',
   MENU: '/menu',
+  /** Core Adaptive FSRS study session */
+  CORE_ADAPTIVE: '/core-adaptive',
 } as const;
 
 // Type for route values

@@ -39,6 +39,8 @@ const SRSSubmitSchema = z.object({
     /** For Ghost Grader: use behavior to infer true difficulty */
     attemptId: z.string().optional(),
     telemetry: z.record(z.string(), z.unknown()).optional(),
+    /** Exam urgency multiplier (0.5–2.0) from blueprint resolver */
+    urgencyMultiplier: z.number().min(0).max(3).optional(),
   }),
 });
 
@@ -62,6 +64,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       variantId,
       attemptId,
       telemetry,
+      urgencyMultiplier,
     } = validated.body;
 
     // Normalize deprecated ratings: Hard (2) → Again (1), Easy (4) → Good (3)
@@ -191,6 +194,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
         stability = Math.max(0.1, stability * (1 - implicitDifficulty));
       }
+      // Exam urgency: tighten intervals when exam is close
+      if (urgencyMultiplier && urgencyMultiplier > 1.0) {
+        const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
+        stability = Math.max(0.01, stability / urgencyDampener);
+      }
 
       await prisma.userTopicProgress.update({
         where: { id: topicProgress.id },
@@ -215,6 +223,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       let stability = reviewState.stability;
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
         stability = Math.max(0.1, stability * (1 - implicitDifficulty));
+      }
+      // Exam urgency: tighten intervals when exam is close
+      if (urgencyMultiplier && urgencyMultiplier > 1.0) {
+        const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
+        stability = Math.max(0.01, stability / urgencyDampener);
       }
 
       await prisma.userTopicProgress.create({

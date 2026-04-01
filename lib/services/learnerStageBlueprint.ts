@@ -30,7 +30,6 @@ export type ExamType =
   | 'EOR_PSYCH'
   | 'EOR_EM'
   | 'EOR_FM';
-
 /** Learner stages that determine blueprint resolution */
 export type LearnerStage =
   | 'didactic_early'    // Semester 1-2: foundational systems only
@@ -151,8 +150,7 @@ export async function resolveBlueprint(
     examDate?: Date | null;
     yearInProgram?: string | number | null;
   }
-): Promise<ResolvedBlueprint> {
-  // ── 1. PANRE (practicing PA) ──
+): Promise<ResolvedBlueprint> {  // ── 1. PANRE (practicing PA) ──
   if (user.lifecycleRole === 'PRACTICING_PA') {
     const weights = await loadBlueprintWeights(prisma, 'PANRE');
     const daysToExam = user.examDate ? daysUntil(user.examDate) : null;
@@ -176,13 +174,13 @@ export async function resolveBlueprint(
         loadBlueprintWeights(prisma, eorType),
         loadBlueprintWeights(prisma, 'PANCE'),
       ]);
+
       // Blend factor ramps as EOR approaches
       const daysToEor = user.eorTestDate
         ? daysUntil(user.eorTestDate)
         : user.rotationEndDate
           ? daysUntil(user.rotationEndDate)
           : null;
-
       let eorBlend: number;
       if (daysToEor !== null && daysToEor <= 7) {
         eorBlend = 0.85; // Last week: heaviest EOR emphasis
@@ -220,7 +218,6 @@ export async function resolveBlueprint(
       urgencyMultiplier: calculateUrgency(daysToExam),
     };
   }
-
   // ── 4. Didactic student → gated PANCE ──
   if (user.trainingPhase === 'DIDACTIC') {
     // yearInProgram might be a string from Prisma — coerce to number
@@ -230,6 +227,7 @@ export async function resolveBlueprint(
     const semester = yearRaw
       ? Math.min(yearRaw * 2, 4) // Convert year to semester (rough)
       : 2; // Default to semester 2
+
     const stage: LearnerStage = semester <= 2 ? 'didactic_early' : 'didactic_late';
     const allowedSystems = DIDACTIC_SEMESTER_SYSTEMS[semester] ?? ALL_SYSTEMS;
     const gatedSystems = ALL_SYSTEMS.filter(s => !allowedSystems.includes(s));
@@ -263,7 +261,6 @@ export async function resolveBlueprint(
     urgencyMultiplier: calculateUrgency(daysToExam),
   };
 }
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -289,6 +286,7 @@ function calculateUrgency(daysToExam: number | null): number {
   if (daysToExam <= 60) return 1.0;
   return 0.8;
 }
+
 /** Load blueprint weights from ExamBlueprintSystem, falling back to hardcoded PANCE */
 async function loadBlueprintWeights(
   prisma: PrismaClient,
@@ -311,7 +309,6 @@ async function loadBlueprintWeights(
   }
   return weights;
 }
-
 /** Blend two weight maps: result[s] = blend * a[s] + (1-blend) * b[s] */
 function blendWeights(
   primary: Record<string, number>,
@@ -332,7 +329,7 @@ function blendWeights(
   // Renormalize to sum = 1.0
   if (total > 0) {
     for (const sys of Object.keys(result)) {
-      result[sys] = (result[sys] ?? 0) / total;
+      result[sys] /= total;
     }
   }
 
@@ -357,23 +354,39 @@ function gateSystems(
   // Renormalize
   if (total > 0) {
     for (const sys of Object.keys(result)) {
-      result[sys] = (result[sys] ?? 0) / total;
+      result[sys] /= total;
     }
   }
 
   return result;
 }
-/** Resolve a rotation name string to its EOR exam type */
+/** Resolve a rotation name string to its EOR exam type (exact + fuzzy match) */
 function resolveEorType(rotation: string): ExamType | null {
-  const normalized = rotation.toLowerCase().trim();
-  return ROTATION_TO_EOR[normalized] ?? null;
+  const normalized = rotation.toLowerCase().trim().replace(/[^a-z\s/]/g, '');
+
+  // Exact match first
+  if (ROTATION_TO_EOR[normalized]) return ROTATION_TO_EOR[normalized];
+
+  // Fuzzy: check if any key is a substring of the input (or vice versa)
+  for (const [key, eorType] of Object.entries(ROTATION_TO_EOR)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return eorType;
+    }
+  }
+
+  return null;
 }
 
-/** Calculate days from now until a target date */
+/** Calculate days from now until a target date (never returns < 0 for urgency) */
 function daysUntil(date: Date): number {
   const now = new Date();
   const diff = date.getTime() - now.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+/** Safe days-until that floors at 0 (use for display/urgency, not transition logic) */
+export function daysUntilSafe(date: Date): number {
+  return Math.max(0, daysUntil(date));
 }
 
 /** Format rotation name for display */
@@ -383,7 +396,6 @@ function formatRotationName(rotation: string): string {
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
 }
-
 /**
  * Check if a clinical rotation has ended and should transition to PANCE prep.
  * Returns a transition notice if the rotation end date is in the past,
@@ -427,6 +439,7 @@ export default {
   resolveBlueprint,
   checkRotationTransition,
   calculateUrgency,
+  daysUntilSafe,
   DIDACTIC_SEMESTER_SYSTEMS,
   ROTATION_TO_EOR,
   ALL_SYSTEMS,

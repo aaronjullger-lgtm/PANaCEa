@@ -29,8 +29,7 @@ export interface ImplicitBehaviorMetrics {
   /** Total time on question screen before submission (ms) */
   totalDwellTime: number;
   /** Whether the answer was correct */
-  isCorrect: boolean;
-  /** Optional: par time for this question type (ms) */
+  isCorrect: boolean;  /** Optional: par time for this question type (ms) */
   parTimeMs?: number;
   /** Optional: question complexity score (1-5) */
   complexityScore?: number;
@@ -43,6 +42,7 @@ export interface ImplicitBehaviorMetrics {
   /** Optional: Hover oscillation count (A↔B revisits). Micro-kinetics. */
   hoverOscillationCount?: number;
 }
+
 /**
  * Session-level latency statistics for variance calculation
  */
@@ -62,8 +62,7 @@ export interface SessionLatencyStats {
  */
 export interface ImplicitReviewData {
   /** Derived FSRS rating (1-4) */
-  rating: Rating;
-  /** Continuous floating-point rating (1.0-4.0) derived from telemetry */
+  rating: Rating;  /** Continuous floating-point rating (1.0-4.0) derived from telemetry */
   continuousRating?: number;
   /** Raw metrics that led to this rating */
   metrics: ImplicitBehaviorMetrics;
@@ -96,8 +95,7 @@ export interface ImplicitRatingConfig {
   /** Minimum time to consider a response valid (ms) */
   minValidTime: number;
   /** Maximum time before considering as "forgotten" (ms) */
-  maxValidTime: number;
-  /** Answer switch penalty factor */
+  maxValidTime: number;  /** Answer switch penalty factor */
   switchPenalty: number;
   /** Latency thresholds for each rating (as ratio of par time) */
   ratingThresholds: {
@@ -129,14 +127,14 @@ export interface ImplicitRatingConfig {
     baseCorrect: number;
     baseIncorrect: number;
     perSwitchPenalty: number;
-    longGapThresholdMs: number;
-    longGapPenalty: number;
+    longGapThresholdMs: number;    longGapPenalty: number;
     highEntropyThreshold: number;
     highEntropyPenalty: number;
     min: number;
     max: number;
   };
 }
+
 /**
  * Default configuration based on cognitive research
  */
@@ -167,8 +165,7 @@ export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
     maxGapMs: 1500,       // Max commitment gap for full bonus
     maxRatio: 0.7,        // Max latency ratio for full bonus
     partialMaxRatio: 0.85, // Max latency ratio for partial bonus
-  },
-  confidenceParams: {
+  },  confidenceParams: {
     baseCorrect: 0.7,
     baseIncorrect: 0.95,
     perSwitchPenalty: 0.1,
@@ -201,9 +198,7 @@ export function updateLatencyStats(
     variance: newVariance,
     stdDev: n > 1 ? Math.sqrt(newVariance / (n - 1)) : 0,
   };
-}
-
-/**
+}/**
  * Initialize empty latency stats for a new session
  */
 export function initLatencyStats(): SessionLatencyStats {
@@ -229,144 +224,7 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
   const percentile = 1 / (1 + Math.exp(-0.7 * zScore));
   return Math.max(0, Math.min(1, percentile));
 }
-/**
- * @deprecated Use `deriveContinuousRating` instead. This function is no longer
- * called in production (drillReviewService uses deriveContinuousRating since the
- * continuous FSRS ratings migration). Kept for backward compatibility only.
- *
- * Derive FSRS rating from implicit behavioral metrics, returning both a discrete
- * rating (1-4) and a continuous floating‑point rating (1.0‑4.0) based on millisecond‑level
- * telemetry and answer‑switch logic.
- *
- * Core algorithm:
- * 1. If incorrect → Rating.Again (continuousRating = 1.0)
- * 2. Calculate effective latency with switch penalty
- * 3. Compute latency ratio relative to par time
- * 4. Apply penalties (switches, latency excess, commitment gap, entropy, oscillation)
- *    and bonus (fast response) to baseline grade 3.0
- * 5. Adjust based on session variance and trajectory if available
- * 6. Clamp to [1.0, 4.0] and map to discrete rating
- */
-export function deriveImplicitRating(
-  metrics: ImplicitBehaviorMetrics,
-  sessionStats?: SessionLatencyStats,
-  config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
-): ImplicitReviewData {
-  // Rule 1: Incorrect answers are always Again
-  if (!metrics.isCorrect) {
-    return {
-      rating: Rating.Again,
-      continuousRating: 1.0,
-      metrics,
-      confidence: 0.95, // High confidence for incorrect
-      latencyPercentile: sessionStats
-        ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats)
-        : 0.5,
-      flagged: false,
-    };
-  }
 
-  // Calculate effective latency with switch penalty
-  const switchPenalty = 1 + metrics.answerSwitches * config.switchPenalty;
-  const effectiveLatency = metrics.timeToFirstClick * switchPenalty;
-
-  // Get par time (use default if not provided)
-  const parTime = metrics.parTimeMs || 30000; // Default 30 seconds
-
-  // Calculate latency ratio
-  const latencyRatio = effectiveLatency / parTime;
-
-  // Check for invalid response times
-  let flagged = false;
-  let flagReason: string | undefined;
-
-  if (metrics.timeToFirstClick < config.minValidTime) {
-    flagged = true;
-    flagReason = 'Suspiciously fast response';
-  } else if (metrics.timeToFirstClick > config.maxValidTime) {
-    flagged = true;
-    flagReason = 'Response time exceeded maximum';
-  }
-
-  // Compute continuous rating (grade) using telemetry-based formula
-  // Base grade for correct answers is 3.0 (standard correct baseline)
-  let grade = 3.0;
-
-  // Penalties for answer switches
-  const penaltySwitch = metrics.answerSwitches * 0.15;
-  // Penalty for latency excess beyond "good" threshold (0.85)
-  const latencyExcess = Math.max(0, Math.min(2, latencyRatio - 0.85));
-  const penaltyLatency = latencyExcess * 0.3;
-  // Penalty for commitment gap (hesitation after selection)
-  const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
-  const penaltyCommitment = commitmentGapSec * 0.02;
-  // Penalty for cursor entropy (meandering)
-  const entropy = metrics.cursorEntropy ?? 0;
-  const penaltyEntropy = entropy > 1 ? (entropy - 1) * 0.2 : 0;
-  // Penalty for hover oscillation
-  const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * 0.1;
-
-  // Bonus for fast, clean response (< 50% par time)
-  const bonusFast = latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
-
-  grade = grade - penaltySwitch - penaltyLatency - penaltyCommitment - penaltyEntropy - penaltyOscillation + bonusFast;
-
-  // Apply variance-based adjustment if session stats available
-  if (sessionStats && sessionStats.count >= 5) {
-    const percentile = calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats);
-    // High percentile (slower than peers) → downgrade by up to 0.2
-    // Low percentile (faster than peers) → upgrade by up to 0.2
-    const adjustment = percentile > 0.85 ? -0.2 : percentile < 0.15 ? 0.2 : 0;
-    grade += adjustment;
-  }
-
-  // Apply trajectory-based adjustment if available (Phase 3A)
-  if (metrics.trajectory) {
-    const trajectoryAnalysis = interpretTrajectoryForRating(metrics.trajectory, metrics.isCorrect);
-    if (trajectoryAnalysis.suggestedAdjustment === 'upgrade') {
-      grade += 0.2;
-    } else if (trajectoryAnalysis.suggestedAdjustment === 'downgrade') {
-      grade -= 0.2;
-    }
-  }
-
-  // Clamp grade to valid FSRS range [1.0, 4.0]
-  grade = Math.max(1.0, Math.min(4.0, grade));
-
-  // Derive discrete rating from continuous grade
-  const discreteRating = gradeToRating(grade);
-
-  // Calculate confidence in derived rating
-  let confidence = 0.7; // Base confidence
-
-  // Higher confidence for clear-cut cases
-  if (latencyRatio < config.ratingThresholds.easy * 0.5) {
-    confidence = 0.9; // Very fast and correct
-  } else if (latencyRatio > config.ratingThresholds.hard * 1.5) {
-    confidence = 0.85; // Very slow
-  }
-
-  // Lower confidence if answer switches occurred
-  confidence -= metrics.answerSwitches * 0.1;
-  confidence = Math.max(0.5, confidence);
-
-  // Additional confidence adjustments based on micro‑kinetics
-  if ((metrics.commitmentGapMs ?? 0) > 3000) confidence -= 0.1;
-  if ((metrics.cursorEntropy ?? 0) > 1.5) confidence -= 0.1;
-  confidence = Math.max(0.5, Math.min(0.95, confidence));
-
-  return {
-    rating: discreteRating,
-    continuousRating: grade,
-    metrics,
-    confidence,
-    latencyPercentile: sessionStats
-      ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats)
-      : 0.5,
-    flagged,
-    flagReason,
-  };
-}
 /**
  * Derive continuous FSRS grade (1.0–4.0) from behavioral metrics.
  * Standard correct (no red flags) = 3.0. Deviations toward 4.0 or 1.0 driven by behavior.
@@ -377,8 +235,7 @@ export function deriveImplicitRating(
  * - bonus: fast response (< 0.5 par time)
  * - grade = clamp(base - penalties + bonus, 1.0, 4.0)
  */
-export function deriveContinuousRating(
-  metrics: ImplicitBehaviorMetrics,
+export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
   config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
 ): ContinuousRatingResult {
   const parTime = metrics.parTimeMs ?? 30000;
@@ -414,8 +271,7 @@ export function deriveContinuousRating(
     }
 
     // Clean-answer bonus: no switches + fast = strong retrieval signal
-    const cb = config.cleanBonus;
-    const bonusClean =
+    const cb = config.cleanBonus;    const bonusClean =
       metrics.answerSwitches === 0 &&
       (metrics.commitmentGapMs ?? 0) < cb.maxGapMs &&
       (metrics.hoverOscillationCount ?? 0) === 0 &&
@@ -452,9 +308,7 @@ export function deriveContinuousRating(
   const discreteRating = gradeToRating(grade);
 
   return { grade, confidence, discreteRating };
-}
-
-/** Map continuous grade to discrete FSRS Rating */
+}/** Map continuous grade to discrete FSRS Rating */
 function gradeToRating(grade: number): Rating {
   if (grade < 1.5) return Rating.Again;
   if (grade < 2.5) return Rating.Hard;
@@ -495,9 +349,7 @@ export function estimateParTime(params: {
   const vignetteTimeMs = hasVignette ? 15000 : 0;
 
   // Image adds 10 seconds
-  const imageTimeMs = hasImage ? 10000 : 0;
-
-  // Processing and decision time: 10 seconds base
+  const imageTimeMs = hasImage ? 10000 : 0;  // Processing and decision time: 10 seconds base
   const processingTimeMs = 10000;
 
   const totalParTime =
@@ -506,6 +358,7 @@ export function estimateParTime(params: {
   // Clamp to reasonable bounds
   return Math.max(15000, Math.min(120000, totalParTime));
 }
+
 /**
  * Analyze session-level metrics for quality indicators
  */
@@ -541,9 +394,7 @@ export function analyzeSessionMetrics(reviews: ImplicitReviewData[]): {
     [Rating.Good]: 0,
     [Rating.Easy]: 0,
   };
-  reviews.forEach((r) => ratingDistribution[r.rating]++);
-
-  // Consistency score: lower variance in latency percentiles = more consistent
+  reviews.forEach((r) => ratingDistribution[r.rating]++);  // Consistency score: lower variance in latency percentiles = more consistent
   const avgPercentile = reviews.reduce((sum, r) => sum + r.latencyPercentile, 0) / reviews.length;
   const percentileVariance =
     reviews.reduce((sum, r) => sum + Math.pow(r.latencyPercentile - avgPercentile, 2), 0) /
@@ -589,9 +440,7 @@ export function serializeImplicitMetrics(data: ImplicitReviewData): Record<strin
   }
 
   return base;
-}
-
-/**
+}/**
  * Stability modifier from continuous grade.
  * grade 3.0 → 1.0; grade < 3 → slightly lower S; grade > 3 → slightly higher S.
  */
@@ -601,7 +450,6 @@ export function applyStabilityModifierFromGrade(grade: number): number {
 }
 
 export default {
-  deriveImplicitRating,
   deriveContinuousRating,
   applyStabilityModifierFromGrade,
   updateLatencyStats,

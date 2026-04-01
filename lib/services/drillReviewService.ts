@@ -62,6 +62,7 @@ interface OptionPoolItem {
   conditionName?: string;
   id?: string;
 }
+
 export function findSelectedOption(
   pool: Array<OptionPoolItem> | string[] | undefined,
   selectedAnswer: string
@@ -123,6 +124,7 @@ export function resolveCorrectAnswer(qData: QuestionData): string | null {
 
   return correctAnswer;
 }
+
 /** Input validated by API route */
 export interface SubmitDrillReviewInput {
   questionId: string;
@@ -133,8 +135,8 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
-  sessionType?: 'main' | 'cram' | 'rapid_recall' | 'drill';
+  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'cram' | 'rapid_recall';
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -182,7 +184,10 @@ export interface SubmitDrillReviewResult {
 export interface DrillReviewLogger {
   info?(msg: string, data?: Record<string, unknown>): void;
   warn?(msg: string, data?: Record<string, unknown>): void;
+  debug?(msg: string, data?: Record<string, unknown>): void;
+  error?(msg: string, data?: Record<string, unknown>): void;
 }
+
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
@@ -202,7 +207,9 @@ export async function submitDrillReview(
   },
   logger?: DrillReviewLogger,
   /** When set (EOR mode), next-review date is clamped to this date. */
-  eorRotationEnd?: Date | null
+  eorRotationEnd?: Date | null,
+  /** Exam urgency multiplier (0.5–2.0). Higher → tighter intervals. */
+  urgencyMultiplier?: number | null
 ): Promise<SubmitDrillReviewResult> {
   const {
     questionId,
@@ -262,6 +269,7 @@ export async function submitDrillReview(
   const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
   const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
   const hoverOscillationCount = (telemetry?.hover_oscillations as number | undefined) ?? 0;
+
   // When timeToFirstClick is missing, substitute a neutral value (parTimeMs * 0.85)
   // rather than totalDwellTime. Total dwell includes rationale-reading time and
   // inflates the latency ratio by 2-5x, systematically downgrading ratings for
@@ -327,6 +335,7 @@ export async function submitDrillReview(
   // Hard and Easy ratings are deprecated; mapping remains for historical data.
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
+
   updateReviewOutcome(
     userId,
     questionId,
@@ -356,7 +365,7 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
-  const isMainSession = sessionType === 'main' || sessionType === 'drill' || sessionType === undefined;
+  const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
@@ -431,7 +440,8 @@ export async function submitDrillReview(
     }
     // Ensure attemptId variable used later matches the final attempt ID
     attemptId = finalAttemptId;
-    const weCreatedAttempt = !existingAttempt;    // Update peer validation statistics
+    const weCreatedAttempt = !existingAttempt;
+    // Update peer validation statistics
     try {
       await prisma.preGeneratedQuestion.update({
         where: { id: questionId },
@@ -478,9 +488,9 @@ export async function submitDrillReview(
     });
   }
 
-  // Only update FSRS (UserProgress.reviewHistory) for main/drill sessions; exclude cram/rapid_recall
+  // Only update FSRS (UserProgress.reviewHistory) for main study sessions; exclude cram/rapid_recall
   // Rapid guesses are logged to ReviewLog but do NOT update FSRS state (accidental taps must not pollute SRS scheduling)
-  const countForFSRS = isMainSession;
+  const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   const shouldLogReview = countForFSRS || isRapidGuess; // Log all main-session reviews, including rapid guesses
 
   // Capture FSRS schedule for the return value so the frontend can display real data
@@ -488,10 +498,7 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  // Map sessionType to ReviewLog enum
-  const logSessionType = (
-    sessionType ? sessionType.toUpperCase() : 'MAIN'
-  ) as 'MAIN' | 'DRILL' | 'CRAM' | 'RAPID_RECALL';
+  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
 
   // Helper function to create full telemetry object with server_computed key
   const buildReviewLogTelemetry = (
@@ -514,9 +521,10 @@ export async function submitDrillReview(
       }),
     },
   });
+
   // DEV-001 FIX: Split rapid-guess ReviewLog from FSRS block
   if (question.conditionId && shouldLogReview) {
-    console.log('[DEBUG] Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
+    logger?.debug?.('Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     
     // For rapid guesses: create ReviewLog only, skip FSRS calculation
     if (isRapidGuess) {
@@ -531,7 +539,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
-        console.log('[DEBUG] Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
+        logger?.debug?.('Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -563,7 +571,7 @@ export async function submitDrillReview(
           },
         });
       } catch (reviewLogError) {
-        console.error('[DEBUG] Rapid-guess ReviewLog creation failed:', reviewLogError);
+        logger?.error?.('Rapid-guess ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
         logger?.warn?.('Failed to write rapid-guess ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
@@ -596,6 +604,7 @@ export async function submitDrillReview(
               ? new Date(fsrsCardData.last_review)
               : new Date(),
         };
+
         const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
         let modifiedStability = rawCard.stability;
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
@@ -604,6 +613,14 @@ export async function submitDrillReview(
         const implicitDifficulty = 1 - implicitConfidence;
         if (implicitDifficulty >= 0.5) {
           modifiedStability *= 1 - implicitDifficulty * 0.5;
+        }
+        // Exam urgency: when an exam is close, tighten review intervals.
+        // urgencyMultiplier > 1.0 → stability shrinks → more frequent reviews.
+        // Formula: stability /= (1 + (urgency - 1) * 0.3)
+        //   urgency 1.0 → no change; urgency 2.0 → stability × 0.77 (23% shorter intervals)
+        if (urgencyMultiplier && urgencyMultiplier > 1.0) {
+          const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
+          modifiedStability /= urgencyDampener;
         }
         const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
 
@@ -619,7 +636,7 @@ export async function submitDrillReview(
         };
 
         // DEV-002 FIX: Store full telemetry with server_computed key
-        console.log('[DEBUG] Creating normal ReviewLog with full telemetry');
+        logger?.debug?.('Creating normal ReviewLog with full telemetry');
         try {
           const reviewDate = new Date();
           const hoverOscillations =
@@ -631,7 +648,7 @@ export async function submitDrillReview(
             timeToFirstClick ??
             undefined;
 
-          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
+          logger?.debug?.('About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
           await prisma.reviewLog.create({
             data: {
               userId,
@@ -665,7 +682,7 @@ export async function submitDrillReview(
             },
           });
         } catch (reviewLogError) {
-          console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
+          logger?.error?.('ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
           logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
             error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
           });
@@ -681,6 +698,48 @@ export async function submitDrillReview(
           nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
         });
 
+        // ── Card dual-write (non-blocking) ──
+        // Creates per-question FSRS Card alongside condition-level UserProgress.
+        // Enables future per-question scheduling without breaking current flow.
+        try {
+          await prisma.card.upsert({
+            where: {
+              userId_questionId: { userId, questionId },
+            },
+            create: {
+              id: `${userId}_${questionId}`,
+              userId,
+              questionId,
+              due: clampedNextDue,
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              elapsed_days: updatedCard.elapsed_days,
+              scheduled_days: updatedCard.scheduled_days,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              state: updatedCard.state,
+              last_review: new Date(),
+            },
+            update: {
+              due: clampedNextDue,
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              elapsed_days: updatedCard.elapsed_days,
+              scheduled_days: updatedCard.scheduled_days,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              state: updatedCard.state,
+              last_review: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+        } catch (cardError) {
+          // Non-blocking: Card dual-write failure should not break the main pipeline
+          logger?.warn?.('Card dual-write failed (non-fatal)', {
+            error: cardError instanceof Error ? cardError.message : String(cardError),
+          });
+        }
+
         try {
           const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
           if (siblingBoosts.length > 0) {
@@ -695,13 +754,14 @@ export async function submitDrillReview(
           });
         }
       } catch (progressError) {
-        console.error('[DEBUG] Failed to update UserProgress', progressError);
+        logger?.error?.('Failed to update UserProgress', { error: progressError instanceof Error ? progressError.message : String(progressError) });
         logger?.warn?.('Failed to update UserProgress', {
           error: progressError instanceof Error ? progressError.message : String(progressError),
         });
       }
     }
   }
+
   if (!isCorrect) {
     try {
       const correctWhere: Array<Record<string, unknown>> = [];
