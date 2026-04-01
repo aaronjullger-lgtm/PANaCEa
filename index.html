@@ -132,6 +132,12 @@
         function normalizeStylesheetMedia(node) {
           if (!node || node.tagName !== 'LINK') return;
           if (node.rel !== 'stylesheet') return;
+          if (!node.href) return;
+          // Scope this guard to the primary app stylesheet only so that
+          // other stylesheets can be managed by services/initialLoadOptimizer.ts
+          // without fighting over media="print".
+          var href = node.href;
+          if (!/\/index\.css(\?|$)/.test(href)) return;
           if (node.media === 'print') {
             node.media = 'all';
           }
