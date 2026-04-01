@@ -1956,6 +1956,7 @@ model PatientEncounterSession {
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([caseId])
   @@index([status])
   @@index([userId])
 }
@@ -2772,6 +2773,7 @@ model SessionAnalytics {
   User                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([computedAt])
+  @@index([sessionId])
   @@index([userId])
 }
 
@@ -3327,6 +3329,7 @@ model UserPearl {
   User          User          @relation(fields: [userId], references: [id])
 
   @@unique([userId, pearlId])
+  @@index([pearlId])
 }
 
 model UserPreferences {
