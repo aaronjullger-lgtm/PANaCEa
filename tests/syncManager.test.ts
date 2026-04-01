@@ -50,6 +50,20 @@ async function waitForAssertion(
   condition();
 }
 
+/**
+ * Drains the macrotask queue by yielding to the next event-loop tick.
+ *
+ * After queueReview/queueAnswer/queuePearlAction each trigger a fire-and-forget
+ * immediate sync, calling this helper lets those async operations run to
+ * completion (they fail with a TypeError because no fetch mock is configured yet)
+ * before the test sets up its own mock for syncAll(). Without the drain, the
+ * fire-and-forget sync would run *after* the mock is registered and would
+ * unexpectedly consume it.
+ */
+async function drainMicrotaskQueue(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 // Mock logger
 vi.mock('@/src/lib/logger', () => ({
   logger: {
@@ -219,6 +233,11 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
+      // Drain the macrotask queue: the immediate sync (from queueReview) runs and
+      // fails cleanly (no mock set up yet → fetch returns undefined → TypeError),
+      // ensuring the mock below is consumed by syncAll(), not the immediate sync.
+      await drainMicrotaskQueue();
+
       // Mock fetch to return success for batch
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -255,6 +274,9 @@ describe('SyncManager', () => {
         timeSpentMs: 1200,
       });
 
+      // Drain: let both immediate syncs (from queueReview) fail first
+      await drainMicrotaskQueue();
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -280,7 +302,12 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
-      // Mock fetch to return HTTP error
+      // Drain: the immediate sync (from queueReview) runs and fails with a
+      // TypeError (no mock yet — fetch returns undefined), incrementing syncAttempts to 1.
+      await drainMicrotaskQueue();
+
+      // Mock fetch to return HTTP error (parseSyncErrorMessage falls back to "HTTP 500"
+      // since the plain object has no .json() method; syncAttempts becomes 2 overall).
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -288,7 +315,8 @@ describe('SyncManager', () => {
 
       const result = await syncManager.syncAll();
       expect(result.reviews).toBe(0); // none synced
-      // Verify syncAttempts increased
+      // Verify syncAttempts increased twice: once by the immediate-sync failure (TypeError)
+      // and once by syncAll's failure (HTTP 500).
       const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
       expect(stored[0].syncAttempts).toBe(2);
       expect(stored[0].synced).toBe(false);
@@ -349,6 +377,9 @@ describe('SyncManager', () => {
         timeSpentMs: 1000,
       });
 
+      // Drain: let the immediate sync (from queueReview) fail first
+      await drainMicrotaskQueue();
+
       // Mock fetch to throw network error
       mockFetch.mockRejectedValueOnce(new Error('Network failure'));
 
@@ -377,6 +408,9 @@ describe('SyncManager', () => {
         pearlId: 'pearl1',
         action: 'mark_mastered',
       });
+
+      // Drain: let the immediate syncs (from queueAnswer/queuePearlAction) fail first
+      await drainMicrotaskQueue();
 
       // Mock fetch for answers endpoint
       mockFetch.mockImplementation((url) => {
