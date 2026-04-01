@@ -7,8 +7,6 @@ import { runStorageKeyMigration } from './lib/storage/storageRegistry';
 import { type View, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { useAppNavigation } from './hooks/useAppNavigation';
-import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
-import { ContrastRatioAudit } from './components/shared/ContrastRatioAudit';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -1131,8 +1129,6 @@ const App: React.FC = () => {
         {/* Accessibility Audit Components (Development Tools) */}
         {devAuditEnabled && (
           <>
-            <KeyboardAccessibilityAudit defaultOpen={false} />
-            <ContrastRatioAudit defaultOpen={false} />
             <PerformanceMonitor defaultOpen={false} />
           </>
         )}

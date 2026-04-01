@@ -25,6 +25,7 @@ interface LeaderboardEntry {
 }
 
 export default function StudyGroupDashboard() {
+  const socialGroupsEnabled = import.meta.env.VITE_SOCIAL_GROUPS_ENABLED === 'true';
   const { getToken } = useAuth();
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'groups' | 'leaderboard'>('groups');
@@ -62,6 +63,14 @@ export default function StudyGroupDashboard() {
   }, [activeTab]);
 
   const fetchGroups = async () => {
+    if (!socialGroupsEnabled) {
+      setGroups([]);
+      setGroupsError(
+        'Study groups are currently unavailable while backend endpoints are being finalized.'
+      );
+      setIsLoadingGroups(false);
+      return;
+    }
     setIsLoadingGroups(true);
     setGroupsError(null);
     try {
@@ -111,6 +120,10 @@ export default function StudyGroupDashboard() {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!socialGroupsEnabled) {
+      setFormError('Creating groups is temporarily unavailable.');
+      return;
+    }
     setIsSubmitting(true);
     setFormError(null);
     try {
@@ -142,6 +155,10 @@ export default function StudyGroupDashboard() {
 
   const handleJoinGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!socialGroupsEnabled) {
+      setFormError('Joining groups is temporarily unavailable.');
+      return;
+    }
     setIsSubmitting(true);
     setFormError(null);
     try {

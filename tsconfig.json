@@ -56,7 +56,6 @@
     "routes/**/*",
     "scripts/deprecated/**/*",
     "scripts/find-optimal-contrast.ts",
-    "components/shared/MobileScreenSizeTester.tsx",
     "**/*.old.*",
     "**/*-Example.*"
   ]
