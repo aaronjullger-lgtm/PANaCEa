@@ -65,9 +65,7 @@ export default function StudyGroupDashboard() {
   const fetchGroups = async () => {
     if (!socialGroupsEnabled) {
       setGroups([]);
-      setGroupsError(
-        'Study groups are currently unavailable while backend endpoints are being finalized.'
-      );
+      setGroupsError('Study groups are temporarily unavailable.');
       setIsLoadingGroups(false);
       return;
     }
