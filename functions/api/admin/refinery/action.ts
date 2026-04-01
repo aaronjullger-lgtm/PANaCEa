@@ -90,7 +90,7 @@ async function copyRawToPublic(
     .copy(rawPath, rawPath, { destinationBucket: PUBLIC_ASSETS_BUCKET });
   if (error) {
     console.error('Refinery media copy failed:', error);
-    return { error: { status: 502, error: `Storage copy failed: ${error.message}` } };
+    return { error: { status: 502, error: 'Storage copy failed. Please try again.' } };
   }
   return {};
 }

@@ -452,7 +452,7 @@ export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (contex
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });
 
 // Helper functions preserved from original file
 async function getFromPreGeneratedPool(

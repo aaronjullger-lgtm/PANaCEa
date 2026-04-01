@@ -138,7 +138,7 @@ export default function ReferenceHub() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [token, setToken] = useState<string | null>(null);
 
-  useEffect(() => { getToken().then(setToken); }, [getToken]);
+  useEffect(() => { getToken().then(setToken).catch(() => setToken(null)); }, [getToken]);
 
   const entityCounts = useEntityCounts(allReferenceConfigs, token);
 

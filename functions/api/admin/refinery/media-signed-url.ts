@@ -46,7 +46,7 @@ export const onRequestGet = refineryEndpoint(
       .createSignedUrl(path, SIGNED_URL_EXPIRES_SEC);
 
     if (error) {
-      return { status: 404, error: error.message };
+      return { status: 404, error: 'Failed to generate signed URL.' };
     }
     return { data: { url: data?.signedUrl ?? null } };
   },

@@ -177,6 +177,8 @@ export function LiveInterface({
             if (call.name === 'get_current_vitals') {
               fetchVitals().then((v) => {
                 sendToolResponse(call.id, call.name, v);
+              }).catch(() => {
+                sendToolResponse(call.id, call.name, { error: 'Failed to fetch vitals' });
               });
             } else if (call.name === 'reveal_lab_result') {
               const testName = (call.args?.test_name as string) ?? 'Unknown';
