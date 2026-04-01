@@ -21,6 +21,6 @@ export async function fetchDailyTriad(signal?: AbortSignal): Promise<DailyTriad>
     throw new Error(body || 'Failed to load Daily Triad');
   }
 
-  const payload = await response.json();
+  const payload = await response.json() as { data: DailyTriad };
   return payload.data as DailyTriad;
 }

@@ -21,6 +21,7 @@ import { StartSessionButton, SemanticButton } from '../../ui/SemanticButton';
 import { ExplainabilityTooltip } from '../../ui/ExplainabilityTooltip';
 import { loadUserProfile } from '../../../services/analytics';
 import { isEorRotation } from '../../../config/rotation-systems';
+import type { ClinicalRotation } from '@/types';
 
 /** Calibration threshold - users below this see the Calibration Protocol UI */
 const CALIBRATION_THRESHOLD = 60;
@@ -496,7 +497,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   const isEorMode =
     profile?.yearInProgram === 'Clinical Year' &&
     profile?.currentRotation &&
-    isEorRotation(profile.currentRotation) &&
+    isEorRotation(profile.currentRotation as ClinicalRotation) &&
     !!profile?.eorTestDate;
   const examLabel = isEorMode ? 'EOR' : 'PANCE';
 

@@ -11,8 +11,8 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'warning' | 'accent';
-type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'warning' | 'accent' | 'success';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -31,6 +31,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: 'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
   warning: 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
   accent: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
+  success: 'bg-[var(--color-data-pass)] text-white hover:opacity-90 active:opacity-80',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -38,6 +39,7 @@ const sizeClasses: Record<ButtonSize, string> = {
   sm: 'px-3 py-1.5 text-sm',
   md: 'px-4 py-2 text-base min-h-[44px]',
   lg: 'px-6 py-3 text-lg min-h-[44px]',
+  xl: 'px-8 py-4 text-xl min-h-[52px]',
 };
 
 export function Button({
@@ -101,6 +103,60 @@ export const SecondaryButton = (props: Omit<ButtonProps, 'variant'>) => <Button 
 export const DangerButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="danger" {...props} />;
 export const OutlineButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="outline" {...props} />;
 export const WarningButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="warning" {...props} />;
-export const SuccessButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="primary" {...props} />;
+export const SuccessButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="success" {...props} />;
 
-export type { ButtonVariant, ButtonSize, ButtonProps };
+// Extended prop interface for SemanticButton / StartSessionButton used in Rolling360 dashboard.
+// Supports alternative prop names (isLoading, leftIcon, rightIcon, buttonId, fullWidth)
+// that match the design-system API expected by those components.
+interface SemanticButtonProps extends Omit<ButtonProps, 'loading' | 'icon' | 'iconRight'> {
+  isLoading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  /** Rendered as the HTML id attribute on the underlying button element. */
+  buttonId?: string;
+  /** When true, adds w-full to make the button span its container. */
+  fullWidth?: boolean;
+}
+
+/**
+ * SemanticButton — extended button with alternative prop names used across the
+ * Rolling360 dashboard. Supports `isLoading`, `leftIcon`, `rightIcon`,
+ * `buttonId`, `fullWidth`, and all standard ButtonProps.
+ */
+export const SemanticButton = ({
+  isLoading,
+  leftIcon,
+  rightIcon,
+  buttonId,
+  fullWidth,
+  className = '',
+  ...rest
+}: SemanticButtonProps) => (
+  <Button
+    id={buttonId}
+    loading={isLoading}
+    icon={leftIcon}
+    iconRight={rightIcon}
+    className={`${fullWidth ? 'w-full' : ''} ${className}`.trim()}
+    {...rest}
+  />
+);
+
+/** Factory that creates a SemanticButton pre-bound to a specific variant. */
+const makeVariantButton =
+  (fixedVariant: ButtonVariant) =>
+  ({ variant: _variant, ...rest }: SemanticButtonProps) =>
+    <SemanticButton variant={fixedVariant} {...rest} />;
+
+/**
+ * StartSessionButton — primary CTA for "Start / Continue Session" in Rolling360 dashboard.
+ */
+export const StartSessionButton = makeVariantButton('primary');
+
+/** ActionButton — secondary-style button. */
+export const ActionButton = makeVariantButton('secondary');
+
+/** GhostButton — ghost-style button. */
+export const GhostButton = makeVariantButton('ghost');
+
+export type { ButtonVariant, ButtonSize, ButtonProps, SemanticButtonProps };

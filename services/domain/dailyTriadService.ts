@@ -60,7 +60,7 @@ export async function fetchDailyTriad(): Promise<DailyTriad> {
     throw new Error(`Failed to fetch daily triad: ${response.statusText}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as DailyTriad;
   return data;
 }
 
@@ -81,7 +81,7 @@ export async function fetchPersonalizedTriad(token: string): Promise<DailyTriad>
     throw new Error(`Failed to fetch personalized triad: ${response.statusText}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as DailyTriad;
   return data;
 }
 
