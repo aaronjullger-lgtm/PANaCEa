@@ -36,6 +36,7 @@ import recommendationsRouter from './recommendations';
 
 import adaptiveRouter from './adaptive';
 import drillsRouter from './drills';
+import auditRouter from './audit';
 
 /**
  * Register all API routes with the Express application.
@@ -74,11 +75,15 @@ export function registerRoutes(app: Express): void {
   app.use('/api/adaptive', adaptiveRouter);
   app.use('/api/recommendations', recommendationsRouter);
 
+  // Admin audit routes
+  app.use('/api/audit', auditRouter);
+
   console.log('✓ Route modules registered:');
   console.log('  - /api/conditions, /api/content, /api/reference');
   console.log('  - /api/labs, /api/drills, /api/drugs, /api/buzzwords');
   console.log('  - /api/analytics, /api/sync');
   console.log('  - /api/questions, /api/osce');
   console.log('  - /api/performance, /api/achievements');
+  console.log('  - /api/audit (admin)');
   console.log('  [DORMANT]: /api/games, /api/pearls, /api/adaptive, /api/recommendations');
 }
