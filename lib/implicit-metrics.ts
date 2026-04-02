@@ -41,6 +41,10 @@ export interface ImplicitBehaviorMetrics {
   cursorEntropy?: number;
   /** Optional: Hover oscillation count (A↔B revisits). Micro-kinetics. */
   hoverOscillationCount?: number;
+  /** Optional: Whether user viewed a hint before answering. Aided recall = weaker retention signal. */
+  hintViewed?: boolean;
+  /** Optional: Time spent viewing hint (ms). Longer viewing = weaker retrieval. */
+  hintViewDurationMs?: number | null;
 }
 
 /**
@@ -111,6 +115,9 @@ export interface ImplicitRatingConfig {
     commitmentGapPerSec: number; // Per second of commitment gap
     entropyAboveOne: number;     // Per unit of entropy above 1.0
     perOscillation: number;      // Per hover oscillation
+    hintViewed: number;          // Flat penalty for viewing hint before answering
+    hintViewDurationPerSec: number; // Additional penalty per second of hint viewing (capped)
+    hintViewDurationCap: number; // Maximum additional hint duration penalty
   };
   /** Speed bonus thresholds (latency ratio → bonus) for deriveContinuousRating */
   speedBonusTiers: Array<{ maxRatio: number; bonus: number }>;
@@ -153,6 +160,9 @@ export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
     commitmentGapPerSec: 0.02,    // Each second of hesitation before submit
     entropyAboveOne: 0.2,         // Cursor wandering penalty per unit
     perOscillation: 0.1,          // Each A↔B hover revisit
+    hintViewed: 0.4,              // Flat penalty: aided recall ≠ free recall (Roediger & Karpicke, 2006)
+    hintViewDurationPerSec: 0.03, // Per second of hint viewing (longer = weaker retrieval signal)
+    hintViewDurationCap: 0.3,     // Maximum additional hint duration penalty
   },
   speedBonusTiers: [
     { maxRatio: 0.35, bonus: 0.5 },  // Instant recall
@@ -238,9 +248,20 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
 export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
   config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
 ): ContinuousRatingResult {
-  const parTime = metrics.parTimeMs ?? 30000;
+  // ── NaN/Infinity guard ──
+  // If telemetry values are NaN or negative, NaN propagates through all penalty/bonus
+  // calculations and survives Math.max/Math.min clamping, corrupting FSRS card state.
+  const parTime = Number.isFinite(metrics.parTimeMs) && (metrics.parTimeMs as number) > 0
+    ? (metrics.parTimeMs as number)
+    : 30000;
+  const safeTimeToFirstClick = Number.isFinite(metrics.timeToFirstClick) && metrics.timeToFirstClick > 0
+    ? metrics.timeToFirstClick
+    : parTime; // Default to par time (produces latencyRatio ≈ 1.0 → neutral grade)
+  const safeSwitches = Number.isFinite(metrics.answerSwitches) && metrics.answerSwitches >= 0
+    ? Math.floor(metrics.answerSwitches)
+    : 0;
   const effectiveLatency =
-    metrics.timeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
+    safeTimeToFirstClick * (1 + safeSwitches * config.switchPenalty);
   const latencyRatio = effectiveLatency / parTime;
 
   const base = metrics.isCorrect ? 3.0 : 1.0;
@@ -250,14 +271,28 @@ export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
     const p = config.penalties;
 
     // Red-flag penalties (from config)
-    const penaltySwitch = metrics.answerSwitches * p.perSwitch;
-    const latencyExcess = Math.max(0, Math.min(2, latencyRatio - config.ratingThresholds.good));
-    const penaltyLatency = latencyExcess * p.latencyExcessMultiplier;
+    const penaltySwitch = safeSwitches * p.perSwitch;
+    // Logarithmic latency penalty: flattens beyond 1.5× par time.
+    // Clinical vignettes with complex stems routinely take 2-3× par for careful
+    // readers. Linear penalty over-punished thorough clinical reasoning.
+    // ln(1 + excess) gives: 1.5× par → 0.13, 2× → 0.21, 3× → 0.29 (vs old 0.20/0.35/0.65)
+    const latencyExcess = Math.max(0, latencyRatio - config.ratingThresholds.good);
+    const penaltyLatency = p.latencyExcessMultiplier * Math.log(1 + latencyExcess);
     const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
     const penaltyCommitment = commitmentGapSec * p.commitmentGapPerSec;
     const entropy = metrics.cursorEntropy ?? 0;
     const penaltyEntropy = entropy > 1 ? (entropy - 1) * p.entropyAboveOne : 0;
     const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * p.perOscillation;
+
+    // Hint-viewed penalty: aided recall produces weaker long-term retention
+    // than unaided recall (testing effect; Roediger & Karpicke, 2006).
+    // Flat penalty + time-proportional component (capped).
+    const penaltyHint = metrics.hintViewed
+      ? p.hintViewed + Math.min(
+          ((metrics.hintViewDurationMs ?? 0) / 1000) * p.hintViewDurationPerSec,
+          p.hintViewDurationCap
+        )
+      : 0;
 
     // Tiered speed bonus (from config tiers)
     // Research: retrieval fluency is the strongest predictor of long-term retention
@@ -272,12 +307,12 @@ export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
 
     // Clean-answer bonus: no switches + fast = strong retrieval signal
     const cb = config.cleanBonus;    const bonusClean =
-      metrics.answerSwitches === 0 &&
+      safeSwitches === 0 &&
       (metrics.commitmentGapMs ?? 0) < cb.maxGapMs &&
       (metrics.hoverOscillationCount ?? 0) === 0 &&
       latencyRatio < cb.maxRatio
         ? cb.full
-        : metrics.answerSwitches === 0 && latencyRatio < cb.partialMaxRatio
+        : safeSwitches === 0 && latencyRatio < cb.partialMaxRatio
           ? cb.partial
           : 0;
 
@@ -289,17 +324,21 @@ export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
       penaltyLatency -
       penaltyCommitment -
       penaltyEntropy -
-      penaltyOscillation +
+      penaltyOscillation -
+      penaltyHint +
       bonusFast;
   }
 
+  // Final NaN guard: if any telemetry produced NaN, fall back to neutral grade.
+  // Math.max/Math.min do NOT catch NaN (NaN comparisons always return false).
+  if (!Number.isFinite(grade)) grade = metrics.isCorrect ? 3.0 : 1.0;
   grade = Math.max(1.0, Math.min(4.0, grade));
 
   // Confidence: high commitment gap / entropy → lower confidence
   const cp = config.confidenceParams;
   let confidence = metrics.isCorrect ? cp.baseCorrect : cp.baseIncorrect;
   if (metrics.isCorrect) {
-    confidence -= metrics.answerSwitches * cp.perSwitchPenalty;
+    confidence -= safeSwitches * cp.perSwitchPenalty;
     if ((metrics.commitmentGapMs ?? 0) > cp.longGapThresholdMs) confidence -= cp.longGapPenalty;
     if ((metrics.cursorEntropy ?? 0) > cp.highEntropyThreshold) confidence -= cp.highEntropyPenalty;
     confidence = Math.max(cp.min, Math.min(cp.max, confidence));
@@ -449,6 +488,40 @@ export function applyStabilityModifierFromGrade(grade: number): number {
   return Math.max(0.85, Math.min(1.15, 1 + delta * 0.05));
 }
 
+/**
+ * Telemetry quality classification for ReviewLog tagging.
+ * Enables the optimizer sidecar to filter or weight reviews by data fidelity.
+ *
+ * - 'full': All key behavioral signals present (first click, switches, CRPL micro-kinetics)
+ * - 'partial': Some behavioral signals (first click or switches, but not CRPL)
+ * - 'minimal': Only correctness and duration available
+ */
+export type TelemetryQuality = 'full' | 'partial' | 'minimal';
+
+/**
+ * Assess telemetry data quality based on which behavioral fields are present.
+ * Used to tag ReviewLog entries so the optimizer can weigh high-fidelity data
+ * more heavily during parameter fitting.
+ *
+ * @param raw - The raw telemetry object from the client (may be undefined)
+ * @returns Quality classification: 'full', 'partial', or 'minimal'
+ */
+export function assessTelemetryQuality(
+  raw?: Record<string, unknown> | null
+): TelemetryQuality {
+  if (!raw) return 'minimal';
+
+  const hasFirstClick = raw.time_to_first_interaction_ms != null;
+  const hasSwitches = raw.answer_changes != null;
+  const hasCRPL = raw.hover_oscillations != null
+    || raw.selection_drift_ms != null
+    || raw.tremor_score != null;
+
+  if (hasFirstClick && hasSwitches && hasCRPL) return 'full';
+  if (hasFirstClick || hasSwitches) return 'partial';
+  return 'minimal';
+}
+
 export default {
   deriveContinuousRating,
   applyStabilityModifierFromGrade,
@@ -459,5 +532,6 @@ export default {
   analyzeSessionMetrics,
   legacyQualityToRating,
   serializeImplicitMetrics,
+  assessTelemetryQuality,
   DEFAULT_IMPLICIT_CONFIG,
 };

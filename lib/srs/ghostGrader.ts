@@ -38,8 +38,13 @@ const OSCILLATION_THRESHOLD = 2;
 const TREMOR_THRESHOLD = 0.6;
 
 /**
- * Apply honest-history override: cap rating at Hard when correct but behavioral
- * signals indicate indecision, low confidence, or high cognitive load.
+ * Apply honest-history override: downgrade rating to Again when correct but
+ * behavioral signals indicate indecision, low confidence, or high cognitive load.
+ *
+ * Binary rating system: Again(1) / Good(3). Hard(2) and Easy(4) are deprecated.
+ * When the Ghost Grader detects indecision on a correct answer, it downgrades
+ * to Again — "you got it right but you didn't really know it" — which triggers
+ * a shorter FSRS interval (relearning) rather than the ambiguous Hard scheduling.
  *
  * @param input - Current rating, correctness, and micro-kinetic metrics
  * @returns Adjusted rating (1-4) for FSRS scheduling
@@ -55,16 +60,21 @@ export function applyHonestRating(input: GhostGraderInput): Rating {
   } = input;
 
   if (!isCorrect) return userRating;
-  if (userRating <= Rating.Hard) return userRating;
+  // Already Again — can't downgrade further
+  if (userRating <= Rating.Again) return userRating;
+
+  // Count indecision signals that fired
+  let signalCount = 0;
 
   const effectiveOscillations = oscillations + Math.min(vignetteRegressions, 2);
-  if (effectiveOscillations > OSCILLATION_THRESHOLD) return Rating.Hard;
+  if (effectiveOscillations > OSCILLATION_THRESHOLD) signalCount++;
 
-  if (selectionDriftMs != null && selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS) {
-    return Rating.Hard;
-  }
+  if (selectionDriftMs != null && selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS) signalCount++;
 
-  if (tremorScore >= TREMOR_THRESHOLD) return Rating.Hard;
+  if (tremorScore >= TREMOR_THRESHOLD) signalCount++;
+
+  // Any indecision signal → Again. Binary system: no middle ground.
+  if (signalCount > 0) return Rating.Again;
 
   return userRating;
 }

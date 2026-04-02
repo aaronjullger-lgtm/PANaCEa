@@ -54,6 +54,7 @@ vi.mock('../lib/circadian', () => ({
     };
   }),
   applyCircadianModifier: vi.fn(function(stability) { return stability; }),
+  applyCircadianParTimeModifier: vi.fn(function(parTimeMs) { return parTimeMs; }),
 }));
 
 vi.mock('../lib/implicit-metrics', () => ({
@@ -65,6 +66,7 @@ vi.mock('../lib/implicit-metrics', () => ({
     };
   }),
   applyStabilityModifierFromGrade: vi.fn(function() { return 1.0; }),
+  assessTelemetryQuality: vi.fn(function() { return 'full'; }),
 }));
 
 vi.mock('../lib/srs/ghostGrader', () => ({
@@ -86,6 +88,20 @@ vi.mock('../lib/services/userStatisticsService', () => ({
 
 vi.mock('../lib/services/srsService', () => ({
   updateReviewOutcome: vi.fn(),
+}));
+
+vi.mock('../lib/taskTypes', () => ({
+  getTaskTypeFromContent: vi.fn(function() { return 'diagnosis'; }),
+}));
+
+vi.mock('../lib/services/rolling360Service', () => ({
+  getRolling360Service: vi.fn(function() {
+    return { updateRolling360OnSubmit: vi.fn() };
+  }),
+}));
+
+vi.mock('../lib/fsrs/eorScheduler', () => ({
+  applyEorClampIfNeeded: vi.fn(function(due) { return { due, clamped: false }; }),
 }));
 
 describe('submitDrillReview', () => {
@@ -491,7 +507,7 @@ describe('submitDrillReview', () => {
       );
     });
 
-    it('should cap rating at Hard when answer switches > 2', async () => {
+    it('should cap rating at Again when answer switches > 2 (binary system)', async () => {
       const input: SubmitDrillReviewInput = {
         questionId,
         selectedAnswer: 'Correct Answer',
@@ -512,8 +528,9 @@ describe('submitDrillReview', () => {
 
       await submitDrillReview(prisma, userId, input, question);
 
+      // Binary system: Easy(4)→Good(3) normalize, switches>2→Again(1)
       expect(applyHonestRating).toHaveBeenCalledWith(
-        expect.objectContaining({ userRating: Rating.Hard })
+        expect.objectContaining({ userRating: Rating.Again })
       );
     });
 
@@ -571,13 +588,14 @@ describe('submitDrillReview', () => {
 
       await submitDrillReview(prisma, userId, input, question);
 
+      // With timeSpentMs=1000 (< MVRT 2000ms), this hits the rapid-guess path.
+      // Rapid guesses read live card state (Improvement 3) and set grade to Again.
       expect(prisma.reviewLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
+            grade: Rating.Again,
             grade_continuous: 1.0,
-            implicit_confidence: 0.5,
             stability: 0.01,
-            retrievability: 0.001,
           }),
         })
       );

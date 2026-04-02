@@ -14,56 +14,14 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { getRolling360Service } from '../../../lib/services/rolling360Service';
-import { FSRS, topicProgressToCard } from '../../../lib/fsrs';
-import { deriveContinuousRating } from '../../../lib/implicit-metrics';
-import { applyHonestRating } from '../../../lib/srs/ghostGrader';
-import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
-import { getTaskTypeFromContent } from '../../../lib/taskTypes';
+// FSRS imports removed — scheduling is handled exclusively by drillReviewService (Improvement 5)
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
-const DEFAULT_PAR_TIME_MS = 30000;
+// DEFAULT_PAR_TIME_MS removed — was only used by the FSRS block now in drillReviewService
 
-function normalizeDeprecatedRating(rawRating: number | undefined): number | undefined {
-  if (rawRating == null) return undefined;
-  if (rawRating === 2) return 1;
-  if (rawRating === 4) return 3;
-  return rawRating;
-}
+// normalizeDeprecatedRating removed — FSRS scheduling moved to drillReviewService (Improvement 5)
 
-function normalizeTelemetryMetrics(params: {
-  telemetryJson?: Record<string, unknown>;
-  timeSpentMillis: number | null;
-  durationMs?: number;
-  answerChangedCount?: number;
-}) {
-  const { telemetryJson, timeSpentMillis, durationMs, answerChangedCount } = params;
-  const telemetry = telemetryJson ?? {};
-  const fallbackFirstInteraction = Math.min(
-    timeSpentMillis ?? durationMs ?? DEFAULT_PAR_TIME_MS,
-    Math.round(DEFAULT_PAR_TIME_MS * 0.85)
-  );
-  const timeToFirstInteraction =
-    typeof telemetry.time_to_first_interaction_ms === 'number'
-      ? telemetry.time_to_first_interaction_ms
-      : fallbackFirstInteraction;
-  const answerChanges =
-    typeof telemetry.answer_change_count === 'number'
-      ? telemetry.answer_change_count
-      : typeof telemetry.answer_changes === 'number'
-        ? telemetry.answer_changes
-        : answerChangedCount ?? 0;
-  return {
-    timeToFirstInteraction,
-    answerChanges,
-    selectionDriftMs:
-      typeof telemetry.selection_drift_ms === 'number' ? telemetry.selection_drift_ms : null,
-    tremorScore: typeof telemetry.tremor_score === 'number' ? telemetry.tremor_score : 0,
-    oscillations: typeof telemetry.hover_oscillations === 'number' ? telemetry.hover_oscillations : 0,
-    vignetteRegressions:
-      typeof telemetry.vignette_regressions === 'number' ? telemetry.vignette_regressions : 0,
-    cursorEntropy: typeof telemetry.cursor_entropy === 'number' ? telemetry.cursor_entropy : undefined,
-  };
-}
+// normalizeTelemetryMetrics removed — FSRS scheduling moved to drillReviewService (Improvement 5)
 
 const AttemptSchema = z.object({
   body: z.object({
@@ -124,7 +82,8 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       telemetryJson,
       durationMs,
       isMainSession = false,
-      rating: fsrsRatingRaw,
+      // rating field still accepted by schema for backward compat but no longer used here;
+      // FSRS scheduling is handled by drillReviewService (Improvement 5)
     } = validated.body;
 
     // Support both isCorrect and wasCorrect field names
@@ -285,149 +244,18 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       }
     }
 
-    // FSRS v6: Apply spaced repetition scheduling via UserTopicProgress
-    // This is the primary scheduling mechanism - Leitner above is kept as legacy fallback
-    let nextReviewDate: Date | null = null;
-    const hasManualFsrsRating = fsrsRatingRaw != null;
-    const hasBehaviorSignals = telemetryJson != null || timeSpentMillis != null || durationMs != null;
-    if (typeof correctness === 'boolean' && (hasManualFsrsRating || hasBehaviorSignals)) {
-      try {
-        // Prefer backend-derived implicit rating (Ghost Grader pipeline) when telemetry is available.
-        const {
-          timeToFirstInteraction,
-          answerChanges,
-          selectionDriftMs,
-          tremorScore,
-          oscillations,
-          vignetteRegressions,
-          cursorEntropy,
-        } = normalizeTelemetryMetrics({
-          telemetryJson,
-          timeSpentMillis,
-          durationMs,
-          answerChangedCount,
-        });
-
-        const implicit = deriveContinuousRating({
-          timeToFirstClick: Math.max(1, timeToFirstInteraction),
-          answerSwitches: Math.max(0, answerChanges),
-          totalDwellTime: timeSpentMillis ?? durationMs ?? 0,
-          isCorrect: correctness,
-          parTimeMs: DEFAULT_PAR_TIME_MS,
-          commitmentGapMs: selectionDriftMs ?? undefined,
-          cursorEntropy,
-          hoverOscillationCount: oscillations,
-        });
-
-        // Normalize deprecated manual ratings if provided, then apply honest-history cap.
-        const normalizedManualRating = normalizeDeprecatedRating(fsrsRatingRaw ?? undefined);
-        const baseRating = normalizedManualRating ?? implicit.discreteRating;
-        const fsrsRating = applyHonestRating({
-          userRating: baseRating,
-          isCorrect: correctness,
-          oscillations,
-          vignetteRegressions,
-          selectionDriftMs,
-          tremorScore,
-        });
-
-        const fsrs = new FSRS();
-        const now = new Date();
-
-        // Get user EOR context for time-blocked scheduling
-        const userForEor = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { yearInProgram: true, currentRotation: true, eorTestDate: true, rotationEndDate: true },
-        });
-        const eorRotationEnd = getEorRotationEnd({
-          yearInProgram: userForEor?.yearInProgram ?? null,
-          currentRotation: userForEor?.currentRotation ?? null,
-          eorTestDate: userForEor?.eorTestDate?.toISOString() ?? null,
-          rotationEndDate: userForEor?.rotationEndDate?.toISOString() ?? null,
-        });
-
-        // Determine condition and task type for topic progress
-        let effectiveConditionId = conditionId ?? null;
-        let taskType: string | null = null;
-
-        if (!effectiveConditionId && questionId) {
-          try {
-            const question = await prisma.question.findUnique({
-              where: { id: questionId },
-              select: { conditionId: true, question: true },
-            });
-            if (question) {
-              effectiveConditionId = question.conditionId;
-              taskType = getTaskTypeFromContent(question.question);
-            }
-          } catch {
-            // Question may not exist in main table
-          }
-        }
-        if (!taskType) {
-          taskType = questionType || 'diagnosis';
-        }
-
-        if (effectiveConditionId && taskType) {
-          // Look up existing topic progress
-          const topicProgress = await prisma.userTopicProgress.findUnique({
-            where: {
-              userId_conditionId_taskType: {
-                userId,
-                conditionId: effectiveConditionId,
-                taskType,
-              },
-            },
-          });
-
-          if (topicProgress) {
-            // Update existing progress with FSRS
-            const card = topicProgressToCard(topicProgress);
-            const scheduled = fsrs.next(card, now, fsrsRating);
-            const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
-            nextReviewDate = clampedDue;
-
-            await prisma.userTopicProgress.update({
-              where: { id: topicProgress.id },
-              data: {
-                stability: scheduled.card.stability,
-                difficulty: scheduled.card.difficulty,
-                state: scheduled.card.state,
-                reps: scheduled.card.reps,
-                lapses: scheduled.card.lapses,
-                lastReviewDate: now,
-                nextReviewDate: clampedDue,
-              },
-            });
-          } else {
-            // Create new topic progress entry
-            const emptyCard = fsrs.createEmptyCard();
-            const scheduled = fsrs.next(emptyCard, now, fsrsRating);
-            const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
-            nextReviewDate = clampedDue;
-
-            await prisma.userTopicProgress.create({
-              data: {
-                userId,
-                conditionId: effectiveConditionId,
-                taskType,
-                stability: scheduled.card.stability,
-                difficulty: scheduled.card.difficulty,
-                state: scheduled.card.state,
-                reps: scheduled.card.reps,
-                lapses: scheduled.card.lapses,
-                lastReviewDate: now,
-                nextReviewDate: clampedDue,
-              },
-            });
-          }
-        }
-      } catch (fsrsErr) {
-        logger.warn('FSRS scheduling failed (non-fatal)', {
-          error: fsrsErr instanceof Error ? fsrsErr.message : String(fsrsErr),
-        });
-      }
-    }
+    // FSRS v6 DEDUP NOTE (Improvement 5):
+    // FSRS scheduling is handled exclusively by drillReviewService.submitDrillReview()
+    // via the queueReview() → POST /api/drills/submit-reviews path. That pipeline is
+    // authoritative and applies the full modifier chain: Ghost Grader, circadian modifier,
+    // urgency dampener, EOR clamp, and sibling propagation.
+    //
+    // Previously this endpoint ran an independent FSRS pipeline writing to UserTopicProgress,
+    // which diverged from drillReviewService's UserProgress writes (different modifier chains
+    // → inconsistent scheduling intervals for the same card). Removed to prevent double-write.
+    //
+    // UserTopicProgress is now updated by drillReviewService as part of the authoritative flow.
+    const nextReviewDate: Date | null = null;
 
     // Rolling 360: update circular buffer and stats for main-session attempts
     if (isMainSession && typeof correctness === 'boolean') {

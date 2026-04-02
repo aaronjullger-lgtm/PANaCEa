@@ -24,6 +24,8 @@ import {
   analyzeBehaviorGemini,
   type BehaviorTelemetryInput,
 } from '../_shared/analyzeBehaviorGemini';
+import { buildCircadianContext, applyCircadianModifier } from '../../../lib/circadian';
+import { applyHonestRating } from '../../../lib/srs/ghostGrader';
 
 const SRSSubmitSchema = z.object({
   body: z.object({
@@ -136,6 +138,21 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
     }
 
     const dbUserId = user.id;
+
+    // Build circadian context (matches drillReviewService pipeline)
+    const circadianContext = buildCircadianContext();
+
+    // Apply Ghost Grader to the effective rating (binary: Again/Good only)
+    const telemetryData = telemetry as Record<string, unknown> | undefined;
+    effectiveRating = applyHonestRating({
+      userRating: effectiveRating <= 1.5 ? Rating.Again : effectiveRating >= 2.5 ? Rating.Good : Rating.Again,
+      isCorrect,
+      oscillations: (telemetryData?.hover_oscillations as number | undefined) ?? 0,
+      vignetteRegressions: (telemetryData?.vignette_regressions as number | undefined) ?? 0,
+      selectionDriftMs: (telemetryData?.selection_drift_ms as number | null) ?? null,
+      tremorScore: (telemetryData?.tremor_score as number | undefined) ?? 0,
+    }) === Rating.Again ? 1 : effectiveRating;
+
     const eorRotationEnd = getEorRotationEnd({
       yearInProgram: user.yearInProgram,
       currentRotation: user.currentRotation,
@@ -191,6 +208,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       nextReviewDate = clampedDue;
 
       let stability = reviewState.stability;
+      // Circadian modifier (matches drillReviewService pipeline)
+      stability = applyCircadianModifier(stability, circadianContext);
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
         stability = Math.max(0.1, stability * (1 - implicitDifficulty));
       }
@@ -221,6 +240,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       nextReviewDate = clampedDue;
 
       let stability = reviewState.stability;
+      // Circadian modifier (matches drillReviewService pipeline)
+      stability = applyCircadianModifier(stability, circadianContext);
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
         stability = Math.max(0.1, stability * (1 - implicitDifficulty));
       }

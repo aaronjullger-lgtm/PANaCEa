@@ -16,13 +16,15 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating } from '../implicit-metrics';
-import { buildCircadianContext, applyCircadianModifier } from '../circadian';
+import { deriveContinuousRating, assessTelemetryQuality } from '../implicit-metrics';
+import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
+import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
 import { applyHonestRating } from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
+import { getTaskTypeFromContent } from '../taskTypes';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -188,6 +190,9 @@ export interface DrillReviewLogger {
   error?(msg: string, data?: Record<string, unknown>): void;
 }
 
+/** Server-authoritative Minimum Valid Response Time. Client cannot lower below this. */
+const SERVER_MVRT_THRESHOLD_MS = 2000;
+
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
@@ -266,71 +271,99 @@ export async function submitDrillReview(
     timezone || undefined
   );
 
+  const circadianAdjustedParTimeMs = applyCircadianParTimeModifier(parTimeMs, circadianContext);
+
   const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
   const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
   const hoverOscillationCount = (telemetry?.hover_oscillations as number | undefined) ?? 0;
 
-  // When timeToFirstClick is missing, substitute a neutral value (parTimeMs * 0.85)
-  // rather than totalDwellTime. Total dwell includes rationale-reading time and
-  // inflates the latency ratio by 2-5x, systematically downgrading ratings for
-  // questions where the client omits the first-click metric.
-  const effectiveFirstClick = timeToFirstClick ?? Math.min(numericTime, parTimeMs * 0.85);
+  // Detect rapid guesses BEFORE deriving implicit rating — don't waste compute on accidental taps
+  // Use question-type-specific MVRT when available; server floor prevents client from lowering threshold
+  const questionTypeMvrt = getMVRTThreshold(
+    ((telemetry?.question_type as string) ?? 'unknown') as QuestionType
+  );
+  const effectiveMvrt = Math.max(
+    SERVER_MVRT_THRESHOLD_MS,
+    (telemetry?.mvrt_threshold_ms as number) ?? questionTypeMvrt
+  );
+  const isRapidGuess = (telemetry?.rapid_guess as boolean) ?? numericTime < effectiveMvrt;
 
-  const behaviorMetrics: ImplicitBehaviorMetrics = {
-    timeToFirstClick: effectiveFirstClick,
-    answerSwitches: answerSwitches ?? 0,
-    totalDwellTime: totalDwellTime ?? numericTime,
-    isCorrect,
-    parTimeMs,
-    commitmentGapMs: commitmentGapMs ?? undefined,
-    cursorEntropy,
-    hoverOscillationCount,
-  };
-
-  const continuousResult = deriveContinuousRating(behaviorMetrics);
-  let rating = continuousResult.discreteRating;
-
-  // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
-  // Rule 1: If responseTime > (parTime * 1.5) AND rating == Easy → downgrade to Good
-  // Note: Easy rating is deprecated; binary rating uses only Again/Good.
-  if (isCorrect && rating === Rating.Easy && numericTime > parTimeMs * 1.5) {
-    rating = Rating.Good;
-    logger?.info?.('Behavioral override: Easy→Good (slow response)', {
-      questionId,
-      timeSpentMs: numericTime,
-      parTimeMs,
-    });
-  }
-  // Rule 2: If answerChanges > 2 (indecision) → max rating is Hard
-  // Hard rating is deprecated; treat as Again.
+  let rating: Rating;
+  let gradeContinuous: number;
+  let implicitConfidence: number;
   const switches = answerSwitches ?? 0;
-  if (switches > 2 && rating > Rating.Hard) {
-    rating = Rating.Hard;
-    logger?.info?.('Behavioral override: capped at Hard (indecision)', {
-      questionId,
-      answerSwitches: switches,
-    });
-  }
-  // Rule 3 (Ghost Grader): oscillations, drift, tremor → force Hard for honest history
-  const oscillations = (telemetry?.hover_oscillations as number | undefined) ?? 0;
-  const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? 0;
-  const selectionDriftMs = telemetry?.selection_drift_ms as number | null | undefined;
-  const tremorScore = (telemetry?.tremor_score as number | undefined) ?? 0;
-  rating = applyHonestRating({
-    userRating: rating,
-    isCorrect,
-    oscillations,
-    vignetteRegressions,
-    selectionDriftMs: selectionDriftMs ?? null,
-    tremorScore,
-  });
 
-  let gradeContinuous = continuousResult.grade;
-  // Hard rating deprecated; treat as Again.
-  if (rating === Rating.Hard && gradeContinuous > 2.0) {
-    gradeContinuous = 2.0;
+  if (isRapidGuess) {
+    // Skip implicit rating derivation entirely — accidental taps must not enter FSRS pipeline
+    rating = Rating.Again;
+    gradeContinuous = 1.0;
+    implicitConfidence = 0;
+    logger?.info?.('Rapid guess detected — skipping implicit rating derivation', {
+      questionId,
+      duration: numericTime,
+      effectiveMvrt,
+    });
+  } else {
+    // Normal path: derive implicit rating from behavioral telemetry
+    // When timeToFirstClick is missing, substitute a neutral value (parTimeMs * 0.85)
+    // rather than totalDwellTime. Total dwell includes rationale-reading time and
+    // inflates the latency ratio by 2-5x, systematically downgrading ratings for
+    // questions where the client omits the first-click metric.
+    const effectiveFirstClick = timeToFirstClick ?? Math.min(numericTime, parTimeMs * 0.85);
+
+    const behaviorMetrics: ImplicitBehaviorMetrics = {
+      timeToFirstClick: effectiveFirstClick,
+      answerSwitches: answerSwitches ?? 0,
+      totalDwellTime: totalDwellTime ?? numericTime,
+      isCorrect,
+      parTimeMs: circadianAdjustedParTimeMs,
+      commitmentGapMs: commitmentGapMs ?? undefined,
+      cursorEntropy,
+      hoverOscillationCount,
+      // Hint-viewed penalty: aided recall weakens the retrieval strength signal
+      hintViewed: (telemetry?.hint_viewed as boolean) ?? false,
+      hintViewDurationMs: (telemetry?.hint_view_duration_ms as number | null) ?? null,
+    };
+
+    const continuousResult = deriveContinuousRating(behaviorMetrics);
+    rating = continuousResult.discreteRating;
+    gradeContinuous = continuousResult.grade;
+    implicitConfidence = continuousResult.confidence;
+
+    // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
+    // Binary system: Again(1) / Good(3). Hard(2) and Easy(4) are deprecated.
+    // Rule 1: If rating came out as Easy (shouldn't happen often) → normalize to Good
+    if (rating === Rating.Easy) {
+      rating = Rating.Good;
+    }
+    // Rule 2: If answerChanges > 2 (high indecision) → downgrade to Again
+    if (switches > 2 && rating > Rating.Again) {
+      rating = Rating.Again;
+      logger?.info?.('Behavioral override: Again (high indecision)', {
+        questionId,
+        answerSwitches: switches,
+      });
+    }
+    // Rule 3 (Ghost Grader): oscillations, drift, tremor → force Hard for honest history
+    const oscillations = (telemetry?.hover_oscillations as number | undefined) ?? 0;
+    const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? 0;
+    const selectionDriftMs = telemetry?.selection_drift_ms as number | null | undefined;
+    const tremorScore = (telemetry?.tremor_score as number | undefined) ?? 0;
+    rating = applyHonestRating({
+      userRating: rating,
+      isCorrect,
+      oscillations,
+      vignetteRegressions,
+      selectionDriftMs: selectionDriftMs ?? null,
+      tremorScore,
+    });
+
+    // When Ghost Grader downgraded to Again, ensure gradeContinuous reflects it.
+    // Again means "you didn't really know it" → grade should be in [1.0, 1.9].
+    if (rating === Rating.Again && gradeContinuous > 1.9) {
+      gradeContinuous = 1.5; // Midpoint of Again range — honest but not catastrophic
+    }
   }
-  const implicitConfidence = continuousResult.confidence;
 
   // Hard and Easy ratings are deprecated; mapping remains for historical data.
   const quality =
@@ -364,7 +397,6 @@ export async function submitDrillReview(
   }
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
-  const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
@@ -406,7 +438,8 @@ export async function submitDrillReview(
                 ...telemetry,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: effectiveDurationMs / parTimeMs,
+                  circadian_par_time_ms: circadianAdjustedParTimeMs,
+                  latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
@@ -427,7 +460,8 @@ export async function submitDrillReview(
                 hint_view_duration_ms: null,
                 server_computed: {
                   par_time_ms: parTimeMs,
-                  latency_ratio: numericTime / parTimeMs,
+                  circadian_par_time_ms: circadianAdjustedParTimeMs,
+                  latency_ratio: numericTime / circadianAdjustedParTimeMs,
                   implicit_rating: rating,
                   implicit_confidence: implicitConfidence,
                   grade_continuous: gradeContinuous,
@@ -500,6 +534,18 @@ export async function submitDrillReview(
 
   const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
 
+  // Assess telemetry data quality for optimizer weighting.
+  // 'minimal' quality means the grade is derived from correctness + duration only —
+  // less reliable for FSRS parameter optimization.
+  const telemetryQuality = assessTelemetryQuality(telemetry as Record<string, unknown> | undefined);
+  if (telemetryQuality === 'minimal' && countForFSRS) {
+    logger?.warn?.('Minimal telemetry quality for FSRS-eligible review', {
+      questionId,
+      sessionType,
+      hasTelemetry: !!telemetry,
+    });
+  }
+
   // Helper function to create full telemetry object with server_computed key
   const buildReviewLogTelemetry = (
     currentCard?: Record<string, number | Date> | null
@@ -507,12 +553,14 @@ export async function submitDrillReview(
     ...(telemetry ?? {}),
     server_computed: {
       par_time_ms: parTimeMs,
-      latency_ratio: effectiveDurationMs / parTimeMs,
+      circadian_par_time_ms: circadianAdjustedParTimeMs,
+      latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
       implicit_confidence: implicitConfidence,
       grade_continuous: gradeContinuous,
       answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
       circadian_phase: circadianContext.circadianPhase,
       rapid_guess: isRapidGuess,
+      telemetry_quality: telemetryQuality,
       ...(currentCard && {
         state: currentCard.state as number,
         stability: currentCard.stability as number,
@@ -526,7 +574,9 @@ export async function submitDrillReview(
   if (question.conditionId && shouldLogReview) {
     logger?.debug?.('Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     
-    // For rapid guesses: create ReviewLog only, skip FSRS calculation
+    // For rapid guesses: create ReviewLog with live card state, but skip FSRS update.
+    // The card state is logged for analytics accuracy — zero values make it impossible
+    // to reconstruct the card lifecycle from ReviewLog alone.
     if (isRapidGuess) {
       try {
         const reviewDate = new Date();
@@ -539,6 +589,25 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
+        // Read live card state so the log reflects the card's true position
+        let liveState = 0, liveStability = 0, liveDifficulty = 0, liveRetrievability = 0, liveElapsedDays = 0;
+        try {
+          const existingProgress = await prisma.userProgress.findUnique({
+            where: { userId_conditionId: { userId, conditionId: question.conditionId! } },
+          });
+          if (existingProgress?.fsrsCard) {
+            const card = existingProgress.fsrsCard as Record<string, unknown>;
+            liveState = typeof card.state === 'number' ? card.state : 0;
+            liveStability = typeof card.stability === 'number' ? card.stability : 0;
+            liveDifficulty = typeof card.difficulty === 'number' ? card.difficulty : 0;
+            liveElapsedDays = typeof card.elapsed_days === 'number' ? card.elapsed_days : 0;
+            if (liveStability > 0) {
+              const fsrs = new FSRS();
+              liveRetrievability = fsrs.calculateRetrievability(liveElapsedDays, liveStability);
+            }
+          }
+        } catch { /* non-fatal: fall back to zeros */ }
+
         logger?.debug?.('Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
         await prisma.reviewLog.create({
           data: {
@@ -549,16 +618,16 @@ export async function submitDrillReview(
             questionType: 'pre_generated',
             grade: Rating.Again, // Force grade to 1 (Again) for rapid guesses
             grade_continuous: 1.0,
-            state: 0, // New card state - no FSRS calculation
-            stability: 0,
-            difficulty: 0,
-            retrievability: 0,
+            state: liveState,
+            stability: liveStability,
+            difficulty: liveDifficulty,
+            retrievability: liveRetrievability,
             implicit_confidence: implicitConfidence,
             scheduledAt: new Date(), // Placeholder - not used for rapid guesses
             reviewedAt: reviewDate,
             responseTimeMs: effectiveDurationMs,
             review_type: 'rapid_guess',
-            elapsedDays: 0,
+            elapsedDays: liveElapsedDays,
             wasCorrect: isCorrect,
             sessionType: logSessionType,
             attemptId,
@@ -567,7 +636,7 @@ export async function submitDrillReview(
             vignette_regressions: vignetteRegressions,
             time_to_first_interaction: timeToFirstInteraction,
             circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
-            telemetry: buildReviewLogTelemetry(),
+            telemetry: buildReviewLogTelemetry({ state: liveState, stability: liveStability, difficulty: liveDifficulty, elapsed_days: liveElapsedDays }),
           },
         });
       } catch (reviewLogError) {
@@ -697,6 +766,53 @@ export async function submitDrillReview(
           accuracy: isCorrect ? 1.0 : 0.0,
           nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
         });
+
+        // ── UserTopicProgress sync (Improvement 5) ──
+        // This is the single authoritative FSRS writer for UserTopicProgress.
+        // Previously /api/questions/attempt ran an independent FSRS pipeline that
+        // diverged from the modifier chain here. Now only drillReviewService writes
+        // FSRS state, ensuring UserProgress and UserTopicProgress stay consistent.
+        try {
+          const qText = ((question.questionData as QuestionData)?.stem
+            ?? (question.questionData as QuestionData)?.question
+            ?? (question.questionData as QuestionData)?.text) || '';
+          const taskType = getTaskTypeFromContent(qText) || 'diagnosis';
+          await prisma.userTopicProgress.upsert({
+            where: {
+              userId_conditionId_taskType: {
+                userId,
+                conditionId: question.conditionId,
+                taskType,
+              },
+            },
+            create: {
+              userId,
+              conditionId: question.conditionId,
+              taskType,
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              state: updatedCard.state,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              lastReviewDate: new Date(),
+              nextReviewDate: clampedNextDue,
+            },
+            update: {
+              stability: updatedCard.stability,
+              difficulty: updatedCard.difficulty,
+              state: updatedCard.state,
+              reps: updatedCard.reps,
+              lapses: updatedCard.lapses,
+              lastReviewDate: new Date(),
+              nextReviewDate: clampedNextDue,
+            },
+          });
+        } catch (topicProgressError) {
+          // Non-fatal: UserTopicProgress sync failure should not break the main pipeline
+          logger?.warn?.('UserTopicProgress sync failed (non-fatal)', {
+            error: topicProgressError instanceof Error ? topicProgressError.message : String(topicProgressError),
+          });
+        }
 
         // ── Card dual-write (non-blocking) ──
         // Creates per-question FSRS Card alongside condition-level UserProgress.
