@@ -18,11 +18,20 @@ jobs:
       contents: read
     outputs:
       branch: ${{ steps.branch_name.outputs.current_branch }}
+      has_neon_key: ${{ steps.check_secrets.outputs.has_neon_key }}
     runs-on: ubuntu-latest
     steps:
       - name: Get branch name
         id: branch_name
         uses: tj-actions/branch-names@v8
+      - name: Check secrets
+        id: check_secrets
+        run: |
+          if [ -n "${{ secrets.NEON_API_KEY }}" ]; then
+            echo "has_neon_key=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_neon_key=false" >> $GITHUB_OUTPUT
+          fi
 
   create_neon_branch:
     name: Create Neon Branch
@@ -33,6 +42,7 @@ jobs:
       db_url_with_pooler: ${{ steps.create_neon_branch_encode.outputs.db_url_with_pooler }}
     needs: setup
     if: |
+      needs.setup.outputs.has_neon_key == 'true' &&
       github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
       || github.event.action == 'opened'
@@ -92,7 +102,7 @@ jobs:
     permissions:
       contents: read
     needs: setup
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: needs.setup.outputs.has_neon_key == 'true' && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Delete Neon Branch
