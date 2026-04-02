@@ -44,6 +44,7 @@ export const onRequestGet = publicEndpoint(
           clinicalPearls: true,
         },
         orderBy: { genericName: 'asc' },
+        take: 2000,
       });
 
       logger.info('All drugs fetched', { count: drugs.length });

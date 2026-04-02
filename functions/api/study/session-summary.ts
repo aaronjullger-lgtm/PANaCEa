@@ -75,8 +75,8 @@ export const onRequestPost = authenticatedEndpoint(
         },
         select: {
           system: true,
-          isCorrect: true,
-          rating: true,
+          wasCorrect: true,
+          grade: true,
         },
       });
 
@@ -96,7 +96,7 @@ export const onRequestPost = authenticatedEndpoint(
           sessionBreakdown[sys] = { count: 0, correct: 0, accuracy: 0, fraction: 0 };
         }
         sessionBreakdown[sys].count += 1;
-        if (review.isCorrect) sessionBreakdown[sys].correct += 1;
+        if (review.wasCorrect) sessionBreakdown[sys].correct += 1;
       }
 
       // Calculate fractions and accuracy

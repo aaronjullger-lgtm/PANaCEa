@@ -243,14 +243,14 @@ export async function onRequestPost(context: {
         review_type: 'real',
         sessionType: 'MAIN',
       },
-      orderBy: { review_date: 'asc' },
+      orderBy: { reviewedAt: 'asc' },
       select: {
         id: true,
         questionFkId: true,
-        review_date: true,
-        rating: true,
+        reviewedAt: true,
+        grade: true,
         state: true,
-        duration: true,
+        responseTimeMs: true,
         stability: true,
         difficulty: true,
         system: true,
@@ -259,10 +259,10 @@ export async function onRequestPost(context: {
 
     // Build snapshots and system codes for in-process optimizer fallback.
     const allSnapshots: ReviewSnapshot[] = reviewRows.map((r) => ({
-      date: r.review_date.toISOString(),
+      date: r.reviewedAt.toISOString(),
       stability: r.stability,
       difficulty: r.difficulty,
-      rating: r.rating as ReviewSnapshot['rating'],
+      rating: r.grade as ReviewSnapshot['rating'],
       state: r.state as ReviewSnapshot['state'],
     }));
     const systemCodes: Record<number, string> = {};

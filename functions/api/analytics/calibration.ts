@@ -105,7 +105,7 @@ export const onRequestGet = authenticatedEndpoint(
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
       const isDbUnavailable =
-        /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
+        /connect|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|accelerate|pool/i.test(errMsg);
       return {
         status: isDbUnavailable ? 503 : 500,
         data: {
