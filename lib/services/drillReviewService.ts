@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener } from '../implicit-metrics';
+import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener, type UserBaseline } from '../implicit-metrics';
 import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
 import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
@@ -25,8 +25,12 @@ import { applyHonestRating } from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../taskTypes';
-import { getUserSpeedFactor } from './userTimingProfileService';
+import { getUserSpeedFactor, getUserBehavioralBaseline } from './userTimingProfileService';
+import { getUserCalibration } from './calibrationService';
+import { accumulateConfidence, type HistoricalReview } from '../confidence/bayesianAccumulator';
+import type { TelemetryQuality } from '../implicit-metrics';
 import { applyFatigueCorrection } from './sessionFatigueService';
+import { getStabilityCorrectionFactor } from './retrievabilityCalibrationService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -263,6 +267,21 @@ export async function submitDrillReview(
   // Fetch user's personalized speed factor (cached, 24h TTL)
   const userSpeedFactor = await getUserSpeedFactor(prisma, userId);
 
+  // Fetch per-user behavioral baseline for z-score normalization (Sprint 1)
+  // Returns null for new users (<25 attempts) — deriveContinuousRating falls back to absolute thresholds
+  const behavioralBaseline = await getUserBehavioralBaseline(prisma, userId);
+  const userBaseline: UserBaseline | undefined = behavioralBaseline
+    ? {
+        rtMedianMs: behavioralBaseline.rtBaseline.medianMs,
+        rtStdDevMs: behavioralBaseline.rtBaseline.stdDevMs,
+        switchMedian: behavioralBaseline.switchBaseline.medianSwitches,
+        switchP75: behavioralBaseline.switchBaseline.p75Switches,
+        commitmentGapMedianMs: behavioralBaseline.hesitationBaseline.medianCommitmentGapMs,
+        cursorEntropyMedian: behavioralBaseline.hesitationBaseline.medianCursorEntropy,
+        oscillationMedian: behavioralBaseline.hesitationBaseline.medianOscillations,
+      }
+    : undefined;
+
   const parTimeMs = calculateParTime({
     ...qData,
     stem: qData.stem || qData.question || qData.vignette || qData.text || '',
@@ -332,9 +351,11 @@ export async function submitDrillReview(
       // Hint-viewed penalty: aided recall weakens the retrieval strength signal
       hintViewed: (telemetry?.hint_viewed as boolean) ?? false,
       hintViewDurationMs: (telemetry?.hint_view_duration_ms as number | null) ?? null,
+      // Question type for type-specific confidence weight profiles (Sprint 3)
+      questionType: (telemetry?.question_type as string) ?? 'unknown',
     };
 
-    const continuousResult = deriveContinuousRating(behaviorMetrics);
+    const continuousResult = deriveContinuousRating(behaviorMetrics, undefined, userBaseline);
     rating = continuousResult.discreteRating;
     gradeContinuous = continuousResult.grade;
     implicitConfidence = continuousResult.confidence;
@@ -690,20 +711,51 @@ export async function submitDrillReview(
         let modifiedStability = rawCard.stability;
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
 
-        // ── Graduated confidence → stability modifier (replaces old binary threshold) ──
-        // Continuous sigmoid function: rewards high confidence, penalizes low.
-        // Research: Benjamin et al. (1998) — retrieval fluency predicts future recall.
-        //
-        // Fluency illusion correction (Kornell & Bjork, 2008):
-        // Short review intervals inflate perceived fluency. Dampen confidence
-        // when elapsed_days < 1.0 to prevent over-scheduling.
-        let adjustedConfidence = implicitConfidence;
+        // ── Confidence pipeline: accumulate → calibrate → dampen → modify stability ──
+
+        // Step 1: Bayesian accumulation — blend current confidence with card history
+        // Stabilizes confidence estimates; prevents single-review anomalies (Mozer et al., 2009).
+        const reviewHistory = (existingProgress?.reviewHistory ?? []) as Array<{
+          confidence?: number;
+          wasCorrect?: boolean;
+          telemetryQuality?: TelemetryQuality;
+        }>;
+        const historicalReviews: HistoricalReview[] = reviewHistory
+          .filter((r): r is { confidence: number; wasCorrect: boolean; telemetryQuality?: TelemetryQuality } =>
+            typeof r.confidence === 'number' && typeof r.wasCorrect === 'boolean'
+          )
+          .map(r => ({
+            confidence: r.confidence,
+            wasCorrect: r.wasCorrect,
+            telemetryQuality: (r.telemetryQuality as TelemetryQuality) ?? 'minimal',
+          }));
+        const accumulated = accumulateConfidence(
+          implicitConfidence,
+          isCorrect,
+          historicalReviews
+        );
+
+        // Step 2: Metacognitive calibration — correct systematic over/under-confidence
+        // (Dunlosky & Nelson, 1992; Koriat, 1997)
+        let calibrationFactor = 1.0;
+        try {
+          const calibration = await getUserCalibration(prisma, userId);
+          calibrationFactor = calibration.dampenerFactor;
+        } catch {
+          // Non-fatal — use neutral calibration
+        }
+
+        // Step 3: Fluency illusion dampener (Kornell & Bjork, 2008)
         const elapsedDays = typeof currentCard.elapsed_days === 'number'
           ? currentCard.elapsed_days
           : 0;
+
+        // Combine: accumulated → calibrated → fluency-dampened
+        let adjustedConfidence = accumulated.posterior;
+        adjustedConfidence *= calibrationFactor;
         adjustedConfidence *= fluencyIllusionDampener(elapsedDays);
 
-        // Apply graduated stability multiplier (sigmoid centered at 0.6)
+        // Step 4: Graduated stability multiplier (sigmoid centered at 0.6)
         modifiedStability *= confidenceStabilityMultiplier(adjustedConfidence);
         // Exam urgency: when an exam is close, tighten review intervals.
         // urgencyMultiplier > 1.0 → stability shrinks → more frequent reviews.
@@ -713,6 +765,20 @@ export async function submitDrillReview(
           const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
           modifiedStability /= urgencyDampener;
         }
+        // ── Retrievability calibration correction (Sprint 4) ──
+        // Adjusts stability based on predicted-vs-actual recall calibration.
+        // If the model consistently overestimates retention for this system,
+        // the correction factor < 1.0 → shorter intervals. Vice versa for underestimation.
+        try {
+          const calibrationFactor = await getStabilityCorrectionFactor(prisma, userId, question.system);
+          modifiedStability *= calibrationFactor;
+        } catch (calErr) {
+          // Non-fatal: if calibration fails, proceed without correction
+          logger?.warn?.('Calibration correction failed, using uncorrected stability', {
+            error: calErr instanceof Error ? calErr.message : String(calErr),
+          });
+        }
+
         const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
 
         const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);

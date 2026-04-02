@@ -1,0 +1,234 @@
+/**
+ * Retrievability Calibration Service (Sprint 4)
+ *
+ * Tracks FSRS predicted retrievability vs actual recall outcomes to detect
+ * systematic over/under-confidence in the scheduling model.
+ *
+ * Core idea: FSRS predicts P(recall) = retrievability. If the model is well-calibrated,
+ * among all reviews where R ≈ 0.8, about 80% should be correct.
+ *
+ * This service:
+ * 1. Buckets review outcomes by predicted retrievability (10 bins: 0-0.1, 0.1-0.2, ...)
+ * 2. Computes per-bin actual recall rate
+ * 3. Derives per-system correction factors for systems that deviate from calibration
+ * 4. Exposes a correction multiplier that drillReviewService can apply to stability
+ *
+ * Data source: ReviewLog table (retrievability, wasCorrect, system)
+ *
+ * @see lib/services/drillReviewService.ts — Consumer of correction factors
+ */
+
+import type { PrismaClient } from '@prisma/client';
+
+// ── Types ──
+
+export interface CalibrationBin {
+  /** Center of the bin (e.g., 0.85 for the 0.8-0.9 bin) */
+  predictedCenter: number;
+  /** Actual recall rate in this bin */
+  actualRecallRate: number;
+  /** Number of reviews in this bin */
+  count: number;
+  /** Ratio: actual / predicted. >1 = model underestimates, <1 = overestimates */
+  calibrationRatio: number;
+}
+export interface CalibrationReport {
+  /** Overall calibration bins across all systems */
+  global: CalibrationBin[];
+  /** Per-system calibration bins (only systems with 50+ reviews) */
+  bySystem: Record<string, CalibrationBin[]>;
+  /** Per-system correction factors for stability adjustment */
+  systemCorrectionFactors: Record<string, number>;
+  /** Global correction factor (weighted average deviation) */
+  globalCorrectionFactor: number;
+  /** Total reviews analyzed */
+  totalReviews: number;
+  /** When this report was generated */
+  generatedAt: string;
+}
+
+// ── Constants ──
+
+const NUM_BINS = 10;
+const MIN_BIN_COUNT = 10; // Minimum reviews in a bin to be statistically meaningful
+const MIN_SYSTEM_REVIEWS = 50; // Minimum reviews for per-system correction
+const CORRECTION_CLAMP_MIN = 0.7; // Don't over-correct: max 30% reduction
+const CORRECTION_CLAMP_MAX = 1.4; // Don't over-correct: max 40% increase
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// ── In-memory cache ──
+
+let cachedReport: CalibrationReport | null = null;
+let cacheTimestamp = 0;
+// ── Pure algorithm functions (exported for testing) ──
+
+/**
+ * Bucket reviews into calibration bins.
+ * Each review has a predicted retrievability and a boolean outcome.
+ */
+export function bucketReviews(
+  reviews: Array<{ retrievability: number; wasCorrect: boolean }>
+): CalibrationBin[] {
+  const bins: Array<{ correct: number; total: number }> = Array.from(
+    { length: NUM_BINS },
+    () => ({ correct: 0, total: 0 })
+  );
+
+  for (const review of reviews) {
+    const r = Math.max(0, Math.min(0.9999, review.retrievability));
+    const binIdx = Math.floor(r * NUM_BINS);
+    bins[binIdx].total++;
+    if (review.wasCorrect) bins[binIdx].correct++;
+  }
+
+  return bins.map((bin, idx) => {
+    const predictedCenter = (idx + 0.5) / NUM_BINS;
+    const actualRecallRate = bin.total >= MIN_BIN_COUNT
+      ? bin.correct / bin.total
+      : predictedCenter; // Insufficient data → assume calibrated
+    const calibrationRatio = predictedCenter > 0
+      ? actualRecallRate / predictedCenter
+      : 1;
+    return {
+      predictedCenter,
+      actualRecallRate,
+      count: bin.total,
+      calibrationRatio,
+    };
+  });
+}
+/**
+ * Compute a single correction factor from calibration bins.
+ *
+ * Uses weighted average of calibration ratios from bins with enough data,
+ * focusing on the 0.6-0.9 range where FSRS predictions matter most
+ * (that's where due cards typically fall).
+ */
+export function computeCorrectionFactor(bins: CalibrationBin[]): number {
+  let weightedSum = 0;
+  let totalWeight = 0;
+
+  for (const bin of bins) {
+    if (bin.count < MIN_BIN_COUNT) continue;
+    // Weight bins in the 0.5-0.95 range more heavily — that's where scheduling decisions matter
+    const relevanceWeight = bin.predictedCenter >= 0.5 && bin.predictedCenter <= 0.95
+      ? bin.count * 2
+      : bin.count;
+    weightedSum += bin.calibrationRatio * relevanceWeight;
+    totalWeight += relevanceWeight;
+  }
+
+  if (totalWeight === 0) return 1.0; // No data → no correction
+
+  const rawFactor = weightedSum / totalWeight;
+  return Math.max(CORRECTION_CLAMP_MIN, Math.min(CORRECTION_CLAMP_MAX, rawFactor));
+}
+
+/**
+ * Generate a full calibration report for a user.
+ * Queries ReviewLog for all reviews with retrievability data.
+ */
+export async function generateCalibrationReport(
+  prisma: PrismaClient,
+  userId: string
+): Promise<CalibrationReport> {  // Fetch all reviews with retrievability data (non-null, real reviews only)
+  const reviews = await prisma.reviewLog.findMany({
+    where: {
+      userId,
+      retrievability: { not: null },
+      review_type: { not: 'rapid_guess' }, // Exclude rapid guesses — no meaningful prediction
+    },
+    select: {
+      retrievability: true,
+      wasCorrect: true,
+      system: true,
+    },
+  });
+
+  const validReviews = reviews
+    .filter((r): r is typeof r & { retrievability: number } => r.retrievability != null)
+    .map(r => ({
+      retrievability: r.retrievability,
+      wasCorrect: r.wasCorrect,
+      system: r.system ?? 'unknown',
+    }));
+
+  // Global calibration
+  const globalBins = bucketReviews(validReviews);
+  const globalCorrectionFactor = computeCorrectionFactor(globalBins);
+
+  // Per-system calibration
+  const systemGroups = new Map<string, Array<{ retrievability: number; wasCorrect: boolean }>>();
+  for (const review of validReviews) {
+    const group = systemGroups.get(review.system) ?? [];
+    group.push(review);
+    systemGroups.set(review.system, group);
+  }
+  const bySystem: Record<string, CalibrationBin[]> = {};
+  const systemCorrectionFactors: Record<string, number> = {};
+
+  for (const [system, systemReviews] of systemGroups) {
+    if (systemReviews.length < MIN_SYSTEM_REVIEWS) continue;
+    const bins = bucketReviews(systemReviews);
+    bySystem[system] = bins;
+    systemCorrectionFactors[system] = computeCorrectionFactor(bins);
+  }
+
+  const report: CalibrationReport = {
+    global: globalBins,
+    bySystem,
+    systemCorrectionFactors,
+    globalCorrectionFactor,
+    totalReviews: validReviews.length,
+    generatedAt: new Date().toISOString(),
+  };
+
+  // Cache the report
+  cachedReport = report;
+  cacheTimestamp = Date.now();
+
+  return report;
+}
+
+/**
+ * Get the stability correction factor for a given body system.
+ * Falls back to global correction if system-specific data is insufficient.
+ *
+ * Returns a multiplier for FSRS stability:
+ * - > 1.0: model underestimates retention → increase stability (longer intervals)
+ * - < 1.0: model overestimates retention → decrease stability (shorter intervals)
+ * - = 1.0: model is well-calibrated → no change
+ */
+export async function getStabilityCorrectionFactor(
+  prisma: PrismaClient,
+  userId: string,
+  system?: string | null
+): Promise<number> {  // Use cached report if fresh enough
+  let report = cachedReport;
+  if (!report || Date.now() - cacheTimestamp > CACHE_TTL_MS) {
+    report = await generateCalibrationReport(prisma, userId);
+  }
+
+  // Prefer system-specific correction if available
+  if (system && report.systemCorrectionFactors[system] !== undefined) {
+    return report.systemCorrectionFactors[system];
+  }
+
+  return report.globalCorrectionFactor;
+}
+
+/** Clear the cached report (for testing or after significant data changes) */
+export function clearCalibrationCache(): void {
+  cachedReport = null;
+  cacheTimestamp = 0;
+}
+
+/** Export constants for testing */
+export const CALIBRATION_CONSTANTS = {
+  NUM_BINS,
+  MIN_BIN_COUNT,
+  MIN_SYSTEM_REVIEWS,
+  CORRECTION_CLAMP_MIN,
+  CORRECTION_CLAMP_MAX,
+  CACHE_TTL_MS,
+} as const;
