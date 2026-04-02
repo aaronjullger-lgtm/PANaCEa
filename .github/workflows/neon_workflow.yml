@@ -33,6 +33,7 @@ jobs:
       db_url_with_pooler: ${{ steps.create_neon_branch_encode.outputs.db_url_with_pooler }}
     needs: setup
     if: |
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.NEON_API_KEY != '') &&
       github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
       || github.event.action == 'opened'
@@ -92,7 +93,7 @@ jobs:
     permissions:
       contents: read
     needs: setup
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.NEON_API_KEY != '') && github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Delete Neon Branch

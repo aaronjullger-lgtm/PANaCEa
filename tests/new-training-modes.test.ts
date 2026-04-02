@@ -37,6 +37,7 @@ describe('New Training Modes Configuration', () => {
   it('should have polypharmacy_puzzle in MODE_REGISTRY', () => {
     const polyMode = MODE_REGISTRY.find((m) => m.id === 'polypharmacy_puzzle');
     expect(polyMode).toBeDefined();
+    expect(polyMode?.category).toBe('clinical_simulation');
   });
 });
 

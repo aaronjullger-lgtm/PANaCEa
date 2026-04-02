@@ -8,6 +8,9 @@ vi.mock('@/lib/prisma', () => ({
     medicalContent: {
       findMany: vi.fn(),
     },
+    condition: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     graphEdge: {
       upsert: vi.fn(),
     },

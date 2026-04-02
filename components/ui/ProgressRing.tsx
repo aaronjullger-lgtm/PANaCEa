@@ -19,8 +19,16 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
   };
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
+    <div
+      className="relative"
+      style={{ width: size, height: size }}
+      role="progressbar"
+      aria-valuenow={Math.round(normalizedScore)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Score progress"
+    >
+      <svg className="transform -rotate-90" width={size} height={size} aria-hidden="true">
         <circle
           className="text-[var(--color-border)]"
           stroke="currentColor"

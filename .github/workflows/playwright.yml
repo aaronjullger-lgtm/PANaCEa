@@ -6,6 +6,7 @@ on:
     branches: [main, master]
 jobs:
   test:
+    if: github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CLERK_SECRET_KEY != ''
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
