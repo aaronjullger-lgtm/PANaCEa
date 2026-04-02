@@ -4,6 +4,18 @@
 **Author:** Aaron + Claude
 **Scope:** UI fixes, dashboard overhaul, personalization, PA domain intelligence, question taxonomy, OSCE realism, clinical data integration, account lifecycle
 
+## Implementation Status (Updated 2026-04-02)
+
+| Sprint | Status | Commit |
+|--------|--------|--------|
+| 1: Dashboard + Notifications | ✅ Complete | d7f1381 |
+| 2: Question Taxonomy | ✅ Complete | 68fa431 |
+| 3: PA Domain Knowledge | ✅ Complete | 4c9a339 |
+| 4: OSCE Realism | ✅ Complete | af34203 |
+| 5: Clinical Data | ✅ Complete | c44b696 |
+| 6: Account Lifecycle | ✅ Complete | c44b696 |
+| 7: Polish + Content | 🔄 Remaining | — |
+
 ---
 
 ## Audit Summary
