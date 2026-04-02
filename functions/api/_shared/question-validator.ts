@@ -1,4 +1,23 @@
-import { GeneratedQuestionStrict } from './question-schema';
+import { GeneratedQuestionStrict, type QuestionOrder, type TaskCategory } from './question-schema';
+
+/**
+ * Valid question orders mapped to expected difficulty ranges.
+ * first  = Remember/Understand (Bloom's 1-2) → 0.2–0.4
+ * second = Apply/Analyze (Bloom's 3-4)       → 0.4–0.6
+ * third  = Evaluate/Create (Bloom's 5-6)     → 0.6–0.9
+ */
+const ORDER_DIFFICULTY_RANGES: Record<QuestionOrder, [number, number]> = {
+  first: [0.15, 0.50],   // generous bounds for fuzzy generation
+  second: [0.35, 0.70],
+  third: [0.50, 0.95],
+};
+
+const VALID_QUESTION_ORDERS: QuestionOrder[] = ['first', 'second', 'third'];
+
+const VALID_TASK_CATEGORIES: TaskCategory[] = [
+  'history_pe', 'diagnostics', 'diagnosis', 'management',
+  'health_maintenance', 'pharmaceutical', 'basic_science', 'professional',
+];
 
 /**
  * Common medical stop words to skip when checking for diagnosis leaks in stems.
@@ -222,6 +241,28 @@ export function validateGeneratedQuestion(
         `Possible diagnosis leak: "${term}" appears directly in stem. Stems should not contain the diagnosis name.`
       );
     }
+  }
+
+  // Rule 7: questionOrder must be valid and align with difficulty
+  if (!question.questionOrder || !VALID_QUESTION_ORDERS.includes(question.questionOrder)) {
+    errors.push(
+      `questionOrder must be one of ${VALID_QUESTION_ORDERS.join(', ')}, got: "${question.questionOrder}"`
+    );
+  } else {
+    const [minDiff, maxDiff] = ORDER_DIFFICULTY_RANGES[question.questionOrder];
+    if (typeof question.difficulty === 'number' && (question.difficulty < minDiff || question.difficulty > maxDiff)) {
+      // Warn but don't fail — difficulty is a soft alignment
+      errors.push(
+        `questionOrder "${question.questionOrder}" has difficulty ${question.difficulty} outside expected range [${minDiff}, ${maxDiff}]. Consider adjusting.`
+      );
+    }
+  }
+
+  // Rule 8: taskCategory must be valid
+  if (!question.taskCategory || !VALID_TASK_CATEGORIES.includes(question.taskCategory)) {
+    errors.push(
+      `taskCategory must be one of ${VALID_TASK_CATEGORIES.join(', ')}, got: "${question.taskCategory}"`
+    );
   }
 
   return {

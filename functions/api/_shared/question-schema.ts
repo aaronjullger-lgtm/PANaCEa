@@ -70,15 +70,39 @@ export const QUESTION_RESPONSE_SCHEMA = {
         type: 'string'
       },
       description: 'Optional array of source section keys (e.g., ["clinicalPresentation", "treatment"])'
+    },
+    questionOrder: {
+      type: 'string',
+      enum: ['first', 'second', 'third'],
+      description: 'Bloom\'s taxonomy-mapped question order. first=Remember/Understand (recall a fact, difficulty 0.2-0.4). second=Apply/Analyze (diagnose then treat, one intermediate step, difficulty 0.4-0.6). third=Evaluate/Create (multi-step vignette with confounders, difficulty 0.6-0.9).'
+    },
+    taskCategory: {
+      type: 'string',
+      enum: ['history_pe', 'diagnostics', 'diagnosis', 'management', 'health_maintenance', 'pharmaceutical', 'basic_science', 'professional'],
+      description: 'PANCE task category. history_pe=History taking & physical exam. diagnostics=Ordering/interpreting labs & imaging. diagnosis=Formulating most likely diagnosis. management=Clinical interventions & treatment planning. health_maintenance=Preventive care & screening. pharmaceutical=Pharmacotherapy selection & monitoring. basic_science=Pathophysiology & mechanisms. professional=Ethics, communication, patient education.'
     }
   },
-  required: ['type', 'question', 'options', 'correctAnswer', 'explanation', 'difficulty']
+  required: ['type', 'question', 'options', 'correctAnswer', 'explanation', 'difficulty', 'questionOrder', 'taskCategory']
 };
 
 /**
  * TypeScript interface matching the schema exactly.
  * Use this for type-safe handling after JSON parsing.
  */
+/** Bloom's taxonomy-mapped question order for PA education */
+export type QuestionOrder = 'first' | 'second' | 'third';
+
+/** PANCE task categories aligned with NCCPA content blueprint */
+export type TaskCategory =
+  | 'history_pe'
+  | 'diagnostics'
+  | 'diagnosis'
+  | 'management'
+  | 'health_maintenance'
+  | 'pharmaceutical'
+  | 'basic_science'
+  | 'professional';
+
 export interface GeneratedQuestionStrict {
   type: 'mcq' | 'vignette';
   question: string;
@@ -95,4 +119,6 @@ export interface GeneratedQuestionStrict {
   };
   difficulty: number;
   sourceSections?: string[];
+  questionOrder: QuestionOrder;
+  taskCategory: TaskCategory;
 }

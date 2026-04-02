@@ -16,6 +16,10 @@ import {
   calculateSimulationTargetDistribution,
   PANCE_SIMULATION_TO_ABBREVIATION,
 } from '../../constants/blueprint';
+import {
+  type LearnerPhase,
+  calculateOrderDistribution,
+} from '../../nccpa-question-weighting';
 
 /** Pick a random task category per NCCPA Blueprint weights (Sprint 5). */
 function pickRandomTask(): string {
@@ -44,6 +48,8 @@ export interface SessionQuestionRequest {
   /** EOR rotation mode: filter by due date and stability, clamp to deadline */
   eorMode?: boolean;
   eorDeadline?: string;
+  /** Learner phase for question order distribution (didactic/clinical/pance_prep) */
+  learnerPhase?: LearnerPhase;
 }
 
 /** Structured rationale format (shared with src/types and ExplanationPanel). */
@@ -497,15 +503,21 @@ export class SessionService {
       panceLevelOnly?: boolean;
       eorMode?: boolean;
       eorDeadline?: string;
+      /** Filter by Bloom's taxonomy question order */
+      questionOrder?: 'first' | 'second' | 'third';
+      /** Filter by PANCE task category */
+      taskCategory?: string;
     }
   ): Promise<{ questions: EnrichedQuestion[] }> {
-    const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline, questionOrder, taskCategory } = options;
 
     const where: Prisma.PreGeneratedQuestionWhereInput = {};
     if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
+    if (questionOrder) where.questionOrder = questionOrder;
+    if (taskCategory) where.taskCategory = taskCategory;
 
     // Optimize: fetch only what we need plus a small buffer, not count * 3
     // For large counts, limit to reasonable size to prevent timeouts

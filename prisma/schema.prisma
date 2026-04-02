@@ -2235,6 +2235,8 @@ model PreGeneratedQuestion {
   validatedBy        String?
   validationNotes    String?
   validationStatus   String          @default("pending")
+  questionOrder      String?         // 'first' | 'second' | 'third' — Bloom's taxonomy order
+  taskCategory       String?         // PANCE task category (history_pe, diagnostics, diagnosis, management, etc.)
   Condition          Condition?      @relation(fields: [conditionId], references: [id])
   MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id])
 
@@ -2244,8 +2246,10 @@ model PreGeneratedQuestion {
   @@index([generatedAt])
   @@index([medicalContentId])
   @@index([qualityScore])
+  @@index([questionOrder])
   @@index([questionType])
   @@index([system])
+  @@index([taskCategory])
   @@index([usedAt])
   @@index([validationStatus])
 }

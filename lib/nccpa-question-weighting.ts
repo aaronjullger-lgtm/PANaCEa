@@ -7,6 +7,70 @@
  * Reference: docs/panceblueprint.md
  */
 
+/**
+ * Question Order Distribution by Learner Phase
+ *
+ * Maps Bloom's taxonomy to PANCE preparation stages:
+ * - first  = Remember/Understand (recall a fact)
+ * - second = Apply/Analyze (diagnose then treat — one intermediate step)
+ * - third  = Evaluate/Create (multi-step vignette with confounders)
+ *
+ * PANCE actual distribution is approximately: 10% first, 35% second, 55% third
+ */
+export type LearnerPhase = 'didactic' | 'clinical' | 'pance_prep';
+
+export interface OrderDistribution {
+  first: number;   // percentage as decimal (0.0-1.0)
+  second: number;
+  third: number;
+}
+
+export const ORDER_DISTRIBUTION_BY_PHASE: Record<LearnerPhase, OrderDistribution> = {
+  didactic: { first: 0.30, second: 0.50, third: 0.20 },   // building foundation
+  clinical: { first: 0.15, second: 0.40, third: 0.45 },   // applying knowledge
+  pance_prep: { first: 0.10, second: 0.35, third: 0.55 }, // match exam distribution
+};
+
+/**
+ * PANCE Task Category Weights (per NCCPA 2025 blueprint)
+ */
+export const PANCE_TASK_CATEGORY_WEIGHTS: Record<string, number> = {
+  diagnosis: 18,
+  history_pe: 16,
+  management: 16,
+  pharmaceutical: 15,
+  health_maintenance: 11,
+  diagnostics: 10,
+  basic_science: 8,
+  professional: 6,
+};
+
+/**
+ * Select question order based on learner phase distribution.
+ * Uses weighted random selection.
+ */
+export function selectQuestionOrder(phase: LearnerPhase): 'first' | 'second' | 'third' {
+  const dist = ORDER_DISTRIBUTION_BY_PHASE[phase];
+  const rand = Math.random();
+  if (rand < dist.first) return 'first';
+  if (rand < dist.first + dist.second) return 'second';
+  return 'third';
+}
+
+/**
+ * Calculate how many questions of each order to include in a session.
+ */
+export function calculateOrderDistribution(
+  sessionSize: number,
+  phase: LearnerPhase
+): { first: number; second: number; third: number } {
+  const dist = ORDER_DISTRIBUTION_BY_PHASE[phase];
+  const first = Math.round(sessionSize * dist.first);
+  const third = Math.round(sessionSize * dist.third);
+  const second = sessionSize - first - third; // remainder to avoid rounding drift
+  return { first, second, third };
+}
+
 export interface SystemWeight {
   system: string;
   percentage: number;

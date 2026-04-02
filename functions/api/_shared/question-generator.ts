@@ -76,6 +76,8 @@ Pertinent negatives: No hyperthyroidism, no structural heart disease, no HF.
     }
   },
   "difficulty": 0.65,
+  "questionOrder": "third",
+  "taskCategory": "management",
   "sourceSections": ["treatment", "clinicalPresentation"]
 }
 
@@ -116,6 +118,8 @@ Pertinent negatives: No immunosuppression, no recent antibiotics (no resistance 
     }
   },
   "difficulty": 0.65,
+  "questionOrder": "third",
+  "taskCategory": "pharmaceutical",
   "sourceSections": ["treatment", "clinicalPresentation"]
 }
 `;
@@ -166,6 +170,15 @@ export async function generateSingleQuestion(
     - Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why it is wrong for this step.
     - Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action.
     - Pertinent negatives: Include at least 2 pertinent negatives that rule out top differentials. Pharmacological contraindications: For therapeutics, include comorbidity that contraindicates first-line (e.g. HTN + gout; otitis + penicillin allergy).
+
+    QUESTION ORDER TAXONOMY (REQUIRED — set "questionOrder" field):
+    - "first" = Remember/Understand (Bloom's 1-2). Single-step recall: "What is the mechanism of X?" or "Which lab confirms Y?" Difficulty 0.2–0.4.
+    - "second" = Apply/Analyze (Bloom's 3-4). One intermediate reasoning step: "Patient presents with X findings → What is the diagnosis?" or "Given diagnosis Y → What is first-line treatment?" Difficulty 0.4–0.6.
+    - "third" = Evaluate/Create (Bloom's 5-6). Multi-step vignette with confounders: "Vignette → Diagnosis → Complication/contraindication → Best next step." Difficulty 0.6–0.9. This is preferred for PANCE-level questions.
+
+    TASK CATEGORY (REQUIRED — set "taskCategory" field):
+    Assign ONE of: history_pe, diagnostics, diagnosis, management, health_maintenance, pharmaceutical, basic_science, professional.
+    Match the primary cognitive task the question tests (e.g., "Which test to order?" = diagnostics, "What is the next step in management?" = management).
 
     FEW-SHOT EXAMPLES:
     Below are two examples showing clinical reasoning (in <thinking> tags) and high-quality JSON output.

@@ -18,6 +18,8 @@ describe('validateGeneratedQuestion', () => {
       },
     },
     difficulty: 0.65,
+    questionOrder: 'third',
+    taskCategory: 'diagnosis',
     ...overrides,
   });
 
