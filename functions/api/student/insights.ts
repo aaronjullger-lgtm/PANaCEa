@@ -1,267 +1,169 @@
 /**
- * API: Get student progress insights
- * GET /api/student/insights?userId={userId}&period={period}
+ * API: GET /api/student/insights
  *
- * Provides automated insights about student learning progress:
- * - Performance trends
- * - Weak areas identification
- * - Study recommendations
- * - Time optimization suggestions
+ * Returns personalized student insights: system weaknesses, calibration
+ * alerts, improvement trends, and exam readiness projection.
  *
- * Query params:
- * - userId: string (required)
- * - period: '7d' | '30d' | '90d' | 'all' (default: '30d')
+ * Sprint 3C — April 2026
  */
 
-import {
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-  type Env,
-} from '../_shared/auth';
-import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
-import { isAdmin, type UserRole } from '../_shared/rbac';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import {
+  generateInsights,
+  type InsightInput,
+  type SystemPerformance,
+} from '../../../lib/services/insightGenerationService';
 
-// Type for PerformanceRecord from Prisma query
-interface PerformanceRecordResult {
-  id: string;
-  userId: string;
-  system: string;
-  isCorrect: boolean;
-  timeSpent: bigint;
-  timestamp: bigint;
-}
+const EmptySchema = z.object({});
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+export const onRequestOptions = withCors();
 
-  try {
-    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
-  } catch (e) {
-    if (e instanceof MissingEnvError) return e.toResponse();
-    throw e;
-  }
-
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions(context);
-  }
-
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    const url = new URL(request.url);
-    const requestedUserId = url.searchParams.get('userId');
-    const period = url.searchParams.get('period') || '30d';
-
-    if (!requestedUserId) {
-      return createErrorResponse(request, 'Missing userId parameter', 400, undefined, env);
-    }
-
-    // Resolve authenticated user's DB id and enforce: only own insights unless admin
-    const authUser = await prisma.user.findUnique({
-      where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true },
-    });
-    if (!authUser) {
-      return createErrorResponse(request, 'User not found', 403, undefined, env);
-    }
-    const mayViewOther = isAdmin((authUser.role as UserRole) ?? 'user');
-    if (requestedUserId !== authUser.id && !mayViewOther) {
-      return createErrorResponse(
-        request,
-        'Forbidden: you may only request insights for your own user',
-        403,
-        undefined,
-        env
-      );
-    }
-    const userId = requestedUserId;
-
-    // Calculate date range
-    const now = new Date();
-    const periodDays = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
-    const startDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
-
-    // Get performance records
-    const records = await prisma.performanceRecord.findMany({
-      where: {
-        userId,
-        timestamp: { gte: BigInt(startDate.getTime()) },
-      },
-      orderBy: { timestamp: 'desc' },
-    });
-
-    if (records.length === 0) {
-      return createSuccessResponse(request, {
-        insights: {
-          message: 'No activity in this period. Start studying to get personalized insights!',
-          hasData: false,
-        },
+export const onRequestGet = authenticatedEndpoint(
+  EmptySchema,
+  async (context) => {
+    const { env, auth } = context;
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { clerkId: auth.userId },
+        select: { id: true, examDate: true },
       });
-    }
 
-    // Calculate metrics
-    const totalQuestions = records.length;
-    const correctAnswers = records.filter((r: (typeof records)[0]) => r.isCorrect).length;
-    const accuracy = (correctAnswers / totalQuestions) * 100;
+      // Fetch overall accuracy
+      const totalAttempts = await prisma.questionAttempt.count({
+        where: { userId: user.id },
+      });
+      const totalCorrect = await prisma.questionAttempt.count({
+        where: { userId: user.id, wasCorrect: true },
+      });
+      const overallAccuracy = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
 
-    // Group by system
-    const systemPerformance: Record<string, { total: number; correct: number; accuracy: number }> =
-      {};
-    records.forEach((record: (typeof records)[0]) => {
-      const sys = record.system ?? 'unknown';
-      if (!systemPerformance[sys]) {
-        systemPerformance[sys] = { total: 0, correct: 0, accuracy: 0 };
-      }
-      const perfEntry = systemPerformance[sys];
-      if (perfEntry) {
-        perfEntry.total++;
-        if (record.isCorrect) {
-          perfEntry.correct++;
-        }
-      }
-    });
+      // Recent accuracy (last 30 days)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const recentAttempts = await prisma.questionAttempt.count({
+        where: { userId: user.id, createdAt: { gte: thirtyDaysAgo } },
+      });
+      const recentCorrect = await prisma.questionAttempt.count({
+        where: { userId: user.id, wasCorrect: true, createdAt: { gte: thirtyDaysAgo } },
+      });
+      const recentAccuracy = recentAttempts > 0 ? recentCorrect / recentAttempts : overallAccuracy;
+      // Per-system performance
+      const systemStats = await prisma.$queryRaw<
+        Array<{ system: string; total: string; correct: string }>
+      >`
+        SELECT COALESCE("systemNormalized", system, 'Unknown') AS system,
+               COUNT(*)::text AS total,
+               SUM(CASE WHEN "wasCorrect" THEN 1 ELSE 0 END)::text AS correct
+        FROM "QuestionAttempt"
+        WHERE "userId" = ${user.id}
+        GROUP BY COALESCE("systemNormalized", system, 'Unknown')
+        HAVING COUNT(*) >= 5
+        ORDER BY COUNT(*) DESC
+      `;
 
-    // Calculate accuracy per system
-    Object.keys(systemPerformance).forEach((system: string) => {
-      const data = systemPerformance[system];
-      if (data) {
-        data.accuracy = (data.correct / data.total) * 100;
-      }
-    });
+      // Recent per-system for trend
+      const recentSystemStats = await prisma.$queryRaw<
+        Array<{ system: string; total: string; correct: string }>
+      >`
+        SELECT COALESCE("systemNormalized", system, 'Unknown') AS system,
+               COUNT(*)::text AS total,
+               SUM(CASE WHEN "wasCorrect" THEN 1 ELSE 0 END)::text AS correct
+        FROM "QuestionAttempt"
+        WHERE "userId" = ${user.id} AND "createdAt" >= ${thirtyDaysAgo}
+        GROUP BY COALESCE("systemNormalized", system, 'Unknown')
+      `;
 
-    // Identify weak areas (< 70% accuracy)
-    const weakAreas = Object.entries(systemPerformance)
-      .filter(([_system, data]: [string, any]) => data.accuracy < 70 && data.total >= 5)
-      .sort((a: [string, any], b: [string, any]) => a[1].accuracy - b[1].accuracy)
-      .map(([system, data]: [string, any]) => ({
-        system,
-        accuracy: Math.round(data.accuracy),
-        questionsAnswered: data.total,
-        recommendation: `Focus on ${system} - try ${3 - Math.floor(data.total / 10)} more drills this week`,
-      }));
-
-    // Identify strong areas (> 85% accuracy)
-    const strongAreas = Object.entries(systemPerformance)
-      .filter(([_system, data]: [string, any]) => data.accuracy > 85 && data.total >= 5)
-      .sort((a: [string, any], b: [string, any]) => b[1].accuracy - a[1].accuracy)
-      .map(([system, data]: [string, any]) => ({
-        system,
-        accuracy: Math.round(data.accuracy),
-        questionsAnswered: data.total,
-      }));
-
-    // Calculate trend (compare first half vs second half of period)
-    const midpoint = Math.floor(records.length / 2);
-    const recentRecords = records.slice(0, midpoint);
-    const olderRecords = records.slice(midpoint);
-
-    const recentAccuracy =
-      recentRecords.length > 0
-        ? (recentRecords.filter((r: (typeof recentRecords)[0]) => r.isCorrect).length /
-            recentRecords.length) *
-          100
-        : 0;
-    const olderAccuracy =
-      olderRecords.length > 0
-        ? (olderRecords.filter((r: (typeof olderRecords)[0]) => r.isCorrect).length /
-            olderRecords.length) *
-          100
-        : 0;
-
-    const trend = recentAccuracy - olderAccuracy;
-    const trendDirection = trend > 5 ? 'improving' : trend < -5 ? 'declining' : 'stable';
-
-    // Study recommendations
-    const recommendations: string[] = [];
-
-    if (accuracy < 60) {
-      recommendations.push('Consider reviewing fundamentals before attempting more questions');
-      recommendations.push('Use Active Recall mode to strengthen retention');
-    } else if (accuracy < 75) {
-      recommendations.push("You're making progress! Focus on your weak areas identified below");
-      recommendations.push('Try spaced repetition for better long-term retention');
-    } else if (accuracy < 85) {
-      recommendations.push('Great work! Challenge yourself with harder questions');
-      recommendations.push('Review missed questions to understand common mistakes');
-    } else {
-      recommendations.push('Excellent performance! Consider helping peers in study groups');
-      recommendations.push('Try Grand Rounds mode for competitive challenge');
-    }
-
-    if (weakAreas.length > 2) {
-      const topWeakArea = weakAreas[0];
-      if (topWeakArea) {
-        recommendations.push(
-          `Priority focus: ${topWeakArea.system} (${topWeakArea.accuracy}% accuracy)`
-        );
-      }
-    }
-
-    if (trendDirection === 'declining') {
-      recommendations.push(
-        'Your accuracy is declining - consider taking a break or reviewing study methods'
+      const recentMap = new Map(
+        recentSystemStats.map(r => [r.system, parseInt(r.correct) / Math.max(1, parseInt(r.total))])
       );
+      const systemPerformances: SystemPerformance[] = systemStats.map(row => {
+        const total = parseInt(row.total);
+        const correct = parseInt(row.correct);
+        const accuracy = total > 0 ? correct / total : 0;
+        const recent = recentMap.get(row.system) ?? accuracy;
+        const diff = recent - accuracy;
+        const trend: 'improving' | 'declining' | 'stable' =
+          diff > 0.05 ? 'improving' : diff < -0.05 ? 'declining' : 'stable';
+
+        return {
+          system: row.system,
+          accuracy,
+          totalAttempts: total,
+          recentAccuracy: recent,
+          trend,
+          weakConditions: [], // Could be enriched with condition-level data
+        };
+      });
+
+      // Streak (consecutive days with >= 1 attempt)
+      const streakDays = await computeStreak(prisma, user.id);
+
+      // Days to exam
+      const daysToExam = user.examDate
+        ? Math.max(0, Math.ceil((new Date(user.examDate).getTime() - Date.now()) / (24*60*60*1000)))
+        : null;
+
+      const input: InsightInput = {
+        userId: user.id,
+        systemPerformances,
+        overallAccuracy,
+        recentAccuracy,
+        totalAttempts,
+        streakDays,
+        daysToExam,
+      };
+      const report = generateInsights(input);
+
+      return new Response(JSON.stringify(report), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (err: any) {
+      return new Response(
+        JSON.stringify({ error: err.message ?? 'Failed to generate insights' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    // Time optimization
-    const avgTimePerQuestion =
-      records.reduce(
-        (sum: number, r: (typeof records)[0]) =>
-          sum + Number((r as { timeSpentMs?: number | null }).timeSpentMs ?? 0),
-        0
-      ) / records.length;
-    const timeOptimization =
-      avgTimePerQuestion > 120
-        ? "You're taking time to think - good! But try to improve speed for exam conditions"
-        : avgTimePerQuestion < 30
-          ? "You're fast! Make sure you're reading questions carefully"
-          : 'Your pace is excellent for exam-like conditions';
-
-    return createSuccessResponse(
-      request,
-      {
-        insights: {
-          hasData: true,
-          period: `Last ${periodDays} days`,
-          summary: {
-            totalQuestions,
-            accuracy: Math.round(accuracy),
-            trend: trendDirection,
-            trendChange: Math.round(trend),
-          },
-          weakAreas: weakAreas.slice(0, 5),
-          strongAreas: strongAreas.slice(0, 3),
-          recommendations,
-          timeOptimization: {
-            avgSeconds: Math.round(avgTimePerQuestion),
-            message: timeOptimization,
-          },
-          systemBreakdown: Object.entries(systemPerformance)
-            .map(([system, data]: [string, any]) => ({
-              system,
-              total: data.total,
-              correct: data.correct,
-              accuracy: Math.round(data.accuracy),
-            }))
-            .sort((a: any, b: any) => b.total - a.total),
-        },
-      },
-      200,
-      0,
-      env
-    );
-  } catch (error: any) {
-    console.error('Error generating student insights:', error);
-    return createErrorResponse(request, 'Failed to generate insights', 500, undefined, env);
-  } finally {
-    await safePrismaDisconnect(prisma);
   }
+);
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function computeStreak(prisma: any, userId: string): Promise<number> {
+  // Get distinct dates with attempts, ordered descending
+  const dates = await prisma.$queryRaw<Array<{ d: string }>>`
+    SELECT DISTINCT DATE("createdAt") AS d
+    FROM "QuestionAttempt"
+    WHERE "userId" = ${userId}
+    ORDER BY d DESC
+    LIMIT 90
+  `;
+
+  if (dates.length === 0) return 0;
+
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < dates.length; i++) {
+    const dateStr = String(dates[i]!.d);
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+
+    const expectedDate = new Date(today);
+    expectedDate.setDate(expectedDate.getDate() - i);
+
+    if (d.getTime() === expectedDate.getTime()) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 }
