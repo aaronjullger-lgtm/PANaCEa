@@ -115,9 +115,18 @@ export class RelationshipExtractor {
    * This is a naive implementation; in production you would use NLP or a medical NER.
    */
   private async extractConditionNames(text: string): Promise<string[]> {
-    // For now, return empty array; implement later
-    // TODO: Use a medical dictionary or lookup from GraphNode labels
-    return [];
+    if (!text || text.length < 3) return [];
+
+    const conditions = await prisma.condition.findMany({
+      select: { id: true, name: true },
+    });
+
+    if (!conditions) return [];
+
+    const lowerText = text.toLowerCase();
+    return conditions
+      .filter((c) => c.name && lowerText.includes(c.name.toLowerCase()))
+      .map((c) => `condition:${c.id}`);
   }
 
   /**
