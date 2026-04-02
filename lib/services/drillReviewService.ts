@@ -29,9 +29,18 @@ import { getUserSpeedFactor, getUserBehavioralBaseline } from './userTimingProfi
 import { getUserCalibration } from './calibrationService';
 import { accumulateConfidence, type HistoricalReview } from '../confidence/bayesianAccumulator';
 import type { TelemetryQuality } from '../implicit-metrics';
-import { applyFatigueCorrection } from './sessionFatigueService';
+import { applyFatigueCorrection, computeFatigueConfidenceDampener } from './sessionFatigueService';
 import { getStabilityCorrectionFactor } from './retrievabilityCalibrationService';
 import { getOptimizedParameters } from './fsrsOptimizerService';
+import { computeDesirableDifficultyBonus } from '../confidence/desirableDifficultyBonus';
+import { detectInterference, type SessionReviewEntry } from '../confidence/interferenceDetector';
+import { detectConfidenceTrend } from '../confidence/trendDetector';
+import { modulateDifficultyDelta } from '../confidence/difficultyModulator';
+// Wave 1 behavioral signal services
+import { computeLapseSeverity } from './lapseSeverityService';
+import { computeRtTrajectory } from './rtTrajectoryService';
+import { recordOutcome as recordAccuracyOutcome, getConfidenceModifier as getAccuracySlopeModifier } from './sessionAccuracySlopeService';
+import { computeIntervalDeviation } from './intervalDeviationService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -259,6 +268,9 @@ export async function submitDrillReview(
           return false;
         });
 
+  // ── Wave 1: Record outcome for session accuracy slope tracking ──
+  recordAccuracyOutcome(userId, isCorrect);
+
   const optionPool = (qData.options || qData.choices) as
     | Array<OptionPoolItem>
     | string[]
@@ -280,6 +292,7 @@ export async function submitDrillReview(
         commitmentGapMedianMs: behavioralBaseline.hesitationBaseline.medianCommitmentGapMs,
         cursorEntropyMedian: behavioralBaseline.hesitationBaseline.medianCursorEntropy,
         oscillationMedian: behavioralBaseline.hesitationBaseline.medianOscillations,
+        exGaussian: behavioralBaseline.rtBaseline.exGaussian,
       }
     : undefined;
 
@@ -320,6 +333,8 @@ export async function submitDrillReview(
   let rating: Rating;
   let gradeContinuous: number;
   let implicitConfidence: number;
+  let rtClassification: string | null = null;
+  let rtSignalQuality = 1.0;
   const switches = answerSwitches ?? 0;
 
   if (isRapidGuess) {
@@ -360,6 +375,9 @@ export async function submitDrillReview(
     rating = continuousResult.discreteRating;
     gradeContinuous = continuousResult.grade;
     implicitConfidence = continuousResult.confidence;
+    // Capture ex-Gaussian RT classification for telemetry (lapse detection)
+    rtClassification = continuousResult.rtClassification ?? null;
+    rtSignalQuality = continuousResult.rtSignalQuality ?? 1.0;
 
     // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
     // Binary system: Again(1) / Good(3). Hard(2) and Easy(4) are deprecated.
@@ -388,6 +406,18 @@ export async function submitDrillReview(
       ? numericTime / circadianAdjustedParTimeMs
       : undefined;
 
+    // Sprint 7: Build Ghost Grader baseline from behavioral baseline for z-score normalization
+    // Uses IQR-derived stddev estimates when direct stddev is unavailable:
+    // stddev ≈ IQR / 1.35 (for normal-ish distributions)
+    const ghostBaseline = behavioralBaseline ? {
+      oscillationMedian: behavioralBaseline.hesitationBaseline.medianOscillations,
+      oscillationStdDev: Math.max(0.5, behavioralBaseline.hesitationBaseline.medianOscillations * 0.8),
+      tremorMedian: 0, // Tremor not yet in baseline — use 0 (falls back to absolute)
+      tremorStdDev: 0,
+      driftMedianMs: behavioralBaseline.hesitationBaseline.medianCommitmentGapMs,
+      driftStdDevMs: Math.max(500, behavioralBaseline.hesitationBaseline.medianCommitmentGapMs * 0.6),
+    } : null;
+
     const ghostResult = applyHonestRatingWithDetail({
       userRating: rating,
       isCorrect,
@@ -398,6 +428,7 @@ export async function submitDrillReview(
       latencyRatio,
       eliminationVelocity,
       optionCount: (question.questionData as any)?.options?.length ?? 4,
+      baseline: ghostBaseline,
     });
     rating = ghostResult.rating;
 
@@ -612,6 +643,8 @@ export async function submitDrillReview(
       circadian_phase: circadianContext.circadianPhase,
       rapid_guess: isRapidGuess,
       telemetry_quality: telemetryQuality,
+      rt_classification: rtClassification,
+      rt_signal_quality: rtSignalQuality,
       ...(currentCard && {
         state: currentCard.state as number,
         stability: currentCard.stability as number,
@@ -728,10 +761,29 @@ export async function submitDrillReview(
         };
 
         const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
+
+        // ── Wave 1A: Lapse severity — amplify difficulty for severe lapses ──
+        let lapseSeverityResult: { severity: number; difficultyMultiplier: number; preLapseReps: number; preLapseStability: number } | undefined;
+        if (!isCorrect && currentCard.state >= 2) {
+          lapseSeverityResult = computeLapseSeverity(
+            currentCard.reps,
+            currentCard.stability,
+            currentCard.state
+          );
+          if (lapseSeverityResult.difficultyMultiplier > 1.0) {
+            const baseDiffIncrease = rawCard.difficulty - currentCard.difficulty;
+            const amplifiedIncrease = baseDiffIncrease * lapseSeverityResult.difficultyMultiplier;
+            rawCard.difficulty = Math.min(10, Math.max(1, currentCard.difficulty + amplifiedIncrease));
+          }
+        }
+
         let modifiedStability = rawCard.stability;
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
 
-        // ── Confidence pipeline: accumulate → calibrate → dampen → modify stability ──
+        // ══════════════════════════════════════════════════════════════════════
+        // CONFIDENCE PIPELINE v3 (8-step → 12-step with Wave 1)
+        // accumulate → calibrate → fatigue → accuracy_slope → interference → fluency → stability → rt_trajectory → interval_deviation → difficulty → trend
+        // ══════════════════════════════════════════════════════════════════════
 
         // Step 1: Bayesian accumulation — blend current confidence with card history
         // Stabilizes confidence estimates; prevents single-review anomalies (Mozer et al., 2009).
@@ -765,18 +817,138 @@ export async function submitDrillReview(
           // Non-fatal — use neutral calibration
         }
 
-        // Step 3: Fluency illusion dampener (Kornell & Bjork, 2008)
+        // Step 3: Session fatigue confidence dampener (Warm, 1984; Helton & Russell, 2015)
+        // Late-session reviews produce signals under cognitive fatigue — dampen confidence
+        const fatigueConfidenceDampener = computeFatigueConfidenceDampener(questionNumber ?? 0);
+
+        // Step 4: Retrieval interference detection (Anderson & Neely, 1996)
+        // Lookup confusion pairs from DB and build session history from ReviewLog
+        let interferenceResult: { discount: number; detected: boolean; details: { interferingCount: number; closestDistance: number | null; type: string } } = {
+          discount: 1.0, detected: false, details: { interferingCount: 0, closestDistance: null, type: 'none' },
+        };
+        try {
+          // Fetch known confusion pairs for this condition from the user's history
+          const confusionPairs = await prisma.confusionPair.findMany({
+            where: {
+              userId,
+              OR: [
+                { correctConditionId: question.conditionId },
+                { selectedConditionId: question.conditionId },
+              ],
+            },
+            select: { correctConditionId: true, selectedConditionId: true },
+            take: 20, // Bounded to prevent unbounded scans
+          });
+          const confusionPairIds = confusionPairs.map(p =>
+            p.correctConditionId === question.conditionId
+              ? p.selectedConditionId
+              : p.correctConditionId
+          );
+
+          // Build session review history from recent ReviewLogs in this session
+          // Uses session_id from telemetry if available, otherwise last 30 min of reviews
+          const sessionId = telemetry?.session_id as string | undefined;
+          const sessionCutoff = new Date(Date.now() - 30 * 60 * 1000); // 30 min fallback
+          const recentSessionReviews = await prisma.reviewLog.findMany({
+            where: {
+              userId,
+              reviewedAt: { gte: sessionCutoff },
+              conditionId: { not: null },
+              review_type: { not: 'rapid_guess' },
+            },
+            select: { conditionId: true, reviewedAt: true },
+            orderBy: { reviewedAt: 'asc' },
+            take: 30,
+          });
+
+          const sessionHistory: SessionReviewEntry[] = recentSessionReviews
+            .filter((r): r is typeof r & { conditionId: string } => r.conditionId != null)
+            .map((r, idx) => ({
+              conditionId: r.conditionId,
+              position: idx,
+            }));
+
+          interferenceResult = detectInterference(
+            question.conditionId,
+            confusionPairIds,
+            sessionHistory
+          );
+        } catch {
+          // Non-fatal — use no-interference fallback (discount = 1.0)
+        }
+
+        // Step 5: Fluency illusion dampener (Kornell & Bjork, 2008)
         const elapsedDays = typeof currentCard.elapsed_days === 'number'
           ? currentCard.elapsed_days
           : 0;
 
-        // Combine: accumulated → calibrated → fluency-dampened
+        // Combine all confidence adjustments: accumulated → calibrated → fatigue → accuracy_slope → interference → fluency
         let adjustedConfidence = accumulated.posterior;
         adjustedConfidence *= calibrationFactor;
+        adjustedConfidence *= fatigueConfidenceDampener;
+
+        // Step 4b: Session accuracy slope (Sievertsen et al., 2016)
+        // Observed declining accuracy within session → dampen confidence
+        const accuracySlope = getAccuracySlopeModifier(userId);
+        adjustedConfidence *= accuracySlope.confidenceMultiplier;
+
+        adjustedConfidence *= interferenceResult.discount;
         adjustedConfidence *= fluencyIllusionDampener(elapsedDays);
 
-        // Step 4: Graduated stability multiplier (sigmoid centered at 0.6)
+        // Step 6: Graduated stability multiplier (sigmoid centered at 0.6)
         modifiedStability *= confidenceStabilityMultiplier(adjustedConfidence);
+
+        // Step 6a: RT trajectory — implicit delayed JOL (Nelson & Dunlosky, 1991)
+        // Faster RT at increasing intervals = consolidation → stability bonus
+        const lastReviewWithRT = reviewHistory
+          .filter((r: any) => typeof r.responseTimeMs === 'number' && r.responseTimeMs > 0)
+          .at(0); // newest first
+        const previousRtMs = (lastReviewWithRT as any)?.responseTimeMs ?? null;
+        const rtTrajectory = computeRtTrajectory(
+          effectiveDurationMs,
+          previousRtMs,
+          currentCard.elapsed_days
+        );
+        if (rtTrajectory.hasHistory && isCorrect) {
+          modifiedStability *= rtTrajectory.stabilityMultiplier;
+        }
+
+        // Step 6b: Interval deviation — information value of this observation (Mozer et al., 2009)
+        const intervalDev = computeIntervalDeviation(
+          currentCard.elapsed_days,
+          currentCard.scheduled_days,
+          isCorrect
+        );
+        modifiedStability *= intervalDev.informationMultiplier;
+
+        // Step 6c: Desirable difficulty bonus (Bjork & Bjork, 2011)
+        // Correct answers with LOW confidence = effortful retrieval → stability BONUS
+        // This partially offsets the penalty from the graduated multiplier above
+        const ddBonus = computeDesirableDifficultyBonus(adjustedConfidence, isCorrect, elapsedDays);
+        if (ddBonus.activated) {
+          modifiedStability *= ddBonus.multiplier;
+          logger?.debug?.('Desirable difficulty bonus applied', {
+            multiplier: ddBonus.multiplier,
+            effortSignal: ddBonus.components.effortSignal,
+            spacingSignal: ddBonus.components.spacingSignal,
+          });
+        }
+
+        // Step 7: Cross-session trend detection (Bjork, 1999; Kornell et al., 2009)
+        // Declining confidence trajectory across reviews → stability penalty
+        const confidenceValues = historicalReviews.map(r => r.confidence);
+        confidenceValues.push(adjustedConfidence); // include current
+        const trend = detectConfidenceTrend(confidenceValues);
+        if (trend.trendMultiplier !== 1.0 && trend.rSquared >= 0.3) {
+          modifiedStability *= trend.trendMultiplier;
+          logger?.debug?.('Cross-session trend applied', {
+            slope: trend.slope,
+            category: trend.category,
+            multiplier: trend.trendMultiplier,
+            rSquared: trend.rSquared,
+          });
+        }
+
         // Exam urgency: when an exam is close, tighten review intervals.
         // urgencyMultiplier > 1.0 → stability shrinks → more frequent reviews.
         // Formula: stability /= (1 + (urgency - 1) * 0.3)
@@ -799,7 +971,20 @@ export async function submitDrillReview(
           });
         }
 
-        const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
+        // Step 8: Confidence-weighted difficulty modulation (Metcalfe & Kornell, 2005)
+        // Modulate how aggressively difficulty shifts based on confidence.
+        // Does not change FSRS core math — operates on the delta after FSRS computes.
+        const baseDifficultyDelta = rawCard.difficulty - currentCard.difficulty;
+        const difficultyMod = modulateDifficultyDelta(baseDifficultyDelta, adjustedConfidence, isCorrect);
+        const modulatedDifficulty = Math.max(1, Math.min(10,
+          currentCard.difficulty + difficultyMod.modulatedDelta
+        ));
+
+        const updatedCard = {
+          ...rawCard,
+          stability: Math.max(0.01, modifiedStability),
+          difficulty: modulatedDifficulty,
+        };
 
         const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
         const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
@@ -855,7 +1040,40 @@ export async function submitDrillReview(
               vignette_regressions: vignetteRegressions,
               time_to_first_interaction: timeToFirstInteraction,
               circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
-              telemetry: buildReviewLogTelemetry(currentCard),
+              telemetry: {
+                ...buildReviewLogTelemetry(currentCard),
+                confidence_pipeline_v3: {
+                  raw_confidence: implicitConfidence,
+                  bayesian_posterior: accumulated.posterior,
+                  bayesian_prior_weight: accumulated.priorWeight,
+                  calibration_factor: calibrationFactor,
+                  fatigue_dampener: fatigueConfidenceDampener,
+                  interference_discount: interferenceResult.discount,
+                  interference_type: interferenceResult.details.type,
+                  fluency_dampener: fluencyIllusionDampener(elapsedDays),
+                  adjusted_confidence: adjustedConfidence,
+                  stability_multiplier: confidenceStabilityMultiplier(adjustedConfidence),
+                  dd_bonus_active: ddBonus.activated,
+                  dd_bonus_multiplier: ddBonus.multiplier,
+                  trend_slope: trend.slope,
+                  trend_category: trend.category,
+                  trend_multiplier: trend.trendMultiplier,
+                  difficulty_modulation_factor: difficultyMod.modulationFactor,
+                  // Wave 1 behavioral signals
+                  lapse_severity: lapseSeverityResult?.severity ?? null,
+                  lapse_severity_multiplier: lapseSeverityResult?.difficultyMultiplier ?? null,
+                  rt_change_ratio: rtTrajectory.rtChangeRatio,
+                  rt_trajectory_multiplier: rtTrajectory.stabilityMultiplier,
+                  session_accuracy_slope: accuracySlope.slope,
+                  session_accuracy_multiplier: accuracySlope.confidenceMultiplier,
+                  session_rolling_accuracy: accuracySlope.rollingAccuracy,
+                  interval_deviation_ratio: intervalDev.deviationRatio,
+                  interval_deviation_multiplier: intervalDev.informationMultiplier,
+                  interval_deviation_class: intervalDev.classification,
+                  final_stability: updatedCard.stability,
+                  final_difficulty: updatedCard.difficulty,
+                },
+              },
             },
           });
         } catch (reviewLogError) {

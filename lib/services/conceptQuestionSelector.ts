@@ -24,7 +24,7 @@
 
 import type { PrismaClient } from '@prisma/client';
 import type { LearnerStage } from './learnerStageBlueprint';
-import { getLeastSeenQuestionForCondition } from './batchVariantService';
+import { batchGetLeastSeenQuestions } from './batchVariantService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -307,12 +307,13 @@ async function fetchDueReviews(
   const result: SelectedQuestion[] = [];
   const usedQuestionIds = new Set<string>();
 
-  for (const progress of dueProgress) {
-    // Variant rotation: prefer the least-seen question (including PreGenerated variants)
-    const leastSeenId = await getLeastSeenQuestionForCondition(
-      prisma, userId, progress.conditionId
-    ).catch(() => null); // Graceful fallback on error
+  // Batch pre-fetch least-seen questions for all conditions (3 queries instead of 3×N)
+  const leastSeenMap = await batchGetLeastSeenQuestions(
+    prisma, userId, conditionIds
+  ).catch(() => new Map<string, string | null>());
 
+  for (const progress of dueProgress) {
+    const leastSeenId = leastSeenMap.get(progress.conditionId) ?? null;
     const candidates = byCondition.get(progress.conditionId) ?? [];
 
     // If leastSeenId points to a Question we already fetched, use it

@@ -358,6 +358,93 @@ export async function getLeastSeenQuestionForCondition(
 
   return allIds[0]!.id;
 }
+// ─── Batched Least-Seen Lookup ───────────────────────────────────────────────
+
+/**
+ * Batch version of getLeastSeenQuestionForCondition.
+ * Resolves least-seen question IDs for multiple conditions in 3 queries total
+ * instead of 3×N (eliminates N+1 in the due-review selection loop).
+ *
+ * @returns Map<conditionId, questionId | null>
+ */
+export async function batchGetLeastSeenQuestions(
+  prisma: PrismaClient,
+  userId: string,
+  conditionIds: string[]
+): Promise<Map<string, string | null>> {
+  if (conditionIds.length === 0) return new Map();
+
+  const uniqueIds = [...new Set(conditionIds)];
+
+  // 1. Fetch all question IDs across all conditions in two bulk queries
+  const [baseQuestions, preGenQuestions] = await Promise.all([
+    prisma.question.findMany({
+      where: { conditionId: { in: uniqueIds } },
+      select: { id: true, conditionId: true },
+    }),
+    prisma.preGeneratedQuestion.findMany({
+      where: { conditionId: { in: uniqueIds } },
+      select: { id: true, conditionId: true },
+    }),
+  ]);
+
+  // Build per-condition candidate lists
+  const candidatesByCondition = new Map<string, Array<{ id: string; isVariant: boolean }>>();
+  for (const q of baseQuestions) {
+    if (!q.conditionId) continue;
+    const list = candidatesByCondition.get(q.conditionId) ?? [];
+    list.push({ id: q.id, isVariant: false });
+    candidatesByCondition.set(q.conditionId, list);
+  }
+  for (const q of preGenQuestions) {
+    if (!q.conditionId) continue;
+    const list = candidatesByCondition.get(q.conditionId) ?? [];
+    list.push({ id: q.id, isVariant: true });
+    candidatesByCondition.set(q.conditionId, list);
+  }
+
+  // 2. Fetch all seen counts in one query
+  const allQuestionIds = [
+    ...baseQuestions.map(q => q.id),
+    ...preGenQuestions.map(q => q.id),
+  ];
+
+  const seenRecords = allQuestionIds.length > 0
+    ? await prisma.userQuestionSeen.findMany({
+        where: { userId, questionId: { in: allQuestionIds } },
+        select: { questionId: true, timesShown: true },
+      })
+    : [];
+
+  const seenMap = new Map(seenRecords.map(r => [r.questionId, r.timesShown]));
+
+  // 3. Resolve least-seen per condition (in-memory sort)
+  const result = new Map<string, string | null>();
+  for (const condId of uniqueIds) {
+    const candidates = candidatesByCondition.get(condId);
+    if (!candidates || candidates.length === 0) {
+      result.set(condId, null);
+      continue;
+    }
+    if (candidates.length === 1) {
+      result.set(condId, candidates[0]!.id);
+      continue;
+    }
+
+    candidates.sort((a, b) => {
+      const seenA = seenMap.get(a.id) ?? 0;
+      const seenB = seenMap.get(b.id) ?? 0;
+      if (seenA !== seenB) return seenA - seenB;
+      if (a.isVariant !== b.isVariant) return a.isVariant ? -1 : 1;
+      return Math.random() - 0.5;
+    });
+
+    result.set(condId, candidates[0]!.id);
+  }
+
+  return result;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function sleep(ms: number): Promise<void> {
