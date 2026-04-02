@@ -33,6 +33,9 @@ import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
 import { RetentionForecastCard } from './RetentionForecastCard';
 import { StudyActionList, type StudyAction } from './StudyActionCard';
 import { BlueprintProgressBar } from './BlueprintProgressBar';
+import { RotationFocusCard } from './RotationFocusCard';
+import { WellnessWidget } from './WellnessWidget';
+import { computeWellnessState, type StudySession } from '@/hooks/useStudyWellness';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
@@ -474,6 +477,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 targetWeights={NCCPA_BLUEPRINT_WEIGHTS}
                 totalAnswered={totalCardsLearned}
               />
+
+              {/* Rotation Focus + Wellness */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RotationFocusCard
+                  rotationName={user?.publicMetadata?.currentRotation as string | undefined}
+                  onStartDrill={(system) => handleNavigation(`/study/main-session?system=${system}`)}
+                  systemPerformance={systemCounts ? Object.fromEntries(
+                    Object.entries(systemCounts).map(([sys, count]) => [sys, Math.min(1, (count as number) / 20)])
+                  ) : {}}
+                />
+                <WellnessWidget
+                  signal={computeWellnessState([] as StudySession[], 0).signal}
+                />
+              </div>
 
               {/* Exam Readiness + Retention Forecast */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

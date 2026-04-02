@@ -2,20 +2,27 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { GraphEdgeType } from '@prisma/client';
 import { RelationshipExtractor } from '@/services/graph/RelationshipExtractor';
 
-// Mock prisma
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    medicalContent: {
-      findMany: vi.fn(),
-    },
-    graphEdge: {
-      upsert: vi.fn(),
-    },
-    $transaction: vi.fn((ops) => Promise.all(ops.map((op: any) => op()))),
-  },
+// Mock prisma — use vi.hoisted() to avoid hoisting issues
+const {
+  mockConditionFindMany,
+  mockMedicalContentFindMany,
+  mockGraphEdgeUpsert,
+  mockTransaction,
+} = vi.hoisted(() => ({
+  mockConditionFindMany: vi.fn().mockImplementation(() => Promise.resolve([])),
+  mockMedicalContentFindMany: vi.fn(),
+  mockGraphEdgeUpsert: vi.fn(),
+  mockTransaction: vi.fn((ops: any[]) => Promise.all(ops.map((op: any) => op()))),
 }));
 
-import { prisma } from '@/lib/prisma';
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    medicalContent: { findMany: mockMedicalContentFindMany },
+    condition: { findMany: mockConditionFindMany },
+    graphEdge: { upsert: mockGraphEdgeUpsert },
+    $transaction: mockTransaction,
+  },
+}));
 
 describe('RelationshipExtractor', () => {
   let extractor: RelationshipExtractor;
@@ -41,12 +48,10 @@ describe('RelationshipExtractor', () => {
           relatedSystems: [],
         },
       ];
-      (prisma.medicalContent.findMany as Mock).mockResolvedValue(mockContents);
-      // Mock extractConditionNames to return empty for simplicity
-      // We'll need to mock the private method, but we can instead spy on prototype
-      // For now, just ensure the method is called
+      mockMedicalContentFindMany.mockResolvedValue(mockContents);
+      mockConditionFindMany.mockResolvedValue([]);
       await extractor.extractAll();
-      expect(prisma.medicalContent.findMany).toHaveBeenCalledWith({
+      expect(mockMedicalContentFindMany).toHaveBeenCalledWith({
         select: expect.objectContaining({
           id: true,
           conditionId: true,
@@ -62,7 +67,7 @@ describe('RelationshipExtractor', () => {
         where: { status: { not: 'draft' } },
       });
       // Since extractConditionNames returns empty, no edges should be created
-      expect(prisma.graphEdge.upsert).not.toHaveBeenCalled();
+      expect(mockGraphEdgeUpsert).not.toHaveBeenCalled();
     });
   });
 

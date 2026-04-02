@@ -121,8 +121,42 @@ plans/               → Implementation plans
 - Rapid-guess filtering: responses below MVRT (minimum valid response time) are flagged.
 - The optimizer sidecar (`gcp-fsrs-optimizer/`) uses review_time, review_rating, review_state, review_duration from ReviewLog to fit personalized FSRS weights.
 
-## Current Priority: Content & Polish
-All drill types now feed into the FSRS pipeline. The remaining priorities are: (1) generate more questions for under-represented PANCE blueprint areas (CV, PULM), (2) fix Knowledge Base content loading, (3) UI/UX polish from audit findings.
+## Current Priority: Content Generation & Integration Wiring
+Sprints 1-7 completed (2026-04-02). All drill types feed into FSRS. Remaining priorities: (1) generate more questions with new `questionOrder`/`taskCategory` taxonomy for under-represented PANCE blueprint areas (CV, PULM), (2) run Prisma migration for new schema fields (`questionOrder`, `taskCategory`, `accountStatus`, `deletionScheduledAt`), (3) wire `RotationFocusCard` to real user profile data (currentRotation, eorDate), (4) wire `useStudyWellness` to real session history, (5) fix Knowledge Base content loading.
+
+### New Subsystems (Sprints 1-7, 2026-04-02)
+
+#### Question Order Taxonomy
+- `questionOrder`: 'first' | 'second' | 'third' (Bloom's taxonomy mapped)
+- `taskCategory`: 8 PANCE task categories per NCCPA blueprint
+- `ORDER_DISTRIBUTION_BY_PHASE` in `lib/nccpa-question-weighting.ts`: didactic/clinical/pance_prep phase distributions
+- `learnerPhase` on `SessionQuestionRequest` for progression-aware selection
+- Question schema, validator, and Gemini prompt all updated
+
+#### PA Curriculum Knowledge Base
+- `lib/constants/pa-curriculum.ts`: 12 didactic courses, 10 clinical rotations, 5 milestone exams, licensure pathway, common struggles
+- Helper functions: `findRotation()`, `getRotationSystems()`, `getRotationHighYield()`, `inferPhase()`
+
+#### Dashboard Enhancements
+- `StudyActionCard.tsx`: Priority action cards (overdue, due today, streak, drills)
+- `BlueprintProgressBar.tsx`: NCCPA system coverage visualization
+- `RotationFocusCard.tsx`: Rotation-specific study guidance with EOR countdown
+- `WellnessWidget.tsx`: Study wellness status (thriving/steady/tired/burnout_risk)
+- `useStudyNudges.ts`: Context-aware toast notifications with cooldowns
+- `useStudyWellness.ts`: Burnout detection from session patterns
+
+#### OSCE Enhancements
+- `services/domain/adaptivePersonalitySelector.ts`: Student-weakness-aware personality selection with progressive difficulty tiers and rotation-personality weights
+- `lib/osce/clinicalReasoningScaffold.ts`: 5-step Clinical Reasoning Ladder (H&P → PE → Dx → DDx → Tx) with per-step scoring and Gemini grading prompts
+- `ROTATION_CASE_MAP`: 10+ rotation-to-condition mappings for focused OSCE practice
+
+#### Clinical Data Reference
+- `lib/constants/clinical-data.ts`: 11 imaging patterns, 12 auscultation sounds, 5 vital ranges, SIRS criteria, shock classification
+- Helper functions: `getImagingBySystem()`, `getImagingByModality()`, `getAuscultationByType()`
+
+#### Account Lifecycle
+- `functions/api/user/delete.ts`: DELETE (30-day soft delete) + PUT (cancel deletion)
+- `accountStatus` and `deletionScheduledAt` on User model
 
 ## Verified Issues (2026-03-31 Audit)
 
