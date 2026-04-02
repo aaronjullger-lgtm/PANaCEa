@@ -213,6 +213,7 @@ export function behavioralPayloadToTelemetryData(
     selectionDriftMs: number | null;
     tremorScore: number;
     cursorEntropy?: number;
+    inputMethod?: 'mouse' | 'touch';
   },
   /** Eliminations per second (strategy speed). */
   eliminationVelocity?: number
@@ -247,6 +248,7 @@ export function behavioralPayloadToTelemetryData(
       selection_drift_ms: microKinetics.selectionDriftMs ?? undefined,
       tremor_score: microKinetics.tremorScore,
       cursor_entropy: microKinetics.cursorEntropy,
+      input_method: microKinetics.inputMethod,
     }),
     ...(eliminationVelocity !== undefined && { elimination_velocity: eliminationVelocity }),
   };

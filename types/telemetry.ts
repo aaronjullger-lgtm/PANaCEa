@@ -294,6 +294,13 @@ export interface TelemetryData {
    * Used server-side for fatigue detection and par time correction.
    */
   question_number?: number;
+
+  /**
+   * Input method that produced the kinetics signals.
+   * 'mouse' = desktop hover/trajectory signals, 'touch' = mobile tap/pressure signals.
+   * Allows server to apply method-appropriate thresholds if needed.
+   */
+  input_method?: 'mouse' | 'touch';
 }
 
 /**

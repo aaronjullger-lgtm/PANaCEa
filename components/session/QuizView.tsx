@@ -50,7 +50,7 @@ import {
   behavioralPayloadToTelemetryData,
   enrichTelemetryWithSessionPosition,
 } from '@/components/quiz/Tracker';
-import { useMicroKinetics } from '@/hooks/useMicroKinetics';
+import { useUnifiedKinetics } from '@/hooks/useUnifiedKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 // ErrorTagger moved to AnswerFeedback component
@@ -370,7 +370,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- IMPLICIT METRICS TRACKING ----
   const implicitMetrics = useImplicitMetrics();
   const behavioralTracker = useBehavioralTracker();
-  const microKinetics = useMicroKinetics();
+  const microKinetics = useUnifiedKinetics();
   const fatigueTracking = useFatigueTracking(isExamSimulator);
 
   // ---- QUEUE HANDLING ----
@@ -962,6 +962,7 @@ const QuizView: React.FC<QuizViewProps> = ({
               selectionDriftMs: microMetrics.selectionDriftMs,
               tremorScore: microMetrics.tremorScore,
               cursorEntropy: microMetrics.cursorEntropy,
+              inputMethod: microKinetics.inputMethod,
             },
             eliminationVelocity
           )
@@ -1672,7 +1673,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     optionIndex={index}
                     optionLabel={optionLabel}
                     className="block"
-                    onHoverEnter={microKinetics.recordHoverEnter}
+                    onHoverEnter={microKinetics.recordOptionInteraction}
                   >
                     <AnswerChoice
                       ref={(el) => {
