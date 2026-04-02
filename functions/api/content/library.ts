@@ -58,9 +58,11 @@ export const onRequestGet = authenticatedEndpoint(
         typeof safeValidated.search === 'string' ? safeValidated.search : undefined;
       const highYield = safeValidated.highYield;
 
+      const page = Math.max(1, parseInt(safeValidated.page || '1', 10) || 1);
+      const pageSize = Math.min(200, Math.max(1, parseInt(safeValidated.pageSize || '100', 10) || 100));
       const search = rawSearch?.trim().slice(0, MAX_SEARCH_LENGTH) || undefined;
 
-      const cacheKey = `content:library:${system ?? 'all'}:${subcategory ?? ''}:${search ?? ''}:${highYield ?? ''}`;
+      const cacheKey = `content:library:${system ?? 'all'}:${subcategory ?? ''}:${search ?? ''}:${highYield ?? ''}:p${page}:ps${pageSize}`;
       if (!search) {
         const cached = await getCached<{ content: unknown[]; count: number }>(
           env as { CACHE?: KVNamespace },
@@ -110,6 +112,9 @@ export const onRequestGet = authenticatedEndpoint(
         }
       }
 
+      // First get total count for pagination metadata
+      const totalCount = await prisma.medicalContent.count({ where });
+
       const content = await prisma.medicalContent.findMany({
         where,
         select: {
@@ -141,6 +146,8 @@ export const onRequestGet = authenticatedEndpoint(
         orderBy: searchResults
           ? undefined
           : [{ pance_yield: 'desc' }, { subcategory: 'asc' }, { condition: 'asc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
       });
 
       if (searchResults && searchResults.length > 0) {
@@ -157,8 +164,9 @@ export const onRequestGet = authenticatedEndpoint(
         normalizeMedicalContent(item)
       );
 
-      logger.info('Library content fetched', { count: normalizedContent.length, system, search });
-      const payload = { content: normalizedContent, count: normalizedContent.length };
+      logger.info('Library content fetched', { count: normalizedContent.length, totalCount, system, search, page, pageSize });
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const payload = { content: normalizedContent, count: normalizedContent.length, totalCount, page, pageSize, totalPages };
       if (!search) {
         await setCached(env as { CACHE?: KVNamespace }, cacheKey, payload, CACHE_TTL);
       }

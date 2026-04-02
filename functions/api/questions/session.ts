@@ -132,7 +132,7 @@ export const onRequestGet = authenticatedEndpoint(
         userId: auth.userId,
       });
       const isDbUnavailable =
-        /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
+        /connect|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|accelerate|pool/i.test(errMsg);
       return {
         data: {
           error: isDbUnavailable
@@ -239,7 +239,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       userId: auth.userId,
     });
     const isDbUnavailable =
-      /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
+      /connect|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|accelerate|pool/i.test(errMsg);
     return {
       data: {
         error: isDbUnavailable
