@@ -4,10 +4,9 @@ interface ProgressRingProps {
   score: number;
   size?: number;
   strokeWidth?: number;
-  ariaLabel?: string;
 }
 
-const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWidth = 10, ariaLabel }) => {
+const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWidth = 10 }) => {
   const normalizedScore = Math.max(0, Math.min(100, score));
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -27,7 +26,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({ score, size = 120, strokeWi
       aria-valuenow={Math.round(normalizedScore)}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={ariaLabel || `Progress: ${Math.round(normalizedScore)}%`}
+      aria-label="Score progress"
     >
       <svg className="transform -rotate-90" width={size} height={size} aria-hidden="true">
         <circle

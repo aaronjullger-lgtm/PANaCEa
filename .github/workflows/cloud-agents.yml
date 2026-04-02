@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [path-filter, changed-files]
     if: |
-      env.CURSOR_AGENTS_API_KEY != '' &&
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') &&
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
       needs.path-filter.outputs.functions == 'true'
     steps:
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [path-filter, changed-files]
     if: |
-      env.CURSOR_AGENTS_API_KEY != '' &&
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') &&
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
       needs.path-filter.outputs.functions_api == 'true'
     steps:
@@ -139,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [path-filter, changed-files]
     if: |
-      env.CURSOR_AGENTS_API_KEY != '' &&
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') &&
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
       needs.path-filter.outputs.assets == 'true'
     steps:
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [path-filter, changed-files]
     if: |
-      env.CURSOR_AGENTS_API_KEY != '' &&
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') &&
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
       needs.path-filter.outputs.schema_config == 'true'
     steps:
@@ -185,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [path-filter, changed-files]
     if: |
-      env.CURSOR_AGENTS_API_KEY != '' &&
+      (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') &&
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
       needs.path-filter.outputs.e2e_scope == 'true'
     steps:
@@ -207,7 +207,7 @@ jobs:
     name: Agent – PR Review
     runs-on: ubuntu-latest
     needs: [changed-files]
-    if: env.CURSOR_AGENTS_API_KEY != '' && github.event_name == 'pull_request'
+    if: (github.repository == 'aaronjullger-lgtm/PANaCEa' || secrets.CURSOR_AGENTS_API_KEY != '') && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -226,7 +226,7 @@ jobs:
   agent-security-sentinel:
     name: Agent – Security Sentinel
     runs-on: ubuntu-latest
-    if: env.CURSOR_AGENTS_API_KEY != '' && github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
