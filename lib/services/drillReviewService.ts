@@ -31,6 +31,7 @@ import { accumulateConfidence, type HistoricalReview } from '../confidence/bayes
 import type { TelemetryQuality } from '../implicit-metrics';
 import { applyFatigueCorrection } from './sessionFatigueService';
 import { getStabilityCorrectionFactor } from './retrievabilityCalibrationService';
+import { getOptimizedParameters } from './fsrsOptimizerService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -681,7 +682,9 @@ export async function submitDrillReview(
     } else {
       // For normal reviews: run FSRS calculation, create ReviewLog, update UserProgress
       try {
-        const fsrs = new FSRS();
+        // Sprint 5: Use per-user/system optimized parameters when available
+        const optimizedParams = await getOptimizedParameters(prisma, userId, question.system).catch(() => undefined);
+        const fsrs = optimizedParams ? new FSRS(optimizedParams) : new FSRS();
         const existingProgress = await prisma.userProgress.findUnique({
           where: {
             userId_conditionId: {
