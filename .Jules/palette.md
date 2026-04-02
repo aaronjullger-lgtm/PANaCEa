@@ -1,0 +1,3 @@
+## 2025-03-09 - ProgressRing Accessibility Improvements
+**Learning:** Custom SVG progress indicators (like ProgressRing) are completely opaque to screen readers by default. Providing the raw text percentage inside the SVG is often insufficient context. The standard `role="progressbar"` along with `aria-valuenow`, `aria-valuemin`, and `aria-valuemax` should always be applied to the container of such visual components to provide semantic meaning.
+**Action:** When building custom visual data components (charts, gauges, rings), always wrap them in an appropriate semantic ARIA role and explicitly hide purely decorative SVG elements with `aria-hidden="true"`.
