@@ -12,6 +12,7 @@
  */
 
 import { z } from 'zod';
+import { resolveSystem } from '../_shared/inferSystem';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -21,6 +22,7 @@ import {
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
 import { SYSTEM_ALIASES } from '../../../lib/constants/blueprint';
+import { getFromCache, setInCache, isKVAvailable } from '../_shared/cache';
 
 // ============================================================================
 // Types
@@ -95,16 +97,19 @@ export async function calculateConceptGaps(
   const osceSessions = await prisma.patientEncounterSession.findMany({
     where: { userId },
     include: {
-      OsceResult: true,
-      PatientEncounterCase: { select: { chiefComplaint: true, correctDiagnosis: true } },
+      OsceResult: { select: { checklist: true, redFlagsMissed: true, score: true, clinicalReasoningScore: true } },
+      PatientEncounterCase: { select: { chiefComplaint: true, correctDiagnosis: true, targetSystem: true } },
     },
+    orderBy: { startTime: 'desc' },
+    take: 100, // Bound to prevent memory exhaustion for users with many sessions
   });
 
   for (const session of osceSessions) {
     const result = session.OsceResult;
     if (!result) continue;
 
-    const system = inferSystemFromCase(
+    const system = resolveSystem(
+      session.PatientEncounterCase.targetSystem,
       session.PatientEncounterCase.chiefComplaint,
       session.PatientEncounterCase.correctDiagnosis
     );
@@ -259,18 +264,6 @@ export async function calculateConceptGaps(
   return { bySystem, byTask, bySystemAndTask, gaps: allGaps };
 }
 
-function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): string {
-  const text = `${chiefComplaint} ${correctDiagnosis}`.toLowerCase();
-  if (/\b(heart|cardiac|chest pain|acs|mi|coronary)\b/.test(text)) return 'Cardiovascular';
-  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe)\b/.test(text)) return 'Pulmonary';
-  if (/\b(gi|abdominal|hepatic|pancreat)\b/.test(text)) return 'Gastrointestinal';
-  if (/\b(neuro|stroke|seizure|headache)\b/.test(text)) return 'Neurological';
-  if (/\b(renal|kidney|aki|ckd)\b/.test(text)) return 'Nephrology';
-  if (/\b(infection|sepsis|uti|pneumonia)\b/.test(text)) return 'Infectious Disease';
-  if (/\b(psych|depression|anxiety|suicid)\b/.test(text)) return 'Psychiatry';
-  return 'General';
-}
-
 // ============================================================================
 // Weak Spot Profile (Tutor Context)
 // ============================================================================
@@ -392,6 +385,16 @@ export const onRequestGet = authenticatedEndpoint(ProfileSchema, async (context)
   let prisma: EdgePrismaClient | null = null;
 
   try {
+    // ── KV cache: 5-minute TTL (concept gaps change slowly) ──
+    const cacheKey = `intel_profile:${auth.userId}`;
+    if (isKVAvailable(env.CACHE)) {
+      const cached = await getFromCache(env.CACHE, cacheKey);
+      if (cached) {
+        log.info('Intelligence profile cache hit');
+        return { data: cached, headers: { 'X-Cache': 'HIT' } };
+      }
+    }
+
     prisma = createEdgePrismaClient(env.DATABASE_URL);
     const userId = await resolveUserId(prisma, auth.userId);
     if (!userId) {
@@ -412,10 +415,16 @@ export const onRequestGet = authenticatedEndpoint(ProfileSchema, async (context)
       tutorContext,
     };
 
+    // Cache the result
+    if (isKVAvailable(env.CACHE)) {
+      await setInCache(env.CACHE, cacheKey, payload, 300); // 5 min TTL
+    }
+
     log.info('Intelligence profile generated', { gapCount: gaps.gaps.length });
 
     return {
       data: payload,
+      headers: { 'X-Cache': 'MISS' },
     };
   } catch (error) {
     log.error('Intelligence profile error', { error });

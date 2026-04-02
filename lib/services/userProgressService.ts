@@ -44,41 +44,41 @@ export async function updateUserProgressWithHistory(
 
   if (executeRaw) {
     try {
-      // Prisma Json[] → PostgreSQL jsonb[]; append one element with array_append
+      // Single atomic UPDATE: append reviewHistory, increment counters, set FSRS card
+      // Avoids read-between-writes race condition on totalAttempts/correctCount
+      const correctIncrement = accuracy >= 0.7 ? 1 : 0;
+      const fsrsCardJson = JSON.stringify({
+        stability: fsrsCard.stability,
+        difficulty: fsrsCard.difficulty,
+        state: fsrsCard.state,
+        elapsed_days: fsrsCard.elapsed_days,
+        scheduled_days: fsrsCard.scheduled_days,
+        reps: fsrsCard.reps,
+        lapses: fsrsCard.lapses,
+        last_review: fsrsCard.last_review.toISOString(),
+      });
+
       const result = await executeRaw(
-        Prisma.sql`UPDATE "UserProgress" SET "reviewHistory" = array_append("reviewHistory", (${snapshotJson})::jsonb) WHERE "userId" = ${userId} AND "conditionId" = ${conditionId}`
+        Prisma.sql`
+          UPDATE "UserProgress"
+          SET
+            "reviewHistory" = array_append("reviewHistory", (${snapshotJson})::jsonb),
+            "totalAttempts" = "totalAttempts" + 1,
+            "correctCount" = "correctCount" + ${correctIncrement},
+            "accuracy" = CASE
+              WHEN "totalAttempts" + 1 > 0
+              THEN ("correctCount" + ${correctIncrement})::float / ("totalAttempts" + 1)::float
+              ELSE 0
+            END,
+            "fsrsCard" = (${fsrsCardJson})::jsonb,
+            "lastReviewAt" = ${now},
+            "nextReviewAt" = ${nextReviewDate},
+            "updatedAt" = ${now}
+          WHERE "userId" = ${userId} AND "conditionId" = ${conditionId}
+        `
       );
       const updated = typeof result === 'number' ? result : Number(result);
-      if (updated > 0) {
-        const row = await prisma.userProgress.findUnique({
-          where: { userId_conditionId: { userId, conditionId } },
-          select: { totalAttempts: true, correctCount: true },
-        });
-        const totalAttempts = (row?.totalAttempts ?? 0) + 1;
-        const correctCount = (row?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
-        await prisma.userProgress.update({
-          where: { userId_conditionId: { userId, conditionId } },
-          data: {
-            fsrsCard: {
-              stability: fsrsCard.stability,
-              difficulty: fsrsCard.difficulty,
-              state: fsrsCard.state,
-              elapsed_days: fsrsCard.elapsed_days,
-              scheduled_days: fsrsCard.scheduled_days,
-              reps: fsrsCard.reps,
-              lapses: fsrsCard.lapses,
-              last_review: fsrsCard.last_review.toISOString(),
-            },
-            totalAttempts,
-            correctCount,
-            accuracy: totalAttempts > 0 ? correctCount / totalAttempts : 0,
-            lastReviewAt: now,
-            nextReviewAt: nextReviewDate,
-            updatedAt: now,
-          },
-        });
-        return;
-      }
+      if (updated > 0) return;
     } catch (e) {
       // Fallback to read-modify-write if raw not supported or DB type differs
     }

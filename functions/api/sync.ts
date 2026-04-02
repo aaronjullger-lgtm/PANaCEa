@@ -21,6 +21,7 @@ import {
 } from './_shared/prisma-edge';
 import { authenticatedEndpoint, withCors } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
+import { getFromCache, setInCache, isKVAvailable } from './_shared/cache';
 
 // ============================================================================
 // SCHEMAS
@@ -373,6 +374,16 @@ export const onRequestGet = authenticatedEndpoint(
     let prisma: EdgePrismaClient | null = null;
 
     try {
+      // ── KV cache: 15-second TTL (prevents rapid re-fetches on flaky connections) ──
+      const syncCacheKey = `sync:${context.auth.userId}`;
+      if (isKVAvailable(context.env.CACHE)) {
+        const cached = await getFromCache(context.env.CACHE, syncCacheKey);
+        if (cached) {
+          log.info('Sync GET cache hit');
+          return { data: cached, headers: { 'X-Cache': 'HIT' } };
+        }
+      }
+
       prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
       // Resolve clerkId to internal userId
@@ -384,16 +395,25 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      // Fetch all user data in parallel
+      // Fetch all user data in parallel (bounded + column-limited for performance)
       const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
         prisma.performanceRecord.findMany({
           where: { userId: internalUserId },
+          select: {
+            id: true, userId: true, timestamp: true, questionId: true,
+            score: true, timeSpent: true, category: true, difficulty: true,
+            reviewType: true, tags: true,
+          },
+          take: 2000,
+          orderBy: { timestamp: 'desc' },
         }),
         prisma.sRSItem.findMany({
           where: { userId: internalUserId },
+          take: 2000,
         }),
         prisma.savedQuestion.findMany({
           where: { userId: internalUserId },
+          take: 500,
         }),
       ]);
 
@@ -404,19 +424,27 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       type PerformanceRecordItem = (typeof performanceRecords)[0];
-      return {
+      const responseData = {
+        success: true,
+        message: 'Data retrieved successfully',
         data: {
-          success: true,
-          message: 'Data retrieved successfully',
-          data: {
-            performanceRecords: performanceRecords.map((r: PerformanceRecordItem) => ({
-              ...r,
-              timestamp: Number(r.timestamp),
-            })),
-            srsItems,
-            savedQuestions,
-          },
+          performanceRecords: performanceRecords.map((r: PerformanceRecordItem) => ({
+            ...r,
+            timestamp: Number(r.timestamp),
+          })),
+          srsItems,
+          savedQuestions,
         },
+      };
+
+      // Cache the sync response
+      if (isKVAvailable(context.env.CACHE)) {
+        await setInCache(context.env.CACHE, syncCacheKey, responseData, 15); // 15s TTL
+      }
+
+      return {
+        data: responseData,
+        headers: { 'X-Cache': 'MISS' },
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

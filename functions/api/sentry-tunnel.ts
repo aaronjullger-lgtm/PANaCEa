@@ -21,8 +21,35 @@ const SENTRY_HOST = 'o4510664011087872.ingest.us.sentry.io';
 // FIXED 2026-01-10: Corrected to match actual Sentry SDK DSN project ID
 const SENTRY_PROJECT_ID = '4510664023212032';
 
+// Simple in-memory rate limiter for unauthenticated Sentry tunnel (per-isolate).
+// Not distributed — each CF isolate tracks independently, which is acceptable
+// since the goal is preventing abuse, not exact counting.
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 envelopes per minute per IP
+const ipBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function checkSentryRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const bucket = ipBuckets.get(ip);
+  if (!bucket || now > bucket.resetAt) {
+    ipBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  bucket.count++;
+  return bucket.count <= RATE_LIMIT_MAX;
+}
+
 export async function onRequestPost(context: any) {
   const { request } = context;
+
+  // Rate limit by IP to prevent abuse of unauthenticated tunnel
+  const clientIp = request.headers.get('cf-connecting-ip') ?? 'unknown';
+  if (!checkSentryRateLimit(clientIp)) {
+    return new Response(JSON.stringify({ error: 'Rate limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+    });
+  }
 
   try {
     // Get the raw envelope body

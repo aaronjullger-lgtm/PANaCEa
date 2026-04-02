@@ -239,6 +239,7 @@ export const onRequestGet = authenticatedEndpoint(
       const seenQuestionIds = await prisma.userQuestionSeen.findMany({
         where: { userId },
         select: { questionId: true },
+        take: 10000, // Bound to prevent memory exhaustion for power users
       });
       const seenIds = new Set<string>(
         seenQuestionIds.map((q: { questionId: string }) => q.questionId)
