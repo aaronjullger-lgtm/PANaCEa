@@ -21,7 +21,7 @@ import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
 import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
-import { applyHonestRating } from '../srs/ghostGrader';
+import { applyHonestRating, applyHonestRatingWithDetail, GHOST_GRADER_CONSTANTS } from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../taskTypes';
@@ -375,24 +375,41 @@ export async function submitDrillReview(
         answerSwitches: switches,
       });
     }
-    // Rule 3 (Ghost Grader): oscillations, drift, tremor → force Hard for honest history
+    // Rule 3 (Ghost Grader): bidirectional behavioral adjustment
+    // - Indecision signals → downgrade to Again + cap grade_continuous
+    // - Clean signals + fast response → boost grade_continuous (confidence pathway)
+    // - Fast elimination → additional boost; absent elimination → soft penalty
     const oscillations = (telemetry?.hover_oscillations as number | undefined) ?? 0;
     const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? 0;
     const selectionDriftMs = telemetry?.selection_drift_ms as number | null | undefined;
     const tremorScore = (telemetry?.tremor_score as number | undefined) ?? 0;
-    rating = applyHonestRating({
+    const eliminationVelocity = (telemetry?.elimination_velocity as number | undefined) ?? undefined;
+    const latencyRatio = circadianAdjustedParTimeMs > 0
+      ? numericTime / circadianAdjustedParTimeMs
+      : undefined;
+
+    const ghostResult = applyHonestRatingWithDetail({
       userRating: rating,
       isCorrect,
       oscillations,
       vignetteRegressions,
       selectionDriftMs: selectionDriftMs ?? null,
       tremorScore,
+      latencyRatio,
+      eliminationVelocity,
+      optionCount: (question.questionData as any)?.options?.length ?? 4,
     });
+    rating = ghostResult.rating;
 
-    // When Ghost Grader downgraded to Again, ensure gradeContinuous reflects it.
-    // Again means "you didn't really know it" → grade should be in [1.0, 1.9].
-    if (rating === Rating.Again && gradeContinuous > 1.9) {
-      gradeContinuous = 1.5; // Midpoint of Again range — honest but not catastrophic
+    // Apply grade_continuous adjustment from Ghost Grader
+    if (ghostResult.rule === 'indecision') {
+      // Indecision: cap grade_continuous at 1.5 (Again range)
+      gradeContinuous = Math.min(gradeContinuous, GHOST_GRADER_CONSTANTS.INDECISION_GRADE_CAP);
+    } else if (ghostResult.gradeContinuousAdjustment !== 0) {
+      // Confidence boost or elimination adjustment
+      gradeContinuous = Math.max(1.0, Math.min(4.0,
+        gradeContinuous + ghostResult.gradeContinuousAdjustment
+      ));
     }
   }
 
