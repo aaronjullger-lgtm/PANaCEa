@@ -303,3 +303,202 @@ export const OPTIMIZER_CONSTANTS = {
   OPTIMIZABLE_INDICES,
   PARAM_BOUNDS,
 } as const;
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// Sprint 9: Circadian-Aware FSRS Parameter Optimization
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Splits review training data by time-of-day phase and produces separate
+// parameter sets. During scheduling, the phase-appropriate parameters are
+// used, accounting for circadian effects on memory consolidation.
+//
+// Phases:
+//   Morning   06:00–11:59 (high cortisol, strong encoding)
+//   Afternoon 12:00–16:59 (post-lunch dip)
+//   Evening   17:00–21:59 (second wind, good for review)
+//   Night     22:00–05:59 (fatigue, reduced performance)
+
+export type CircadianPhase = 'morning' | 'afternoon' | 'evening' | 'night';
+
+const MIN_REVIEWS_PER_PHASE = 50;
+
+/**
+ * Determine circadian phase from hour of day (0–23).
+ */
+export function getCircadianPhase(hour: number): CircadianPhase {
+  if (hour >= 6 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 22) return 'evening';
+  return 'night';
+}
+
+/**
+ * Split review data by circadian phase based on review timestamp hour.
+ */
+export function splitByCircadianPhase(
+  reviews: Array<ReviewDatum & { hourOfDay: number }>
+): Record<CircadianPhase, ReviewDatum[]> {
+  const result: Record<CircadianPhase, ReviewDatum[]> = {
+    morning: [],
+    afternoon: [],
+    evening: [],
+    night: [],
+  };
+
+  for (const r of reviews) {
+    result[getCircadianPhase(r.hourOfDay)].push(r);
+  }
+
+  return result;
+}
+
+export interface CircadianOptimizationResult {
+  /** Global optimized parameters (fallback) */
+  global: OptimizationResult;
+  /** Per-phase optimized parameters (only for phases with enough data) */
+  phases: Partial<Record<CircadianPhase, OptimizationResult>>;
+  /** Which phases had sufficient data for optimization */
+  availablePhases: CircadianPhase[];
+}
+
+/**
+ * Run circadian-aware optimization on review data with hour annotations.
+ * Produces global parameters plus per-phase overrides for phases with
+ * sufficient data (≥50 reviews).
+ */
+export function optimizeWithCircadian(
+  reviews: Array<ReviewDatum & { hourOfDay: number }>,
+  initialParams: FSRSParameters = defaultParameters
+): CircadianOptimizationResult {
+  // Global optimization (always runs)
+  const globalOpt = optimizeParameters(reviews, initialParams);
+  const global: OptimizationResult = {
+    parameters: globalOpt.parameters,
+    initialLoss: globalOpt.initialLoss,
+    finalLoss: globalOpt.finalLoss,
+    reviewCount: reviews.length,
+    system: 'global',
+    optimizedAt: new Date().toISOString(),
+  };
+
+  // Per-phase optimization
+  const phaseData = splitByCircadianPhase(reviews);
+  const phases: Partial<Record<CircadianPhase, OptimizationResult>> = {};
+  const availablePhases: CircadianPhase[] = [];
+
+  for (const phase of ['morning', 'afternoon', 'evening', 'night'] as CircadianPhase[]) {
+    if (phaseData[phase].length >= MIN_REVIEWS_PER_PHASE) {
+      const phaseOpt = optimizeParameters(phaseData[phase], globalOpt.parameters);
+      phases[phase] = {
+        parameters: phaseOpt.parameters,
+        initialLoss: phaseOpt.initialLoss,
+        finalLoss: phaseOpt.finalLoss,
+        reviewCount: phaseData[phase].length,
+        system: `phase:${phase}`,
+        optimizedAt: new Date().toISOString(),
+      };
+      availablePhases.push(phase);
+    }
+  }
+
+  return { global, phases, availablePhases };
+}
+
+/**
+ * Get the best parameters for a given hour of day from a circadian result.
+ * Falls back to global if the phase doesn't have enough data.
+ */
+export function getParametersForHour(
+  result: CircadianOptimizationResult,
+  hour: number
+): FSRSParameters {
+  const phase = getCircadianPhase(hour);
+  return result.phases[phase]?.parameters ?? result.global.parameters;
+}
+
+// Circadian-aware cache (stores full circadian results alongside simple cache)
+const circadianCache = new Map<string, {
+  result: CircadianOptimizationResult;
+  timestamp: number;
+}>();
+
+/**
+ * Get optimized FSRS parameters with circadian awareness.
+ * If hourOfDay is provided, returns phase-specific params when available.
+ */
+export async function getCircadianOptimizedParameters(
+  prisma: PrismaClient,
+  userId: string,
+  system?: string | null,
+  hourOfDay?: number
+): Promise<FSRSParameters> {
+  const cacheKey = `circadian:${userId}:${system ?? 'global'}`;
+  const cached = circadianCache.get(cacheKey);
+
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    if (hourOfDay !== undefined) {
+      return getParametersForHour(cached.result, hourOfDay);
+    }
+    return cached.result.global.parameters;
+  }
+
+  try {
+    const where: any = {
+      userId,
+      review_type: { not: 'rapid_guess' },
+      retrievability: { not: null },
+    };
+    if (system) where.system = system;
+
+    const reviews = await prisma.reviewLog.findMany({
+      where,
+      select: {
+        stability: true,
+        difficulty: true,
+        elapsedDays: true,
+        grade_continuous: true,
+        wasCorrect: true,
+        retrievability: true,
+        reviewedAt: true,
+      },
+      orderBy: { reviewedAt: 'desc' },
+      take: 2000,
+    });
+
+    const reviewData = reviews
+      .filter((r: any) => r.retrievability != null && r.elapsedDays != null)
+      .map((r: any) => ({
+        stability: r.stability,
+        difficulty: r.difficulty,
+        elapsedDays: r.elapsedDays!,
+        gradeContinuous: r.grade_continuous ?? (r.wasCorrect ? 3.0 : 1.0),
+        wasCorrect: r.wasCorrect,
+        retrievability: r.retrievability,
+        hourOfDay: new Date(r.reviewedAt).getHours(),
+      }));
+
+    if (reviewData.length < MIN_REVIEWS_FOR_OPTIMIZATION) {
+      return defaultParameters;
+    }
+
+    const circadianResult = optimizeWithCircadian(reviewData);
+
+    circadianCache.set(cacheKey, {
+      result: circadianResult,
+      timestamp: Date.now(),
+    });
+
+    if (hourOfDay !== undefined) {
+      return getParametersForHour(circadianResult, hourOfDay);
+    }
+    return circadianResult.global.parameters;
+  } catch {
+    return defaultParameters;
+  }
+}
+
+/** Clear circadian optimizer cache */
+export function clearCircadianOptimizerCache(): void {
+  circadianCache.clear();
+}

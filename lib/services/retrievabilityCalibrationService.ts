@@ -232,3 +232,134 @@ export const CALIBRATION_CONSTANTS = {
   CORRECTION_CLAMP_MAX,
   CACHE_TTL_MS,
 } as const;
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// Sprint 8: Rolling-Window Calibration Drift Detection
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Compares the last 200 reviews (long window) against the last 50 reviews
+// (short window) to detect if the learner's retention is shifting.
+// If the short-window correction diverges significantly from the long-window,
+// it signals FSRS parameters need re-optimization.
+
+const LONG_WINDOW = 200;
+const SHORT_WINDOW = 50;
+const DRIFT_THRESHOLD = 0.15;
+
+export interface DriftReport {
+  /** Long-window (last 200 reviews) correction factor */
+  longWindowFactor: number;
+  /** Short-window (last 50 reviews) correction factor */
+  shortWindowFactor: number;
+  /** Absolute difference between short and long factors */
+  drift: number;
+  /** Whether drift exceeds the threshold */
+  isDrifting: boolean;
+  /** Direction of change: improving, degrading, or stable */
+  direction: 'improving' | 'degrading' | 'stable';
+  /** Per-system drift breakdown */
+  systemDrift: Record<string, {
+    longFactor: number;
+    shortFactor: number;
+    drift: number;
+    isDrifting: boolean;
+  }>;
+}
+
+/**
+ * Detect calibration drift from an ordered array of review records.
+ * Pure function — no DB access. Exported for testing.
+ */
+export function detectDrift(
+  reviews: Array<{ retrievability: number; wasCorrect: boolean; system?: string }>
+): DriftReport {
+  const longWindow = reviews.slice(-LONG_WINDOW);
+  const shortWindow = reviews.slice(-SHORT_WINDOW);
+
+  const longFactor = computeCorrectionFactor(bucketReviews(longWindow));
+  const shortFactor = computeCorrectionFactor(bucketReviews(shortWindow));
+
+  const driftVal = Math.abs(shortFactor - longFactor);
+  const isDrifting = driftVal > DRIFT_THRESHOLD;
+
+  let direction: 'improving' | 'degrading' | 'stable' = 'stable';
+  if (isDrifting) {
+    direction = shortFactor > longFactor ? 'improving' : 'degrading';
+  }
+
+  // Per-system drift
+  const systems = new Set(
+    reviews.map(r => r.system).filter((s): s is string => !!s)
+  );
+  const systemDrift: DriftReport['systemDrift'] = {};
+
+  for (const system of systems) {
+    const sysReviews = reviews.filter(r => r.system === system);
+    if (sysReviews.length < MIN_SYSTEM_REVIEWS) continue;
+
+    const sysLong = sysReviews.slice(-LONG_WINDOW);
+    const sysShort = sysReviews.slice(-SHORT_WINDOW);
+    const sysLongFactor = computeCorrectionFactor(bucketReviews(sysLong));
+    const sysShortFactor = computeCorrectionFactor(bucketReviews(sysShort));
+    const sysDrift = Math.abs(sysShortFactor - sysLongFactor);
+
+    systemDrift[system] = {
+      longFactor: sysLongFactor,
+      shortFactor: sysShortFactor,
+      drift: sysDrift,
+      isDrifting: sysDrift > DRIFT_THRESHOLD,
+    };
+  }
+
+  return {
+    longWindowFactor: longFactor,
+    shortWindowFactor: shortFactor,
+    drift: driftVal,
+    isDrifting,
+    direction,
+    systemDrift,
+  };
+}
+
+/**
+ * Generate a drift report from ReviewLog for a user.
+ * DB-integrated version of detectDrift.
+ */
+export async function generateDriftReport(
+  prisma: PrismaClient,
+  userId: string
+): Promise<DriftReport> {
+  const reviews = await prisma.reviewLog.findMany({
+    where: {
+      userId,
+      retrievability: { not: null },
+      review_type: { not: 'rapid_guess' },
+    },
+    select: {
+      retrievability: true,
+      wasCorrect: true,
+      system: true,
+    },
+    orderBy: { reviewedAt: 'asc' },
+  });
+
+  const validReviews = reviews
+    .filter((r): r is typeof r & { retrievability: number } =>
+      r.retrievability != null
+    )
+    .map(r => ({
+      retrievability: r.retrievability,
+      wasCorrect: r.wasCorrect,
+      system: r.system ?? undefined,
+    }));
+
+  return detectDrift(validReviews);
+}
+
+/** Export drift constants for testing */
+export const DRIFT_CONSTANTS = {
+  LONG_WINDOW,
+  SHORT_WINDOW,
+  DRIFT_THRESHOLD,
+} as const;

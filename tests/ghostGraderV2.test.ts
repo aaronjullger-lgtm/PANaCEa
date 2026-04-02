@@ -206,3 +206,119 @@ describe('Ghost Grader — Elimination Velocity (new)', () => {
     expect(result.gradeContinuousAdjustment).toBe(CONFIDENCE_BOOST_AMOUNT);
   });
 });
+
+describe('Ghost Grader — Z-Score Baselines (Sprint 7)', () => {
+  const normalBaseline = {
+    oscillationMedian: 1.0,
+    oscillationStdDev: 0.5,
+    tremorMedian: 0.3,
+    tremorStdDev: 0.1,
+    driftMedianMs: 1500,
+    driftStdDevMs: 500,
+  };
+
+  it('does NOT fire on oscillations within 2 stddev of user norm', () => {
+    // User has median 1.0, stddev 0.5, so 2.0 is z=2.0 (exactly at threshold, not over)
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 2, // z = (2 - 1) / 0.5 = 2.0, NOT > 2.0
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Good);
+    expect(result.rule).not.toBe('indecision');
+  });
+
+  it('fires on oscillations > 2 stddev above user norm', () => {
+    // oscillations=3: z = (3 - 1) / 0.5 = 4.0 → way above threshold
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 3,
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Again);
+    expect(result.rule).toBe('indecision');
+  });
+
+  it('does NOT fire on drift within 2 stddev of user norm', () => {
+    // drift=2400, baseline median=1500, stddev=500 → z=(2400-1500)/500=1.8 < 2.0
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 0,
+      selectionDriftMs: 2400,
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Good);
+  });
+
+  it('fires on drift > 2 stddev above user norm', () => {
+    // drift=3500, baseline median=2000, stddev=500 → z=(3500-2000)/500=3.0
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 0,
+      selectionDriftMs: 3500,
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Again);
+  });
+
+  it('fires on tremor > 2 stddev above user norm', () => {
+    // tremor=0.6, baseline median=0.3, stddev=0.1 → z=(0.6-0.3)/0.1=3.0 > 2.0
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 0,
+      tremorScore: 0.6,
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Again);
+  });
+
+  it('does NOT fire on tremor within 2 stddev of user norm', () => {
+    // tremor=0.35, baseline median=0.2, stddev=0.1 → z=1.5
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 0,
+      tremorScore: 0.35,
+      baseline: normalBaseline,
+    });
+    expect(result.rating).toBe(Rating.Good);
+  });
+
+  it('uses absolute thresholds when baseline stddev is 0', () => {
+    const zeroBaseline = {
+      oscillationMedian: 2, oscillationStdDev: 0,
+      tremorMedian: 0.3, tremorStdDev: 0,
+      driftMedianMs: 2000, driftStdDevMs: 0,
+    };
+    // oscillations=4 should fire via absolute threshold (>2)
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 4,
+      baseline: zeroBaseline,
+    });
+    expect(result.rating).toBe(Rating.Again);
+  });
+
+  it('tolerates high absolute oscillations that are normal for user', () => {
+    // User who always oscillates a lot: median=5, stddev=2
+    const highOscBaseline = {
+      oscillationMedian: 5, oscillationStdDev: 2,
+      tremorMedian: 0.2, tremorStdDev: 0.1,
+      driftMedianMs: 2000, driftStdDevMs: 500,
+    };
+    // oscillations=6 → z=(6-5)/2=0.5, normal for this user
+    const result = applyHonestRatingWithDetail({
+      userRating: Rating.Good,
+      isCorrect: true,
+      oscillations: 6,
+      baseline: highOscBaseline,
+    });
+    expect(result.rating).toBe(Rating.Good);
+  });
+});
