@@ -5,123 +5,74 @@
  * This creates a global fsrsParams entry that applies to all cards
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-interface Env {
-  DATABASE_URL: string;
-}
+/**
+ * Schema for FSRS parameters update
+ */
+const UpdateFsrsParamsSchema = z.object({
+  parameters: z.array(z.number()).length(21, 'Must be an array of exactly 21 numbers'),
+  metadata: z.object({
+    rmse: z.number().optional(),
+    logLoss: z.number().optional(),
+    recordCount: z.number().optional(),
+    improvementVsDefault: z.number().optional(),
+  }).optional(),
+});
 
-interface RequestBody {
-  parameters: number[];
-  metadata?: {
-    rmse?: number;
-    logLoss?: number;
-    recordCount?: number;
-    improvementVsDefault?: number;
-  };
-}
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: { request: Request; env: Env }) => {
-  let prisma;
-
-  try {
-    // Authenticate request
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth || !auth.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
+export const onRequestPost = authenticatedEndpoint(
+  UpdateFsrsParamsSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
     const userId = auth.userId;
+    const body = validated;
 
-    // Parse request body
-    const body: RequestBody = await context.request.json();
+    let prisma;
 
-    if (!body.parameters || !Array.isArray(body.parameters) || body.parameters.length !== 21) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid parameters: must be array of 21 numbers' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    try {
+      // Connect to database
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Validate all parameters are numbers
-    if (!body.parameters.every((p: number) => typeof p === 'number' && !isNaN(p))) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid parameters: all values must be valid numbers' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+      // Store optimization metadata in User table (if it exists)
+      // This will be a new field we'll add in a migration
+      const optimizationData = {
+        w: body.parameters,
+        optimizedAt: new Date().toISOString(),
+        ...body.metadata,
+      };
 
-    // Connect to database
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-    // Store optimization metadata in User table (if it exists)
-    // This will be a new field we'll add in a migration
-    const optimizationData = {
-      w: body.parameters,
-      optimizedAt: new Date().toISOString(),
-      ...body.metadata,
-    };
-
-    // Apply optimized params to all UserProgress for this user (MAIN session scheduling only).
-    // Data isolation: these params are used only for FSRS scheduler/optimizer; CRAM/RAPID_RECALL
-    // and OSCE do not use or aggregate this table.
-    const updated = await prisma.userProgress.updateMany({
-      where: { userId },
-      data: {
-        fsrsParams: optimizationData,
-      },
-    });
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Updated ${updated.count} progress records with optimized parameters`,
-        parameters: body.parameters,
-        metadata: body.metadata,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+      // Apply optimized params to all UserProgress for this user (MAIN session scheduling only).
+      // Data isolation: these params are used only for FSRS scheduler/optimizer; CRAM/RAPID_RECALL
+      // and OSCE do not use or aggregate this table.
+      const updated = await prisma.userProgress.updateMany({
+        where: { userId },
+        data: {
+          fsrsParams: optimizationData,
         },
-      }
-    );
-  } catch (error) {
-    console.error('Failed to update FSRS parameters:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to update parameters' }),
-      {
+      });
+
+      return {
+        data: {
+          success: true,
+          message: `Updated ${updated.count} progress records with optimized parameters`,
+          parameters: body.parameters,
+          metadata: body.metadata,
+        }
+      };
+    } catch (error) {
+      console.error('Failed to update FSRS parameters:', error);
+      return {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        error: 'Failed to update parameters'
+      };
+    } finally {
+      if (prisma) {
+        await safePrismaDisconnect(prisma);
       }
-    );
-  } finally {
-    if (prisma) {
-      await prisma.$disconnect();
     }
   }
-};
-
-export const onRequestOptions = async () =>
-  new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    },
-  });
+);

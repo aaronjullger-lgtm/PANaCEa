@@ -5,104 +5,82 @@
  * Returns QuestionAttempt records with telemetry data
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-interface Env {
-  DATABASE_URL: string;
-}
+/**
+ * Schema for review history query parameters
+ */
+const ReviewHistorySchema = z.object({
+  limit: z.coerce.number().int().positive().default(1000),
+  // FSRS isolation: when true, return only MAIN/session attempts (exclude cram, rapid_recall, osce, drill)
+  mainOnly: z.string().optional().transform((val) => val === 'true'),
+});
 
-export const onRequestGet = async (context: { request: Request; env: Env }) => {
-  let prisma;
+export const onRequestOptions = withCors();
 
-  try {
-    // Authenticate request
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth?.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
+export const onRequestGet = authenticatedEndpoint(
+  ReviewHistorySchema,
+  async (context) => {
+    const { env, auth, validated } = context;
     const userId = auth.userId;
-    const url = new URL(context.request.url);
-    const limit = Number.parseInt(url.searchParams.get('limit') ?? '1000', 10);
-    // FSRS isolation: when true, return only MAIN/session attempts (exclude cram, rapid_recall, osce, drill)
-    const mainOnly = url.searchParams.get('mainOnly') === 'true';
+    const { limit, mainOnly } = validated;
 
-    // Connect to database
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    let prisma;
 
-    // Resolve internal user id if needed (UserProgress/ReviewLog use internal id; QuestionAttempt may use clerkId)
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      select: { id: true },
-    });
-    const queryUserId = user?.id ?? userId;
+    try {
+      // Connect to database
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Fetch review history with telemetry. When mainOnly, exclude non-FSRS modes.
-    const reviews = await prisma.questionAttempt.findMany({
-      where: {
-        userId: queryUserId,
-        ...(mainOnly && {
-          mode: { in: ['session', 'main', 'MAIN'] },
-        }),
-      },
-      select: {
-        id: true,
-        userId: true,
-        questionId: true,
-        wasCorrect: true,
-        createdAt: true,
-        durationMs: true,
-        telemetryJson: true,
-        answerChangedCount: true,
-        timeSpentMs: true,
-      },
-      orderBy: { createdAt: 'asc' },
-      take: limit,
-    });
+      // Resolve internal user id if needed (UserProgress/ReviewLog use internal id; QuestionAttempt may use clerkId)
+      const user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+        select: { id: true },
+      });
+      const queryUserId = user?.id ?? userId;
 
-    return new Response(
-      JSON.stringify({
-        reviews,
-        count: reviews.length,
-        userId,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+      // Fetch review history with telemetry. When mainOnly, exclude non-FSRS modes.
+      const reviews = await prisma.questionAttempt.findMany({
+        where: {
+          userId: queryUserId,
+          ...(mainOnly && {
+            mode: { in: ['session', 'main', 'MAIN'] },
+          }),
         },
-      }
-    );
-  } catch (error) {
-    console.error('Failed to fetch review history:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch review history' }),
-      {
+        select: {
+          id: true,
+          userId: true,
+          questionId: true,
+          wasCorrect: true,
+          createdAt: true,
+          durationMs: true,
+          telemetryJson: true,
+          answerChangedCount: true,
+          timeSpentMs: true,
+        },
+        orderBy: { createdAt: 'asc' },
+        take: limit,
+      });
+
+      return {
+        data: {
+          reviews,
+          count: reviews.length,
+          userId,
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch review history:', error);
+      return {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+        error: 'Failed to fetch review history'
+      };
+    } finally {
+      if (prisma) {
+        await safePrismaDisconnect(prisma);
       }
-    );
-  } finally {
-    if (prisma) {
-      await prisma.$disconnect();
     }
-  }
-};
-
-export const onRequestOptions = async () =>
-  new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    },
-  });
+  },
+  { source: 'query' }
+);
