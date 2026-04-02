@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -50,6 +50,7 @@ import {
   PhaseStepper,
 } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
+import { useEncounterReducer, type EncounterPhase, type ViewState } from '@/hooks/useEncounterReducer';
 import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
 import {
   getRandomEncounterCase,
@@ -113,72 +114,44 @@ interface PatientEncounterModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'landing' | 'loading_encounter' | 'active' | 'results';
-type EncounterPhase = 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
-
 const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) => {
   const { getToken, userId } = useAuth();
   const persistKey = userId ? `user_${userId}` : 'anonymous';
-  const [viewState, setViewState] = useState<ViewState>('landing');
-  const [phase, setPhase] = useState<EncounterPhase>('history');
-  const [isPaused, setIsPaused] = useState(false);
-  const [pausedMs, setPausedMs] = useState(0);
+
+  // Consolidated state via useReducer — replaces ~50 individual useState calls
+  const [encounterState, , actions] = useEncounterReducer();
+  const {
+    viewState, phase, isPaused, pausedMs,
+    currentCase, session, patientPersona, secretDiagnosis, encounterStartTime,
+    currentQuestion, examAction, diagnosticOrder, userDiagnosis, treatmentPlan, newDifferential,
+    physicalFindings, diagnosticResults, differentialDiagnoses,
+    isLoading, isTyping, loadingStatusIndex, typingStatusIndex, languageMode, loadError,
+    diagnosisFeedback, treatmentFeedback, aar, isPatientInfoExpanded, preceptorFeedback,
+    streamedDebriefText, isStreamingDebrief, enhancedScoreReport, gradeResult, gradeResultLoading,
+    showOrderPanel, showExamPanel, showRapportMeter, showLiveSession, showHistoryPanel, emrTab,
+    enableCulturalCompetency, enableResourceLimited, aiDifficulty, presetFilters,
+    dueConditions, conditionStats, osceStats,
+    avEngine, currentAVState, wsUrl, voiceMode,
+  } = encounterState;
+  const {
+    setViewState, setPhase, setIsPaused, setPausedMs,
+    setCurrentCase, setSession, setPatientPersona, setSecretDiagnosis, setEncounterStartTime,
+    setCurrentQuestion, setExamAction, setDiagnosticOrder, setUserDiagnosis, setTreatmentPlan, setNewDifferential,
+    setPhysicalFindings, setDiagnosticResults, setDifferentialDiagnoses,
+    setIsLoading, setIsTyping, setLoadingStatusIndex, setTypingStatusIndex, setLanguageMode, setLoadError,
+    setDiagnosisFeedback, setTreatmentFeedback, setAar, setIsPatientInfoExpanded, setPreceptorFeedback,
+    setStreamedDebriefText, setIsStreamingDebrief, setEnhancedScoreReport, setGradeResult, setGradeResultLoading,
+    setShowOrderPanel, setShowExamPanel, setShowRapportMeter, setShowLiveSession, setShowHistoryPanel, setEmrTab,
+    setEnableCulturalCompetency, setEnableResourceLimited, setAiDifficulty, setPresetFilters,
+    setDueConditions, setConditionStats, setOsceStats,
+    setAVEngine, setCurrentAVState, setWsUrl, setVoiceMode,
+  } = actions;
+  // --- State is now managed by useEncounterReducer above ---
   const pauseStartRef = useRef<number | null>(null);
-
-  const [currentCase, setCurrentCase] = useState<PatientEncounterCase | null>(null);
-  const [session, setSession] = useState<EncounterSession | null>(null);
-  const [patientPersona, setPatientPersona] = useState<PatientPersona | null>(null);
-  const [secretDiagnosis, setSecretDiagnosis] = useState<string | null>(null);
-
-  // Phase Inputs
-  const [currentQuestion, setCurrentQuestion] = useState<string>('');
-  const [examAction, setExamAction] = useState<string>('');
-  const [diagnosticOrder, setDiagnosticOrder] = useState<string>('');
-  const [userDiagnosis, setUserDiagnosis] = useState<string>('');
-  const [treatmentPlan, setTreatmentPlan] = useState<string>('');
-
-  // Phase Data
-  const [physicalFindings, setPhysicalFindings] = useState<{ maneuver: string; finding: string }[]>(
-    []
-  );
-  const [diagnosticResults, setDiagnosticResults] = useState<
-    { testName: string; result: string; interpretation: string }[]
-  >([]);
-  const [differentialDiagnoses, setDifferentialDiagnoses] = useState<string[]>([]);
-  const [newDifferential, setNewDifferential] = useState('');
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [loadingStatusIndex, setLoadingStatusIndex] = useState(0);
-  const [typingStatusIndex, setTypingStatusIndex] = useState(0);
-  const [languageMode, setLanguageMode] = useState<SpanishMode>('english');
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  // Feedback
-  const [diagnosisFeedback, setDiagnosisFeedback] = useState<{
-    isCorrect: boolean;
-    feedback: string;
-    score: number;
-  } | null>(null);
-  const [treatmentFeedback, setTreatmentFeedback] = useState<{
-    isCorrect: boolean;
-    feedback: string;
-    score: number;
-  } | null>(null);
-  const [aar, setAar] = useState<string>('');
-  const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
-  const [preceptorFeedback, setPreceptorFeedback] = useState<PreceptorFeedback | null>(null);
-  const [streamedDebriefText, setStreamedDebriefText] = useState('');
-  const [isStreamingDebrief, setIsStreamingDebrief] = useState(false);
 
   // Clinical Fidelity Mode (shared hook with Settings modal)
   const { settings: clinicalFidelity } = useClinicalFidelitySettings();
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
-
-  // OSCE scenario modifiers: cultural competency + resource-limited + difficulty
-  const [enableCulturalCompetency, setEnableCulturalCompetency] = useState(false);
-  const [enableResourceLimited, setEnableResourceLimited] = useState(false);
-  const [aiDifficulty, setAiDifficulty] = useState<'cooperative' | 'difficult' | 'very_difficult'>('cooperative');
 
   // Build scenario modifiers string for AI patient simulator
   const scenarioModifiers = useMemo(() => {
@@ -194,21 +167,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
     return modifiers || undefined;
   }, [aiDifficulty, enableCulturalCompetency, enableResourceLimited]);
-
-  // Enhanced OSCE Panel States
-  const [showOrderPanel, setShowOrderPanel] = useState(false);
-  const [showExamPanel, setShowExamPanel] = useState(false);
-  const [showRapportMeter, setShowRapportMeter] = useState(true);
-  const [showLiveSession, setShowLiveSession] = useState(false);
-  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
-  const [encounterStartTime, setEncounterStartTime] = useState<number>(Date.now());
-  const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
-  const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
-  const [gradeResultLoading, setGradeResultLoading] = useState(false);
-  const [emrTab, setEmrTab] = useState<'hpi' | 'pmh' | 'meds' | 'vitals' | 'labs'>('hpi');
-  const [dueConditions, setDueConditions] = useState<OSCEConditionSchedule[]>([]);
-  const [conditionStats, setConditionStats] = useState<{ total: number; due: number; mastered: number; struggling: number } | null>(null);
-  const [presetFilters, setPresetFilters] = useState<{ targetSystems?: string[]; difficulty?: string } | null>(null);
 
   // Initialize Enhanced OSCE Hook
   const enhancedOSCE = useEnhancedOSCE({
@@ -263,12 +221,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   }, []);
 
   // Fetch OSCE stats for landing page sparkline
-  const [osceStats, setOsceStats] = useState<{
-    totalEncounters: number;
-    passRate: number | null;
-    averageScore: number | null;
-    trend: number[];
-  } | null>(null);
 
   useEffect(() => {
     if (viewState !== 'landing') return;
@@ -306,11 +258,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
   }, [viewState]);
 
-  // NEW: State machine for Module 1
-  const [avEngine, setAVEngine] = useState<PatientAVEngine | null>(null);
-  const [currentAVState, setCurrentAVState] = useState<AVState | null>(null);
-  const [wsUrl, setWsUrl] = useState<string | null>(null);
-  const [voiceMode, setVoiceMode] = useState(false);
+  // AV state machine is managed by useEncounterReducer
 
   const fallbackVitals = useMemo(
     () => ({

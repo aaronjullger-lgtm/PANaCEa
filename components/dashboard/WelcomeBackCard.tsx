@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, TrendingUp, TrendingDown, X, RotateCcw } from 'lucide-react';
 import { formatRelativeTime, type LastSessionData } from '@/lib/utils/sessionStorage';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface WelcomeBackCardProps {
   lastSession: LastSessionData;
@@ -24,6 +25,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
   onDismiss,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const accuracy = lastSession.accuracy;
   const isGoodSession = accuracy >= 0.75;
   const weakSystemName =
@@ -32,10 +34,10 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: -10 }}
+      initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ y: 0 }}
-      exit={{ y: -10 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { y: -10 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' }}
       className={`
         relative overflow-hidden rounded-xl
         bg-[var(--color-bg-secondary)]
@@ -46,7 +48,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       {/* Dismiss button */}
       <button
         onClick={onDismiss}
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+        className="absolute top-2 right-2 p-2.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         aria-label="Dismiss welcome card"
       >
         <X className="w-4 h-4" />
@@ -112,7 +114,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       {/* Resume button */}
       <button
         onClick={onResume}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:opacity-90 transition-opacity group"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:opacity-90 transition-opacity group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         <span>Continue where you left off</span>
         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

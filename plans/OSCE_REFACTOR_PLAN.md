@@ -1,7 +1,7 @@
 # OSCE Mode Refactor Plan
 
 **Date:** 2026-04-01
-**Status:** PHASES A2/A3/B/C2/C3/D1/E1/E2/E3 IMPLEMENTED + misc cleanup — A1/C1/D2 remaining
+**Status:** PHASES A1/A2/A3/B/C2/C3/D1/E1/E2/E3 IMPLEMENTED + misc cleanup — C1/D2 remaining
 **Scope:** Performance, grading accuracy, UI immersion, architecture cleanup
 
 ## Implementation Log (2026-04-01)
@@ -24,9 +24,10 @@
 - **E1** ✅ Dead code cleanup: removed `initialCaseId` prop from OSCESimulator, removed `RapportChangeNotification`/`RapportIndicator` from barrel exports, un-exported 3 dead functions from osceScoringEngine (`calculateExamThoroughness`, `getDangerousActionsForCondition`, `checkForDangerousActions`)
 - **E3** ✅ Unused component audit: confirmed all 11 barrel-exported OSCE components are actively imported; only `RapportChangeNotification` and `RapportIndicator` were dead (now removed from exports)
 
+- **A1** ✅ `useEncounterReducer` hook: extracted 52 `useState` calls into a single `useReducer` with typed state, 4 action types (SET_FIELD, SET_FIELDS, UPDATE_FIELD, RESET), stable setter refs via `set()` factory. Functional updater pattern supported. Zero-diff JSX migration. File: `hooks/useEncounterReducer.ts` (308 lines).
+
 ### Still Pending
-- **A1**: Extract `useEncounterReducer` from 50 loose useState calls (biggest impact, highest risk — deferred)
-- **C1**: Full EncounterWorkstation layout refactor (depends on A1)
+- **C1**: Full EncounterWorkstation layout refactor (now unblocked by A1)
 - **D2**: Apply voice modulation from AV state to TTS output (requires Gemini Live WebSocket integration)
 
 ---

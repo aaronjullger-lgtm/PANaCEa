@@ -17,6 +17,7 @@ import {
   BarChart3,
   LayoutDashboard,
 } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import DecayCurve from './charts/DecayCurve';
 import StabilityPyramid from './charts/StabilityPyramid';
 import AlgorithmStatusWidget from './AlgorithmStatusWidget';
@@ -104,11 +105,13 @@ const QuickStat: React.FC<QuickStatProps> = ({
   trend,
   accentColor,
   delay = 0,
-}) => (
+}) => {
+  const prefersReducedMotion = useReducedMotion();
+  return (
   <motion.div
-    initial={{ y: 20 }}
+    initial={prefersReducedMotion ? false : { y: 20 }}
     animate={{ y: 0 }}
-    transition={{ duration: 0.4, delay, ease: 'easeOut' }}
+    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay, ease: 'easeOut' }}
     className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300"
   >
     {/* Gradient accent line */}
@@ -125,7 +128,7 @@ const QuickStat: React.FC<QuickStatProps> = ({
         </div>
         <div>
           <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-0.5">{label}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">
+          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight tabular-nums">
             {value}
           </p>
         </div>
@@ -144,7 +147,8 @@ const QuickStat: React.FC<QuickStatProps> = ({
       )}
     </div>
   </motion.div>
-);
+  );
+};
 
 // ============================================================================
 // Section Header Component
@@ -187,6 +191,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
   const { performanceData } = useUserStats();
+  const prefersReducedMotion = useReducedMotion();
   const retentionFetcher = useCallback(
     async (url: string) => {
       const token = await getToken();
@@ -260,8 +265,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
         <motion.div
-          initial={{ y: 20 }}
+          initial={prefersReducedMotion ? false : { y: 20 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-sm max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
@@ -277,7 +283,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-lg transition-opacity"
+            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             {isOffline ? 'Check Connection & Retry' : 'Retry'}
           </button>
@@ -293,9 +299,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ===== HEADER SECTION - Enhanced with gradient text ===== */}
         <motion.div
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
           className="pt-2"
         >
           <div className="flex items-center gap-3 mb-2">
@@ -326,7 +332,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 key={v.id}
                 type="button"
                 onClick={() => setView(v.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                   isActive
                     ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
@@ -344,10 +350,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'pilot' && (
             <motion.div
               key="pilot"
-              initial={{ y: 8 }}
+              initial={prefersReducedMotion ? false : { y: 8 }}
               animate={{ y: 0 }}
-              exit={{ y: -8 }}
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="space-y-6"
             >
               {/* Daily Pilot: Streak, Due, Goal */}
@@ -445,10 +451,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'data' && (
             <motion.div
               key="data"
-              initial={{ y: 8 }}
+              initial={prefersReducedMotion ? false : { y: 8 }}
               animate={{ y: 0 }}
-              exit={{ y: -8 }}
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="space-y-6"
             >
               {/* Data Scientist: System Performance + Calibration */}

@@ -1410,7 +1410,8 @@ interface ExamThoroughnessResult {
  * @param performedExams - Array of exam maneuvers the student performed
  * @returns Object containing thoroughness score (0-100%) and exam breakdown
  */
-export function calculateExamThoroughness(
+/** @internal Not currently wired — kept for future exam thoroughness scoring */
+function calculateExamThoroughness(
   condition: string,
   performedExams: string[]
 ): ExamThoroughnessResult {
@@ -1529,7 +1530,8 @@ export function getCriticalActionsForCondition(diagnosis: string): CriticalActio
 /**
  * Get all dangerous actions for a specific condition
  */
-export function getDangerousActionsForCondition(condition: string): DangerousAction[] {
+/** @internal Used by checkForDangerousActions — not currently wired externally */
+function getDangerousActionsForCondition(condition: string): DangerousAction[] {
   const actions: DangerousAction[] = [];
 
   Object.entries(DANGEROUS_ACTIONS).forEach(([condKey, dangerousActionsList]) => {
@@ -1545,7 +1547,8 @@ export function getDangerousActionsForCondition(condition: string): DangerousAct
  * Check if student actions triggered any dangerous actions for a given condition
  * Uses fuzzy keyword matching to identify dangerous actions in student behavior
  */
-export function checkForDangerousActions(
+/** @internal Not currently wired — kept for future client-side dangerous action detection */
+function checkForDangerousActions(
   condition: string,
   studentActions: string[]
 ): { triggered: DangerousAction[]; totalPenalty: number } {

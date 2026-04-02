@@ -140,7 +140,7 @@ const ModeCard: React.FC<{
           {mode.estimatedMinutes && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
-              <span>~{mode.estimatedMinutes} min</span>
+              <span className="tabular-nums">~{mode.estimatedMinutes} min</span>
             </div>
           )}
         </div>
@@ -304,7 +304,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
               aria-label="Clear search"
             >
               <X className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -453,7 +453,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-[var(--color-text-muted)]">
+                        <p className="text-xs text-[var(--color-text-muted)] tabular-nums">
                           {sysStats.accuracy.toFixed(0)}% · {sysStats.total} q
                         </p>
                       </button>

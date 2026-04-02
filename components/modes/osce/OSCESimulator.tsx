@@ -19,8 +19,6 @@ import type { BodyRegion, ExamFinding, OSCEScoreReport, RapportMeterType } from 
 import type { PatientEncounterCase } from '@/types/drill-modes';
 
 interface OSCESimulatorProps {
-  /** Pre‑selected case ID; if omitted, a random case will be fetched */
-  initialCaseId?: string;
   /** Time limit in seconds (default: 900s = 15 minutes) */
   timeLimit?: number;
   /** Called when the station is completed (with final score) */
@@ -30,7 +28,6 @@ interface OSCESimulatorProps {
 }
 
 export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
-  initialCaseId,
   timeLimit = 900,
   onComplete,
   onExit,
@@ -108,12 +105,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
 
   // Initialize on mount
   useEffect(() => {
-    if (initialCaseId) {
-      // TODO: load specific case
-      loadCase();
-    } else {
-      loadCase();
-    }
+    loadCase();
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
