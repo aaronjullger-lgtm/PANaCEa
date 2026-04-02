@@ -1,6 +1,10 @@
 // Estimate a fair par time for a question based on length and assets.
 // Includes a base decision buffer so short questions don't penalize deliberate thinkers.
-export function calculateParTime(question: any): number {
+// userSpeedFactor (optional): personalizes par time to user's reading/processing speed.
+//   > 1.0 = user is faster than average → shorter par time
+//   < 1.0 = user is slower → longer par time
+//   Derived from userTimingProfileService. Default 1.0 (population baseline).
+export function calculateParTime(question: any, userSpeedFactor: number = 1.0): number {
   const stem =
     typeof question?.stem === 'string'
       ? question.stem
@@ -34,5 +38,13 @@ export function calculateParTime(question: any): number {
   if (imageUrl) parSeconds += 10; // Image review buffer
   if (hasLabs) parSeconds += 15; // Lab interpretation buffer
 
-  return Math.max(parSeconds, 15) * 1000; // ms, floor raised to 15s
+  // Apply user speed factor: divide par time by speed factor so faster users get
+  // shorter par and slower users get longer par. The reading portion scales but
+  // the decision buffer is speed-independent (cognitive, not reading).
+  // Split: reading time = wordCount / 3, decision time = everything else
+  const readingSeconds = wordCount / 3;
+  const decisionSeconds = parSeconds - readingSeconds;
+  const personalizedSeconds = (readingSeconds / Math.max(0.5, userSpeedFactor)) + decisionSeconds;
+
+  return Math.max(personalizedSeconds, 15) * 1000; // ms, floor raised to 15s
 }

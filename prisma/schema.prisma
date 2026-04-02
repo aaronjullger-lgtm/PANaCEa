@@ -3497,6 +3497,8 @@ model UserStatistics {
   weakestSystems      String[] @default([])
   peakStudyHours      Int[]    @default([])
   avgSessionLength    Float?
+  /// Personalized par-time calibration profile (JSON: {speedFactor, tiers, totalAttempts, computedAt})
+  timingProfile       Json?
   updatedAt           DateTime
   createdAt           DateTime @default(now())
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)

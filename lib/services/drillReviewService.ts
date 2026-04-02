@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, assessTelemetryQuality } from '../implicit-metrics';
+import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener } from '../implicit-metrics';
 import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
 import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
@@ -25,6 +25,7 @@ import { applyHonestRating } from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../taskTypes';
+import { getUserSpeedFactor } from './userTimingProfileService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -258,11 +259,14 @@ export async function submitDrillReview(
     | undefined;
   const selectedMeta = findSelectedOption(optionPool, normalizedSelectedAnswer);
 
+  // Fetch user's personalized speed factor (cached, 24h TTL)
+  const userSpeedFactor = await getUserSpeedFactor(prisma, userId);
+
   const parTimeMs = calculateParTime({
     ...qData,
     stem: qData.stem || qData.question || qData.vignette || qData.text || '',
     choices: qData.choices || qData.options || [],
-  });
+  }, userSpeedFactor);
 
   const numericTime = typeof timeSpentMs === 'number' ? timeSpentMs : Number(timeSpentMs) || 0;
 
@@ -553,6 +557,7 @@ export async function submitDrillReview(
     ...(telemetry ?? {}),
     server_computed: {
       par_time_ms: parTimeMs,
+      user_speed_factor: userSpeedFactor,
       circadian_par_time_ms: circadianAdjustedParTimeMs,
       latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
       implicit_confidence: implicitConfidence,
@@ -677,12 +682,22 @@ export async function submitDrillReview(
         const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
         let modifiedStability = rawCard.stability;
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
-        // implicitConfidence is floored at 0.5 → implicitDifficulty maxes at 0.5.
-        // Using >= instead of > so the modifier can actually fire at the boundary.
-        const implicitDifficulty = 1 - implicitConfidence;
-        if (implicitDifficulty >= 0.5) {
-          modifiedStability *= 1 - implicitDifficulty * 0.5;
-        }
+
+        // ── Graduated confidence → stability modifier (replaces old binary threshold) ──
+        // Continuous sigmoid function: rewards high confidence, penalizes low.
+        // Research: Benjamin et al. (1998) — retrieval fluency predicts future recall.
+        //
+        // Fluency illusion correction (Kornell & Bjork, 2008):
+        // Short review intervals inflate perceived fluency. Dampen confidence
+        // when elapsed_days < 1.0 to prevent over-scheduling.
+        let adjustedConfidence = implicitConfidence;
+        const elapsedDays = typeof currentCard.elapsed_days === 'number'
+          ? currentCard.elapsed_days
+          : 0;
+        adjustedConfidence *= fluencyIllusionDampener(elapsedDays);
+
+        // Apply graduated stability multiplier (sigmoid centered at 0.6)
+        modifiedStability *= confidenceStabilityMultiplier(adjustedConfidence);
         // Exam urgency: when an exam is close, tighten review intervals.
         // urgencyMultiplier > 1.0 → stability shrinks → more frequent reviews.
         // Formula: stability /= (1 + (urgency - 1) * 0.3)

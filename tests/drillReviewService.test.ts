@@ -67,6 +67,8 @@ vi.mock('../lib/implicit-metrics', () => ({
   }),
   applyStabilityModifierFromGrade: vi.fn(function() { return 1.0; }),
   assessTelemetryQuality: vi.fn(function() { return 'full'; }),
+  confidenceStabilityMultiplier: vi.fn(function() { return 1.0; }),
+  fluencyIllusionDampener: vi.fn(function() { return 1.0; }),
 }));
 
 vi.mock('../lib/srs/ghostGrader', () => ({
@@ -92,6 +94,10 @@ vi.mock('../lib/services/srsService', () => ({
 
 vi.mock('../lib/taskTypes', () => ({
   getTaskTypeFromContent: vi.fn(function() { return 'diagnosis'; }),
+}));
+
+vi.mock('../lib/services/userTimingProfileService', () => ({
+  getUserSpeedFactor: vi.fn(function() { return Promise.resolve(1.0); }),
 }));
 
 vi.mock('../lib/services/rolling360Service', () => ({
