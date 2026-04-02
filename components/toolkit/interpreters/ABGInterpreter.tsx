@@ -9,7 +9,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Beaker } from 'lucide-react';
-import { CalculatorHeader, ClinicalInput } from '../calculators/shared';
+import { CalculatorHeader, ClinicalInput, ResetButton, CopyResultButton } from '../calculators/shared';
 import type { CalculatorProps } from '../calculators/types';
 
 type Compensation = 'none' | 'partial' | 'full' | 'over';
@@ -220,11 +220,34 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="ABG Interpreter"
-        subtitle="pH, pCO₂, HCO₃, PaO₂ → Acidosis/alkalosis, metabolic/respiratory, compensation"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="ABG Interpreter"
+          subtitle="pH, pCO₂, HCO₃, PaO₂ → Acidosis/alkalosis, metabolic/respiratory, compensation"
+          onBack={onBack}
+        />
+        <div className="flex items-center gap-2">
+          <ResetButton onReset={() => { setPH(''); setPCO2(''); setHCO3(''); setPaO2(''); }} />
+          {interpretation && (
+            <CopyResultButton getText={() => {
+              const lines = [
+                `ABG Interpretation`,
+                `pH: ${pH} | pCO₂: ${pCO2} mmHg | HCO₃: ${hco3} mEq/L${pao2 ? ` | PaO₂: ${pao2} mmHg` : ''}`,
+                ``,
+                `Primary Disorder: ${interpretation.primaryDisorder}`,
+                `Compensation: ${interpretation.compensationNote}`,
+                ...(interpretation.wintersExpected ? [`Winter's Expected pCO₂: ${interpretation.wintersExpected} mmHg`] : []),
+                ...(interpretation.oxygenStatus ? [interpretation.oxygenStatus] : []),
+                ``,
+                ...(interpretation.differential.length ? [`Differential: ${interpretation.differential.join(', ')}`] : []),
+                ``,
+                `Recommendation: ${interpretation.recommendation}`,
+              ];
+              return lines.join('\n');
+            }} />
+          )}
+        </div>
+      </div>
 
       <div className="bg-gradient-to-r from-[var(--color-bg-primary)]/40 to-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-xl p-4">
         <div className="flex items-center gap-3">

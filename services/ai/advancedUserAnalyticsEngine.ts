@@ -209,15 +209,47 @@ export function generateQuestionTargeting(
 // ============================================================================
 
 /**
- * Calculate system mastery from user progress data (STUB)
- *
- * In production, this should query actual user progress data
- * and calculate mastery levels based on FSRS stability and accuracy.
+ * Calculate system mastery from user progress data.
+ * Fetches from /api/user/stats bySystems data.
  */
-export function calculateSystemMastery(userId: string): SystemMasteryProfile[] {
-  // Stub: Return empty array
-  // In production, query ReviewLog and UserProgress for actual data
-  return [];
+export async function calculateSystemMastery(
+  userId: string,
+  token?: string | null
+): Promise<SystemMasteryProfile[]> {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch('/api/user/stats', { headers });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const bySystems: Record<string, {
+      total: number;
+      correct: number;
+      accuracy: number;
+      trend: string;
+      avgTimeMs: number | null;
+      lastAttempt: string | null;
+    }> = data.stats?.bySystems ?? {};
+
+    return Object.entries(bySystems)
+      .filter(([, s]) => s.total > 0)
+      .map(([system, s]) => ({
+        system,
+        masteryLevel: s.accuracy,
+        stabilityScore: Math.min(100, s.total * 2),
+        difficultyRating: 100 - s.accuracy,
+        forgettingCurve: Math.max(1, Math.round(30 * (s.accuracy / 100))),
+        optimalReviewInterval: Math.max(1, Math.round(7 * (s.accuracy / 100))),
+        questionsSeen: s.total,
+        lastReviewed: s.lastAttempt ? new Date(s.lastAttempt) : null,
+        weakSubtopics: [],
+        strongSubtopics: [],
+      }));
+  } catch {
+    return [];
+  }
 }
 
 /**

@@ -444,26 +444,35 @@ export function useUserStats(): UseUserStatsResult {
 
       if (result.success && result.data) {
         const d = result.data;
-        
+        const syncErrors: string[] = [];
+
         // Merge performance records by ID, keeping newer records
-        if (d.performanceRecords?.length) {
-          setPerformanceDataState((prev) => {
-            const merged = new Map<string, PerformanceRecord>();
-            prev.forEach((r) => merged.set(r.id || '', r));
-            d.performanceRecords.forEach((r) => {
-              const existing = merged.get(r.id || '');
-              if (!existing || r.timestamp > existing.timestamp) {
-                merged.set(r.id || '', r);
-              }
+        try {
+          if (d.performanceRecords?.length) {
+            setPerformanceDataState((prev) => {
+              const merged = new Map<string, PerformanceRecord>();
+              prev.forEach((r) => merged.set(r.id || '', r));
+              d.performanceRecords!.forEach((r) => {
+                const existing = merged.get(r.id || '');
+                if (!existing || r.timestamp > existing.timestamp) {
+                  merged.set(r.id || '', r);
+                }
+              });
+              return Array.from(merged.values());
             });
-            return Array.from(merged.values());
-          });
+          }
+        } catch (e) { syncErrors.push(`performanceRecords: ${e instanceof Error ? e.message : String(e)}`); }
+
+        try {
+          if (d.srsItems?.length) {
+            loadSRSItemsFromCloud(d.srsItems);
+          }
+        } catch (e) { syncErrors.push(`srsItems: ${e instanceof Error ? e.message : String(e)}`); }
+
+        if (syncErrors.length > 0) {
+          logger.warn('useUserStats', 'Partial sync errors during download', syncErrors);
         }
-        
-        if (d.srsItems?.length) {
-          loadSRSItemsFromCloud(d.srsItems);
-        }
-        
+
         // Merge saved questions with timestamp-based conflict resolution
         if (d.savedQuestions?.length) {
           const { missed, flagged } = separateSavedQuestions(d.savedQuestions);

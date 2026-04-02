@@ -191,7 +191,7 @@ export default function DrillHub(): JSX.Element {
         <motion.div
           initial={{ y: -20 }}
           animate={{ y: 0 }}
-          className="text-center mb-12"
+          className="w-full text-center mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
             <Zap className="w-12 h-12 text-data-provisional" />

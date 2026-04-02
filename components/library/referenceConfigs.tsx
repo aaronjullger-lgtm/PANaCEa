@@ -154,6 +154,20 @@ const detailGroup = (title: string, children: React.ReactNode) => (
   </details>
 );
 
+// ---- Cross-reference hint to related sections ----
+const crossRefHint = (text: string, icon?: React.ReactNode) => (
+  <div style={{
+    marginBottom: 14, padding: '8px 12px', borderRadius: 8,
+    background: 'color-mix(in srgb, var(--color-bg-secondary) 90%, var(--color-accent, #3b82f6) 10%)',
+    border: '1px dashed var(--color-border)',
+    fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY,
+    display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1.5,
+  }}>
+    {icon || <BookOpen size={13} />}
+    {text}
+  </div>
+);
+
 // ---- PANCE Focus accordion (study tier — positioned at TOP of detail) ----
 const studyPanel = (pearls?: string[], tips?: string[], mistakes?: string[], mnemonics?: string[], boardFacts?: string[], accentColor?: string) => {
   const sections = [
@@ -944,6 +958,7 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
       {l.criticalValues && detailSectionCritical('Critical Values', typeof l.criticalValues === 'string' ? l.criticalValues : JSON.stringify(l.criticalValues))}
       {detailList('Related Tests', l.relatedTests)}
       {detailList('Follow-Up Tests', l.followUpTests)}
+      {crossRefHint('For pocket-card reference ranges, see Toolkit → Quick Reference → Normal Lab Values')}
     </div>
   ),
 };
@@ -1049,6 +1064,7 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
         </div>
       ) : null}
       {studyPanel(s.clinicalPearls, s.testQuestionTips, s.commonMistakes, s.mnemonics, s.boardYieldFacts)}
+      {crossRefHint('Interactive calculators for this and other scoring systems are available in Toolkit → Calculators', <Calculator size={13} />)}
     </div>
   ),
 };

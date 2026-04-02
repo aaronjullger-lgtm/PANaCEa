@@ -441,6 +441,8 @@ model Condition {
   relatedSystems                                              String[]                     @default([])
   status                                                      String                       @default("published")
   subcategory                                                 String?
+  icd10Code                                                   String?
+  conditionType                                               String?                      @default("diagnosis")
   media_url                                                   String?
   parent_category                                             String?
   AnatomyConditionLink                                        AnatomyConditionLink[]
@@ -487,6 +489,8 @@ model Condition {
   @@index([system])
   @@index([system, parent_category])
   @@index([system, subcategory, parent_category])
+  @@index([icd10Code])
+  @@index([conditionType])
 }
 
 model ConditionRelation {

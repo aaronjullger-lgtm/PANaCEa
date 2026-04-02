@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { calculateCURB65 } from '@/lib/calculators';
 
@@ -105,11 +105,14 @@ export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="CURB-65 Score"
-        subtitle="Pneumonia Severity Assessment"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between">
+        <CalculatorHeader
+          title="CURB-65 Score"
+          subtitle="Pneumonia Severity Assessment"
+          onBack={onBack}
+        />
+        <ResetButton onReset={() => { setConfusion(false); setUrea(false); setRespiratory(false); setBloodPressure(false); setAge(false); }} />
+      </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">
         <CheckboxCriteria items={criteria} />

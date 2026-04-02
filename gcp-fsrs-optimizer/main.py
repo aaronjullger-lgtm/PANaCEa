@@ -2,8 +2,11 @@
 FSRS Optimizer Cloud Function (Google Cloud Functions 2nd Gen).
 
 Accepts a JSON payload of review history (card_id, review_time, review_rating,
-review_state, review_duration), runs fsrs-optimizer, and returns the 21 w[]
-parameters plus metadata (sampleSize, brierScore, improvementOverDefault).
+review_state, review_duration, telemetry_quality?, brier_score?), runs
+fsrs-optimizer, and returns the 21 w[] parameters plus metadata.
+
+Sprint 5 enhancement: reviews are weighted by telemetry quality and user
+calibration score. Full-telemetry reviews contribute more to parameter fitting.
 
 Payload: { "reviews": [...], "timezone": "UTC", "next_day_starts_at": 0 }
 Response: { "success": true, "w": [...], "sampleSize": N, "brierScore": ..., ... }
@@ -49,6 +52,7 @@ def optimize(request):
     reviews = body.get("reviews") or []
     timezone = body.get("timezone", "UTC")
     next_day_starts_at = int(body.get("next_day_starts_at", 0))
+    enable_quality_weighting = bool(body.get("enable_quality_weighting", True))
 
     # Cap payload size to avoid abuse (e.g. 50k reviews)
     if len(reviews) > 50_000:
@@ -66,6 +70,41 @@ def optimize(request):
             },
             400,
         )
+
+    # ── Sprint 5: Telemetry quality weighting ──
+    # Weight reviews by their telemetry fidelity and user calibration.
+    # Since fsrs-optimizer doesn't support per-sample weights natively, we
+    # use probabilistic downsampling: full→100%, partial→60%, minimal→30%.
+    # This ensures high-fidelity behavioral data drives parameter fitting.
+    QUALITY_KEEP_PROB = {
+        "full": 1.0,
+        "partial": 0.6,
+        "minimal": 0.3,
+    }
+
+    import random
+    quality_stats = {"full": 0, "partial": 0, "minimal": 0, "unknown": 0}
+
+    if enable_quality_weighting:
+        weighted_reviews = []
+        for r in reviews:
+            quality = str(r.get("telemetry_quality", "minimal")).lower()
+            quality_stats[quality] = quality_stats.get(quality, 0) + 1
+            keep_prob = QUALITY_KEEP_PROB.get(quality, 0.3)
+            # Also factor in user calibration: well-calibrated reviews are more trustworthy
+            brier = r.get("brier_score")
+            if brier is not None and isinstance(brier, (int, float)):
+                calibration_weight = max(0.5, 1.0 - float(brier))
+                keep_prob *= calibration_weight
+            if random.random() < keep_prob:
+                weighted_reviews.append(r)
+        # Only use weighted reviews if we still have enough
+        if len(weighted_reviews) >= 400:
+            reviews = weighted_reviews
+    else:
+        for r in reviews:
+            quality = str(r.get("telemetry_quality", "unknown")).lower()
+            quality_stats[quality] = quality_stats.get(quality, 0) + 1
 
     # Build revlog DataFrame and run optimizer in a temp directory
     # (fsrs-optimizer reads ./revlog.csv and writes ./revlog_history.tsv)
@@ -125,6 +164,8 @@ def optimize(request):
                 "defaultBrierScore": round(float(loss_before), 6),
                 "improvementOverDefault": round(improvement, 2),
                 "iterations": None,
+                "qualityWeighting": enable_quality_weighting,
+                "qualityStats": quality_stats,
             },
             200,
         )

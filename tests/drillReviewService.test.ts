@@ -98,6 +98,7 @@ vi.mock('../lib/taskTypes', () => ({
 
 vi.mock('../lib/services/userTimingProfileService', () => ({
   getUserSpeedFactor: vi.fn(function() { return Promise.resolve(1.0); }),
+  getUserBehavioralBaseline: vi.fn(function() { return Promise.resolve(null); }),
 }));
 
 vi.mock('../lib/services/sessionFatigueService', () => ({

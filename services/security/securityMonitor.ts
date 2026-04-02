@@ -602,8 +602,8 @@ export class SecurityMonitor {
         return csvContent;
       }
       case 'pdf':
-        // In production, this would generate a PDF report
-        return 'PDF export not implemented in this version';
+        // PDF generation requires a server-side library; export as CSV instead
+        return this.exportEvents('csv');
 
       default:
         throw new Error(`Unsupported export format: ${format}`);

@@ -14,3 +14,4 @@ export { EncounterTimer } from './EncounterTimer';
 export { VitalsStrip } from './VitalsStrip';
 export { PhaseStepper } from './PhaseStepper';
 export type { EncounterPhase as PhaseStepperPhase } from './PhaseStepper';
+export { EncounterWorkstation } from './EncounterWorkstation';

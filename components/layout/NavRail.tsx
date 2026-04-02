@@ -365,7 +365,7 @@ export const NavRail: React.FC<NavRailProps> = ({
     >
       {/* Header with collapse/hide controls — centered when collapsed; clear separation from nav items */}
       <div
-        className={`flex h-12 shrink-0 items-center border-b border-[var(--color-border)] px-2 ${collapsed ? 'justify-center' : 'justify-between'}`}
+        className={`flex h-12 shrink-0 items-center border-b border-[var(--color-border)] ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
       >
         {!collapsed && (
           <button

@@ -307,9 +307,14 @@ export class SystemIntegrationService {
    * Pre-load resources for smooth transition.
    */
   private async preLoadResources(resources: string[]): Promise<void> {
-    // Placeholder - in production, pre-fetch images, videos, etc.
+    // Pre-fetch resources using browser link prefetch for smooth transitions
     for (const resource of resources) {
-      console.log(`Pre-loading: ${resource}`);
+      if (typeof document !== 'undefined') {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = resource;
+        document.head.appendChild(link);
+      }
     }
   }
 

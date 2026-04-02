@@ -4,9 +4,9 @@
  * Reusable UI components for standardized calculator design
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, Info, TrendingUp } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, TrendingUp, RotateCcw, Copy, Check } from 'lucide-react';
 import type { CalculatorResult, CriteriaItem, InputFieldConfig } from '../types';
 
 /**
@@ -31,6 +31,18 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
   max,
   step = 1,
 }) => {
+  // Out-of-range validation for numeric inputs
+  const validation = useMemo(() => {
+    if (type !== 'number' || !value) return null;
+    const num = parseFloat(value);
+    if (Number.isNaN(num)) return null;
+    if (min !== undefined && num < min) return `Below minimum (${min})`;
+    if (max !== undefined && num > max) return `Above maximum (${max})`;
+    return null;
+  }, [type, value, min, max]);
+
+  const hasError = !!validation;
+
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between">
@@ -59,7 +71,13 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
             min={min}
             max={max}
             step={step}
-            className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-lg font-medium placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
+            aria-invalid={hasError}
+            aria-describedby={hasError ? `${label}-error` : undefined}
+            className={`w-full px-4 py-3 bg-[var(--color-bg-secondary)] border rounded-lg text-[var(--color-text-primary)] text-lg font-medium placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+              hasError
+                ? 'border-[#ef4444] focus:ring-[#ef4444]/30'
+                : 'border-[var(--color-border)] focus:ring-[var(--color-accent)]'
+            }`}
           />
           {unit && (
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm font-medium pointer-events-none">
@@ -81,6 +99,14 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
             </option>
           ))}
         </select>
+      )}
+
+      {/* Validation error message */}
+      {hasError && (
+        <p id={`${label}-error`} role="alert" className="flex items-center gap-1.5 text-xs text-[#ef4444] font-medium">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {validation}
+        </p>
       )}
     </div>
   );
@@ -351,6 +377,78 @@ export const SimpleCalculatorResult: React.FC<SimpleResultProps> = ({
         {value}
       </div>
     </div>
+  );
+};
+
+/**
+ * ResetButton - Clear all calculator inputs at once
+ */
+interface ResetButtonProps {
+  onReset: () => void;
+  label?: string;
+}
+
+export const ResetButton: React.FC<ResetButtonProps> = ({
+  onReset,
+  label = 'Reset',
+}) => (
+  <button
+    type="button"
+    onClick={onReset}
+    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-muted)] text-sm font-medium transition-all"
+  >
+    <RotateCcw className="w-4 h-4" />
+    {label}
+  </button>
+);
+
+/**
+ * CopyResultButton - Copy clinical interpretation text to clipboard
+ */
+interface CopyResultButtonProps {
+  getText: () => string;
+  label?: string;
+}
+
+export const CopyResultButton: React.FC<CopyResultButtonProps> = ({
+  getText,
+  label = 'Copy Result',
+}) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(getText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = getText();
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+        copied
+          ? 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]'
+          : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-muted)]'
+      }`}
+    >
+      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      {copied ? 'Copied!' : label}
+    </button>
   );
 };
 

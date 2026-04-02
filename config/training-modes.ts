@@ -466,17 +466,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
   // Note: cram_mode is still available as a separate mode (not merged into rapid_recall)
-  {
-    id: 'polypharmacy_puzzle',
-    label: 'Polypharmacy Puzzle',
-    description: 'Manage complex med lists safely',
-    category: 'clinical_simulation',
-    iconName: 'PillBottle',
-    theme: 'emerald',
-    route: '/modes/polypharmacy-puzzle',
-    estimatedMinutes: 12,
-    isComingSoon: true,
-  },
+  // polypharmacy_puzzle removed — no backend API; will re-add when implemented
   {
     id: 'diagnostic_puzzle',
     label: 'Diagnostic Puzzle',

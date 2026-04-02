@@ -327,18 +327,11 @@ export const LearningProfileDashboard: React.FC = () => {
                 {aggregateStats.accuracyTrend === 'declining' && (
                   <TrendingDown className="w-4 h-4" />
                 )}
-                {/* Calculate delta percentage */}
-                {(() => {
-                  // For now, show visual indicator with approximate delta
-                  // TODO: Backend should provide actual previousAvgAccuracy for precise calculation
-                  if (aggregateStats.accuracyTrend === 'improving') {
-                    return '+2.4%';
-                  } else if (aggregateStats.accuracyTrend === 'declining') {
-                    return '-1.8%';
-                  } else {
-                    return '→ 0.0%';
-                  }
-                })()}
+                {aggregateStats.accuracyTrend === 'improving'
+                  ? 'Improving'
+                  : aggregateStats.accuracyTrend === 'declining'
+                    ? 'Declining'
+                    : 'Stable'}
               </p>
             </div>
             <div>

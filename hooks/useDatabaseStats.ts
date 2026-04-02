@@ -48,6 +48,8 @@ export interface DatabaseStats {
     totalStudyDays: number;
     avgTimeMs: number | null;
     avgAnswerChanges: number | null;
+    todayCount?: number;
+    todayTimeMs?: number;
   };
   bySystems: Record<string, SystemStats>;
   byConditions?: ConditionStat[];
@@ -104,14 +106,15 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
         return;
       }
 
-      // Prevent concurrent fetches
+      // Prevent concurrent fetches — set ref immediately before any async work
       if (isLoadingRef.current) return;
+      isLoadingRef.current = true;
 
       // Check cache (success) or cooldown (error)
       if (!force && lastFetchedRef.current) {
         const elapsed = Date.now() - lastFetchedRef.current;
-        if (statsRef.current && elapsed < CACHE_DURATION) return;
-        if (!statsRef.current && elapsed < ERROR_COOLDOWN) return;
+        if (statsRef.current && elapsed < CACHE_DURATION) { isLoadingRef.current = false; return; }
+        if (!statsRef.current && elapsed < ERROR_COOLDOWN) { isLoadingRef.current = false; return; }
       }
 
       setIsLoading(true);

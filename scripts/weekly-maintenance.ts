@@ -183,14 +183,19 @@ async function runContentGeneration(
   const systemFlag = options.targetSystem ? ` --system=${options.targetSystem}` : '';
 
   try {
-    execSync(`npm run content-doctor:phase2${systemFlag}`, {
-      stdio: options.verbose ? 'inherit' : 'pipe',
+    const output = execSync(`npm run content-doctor:phase2${systemFlag}`, {
+      stdio: 'pipe',
       cwd: process.cwd(),
+      encoding: 'utf-8',
     });
-
-    // Count generated (this is approximate - would need to track in content-doctor)
+    if (options.verbose) console.log(output);
+    const generatedMatch = output.match(/generated:\s*(\d+)/i);
+    const failedMatch = output.match(/failed:\s*(\d+)/i);
     console.log('✅ Content generation complete\n');
-    return { generated: 0, failed: 0 }; // TODO: Get actual counts from content-doctor
+    return {
+      generated: generatedMatch ? parseInt(generatedMatch[1], 10) : 0,
+      failed: failedMatch ? parseInt(failedMatch[1], 10) : 0,
+    };
   } catch (error) {
     console.error('❌ Content generation failed:', error);
     return { generated: 0, failed: 1 };

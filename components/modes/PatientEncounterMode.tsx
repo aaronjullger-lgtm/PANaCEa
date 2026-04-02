@@ -48,6 +48,7 @@ import {
   EncounterTimer,
   VitalsStrip,
   PhaseStepper,
+  EncounterWorkstation,
 } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import { useEncounterReducer, type EncounterPhase, type ViewState } from '@/hooks/useEncounterReducer';
@@ -1831,6 +1832,111 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   // Active Interview View - Clinical White/Navy Theme
   if (viewState === 'active' && currentCase && session) {
+    // Sidebar content for EncounterWorkstation (Rapport + Encounter Log)
+    const sidebarJsx = (
+      <>
+        {showRapportMeter && enhancedOSCE.state.isSessionActive && (
+          <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
+            <RapportMeter
+              meter={enhancedOSCE.state.rapportMeter}
+              emotionalState={enhancedOSCE.state.emotionalState ?? undefined}
+              personality={enhancedOSCE.state.personality ?? undefined}
+              compact
+            />
+          </motion.div>
+        )}
+        <motion.div
+          initial={{ x: 20 }}
+          animate={{ x: 0 }}
+          className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
+        >
+          <h3 className="text-lg font-semibold mb-4 text-data-neutral">Encounter Log</h3>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            {session.questions.map((q: { questionText: string; response: string }, idx: number) => (
+              <div key={`hist-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
+                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
+                  <MessageSquare className="w-3 h-3" /> History
+                </div>
+                <p className="text-white font-semibold">Q: {q.questionText}</p>
+                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
+                  A: {getTranslatedText(q.response)}
+                </p>
+              </div>
+            ))}
+            {physicalFindings.map((f, idx) => (
+              <div key={`phys-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
+                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
+                  <Stethoscope className="w-3 h-3" /> Physical Exam
+                </div>
+                <p className="text-white font-semibold">Exam: {f.maneuver}</p>
+                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
+                  Finding: {f.finding}
+                </p>
+              </div>
+            ))}
+            {diagnosticResults.map((d, idx) => {
+              const trendData = generateTrendData(d.result);
+              return (
+                <div key={`diag-${idx}`} className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
+                  <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
+                    <ClipboardList className="w-3 h-3" /> Diagnostic
+                  </div>
+                  <p className="text-white font-semibold">{d.testName}</p>
+                  {isFidelityModeActive && clinicalFidelity.rawLabValues && trendData && (
+                    <div className="flex items-center gap-1 h-6 mt-1">
+                      {trendData.map((val, ti) => (
+                        <div
+                          key={ti}
+                          className="w-1.5 bg-blue-400 rounded-full opacity-70"
+                          style={{ height: `${Math.max(4, Math.min(24, (val / Math.max(...trendData)) * 24))}px` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
+                    {d.result} — {d.interpretation}
+                  </p>
+                </div>
+              );
+            })}
+            {diagnosisFeedback && (
+              <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+                  style={{ color: diagnosisFeedback.isCorrect ? 'var(--color-success)' : 'var(--color-error)' }}>
+                  <ClipboardList className="w-3 h-3" /> Diagnosis Submitted
+                </div>
+                <p className="text-white font-semibold">{userDiagnosis}</p>
+                <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
+                  {diagnosisFeedback.isCorrect ? 'Correct!' : `Expected: ${diagnosisFeedback.correctDiagnosis ?? 'N/A'}`}
+                </p>
+              </div>
+            )}
+            {isTyping && (
+              <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral animate-pulse">
+                <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
+                  <MessageSquare className="w-3 h-3" />
+                  {TYPING_STATUS_MESSAGES[typingStatusIndex]}
+                </div>
+                <div className="flex gap-1 items-center h-4">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            )}
+            {isLoading && session.questions.length === 0 && (
+              <ChatSkeleton />
+            )}
+            {session.questions.length === 0 && physicalFindings.length === 0 && diagnosticResults.length === 0 && !isLoading && (
+              <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
+                Start the encounter by asking about the patient's history.
+              </p>
+            )}
+          </div>
+        </motion.div>
+      </>
+    );
+
     return (
       <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
         {/* Header */}
@@ -2017,60 +2123,51 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Vitals Strip — persistent real-time vital signs */}
-          <div className="mb-4">
-            <VitalsStrip
-              hr={currentVitals.hr}
-              sbp={currentVitals.sbp ?? 120}
-              dbp={currentVitals.dbp ?? 80}
-              rr={currentVitals.rr}
-              o2={currentVitals.o2}
-              hrHistory={vitalsHistory?.hr}
-              sbpHistory={vitalsHistory?.sbp}
-              rrHistory={vitalsHistory?.rr}
-              o2History={vitalsHistory?.o2}
+        {/* Main Content — Clinical Workstation Layout */}
+        <EncounterWorkstation
+          vitals={{
+            hr: currentVitals.hr,
+            sbp: currentVitals.sbp ?? 120,
+            dbp: currentVitals.dbp ?? 80,
+            rr: currentVitals.rr,
+            o2: currentVitals.o2,
+          }}
+          vitalsHistory={vitalsHistory}
+          phase={phase}
+          onPhaseSelect={handlePhaseSelect}
+          avState={currentAVState}
+          showOrders={showOrderPanel}
+          showExam={showExamPanel}
+          onToggleOrders={() => setShowOrderPanel(!showOrderPanel)}
+          onToggleExam={() => setShowExamPanel(!showExamPanel)}
+          orderPanel={
+            <OrderPanel
+              isOpen={showOrderPanel}
+              onOrderPlace={handleOrderPlace}
+              placedOrders={enhancedOSCE.state.orders}
+              onClose={handleCloseOrderPanel}
             />
-          </div>
-
-          {/* AV State Badge — shows patient clinical state when state machine is active */}
-          {currentAVState && (
-            <div className="mb-3 flex items-center gap-3 px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-              <div className={`w-2.5 h-2.5 rounded-full ${
-                currentAVState.id.includes('critical') || currentAVState.id.includes('severe')
-                  ? 'bg-red-500 animate-pulse'
-                  : currentAVState.id.includes('distress') || currentAVState.id.includes('worsening')
-                    ? 'bg-amber-500 animate-pulse'
-                    : 'bg-emerald-500'
-              }`} />
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                {currentAVState.name}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)] ml-auto">
-                {currentAVState.clinicalContext}
-              </span>
-              {currentAVState.voice?.toneDescriptors?.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
-                  {currentAVState.voice.toneDescriptors.slice(0, 2).join(', ')}
-                </span>
+          }
+          examPanel={
+            <ExamPanel
+              onExamPerformed={handleExamPerformed}
+              completedExams={enhancedOSCE.state.examFindings}
+              suggestedRegions={enhancedOSCE.getSuggestedExams(
+                currentCase?.chiefComplaint || ''
               )}
-            </div>
-          )}
-
-          {/* Phase Stepper — clinical workflow progression */}
-          <div className="mb-6 py-3 px-4 rounded-xl bg-data-neutral-bg/80 border border-data-neutral">
-            <PhaseStepper
-              currentPhase={phase}
-              onPhaseSelect={handlePhaseSelect}
-              compact
+              caseData={
+                currentCase
+                  ? {
+                      physicalExamData: currentCase.physicalExamData,
+                      correctDiagnosis: currentCase.correctDiagnosis,
+                    }
+                  : undefined
+              }
+              onClose={handleCloseExamPanel}
             />
-          </div>
-
-          {/* NEW: Three-column layout for sidebar integration */}
-          <div className="grid md:grid-cols-12 gap-6">
-            {/* Left Column: Patient Info & Inputs (8 cols) */}
-            <div className="md:col-span-8 space-y-4">
+          }
+          sidebarContent={sidebarJsx}
+        >
               {/* Patient Card (Collapsible) */}
               <motion.div
                 initial={{ x: -20 }}
@@ -2712,220 +2809,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
                 </motion.div>
               )}
-            </div>
-
-            {/* Right Column: Output Stream */}
-            <div className="space-y-4">
-              {/* Rapport Meter (when enabled) */}
-              {showRapportMeter && enhancedOSCE.state.isSessionActive && (
-                <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-                  <RapportMeter
-                    meter={enhancedOSCE.state.rapportMeter}
-                    emotionalState={enhancedOSCE.state.emotionalState ?? undefined}
-                    personality={enhancedOSCE.state.personality ?? undefined}
-                    compact
-                  />
-                </motion.div>
-              )}
-
-              <motion.div
-                initial={{ x: 20 }}
-                animate={{ x: 0 }}
-                className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
-              >
-                <h3 className="text-lg font-semibold mb-4 text-data-neutral">Encounter Log</h3>
-
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                  {/* History Log */}
-                  {session.questions.map((q, idx) => (
-                    <div
-                      key={`hist-${idx}`}
-                      className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                        <MessageSquare className="w-3 h-3" /> History
-                      </div>
-                      <p className="text-white font-semibold">Q: {q.questionText}</p>
-                      <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                        A: {getTranslatedText(q.response)}
-                      </p>
-                    </div>
-                  ))}
-
-                  {/* Physical Exam Log */}
-                  {physicalFindings.map((f, idx) => (
-                    <div
-                      key={`phys-${idx}`}
-                      className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                        <Stethoscope className="w-3 h-3" /> Physical Exam
-                      </div>
-                      <p className="text-white font-semibold">Exam: {f.maneuver}</p>
-                      <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                        Finding: {f.finding}
-                      </p>
-                    </div>
-                  ))}
-
-                  {/* Diagnostic Log */}
-                  {diagnosticResults.map((r, idx) => {
-                    const trendData = generateTrendData(r.result);
-
-                    return (
-                      <div
-                        key={`diag-${idx}`}
-                        className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                            <Activity className="w-3 h-3" /> Diagnostics
-                          </div>
-                          {trendData && !clinicalFidelity.rawLabValues && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-data-neutral uppercase font-bold tracking-widest">
-                                Trend
-                              </span>
-                              <Sparkline
-                                data={trendData}
-                                width={60}
-                                height={20}
-                                color="#64748b"
-                                strokeWidth={2}
-                                showDots={false}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-white font-semibold">Order: {r.testName}</p>
-                        <p className="text-white text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap font-mono">
-                          Result: {r.result}
-                        </p>
-                        {/* Hide interpretation in Clinical Fidelity mode - makes user interpret raw values */}
-                        {!clinicalFidelity.rawLabValues && r.interpretation && (
-                          <p className="text-data-neutral text-xs pl-4 border-l-2 border-data-neutral italic">
-                            Interpretation: {r.interpretation}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Diagnosis Log */}
-                  {diagnosisFeedback && (
-                    <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
-                      <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
-                        <CheckCircle className="w-3 h-3" /> Diagnosis
-                      </div>
-                      <p className="text-white font-semibold">Dx: {userDiagnosis}</p>
-                      <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
-                        {diagnosisFeedback.feedback}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Loading state with smooth skeleton */}
-                  {isLoading && <ChatSkeleton messageCount={2} className="mt-4" />}
-
-                  {/* Typing indicator with rotating status (latency masking so user knows system is thinking) */}
-                  {isTyping && !isLoading && (
-                    <div className="flex items-center gap-2 text-data-neutral italic p-4 rounded-lg bg-data-neutral-bg/50 border border-data-neutral/50">
-                      <div
-                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
-                        style={{ animationDelay: '0ms' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
-                        style={{ animationDelay: '150ms' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
-                        style={{ animationDelay: '300ms' }}
-                      />
-                      <span className="text-sm ml-2">
-                        {TYPING_STATUS_MESSAGES[typingStatusIndex % TYPING_STATUS_MESSAGES.length]}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Empty State */}
-                  {session.questions.length === 0 &&
-                    physicalFindings.length === 0 &&
-                    diagnosticResults.length === 0 && (
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
-                        Start the encounter by asking about the patient's history.
-                      </p>
-                    )}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced OSCE Panel Overlays */}
-        <AnimatePresence>
-          {showOrderPanel && (
-            <motion.div
-              initial={false}
-              animate={{}}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
-              onClick={() => setShowOrderPanel(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="max-w-2xl w-full max-h-[90vh] overflow-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <OrderPanel
-                  isOpen={showOrderPanel}
-                  onOrderPlace={handleOrderPlace}
-                  placedOrders={enhancedOSCE.state.orders}
-                  onClose={handleCloseOrderPanel}
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showExamPanel && (
-            <motion.div
-              initial={false}
-              animate={{}}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
-              onClick={handleCloseExamPanel}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="max-w-3xl w-full max-h-[90vh] overflow-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExamPanel
-                  onExamPerformed={handleExamPerformed}
-                  completedExams={enhancedOSCE.state.examFindings}
-                  suggestedRegions={enhancedOSCE.getSuggestedExams(
-                    currentCase?.chiefComplaint || ''
-                  )}
-                  caseData={
-                    currentCase
-                      ? {
-                          physicalExamData: currentCase.physicalExamData,
-                          correctDiagnosis: currentCase.correctDiagnosis,
-                        }
-                      : undefined
-                  }
-                  onClose={handleCloseExamPanel}
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </EncounterWorkstation>
       </div>
     );
   }

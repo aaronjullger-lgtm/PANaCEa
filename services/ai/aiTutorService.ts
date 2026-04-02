@@ -400,7 +400,7 @@ export class AITutorService {
 
       citations.push({
         resourceId,
-        resourceTitle: 'Clinical Resource', // TODO: Look up from database
+        resourceTitle: resourceId.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         excerpt: attr.content.text,
         relevanceScore: attr.retrievalScore,
         citationString: `[${resourceId}] ${attr.content.text.slice(0, 100)}...`,
@@ -551,12 +551,32 @@ Provide:
 
   /**
    * Get recommended resources based on case.
+   * Searches uploaded corpus resources matching the case's condition and system.
    */
   private async getRecommendedResources(
     caseDetails: OSCEDebrief['case']
   ): Promise<ClinicalResource[]> {
-    // Placeholder - in production, query database for relevant resources
-    return [];
+    // Return cached resources that match the case's clinical domain
+    const resources: ClinicalResource[] = [];
+    const searchTerms = [
+      caseDetails.diagnosis,
+      caseDetails.chiefComplaint,
+      ...(caseDetails.systems ?? []),
+    ].filter(Boolean).map(t => t.toLowerCase());
+
+    for (const [resourceId] of this.corpusCache.entries()) {
+      // Match resource IDs containing relevant terms
+      const lowerResourceId = resourceId.toLowerCase();
+      if (searchTerms.some(term => lowerResourceId.includes(term))) {
+        resources.push({
+          id: resourceId,
+          title: resourceId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          format: 'txt',
+          contentType: 'reference',
+        } as ClinicalResource);
+      }
+    }
+    return resources.slice(0, 5);
   }
 
   /**

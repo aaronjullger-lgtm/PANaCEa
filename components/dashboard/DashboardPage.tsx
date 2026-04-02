@@ -16,6 +16,11 @@ import {
   Target,
   BarChart3,
   LayoutDashboard,
+  AlertTriangle,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Stethoscope,
 } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import DecayCurve from './charts/DecayCurve';
@@ -26,6 +31,9 @@ import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
 import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
 import { RetentionForecastCard } from './RetentionForecastCard';
+import { StudyActionList, type StudyAction } from './StudyActionCard';
+import { BlueprintProgressBar } from './BlueprintProgressBar';
+import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
 
@@ -294,6 +302,76 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const totalCardsLearned = data.totalCards || 0;
 
+  // Derive system-level question counts from performance data for blueprint progress
+  const systemCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (performanceData) {
+      for (const entry of performanceData) {
+        const sys = (entry as { system?: string }).system;
+        if (sys) {
+          counts[sys] = (counts[sys] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [performanceData]);
+
+  // Build prioritized study actions from retention data
+  const studyActions = useMemo<StudyAction[]>(() => {
+    const actions: StudyAction[] = [];
+    const dueCount = data.dueCount || 0;
+
+    if (dueCount > 0) {
+      actions.push({
+        id: 'due-reviews',
+        priority: dueCount > 50 ? 'critical' : dueCount > 20 ? 'high' : 'medium',
+        title: dueCount > 50 ? 'Overdue Reviews' : 'Reviews Due',
+        subtitle: `${dueCount} card${dueCount !== 1 ? 's' : ''} ready for review`,
+        count: dueCount,
+        route: '/study/main-session',
+        icon: <Brain className="w-5 h-5" />,
+        accentColor: dueCount > 50 ? 'var(--color-data-fail)' : 'var(--color-accent)',
+      });
+    }
+
+    // Streak maintenance action
+    if (currentStreak > 0) {
+      actions.push({
+        id: 'streak-keeper',
+        priority: 'low',
+        title: `Keep your ${currentStreak}-day streak`,
+        subtitle: 'Complete at least 10 cards today',
+        route: '/study/main-session',
+        icon: <Flame className="w-5 h-5" />,
+        accentColor: 'var(--color-data-provisional)',
+      });
+    }
+
+    // Quick drill suggestion
+    actions.push({
+      id: 'quick-drill',
+      priority: 'medium',
+      title: 'Quick Drill',
+      subtitle: 'Targeted practice on high-yield topics',
+      route: '/drills',
+      icon: <Zap className="w-5 h-5" />,
+      accentColor: 'var(--color-accent)',
+    });
+
+    // OSCE practice
+    actions.push({
+      id: 'osce-practice',
+      priority: 'low',
+      title: 'Patient Encounter',
+      subtitle: 'Practice clinical reasoning with a simulated patient',
+      route: '/modes/simulation',
+      icon: <Stethoscope className="w-5 h-5" />,
+      accentColor: 'var(--color-data-pass)',
+    });
+
+    return actions;
+  }, [data.dueCount, currentStreak]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -356,7 +434,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="space-y-6"
             >
-              {/* Daily Pilot: Streak, Due, Goal */}
+              {/* Quick Stats Row */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <QuickStat
                   icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
@@ -382,7 +460,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 />
               </div>
 
-              {/* Hero: Exam Readiness + Start Session */}
+              {/* Study Actions — "What should I do right now?" */}
+              <SectionHeader
+                title="What To Study"
+                subtitle="Prioritized actions based on your FSRS schedule"
+                icon={<Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />}
+              />
+              <StudyActionList actions={studyActions} />
+
+              {/* Blueprint Progress */}
+              <BlueprintProgressBar
+                systemCounts={systemCounts}
+                targetWeights={NCCPA_BLUEPRINT_WEIGHTS}
+                totalAnswered={totalCardsLearned}
+              />
+
+              {/* Exam Readiness + Retention Forecast */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ExamReadinessCard />
                 <RetentionForecastCard
@@ -399,29 +492,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* HIDDEN: Medical Wordle (API not implemented in Cloudflare Functions - /api/games/wordle/*)
-                <button
-                  onClick={() => handleNavigation('/drills/wordle')}
-                  className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-pass)]/50 hover:shadow-lg hover:shadow-[var(--color-data-pass)]/10 transition-all duration-300 w-full text-left overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-pass)] to-[var(--color-data-pass)] rounded-xl shadow-lg shadow-[var(--color-data-pass)]/20">
-                      <Sparkles className="w-5 h-5 text-[var(--color-text-inverse)]" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                      Medical Wordle
-                    </h3>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                    Guess the medical term in 6 tries
-                  </p>
-                  <div className="flex items-center text-[var(--color-data-pass)] text-sm font-semibold group-hover:gap-2 transition-all">
-                    Play Now
-                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </button>
-                */}
                 <button
                   onClick={() => handleNavigation('/modes/rapid-recall')}
                   className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 transition-all duration-300 w-full text-left overflow-hidden"

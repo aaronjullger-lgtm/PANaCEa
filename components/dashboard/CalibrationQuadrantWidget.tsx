@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import { Brain, CheckCircle, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { getQuadrantLabel, type CalibrationQuadrant } from '@/lib/calibrationQuadrants';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
@@ -98,6 +99,7 @@ const CALIBRATION_URL = `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?
 
 export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ className?: string }>) {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const fetcher = React.useMemo(() => makeCalibrationFetcher(getToken), [getToken]);
   const { data, error, isLoading } = useSWR<CalibrationApiResponse>(CALIBRATION_URL, fetcher, {
     revalidateOnFocus: false,
@@ -140,8 +142,9 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
   if (!cal || total === 0) {
     return (
       <motion.div
-        initial={{ y: 8 }}
+        initial={prefersReducedMotion ? false : { y: 8 }}
         animate={{ y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 ${className}`}
       >
         <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
@@ -155,7 +158,7 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
         <button
           type="button"
           onClick={() => window.location.assign('/study')}
-          className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
           Take a 10-question diagnostic quiz to unlock this graph
         </button>
@@ -165,8 +168,9 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
 
   return (
     <motion.div
-      initial={{ y: 8 }}
+      initial={prefersReducedMotion ? false : { y: 8 }}
       animate={{ y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -190,8 +194,8 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
                 <span className={`text-xs font-medium ${textClass}`}>{label.short}</span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--color-text-primary)]">{count}</span>
-                <span className="text-xs text-[var(--color-text-muted)]">({pct}%)</span>
+                <span className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">{count}</span>
+                <span className="text-xs text-[var(--color-text-muted)] tabular-nums">({pct}%)</span>
               </div>
             </div>
           );

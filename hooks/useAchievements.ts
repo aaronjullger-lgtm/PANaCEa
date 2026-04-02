@@ -101,31 +101,39 @@ export function useAchievements() {
    */
   const unlockAchievement = useCallback(
     (achievementId: string, progress: number = 100): boolean => {
-      const existing = state.achievements.find((a) => a.achievementId === achievementId);
-      if (existing?.isUnlocked) return false;
+      let wasUnlocked = false;
 
-      const newAchievement: UserAchievement = {
-        achievementId,
-        isUnlocked: progress >= 100,
-        progress,
-        unlockedAt: progress >= 100 ? new Date() : undefined,
-      };
+      setState((prev) => {
+        const existing = prev.achievements.find((a) => a.achievementId === achievementId);
+        if (existing?.isUnlocked) return prev;
 
-      const updatedAchievements = existing
-        ? state.achievements.map((a) => (a.achievementId === achievementId ? newAchievement : a))
-        : [...state.achievements, newAchievement];
+        const newAchievement: UserAchievement = {
+          achievementId,
+          isUnlocked: progress >= 100,
+          progress,
+          unlockedAt: progress >= 100 ? new Date() : undefined,
+        };
 
-      setState((prev) => ({
-        ...prev,
-        achievements: updatedAchievements,
-        recentUnlocks:
-          progress >= 100 ? [achievementId, ...prev.recentUnlocks] : prev.recentUnlocks,
-      }));
+        const updatedAchievements = existing
+          ? prev.achievements.map((a) => (a.achievementId === achievementId ? newAchievement : a))
+          : [...prev.achievements, newAchievement];
 
-      saveAchievements(updatedAchievements, state.streak);
-      return progress >= 100;
+        wasUnlocked = progress >= 100;
+
+        // Persist with current streak from state (not stale closure)
+        saveAchievements(updatedAchievements, prev.streak);
+
+        return {
+          ...prev,
+          achievements: updatedAchievements,
+          recentUnlocks:
+            progress >= 100 ? [achievementId, ...prev.recentUnlocks] : prev.recentUnlocks,
+        };
+      });
+
+      return wasUnlocked;
     },
-    [state.achievements, state.streak, saveAchievements]
+    [saveAchievements]
   );
 
   /**
@@ -246,7 +254,7 @@ export function useAchievements() {
    */
   const recordSession = useCallback(
     (questionsAnswered: number, correctAnswers: number, totalQuestions: number) => {
-      const accuracy = (correctAnswers / questionsAnswered) * 100;
+      const accuracy = questionsAnswered > 0 ? (correctAnswers / questionsAnswered) * 100 : 0;
 
       // Update streak
       updateStreak(questionsAnswered, accuracy);

@@ -134,7 +134,7 @@ export function DailyChallengesHub() {
         }
         const data = await response.json();
         setGrandRoundsCompleted(data.data?.completed ?? false);
-        // TODO: fetch streak from another endpoint
+        setGrandRoundsStreak(data.data?.streak ?? undefined);
       } catch (err) {
         setGrandRoundsError(err instanceof Error ? err.message : 'Failed to load');
       } finally {

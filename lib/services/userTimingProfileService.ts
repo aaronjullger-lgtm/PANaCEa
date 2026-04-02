@@ -233,3 +233,199 @@ export async function getUserSpeedFactor(
     return 1.0; // Safe fallback
   }
 }
+
+/**
+ * Per-user behavioral baseline for z-score normalization.
+ * Rolling statistics from recent attempts, used to normalize confidence signals
+ * against the student's own behavioral history rather than absolute thresholds.
+ *
+ * Research basis:
+ * - Ratcliff & McKoon (2008): RT distributions are log-normal and individual-specific
+ * - Van der Linden (2006): person-specific speed-accuracy tradeoff parameters improve models
+ */
+export interface UserBehavioralBaseline {
+  rtBaseline: {
+    medianMs: number;
+    stdDevMs: number;
+    p25Ms: number;
+    p75Ms: number;
+    n: number;
+  };
+  switchBaseline: {
+    medianSwitches: number;
+    p75Switches: number;
+    n: number;
+  };
+  hesitationBaseline: {
+    medianCommitmentGapMs: number;
+    medianCursorEntropy: number;
+    medianOscillations: number;
+    n: number;
+  };
+  computedAt: string;
+}
+
+/** Minimum attempts before generating a behavioral baseline */
+const MIN_ATTEMPTS_FOR_BASELINE = 25;
+
+/** Max attempts to scan for baseline */
+const BASELINE_MAX_ATTEMPTS = 200;
+
+/** Days of history for baseline */
+const BASELINE_LOOKBACK_DAYS = 60;
+
+/**
+ * Compute percentile stats for an array of numbers.
+ */
+function percentileStats(values: number[]): { median: number; p25: number; p75: number; stdDev: number } {
+  if (values.length === 0) return { median: 0, p25: 0, p75: 0, stdDev: 0 };
+  const sorted = [...values].sort((a, b) => a - b);
+  const med = median(sorted);
+  const p25 = sorted[Math.floor(sorted.length * 0.25)] ?? med;
+  const p75 = sorted[Math.floor(sorted.length * 0.75)] ?? med;
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(1, values.length - 1);
+  return { median: med, p25, p75, stdDev: Math.sqrt(variance) };
+}
+
+/**
+ * Compute rolling behavioral baselines from a user's recent QuestionAttempts.
+ * Extracts RT, switch count, and hesitation signals from telemetryJson.
+ * Returns null if insufficient data.
+ */
+export async function computeBehavioralBaseline(
+  prisma: PrismaClient,
+  userId: string
+): Promise<UserBehavioralBaseline | null> {
+  const cutoff = new Date(Date.now() - BASELINE_LOOKBACK_DAYS * 86400000);
+
+  const attempts = await (prisma as any).questionAttempt.findMany({
+    where: {
+      userId,
+      isMainSession: true,
+      createdAt: { gte: cutoff },
+      telemetryJson: { not: null },
+      durationMs: { gt: 500 },
+    },
+    select: {
+      durationMs: true,
+      telemetryJson: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: BASELINE_MAX_ATTEMPTS,
+  });
+
+  if (attempts.length < MIN_ATTEMPTS_FOR_BASELINE) return null;
+
+  const rtValues: number[] = [];
+  const switchValues: number[] = [];
+  const gapValues: number[] = [];
+  const entropyValues: number[] = [];
+  const oscValues: number[] = [];
+
+  for (const attempt of attempts) {
+    const t = attempt.telemetryJson as Record<string, unknown> | null;
+    if (!t) continue;
+
+    // RT: use time_to_first_interaction_ms if available, else durationMs
+    const firstClick = t.time_to_first_interaction_ms as number | null;
+    const rt = firstClick ?? attempt.durationMs;
+    if (typeof rt === 'number' && rt > 500) {
+      rtValues.push(rt);
+    }
+
+    // Switches
+    const switches = t.answer_changes as number | undefined;
+    if (typeof switches === 'number') {
+      switchValues.push(switches);
+    }
+
+    // Hesitation signals (from CRPL micro-kinetics)
+    const serverComputed = t.server_computed as Record<string, unknown> | undefined;
+    const gap = (t.selection_drift_ms as number | undefined) ??
+                (serverComputed?.commitment_gap_ms as number | undefined);
+    if (typeof gap === 'number') gapValues.push(gap);
+
+    const entropy = t.cursor_entropy as number | undefined;
+    if (typeof entropy === 'number') entropyValues.push(entropy);
+
+    const osc = t.hover_oscillations as number | undefined;
+    if (typeof osc === 'number') oscValues.push(osc);
+  }
+
+  const rtStats = percentileStats(rtValues);
+  const switchStats = percentileStats(switchValues);
+
+  return {
+    rtBaseline: {
+      medianMs: Math.round(rtStats.median),
+      stdDevMs: Math.round(rtStats.stdDev),
+      p25Ms: Math.round(rtStats.p25),
+      p75Ms: Math.round(rtStats.p75),
+      n: rtValues.length,
+    },
+    switchBaseline: {
+      medianSwitches: Math.round(switchStats.median * 100) / 100,
+      p75Switches: Math.round(switchStats.p75 * 100) / 100,
+      n: switchValues.length,
+    },
+    hesitationBaseline: {
+      medianCommitmentGapMs: gapValues.length > 0 ? Math.round(percentileStats(gapValues).median) : 0,
+      medianCursorEntropy: entropyValues.length > 0
+        ? Math.round(percentileStats(entropyValues).median * 1000) / 1000
+        : 0,
+      medianOscillations: oscValues.length > 0
+        ? Math.round(percentileStats(oscValues).median * 100) / 100
+        : 0,
+      n: Math.min(gapValues.length, entropyValues.length, oscValues.length),
+    },
+    computedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get cached behavioral baseline, recomputing if stale (> 24 hours).
+ * Returns null if insufficient data — caller falls back to absolute thresholds.
+ */
+export async function getUserBehavioralBaseline(
+  prisma: PrismaClient,
+  userId: string
+): Promise<UserBehavioralBaseline | null> {
+  try {
+    const stats = await (prisma as any).userStatistics.findUnique({
+      where: { userId },
+      select: { timingProfile: true },
+    });
+
+    // Check if behavioral baseline is cached inside timingProfile
+    const cached = stats?.timingProfile as (UserTimingProfile & { behavioralBaseline?: UserBehavioralBaseline }) | null;
+    if (cached?.behavioralBaseline?.computedAt) {
+      const age = Date.now() - new Date(cached.behavioralBaseline.computedAt).getTime();
+      if (age < 24 * 60 * 60 * 1000) {
+        return cached.behavioralBaseline;
+      }
+    }
+
+    // Recompute
+    const baseline = await computeBehavioralBaseline(prisma, userId);
+    if (!baseline) return null;
+
+    // Cache alongside existing timingProfile (non-blocking)
+    const existingProfile = cached ?? {};
+    (prisma as any).userStatistics.upsert({
+      where: { userId },
+      update: { timingProfile: { ...existingProfile, behavioralBaseline: baseline } as any },
+      create: {
+        userId,
+        totalQuestions: 0,
+        correctAnswers: 0,
+        systemStats: {},
+        timingProfile: { behavioralBaseline: baseline } as any,
+      },
+    }).catch(() => { /* non-fatal */ });
+
+    return baseline;
+  } catch {
+    return null; // Safe fallback — use absolute thresholds
+  }
+}

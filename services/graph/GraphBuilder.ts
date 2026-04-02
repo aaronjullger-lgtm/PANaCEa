@@ -410,10 +410,41 @@ export class GraphBuilder {
   }
 
   private async buildCoOccurrenceEdges(): Promise<void> {
-    // For now, create edges between conditions that share the same MedicalContent? Actually each MedicalContent is for a single condition.
-    // We'll need to analyze cross-condition co-occurrence via ReviewLog or Question seeds. This is a placeholder.
-    // TODO: implement co-occurrence based on shared tags, systems, or content.
-    console.log('Co‑occurrence edge builder not yet implemented');
+    // Build co-occurrence edges between conditions that share the same organ system
+    const conditions = await prisma.condition.findMany({
+      select: { id: true, system: true },
+      where: { system: { not: null } },
+    });
+
+    // Group conditions by system
+    const bySystem = new Map<string, string[]>();
+    for (const c of conditions) {
+      if (!c.system) continue;
+      const list = bySystem.get(c.system) ?? [];
+      list.push(c.id);
+      bySystem.set(c.system, list);
+    }
+
+    const edges: GraphEdgeData[] = [];
+    for (const [, conditionIds] of bySystem) {
+      // Create edges between conditions in same system (limit pairwise to avoid explosion)
+      const limited = conditionIds.slice(0, 50);
+      for (let i = 0; i < limited.length; i++) {
+        for (let j = i + 1; j < limited.length; j++) {
+          edges.push({
+            id: `cooccur:condition:${limited[i]}->condition:${limited[j]}`,
+            sourceId: `condition:${limited[i]}`,
+            targetId: `condition:${limited[j]}`,
+            edgeType: GraphEdgeType.ASSOCIATED,
+            weight: 0.3,
+            description: 'Same organ system co-occurrence',
+            evidenceCount: 1,
+          });
+        }
+      }
+    }
+
+    if (edges.length > 0) await this.upsertEdges(edges);
   }
 
   private async buildAssociatedEdges(): Promise<void> {
@@ -461,9 +492,33 @@ export class GraphBuilder {
     targetPrefix: string,
     edgeType: GraphEdgeType,
   ): Promise<void> {
-    // Dynamically access prisma model (not type-safe). We'll need to map model names to known models.
-    // For simplicity, we'll implement each link table separately later.
-    console.log(`Edge builder for ${modelName} not yet implemented`);
+    try {
+      // Access prisma model dynamically — cast to any for dynamic key access
+      const model = (prisma as Record<string, unknown>)[modelName.charAt(0).toLowerCase() + modelName.slice(1)] as
+        | { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
+        | undefined;
+      if (!model?.findMany) return;
+
+      const sourceKey = `${sourcePrefix}Id`;
+      const targetKey = `${targetPrefix}Id`;
+      const links = await model.findMany({ select: { [sourceKey]: true, [targetKey]: true }, take: 5000 });
+
+      const edges: GraphEdgeData[] = links
+        .filter((l) => l[sourceKey] && l[targetKey])
+        .map((l) => ({
+          id: `link:${sourcePrefix}:${l[sourceKey]}->${targetPrefix}:${l[targetKey]}`,
+          sourceId: `${sourcePrefix}:${l[sourceKey]}`,
+          targetId: `${targetPrefix}:${l[targetKey]}`,
+          edgeType,
+          weight: 0.6,
+          description: `${modelName} association`,
+          evidenceCount: 1,
+        }));
+
+      if (edges.length > 0) await this.upsertEdges(edges);
+    } catch {
+      // Link table may not exist — skip silently
+    }
   }
 
   // --- Database Operations ---

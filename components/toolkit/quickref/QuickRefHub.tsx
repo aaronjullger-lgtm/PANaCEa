@@ -27,6 +27,7 @@ import {
   Star,
   ChevronRight,
   Printer,
+  BookOpen,
 } from 'lucide-react';
 import AntibioticRefCards from './AntibioticRefCards';
 import ACLSRefCards from './ACLSRefCards';
@@ -176,6 +177,21 @@ export default function QuickRefHub({ onBack }: { onBack?: () => void }) {
             </motion.button>
           );
         })}
+      </div>
+
+      {/* Cross-reference to Knowledge Base */}
+      <div style={{
+        marginTop: 20, padding: '10px 14px', borderRadius: 10,
+        background: 'color-mix(in srgb, var(--color-bg-secondary) 90%, #3b82f6 10%)',
+        border: '1px dashed var(--color-border)',
+        fontSize: 12, color: 'var(--color-text-secondary)',
+        display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.5,
+      }}>
+        <BookOpen size={14} style={{ flexShrink: 0 }} />
+        <span>
+          For in-depth lab test details, scoring system breakdowns, and PANCE study notes, visit the{' '}
+          <strong style={{ color: 'var(--color-text-primary)' }}>Knowledge Base → Reference Library</strong>.
+        </span>
       </div>
     </div>
   );

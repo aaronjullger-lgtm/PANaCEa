@@ -5,6 +5,7 @@ import { Sparkles, RefreshCw, ShieldCheck, BookOpen, Flame, Check } from 'lucide
 import { useAuth } from '@clerk/clerk-react';
 import { ClinicalSkeleton } from '@/components/loading';
 import { fetchDailyTriad, markTriadReviewed, type DailyTriad } from '@/services/domain';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const triadFetcher = () => fetchDailyTriad();
 
@@ -46,10 +47,12 @@ function TriadSkeleton() {
 }
 
 function ErrorCard({ onRetry }: { onRetry: () => void }) {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className="bg-gradient-to-br from-[var(--color-data-fail)]/40 to-[var(--color-data-fail)]/30 rounded-2xl p-5 border border-[var(--color-data-fail)]/30 shadow-xl text-[var(--color-text-primary)]"
     >
       <div className="flex items-start justify-between">
@@ -68,7 +71,7 @@ function ErrorCard({ onRetry }: { onRetry: () => void }) {
       </div>
       <button
         onClick={onRetry}
-        className="mt-4 inline-flex items-center gap-2 px-3 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 rounded-lg text-sm font-semibold text-[var(--color-text-primary)]"
+        className="mt-4 inline-flex items-center gap-2 px-3 py-2 min-h-[36px] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 rounded-lg text-sm font-semibold text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         <RefreshCw className="w-4 h-4" /> Retry
       </button>
@@ -101,15 +104,17 @@ export default function DailyTriadCard() {
     }
   }, [getToken]);
 
+  const prefersReducedMotion = useReducedMotion();
+
   if (isLoading) return <TriadSkeleton />;
   if (error || !data) return <ErrorCard onRetry={() => mutate()} />;
 
   return (
     <motion.div
-      initial={{ y: 12 }}
+      initial={prefersReducedMotion ? false : { y: 12 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-      whileHover={{ y: -4, scale: 1.01 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
+      whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.01 }}
       className="bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] rounded-2xl p-5 border border-[var(--color-border)] shadow-xl text-[var(--color-text-primary)]"
     >
       <div className="flex items-start justify-between gap-3">
@@ -142,7 +147,7 @@ export default function DailyTriadCard() {
         {typeof data.panceYield === 'number' && (
           <span className="inline-flex items-center gap-1.5">
             <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" aria-hidden />
-            Yield {data.panceYield}
+            Yield <span className="tabular-nums">{data.panceYield}</span>
           </span>
         )}
       </div>
@@ -158,7 +163,7 @@ export default function DailyTriadCard() {
             onClick={handleMarkReviewed}
             disabled={isMarkingReviewed}
             aria-label="Mark triad as reviewed"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 min-h-[36px] rounded-lg bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             <Check className="w-4 h-4" />
             {isMarkingReviewed ? 'Saving...' : 'Reviewed'}
@@ -166,7 +171,7 @@ export default function DailyTriadCard() {
           <button
             onClick={() => mutate()}
             aria-label="Shuffle for a different triad"
-            className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 text-[var(--color-text-primary)]"
+            className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 min-h-[36px] rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             <RefreshCw className="w-4 h-4" />
             Shuffle

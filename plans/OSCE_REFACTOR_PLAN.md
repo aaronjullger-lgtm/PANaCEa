@@ -1,7 +1,7 @@
 # OSCE Mode Refactor Plan
 
 **Date:** 2026-04-01
-**Status:** PHASES A1/A2/A3/B/C2/C3/D1/E1/E2/E3 IMPLEMENTED + misc cleanup — C1/D2 remaining
+**Status:** PHASES A1/A2/A3/B/C1/C2/C3/D1/E1/E2/E3 IMPLEMENTED + misc cleanup — D2 remaining
 **Scope:** Performance, grading accuracy, UI immersion, architecture cleanup
 
 ## Implementation Log (2026-04-01)
@@ -26,8 +26,9 @@
 
 - **A1** ✅ `useEncounterReducer` hook: extracted 52 `useState` calls into a single `useReducer` with typed state, 4 action types (SET_FIELD, SET_FIELDS, UPDATE_FIELD, RESET), stable setter refs via `set()` factory. Functional updater pattern supported. Zero-diff JSX migration. File: `hooks/useEncounterReducer.ts` (308 lines).
 
+- **C1** ✅ `EncounterWorkstation` clinical layout: created `components/modes/osce/EncounterWorkstation.tsx` (~240 lines) with 12-col grid (7-8 main + 4-5 sidebar), responsive based on active sidebar panel. Features: `AVStateBadge` (severity-colored dot + name + context + voice tone descriptors), `SidebarTab` toggles for Orders/Exam, `AnimatePresence` slide-in panels (max-h-[50vh]). Integrated into `PatientEncounterMode.tsx` replacing old modal overlays. Sidebar content extracted to `sidebarJsx` variable with full feature parity: Rapport Meter, Encounter Log (history/exam/diagnostics with sparkline trends), typing indicator with bounce dots + `TYPING_STATUS_MESSAGES`, `ChatSkeleton` loading state, diagnosis feedback entry, and `clinicalFidelity.rawLabValues` conditional for trend visualization.
+
 ### Still Pending
-- **C1**: Full EncounterWorkstation layout refactor (now unblocked by A1)
 - **D2**: Apply voice modulation from AV state to TTS output (requires Gemini Live WebSocket integration)
 
 ---

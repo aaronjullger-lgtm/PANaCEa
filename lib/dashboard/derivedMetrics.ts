@@ -99,7 +99,7 @@ export function deriveQuestionCounts(
   const uniqueQuestions = database?.overall.questionsSeenCount ?? 0;
   const totalAttempts = database?.overall.totalAttempts ?? 0;
   const rollingWindowAttempts = rolling360?.totalInWindow ?? 0;
-  const today = 0; // TODO: fetch from daily stats endpoint
+  const today = database?.overall.todayCount ?? 0;
 
   return {
     uniqueQuestions,
@@ -120,7 +120,7 @@ export function deriveStudyTime(
     ? database.overall.avgTimeMs * (database.overall.totalAttempts || 1)
     : 0;
   const avgPerQuestionMs = database?.overall.avgTimeMs ?? null;
-  const todayMs = 0; // TODO: fetch from daily stats
+  const todayMs = database?.overall.todayTimeMs ?? 0;
 
   return {
     totalMs,

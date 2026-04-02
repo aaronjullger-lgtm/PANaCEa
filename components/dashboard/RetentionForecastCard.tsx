@@ -9,6 +9,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   AreaChart,
   Area,
@@ -68,10 +69,10 @@ const CustomTooltip = ({
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-lg px-3 py-2 shadow-sm">
       <p className="text-[var(--color-text-primary)] font-semibold text-sm mb-1">Day {label}</p>
-      <p className="text-[var(--color-text-muted)] text-xs">
+      <p className="text-[var(--color-text-muted)] text-xs tabular-nums">
         Without review: {Math.round(payload[0]?.value ?? 0)}%
       </p>
-      <p className="text-[var(--color-data-pass)] text-xs">
+      <p className="text-[var(--color-data-pass)] text-xs tabular-nums">
         After review: {Math.round(payload[1]?.value ?? 0)}%
       </p>
     </div>
@@ -85,12 +86,14 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
   className = '',
 }) => {
   const chartData = useMemo(() => buildChartData(decayCurveData), [decayCurveData]);
+  const prefersReducedMotion = useReducedMotion();
 
   if (dueCount === 0) {
     return (
       <motion.div
-        initial={{ y: 8 }}
+        initial={prefersReducedMotion ? false : { y: 8 }}
         animate={{ y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -118,9 +121,9 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
   return (
     <motion.div
-      initial={{ x: -20 }}
+      initial={prefersReducedMotion ? false : { x: -20 }}
       animate={{ x: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
       className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
     >
       <div className="flex items-center gap-3 mb-3">
@@ -208,13 +211,13 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
       </div>
 
       <p className="text-xs text-[var(--color-text-muted)] mb-4">
-        <strong>{dueCount}</strong> review{dueCount !== 1 ? 's' : ''} due — doing them now resets
+        <strong className="tabular-nums">{dueCount}</strong> review{dueCount !== 1 ? 's' : ''} due — doing them now resets
         retention to 100% for those memories.
       </p>
 
       <button
         onClick={onStartReview}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-lg shadow-sm transition-all duration-200"
+        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         Save the memory — Start Review
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

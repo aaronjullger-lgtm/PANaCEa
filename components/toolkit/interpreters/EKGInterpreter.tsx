@@ -9,7 +9,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Heart } from 'lucide-react';
-import { CalculatorHeader, ClinicalInput } from '../calculators/shared';
+import { CalculatorHeader, ClinicalInput, ResetButton, CopyResultButton } from '../calculators/shared';
 import type { CalculatorProps } from '../calculators/types';
 
 const RHYTHM_OPTIONS = [
@@ -281,11 +281,34 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="EKG Interpreter"
-        subtitle="Rhythm, rate, PR, QRS, QT, ST, T-wave → diagnostic interpretation & DDx"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="EKG Interpreter"
+          subtitle="Rhythm, rate, PR, QRS, QT, ST, T-wave → diagnostic interpretation & DDx"
+          onBack={onBack}
+        />
+        <div className="flex items-center gap-2">
+          <ResetButton onReset={() => { setRhythm(''); setRate(''); setPR(''); setQRS(''); setQT(''); setST('normal'); setTWave('normal'); }} />
+          {interpretation && (
+            <CopyResultButton getText={() => {
+              const lines = [
+                `EKG Interpretation`,
+                `Rhythm: ${RHYTHM_OPTIONS.find(o => o.value === rhythm)?.label ?? rhythm} | Rate: ${rate || '—'} bpm | PR: ${pr || '—'} ms | QRS: ${qrs || '—'} ms | QT: ${qt || '—'} ms`,
+                `ST: ${ST_OPTIONS.find(o => o.value === st)?.label ?? st} | T-wave: ${T_OPTIONS.find(o => o.value === tWave)?.label ?? tWave}`,
+                ``,
+                `Primary Finding: ${interpretation.primaryFinding}`,
+                `Urgency: ${interpretation.urgency.toUpperCase()}`,
+                ...(interpretation.criteria.length ? [``, `Criteria:`, ...interpretation.criteria.map(c => `  • ${c}`)] : []),
+                ...(interpretation.differential.length ? [``, `Differential: ${interpretation.differential.join(', ')}`] : []),
+                ...(interpretation.pearls.length ? [``, `Pearls:`, ...interpretation.pearls.map(p => `  💡 ${p}`)] : []),
+                ``,
+                `Recommendation: ${interpretation.recommendation}`,
+              ];
+              return lines.join('\n');
+            }} />
+          )}
+        </div>
+      </div>
 
       <div className="bg-gradient-to-r from-[var(--color-bg-primary)]/40 to-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-xl p-4">
         <div className="flex items-center gap-3">

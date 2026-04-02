@@ -100,20 +100,29 @@ export function usePreferences(): UsePreferencesReturn {
       setError(null);
 
       try {
+        // Validate merged preferences — strip null/undefined values so DEFAULT_PREFERENCES fill gaps
+        const sanitize = (raw: Partial<UserPreferencesPayload>): Partial<UserPreferencesPayload> => {
+          const clean: Partial<UserPreferencesPayload> = {};
+          for (const [k, v] of Object.entries(raw)) {
+            if (v != null) (clean as Record<string, unknown>)[k] = v;
+          }
+          return clean;
+        };
+
         if (!isSignedIn) {
           // Not signed in: Load from localStorage only
-          const localPrefs = extractLocalStoragePreferences();
+          const localPrefs = sanitize(extractLocalStoragePreferences());
           setPreferences({ ...DEFAULT_PREFERENCES, ...localPrefs });
           console.debug('[usePreferences] Loaded from localStorage (not signed in)');
         } else {
           // Signed in: Full sync (localStorage → DB → localStorage)
           const syncedPrefs = await fullPreferencesSync(getToken);
           if (syncedPrefs) {
-            setPreferences({ ...DEFAULT_PREFERENCES, ...syncedPrefs });
+            setPreferences({ ...DEFAULT_PREFERENCES, ...sanitize(syncedPrefs) });
             if (import.meta.env.DEV) console.debug('[usePreferences] Synced from DB');
           } else {
             // Fallback to localStorage
-            const localPrefs = extractLocalStoragePreferences();
+            const localPrefs = sanitize(extractLocalStoragePreferences());
             setPreferences({ ...DEFAULT_PREFERENCES, ...localPrefs });
             console.warn('[usePreferences] Sync failed, using localStorage');
           }

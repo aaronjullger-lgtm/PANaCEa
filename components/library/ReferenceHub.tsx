@@ -53,6 +53,9 @@ interface EntityCardProps {
   onClick: () => void;
 }
 
+const FONT_HEADING = "'Poppins', system-ui, sans-serif";
+const FONT_BODY = "'Inter', system-ui, sans-serif";
+
 function EntityCard({ config, count, onClick }: EntityCardProps) {
   const Icon = config.icon;
   return (
@@ -81,16 +84,18 @@ function EntityCard({ config, count, onClick }: EntityCardProps) {
         {count !== null && (
           <span style={{
             fontSize: 20, fontWeight: 800, color: config.accentColor, opacity: 0.7,
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            fontVariantNumeric: 'tabular-nums',
           }}>
             {count}
           </span>
         )}
       </div>
       <div>
-        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text-primary)' }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>
           {config.entityName}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.5, fontFamily: FONT_BODY }}>
           {ENTITY_DESCRIPTIONS[config.entitySlug] || `Browse all ${config.entityName.toLowerCase()}`}
         </div>
       </div>
@@ -262,11 +267,11 @@ export default function ReferenceHub() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
         <Library size={24} style={{ color: 'var(--color-text-primary)' }} />
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>
           Clinical Reference Library
         </h2>
       </div>
-      <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 16, maxWidth: 600 }}>
+      <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 16, maxWidth: 600, lineHeight: 1.6, fontFamily: FONT_BODY }}>
         Browse, search, and study all clinical reference entities. Each section
         includes PANCE-focused study tools, high-yield filtering, and detailed cards.
       </p>

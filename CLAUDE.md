@@ -46,10 +46,19 @@ Research-backed multi-signal confidence model replacing the old additive-penalty
 - **Multi-signal weighted model** (SDT-inspired): `confidence = Σ(wi × si) × hintFactor`, where signals are RT (0.35), answer switches (0.25), trajectory/proxy (0.20), and hesitation composite (0.20). Bounded to [0.3, 0.95]. For incorrect answers, confidence is fixed at 0.9 (high confidence the student got it wrong → aggressive rescheduling).
 - **Graduated stability multiplier** (sigmoid): `stabilityMult = 0.7 + 0.6 × σ((confidence - 0.6) × 5)`. Replaces old binary threshold (≤0.5 → 0.75×). Now both rewards high confidence (up to ~1.28×) and penalizes low (down to ~0.72×). Centered at 0.6 = neutral (1.0×).
 - **Fluency illusion dampener** (Kornell & Bjork, 2008): `dampener = 0.7 + 0.3 × clamp(elapsedDays, 0, 1)`. Same-day reviews get 30% confidence reduction; ≥1 day → no adjustment. Prevents massed-repetition fluency from inflating stability.
-- **Integration in drillReviewService.ts**: `adjustedConfidence = implicitConfidence × fluencyIllusionDampener(elapsedDays)` → `modifiedStability *= confidenceStabilityMultiplier(adjustedConfidence)`.
-- **Exports**: `confidenceStabilityMultiplier()` and `fluencyIllusionDampener()` from `lib/implicit-metrics.ts`.
-- **Test coverage**: 57 tests across `tests/confidence-scoring.test.ts` (29) and `tests/telemetry-audit.test.ts` (28), all passing.
-- **Research plan**: `plans/confidence-scoring-upgrade-plan.md` documents the full research basis (Benjamin et al. 1998, Freeman & Ambady 2010, Kornell & Bjork 2008, SDT).
+- **Integration in drillReviewService.ts**: Full 4-step confidence pipeline: Bayesian accumulation → calibration dampener → fluency illusion dampener → graduated stability multiplier.
+- **Exports**: `confidenceStabilityMultiplier()`, `fluencyIllusionDampener()`, `UserBaseline`, `QUESTION_TYPE_WEIGHTS`, `QuestionTypeKey` from `lib/implicit-metrics.ts`.
+- **Test coverage**: 134+ tests across 6 test files, all passing.
+- **Research plan**: `plans/confidence-scoring-upgrade-plan.md` and `plans/confidence-pipeline-v2-sprints.md`.
+
+### Confidence Pipeline v2 (2026-04-02 Upgrade)
+Six-sprint enhancement to the confidence scoring pipeline:
+- **Sprint 1 — Per-student baseline normalization**: Z-scores RT, switch, and hesitation signals against each student's own behavioral history (rolling 200-attempt baseline from `userTimingProfileService.ts`). Falls back to absolute thresholds for new users (<25 attempts). Research: Ratcliff & McKoon (2008), Van der Linden (2006).
+- **Sprint 2 — Metacognitive calibration**: `lib/services/calibrationService.ts` computes Brier score from ReviewLog pairs (confidence_i → wasCorrect_i+1). Derives a per-user `dampenerFactor` (0.7–1.3×): overconfident students get dampened, underconfident get boosted. Requires ≥30 review pairs. Research: Dunlosky & Nelson (1992), Koriat (1997).
+- **Sprint 3 — Question-type signal weighting**: `QUESTION_TYPE_WEIGHTS` in `lib/implicit-metrics.ts` provides per-type weight profiles — vignettes weight RT (0.40), recall weights switches (0.40), image weights trajectory (0.35), rapid_recall weights RT (0.50). Research: Rayner (1998), Ericsson & Kintsch (1995).
+- **Sprint 4 — Bayesian confidence accumulation**: `lib/confidence/bayesianAccumulator.ts` blends current-review confidence with exponentially-decayed history of past reviews for the same card. Prior weight capped at 0.4. Quality-aware and correctness-aligned. Research: Mozer et al. (2009), Benjamin et al. (1998).
+- **Sprint 5 — Optimizer quality weighting**: `gcp-fsrs-optimizer/main.py` now probabilistically downsamples reviews by telemetry quality (full=100%, partial=60%, minimal=30%) and user calibration Brier score. Ensures high-fidelity behavioral data drives FSRS parameter fitting.
+- **Sprint 6 — Calibration validation pipeline**: `scripts/validate-confidence-pipeline.ts` pulls ReviewLog pairs, computes Brier scores by quality tier and question type, measures stability multiplier correlation, and outputs JSON reports to `docs/validation/`.
 
 ### FSRS Pipeline Consumers
 All drill and session types now submit to FSRS:

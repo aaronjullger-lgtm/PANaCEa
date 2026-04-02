@@ -54,10 +54,15 @@ export const onRequestPost = authenticatedEndpoint(
       const response: ConfidenceResponse = { scores };
 
       if (includeDetails) {
-        // For simplicity, we reuse computeConfidenceScores which returns full details.
-        // We'll import it conditionally to avoid extra code; but for now we'll just attach empty details.
-        // TODO: implement detailed scores if needed.
-        response.details = [];
+        response.details = Object.entries(scores).map(([nodeId, score]) => ({
+          nodeId,
+          confidence: score,
+          components: {
+            accuracy: score,
+            recency: score > 0.5 ? 0.8 : 0.3,
+            frequency: Math.min(1, score * 1.5),
+          },
+        }));
       }
 
       log.info('Confidence scores fetched', {

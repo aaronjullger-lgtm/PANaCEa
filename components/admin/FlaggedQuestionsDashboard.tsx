@@ -98,7 +98,7 @@ type StatusKey = keyof typeof STATUS_CONFIG;
 const isStatusKey = (key: string): key is StatusKey => key in STATUS_CONFIG;
 
 export const FlaggedQuestionsDashboard: React.FC = () => {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   const [flags, setFlags] = useState<QuestionFlag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -189,7 +189,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          reviewedBy: 'admin', // TODO: Get actual admin user ID
+          reviewedBy: userId ?? 'admin',
           resolutionNote: resolutionNote,
           status: resolveAction,
         }),

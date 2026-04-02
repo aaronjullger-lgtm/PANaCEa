@@ -4,6 +4,7 @@ import { ArrowLeft, Home } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { DrillErrorBoundary } from '@/components/error/DrillErrorBoundary';
 import { ROUTES } from '@/config/routes';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface DrillShellProps {
   /** Title of the current drill */
@@ -61,14 +62,16 @@ const DrillShell: React.FC<DrillShellProps> = ({
   className = '',
   hideBreadcrumb = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const hubTarget = backTo ?? ROUTES.PRACTICE;
   return (
     <div className={`min-h-screen bg-[var(--color-bg-primary)] flex flex-col ${className}`}>
       {/* Header with Breadcrumb */}
       {!hideBreadcrumb && (
         <motion.header
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
         >
           <div className="max-w-7xl mx-auto px-4 py-3">
@@ -79,7 +82,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
               ) : (
                 <button
                   onClick={onBackToHub}
-                  className="flex items-center gap-1 hover:text-[var(--color-accent)] transition-colors group"
+                  className="flex items-center gap-1 hover:text-[var(--color-accent)] transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded-lg px-2 py-1"
                   aria-label="Back to hub"
                 >
                   <Home className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
@@ -108,7 +111,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                 {onBack && (
                   <button
                     onClick={onBack}
-                    className="p-2 min-h-[44px] min-w-[44px] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group"
+                    className="p-2 min-h-[44px] min-w-[44px] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     aria-label="Go back"
                   >
                     <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:-translate-x-1 transition-all" />

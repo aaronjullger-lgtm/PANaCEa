@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { isPERCNegative, percPositiveCount } from '@/lib/calculators';
 
@@ -117,11 +117,23 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="PERC Rule"
-        subtitle="Pulmonary Embolism Rule-out Criteria"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between">
+        <CalculatorHeader
+          title="PERC Rule"
+          subtitle="Pulmonary Embolism Rule-out Criteria"
+          onBack={onBack}
+        />
+        <ResetButton onReset={() => {
+          setAge50(false);
+          setHeartRate100(false);
+          setO2sat95(false);
+          setUnilateralLegSwelling(false);
+          setHemoptysis(false);
+          setRecentSurgery(false);
+          setPriorPE(false);
+          setHormoneUse(false);
+        }} />
+      </div>
 
       <div className="bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-4">
         <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">

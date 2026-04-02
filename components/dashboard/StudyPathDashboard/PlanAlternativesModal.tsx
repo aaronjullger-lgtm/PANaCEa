@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Check, Clock, Target, TrendingUp, Zap, Calendar } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import type { StudyPlan } from '@/types';
 
@@ -20,6 +21,7 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
   alternatives,
   currentPlan,
 }) => {
+  const { getToken } = useAuth();
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -31,10 +33,23 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSelectAlternative = (planId: string) => {
-    // TODO: call accept endpoint with planId
-    toast.info('Plan selection is coming soon.');
-    onClose();
+  const handleSelectAlternative = async (planId: string) => {
+    try {
+      const token = await getToken?.();
+      const res = await fetch(`/api/study-path/accept`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ planId }),
+      });
+      if (!res.ok) throw new Error('Failed to select plan');
+      toast.success('Study plan updated.');
+      onClose();
+    } catch {
+      toast.error('Could not select plan. Please try again.');
+    }
   };
 
   const formatDate = (date: Date) => new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });

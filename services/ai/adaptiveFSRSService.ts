@@ -218,13 +218,30 @@ export function calculateOptimalRetention(
  * @param userId - User ID to fetch review history for
  * @returns Promise resolving to review history entries
  */
-export async function fetchUserReviewHistory(userId: string): Promise<ReviewHistoryEntry[]> {
-  // TODO: Implement database query to fetch ReviewLog entries for the user
-  // and convert them to ReviewHistoryEntry format.
-  // This requires Prisma client and appropriate environment.
-  // For now, return empty array.
-  console.warn('fetchUserReviewHistory is not yet implemented');
-  return [];
+export async function fetchUserReviewHistory(
+  userId: string,
+  token?: string | null
+): Promise<ReviewHistoryEntry[]> {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`/api/user/review-history?limit=500&mainOnly=true`, { headers });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const reviews = data.reviews ?? data.data?.reviews ?? [];
+
+    return reviews.map((r: Record<string, unknown>) => ({
+      rating: r.wasCorrect ? 3 : 1,
+      elapsed_days: 0,
+      scheduled_days: 0,
+      review: new Date(r.createdAt as string),
+      state: 0,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================

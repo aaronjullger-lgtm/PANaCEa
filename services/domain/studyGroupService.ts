@@ -2,6 +2,10 @@
  * Study Group Service
  * Sprint 8: Social & Gamification - Study group management
  *
+ * STATUS: NOT YET IMPLEMENTED — no backend API endpoints exist for study groups.
+ * All methods return mock/empty data. The /api/social/* endpoints do not exist.
+ * Types are exported for use by components that will consume this when implemented.
+ *
  * Enables users to create/join study groups, track group progress,
  * and participate in collaborative learning challenges.
  */

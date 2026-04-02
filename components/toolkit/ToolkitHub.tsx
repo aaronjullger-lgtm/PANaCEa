@@ -783,13 +783,11 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => onNavigateToItem?.('radiology_scroll')}
-                    className="w-full p-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg transition-all flex items-center justify-center gap-2"
+                  <div
+                    className="w-full p-3 bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] rounded-lg flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
                   >
-                    <span>Open Imaging Library</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                    <span>Imaging Library — Coming Soon</span>
+                  </div>
                 </div>
               </motion.div>
             )}

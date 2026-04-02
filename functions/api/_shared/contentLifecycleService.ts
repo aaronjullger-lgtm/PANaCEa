@@ -128,7 +128,40 @@ export async function transitionQuestion(
         },
       });
 
-      // TODO: Migrate SRS state to replacement question if provided
+      // Migrate SRS state if a replacement question is referenced in the reason field
+      // Format: "replaced:REPLACEMENT_QUESTION_ID"
+      if (reason?.startsWith('replaced:')) {
+        const replacementId = reason.split(':')[1];
+        if (replacementId) {
+          // Copy UserProgress entries to the replacement question
+          const progressRecords = await prisma.userProgress.findMany({
+            where: { questionId },
+          });
+          for (const record of progressRecords) {
+            await prisma.userProgress.upsert({
+              where: { userId_questionId: { userId: record.userId, questionId: replacementId } },
+              update: {
+                stability: record.stability,
+                difficulty: record.difficulty,
+                state: record.state,
+                lastReviewDate: record.lastReviewDate,
+                nextReviewDate: record.nextReviewDate,
+              },
+              create: {
+                userId: record.userId,
+                questionId: replacementId,
+                stability: record.stability,
+                difficulty: record.difficulty,
+                state: record.state,
+                lastReviewDate: record.lastReviewDate,
+                nextReviewDate: record.nextReviewDate,
+                reps: record.reps,
+                lapses: record.lapses,
+              },
+            });
+          }
+        }
+      }
       break;
 
     default:

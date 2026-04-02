@@ -179,49 +179,8 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
   },
 ];
 
-/**
- * @deprecated NAVIGATION_STRUCTURE contains many dead links and should NOT be used.
- * Paths like /education, /stats, /settings, /subscription, /reference/*, /skills/* do not
- * have routes in App.tsx and will show wrong content. Use NAVIGATION_CONFIG instead.
- *
- * This export is kept only for legacy compatibility; any code using it should migrate to
- * NAVIGATION_CONFIG or NavRail, which only expose valid paths.
- *
- * See: docs/GAP_ANALYSIS_AND_IMPROVEMENT_PLAN.md and docs/EXTRAPOLATED_DEVELOPMENT_AUDIT.md
- */
-export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
-  {
-    category: 'Overview',
-    items: [
-      { label: 'Dashboard', path: '/study', icon: 'LayoutDashboard' },
-      { label: 'Analytics', path: '/study?tab=analytics', icon: 'LineChart' },
-    ],
-  },
-  {
-    category: 'Resources',
-    items: [
-      { label: 'Clinical Reference', path: '/study/knowledge', icon: 'Library' },
-      { label: 'Toolkit', path: '/study/utilities', icon: 'Zap' },
-      { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
-      { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
-      { label: 'Cross‑System Explorer', path: '/explorer', icon: 'BrainCircuit' },
-    ],
-  },
-];
-
-/**
- * @deprecated Uses NAVIGATION_STRUCTURE which contains dead links.
- * No active component calls this function. Use NAV_RAIL_ITEMS instead.
- */
-export const getNavigationWithIcons = (): NavigationCategory[] => {
-  return NAVIGATION_STRUCTURE.map((category) => ({
-    ...category,
-    items: category.items.map((item) => ({
-      ...item,
-      iconComponent: ICON_MAP[item.icon],
-    })),
-  }));
-};
+// NAVIGATION_STRUCTURE and getNavigationWithIcons removed — contained dead links.
+// Use NAVIGATION_CONFIG or NAV_RAIL_ITEMS instead.
 
 /**
  * Get all known paths in the application.

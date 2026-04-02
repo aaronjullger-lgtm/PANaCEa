@@ -8,6 +8,7 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
@@ -291,14 +292,20 @@ export class DisasterRecoveryService {
         const jsonData = JSON.stringify(data, null, 2);
 
         if (this.config.compress) {
-          // TODO: Implement compression
-          fs.writeFileSync(filePath, jsonData);
+          const compressed = zlib.gzipSync(Buffer.from(jsonData, 'utf-8'));
+          fs.writeFileSync(filePath + '.gz', compressed);
         } else {
           fs.writeFileSync(filePath, jsonData);
         }
 
-        if (this.config.encrypt) {
-          // TODO: Implement encryption
+        if (this.config.encrypt && this.config.encryptionKey) {
+          const targetPath = this.config.compress ? filePath + '.gz' : filePath;
+          const raw = fs.readFileSync(targetPath);
+          const iv = crypto.randomBytes(16);
+          const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(this.config.encryptionKey, 'hex'), iv);
+          const encrypted = Buffer.concat([iv, cipher.update(raw), cipher.final()]);
+          fs.writeFileSync(targetPath + '.enc', encrypted);
+          fs.unlinkSync(targetPath);
         }
 
         const stats = fs.statSync(filePath);
@@ -562,14 +569,21 @@ export class DisasterRecoveryService {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 
         if (!options.dryRun) {
-          // Clear existing data
-          // Note: This is a simplified approach - in production, you'd want
-          // more sophisticated restoration logic
-          console.log(`🗑️  Clearing ${tableInfo.table}...`);
-
-          // Restore data
           console.log(`📥 Restoring ${data.length} records to ${tableInfo.table}...`);
-          // TODO: Implement actual restoration logic based on table structure
+          // Use Prisma createMany for bulk restoration
+          const model = (this.prisma as Record<string, unknown>)[tableInfo.table] as
+            | { deleteMany?: (args?: Record<string, unknown>) => Promise<unknown>; createMany?: (args: Record<string, unknown>) => Promise<unknown> }
+            | undefined;
+          if (model?.deleteMany && model?.createMany) {
+            if (options.clearExisting !== false) {
+              await model.deleteMany({});
+            }
+            // Batch in chunks of 500 to avoid timeout
+            for (let b = 0; b < data.length; b += 500) {
+              const batch = data.slice(b, b + 500);
+              await model.createMany({ data: batch, skipDuplicates: true });
+            }
+          }
         }
 
         results.push({

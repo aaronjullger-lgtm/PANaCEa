@@ -37,7 +37,6 @@ import {
   ContrastiveDrillSession,
   ReasoningTutorMode,
   CramMode,
-  PolypharmacyPuzzleMode,
   CommuterMode,
   MedicalWordleMode,
   DiagnosticPuzzleMode,
@@ -49,7 +48,7 @@ import {
 } from '@/config/lazyComponents';
 import type { View } from '@/config/appViews';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
-import { TRAINING_MODES } from '@/config/training-modes';
+// TRAINING_MODES import removed — no longer needed after polypharmacy simplification
 
 interface DrillViewRouterProps {
   view: View;
@@ -390,36 +389,20 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
       )}
 
       {view === 'polypharmacy_puzzle' && (
-        <WithGeminiErrorBoundary
-          viewName="polypharmacy_puzzle"
-          onRetry={() => setView('polypharmacy_puzzle')}
-        >
-          <Suspense fallback={<Loader />}>
-            {(() => {
-              // Check if mode is coming soon
-              const mode = TRAINING_MODES.find((m) => m.id === 'polypharmacy_puzzle');
-              if (mode?.isComingSoon) {
-                return (
-                  <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                      Coming Soon
-                    </h2>
-                    <p className="text-[var(--color-text-muted)] mb-6">
-                      {mode.label} is currently under development.
-                    </p>
-                    <button
-                      onClick={exit}
-                      className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-opacity"
-                    >
-                      Return to Home
-                    </button>
-                  </div>
-                );
-              }
-              return <PolypharmacyPuzzleMode onExit={exit} />;
-            })()}
-          </Suspense>
-        </WithGeminiErrorBoundary>
+        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+            Coming Soon
+          </h2>
+          <p className="text-[var(--color-text-muted)] mb-6">
+            Polypharmacy Puzzle is currently under development.
+          </p>
+          <button
+            onClick={exit}
+            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Return to Home
+          </button>
+        </div>
       )}
 
       {view === 'commuter_mode' && (

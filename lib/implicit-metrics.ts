@@ -45,6 +45,8 @@ export interface ImplicitBehaviorMetrics {
   hintViewed?: boolean;
   /** Optional: Time spent viewing hint (ms). Longer viewing = weaker retrieval. */
   hintViewDurationMs?: number | null;
+  /** Optional: Question type for type-specific weight profiles */
+  questionType?: string;
 }
 
 /**
@@ -90,6 +92,24 @@ export interface ContinuousRatingResult {
   confidence: number;
   /** Discrete rating for FSRS.next() (round of grade) */
   discreteRating: Rating;
+}
+
+/**
+ * Per-user behavioral baseline for normalizing confidence signals.
+ * When provided, confidence signals are z-scored against the student's own history
+ * instead of using absolute thresholds.
+ *
+ * All fields are optional — if a particular baseline is missing (e.g., no CRPL data),
+ * that signal falls back to absolute normalization.
+ */
+export interface UserBaseline {
+  rtMedianMs: number;
+  rtStdDevMs: number;
+  switchMedian: number;
+  switchP75: number;
+  commitmentGapMedianMs: number;
+  cursorEntropyMedian: number;
+  oscillationMedian: number;
 }
 
 /**
@@ -206,6 +226,60 @@ export const DEFAULT_IMPLICIT_CONFIG: ImplicitRatingConfig = {
 };
 
 /**
+ * Per-question-type confidence weight profiles.
+ *
+ * Different question formats engage different cognitive processes:
+ * - Vignettes: reading comprehension dominates → RT is most diagnostic
+ * - Recall: know-it-or-don't → answer switches most diagnostic
+ * - Image: visual scanning → trajectory/cursor movement most diagnostic
+ * - Rapid recall: pure speed → RT dominates
+ *
+ * Research: Rayner (1998) on reading vs scene perception;
+ * Ericsson & Kintsch (1995) on retrieval mechanisms per format.
+ */
+export interface ConfidenceWeights {
+  rtWeight: number;
+  switchWeight: number;
+  trajectoryWeight: number;
+  hesitationWeight: number;
+}
+
+export type QuestionTypeKey = 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown';
+
+export const QUESTION_TYPE_WEIGHTS: Record<QuestionTypeKey, ConfidenceWeights> = {
+  vignette: {
+    rtWeight: 0.40,
+    switchWeight: 0.20,
+    trajectoryWeight: 0.15,
+    hesitationWeight: 0.25,
+  },
+  recall: {
+    rtWeight: 0.30,
+    switchWeight: 0.40,
+    trajectoryWeight: 0.10,
+    hesitationWeight: 0.20,
+  },
+  image: {
+    rtWeight: 0.20,
+    switchWeight: 0.20,
+    trajectoryWeight: 0.35,
+    hesitationWeight: 0.25,
+  },
+  rapid_recall: {
+    rtWeight: 0.50,
+    switchWeight: 0.30,
+    trajectoryWeight: 0.05,
+    hesitationWeight: 0.15,
+  },
+  unknown: {
+    rtWeight: 0.35,
+    switchWeight: 0.25,
+    trajectoryWeight: 0.20,
+    hesitationWeight: 0.20,
+  },
+};
+
+/**
  * Calculate running latency statistics using Welford's algorithm
  * Maintains numerical stability for variance calculation
  */
@@ -262,8 +336,10 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
  * - bonus: fast response (< 0.5 par time)
  * - grade = clamp(base - penalties + bonus, 1.0, 4.0)
  */
-export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
-  config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
+export function deriveContinuousRating(
+  metrics: ImplicitBehaviorMetrics,
+  config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG,
+  baseline?: UserBaseline
 ): ContinuousRatingResult {
   // ── NaN/Infinity guard ──
   // If telemetry values are NaN or negative, NaN propagates through all penalty/bonus
@@ -368,18 +444,35 @@ export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
     confidence = cp.incorrectConfidence;
   } else {
     // Signal 1: Response time (fast correct = strong automatic retrieval)
-    // Uses log-transform: diminishing penalty beyond 1.5× par time (clinical reasoning)
-    // Range: 0.0 (very slow) → 1.0 (instant recall)
-    const rtRatio = latencyRatio; // already computed above: effectiveLatency / parTime
-    const sRT = Math.max(0, Math.min(1, 1 - Math.log(Math.max(rtRatio, 0.1)) / Math.log(3)));
-    // rtRatio 0.3 → sRT ≈ 1.0 (instant recall)
-    // rtRatio 1.0 → sRT ≈ 1.0 (at par, log(1)=0)
-    // rtRatio 1.5 → sRT ≈ 0.63
-    // rtRatio 3.0 → sRT ≈ 0.0 (3× par time)
+    // When baseline available: z-score against student's own RT distribution
+    // Fallback: log-transform of latency ratio (absolute threshold)
+    let sRT: number;
+    if (baseline && baseline.rtStdDevMs > 0) {
+      // Z-score: how many stddevs above/below the student's own median
+      const zScore = (safeTimeToFirstClick - baseline.rtMedianMs) / baseline.rtStdDevMs;
+      // Map z-score to [0, 1]: z=-2 → 1.0 (very fast for them), z=0 → 0.67, z=+2 → 0.33, z=+3 → 0.0
+      sRT = Math.max(0, Math.min(1, 1 - zScore / 3));
+    } else {
+      // Uses log-transform: diminishing penalty beyond 1.5× par time (clinical reasoning)
+      // Range: 0.0 (very slow) → 1.0 (instant recall)
+      const rtRatio = latencyRatio; // already computed above: effectiveLatency / parTime
+      sRT = Math.max(0, Math.min(1, 1 - Math.log(Math.max(rtRatio, 0.1)) / Math.log(3)));
+      // rtRatio 0.3 → sRT ≈ 1.0 (instant recall)
+      // rtRatio 1.0 → sRT ≈ 1.0 (at par, log(1)=0)
+      // rtRatio 1.5 → sRT ≈ 0.63
+      // rtRatio 3.0 → sRT ≈ 0.0 (3× par time)
+    }
 
-    // Signal 2: Answer stability (no switches = confident, each switch reduces)
-    // Range: 0.2 (many switches) → 1.0 (no switches)
-    const sSwitch = Math.max(0.2, 1 - safeSwitches * 0.2);
+    // Signal 2: Answer stability (no switches = confident)
+    // When baseline available: normalize against student's own switch rate
+    let sSwitch: number;
+    if (baseline && baseline.switchP75 > 0) {
+      // Normalize: switches at or below their p75 are "normal"; above is penalized
+      const switchNorm = safeSwitches / (baseline.switchP75 * 1.5);
+      sSwitch = Math.max(0.2, 1 - switchNorm * 0.5);
+    } else {
+      sSwitch = Math.max(0.2, 1 - safeSwitches * 0.2);
+    }
 
     // Signal 3: Trajectory / micro-kinetics (if available)
     // Uses existing trajectory.confidenceScore or commitment gap + entropy as proxy
@@ -396,18 +489,35 @@ export function deriveContinuousRating(  metrics: ImplicitBehaviorMetrics,
     }
 
     // Signal 4: Hesitation composite (commitment gap, entropy, oscillations)
+    // When baseline available: normalize against student's own hesitation norms
+    const gapDenominator = (baseline && baseline.commitmentGapMedianMs > 0)
+      ? baseline.commitmentGapMedianMs * 3
+      : 4000;
+    const gapNorm = Math.max(0, 1 - (metrics.commitmentGapMs ?? 0) / gapDenominator);
+
+    const entropyCenter = (baseline && baseline.cursorEntropyMedian > 0)
+      ? baseline.cursorEntropyMedian
+      : 1.0;
+    const entropyNorm = Math.max(0, 1 - Math.max(0, ((metrics.cursorEntropy ?? 0) - entropyCenter)) / (entropyCenter * 2));
+
+    const oscDenominator = (baseline && baseline.oscillationMedian > 0)
+      ? baseline.oscillationMedian * 3
+      : 4;
+    const oscNorm = Math.max(0, 1 - (metrics.hoverOscillationCount ?? 0) / oscDenominator);
+
     // Range: 0.0 (strong hesitation) → 1.0 (no hesitation signals)
-    const gapNorm = Math.max(0, 1 - (metrics.commitmentGapMs ?? 0) / 4000);
-    const entropyNorm = Math.max(0, 1 - Math.max(0, ((metrics.cursorEntropy ?? 0) - 1)) / 2);
-    const oscNorm = Math.max(0, 1 - (metrics.hoverOscillationCount ?? 0) * 0.25);
     const sHesitation = (gapNorm + entropyNorm + oscNorm) / 3;
 
-    // Weighted sum of signals
+    // Select question-type-specific weights if available, otherwise use config defaults
+    const qtKey = (metrics.questionType ?? 'unknown') as QuestionTypeKey;
+    const weights = QUESTION_TYPE_WEIGHTS[qtKey] ?? QUESTION_TYPE_WEIGHTS.unknown;
+
+    // Weighted sum of signals (question-type-aware)
     confidence =
-      cp.rtWeight * sRT +
-      cp.switchWeight * sSwitch +
-      cp.trajectoryWeight * sTrajectory +
-      cp.hesitationWeight * sHesitation;
+      weights.rtWeight * sRT +
+      weights.switchWeight * sSwitch +
+      weights.trajectoryWeight * sTrajectory +
+      weights.hesitationWeight * sHesitation;
 
     // Hint dampener: aided recall produces weaker retrieval strength signal
     if (metrics.hintViewed) {

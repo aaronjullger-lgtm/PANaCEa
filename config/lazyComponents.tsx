@@ -90,7 +90,7 @@ export const OnboardingYourPlan = lazy(() =>
 );
 export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
 export const CoreAdaptiveSession = lazy(() => import('../components/session/CoreAdaptiveSession'));
-export const StudyGroupDashboard = lazy(() => import('../components/social/StudyGroupDashboard'));
+// StudyGroupDashboard removed — social API not implemented
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
 export const GapAnalysisDashboard = lazy(() =>
   import('../components/dashboard/GapAnalysisDashboard').then((m) => ({

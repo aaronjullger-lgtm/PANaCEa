@@ -95,6 +95,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     }
 
     const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86400000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
@@ -548,6 +550,16 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       recommendations.push(`Try more questions in: ${underStudiedSystems.slice(0, 3).join(', ')}`);
     }
 
+    // Today's stats from recentAttempts
+    const todayAttempts = allAttempts.filter(
+      (a: (typeof allAttempts)[0]) => new Date(a.createdAt) >= todayStart
+    );
+    const todayCount = todayAttempts.length;
+    const todayTimeMs = todayAttempts.reduce(
+      (sum: number, a: (typeof allAttempts)[0]) => sum + (a.timeSpentMs || a.durationMs || 0),
+      0
+    );
+
     const responseData = {
       success: true,
       stats: {
@@ -560,6 +572,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
           totalStudyDays: attemptDates.size,
           avgTimeMs,
           avgAnswerChanges,
+          todayCount,
+          todayTimeMs,
         },
         bySystems: systemStats,
         byConditions: conditionStats,
