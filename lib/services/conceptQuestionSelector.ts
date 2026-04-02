@@ -28,7 +28,7 @@ import { getLeastSeenQuestionForCondition } from './batchVariantService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type SessionMode = 'adaptive' | 'system' | 'subcategory' | 'condition';
+export type SessionMode = 'adaptive' | 'system' | 'subcategory' | 'condition' | 'review' | 'focused';
 
 export interface SessionRequest {
   userId: string;
@@ -124,6 +124,32 @@ export async function selectSessionQuestions(
     urgencyMultiplier,
   } = request;
 
+  // ── Review mode: 100% due reviews, no new cards ──
+  if (mode === 'review') {
+    const dueCards = await fetchDueReviews(prisma, userId, mode, {
+      system, subcategory, conditionId, gatedSystems,
+    });
+    const selected = dueCards.slice(0, size);
+    const sessionId = generateSessionId();
+    const systemDist: Record<string, number> = {};
+    for (const q of selected) {
+      const sys = q.system ?? 'Unknown';
+      systemDist[sys] = (systemDist[sys] ?? 0) + 1;
+    }
+    return {
+      sessionId, questions: selected,
+      metadata: {
+        dueReviewCount: selected.length, newCardCount: 0,
+        systemDistribution: systemDist,
+        estimatedMinutes: Math.round((selected.length * AVG_SECONDS_PER_QUESTION) / 60),
+        mode, blueprintStage,
+      },
+    };
+  }
+
+  // ── Focused mode: weak-system boost, higher new card ratio ──
+  const focusedNewRatio = mode === 'focused' ? 0.50 : MIN_NEW_CARD_RATIO;
+
   // Step 1: Find due review cards
   const dueCards = await fetchDueReviews(prisma, userId, mode, {
     system,
@@ -134,7 +160,7 @@ export async function selectSessionQuestions(
 
   // Step 2: Calculate the split between due reviews and new cards
   const maxDueSlots = Math.floor(size * DUE_REVIEW_RATIO);
-  const minNewSlots = Math.max(1, Math.floor(size * MIN_NEW_CARD_RATIO));
+  const minNewSlots = Math.max(1, Math.floor(size * focusedNewRatio));
   const dueCount = Math.min(dueCards.length, maxDueSlots);
   const newCount = Math.max(minNewSlots, size - dueCount);
 
