@@ -400,9 +400,10 @@ export const onRequestGet = authenticatedEndpoint(
         prisma.performanceRecord.findMany({
           where: { userId: internalUserId },
           select: {
-            id: true, userId: true, timestamp: true, questionId: true,
-            score: true, timeSpent: true, category: true, difficulty: true,
-            reviewType: true, tags: true,
+            id: true, userId: true, timestamp: true, topic: true,
+            system: true, focus: true, difficulty: true, isCorrect: true,
+            questionWordCount: true, errorTag: true, subcategoryName: true,
+            conditionName: true, createdAt: true,
           },
           take: 2000,
           orderBy: { timestamp: 'desc' },
