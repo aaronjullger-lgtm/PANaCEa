@@ -34,6 +34,8 @@ export interface CircadianContext {
   circadianPhase: CircadianPhase;
   /** Stability modifier to apply to FSRS calculations */
   stabilityModifier: number;
+  /** Par time modifier to apply to baseline question timing */
+  parTimeModifier: number;
   /** ISO timestamp of when this context was captured */
   capturedAt: string;
 }
@@ -99,6 +101,28 @@ const PHASE_MODIFIERS: Record<CircadianPhase, number> = {
   neutral: 1.0, // Standard periods
   evening_recovery: 1.05, // +5% for second wind studying (6-9 PM)
   late_night: 1.2, // +20% for late night (>11 PM) - exceptional retention
+};
+
+/**
+ * Par time modifiers for each circadian phase
+ *
+ * Adjusts baseline question timing based on circadian phase to account for natural
+ * cognitive speed variations. Used when deriving implicit ratings to avoid unfairly
+ * penalizing students for natural circadian slowdown.
+ *
+ * Rationale:
+ * - Peak (9-12): Baseline (1.0x) - optimal speed, no adjustment
+ * - Trough (14-16 / 2-4 PM): +15% - acknowledge post-lunch dip cognitive slowdown
+ * - Neutral: 1.0x - standard timing
+ * - Evening Recovery (18-21): +5% - slight leniency for second wind
+ * - Late Night (>23 / 11 PM+): +25% - significant cognitive slowdown at night
+ */
+const PAR_TIME_MODIFIERS: Record<CircadianPhase, number> = {
+  peak: 1.0, // Baseline — optimal cognition
+  trough: 1.15, // +15% par time during afternoon dip
+  neutral: 1.0, // Standard
+  evening_recovery: 1.05, // +5% slight leniency
+  late_night: 1.25, // +25% — significant cognitive slowdown
 };
 
 /**
@@ -241,6 +265,7 @@ export function buildCircadianContext(
     hoursSinceWake,
     circadianPhase,
     stabilityModifier: PHASE_MODIFIERS[circadianPhase],
+    parTimeModifier: PAR_TIME_MODIFIERS[circadianPhase],
     capturedAt: now.toISOString(),
   };
 }
@@ -254,6 +279,17 @@ export function buildCircadianContext(
  */
 export function applyCircadianModifier(baseStability: number, context: CircadianContext): number {
   return baseStability * context.stabilityModifier;
+}
+
+/**
+ * Apply circadian modifier to baseline par time
+ *
+ * @param baseParTimeMs - Baseline par time in milliseconds (content-based)
+ * @param context - Circadian context from buildCircadianContext
+ * @returns Adjusted par time in milliseconds
+ */
+export function applyCircadianParTimeModifier(baseParTimeMs: number, context: CircadianContext): number {
+  return Math.round(baseParTimeMs * context.parTimeModifier);
 }
 
 /**
@@ -319,6 +355,7 @@ export function serializeCircadianContext(context: CircadianContext): Record<str
     hoursSinceWake: context.hoursSinceWake,
     phase: context.circadianPhase,
     modifier: context.stabilityModifier,
+    parTimeModifier: context.parTimeModifier,
     capturedAt: context.capturedAt,
   };
 }
@@ -337,6 +374,7 @@ export function deserializeCircadianContext(
     hoursSinceWake: data.hoursSinceWake as number | undefined,
     circadianPhase: (data.phase as CircadianPhase) || 'neutral',
     stabilityModifier: (data.modifier as number) || 1.0,
+    parTimeModifier: (data.parTimeModifier as number) || 1.0,
     capturedAt: (data.capturedAt as string) || new Date().toISOString(),
   };
 }

@@ -6,6 +6,8 @@ interface EncounterTimerProps {
   startTime: number;
   isActive: boolean;
   isPaused?: boolean;
+  /** Accumulated milliseconds spent paused — subtracted from elapsed time */
+  pausedMs?: number;
   targetMinutes?: number;
   compact?: boolean;
 }
@@ -14,6 +16,7 @@ export const EncounterTimer: React.FC<EncounterTimerProps> = ({
   startTime,
   isActive,
   isPaused = false,
+  pausedMs = 0,
   targetMinutes = 15,
   compact = false,
 }) => {
@@ -23,14 +26,12 @@ export const EncounterTimer: React.FC<EncounterTimerProps> = ({
     if (!isActive || isPaused) return;
 
     const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsedMs = now - startTime;
-      const elapsedSeconds = Math.floor(elapsedMs / 1000);
-      setElapsed(elapsedSeconds);
+      const activeMs = Date.now() - startTime - pausedMs;
+      setElapsed(Math.max(0, Math.floor(activeMs / 1000)));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, isPaused, startTime]);
+  }, [isActive, isPaused, startTime, pausedMs]);
 
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;

@@ -9,7 +9,7 @@
  * @testSuite 4 – Edge cases (missing parTime, optional fields)
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { deriveContinuousRating, DEFAULT_IMPLICIT_CONFIG } from './implicit-metrics';
 import { Rating } from './fsrs';
 import type { ImplicitBehaviorMetrics } from './implicit-metrics';
@@ -237,6 +237,155 @@ describe('deriveContinuousRating', () => {
       // Should still produce a grade (likely 1.0 due to huge penalty)
       expect(result.grade).toBeDefined();
       expect(result.grade).not.toBeNaN();
+    });
+  });
+
+  // ============================================================================
+  //  TEST SET 5: Hint-Viewed Penalty
+  // ============================================================================
+
+  describe('hint-viewed penalty', () => {
+    const baseMetric: ImplicitBehaviorMetrics = {
+      timeToFirstClick: 20000,
+      answerSwitches: 0,
+      totalDwellTime: 25000,
+      isCorrect: true,
+      parTimeMs: 30000,
+    };
+
+    it('correct answer without hint has higher grade than with hint', () => {
+      const noHint = deriveContinuousRating({ ...baseMetric, hintViewed: false });
+      const withHint = deriveContinuousRating({ ...baseMetric, hintViewed: true });
+
+      expect(withHint.grade).toBeLessThan(noHint.grade);
+      // Default hint penalty is 0.4 grade points
+      expect(noHint.grade - withHint.grade).toBeCloseTo(0.4, 1);
+    });
+
+    it('hint with long viewing duration has additional penalty', () => {
+      const shortHint = deriveContinuousRating({
+        ...baseMetric,
+        hintViewed: true,
+        hintViewDurationMs: 1000, // 1 second
+      });
+      const longHint = deriveContinuousRating({
+        ...baseMetric,
+        hintViewed: true,
+        hintViewDurationMs: 10000, // 10 seconds
+      });
+
+      expect(longHint.grade).toBeLessThan(shortHint.grade);
+    });
+
+    it('hint duration penalty is capped at 0.3', () => {
+      const veryLongHint = deriveContinuousRating({
+        ...baseMetric,
+        hintViewed: true,
+        hintViewDurationMs: 60000, // 60 seconds
+      });
+      const maxPenaltyHint = deriveContinuousRating({
+        ...baseMetric,
+        hintViewed: true,
+        hintViewDurationMs: 15000, // 15 seconds — should already hit cap
+      });
+
+      // Both should hit the cap, so grades should be very close
+      expect(Math.abs(veryLongHint.grade - maxPenaltyHint.grade)).toBeLessThan(0.01);
+    });
+
+    it('hint penalty does not push grade below 1.0 (clamp)', () => {
+      // Combine hint with other heavy penalties
+      const heavyPenalty = deriveContinuousRating({
+        ...baseMetric,
+        hintViewed: true,
+        hintViewDurationMs: 30000,
+        answerSwitches: 5,
+        timeToFirstClick: 60000,
+        cursorEntropy: 3,
+        hoverOscillationCount: 5,
+      });
+
+      expect(heavyPenalty.grade).toBe(1.0);
+      expect(heavyPenalty.discreteRating).toBe(Rating.Again);
+    });
+
+    it('hintViewed=undefined applies no penalty (backwards compatibility)', () => {
+      const noField = deriveContinuousRating(baseMetric); // hintViewed undefined
+      const explicitFalse = deriveContinuousRating({ ...baseMetric, hintViewed: false });
+
+      expect(noField.grade).toBe(explicitFalse.grade);
+    });
+
+    it('incorrect answer is unaffected by hint penalty', () => {
+      const incorrectNoHint = deriveContinuousRating({ ...baseMetric, isCorrect: false });
+      const incorrectWithHint = deriveContinuousRating({
+        ...baseMetric,
+        isCorrect: false,
+        hintViewed: true,
+        hintViewDurationMs: 5000,
+      });
+
+      // Both should be 1.0 — incorrect base is 1.0, no adjustments applied
+      expect(incorrectNoHint.grade).toBe(incorrectWithHint.grade);
+    });
+  });
+
+  // ============================================================================
+  //  TEST SET 6: Telemetry Quality Assessment
+  // ============================================================================
+
+  describe('assessTelemetryQuality', () => {
+    // Import is dynamic to avoid circular issues
+    let assessTelemetryQuality: typeof import('./implicit-metrics').assessTelemetryQuality;
+
+    beforeAll(async () => {
+      const mod = await import('./implicit-metrics');
+      assessTelemetryQuality = mod.assessTelemetryQuality;
+    });
+
+    it('returns "minimal" for null/undefined telemetry', () => {
+      expect(assessTelemetryQuality(null)).toBe('minimal');
+      expect(assessTelemetryQuality(undefined)).toBe('minimal');
+    });
+
+    it('returns "minimal" for empty object', () => {
+      expect(assessTelemetryQuality({})).toBe('minimal');
+    });
+
+    it('returns "partial" when only first-click is present', () => {
+      expect(assessTelemetryQuality({
+        time_to_first_interaction_ms: 5000,
+      })).toBe('partial');
+    });
+
+    it('returns "partial" when only answer_changes is present', () => {
+      expect(assessTelemetryQuality({
+        answer_changes: 2,
+      })).toBe('partial');
+    });
+
+    it('returns "full" when first-click, switches, and CRPL present', () => {
+      expect(assessTelemetryQuality({
+        time_to_first_interaction_ms: 5000,
+        answer_changes: 1,
+        hover_oscillations: 3,
+      })).toBe('full');
+    });
+
+    it('returns "full" with selection_drift_ms as CRPL signal', () => {
+      expect(assessTelemetryQuality({
+        time_to_first_interaction_ms: 5000,
+        answer_changes: 0,
+        selection_drift_ms: 2500,
+      })).toBe('full');
+    });
+
+    it('returns "full" with tremor_score as CRPL signal', () => {
+      expect(assessTelemetryQuality({
+        time_to_first_interaction_ms: 5000,
+        answer_changes: 0,
+        tremor_score: 0.3,
+      })).toBe('full');
     });
   });
 });

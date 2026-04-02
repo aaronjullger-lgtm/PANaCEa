@@ -767,6 +767,13 @@ export class SessionService {
     return questions;
   }
 
+  /**
+   * Generate new questions on-demand when pool is exhausted mid-session.
+   * Caps at MAX_SESSION_GENERATION to bound latency. Each question gets an
+   * independent timeout so one slow generation doesn't block the rest.
+   */
+  private static readonly MAX_SESSION_GENERATION = 5;
+
   private async generateNewQuestions(options: {
     count: number;
     system?: string;
@@ -775,6 +782,7 @@ export class SessionService {
     userId?: string;
   }): Promise<EnrichedQuestion[]> {
     const { count, system, conditionId, difficulty, userId } = options;
+    const cappedCount = Math.min(count, (this.constructor as typeof SessionService).MAX_SESSION_GENERATION);
 
     const where: Prisma.MedicalContentWhereInput = { status: 'published' };
     if (system) where.system = system;
@@ -782,7 +790,7 @@ export class SessionService {
 
     const contentRecords = await this.prisma.medicalContent.findMany({
       where,
-      take: count,
+      take: cappedCount,
       orderBy: { updatedAt: 'desc' },
     });
 
@@ -791,9 +799,10 @@ export class SessionService {
     }
 
     const questions: EnrichedQuestion[] = [];
+    const generationStartMs = Date.now();
 
     for (const content of contentRecords) {
-      if (questions.length >= count) break;
+      if (questions.length >= cappedCount) break;
 
       try {
         const fsrsHint = await this.getFSRSDifficultyHint(userId, content.conditionId);
@@ -801,7 +810,8 @@ export class SessionService {
         if (generated) {
           questions.push(generated);
 
-          await this.prisma.preGeneratedQuestion.create({
+          // Save to pool for future sessions (non-blocking)
+          this.prisma.preGeneratedQuestion.create({
             data: {
               id: generated.id,
               questionType: 'mcq',
@@ -819,12 +829,22 @@ export class SessionService {
                 pearls: generated.pearls,
               },
             },
+          }).catch((err: unknown) => {
+            logger.warn(`[${LOG_SCOPE}] Non-blocking pool save failed`, { error: err });
           });
         }
       } catch (error) {
         logger.error(`[${LOG_SCOPE}] Failed to generate question`, { error });
       }
     }
+
+    const generationTimeMs = Date.now() - generationStartMs;
+    logger.info(`[${LOG_SCOPE}] Mid-session generation completed`, {
+      requested: count,
+      capped: cappedCount,
+      generated: questions.length,
+      generationTimeMs,
+    });
 
     return questions;
   }
@@ -861,8 +881,11 @@ export class SessionService {
   ): Promise<EnrichedQuestion | null> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
-    // Stable model for PANCE-style question generation (preview IDs change; use stable)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+    // Use flash model for mid-session generation (speed > depth; pro for batch generation)
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: { temperature: 0.7 },
+    });
 
     // Pass findings-only context for vignette-building; withhold diagnosis/overview from vignette
     const findingsContext = [
@@ -919,8 +942,8 @@ Return ONLY valid JSON (PANCE uses 5 options):
     try {
       const result = await withTimeout(
         model.generateContent(prompt).then((r) => r.response.text()),
-        30000,
-        'Gemini generateContent timed out (30s)'
+        8000,
+        'Gemini generateContent timed out (8s mid-session)'
       );
       const text = result;
       const jsonMatch = text.match(/\{[\s\S]*\}/);

@@ -100,6 +100,10 @@ vi.mock('../lib/services/userTimingProfileService', () => ({
   getUserSpeedFactor: vi.fn(function() { return Promise.resolve(1.0); }),
 }));
 
+vi.mock('../lib/services/sessionFatigueService', () => ({
+  applyFatigueCorrection: vi.fn(function(parTimeMs) { return parTimeMs; }),
+}));
+
 vi.mock('../lib/services/rolling360Service', () => ({
   getRolling360Service: vi.fn(function() {
     return { updateRolling360OnSubmit: vi.fn() };

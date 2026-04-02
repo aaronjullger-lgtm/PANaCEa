@@ -227,7 +227,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <Target className="w-4 h-4 text-data-pass" />
               <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {stats.accuracy}%
             </div>
           </div>
@@ -237,7 +237,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <Zap className="w-4 h-4 text-[var(--color-accent)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Today</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {stats.todayQuestions}
             </div>
           </div>
@@ -247,7 +247,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <TrendingUp className="w-4 h-4 text-data-provisional" />
               <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {stats.growthAreasCount}
             </div>
           </div>
@@ -257,7 +257,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <Flag className="w-4 h-4 text-data-fail" />
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
               {stats.flaggedCount}
             </div>
           </div>

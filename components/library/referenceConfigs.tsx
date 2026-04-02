@@ -1,9 +1,14 @@
 /**
  * referenceConfigs.tsx
  *
- * ReferenceViewConfig definitions for all 9 entity types that plug into
+ * ReferenceViewConfig definitions for all 11 entity types that plug into
  * GenericReferenceView. Each config provides API endpoint, filters, card
- * renderer, detail renderer, and search fields.
+ * renderer, detail renderer, search fields, and optional drill params.
+ *
+ * Visual hierarchy (3 tiers):
+ *   1. CRITICAL — red left-border + warning bg (contraindications, emergencies)
+ *   2. CLINICAL — standard rendering (descriptions, mechanisms, technique)
+ *   3. STUDY   — PANCE Focus accordion at top of detail view
  */
 
 import React from 'react';
@@ -12,8 +17,16 @@ import {
   Scissors, Scan, Activity, Bone, TestTube2,
   Brain, Stethoscope, BookOpen, ClipboardList,
   Star, AlertTriangle, Zap, MapPin,
-  FlaskConical, Calculator,
+  FlaskConical, Calculator, ChevronRight,
 } from 'lucide-react';
+
+// ============================================================================
+// TYPOGRAPHY TOKENS
+// ============================================================================
+
+const FONT_HEADING = "'Poppins', system-ui, sans-serif";
+const FONT_BODY = "'Inter', system-ui, sans-serif";
+const FONT_MONO = "'JetBrains Mono', 'Fira Code', monospace";
 
 // ============================================================================
 // SHARED HELPERS
@@ -22,7 +35,7 @@ import {
 const badge = (text: string, bg: string, color: string) => (
   <span style={{
     fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999,
-    background: bg, color, whiteSpace: 'nowrap',
+    background: bg, color, whiteSpace: 'nowrap', fontFamily: FONT_BODY,
   }}>{text}</span>
 );
 
@@ -33,22 +46,70 @@ const arrayPreview = (arr: string[] | undefined, max = 3) => {
   const shown = arr.slice(0, max);
   const more = arr.length - max;
   return (
-    <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+    <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>
       {shown.join(' · ')}{more > 0 ? ` +${more} more` : ''}
     </span>
   );
 };
 
+/** Card title — Poppins heading font */
+const cardTitle = (text: string) => (
+  <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>
+    {text}
+  </span>
+);
+
+// ---- Standard detail section (clinical tier) ----
 const detailSection = (label: string, content: React.ReactNode) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+  <div style={{ marginBottom: 14 }}>
+    <div style={{
+      fontSize: 12, fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: 0.6, color: 'var(--color-text-secondary)',
+      marginBottom: 4, fontFamily: FONT_BODY,
+    }}>
       {label}
     </div>
-    <div style={{ fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
+    <div style={{
+      fontSize: 14, color: 'var(--color-text-primary)',
+      lineHeight: 1.6, fontFamily: FONT_BODY,
+    }}>
       {content}
     </div>
   </div>
 );
+
+// ---- Critical detail section (safety tier — contraindications, emergencies) ----
+const detailSectionCritical = (label: string, content: React.ReactNode) => (
+  <div style={{
+    marginBottom: 14, padding: '10px 12px', borderRadius: 8,
+    borderLeft: '3px solid #ef4444',
+    background: 'color-mix(in srgb, var(--color-bg-secondary) 80%, #fef2f2 20%)',
+  }}>
+    <div style={{
+      fontSize: 12, fontWeight: 700, textTransform: 'uppercase',
+      letterSpacing: 0.6, color: '#dc2626', marginBottom: 4,
+      fontFamily: FONT_BODY, display: 'flex', alignItems: 'center', gap: 5,
+    }}>
+      <AlertTriangle size={12} /> {label}
+    </div>
+    <div style={{
+      fontSize: 14, color: 'var(--color-text-primary)',
+      lineHeight: 1.6, fontFamily: FONT_BODY,
+    }}>
+      {content}
+    </div>
+  </div>
+);
+
+// ---- Critical list variant ----
+const detailListCritical = (label: string, items: string[] | undefined) => {
+  if (!items?.length) return null;
+  return detailSectionCritical(label, (
+    <ul style={{ margin: 0, paddingLeft: 18 }}>
+      {items.map((item, i) => <li key={i}>{item}</li>)}
+    </ul>
+  ));
+};
 
 const detailList = (label: string, items: string[] | undefined) => {
   if (!items?.length) return null;
@@ -59,21 +120,96 @@ const detailList = (label: string, items: string[] | undefined) => {
   ));
 };
 
-const studyPanel = (pearls?: string[], tips?: string[], mistakes?: string[], mnemonics?: string[], boardFacts?: string[]) => {
+/** Monospace clinical data display — for lab ranges, dosages, sensitivity/specificity */
+const clinicalData = (text: string) => (
+  <span style={{ fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums', fontSize: 13 }}>
+    {text}
+  </span>
+);
+
+/** Diagnostic accuracy display with mono font */
+const diagnosticAccuracy = (vals: { label: string; value: string }[]) => (
+  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+    {vals.map(({ label, value }) => (
+      <span key={label} style={{ fontFamily: FONT_BODY, fontSize: 14 }}>
+        {label}: <strong style={{ fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' }}>{value}</strong>
+      </span>
+    ))}
+  </div>
+);
+
+// ---- Collapsible detail group for progressive disclosure ----
+const detailGroup = (title: string, children: React.ReactNode) => (
+  <details open style={{ marginBottom: 16 }}>
+    <summary style={{
+      fontSize: 13, fontWeight: 700, fontFamily: FONT_HEADING,
+      color: 'var(--color-text-primary)', cursor: 'pointer',
+      padding: '8px 0', borderBottom: '1px solid var(--color-border)',
+      marginBottom: 10, listStyle: 'none', display: 'flex', alignItems: 'center', gap: 6,
+    }}>
+      <ChevronRight size={14} style={{ transition: 'transform 0.15s' }} />
+      {title}
+    </summary>
+    <div>{children}</div>
+  </details>
+);
+
+// ---- PANCE Focus accordion (study tier — positioned at TOP of detail) ----
+const studyPanel = (pearls?: string[], tips?: string[], mistakes?: string[], mnemonics?: string[], boardFacts?: string[], accentColor?: string) => {
   const sections = [
-    { label: 'Board Yield Facts', items: boardFacts },
-    { label: 'Clinical Pearls', items: pearls },
-    { label: 'Test Question Tips', items: tips },
-    { label: 'Common Mistakes', items: mistakes },
-    { label: 'Mnemonics', items: mnemonics },
+    { label: 'Board Yield Facts', items: boardFacts, emoji: '🎯' },
+    { label: 'Clinical Pearls', items: pearls, emoji: '💎' },
+    { label: 'Test Question Tips', items: tips, emoji: '📝' },
+    { label: 'Common Mistakes', items: mistakes, emoji: '⚠️' },
+    { label: 'Mnemonics', items: mnemonics, emoji: '🧠' },
   ].filter(s => s.items?.length);
 
   if (!sections.length) return null;
+
+  const counts = sections.map(s => `${s.items!.length} ${s.label.toLowerCase().replace(/^board yield /, '').replace(/^test question /, '').replace(/^common /, '')}`).join(' · ');
+
   return (
-    <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 8 }}>📚 PANCE Study Mode</div>
-      {sections.map(({ label, items }) => detailList(label, items))}
-    </div>
+    <details style={{
+      marginBottom: 16, borderRadius: 10,
+      border: `1px solid ${accentColor || 'var(--color-border)'}`,
+      background: 'var(--color-bg-secondary)',
+      overflow: 'hidden',
+    }}>
+      <summary style={{
+        padding: '10px 14px', cursor: 'pointer', listStyle: 'none',
+        display: 'flex', alignItems: 'center', gap: 8,
+        fontFamily: FONT_HEADING, fontSize: 14, fontWeight: 700,
+        color: accentColor || 'var(--color-text-primary)',
+        borderLeft: `3px solid ${accentColor || 'var(--color-text-primary)'}`,
+      }}>
+        <span>📚 PANCE Focus</span>
+        <span style={{
+          fontSize: 11, fontWeight: 500, color: 'var(--color-text-secondary)',
+          fontFamily: FONT_BODY, marginLeft: 'auto',
+        }}>
+          {counts}
+        </span>
+        <ChevronRight size={14} style={{ color: 'var(--color-text-secondary)', transition: 'transform 0.15s' }} />
+      </summary>
+      <div style={{ padding: '4px 14px 14px' }}>
+        {sections.map(({ label, items, emoji }) => (
+          <details key={label} open style={{ marginBottom: 6 }}>
+            <summary style={{
+              fontSize: 12, fontWeight: 700, fontFamily: FONT_BODY,
+              textTransform: 'uppercase', letterSpacing: 0.6,
+              color: 'var(--color-text-secondary)', cursor: 'pointer',
+              padding: '4px 0', listStyle: 'none',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <span>{emoji}</span> {label}
+            </summary>
+            <ul style={{ margin: '4px 0 8px', paddingLeft: 18, fontSize: 14, lineHeight: 1.6, fontFamily: FONT_BODY, color: 'var(--color-text-primary)' }}>
+              {items!.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          </details>
+        ))}
+      </div>
+    </details>
   );
 };
 
@@ -114,31 +250,40 @@ export const procedureConfig: ReferenceViewConfig<ProcedureItem> = {
     { key: 'system', label: 'Systems', autoDerive: true, accessor: (p: ProcedureItem) => p.system },
     { key: 'type', label: 'Types', autoDerive: true, accessor: (p: ProcedureItem) => p.type },
   ],
+  getDrillParams: (p) => ({ system: p.system, tag: p.name }),
   cardRenderer: (p, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{p.displayName || p.name}</span>
+        {cardTitle(p.displayName || p.name)}
         {p.isHighYield && highYieldBadge()}
         {p.category && badge(p.category, '#f3e8ff', '#7c3aed')}
       </div>
       {!expanded && p.description && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
       )}
     </div>
   ),
   detailRenderer: (p) => (
     <div>
-      {p.description && detailSection('Description', p.description)}
-      {p.technique && detailSection('Technique', p.technique)}
-      {p.preparation && detailSection('Preparation', p.preparation)}
-      {p.duration && detailSection('Duration', p.duration)}
-      {detailList('Indications', p.indications)}
-      {detailList('Absolute Contraindications', p.absoluteContraindications)}
-      {detailList('Relative Contraindications', p.relativeContraindications)}
-      {detailList('Equipment', p.equipment)}
-      {detailList('Complications', p.complications)}
-      {p.postProcedureCare && detailSection('Post-Procedure Care', p.postProcedureCare)}
-      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts)}
+      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, '#8b5cf6')}
+      {detailGroup('Preparation', <>
+        {p.description && detailSection('Description', p.description)}
+        {p.preparation && detailSection('Preparation', p.preparation)}
+        {detailList('Equipment', p.equipment)}
+        {p.duration && detailSection('Duration', p.duration)}
+      </>)}
+      {detailGroup('Technique', <>
+        {p.technique && detailSection('Technique', p.technique)}
+      </>)}
+      {detailGroup('Safety', <>
+        {detailList('Indications', p.indications)}
+        {detailListCritical('Absolute Contraindications', p.absoluteContraindications)}
+        {detailListCritical('Relative Contraindications', p.relativeContraindications)}
+        {detailListCritical('Complications', p.complications)}
+      </>)}
+      {p.postProcedureCare && detailGroup('Follow-Up', <>
+        {detailSection('Post-Procedure Care', p.postProcedureCare)}
+      </>)}
     </div>
   ),
 };
@@ -182,29 +327,29 @@ export const imagingConfig: ReferenceViewConfig<ImagingItem> = {
   cardRenderer: (i, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{i.name}</span>
+        {cardTitle(i.name)}
         {i.isHighYield && highYieldBadge()}
         {i.modality && badge(i.modality, '#e0f2fe', '#0369a1')}
         {i.usesRadiation && badge('☢ Radiation', '#fef2f2', '#991b1b')}
       </div>
       {!expanded && i.bodyRegion && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>{i.bodyRegion}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{i.bodyRegion}</p>
       )}
     </div>
   ),
   detailRenderer: (i) => (
     <div>
+      {studyPanel(i.clinicalPearls, i.testQuestionTips, i.commonMistakes, undefined, i.boardYieldFacts, '#0ea5e9')}
       {i.description && detailSection('Description', i.description)}
       {detailList('Indications', i.indications)}
       {detailList('Classic Signs', i.classicSigns)}
       {detailList('First-Line For', i.firstLineFor)}
       {i.normalFindings && detailSection('Normal Findings', i.normalFindings)}
-      {detailList('Contraindications', i.contraindications)}
+      {detailListCritical('Contraindications', i.contraindications)}
       {detailList('Limitations', i.limitations)}
       {i.preparation && detailSection('Preparation', i.preparation)}
-      {i.scanDuration && detailSection('Scan Duration', i.scanDuration)}
-      {i.radiationDose && detailSection('Radiation Dose', i.radiationDose)}
-      {studyPanel(i.clinicalPearls, i.testQuestionTips, i.commonMistakes, undefined, i.boardYieldFacts)}
+      {i.scanDuration && detailSection('Scan Duration', clinicalData(i.scanDuration))}
+      {i.radiationDose && detailSection('Radiation Dose', clinicalData(i.radiationDose))}
     </div>
   ),
 };
@@ -247,38 +392,45 @@ export const ecgConfig: ReferenceViewConfig<ECGItem> = {
     { key: 'category', label: 'Categories', autoDerive: true, accessor: (e: ECGItem) => e.category },
     { key: 'subcategory', label: 'Subcategories', autoDerive: true, accessor: (e: ECGItem) => e.subcategory },
   ],
+  getDrillParams: (e) => ({ tag: e.displayName || e.name }),
   cardRenderer: (e, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{e.displayName || e.name}</span>
+        {cardTitle(e.displayName || e.name)}
         {e.isHighYield && highYieldBadge()}
         {e.isEmergency && badge('⚡ Emergency', '#fef2f2', '#991b1b')}
         {e.category && badge(e.category, '#fee2e2', '#dc2626')}
       </div>
       {!expanded && e.rhythm && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>Rhythm: {e.rhythm}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>Rhythm: {e.rhythm}</p>
       )}
     </div>
   ),
   detailRenderer: (e) => (
     <div>
+      {studyPanel(e.clinicalPearls, e.testQuestionTips, e.commonMistakes, e.mnemonics, e.boardYieldFacts, '#ef4444')}
       {e.pathognomonic && detailSection('Pathognomonic Finding', <strong>{e.pathognomonic}</strong>)}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-        {e.rate && detailSection('Rate', e.rate)}
-        {e.rhythm && detailSection('Rhythm', e.rhythm)}
-        {e.pWave && detailSection('P Wave', e.pWave)}
-        {e.prInterval && detailSection('PR Interval', e.prInterval)}
-        {e.qrsComplex && detailSection('QRS Complex', e.qrsComplex)}
-        {e.stSegment && detailSection('ST Segment', e.stSegment)}
-        {e.tWave && detailSection('T Wave', e.tWave)}
-      </div>
-      {detailList('Diagnostic Criteria', e.diagnosticCriteria)}
-      {detailList('Etiology', e.etiology)}
-      {detailList('Symptoms', e.symptoms)}
-      {e.acuteManagement && detailSection('Acute Management', e.acuteManagement)}
-      {detailList('Medications', e.medications)}
-      {detailList('Mimics', e.mimics)}
-      {studyPanel(e.clinicalPearls, e.testQuestionTips, e.commonMistakes, e.mnemonics, e.boardYieldFacts)}
+      {detailGroup('Waveform Analysis', <>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+          {e.rate && detailSection('Rate', e.rate)}
+          {e.rhythm && detailSection('Rhythm', e.rhythm)}
+          {e.pWave && detailSection('P Wave', e.pWave)}
+          {e.prInterval && detailSection('PR Interval', e.prInterval)}
+          {e.qrsComplex && detailSection('QRS Complex', e.qrsComplex)}
+          {e.stSegment && detailSection('ST Segment', e.stSegment)}
+          {e.tWave && detailSection('T Wave', e.tWave)}
+        </div>
+      </>)}
+      {detailGroup('Clinical Context', <>
+        {detailList('Diagnostic Criteria', e.diagnosticCriteria)}
+        {detailList('Etiology', e.etiology)}
+        {detailList('Symptoms', e.symptoms)}
+      </>)}
+      {detailGroup('Management', <>
+        {e.acuteManagement && detailSectionCritical('Acute Management', e.acuteManagement)}
+        {detailList('Medications', e.medications)}
+        {detailList('Mimics', e.mimics)}
+      </>)}
     </div>
   ),
 };
@@ -320,32 +472,39 @@ export const anatomyConfig: ReferenceViewConfig<AnatomyItem> = {
     { key: 'region', label: 'Regions', autoDerive: true, accessor: (a: AnatomyItem) => a.region },
     { key: 'type', label: 'Types', autoDerive: true, accessor: (a: AnatomyItem) => a.type },
   ],
+  getDrillParams: (a) => ({ system: a.system, tag: a.name }),
   cardRenderer: (a, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{a.name}</span>
+        {cardTitle(a.name)}
         {a.isHighYield && highYieldBadge()}
         {a.system && badge(a.system, '#fef3c7', '#92400e')}
       </div>
       {!expanded && a.region && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>{a.region}{a.type ? ` · ${a.type}` : ''}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{a.region}{a.type ? ` · ${a.type}` : ''}</p>
       )}
     </div>
   ),
   detailRenderer: (a) => (
     <div>
-      {a.description && detailSection('Description', a.description)}
-      {a.function && detailSection('Function', a.function)}
-      {a.innervation && detailSection('Innervation', a.innervation)}
-      {a.bloodSupply && detailSection('Blood Supply', a.bloodSupply)}
-      {a.origin && a.insertion && detailSection('Attachments', `Origin: ${a.origin} → Insertion: ${a.insertion}`)}
-      {a.nerveRoots && detailSection('Nerve Roots', a.nerveRoots)}
-      {a.dermatome && detailSection('Dermatome', a.dermatome)}
-      {a.myotome && detailSection('Myotome', a.myotome)}
-      {a.clinicalSignificance && detailSection('Clinical Significance', a.clinicalSignificance)}
-      {detailList('Common Pathology', a.commonPathology)}
-      {detailList('Surface Landmarks', a.surfaceLandmarks)}
-      {studyPanel(a.clinicalPearls, a.testQuestionTips, a.commonMistakes, a.mnemonics, a.boardYieldFacts)}
+      {studyPanel(a.clinicalPearls, a.testQuestionTips, a.commonMistakes, a.mnemonics, a.boardYieldFacts, '#f59e0b')}
+      {detailGroup('Structure', <>
+        {a.description && detailSection('Description', a.description)}
+        {a.function && detailSection('Function', a.function)}
+        {a.origin && a.insertion && detailSection('Attachments', `Origin: ${a.origin} → Insertion: ${a.insertion}`)}
+        {detailList('Surface Landmarks', a.surfaceLandmarks)}
+      </>)}
+      {detailGroup('Neurovascular', <>
+        {a.innervation && detailSection('Innervation', a.innervation)}
+        {a.bloodSupply && detailSection('Blood Supply', a.bloodSupply)}
+        {a.nerveRoots && detailSection('Nerve Roots', a.nerveRoots)}
+        {a.dermatome && detailSection('Dermatome', a.dermatome)}
+        {a.myotome && detailSection('Myotome', a.myotome)}
+      </>)}
+      {detailGroup('Clinical', <>
+        {a.clinicalSignificance && detailSection('Clinical Significance', a.clinicalSignificance)}
+        {detailList('Common Pathology', a.commonPathology)}
+      </>)}
     </div>
   ),
 };
@@ -383,11 +542,11 @@ export const specialTestConfig: ReferenceViewConfig<SpecialTestItem> = {
   cardRenderer: (t, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{t.displayName || t.name}</span>
+        {cardTitle(t.displayName || t.name)}
         {t.region && badge(t.region, '#d1fae5', '#065f46')}
       </div>
       {!expanded && (
-        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>
           {t.sensitivity != null && <span>Sn: {(t.sensitivity * 100).toFixed(0)}%</span>}
           {t.specificity != null && <span>Sp: {(t.specificity * 100).toFixed(0)}%</span>}
         </div>
@@ -401,10 +560,10 @@ export const specialTestConfig: ReferenceViewConfig<SpecialTestItem> = {
       {t.positiveTest && detailSection('Positive Test', t.positiveTest)}
       {t.interpretation && detailSection('Interpretation', t.interpretation)}
       {(t.sensitivity != null || t.specificity != null) && detailSection('Diagnostic Accuracy',
-        <div style={{ display: 'flex', gap: 16 }}>
-          {t.sensitivity != null && <span>Sensitivity: <strong>{(t.sensitivity * 100).toFixed(0)}%</strong></span>}
-          {t.specificity != null && <span>Specificity: <strong>{(t.specificity * 100).toFixed(0)}%</strong></span>}
-        </div>
+        diagnosticAccuracy([
+          ...(t.sensitivity != null ? [{ label: 'Sensitivity', value: `${(t.sensitivity * 100).toFixed(0)}%` }] : []),
+          ...(t.specificity != null ? [{ label: 'Specificity', value: `${(t.specificity * 100).toFixed(0)}%` }] : []),
+        ])
       )}
     </div>
   ),
@@ -446,31 +605,32 @@ export const physiologyConfig: ReferenceViewConfig<PhysiologyItem> = {
     { key: 'system', label: 'Systems', autoDerive: true, accessor: (p: PhysiologyItem) => p.system },
     { key: 'category', label: 'Categories', autoDerive: true, accessor: (p: PhysiologyItem) => p.category },
   ],
+  getDrillParams: (p) => ({ system: p.system, tag: p.displayName || p.name }),
   cardRenderer: (p, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{p.displayName || p.name}</span>
+        {cardTitle(p.displayName || p.name)}
         {p.isHighYield && highYieldBadge()}
         {p.system && badge(p.system, '#e0e7ff', '#4338ca')}
       </div>
       {!expanded && p.description && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
       )}
     </div>
   ),
   detailRenderer: (p) => (
     <div>
+      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, '#6366f1')}
       {p.description && detailSection('Description', p.description)}
       {p.mechanism && detailSection('Mechanism', p.mechanism)}
-      {p.normalValues && detailSection('Normal Values', p.normalValues)}
+      {p.normalValues && detailSection('Normal Values', clinicalData(p.normalValues))}
       {p.pathophysiology && detailSection('Pathophysiology', p.pathophysiology)}
       {p.feedbackLoops && detailSection('Feedback Loops', p.feedbackLoops)}
       {p.clinicalSignificance && detailSection('Clinical Significance', p.clinicalSignificance)}
       {detailList('Related Conditions', p.relatedConditions)}
       {detailList('Related Drugs', p.relatedDrugs)}
       {detailList('Compensatory Mechanisms', p.compensatoryMechanisms)}
-      {detailList('Decompensation Signs', p.decompensationSigns)}
-      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts)}
+      {detailListCritical('Decompensation Signs', p.decompensationSigns)}
     </div>
   ),
 };
@@ -513,16 +673,17 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
     { key: 'category', label: 'Categories', autoDerive: true, accessor: (f: FindingItem) => f.category },
     { key: 'findingType', label: 'Types', autoDerive: true, accessor: (f: FindingItem) => f.findingType },
   ],
+  getDrillParams: (f) => ({ system: f.system, tag: f.name }),
   cardRenderer: (f, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{f.name}</span>
+        {cardTitle(f.name)}
         {f.isHighYield && highYieldBadge()}
         {f.system && badge(f.system, '#fce7f3', '#9d174d')}
-        {f.eponymousName && <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-secondary)' }}>{f.eponymousName}</span>}
+        {f.eponymousName && <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{f.eponymousName}</span>}
       </div>
       {!expanded && (
-        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>
           {f.sensitivity != null && <span>Sn: {(f.sensitivity * 100).toFixed(0)}%</span>}
           {f.specificity != null && <span>Sp: {(f.specificity * 100).toFixed(0)}%</span>}
           {f.positiveLR != null && <span>+LR: {f.positiveLR.toFixed(1)}</span>}
@@ -532,23 +693,27 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
   ),
   detailRenderer: (f) => (
     <div>
-      {f.description && detailSection('Description', f.description)}
-      {f.howToElicit && detailSection('How to Elicit', f.howToElicit)}
-      {f.clinicalSignificance && detailSection('Clinical Significance', f.clinicalSignificance)}
-      {(f.sensitivity != null || f.specificity != null) && detailSection('Diagnostic Accuracy',
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {f.sensitivity != null && <span>Sensitivity: <strong>{(f.sensitivity * 100).toFixed(0)}%</strong></span>}
-          {f.specificity != null && <span>Specificity: <strong>{(f.specificity * 100).toFixed(0)}%</strong></span>}
-          {f.positiveLR != null && <span>+LR: <strong>{f.positiveLR.toFixed(1)}</strong></span>}
-          {f.negativeLR != null && <span>−LR: <strong>{f.negativeLR.toFixed(2)}</strong></span>}
-        </div>
-      )}
-      {detailList('Positive Indicates', f.positiveIndicates)}
-      {detailList('Negative Indicates', f.negativeIndicates)}
-      {detailList('Differential For', f.differentialFor)}
-      {detailList('Equipment Needed', f.equipmentNeeded)}
+      {studyPanel(f.clinicalPearls, f.testQuestionTips, f.commonMistakes, f.mnemonics, f.boardYieldFacts, '#ec4899')}
+      {detailGroup('Examination', <>
+        {f.description && detailSection('Description', f.description)}
+        {f.howToElicit && detailSection('How to Elicit', f.howToElicit)}
+        {detailList('Equipment Needed', f.equipmentNeeded)}
+      </>)}
+      {detailGroup('Interpretation', <>
+        {f.clinicalSignificance && detailSection('Clinical Significance', f.clinicalSignificance)}
+        {(f.sensitivity != null || f.specificity != null) && detailSection('Diagnostic Accuracy',
+          diagnosticAccuracy([
+            ...(f.sensitivity != null ? [{ label: 'Sensitivity', value: `${(f.sensitivity * 100).toFixed(0)}%` }] : []),
+            ...(f.specificity != null ? [{ label: 'Specificity', value: `${(f.specificity * 100).toFixed(0)}%` }] : []),
+            ...(f.positiveLR != null ? [{ label: '+LR', value: f.positiveLR.toFixed(1) }] : []),
+            ...(f.negativeLR != null ? [{ label: '−LR', value: f.negativeLR.toFixed(2) }] : []),
+          ])
+        )}
+        {detailList('Positive Indicates', f.positiveIndicates)}
+        {detailList('Negative Indicates', f.negativeIndicates)}
+        {detailList('Differential For', f.differentialFor)}
+      </>)}
       {f.howToDocument && detailSection('How to Document', f.howToDocument)}
-      {studyPanel(f.clinicalPearls, f.testQuestionTips, f.commonMistakes, f.mnemonics, f.boardYieldFacts)}
     </div>
   ),
 };
@@ -623,12 +788,12 @@ export const guidelinesConfig: ReferenceViewConfig<GuidelineItem> = {
   cardRenderer: (g, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{g.name}</span>
+        {cardTitle(g.name)}
         {g.maxScore != null && badge(`Max: ${g.maxScore}`, '#ccfbf1', '#115e59')}
         {g.components && Array.isArray(g.components) && badge(`${g.components.length} criteria`, '#ccfbf1', '#115e59')}
       </div>
       {!expanded && g.clinicalContext && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.clinicalContext}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.clinicalContext}</p>
       )}
     </div>
   ),
@@ -692,26 +857,26 @@ export const historyConfig: ReferenceViewConfig<HistoryItem> = {
   cardRenderer: (h, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{h.displayName || h.name}</span>
+        {cardTitle(h.displayName || h.name)}
         {h.isHighYield && highYieldBadge()}
         {h.category && badge(h.category, '#ffedd5', '#9a3412')}
       </div>
       {!expanded && h.frameworkName && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>Framework: {h.frameworkName}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>Framework: {h.frameworkName}</p>
       )}
     </div>
   ),
   detailRenderer: (h) => (
     <div>
+      {studyPanel(h.clinicalPearls, h.testQuestionTips, h.commonMistakes, h.mnemonics, h.boardYieldFacts, '#f97316')}
       {h.description && detailSection('Description', h.description)}
       {h.frameworkName && detailSection('Framework', h.frameworkName)}
       {detailList('Elements', h.elements)}
       {h.documentationTips && detailSection('Documentation Tips', h.documentationTips)}
       {detailList('Positive Indicators', h.positiveIndicators)}
       {detailList('Negative Indicators', h.negativeIndicators)}
-      {detailList('Red Flag Responses', h.redFlagResponses)}
+      {detailListCritical('Red Flag Responses', h.redFlagResponses)}
       {detailList('Reassuring Responses', h.reassuringResponses)}
-      {studyPanel(h.clinicalPearls, h.testQuestionTips, h.commonMistakes, h.mnemonics, h.boardYieldFacts)}
     </div>
   ),
 };
@@ -754,12 +919,12 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
   cardRenderer: (l, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{l.name}</span>
+        {cardTitle(l.name)}
         {l.isHighYield && highYieldBadge()}
         {l.category && badge(l.category, '#e0f2fe', '#0369a1')}
       </div>
       {!expanded && l.conventionalRange && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>
           Normal: {l.conventionalRange} {l.siUnits || ''}
         </p>
       )}
@@ -767,18 +932,18 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
   ),
   detailRenderer: (l) => (
     <div>
+      {studyPanel(l.clinicalPearls, l.testQuestionTips, l.commonMistakes, l.mnemonics, l.boardYieldFacts, '#0ea5e9')}
       {l.typicalUse && detailSection('Typical Use', l.typicalUse)}
-      {l.conventionalRange && detailSection('Reference Range', `${l.conventionalRange}${l.siUnits ? ` ${l.siUnits}` : ''}`)}
-      {l.siRange && detailSection('SI Range', l.siRange)}
+      {l.conventionalRange && detailSection('Reference Range', clinicalData(`${l.conventionalRange}${l.siUnits ? ` ${l.siUnits}` : ''}`))}
+      {l.siRange && detailSection('SI Range', clinicalData(l.siRange))}
       {l.sampleType && detailSection('Sample Type', l.sampleType)}
       {l.collectionTube && detailSection('Collection Tube', l.collectionTube)}
       {l.increaseIndicates && detailSection('Increased In', l.increaseIndicates)}
       {l.decreaseIndicates && detailSection('Decreased In', l.decreaseIndicates)}
       {l.falsePosNeg && detailSection('False Positives/Negatives', l.falsePosNeg)}
-      {l.criticalValues && detailSection('Critical Values', typeof l.criticalValues === 'string' ? l.criticalValues : JSON.stringify(l.criticalValues))}
+      {l.criticalValues && detailSectionCritical('Critical Values', typeof l.criticalValues === 'string' ? l.criticalValues : JSON.stringify(l.criticalValues))}
       {detailList('Related Tests', l.relatedTests)}
       {detailList('Follow-Up Tests', l.followUpTests)}
-      {studyPanel(l.clinicalPearls, l.testQuestionTips, l.commonMistakes, l.mnemonics, l.boardYieldFacts)}
     </div>
   ),
 };
@@ -823,30 +988,31 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
   cardRenderer: (s, expanded) => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-text-primary)' }}>{s.displayName || s.name}</span>
+        {cardTitle(s.displayName || s.name)}
         {s.isHighYield && highYieldBadge()}
         {s.category && badge(s.category, '#ede9fe', '#5b21b6')}
       </div>
       {!expanded && (
-        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>
           {s.condition && <span>{s.condition}</span>}
-          {s.maxScore != null && <span>Max: {s.maxScore}</span>}
-          {s.sensitivity != null && <span>Sn: {(s.sensitivity * 100).toFixed(0)}%</span>}
+          {s.maxScore != null && <span style={{ fontFamily: FONT_MONO }}>Max: {s.maxScore}</span>}
+          {s.sensitivity != null && <span style={{ fontFamily: FONT_MONO }}>Sn: {(s.sensitivity * 100).toFixed(0)}%</span>}
         </div>
       )}
     </div>
   ),
   detailRenderer: (s) => (
     <div>
+      {studyPanel(s.clinicalPearls, s.testQuestionTips, s.commonMistakes, s.mnemonics, s.boardYieldFacts, '#8b5cf6')}
       {s.clinicalContext && detailSection('Clinical Context', s.clinicalContext)}
       {s.whenToUse && detailSection('When to Use', s.whenToUse)}
-      {s.whenNotToUse && detailSection('When NOT to Use', s.whenNotToUse)}
+      {s.whenNotToUse && detailSectionCritical('When NOT to Use', s.whenNotToUse)}
       {(s.sensitivity != null || s.specificity != null) && detailSection('Diagnostic Accuracy',
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {s.sensitivity != null && <span>Sensitivity: <strong>{(s.sensitivity * 100).toFixed(0)}%</strong></span>}
-          {s.specificity != null && <span>Specificity: <strong>{(s.specificity * 100).toFixed(0)}%</strong></span>}
-          {s.maxScore != null && <span>Max Score: <strong>{s.maxScore}</strong></span>}
-        </div>
+        diagnosticAccuracy([
+          ...(s.sensitivity != null ? [{ label: 'Sensitivity', value: `${(s.sensitivity * 100).toFixed(0)}%` }] : []),
+          ...(s.specificity != null ? [{ label: 'Specificity', value: `${(s.specificity * 100).toFixed(0)}%` }] : []),
+          ...(s.maxScore != null ? [{ label: 'Max Score', value: String(s.maxScore) }] : []),
+        ])
       )}
       {s.components && detailSection('Components',
         <div style={{ fontSize: 12 }}>

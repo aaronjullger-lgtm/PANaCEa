@@ -26,6 +26,7 @@ import { getRolling360Service } from './rolling360Service';
 import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../taskTypes';
 import { getUserSpeedFactor } from './userTimingProfileService';
+import { applyFatigueCorrection } from './sessionFatigueService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -275,7 +276,11 @@ export async function submitDrillReview(
     timezone || undefined
   );
 
-  const circadianAdjustedParTimeMs = applyCircadianParTimeModifier(parTimeMs, circadianContext);
+  // Apply session fatigue correction: later questions in a session get more generous par time
+  const questionNumber = (telemetry?.question_number as number | undefined) ?? null;
+  const fatigueAdjustedParTimeMs = applyFatigueCorrection(parTimeMs, questionNumber);
+
+  const circadianAdjustedParTimeMs = applyCircadianParTimeModifier(fatigueAdjustedParTimeMs, circadianContext);
 
   const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
   const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
@@ -557,7 +562,9 @@ export async function submitDrillReview(
     ...(telemetry ?? {}),
     server_computed: {
       par_time_ms: parTimeMs,
+      fatigue_adjusted_par_time_ms: fatigueAdjustedParTimeMs,
       user_speed_factor: userSpeedFactor,
+      question_number: questionNumber,
       circadian_par_time_ms: circadianAdjustedParTimeMs,
       latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
       implicit_confidence: implicitConfidence,

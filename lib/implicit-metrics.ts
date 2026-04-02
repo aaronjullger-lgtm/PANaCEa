@@ -637,7 +637,8 @@ export function confidenceStabilityMultiplier(confidence: number): number {
  */
 export function fluencyIllusionDampener(elapsedDays: number): number {
   if (elapsedDays >= 1.0) return 1.0;
-  return 0.7 + 0.3 * Math.min(elapsedDays, 1.0);
+  // Floor at 0.7 even for negative/zero elapsed days
+  return 0.7 + 0.3 * Math.max(0, Math.min(elapsedDays, 1.0));
 }
 
 export default {

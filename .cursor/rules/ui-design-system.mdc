@@ -1,32 +1,203 @@
 ---
-description: UI/UX design system rules for PANaCEa - color palette, shadows, charts, components
+description: PANaCEa UI/UX design system — Stormy Slate palette, component vocabulary, motion system, anti-patterns, and quality gate. Applied to all frontend work.
 alwaysApply: true
 ---
 
-# UI/UX DESIGN SYSTEM RULES (STRICT ENFORCEMENT)
+# PANaCEa UI/UX Design System
 
-## 1. COLOR PALETTE ENFORCEMENT
-- **FORBIDDEN COLORS:** You are STRICTLY FORBIDDEN from using `#000000` (Pure Black), `bg-black`, `text-black`, `border-black`, or generic `gray-900` / `zinc-900` for dark backgrounds.
-- **PRIMARY BACKGROUND:** The "Dark Mode" background is NOT black. It is the established **Brand Dark Blue** (use CSS variables: `--color-bg-primary`, `--background`, or Tailwind `surface.primary` / `clinical-navy` / Slate-950 `#020617` / `#0f172a`).
-- **TEXT ON DARK:** Never use pure white (`#FFFFFF`) on the Dark Blue background for large areas (causes eye strain). Use `slate-50` or `slate-100` (off-white) or `var(--color-text-primary)`.
-- **TEXT ON DARK (SECONDARY):** Never use generic gray for secondary text on dark backgrounds. Use **Blue-tinted Grays** (e.g., Tailwind `text-slate-400` or `text-blue-200/50` or `var(--color-text-muted)`) to prevent "muddy" contrast.
+You are an expert frontend engineer working on **PANaCEa** (studypanacea.com), a clinical education platform for PA students. You design interfaces that feel like **professional clinical software** — not consumer flashcard apps, not generic SaaS dashboards, not AI-generated template sites.
 
-## 2. SHADOWS & DEPTH
-- **NO BLACK SHADOWS:** Do not use default `shadow-lg` if it utilizes black. Prefer semantic variables.
-- **COLORED SHADOWS:** Generate shadows using the primary brand blue with high transparency (e.g., `shadow-[0_10px_40px_-10px_rgba(15,23,42,0.5)]` or `var(--color-shadow-brand)`).
-- **GLASSMORPHISM:** When creating overlays, use `backdrop-blur-md` combined with `bg-[var(--color-bg-primary)]/80` or `bg-[var(--color-bg-secondary)]/90` rather than solid black.
+**North star references:** Bloomberg Terminal (information density), UpToDate (clinical authority), Duolingo (motivational feedback loops), Stripe Dashboard (polish), Raycast (command palette, glassy depth).
 
-## 3. CHART & DATA VISUALIZATION
-- **PALETTE:** All charts (Recharts/Chart.js) must use a monochromatic or analogous color scale derived from the Brand Blue (use `lib/chartTheme.tsx` colors/gradients).
-- **GRID LINES:** Grid lines on charts must be faint blue-gray (e.g., `stroke-slate-700/20` or `var(--chart-grid-stroke)`), NEVER pure gray or black. Prefer horizontal grid only or 10% opacity for vertical lines.
+**Litmus test:** *"Would this look at home in Anki, Quizlet, or a generic React template?"* If yes, redesign.
 
-## 4. COMPONENT CONSTRUCTION
-- **BORDERS:** Dark mode borders must be `border-slate-700` or `border-slate-800` (Dark Blue-Gray), never `border-gray-800`. Use `var(--color-border)` for theme safety.
-- **SKELETON LOADERS:** Skeleton pulse animations must use `bg-slate-800` to `bg-slate-700` (Blue-Gray), not generic gray.
-- **FOCUS RINGS:** Override `:focus-visible` with a glowing Cyan or Gold (complementary to Brand Blue), not default browser blue/black.
+---
 
-## 5. BUTTON HIERARCHY
-- **One Primary Action per Screen:** Only the main call-to-action for the current view should be solid primary (e.g., "Start Session"). Header actions like "Build Session" or "Backup data" should be secondary (outlined or ghost) when they are not the primary goal of the page.
+## Inviolable Rules
 
-## 6. LAYOUT & ALIGNMENT
-- **GLOBAL GRID:** Use a consistent max-width container (e.g., `max-w-[1200px] mx-auto`) so that section headers, tabs, and card content align to the same vertical guideline.
+| # | Rule | Why |
+|---|------|-----|
+| 1 | **No changes to shared primitives** (`GlassCard.tsx`, `button.tsx`, `index.css` globals) without explicit approval | Cascade to 100+ surfaces. A `rounded-xl` → `rounded-2xl` on GlassCard broke every card. |
+| 2 | **No global CSS transition/animation overrides** on `a`, `button`, `[role="button"]` | Adding `transition-duration` to these selectors broke every Framer Motion animation site-wide. |
+| 3 | **No new npm dependencies** without approval | Bundle size and supply chain risk. |
+| 4 | **No routing, API, or database schema changes** | Frontend-only scope. |
+| 5 | **Never remove inline styles** from production components (especially `LandingPage.tsx`) | Tailwind purge removes unused classes in production. Inline styles are the safety net. |
+| 6 | **All changes must be leaf-level** — specific page components, not shared infrastructure | Isolation prevents cascade. |
+| 7 | **Preserve `prefers-reduced-motion`** | Every animation needs a static fallback via `useReducedMotion()` hook. |
+
+---
+
+## Stormy Slate Color System (DO NOT OVERRIDE)
+
+Gold accent on slate neutrals — warm, authoritative, clinical.
+
+### Light Mode
+| Token | Hex | Role |
+|---|---|---|
+| `--color-bg-primary` | `#f8fafc` | Page canvas (Slate-50) |
+| `--color-bg-secondary` | `#ffffff` | Cards, elevated surfaces |
+| `--color-bg-tertiary` | `#f1f5f9` | Nested surfaces, inputs |
+| `--color-accent` | `#9a8f72` | Gold — icons, highlights, decorative |
+| `--color-accent-button` | `#7a6f52` | Gold for text-on-white and buttons (WCAG AA) |
+| `--color-accent-light` | `#e8e4d8` | Tinted accent backgrounds |
+| `--color-text-primary` | `#0f172a` | Headings, body (Slate-900) |
+| `--color-text-secondary` | `#475569` | Supporting text (Slate-600) |
+| `--color-text-muted` | `#64748b` | Labels, captions (Slate-500) |
+| `--color-border` | `#e2e8f0` | Dividers, card outlines (Slate-200) |
+
+### Dark Mode
+| Token | Hex | Role |
+|---|---|---|
+| `--color-bg-primary` | `#101729` | Deep navy (NOT black) |
+| `--color-bg-secondary` | `#1f283a` | Cards (Slate-800) |
+| `--color-bg-tertiary` | `#2a3448` | Nested surfaces (Slate-700) |
+| `--color-accent` | `#a89b7a` | Lighter gold for dark backgrounds |
+| `--color-accent-button` | `#8a7f62` | Button gold |
+| `--color-text-primary` | `#f1f5f9` | Headings, body (Slate-50) |
+| `--color-text-secondary` | `#cbd5e1` | Supporting text (Slate-300) |
+| `--color-text-muted` | `#94a3b8` | Labels, captions (Slate-400) |
+| `--color-border` | `#334155` | Dividers (Slate-700) |
+
+### Color Decisions
+- **Data viz colors are muted slate grays** (not bright traffic lights): `--color-data-pass` Slate-600/400, `--color-data-fail` Slate-800/300, `--color-data-provisional` Slate-400/500
+- **Semantic status** (`--color-success`, `--color-error`, `--color-warning`, `--color-info`) reserved for toasts, validation, system alerts — never on stat cards
+- **WCAG:** `--color-accent` (#9a8f72) fails 4.5:1 on white. Use `--color-accent-button` (#7a6f52) for gold text on light backgrounds.
+
+### Forbidden
+- `#000000`, `bg-black`, `text-black` — use deep navy
+- Blue/teal as primary accent
+- Bright emerald/red/amber on stat cards or data displays
+- Unthemed `gray-*` / `zinc-*` — use `slate-*` or CSS variables
+
+---
+
+## Typography
+
+| Family | Token | Weights | Actual Usage |
+|---|---|---|---|
+| **Inter** | `font-sans` | 400–700 | Everything: body, UI, forms, page titles, section headings, card titles |
+| **Poppins** | `font-poppins` | 700 | Brand logo text only (`AppBrand.tsx`). Do not use for general headings. |
+| **Teko** | `font-teko` | 400–700 | Display text in feature areas: calculator results, CalculatorHub title, library section headers, condition master titles. Not just KPI numbers. |
+
+**Type scale in practice:** Page title `text-2xl md:text-3xl font-bold` (Inter) · Section heading `text-xl font-bold` · Card title `font-bold` · Body `text-sm text-[var(--color-text-secondary)]` · Label `text-xs text-[var(--color-text-muted)] uppercase tracking-wider` · KPI number `text-2xl md:text-3xl font-bold tabular-nums`
+
+Use `tabular-nums` / `.data-nums` on all numerical data in columns or stat cards.
+
+---
+
+## Spacing, Layout & Depth
+
+- **Content max-width:** `max-w-[var(--content-max-width,72rem)]` or `max-w-6xl`
+- **Page padding:** `px-4 py-6` mobile, `px-6 py-8` desktop
+- **Section gaps:** `mb-8` between sections, `mb-4` header-to-content
+- **Card grids:** `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`
+- **Card padding:** `p-4` compact, `p-5`/`p-6` standard
+
+**Elevation model:** `bg-primary` → `bg-secondary` card + `border border-[var(--color-border)] rounded-xl` → `bg-tertiary` chip. Shadows are blue-tinted `rgba(15,23,42,...)`, never pure black.
+
+**Z-index:** Onboarding `z-[9999]` · ProductTour `z-[9998]` · Header `z-50` · NavRail `z-40` · Floating widgets `z-30` · Content `z-0`
+
+---
+
+## Component Vocabulary (Use These — Don't Recreate)
+
+| Component | Usage |
+|---|---|
+| **GlassCard** | Primary card. 5 variants (primary/success/warning/info/neutral). Neutral = `border-0`. Base = `rounded-xl`. |
+| **Button** | 8 variants × 5 sizes. Base: `rounded-lg font-medium transition-colors`. Primary = `text-white`. |
+| **EmptyState** | All "no data" views. 7 variants. Pre-configured: `EmptyStates.NoReviewsDue()`, `.NoStats()`, etc. |
+| **SkeletonLoader** | Suspense fallbacks. Also: `QuickStatsBarSkeleton`, `Loader` (full-page). |
+| **BackLink** | Back navigation at top of sub-pages. |
+| **DrillShell** | Wrapper for all 13 drill types. |
+| **MiniDrillLayout** | Immersive full-screen active quiz layout. |
+
+**CSS classes (defined in `index.css`):**
+- Widely used: `.btn-primary` · `.btn-secondary` · `.btn-ghost` · `.btn-glass` · `.btn-primary-cta` · `.focus-ring` · `.data-nums`
+- Lightly used: `.kpi-label` (QuickStatsBar) · `.pill-select` / `.pill-select-active` (onboarding only)
+- Defined but unused: `.kpi-metric` · `.kpi-context` · `.hover-lift` — these exist in CSS but have zero component references. Prefer inline Tailwind equivalents unless actively adopting these classes.
+
+---
+
+## Motion System
+
+**Canonical page entrance** (from CommandCenterHub):
+```tsx
+const prefersReducedMotion = useReducedMotion();
+const sectionEnter = prefersReducedMotion ? false : { y: 16 };
+const sectionAnimate = prefersReducedMotion ? false : { y: 0 };
+const sectionTransition = (delay: number) =>
+  prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1], delay };
+```
+
+**Avoid `opacity: 0` in `initial` for dashboard/persistent sections** — Framer Motion animations can stall in dev/StrictMode, leaving sections permanently invisible. The dashboard (CommandCenterHub) uses `y` transforms only for this reason. Opacity is acceptable in transient/modal contexts (e.g., SessionPostMortem, AnimatePresence exits) where the component mounts fresh.
+
+**Timings:** 0.3s section reveals · 0.2s micro-interactions · 0.15s color transitions · 0.1s stagger between siblings
+
+**Interactive hover/tap** (cards only, not static):
+```tsx
+whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
+whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+```
+
+**Never:** Looping ambient animations · parallax · hover wobbles on static content · background particles
+
+---
+
+## UI State Patterns
+
+- **Loading:** `<Suspense fallback={<SkeletonLoader />}>` for lazy sections. `<Loader />` for full-page. Pulse icon for small inline areas. Always include text hint.
+- **Empty:** Use `EmptyState` component. Contextual messaging: "No drill sessions yet — complete your first drill below" not "No data."
+- **Error:** Dismissible banner with `AlertCircle`, `data-provisional` tint for non-critical. ErrorBoundary for critical. Never show raw HTTP codes or stack traces.
+- **Skeletons:** `bg-tertiary` → `bg-secondary` pulse (blue-gray, NOT generic gray).
+
+---
+
+## Accessibility
+
+| Requirement | Implementation |
+|---|---|
+| Touch targets | `min-h-[44px]` on all interactive elements |
+| Focus indicators | `focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none` |
+| Color contrast | 4.5:1 normal text; gold on white must use `--color-accent-button` not `--color-accent` |
+| Reduced motion | Gate all animations behind `useReducedMotion()` |
+| Screen readers | `aria-label` on icon-only buttons, `aria-hidden="true"` on decorative icons |
+
+---
+
+## Anti-Patterns (Real Breakages)
+
+| What Happened | The Rule |
+|---|---|
+| Global `transition-*` on `a, button, [role="button"]` broke all Framer Motion | Never add global transition rules to base elements |
+| Data colors changed from slate to bright emerald/red/amber | Data colors are muted by design |
+| `border` added to GlassCard base; `rounded-xl` → `rounded-2xl` | Never modify shared component base styles |
+| Inline styles removed from LandingPage buttons | Inline styles on LandingPage are the safety net |
+| Button base changed: `rounded-lg` → `rounded-xl`, `font-medium` → `font-semibold` | Never modify button primitive styling |
+| CommandCenterHub layout restructured | Understand existing layout before changing it |
+| 13 files changed in one batch | One file at a time. Verify before moving on. |
+
+---
+
+## Workflow
+
+1. **Read** target file(s) first. Understand dependencies (does it use GlassCard? Button?).
+2. **Propose** changes as text audit with exact className/JSX modifications and rationale.
+3. **Implement** one file at a time with `Edit` tool. Use existing components (EmptyState, SkeletonLoader).
+4. **Verify** via `git diff --stat` — only intended files should appear.
+
+## Quality Gate
+
+- [ ] Only CSS variables, no hardcoded hex
+- [ ] Gold/slate preserved, no blue/teal
+- [ ] Data colors muted slate, not bright semantic
+- [ ] Works in light AND dark mode
+- [ ] `prefers-reduced-motion` respected
+- [ ] Touch targets ≥ 44px
+- [ ] `focus-visible` on interactive elements
+- [ ] `aria-label` on icon-only buttons
+- [ ] No shared primitive changes
+- [ ] No new dependencies
+- [ ] Inline styles preserved on production components
+- [ ] Numerical data uses `tabular-nums`
+- [ ] Single primary CTA per screen
+- [ ] `git diff --stat` shows only intended files

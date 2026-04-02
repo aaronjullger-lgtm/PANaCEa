@@ -218,7 +218,7 @@ export default function DrillHub(): JSX.Element {
                 <Trophy className="w-6 h-6 text-data-provisional" />
                 <span className="text-[var(--color-text-muted)] text-sm">Total Sessions</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overview.totalSessions}
               </p>
             </div>
@@ -228,7 +228,7 @@ export default function DrillHub(): JSX.Element {
                 <Target className="w-6 h-6 text-data-pass" />
                 <span className="text-[var(--color-text-muted)] text-sm">Overall Accuracy</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {(overview.overallAccuracy * 100).toFixed(1)}%
               </p>
             </div>
@@ -238,7 +238,7 @@ export default function DrillHub(): JSX.Element {
                 <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
                 <span className="text-[var(--color-text-muted)] text-sm">Current Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overview.currentStreak} days
               </p>
             </div>
@@ -248,7 +248,7 @@ export default function DrillHub(): JSX.Element {
                 <Award className="w-6 h-6 text-data-provisional" />
                 <span className="text-[var(--color-text-muted)] text-sm">Best Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overview.bestStreak} days
               </p>
             </div>

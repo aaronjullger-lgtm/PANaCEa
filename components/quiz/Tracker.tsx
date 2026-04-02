@@ -251,3 +251,17 @@ export function behavioralPayloadToTelemetryData(
     ...(eliminationVelocity !== undefined && { elimination_velocity: eliminationVelocity }),
   };
 }
+
+/**
+ * Enrich telemetry with session position data for server-side fatigue detection.
+ * Call this after behavioralPayloadToTelemetryData to add question_number.
+ */
+export function enrichTelemetryWithSessionPosition(
+  telemetry: TelemetryData,
+  questionNumber: number
+): TelemetryData {
+  return {
+    ...telemetry,
+    question_number: questionNumber,
+  };
+}

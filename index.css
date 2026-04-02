@@ -2171,3 +2171,22 @@ html:not(.dark) .clinical-achievement {
 .animate-scale-in {
   animation: scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ---- Clinical Library: detail group / accordion chevron rotation ---- */
+details > summary > svg:first-child {
+  transition: transform 0.15s ease;
+}
+details[open] > summary > svg:first-child {
+  transform: rotate(90deg);
+}
+details > summary::marker,
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Print: force all detail groups open */
+@media print {
+  details { open: true; }
+  details:not([open]) { display: block; }
+  details:not([open]) > *:not(summary) { display: block; }
+}

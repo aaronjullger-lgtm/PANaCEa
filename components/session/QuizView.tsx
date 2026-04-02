@@ -48,6 +48,7 @@ import {
   useBehavioralTracker,
   OptionHoverTracker,
   behavioralPayloadToTelemetryData,
+  enrichTelemetryWithSessionPosition,
 } from '@/components/quiz/Tracker';
 import { useMicroKinetics } from '@/hooks/useMicroKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
@@ -966,6 +967,11 @@ const QuizView: React.FC<QuizViewProps> = ({
           )
         : undefined;
 
+    // Enrich telemetry with session position for server-side fatigue detection
+    const telemetryWithPosition = telemetryForApi
+      ? enrichTelemetryWithSessionPosition(telemetryForApi, questionNumber)
+      : undefined;
+
     // Derive FSRS rating from behavioral signals — fully implicit, no self-rating buttons.
     // When behavioral data is available, use the full pipeline (deriveContinuousRating +
     // Ghost Grader) that matches the server-side computation in drillReviewService.
@@ -1001,7 +1007,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       conditionId: currentQuestion.conditionId ?? undefined,
       isMainSession: sessionSettings.mode !== 'rapid_recall' && sessionSettings.mode !== 'cram_mode',
       rating: fsrsRating,
-      telemetryJson: (telemetryForApi ?? undefined) as Record<string, unknown> | undefined,
+      telemetryJson: (telemetryWithPosition ?? undefined) as Record<string, unknown> | undefined,
       answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
     });
@@ -1228,7 +1234,7 @@ const QuizView: React.FC<QuizViewProps> = ({
               : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
                 ? 'cram'
                 : 'main',
-          telemetry: telemetryForApi,
+          telemetry: telemetryWithPosition,
         });
       } catch (err) {
         logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);

@@ -46,6 +46,8 @@ import {
   OSCEResultsView,
   OSCEHistoryPanel,
   EncounterTimer,
+  VitalsStrip,
+  PhaseStepper,
 } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
@@ -120,6 +122,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [phase, setPhase] = useState<EncounterPhase>('history');
   const [isPaused, setIsPaused] = useState(false);
+  const [pausedMs, setPausedMs] = useState(0);
+  const pauseStartRef = useRef<number | null>(null);
 
   const [currentCase, setCurrentCase] = useState<PatientEncounterCase | null>(null);
   const [session, setSession] = useState<EncounterSession | null>(null);
@@ -816,6 +820,43 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     handleStartEncounter(filters);
   };
 
+  // Memoized callbacks for React.memo'd children (prevents re-render cascades)
+  const handleOrderPlace = useCallback((orders: PlacedOrder[]) => {
+    const existingIds = new Set(enhancedOSCE.state.orders.map((o) => o.id));
+    const newOrders = orders.filter((o) => !existingIds.has(o.id));
+    newOrders.forEach((order) => {
+      enhancedOSCE.placeOrder(order);
+      setDiagnosticResults((prev) => [
+        ...prev,
+        { testName: order.itemName, result: 'Pending...', interpretation: '' },
+      ]);
+    });
+  }, [enhancedOSCE]);
+
+  const handleExamPerformed = useCallback((finding: ExamFinding) => {
+    enhancedOSCE.recordExamFinding(finding);
+    setPhysicalFindings((prev) => [
+      ...prev,
+      { maneuver: finding.maneuverName, finding: finding.finding },
+    ]);
+  }, [enhancedOSCE]);
+
+  const handleCloseOrderPanel = useCallback(() => setShowOrderPanel(false), []);
+  const handleCloseExamPanel = useCallback(() => setShowExamPanel(false), []);
+  const handlePhaseSelect = useCallback((p: EncounterPhase) => setPhase(p), []);
+
+  const togglePause = () => {
+    if (isPaused && pauseStartRef.current != null) {
+      // Resuming — accumulate paused duration
+      setPausedMs(prev => prev + (Date.now() - pauseStartRef.current!));
+      pauseStartRef.current = null;
+    } else {
+      // Pausing — record start of pause
+      pauseStartRef.current = Date.now();
+    }
+    setIsPaused(prev => !prev);
+  };
+
   const handleNewCase = () => {
     setCurrentCase(null);
     setSession(null);
@@ -836,6 +877,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setTreatmentPlan('');
     setAar('');
     setPreceptorFeedback(null);
+    setIsPaused(false);
+    setPausedMs(0);
+    pauseStartRef.current = null;
     osceMetrics.reset();
   };
 
@@ -1839,10 +1883,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   // Active Interview View - Clinical White/Navy Theme
   if (viewState === 'active' && currentCase && session) {
-    const elapsedSeconds = Math.floor((Date.now() - session.startTime) / 1000);
-    const minutes = Math.floor(elapsedSeconds / 60);
-    const seconds = elapsedSeconds % 60;
-
     return (
       <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
         {/* Header */}
@@ -1911,11 +1951,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Pause Toggle */}
+              <button
+                onClick={togglePause}
+                className={`p-1.5 rounded-md transition-colors border ${
+                  isPaused
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                    : 'border-transparent text-data-neutral hover:text-white'
+                }`}
+                title={isPaused ? 'Resume encounter' : 'Pause encounter'}
+                aria-label={isPaused ? 'Resume encounter' : 'Pause encounter'}
+              >
+                {isPaused ? <ArrowRight className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              </button>
+
               {/* Encounter Timer */}
               <EncounterTimer
                 startTime={encounterStartTime}
                 isActive={viewState === 'active'}
                 isPaused={isPaused}
+                pausedMs={pausedMs}
                 targetMinutes={15}
                 compact
               />
@@ -1978,15 +2033,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       : 'EN'}
                 </span>
               </button>
-              <div
-                className="flex items-center gap-2 text-sm"
-                aria-label={`Time elapsed: ${minutes} minutes ${seconds} seconds`}
-              >
-                <Clock className="w-4 h-4 text-data-neutral" />
-                <span className="font-mono text-white">
-                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-                </span>
-              </div>
+              {/* Timer is rendered by EncounterTimer component above */}
               {onExit && (
                 <button
                   onClick={onExit}
@@ -2024,66 +2071,53 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Phase progression stepper */}
-          <nav
-            className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 py-3 px-4 rounded-xl bg-data-neutral-bg/80 border border-data-neutral"
-            aria-label="Encounter phase"
-          >
-            {(
-              [
-                { id: 'history' as const, label: 'History' },
-                { id: 'physical' as const, label: 'Physical Exam' },
-                { id: 'diagnostic' as const, label: 'Diagnostics' },
-                { id: 'diagnosis' as const, label: 'Diagnosis' },
-                { id: 'treatment' as const, label: 'Treatment' },
-              ] as const
-            ).map((step, idx) => {
-              const isCurrent = phase === step.id;
-              const order = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(
-                phase
-              );
-              const stepOrder = [
-                'history',
-                'physical',
-                'diagnostic',
-                'diagnosis',
-                'treatment',
-              ].indexOf(step.id);
-              const isPast = stepOrder < order;
-              const isFuture = stepOrder > order;
-              return (
-                <React.Fragment key={step.id}>
-                  {idx > 0 && (
-                    <ChevronRight
-                      className={`w-4 h-4 flex-shrink-0 ${
-                        isPast
-                          ? 'text-data-neutral'
-                          : isCurrent
-                            ? 'text-[var(--color-accent)]'
-                            : 'text-data-neutral'
-                      }`}
-                      aria-hidden
-                    />
-                  )}
-                  <span
-                    className={`text-sm font-medium transition-colors ${
-                      isCurrent ? 'text-white' : isPast ? 'text-data-neutral' : 'text-data-neutral'
-                    }`}
-                    aria-current={isCurrent ? 'step' : undefined}
-                  >
-                    {step.label}
-                  </span>
-                </React.Fragment>
-              );
-            })}
-            <span className="ml-auto text-xs text-data-neutral">
-              {phase === 'history' && 'Next: gather history and move to physical exam'}
-              {phase === 'physical' && 'Next: perform focused physical exam'}
-              {phase === 'diagnostic' && 'Next: order labs/imaging as needed'}
-              {phase === 'diagnosis' && 'Next: submit your diagnosis'}
-              {phase === 'treatment' && 'Next: submit treatment plan'}
-            </span>
-          </nav>
+          {/* Vitals Strip — persistent real-time vital signs */}
+          <div className="mb-4">
+            <VitalsStrip
+              hr={currentVitals.hr}
+              sbp={currentVitals.sbp ?? 120}
+              dbp={currentVitals.dbp ?? 80}
+              rr={currentVitals.rr}
+              o2={currentVitals.o2}
+              hrHistory={vitalsHistory?.hr}
+              sbpHistory={vitalsHistory?.sbp}
+              rrHistory={vitalsHistory?.rr}
+              o2History={vitalsHistory?.o2}
+            />
+          </div>
+
+          {/* AV State Badge — shows patient clinical state when state machine is active */}
+          {currentAVState && (
+            <div className="mb-3 flex items-center gap-3 px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+              <div className={`w-2.5 h-2.5 rounded-full ${
+                currentAVState.id.includes('critical') || currentAVState.id.includes('severe')
+                  ? 'bg-red-500 animate-pulse'
+                  : currentAVState.id.includes('distress') || currentAVState.id.includes('worsening')
+                    ? 'bg-amber-500 animate-pulse'
+                    : 'bg-emerald-500'
+              }`} />
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                {currentAVState.name}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)] ml-auto">
+                {currentAVState.clinicalContext}
+              </span>
+              {currentAVState.voice?.toneDescriptors?.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
+                  {currentAVState.voice.toneDescriptors.slice(0, 2).join(', ')}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Phase Stepper — clinical workflow progression */}
+          <div className="mb-6 py-3 px-4 rounded-xl bg-data-neutral-bg/80 border border-data-neutral">
+            <PhaseStepper
+              currentPhase={phase}
+              onPhaseSelect={handlePhaseSelect}
+              compact
+            />
+          </div>
 
           {/* NEW: Three-column layout for sidebar integration */}
           <div className="grid md:grid-cols-12 gap-6">
@@ -2899,24 +2933,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 <OrderPanel
                   isOpen={showOrderPanel}
-                  onOrderPlace={(orders: PlacedOrder[]) => {
-                    // Handle the newly placed orders
-                    const existingIds = new Set(enhancedOSCE.state.orders.map((o) => o.id));
-                    const newOrders = orders.filter((o) => !existingIds.has(o.id));
-                    newOrders.forEach((order) => {
-                      enhancedOSCE.placeOrder(order);
-                      setDiagnosticResults((prev) => [
-                        ...prev,
-                        {
-                          testName: order.itemName,
-                          result: 'Pending...',
-                          interpretation: '',
-                        },
-                      ]);
-                    });
-                  }}
+                  onOrderPlace={handleOrderPlace}
                   placedOrders={enhancedOSCE.state.orders}
-                  onClose={() => setShowOrderPanel(false)}
+                  onClose={handleCloseOrderPanel}
                 />
               </motion.div>
             </motion.div>
@@ -2930,7 +2949,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               animate={{}}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
-              onClick={() => setShowExamPanel(false)}
+              onClick={handleCloseExamPanel}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -2940,16 +2959,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExamPanel
-                  onExamPerformed={(finding) => {
-                    enhancedOSCE.recordExamFinding(finding);
-                    setPhysicalFindings((prev) => [
-                      ...prev,
-                      {
-                        maneuver: finding.maneuverName,
-                        finding: finding.finding,
-                      },
-                    ]);
-                  }}
+                  onExamPerformed={handleExamPerformed}
                   completedExams={enhancedOSCE.state.examFindings}
                   suggestedRegions={enhancedOSCE.getSuggestedExams(
                     currentCase?.chiefComplaint || ''
@@ -2962,7 +2972,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         }
                       : undefined
                   }
-                  onClose={() => setShowExamPanel(false)}
+                  onClose={handleCloseExamPanel}
                 />
               </motion.div>
             </motion.div>

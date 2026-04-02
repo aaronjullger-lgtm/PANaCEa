@@ -68,6 +68,14 @@ vi.mock('../../_shared/rateLimiter', () => ({
   getRateLimitIdentifier: vi.fn(() => 'test-rate-limit-id'),
 }));
 
+vi.mock('../../_shared/inferSystem', () => ({
+  resolveSystem: vi.fn(() => 'cardiovascular'),
+}));
+
+vi.mock('../../intelligence/profile', () => ({
+  scheduleConceptReview: vi.fn(),
+}));
+
 describe('POST /api/osce/analysis/grade', () => {
   const baseContext = {
     request: new Request('http://localhost/api/osce/analysis/grade', { method: 'POST' }),
@@ -138,7 +146,10 @@ describe('POST /api/osce/analysis/grade', () => {
 
   it('returns graded payload for completed session', async () => {
     mockPrisma.patientEncounterSession.findFirst.mockResolvedValue(completedSession);
-    mockPrisma.osceResult.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'result_1' });
+    mockPrisma.osceResult.findUnique
+      .mockResolvedValueOnce(null)      // idempotency check
+      .mockResolvedValueOnce(null)      // persistGradeAndConceptGap: check existing
+      .mockResolvedValueOnce({ id: 'result_1' }); // persistGradeAndConceptGap: verify saved
     mockPrisma.osceResult.create.mockResolvedValue({ id: 'result_1' });
 
     vi.stubGlobal(

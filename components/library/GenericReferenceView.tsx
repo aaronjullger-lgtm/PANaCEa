@@ -23,6 +23,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ChevronDown,
@@ -33,6 +34,7 @@ import {
   RefreshCw,
   AlertCircle,
   Keyboard,
+  Zap,
 } from 'lucide-react';
 
 // ============================================================================
@@ -102,6 +104,9 @@ export interface ReferenceViewConfig<T> {
   /** Optional: get PANCE yield score for sorting */
   getPanceYield?: (item: T) => number | undefined;
 
+  /** Optional: get drill params for "Practice This Topic" CTA */
+  getDrillParams?: (item: T) => { system?: string; tag?: string } | null;
+
   /** Grid columns config */
   gridColumns?: string;
 }
@@ -120,6 +125,7 @@ export default function GenericReferenceView<T>({
   onBack,
 }: GenericReferenceViewProps<T>) {
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [data, setData] = useState<T[]>([]);
@@ -300,7 +306,7 @@ export default function GenericReferenceView<T>({
           </button>
         )}
         <Icon size={24} style={{ color: config.accentColor }} />
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: "'Poppins', system-ui, sans-serif" }}>
           {config.entityName}
         </h2>
         <span aria-live="polite" role="status" style={{
@@ -560,6 +566,37 @@ export default function GenericReferenceView<T>({
                           paddingTop: 16,
                         }}>
                           {config.detailRenderer(item)}
+                          {/* Practice This Topic CTA */}
+                          {config.getDrillParams && (() => {
+                            const params = config.getDrillParams!(item);
+                            if (!params) return null;
+                            const qs = new URLSearchParams();
+                            qs.set('mode', 'smart-review');
+                            if (params.system) qs.set('system', params.system);
+                            if (params.tag) qs.set('tag', params.tag);
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/study?${qs.toString()}`);
+                                }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  gap: 8, width: '100%', marginTop: 16, padding: '10px 16px',
+                                  borderRadius: 10, border: 'none', cursor: 'pointer',
+                                  background: config.accentColor, color: '#fff',
+                                  fontFamily: "'Poppins', system-ui, sans-serif",
+                                  fontSize: 14, fontWeight: 600,
+                                  transition: 'opacity 0.15s',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                              >
+                                <Zap size={16} />
+                                Practice This Topic
+                              </button>
+                            );
+                          })()}
                         </div>
                       </motion.div>
                     )}

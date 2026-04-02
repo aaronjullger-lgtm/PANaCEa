@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { resolveSystem } from '../_shared/inferSystem';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -18,33 +19,6 @@ import { resolveUserByClerkId } from '../_shared/resolveUser';
 const PASS_THRESHOLD = 70;
 
 const Schema = z.object({ query: z.object({}).optional() });
-
-/**
- * Infer the organ system from a patient case's chief complaint and diagnosis
- * using regex pattern matching.
- */
-function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): string {
-  const text = `${chiefComplaint} ${correctDiagnosis}`.toLowerCase();
-
-  if (/\b(heart|cardiac|chest pain|acs|mi|coronary|chf|heart failure|decompensated)\b/.test(text))
-    return 'cardiovascular';
-  if (/\b(dvt|deep vein|thrombosis|embol)\b/.test(text)) return 'cardiovascular';
-  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe|wheez)\b/.test(text)) return 'pulmonary';
-  if (/\b(gi|abdominal|hepatic|pancreat|appendic)\b/.test(text)) return 'gastrointestinal';
-  if (/\b(neuro|stroke|seizure|headache|weakness|slurred|aphasia|tia)\b/.test(text))
-    return 'neurological';
-  if (/\b(renal|kidney|aki|ckd|urosepsis)\b/.test(text)) return 'nephrology';
-  if (/\b(infection|sepsis|uti|pneumonia|cellulitis|meningit)\b/.test(text))
-    return 'infectious_disease';
-  if (/\b(diabetes|diabetic|dka|ketoacidosis|hyperglycemi)\b/.test(text)) return 'endocrine';
-  if (/\b(ectopic|pregnan|obstetric|gynecolog|ovarian)\b/.test(text)) return 'reproductive';
-  if (/\b(psych|depression|anxiety|suicid|bipolar|schizo)\b/.test(text)) return 'psychiatry';
-  if (/\b(anemia|leukemia|lymphoma|coagul|thrombocytop)\b/.test(text)) return 'hematology';
-  if (/\b(fracture|orthoped|musculoskel|joint|back pain)\b/.test(text)) return 'musculoskeletal';
-  if (/\b(dermat|rash|skin|wound|burn)\b/.test(text)) return 'dermatology';
-
-  return 'general';
-}
 
 export const onRequestOptions = withCors();
 
@@ -114,9 +88,11 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
 
     for (const session of withScores) {
       const pec = session.PatientEncounterCase!;
-      // Prefer stored targetSystem; fall back to regex inference
-      const system = (pec as { targetSystem?: string | null }).targetSystem
-        || inferSystemFromCase(pec.chiefComplaint, pec.correctDiagnosis);
+      const system = resolveSystem(
+        (pec as { targetSystem?: string | null }).targetSystem,
+        pec.chiefComplaint,
+        pec.correctDiagnosis
+      );
 
       const result = session.OsceResult;
       const score = result?.score ?? 0;
@@ -166,8 +142,11 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
         return {
           date: s.startTime.toISOString(),
           score: s.OsceResult?.score ?? 0,
-          system: (pc as { targetSystem?: string | null }).targetSystem
-            || inferSystemFromCase(pc.chiefComplaint, pc.correctDiagnosis),
+          system: resolveSystem(
+            (pc as { targetSystem?: string | null }).targetSystem,
+            pc.chiefComplaint,
+            pc.correctDiagnosis
+          ),
         };
       });
 

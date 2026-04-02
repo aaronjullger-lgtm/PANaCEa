@@ -288,6 +288,12 @@ export interface TelemetryData {
    * Hesitation = pause > 200ms during mouse movement or typing
    */
   hesitation_count?: number;
+
+  /**
+   * Position of this question within the session (1-based).
+   * Used server-side for fatigue detection and par time correction.
+   */
+  question_number?: number;
 }
 
 /**

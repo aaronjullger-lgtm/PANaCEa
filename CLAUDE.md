@@ -32,8 +32,24 @@ The spaced repetition system is the core differentiator. Key files:
 - `lib/fsrs/eorScheduler.ts` — End-of-rotation scheduling clamp
 - `functions/api/drills/submit-review.ts` — API endpoint that calls drillReviewService
 
-### Implicit Rating Inputs (from PDFs)
-The `deriveImplicitRating` function uses: `timeToFirstClick`, `answerSwitches`, `totalDwellTime`, `isCorrect`, `parTimeMs`, and optionally `trajectory` (micro-kinetics). These are stored in `ReviewLog.telemetry` as: `par_time_ms`, `latency_ratio`, `implicit_confidence`, `answer_changes`, `circadian_phase`.
+### Implicit Rating Inputs
+The `deriveContinuousRating` function in `lib/implicit-metrics.ts` uses: `timeToFirstClick`, `answerSwitches`, `totalDwellTime`, `isCorrect`, `parTimeMs`, `hintViewed`, `hintViewDurationMs`, and optionally CRPL micro-kinetics (`commitmentGapMs`, `cursorEntropy`, `hoverOscillationCount`). These are stored in `ReviewLog.telemetry` as: `par_time_ms`, `latency_ratio`, `implicit_confidence`, `answer_changes`, `circadian_phase`, `telemetry_quality`.
+
+### Telemetry Rules (2026-04-02 Audit)
+- **Hint-viewed penalty**: Viewing a hint before answering applies a 0.4 grade penalty + time-proportional penalty (capped at 0.3). This correctly models aided recall as weaker than free recall.
+- **MVRT-aware rapid guess**: Server uses question-type-specific MVRT thresholds (VIGNETTE=3000ms, RECALL=1500ms, IMAGE=2000ms, DEFAULT=2000ms) with a server floor of 2000ms. Rapid guesses skip FSRS state updates.
+- **Telemetry quality tags**: Each ReviewLog entry's `server_computed.telemetry_quality` is tagged as `'full'`, `'partial'`, or `'minimal'`. The optimizer can filter by quality.
+- **assessTelemetryQuality()** in `lib/implicit-metrics.ts` classifies quality: full=first-click+switches+CRPL, partial=first-click or switches, minimal=only duration.
+
+### Confidence Scoring Model (2026-04-02 Upgrade)
+Research-backed multi-signal confidence model replacing the old additive-penalty approach. Key components:
+- **Multi-signal weighted model** (SDT-inspired): `confidence = Σ(wi × si) × hintFactor`, where signals are RT (0.35), answer switches (0.25), trajectory/proxy (0.20), and hesitation composite (0.20). Bounded to [0.3, 0.95]. For incorrect answers, confidence is fixed at 0.9 (high confidence the student got it wrong → aggressive rescheduling).
+- **Graduated stability multiplier** (sigmoid): `stabilityMult = 0.7 + 0.6 × σ((confidence - 0.6) × 5)`. Replaces old binary threshold (≤0.5 → 0.75×). Now both rewards high confidence (up to ~1.28×) and penalizes low (down to ~0.72×). Centered at 0.6 = neutral (1.0×).
+- **Fluency illusion dampener** (Kornell & Bjork, 2008): `dampener = 0.7 + 0.3 × clamp(elapsedDays, 0, 1)`. Same-day reviews get 30% confidence reduction; ≥1 day → no adjustment. Prevents massed-repetition fluency from inflating stability.
+- **Integration in drillReviewService.ts**: `adjustedConfidence = implicitConfidence × fluencyIllusionDampener(elapsedDays)` → `modifiedStability *= confidenceStabilityMultiplier(adjustedConfidence)`.
+- **Exports**: `confidenceStabilityMultiplier()` and `fluencyIllusionDampener()` from `lib/implicit-metrics.ts`.
+- **Test coverage**: 57 tests across `tests/confidence-scoring.test.ts` (29) and `tests/telemetry-audit.test.ts` (28), all passing.
+- **Research plan**: `plans/confidence-scoring-upgrade-plan.md` documents the full research basis (Benjamin et al. 1998, Freeman & Ambady 2010, Kornell & Bjork 2008, SDT).
 
 ### FSRS Pipeline Consumers
 All drill and session types now submit to FSRS:

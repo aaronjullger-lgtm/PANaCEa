@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { resolveSystem } from '../../_shared/inferSystem';
 import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -161,23 +162,7 @@ function parseRubricChecklist(checklist: unknown): RubricItem[] {
   return checklist.filter((x): x is RubricItem => RUBRIC_CHECKLIST_ITEM.safeParse(x).success);
 }
 
-function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): string {
-  const text = `${chiefComplaint} ${correctDiagnosis}`.toLowerCase();
-  if (/\b(heart|cardiac|chest pain|acs|mi|coronary|chf|heart failure|decompensated)\b/.test(text)) return 'cardiovascular';
-  if (/\b(dvt|deep vein|thrombosis|embol)\b/.test(text)) return 'cardiovascular';
-  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe|wheez)\b/.test(text)) return 'pulmonary';
-  if (/\b(gi|abdominal|hepatic|pancreat|appendic)\b/.test(text)) return 'gastrointestinal';
-  if (/\b(neuro|stroke|seizure|headache|weakness|slurred|aphasia|tia)\b/.test(text)) return 'neurological';
-  if (/\b(renal|kidney|aki|ckd|urosepsis)\b/.test(text)) return 'nephrology';
-  if (/\b(infection|sepsis|uti|pneumonia|cellulitis|meningit)\b/.test(text)) return 'infectious_disease';
-  if (/\b(diabetes|diabetic|dka|ketoacidosis|hyperglycemi)\b/.test(text)) return 'endocrine';
-  if (/\b(ectopic|pregnan|obstetric|gynecolog|ovarian)\b/.test(text)) return 'reproductive';
-  if (/\b(psych|depression|anxiety|suicid|bipolar|schizo)\b/.test(text)) return 'psychiatry';
-  if (/\b(anemia|leukemia|lymphoma|coagul|thrombocytop)\b/.test(text)) return 'hematology';
-  if (/\b(fracture|orthoped|musculoskel|joint|back pain)\b/.test(text)) return 'musculoskeletal';
-  if (/\b(dermat|rash|skin|wound|burn)\b/.test(text)) return 'dermatology';
-  return 'general';
-}
+// System inference consolidated in _shared/inferSystem.ts — see resolveSystem import above
 
 async function callGeminiSoftSkills(
   apiKey: string,
@@ -388,7 +373,7 @@ async function persistGradeAndConceptGap(
   payload: GradePayload,
   session: {
     User?: { id: string } | null;
-    PatientEncounterCase: { chiefComplaint: string; correctDiagnosis: string };
+    PatientEncounterCase: { chiefComplaint: string; correctDiagnosis: string; targetSystem?: string | null };
   },
   softSkillsReport: SoftSkillsReport | null,
   dangerousActions?: DetectedDangerousAction[]
@@ -424,7 +409,8 @@ async function persistGradeAndConceptGap(
     payload.clinicalReasoningScore < 60 || payload.redFlagsMissed.length > 0;
   let conceptGapCreated = false;
   if (differentialFailed && session.User?.id) {
-    const system = inferSystemFromCase(
+    const system = resolveSystem(
+      session.PatientEncounterCase.targetSystem,
       session.PatientEncounterCase.chiefComplaint,
       session.PatientEncounterCase.correctDiagnosis
     );
@@ -487,6 +473,31 @@ export const onRequestPost = authenticatedEndpoint(GradeBodySchema, async (conte
 
   const { session, caseRecord, checklistText, transcript, caseLabel } = resolved;
 
+  // Idempotency: return cached result unless ?force=true is specified
+  const url = new URL(request.url);
+  const forceRegrade = url.searchParams.get('force') === 'true';
+  if (!forceRegrade) {
+    const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
+    if (existingResult) {
+      log.info('Returning cached OSCE grade (use ?force=true to regrade)', { sessionId });
+      return {
+        data: {
+          resultId: existingResult.id,
+          score: existingResult.score,
+          checklist: existingResult.checklist,
+          redFlagsMissed: existingResult.redFlagsMissed,
+          clinicalReasoningScore: existingResult.clinicalReasoningScore,
+          billingCodeSuggestion: existingResult.billingCodeSuggestion,
+          softSkillsReport: existingResult.softSkillsReport ?? undefined,
+          ...(existingResult.communicationScore != null ? { communicationScore: existingResult.communicationScore } : {}),
+          ...(existingResult.differentialScore != null ? { differentialScore: existingResult.differentialScore } : {}),
+          ...(existingResult.dangerousActionsDetected != null ? { dangerousActionsDetected: existingResult.dangerousActionsDetected } : {}),
+          cached: true,
+        },
+      };
+    }
+  }
+
   // Build telemetry context if available (from useOSCEMetrics via complete endpoint)
   const telemetry = (session as { osceTelemetry?: Record<string, unknown> }).osceTelemetry;
   const telemetryContext = telemetry
@@ -500,23 +511,66 @@ export const onRequestPost = authenticatedEndpoint(GradeBodySchema, async (conte
 Note: Factor efficiency and clinical decision-making speed into your overall assessment.`
     : '';
 
+  // Build dangerous actions context for this condition so Gemini can factor safety into scoring
+  const diagLower = caseRecord.correctDiagnosis.toLowerCase();
+  const dangerousActionsContext: string[] = [];
+  for (const [condition, actions] of Object.entries(DANGEROUS_ACTIONS_MAP)) {
+    if (diagLower.includes(condition) || condition.split(' ').every(w => diagLower.includes(w))) {
+      for (const action of actions) {
+        dangerousActionsContext.push(`- ${action.description} (${action.penalty}pt penalty): keywords [${action.keywords.join(', ')}]`);
+      }
+    }
+  }
+  const safetySection = dangerousActionsContext.length > 0
+    ? `\n\nPATIENT SAFETY (critical — factor into scoring):
+The following actions are DANGEROUS for this condition (${caseRecord.correctDiagnosis}):
+${dangerousActionsContext.join('\n')}
+If the student's transcript shows evidence of any dangerous action, deduct the penalty from the relevant competency area AND list it in redFlagsMissed. These are serious clinical errors.`
+    : '';
+
   const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
 
-Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall score):
-- History Taking (16%)
-- Physical Exam (16%)
-- Differential Diagnosis (18%)
-- Clinical Intervention (16%)
+SCORING FORMULA (mandatory — compute each section independently, then sum):
 
-Also consider: time management, clinical efficiency, and decision-making quality when behavioral telemetry is available.
+1. History Taking (20 pts max):
+   - Full credit: student asks ≥4 essential questions AND covers HPI, PMH, medications, allergies, social/family history
+   - Partial credit: 4 pts per major history domain covered (HPI, PMH, meds/allergies, social/family)
+   - 0 pts: fewer than 2 domains addressed
 
-Additionally, evaluate the student's communication quality:
-- Did they use open-ended questions before closed-ended questions?
-- Did they show empathy (acknowledging patient emotions, concerns)?
-- Did they explain their clinical reasoning to the patient?
-- Did they ask about the patient's perspective and concerns?
-- Did they introduce themselves and explain their role?
-Rate communication quality as "communicationScore" (0-100).
+2. Physical Exam (20 pts max):
+   - Full credit: ≥3 relevant exam maneuvers performed AND findings correctly interpreted
+   - Partial credit: 5 pts per relevant maneuver (max 4)
+   - Deduct 5 pts if a critical exam was omitted (e.g., cardiac auscultation for chest pain)
+
+3. Diagnostic Reasoning (25 pts max):
+   - 10 pts: correct diagnosis identified or included in differential
+   - 8 pts: appropriate diagnostic tests ordered (≥2 relevant, ≤1 unnecessary)
+   - 7 pts: logical clinical reasoning demonstrated (explains why tests ordered, narrows differential)
+   - Deduct 5 pts per unnecessary/inappropriate test beyond the first
+
+4. Treatment/Management (20 pts max):
+   - 10 pts: treatment plan addresses the primary diagnosis appropriately
+   - 5 pts: follow-up and monitoring plan included
+   - 5 pts: patient education and shared decision-making
+   - Deduct 10 pts if treatment is contraindicated or dangerous
+
+5. Communication (10 pts max):
+   - 3 pts: used open-ended questions before narrowing
+   - 3 pts: showed empathy (acknowledged patient emotions/concerns)
+   - 2 pts: explained clinical reasoning to the patient
+   - 1 pt: introduced self and explained role
+   - 1 pt: asked about patient's perspective/concerns
+
+6. Efficiency (5 pts max):
+   - 5 pts: focused, no unnecessary questions or tests
+   - 3 pts: mostly efficient with minor tangents
+   - 1 pt: significant wasted time on irrelevant lines of inquiry
+   - 0 pts: shotgun approach with many unnecessary actions
+
+Final score = sum of sections 1-6 (0-100).
+Return this sum as the "score" field.
+Return the communication section total (scaled to 0-100) as "communicationScore".
+Set "clinicalReasoningScore" = (section 3 score / 25) * 100.${safetySection}
 
 If the student submitted differential diagnoses, evaluate them:
 - Are the key differentials for this presentation included?
@@ -587,17 +641,38 @@ Output your grading as a single JSON object only.`;
       log.warn('Soft skills analysis skipped or failed', { sessionId });
     }
 
-    // Dangerous action detection: check transcript for condition-specific contraindications
+    // Safety net: keyword-based dangerous action detection catches anything Gemini missed
     const dangerousActions = detectDangerousActions(caseRecord.correctDiagnosis, transcript);
     if (dangerousActions.length > 0) {
-      const totalPenalty = dangerousActions.reduce((sum, a) => sum + a.penalty, 0);
-      payload.score = Math.max(0, payload.score - totalPenalty);
-      log.info('Dangerous actions detected', {
-        sessionId,
-        count: dangerousActions.length,
-        totalPenalty,
-        actions: dangerousActions.map(a => a.description),
-      });
+      // Only apply penalties for actions Gemini didn't already flag in redFlagsMissed
+      const geminiFlags = (payload.redFlagsMissed ?? []).map(f => f.toLowerCase());
+      const undetected = dangerousActions.filter(
+        a => !geminiFlags.some(flag =>
+          flag.includes(a.description.toLowerCase().slice(0, 20)) ||
+          a.keywords?.some((kw: string) => flag.includes(kw))
+        )
+      );
+      if (undetected.length > 0) {
+        const additionalPenalty = undetected.reduce((sum, a) => sum + a.penalty, 0);
+        payload.score = Math.max(0, payload.score - additionalPenalty);
+        // Add to redFlagsMissed if not already present
+        for (const action of undetected) {
+          if (!payload.redFlagsMissed.includes(action.description)) {
+            payload.redFlagsMissed.push(action.description);
+          }
+        }
+        log.info('Safety net caught additional dangerous actions', {
+          sessionId,
+          geminiCaught: dangerousActions.length - undetected.length,
+          safetyNetCaught: undetected.length,
+          additionalPenalty,
+        });
+      } else {
+        log.info('Gemini correctly identified all dangerous actions', {
+          sessionId,
+          count: dangerousActions.length,
+        });
+      }
     }
 
     const sessionForPersist = {
@@ -605,6 +680,7 @@ Output your grading as a single JSON object only.`;
       PatientEncounterCase: {
         chiefComplaint: caseRecord.chiefComplaint,
         correctDiagnosis: caseRecord.correctDiagnosis,
+        targetSystem: caseRecord.targetSystem,
       },
     };
     const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
@@ -622,7 +698,8 @@ Output your grading as a single JSON object only.`;
       });
       if (user?.id) {
         try {
-          const system = inferSystemFromCase(
+          const system = resolveSystem(
+            caseRecord.targetSystem,
             caseRecord.chiefComplaint,
             caseRecord.correctDiagnosis
           );

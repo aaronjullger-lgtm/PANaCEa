@@ -6,6 +6,7 @@
  */
 
 import { DEFAULT_OSCE_CONFIG } from '@/config/osce-settings';
+import { resolveSystem } from '@/lib/utils/inferSystem';
 import type { OSCEConfiguration } from '@/types';
 
 /**
@@ -76,7 +77,7 @@ export async function suggestOSCECase(
         chiefComplaint: true,
         correctDiagnosis: true,
         conditionId: true,
-        // Add any fields that indicate cultural competency or voice support
+        targetSystem: true,
       },
     });
 
@@ -91,7 +92,7 @@ export async function suggestOSCECase(
       // System match (if system provided)
       if (system) {
         // Infer system from chiefComplaint or diagnosis (simplistic)
-        const candidateSystem = inferSystemFromCase(candidate.chiefComplaint, candidate.correctDiagnosis);
+        const candidateSystem = resolveSystem(candidate.targetSystem, candidate.chiefComplaint, candidate.correctDiagnosis);
         if (candidateSystem.toLowerCase().includes(system.toLowerCase())) {
           score += 2.0;
         }
@@ -140,7 +141,7 @@ export async function suggestOSCECase(
     return {
       caseId: caseData.id,
       chiefComplaint: caseData.chiefComplaint,
-      system: inferSystemFromCase(caseData.chiefComplaint, caseData.correctDiagnosis),
+      system: resolveSystem(caseData.targetSystem, caseData.chiefComplaint, caseData.correctDiagnosis),
       difficulty: 'medium', // placeholder
       relevanceScore: best.score,
       culturalCompetency: culturalCompetency,
@@ -150,33 +151,6 @@ export async function suggestOSCECase(
     console.warn('[OSCESuggestion] Failed to query OSCE cases:', error);
     return null;
   }
-}
-
-/**
- * Infer organ system from chief complaint and diagnosis.
- * Simplified implementation; in production this would use NLP or a mapping table.
- */
-function inferSystemFromCase(chiefComplaint: string, diagnosis: string): string {
-  const text = (chiefComplaint + ' ' + diagnosis).toLowerCase();
-  if (text.includes('chest pain') || text.includes('heart') || text.includes('cardiac') || text.includes('mi')) {
-    return 'Cardiovascular';
-  }
-  if (text.includes('shortness of breath') || text.includes('copd') || text.includes('asthma') || text.includes('pneumonia')) {
-    return 'Pulmonary';
-  }
-  if (text.includes('abdominal pain') || text.includes('gi') || text.includes('liver') || text.includes('gall')) {
-    return 'Gastrointestinal';
-  }
-  if (text.includes('joint') || text.includes('fracture') || text.includes('arthritis') || text.includes('muscle')) {
-    return 'Musculoskeletal';
-  }
-  if (text.includes('headache') || text.includes('stroke') || text.includes('neuro')) {
-    return 'Neurological';
-  }
-  if (text.includes('kidney') || text.includes('renal') || text.includes('uti')) {
-    return 'Renal';
-  }
-  return 'General';
 }
 
 /**

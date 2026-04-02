@@ -606,8 +606,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           >
             <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-full">
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                animate={prefersReducedMotion ? undefined : { rotate: 360 }}
+                transition={prefersReducedMotion ? undefined : { duration: 1, repeat: Infinity, ease: 'linear' }}
               >
                 <RotateCcw className="w-4 h-4 text-[var(--color-accent)]" />
               </motion.div>
@@ -664,7 +664,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToSrsReview}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium hover:bg-data-fail/20 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium hover:bg-data-fail/20 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 title="Open Due Review — variant PANCE questions"
               >
                 <span className="text-data-fail">{propDueCount}</span>
@@ -784,7 +784,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       Daily Challenge
                     </h2>
                     {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-data-success/20 text-data-success">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/15 text-[var(--color-accent)]">
                         Completed today
                       </span>
                     )}
@@ -995,8 +995,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </div>
               </div>
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 onClick={onNavigateToStudyPathDashboard}
                 className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent)] active:bg-[var(--color-accent)]/80 font-medium rounded-lg transition-colors"
               >
@@ -1116,7 +1116,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       );
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   >
                     Enable All
                   </button>
@@ -1127,7 +1127,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify([]));
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   >
                     Disable All
                   </button>
@@ -1136,7 +1136,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       type="button"
                       onClick={onOpenSettings}
                       title="More options"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     >
                       <MoreHorizontal className="w-4 h-4" aria-hidden />
                       <span>More options</span>
@@ -1178,8 +1178,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 onClick={() => onNavigateToDrillMode('panre_la')}
                 className="flex items-center gap-2 px-4 py-2 bg-[var(--color-category-simulation)] hover:brightness-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
               >

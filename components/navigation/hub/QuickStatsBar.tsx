@@ -38,7 +38,7 @@ export const QuickStatsBar: React.FC<{
     },
     {
       label: accuracyLabel,
-      value: accuracy !== null ? `${accuracy}%` : 'Waiting for first session',
+      value: accuracy !== null ? `${accuracy}%` : '—',
       icon: Target,
       color: 'text-[var(--color-accent)]',
     },
@@ -59,7 +59,7 @@ export const QuickStatsBar: React.FC<{
                 scale: [1, 1.02, 1],
                 borderColor: [
                   'var(--color-border)',
-                  'rgba(20, 184, 166, 0.4)',
+                  'rgba(168, 155, 122, 0.5)',
                   'var(--color-border)',
                 ],
               }

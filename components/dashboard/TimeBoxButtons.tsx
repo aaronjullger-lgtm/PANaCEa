@@ -9,6 +9,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Zap } from 'lucide-react';
 import type { SessionSettings } from '@/types';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface TimeBoxButtonsProps {
   onStartSession: (settings: SessionSettings) => void;
@@ -51,6 +52,8 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
   onStartSession,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+
   const handleTimeBox = (minutes: number, questionCount: number) => {
     const settings: SessionSettings = {
       questionCount,
@@ -78,11 +81,11 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
             <motion.button
               key={preset.minutes}
               onClick={() => handleTimeBox(preset.minutes, preset.questionEstimate)}
-              initial={{ y: 10 }}
+              initial={prefersReducedMotion ? false : { y: 10 }}
               animate={{ y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -2 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               className={`
                 relative overflow-hidden
                 p-4 rounded-xl border border-[var(--color-border)]
