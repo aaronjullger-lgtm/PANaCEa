@@ -3078,6 +3078,10 @@ model User {
   /// Canonical EOR exam date (maps to frontend's eorTestDate).
   rotationExamDate          DateTime?
   activeSystems             String[]                    @default([])
+  /// Account lifecycle: 'active' | 'pending_deletion' | 'suspended'
+  accountStatus             String                      @default("active")
+  /// When set, account will be hard-deleted after this date (30-day grace period)
+  deletionScheduledAt       DateTime?
   /// * FSRS v6 optimized weights (21 params). Empty = use defaults. Denormalized from PersonalizedFSRSParams.
   fsrs_weights              Float[]                     @default([])
   Card                      Card[]
