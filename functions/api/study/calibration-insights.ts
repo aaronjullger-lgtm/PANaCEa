@@ -13,13 +13,83 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import {
-  bucketReviews,
-  computeCorrectionFactor,
-  detectDrift,
-  CALIBRATION_CONSTANTS,
-} from '../../lib/services/retrievabilityCalibrationService';
-import { getCircadianPhase } from '../../lib/services/fsrsOptimizerService';
+// --- Inline calibration helpers (avoids missing service imports) ---
+
+const CALIBRATION_CONSTANTS = {
+  BIN_COUNT: 10,
+  MIN_SYSTEM_REVIEWS: 20,
+} as const;
+
+interface CalibrationBin {
+  predictedCenter: number;
+  actualRecallRate: number;
+  count: number;
+  calibrationRatio: number;
+}
+
+interface Review {
+  retrievability: number;
+  wasCorrect: boolean;
+  system?: string;
+  hourOfDay: number;
+}
+
+function bucketReviews(reviews: Review[]): CalibrationBin[] {
+  const bins: { predicted: number[]; correct: number; total: number }[] = [];
+  for (let i = 0; i < CALIBRATION_CONSTANTS.BIN_COUNT; i++) {
+    bins.push({ predicted: [], correct: 0, total: 0 });
+  }
+  for (const r of reviews) {
+    const idx = Math.min(
+      Math.floor(r.retrievability * CALIBRATION_CONSTANTS.BIN_COUNT),
+      CALIBRATION_CONSTANTS.BIN_COUNT - 1
+    );
+    bins[idx].predicted.push(r.retrievability);
+    bins[idx].total++;
+    if (r.wasCorrect) bins[idx].correct++;
+  }
+  return bins
+    .filter(b => b.total > 0)
+    .map(b => {
+      const predictedCenter = b.predicted.reduce((a, c) => a + c, 0) / b.predicted.length;
+      const actualRecallRate = b.correct / b.total;
+      return {
+        predictedCenter,
+        actualRecallRate,
+        count: b.total,
+        calibrationRatio: actualRecallRate / Math.max(predictedCenter, 0.01),
+      };
+    });
+}
+
+function computeCorrectionFactor(bins: CalibrationBin[]): number {
+  if (bins.length === 0) return 1.0;
+  const totalWeight = bins.reduce((s, b) => s + b.count, 0);
+  const weightedSum = bins.reduce((s, b) => s + b.calibrationRatio * b.count, 0);
+  return totalWeight > 0 ? weightedSum / totalWeight : 1.0;
+}
+
+function detectDrift(reviews: Review[]) {
+  if (reviews.length < 100) {
+    return { longWindowFactor: 1.0, shortWindowFactor: 1.0, drift: 0, isDrifting: false, direction: 'stable' as const };
+  }
+  const longBins = bucketReviews(reviews);
+  const shortWindow = reviews.slice(-Math.floor(reviews.length / 3));
+  const shortBins = bucketReviews(shortWindow);
+  const longFactor = computeCorrectionFactor(longBins);
+  const shortFactor = computeCorrectionFactor(shortBins);
+  const drift = shortFactor - longFactor;
+  const isDrifting = Math.abs(drift) > 0.1;
+  const direction = drift > 0.1 ? 'improving' : drift < -0.1 ? 'declining' : 'stable';
+  return { longWindowFactor: longFactor, shortWindowFactor: shortFactor, drift, isDrifting, direction };
+}
+
+function getCircadianPhase(hour: number): string {
+  if (hour >= 6 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 21) return 'evening';
+  return 'night';
+}
 
 // Empty schema for GET endpoint with no parameters
 const emptySchema = z.object({});
