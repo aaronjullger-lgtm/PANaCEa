@@ -5,6 +5,9 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Prisma } from '@prisma/client';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'ContentBranching';
 
 interface BranchCreateOptions {
   name: string;
@@ -79,10 +82,10 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
       },
     });
 
-    console.log(`[ContentBranching] Created branch: ${options.name}`);
+    logger.info(`[${LOG_SCOPE}] Created branch: ${options.name}`);
     return branch.id;
   } catch (error) {
-    console.error('[ContentBranching] Error creating branch:', error);
+    logger.error(`[${LOG_SCOPE}] Error creating branch:`, { error });
     throw error;
   }
 }
@@ -133,10 +136,10 @@ export async function addChangeToBranch(branchName: string, change: BranchChange
       },
     });
 
-    console.log(`[ContentBranching] Added ${change.changeType} change to branch ${branchName}`);
+    logger.info(`[${LOG_SCOPE}] Added ${change.changeType} change to branch ${branchName}`);
     return branchChange.id;
   } catch (error) {
-    console.error('[ContentBranching] Error adding change to branch:', error);
+    logger.error(`[${LOG_SCOPE}] Error adding change to branch:`, { error });
     throw error;
   }
 }
@@ -178,7 +181,7 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
       createdBy: c.createdBy,
     }));
   } catch (error) {
-    console.error('[ContentBranching] Error getting branch changes:', error);
+    logger.error(`[${LOG_SCOPE}] Error getting branch changes:`, { error });
     throw error;
   }
 }
@@ -287,7 +290,7 @@ export async function mergeBranch(
           mergedCount++;
         }
       } catch (error) {
-        console.error(`[ContentBranching] Error applying change ${change.contentId}:`, error);
+        logger.error(`[${LOG_SCOPE}] Error applying change ${change.contentId}:`, { error });
         // Continue with other changes
       }
     }
@@ -302,7 +305,7 @@ export async function mergeBranch(
       },
     });
 
-    console.log(`[ContentBranching] Merged branch ${branchName} - ${mergedCount} changes applied`);
+    logger.info(`[${LOG_SCOPE}] Merged branch ${branchName} - ${mergedCount} changes applied`);
 
     return {
       success: true,
@@ -310,7 +313,7 @@ export async function mergeBranch(
       message: `Successfully merged ${mergedCount} change(s) from ${branchName} to ${targetBranch}`,
     };
   } catch (error) {
-    console.error('[ContentBranching] Error merging branch:', error);
+    logger.error(`[${LOG_SCOPE}] Error merging branch:`, { error });
     throw error;
   }
 }
@@ -349,7 +352,7 @@ export async function listBranches(includeArchived: boolean = false): Promise<an
       mergedAt: b.mergedAt,
     }));
   } catch (error) {
-    console.error('[ContentBranching] Error listing branches:', error);
+    logger.error(`[${LOG_SCOPE}] Error listing branches:`, { error });
     return [];
   }
 }
@@ -387,9 +390,9 @@ export async function deleteBranch(branchName: string): Promise<void> {
       where: { id: branch.id },
     });
 
-    console.log(`[ContentBranching] Deleted branch ${branchName}`);
+    logger.info(`[${LOG_SCOPE}] Deleted branch ${branchName}`);
   } catch (error) {
-    console.error('[ContentBranching] Error deleting branch:', error);
+    logger.error(`[${LOG_SCOPE}] Error deleting branch:`, { error });
     throw error;
   }
 }
@@ -424,7 +427,7 @@ export async function compareBranches(
       total: changes.length,
     };
   } catch (error) {
-    console.error('[ContentBranching] Error comparing branches:', error);
+    logger.error(`[${LOG_SCOPE}] Error comparing branches:`, { error });
     return { added: [], modified: [], deleted: [], total: 0 };
   }
 }

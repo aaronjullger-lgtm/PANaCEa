@@ -5,6 +5,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { geminiLogger } from '../logger';
+
+const LOG_SCOPE = 'SemanticCache';
 
 interface CacheQuery {
   queryText: string;
@@ -99,7 +102,7 @@ export async function findSimilarCachedQuestion(query: CacheQuery): Promise<Cach
   try {
     // For development without database
     if (!process.env.DATABASE_URL) {
-      console.log('[SemanticCache] Database not configured, skipping cache lookup');
+      geminiLogger.debug(`[${LOG_SCOPE}] Database not configured, skipping cache lookup`);
       return null;
     }
 
@@ -152,16 +155,16 @@ export async function findSimilarCachedQuestion(query: CacheQuery): Promise<Cach
         },
       });
 
-      console.log(
-        `[SemanticCache] Cache HIT - similarity: ${(highestSimilarity * 100).toFixed(1)}%`
+      geminiLogger.info(
+        `[${LOG_SCOPE}] Cache HIT - similarity: ${(highestSimilarity * 100).toFixed(1)}%`
       );
     } else {
-      console.log('[SemanticCache] Cache MISS');
+      geminiLogger.debug(`[${LOG_SCOPE}] Cache MISS`);
     }
 
     return bestMatch;
   } catch (error) {
-    console.error('[SemanticCache] Error finding cached question:', error);
+    geminiLogger.error(`[${LOG_SCOPE}] Error finding cached question:`, { error });
     return null;
   }
 }
@@ -177,7 +180,7 @@ export async function cacheGeneratedQuestion(
   try {
     // For development without database
     if (!process.env.DATABASE_URL) {
-      console.log('[SemanticCache] Database not configured, skipping cache storage');
+      geminiLogger.debug(`[${LOG_SCOPE}] Database not configured, skipping cache storage`);
       return;
     }
 
@@ -198,9 +201,9 @@ export async function cacheGeneratedQuestion(
       },
     });
 
-    console.log('[SemanticCache] Question cached successfully');
+    geminiLogger.info(`[${LOG_SCOPE}] Question cached successfully`);
   } catch (error) {
-    console.error('[SemanticCache] Error caching question:', error);
+    geminiLogger.error(`[${LOG_SCOPE}] Error caching question:`, { error });
     // Don't throw - caching failures shouldn't break question generation
   }
 }
@@ -262,7 +265,7 @@ export async function getCacheStats(): Promise<{
       topConditions,
     };
   } catch (error) {
-    console.error('[SemanticCache] Error getting cache stats:', error);
+    geminiLogger.error(`[${LOG_SCOPE}] Error getting cache stats:`, { error });
     return {
       totalEntries: 0,
       totalHits: 0,
@@ -296,10 +299,10 @@ export async function pruneCache(
       },
     });
 
-    console.log(`[SemanticCache] Pruned ${result.count} old cache entries`);
+    geminiLogger.info(`[${LOG_SCOPE}] Pruned ${result.count} old cache entries`);
     return result.count;
   } catch (error) {
-    console.error('[SemanticCache] Error pruning cache:', error);
+    geminiLogger.error(`[${LOG_SCOPE}] Error pruning cache:`, { error });
     return 0;
   }
 }

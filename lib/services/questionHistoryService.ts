@@ -5,6 +5,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'QuestionHistory';
 
 interface QuestionSnapshot {
   questionId: string;
@@ -33,7 +36,7 @@ export async function saveQuestionVersion(
 ): Promise<number> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return 1;
     }
 
@@ -68,10 +71,10 @@ export async function saveQuestionVersion(
       },
     });
 
-    console.log(`[QuestionHistory] Saved version ${newVersion} of question ${questionId}`);
+    logger.info(`[${LOG_SCOPE}] Saved version ${newVersion} of question ${questionId}`);
     return newVersion;
   } catch (error) {
-    console.error('[QuestionHistory] Error saving question version:', error);
+    logger.error(`[${LOG_SCOPE}] Error saving question version:`, { error });
     throw error;
   }
 }
@@ -85,7 +88,7 @@ export async function getQuestionAtTime(
 ): Promise<QuestionSnapshot | null> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return null;
     }
 
@@ -105,8 +108,8 @@ export async function getQuestionAtTime(
     });
 
     if (!version) {
-      console.log(
-        `[QuestionHistory] No version found for question ${questionId} at ${timestamp.toISOString()}`
+      logger.debug(
+        `[${LOG_SCOPE}] No version found for question ${questionId} at ${timestamp.toISOString()}`
       );
       return null;
     }
@@ -121,7 +124,7 @@ export async function getQuestionAtTime(
       validTo: version.validTo || undefined,
     };
   } catch (error) {
-    console.error('[QuestionHistory] Error getting question at time:', error);
+    logger.error(`[${LOG_SCOPE}] Error getting question at time:`, { error });
     return null;
   }
 }
@@ -132,7 +135,7 @@ export async function getQuestionAtTime(
 export async function getQuestionHistory(questionId: string): Promise<VersionHistory | null> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return null;
     }
 
@@ -165,7 +168,7 @@ export async function getQuestionHistory(questionId: string): Promise<VersionHis
       currentVersion: current,
     };
   } catch (error) {
-    console.error('[QuestionHistory] Error getting question history:', error);
+    logger.error(`[${LOG_SCOPE}] Error getting question history:`, { error });
     return null;
   }
 }
@@ -188,7 +191,7 @@ export async function compareQuestionVersions(
 } | null> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return null;
     }
 
@@ -215,7 +218,7 @@ export async function compareQuestionVersions(
       differences,
     };
   } catch (error) {
-    console.error('[QuestionHistory] Error comparing versions:', error);
+    logger.error(`[${LOG_SCOPE}] Error comparing versions:`, { error });
     return null;
   }
 }
@@ -263,7 +266,7 @@ export async function revertQuestionToVersion(
 ): Promise<boolean> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return false;
     }
 
@@ -286,10 +289,10 @@ export async function revertQuestionToVersion(
       `Reverted to version ${targetVersion}: ${reason}`
     );
 
-    console.log(`[QuestionHistory] Reverted question ${questionId} to version ${targetVersion}`);
+    logger.info(`[${LOG_SCOPE}] Reverted question ${questionId} to version ${targetVersion}`);
     return true;
   } catch (error) {
-    console.error('[QuestionHistory] Error reverting question:', error);
+    logger.error(`[${LOG_SCOPE}] Error reverting question:`, { error });
     return false;
   }
 }
@@ -303,7 +306,7 @@ export async function getQuestionsModifiedInRange(
 ): Promise<Array<{ questionId: string; versions: number }>> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return [];
     }
 
@@ -335,7 +338,7 @@ export async function getQuestionsModifiedInRange(
       versions: versions as number,
     }));
   } catch (error) {
-    console.error('[QuestionHistory] Error getting modified questions:', error);
+    logger.error(`[${LOG_SCOPE}] Error getting modified questions:`, { error });
     return [];
   }
 }
@@ -355,7 +358,7 @@ export async function getQuestionAuditTrail(questionId: string): Promise<
 > {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return [];
     }
 
@@ -401,7 +404,7 @@ export async function getQuestionAuditTrail(questionId: string): Promise<
 
     return trail;
   } catch (error) {
-    console.error('[QuestionHistory] Error getting audit trail:', error);
+    logger.error(`[${LOG_SCOPE}] Error getting audit trail:`, { error });
     return [];
   }
 }
@@ -415,7 +418,7 @@ export async function pruneQuestionHistory(
 ): Promise<number> {
   try {
     if (!process.env.DATABASE_URL) {
-      console.log('[QuestionHistory] Database not configured');
+      logger.debug(`[${LOG_SCOPE}] Database not configured`);
       return 0;
     }
 
@@ -439,10 +442,10 @@ export async function pruneQuestionHistory(
       },
     });
 
-    console.log(`[QuestionHistory] Pruned ${result.count} old versions of question ${questionId}`);
+    logger.info(`[${LOG_SCOPE}] Pruned ${result.count} old versions of question ${questionId}`);
     return result.count;
   } catch (error) {
-    console.error('[QuestionHistory] Error pruning history:', error);
+    logger.error(`[${LOG_SCOPE}] Error pruning history:`, { error });
     return 0;
   }
 }
