@@ -33,7 +33,7 @@ export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (c
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
     return {
-      data: { error: 'Systems unavailable', message: 'Database is not configured.' },
+      error: 'Systems unavailable: Database is not configured.',
       status: 503,
     };
   }
@@ -61,7 +61,7 @@ export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (c
     const errMsg = error instanceof Error ? error.message : String(error);
     logger.error('Failed to fetch systems', { error: errMsg });
     return {
-      data: { error: 'Failed to fetch systems', message: 'Please try again later.' },
+      error: 'Failed to fetch systems. Please try again later.',
       status: 500,
     };
   } finally {

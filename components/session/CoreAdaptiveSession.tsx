@@ -26,6 +26,7 @@ import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from
 import { useAuth } from '@clerk/clerk-react';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
 import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
+import { SessionScopeSelector } from '@/components/session/SessionScopeSelector';
 
 const QuizView = lazy(() => import('@/components/session/QuizView'));
 
@@ -109,16 +110,28 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     perSystemCaps: {},
   });
 
+  // Session scope state (set by SessionScopeSelector)
+  const [showScopeSelector, setShowScopeSelector] = useState(true);
+  const [sessionScope, setSessionScope] = useState<{
+    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
+    size: number;
+    system?: string;
+    subcategory?: string;
+    conditionId?: string;
+  } | null>(null);
+
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rotationNotice, setRotationNotice] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
   // ── Initialize: resolve blueprint + check distribution + fetch questions ──
+  // Only runs after the user has selected a session scope (or skipped via Quick Start)
   useEffect(() => {
+    if (!sessionScope) return; // Wait for scope selection
     let cancelled = false;
 
     async function initialize() {
@@ -181,7 +194,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           }
         }
 
-        // Step 3: Fetch questions using blueprint weights + distribution constraints
+        // Step 3: Fetch questions using blueprint weights + distribution constraints + user scope
         const sessionResponse = await fetch('/api/study/session/generate', {
           method: 'POST',
           headers: {
@@ -189,8 +202,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            mode: 'mainSession',
-            size: Math.min(50, Math.max(10, Math.round(DEFAULT_SESSION_SIZE * (bp.urgencyMultiplier ?? 1)))),
+            mode: sessionScope.mode,
+            size: sessionScope.size,
             blueprintWeights: bp.weights,
             gatedSystems: bp.gatedSystems,
             boostSystems: distData?.constraints?.boostSystems,
@@ -200,6 +213,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             blueprintExamTypes: bp.examTypes,
             blueprintLabel: bp.label,
             urgencyMultiplier: bp.urgencyMultiplier,
+            // Scope filters from user selection
+            system: sessionScope.system,
+            subcategory: sessionScope.subcategory,
+            conditionId: sessionScope.conditionId,
           }),
         });
 
@@ -226,7 +243,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
     initialize();
     return () => { cancelled = true; };
-  }, [getToken, retryCount]);
+  }, [getToken, retryCount, sessionScope]);
   // ── Session end: fetch summary, then exit ──
   const [sessionSummary, setSessionSummary] = useState<any>(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -296,6 +313,20 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   }), [blueprint]);
 
   // ── Render ──
+
+  // Show scope selector before session starts
+  if (showScopeSelector && !sessionScope) {
+    return (
+      <SessionScopeSelector
+        onStart={(config) => {
+          setSessionScope(config);
+          setShowScopeSelector(false);
+        }}
+        onCancel={onExit}
+      />
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -323,13 +354,13 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
                 // Re-trigger initialization by toggling a retry key
                 setRetryCount(c => c + 1);
               }}
-              className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               Retry
             </button>
             <button
               onClick={onExit}
-              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               Back to Menu
             </button>
@@ -353,7 +384,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           </p>
           <button
             onClick={onExit}
-            className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors text-sm font-medium"
+            className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Back to Menu
           </button>
@@ -427,7 +458,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
           <button
             onClick={onExit}
-            className="w-full px-4 py-2.5 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors text-sm font-medium mt-2"
+            className="w-full px-4 py-2.5 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors duration-200 text-sm font-medium mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Done
           </button>
@@ -480,7 +511,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           <p className="text-xs text-blue-700">{rotationNotice}</p>
           <button
             onClick={() => setRotationNotice(null)}
-            className="text-xs text-blue-500 hover:text-blue-700 ml-2"
+            className="text-xs text-blue-500 hover:text-blue-700 ml-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
           >
             Dismiss
           </button>

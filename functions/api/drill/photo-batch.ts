@@ -8,60 +8,54 @@
  *
  * @deprecated Use GET /api/drills/media?modality=ecg&count=10 instead.
  * @module functions/api/drill/photo-batch
+ *
+ * Security: Authenticated endpoint - requires valid Clerk JWT in Authorization header
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import { mediaDrillQuerySchema } from '../_shared/zodSchemas';
+import { z } from 'zod';
 import { getMediaDrillCases } from '../../../services/drill/mediaDrillCases';
 import type { DrillModality } from '../../../lib/mediaTypes';
 
-/** Query accepts 'ecg' | 'derm' | 'radiology'; mapped to DrillModality (radiology -> xray) */
-const MODALITY_ALIAS: Record<string, DrillModality> = {
-  ecg: 'ecg',
-  derm: 'derm',
-  radiology: 'xray',
-  imaging: 'xray',
-  xray: 'xray',
-};
+type QueryType = z.infer<typeof mediaDrillQuerySchema>;
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = authenticatedEndpoint(
+  mediaDrillQuerySchema,
+  async (context: AuthenticatedContext & ValidatedContext<QueryType>) => {
+    const { modality: modalityParam, count } = context.validated;
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL as string);
 
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const modalityForQuery: DrillModality | null =
+        modalityParam === 'radiology'
+          ? 'xray'
+          : modalityParam
+            ? (modalityParam as DrillModality)
+            : null;
 
-    const url = new URL(request.url);
-    const modalityParam = url.searchParams.get('modality');
-    const count = Math.min(
-      100,
-      Math.max(1, parseInt(url.searchParams.get('count') || '10', 10) || 10)
-    );
+      const photoCases = await getMediaDrillCases(prisma, {
+        modality: modalityForQuery,
+        count,
+      });
 
-    let modality: DrillModality | null = null;
-    if (modalityParam) {
-      const normalized = modalityParam.toLowerCase();
-      modality = MODALITY_ALIAS[normalized] ?? null;
+      if (photoCases.length === 0) {
+        console.warn(`[Photo Batch] No assets found. Modality: ${modalityParam || 'all'}`);
+      }
+
+      return { data: photoCases };
+    } catch (error) {
+      console.error('[Photo Batch] Error:', error);
+      return {
+        status: 500,
+        data: {
+          error: 'Failed to fetch photo drill batch',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    const photoCases = await getMediaDrillCases(prisma, {
-      modality,
-      count,
-    });
-
-    return new Response(JSON.stringify({ data: photoCases }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('[Photo Batch] Error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch photo drill batch',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
   }
-}
+);

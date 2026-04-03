@@ -3382,6 +3382,7 @@ model UserPreferences {
   streakFreezes       Int      @default(0)
   streakGoalDays      String   @default("all")
   userCoins           Int      @default(0)
+  defaultInterleaveMode String @default("interleaved")
   User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -4096,6 +4097,38 @@ model QuestionSubmission {
 
   @@index([contentAuthorId, status])
   @@index([status])
+}
+
+// ─── Proactive Question Reservoir ──────────────────────────────────────────
+// Per-student warm buffer of pre-selected questions. Background refill jobs
+// keep the reservoir above a low-water mark so session generation is instant.
+
+model StudentReservoirItem {
+  id              String    @id @default(cuid())
+  userId          String
+  questionId      String
+  questionSource  String    @default("pool")   // pool | generated | review
+  scope           String    @default("adaptive") // adaptive | system:CV | condition:xyz
+  status          String    @default("queued")   // queued | reserved | consumed | expired | failed
+  priority        Int       @default(5)          // 1-10, reviews get higher priority
+  reservedAt      DateTime?
+  reservedBy      String?                        // sessionId that claimed it
+  consumedAt      DateTime?
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+
+  // Metadata for balanced selection
+  system          String?
+  difficulty      String?
+  questionOrder   String?    // first | second | third (Bloom's)
+  taskCategory    String?    // diagnosis, management, etc.
+  isReview        Boolean   @default(false)
+
+  @@unique([userId, questionId])
+  @@index([userId, status, priority])
+  @@index([userId, scope, status])
+  @@index([expiresAt])
+  @@index([status, reservedAt])
 }
 
 enum ContentAuthorRole {

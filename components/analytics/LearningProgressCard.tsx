@@ -347,7 +347,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
         className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] ${className}`}
       >
         <div className="flex items-center gap-4">
-          <CircularProgress value={accuracy} size={80} strokeWidth={8} />
+          <CircularProgress value={accuracy} size={80} strokeWidth={8} label={totalQuestions === 0 ? '—' : undefined} />
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</span>
@@ -386,7 +386,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
       {/* Main progress */}
       <div className="flex flex-col items-center mb-6">
-        <CircularProgress value={accuracy} label={`${Math.round(accuracy)}%`} sublabel="Accuracy" />
+        <CircularProgress value={accuracy} label={totalQuestions === 0 ? '—' : `${Math.round(accuracy)}%`} sublabel={totalQuestions === 0 ? 'Not yet assessed' : 'Accuracy'} />
 
         {/* Grade badge */}
         <motion.div

@@ -42,7 +42,7 @@ export const onRequestGet = authenticatedEndpoint(
     if (!env.DATABASE_URL) {
       logger.error('DATABASE_URL not configured');
       return {
-        data: { error: 'Library unavailable', message: 'Database is not configured.' },
+        error: 'Library unavailable: Database is not configured.',
         status: 503,
       };
     }
@@ -182,13 +182,7 @@ export const onRequestGet = authenticatedEndpoint(
       const errMsg = error instanceof Error ? error.message : String(error);
       logger.error('Error fetching library content', { error: errMsg });
       return {
-        data: {
-          error: 'failed_to_load_library',
-          message: 'Clinical content temporarily unavailable. Please try again later.',
-          error_code: 'failed_to_load_library',
-          content: [],
-          count: 0,
-        },
+        error: 'Clinical content temporarily unavailable. Please try again later.',
         status: 503,
       };
     } finally {

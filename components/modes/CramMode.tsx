@@ -339,22 +339,22 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             animate={{ scale: 1, opacity: 1 }}
             className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 text-center border border-[var(--color-border)]"
           >
-            <Trophy className="w-20 h-20 mx-auto mb-6 text-[var(--color-data-provisional)]" />
+            <Trophy className="w-20 h-20 mx-auto mb-6 text-[var(--color-data-provisional)]" aria-hidden="true" />
             <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center justify-center gap-2">
-              Cram Session Complete! <Trophy className="w-8 h-8 text-data-provisional" />
+              Cram Session Complete! <Trophy className="w-8 h-8 text-data-provisional" aria-hidden="true" />
             </h2>
 
             <div className="grid grid-cols-2 gap-4 my-8">
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6">
-                <Target className="w-8 h-8 mx-auto mb-2 text-data-pass dark:text-data-pass" />
-                <div className="text-3xl font-bold text-data-pass dark:text-data-pass">
+                <Target className="w-8 h-8 mx-auto mb-2 text-data-pass dark:text-data-pass" aria-hidden="true" />
+                <div className="text-3xl font-bold text-data-pass dark:text-data-pass tabular-nums">
                   {accuracy.toFixed(0)}%
                 </div>
                 <div className="text-sm text-data-pass dark:text-data-pass">Accuracy</div>
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)]" />
+                <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)]" aria-hidden="true" />
                 <div className="text-3xl font-bold text-[var(--color-category-practice)]">
                   {formatTime(elapsedTime)}
                 </div>
@@ -384,16 +384,16 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleRestart}
-                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-data-provisional)]/100 hover:bg-[var(--color-data-provisional)] text-white rounded-xl font-semibold transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-data-provisional)]/100 hover:bg-[var(--color-data-provisional)] text-white rounded-xl font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <RotateCcw className="w-5 h-5" />
+                <RotateCcw className="w-5 h-5" aria-hidden="true" />
                 Try Again
               </button>
               <button
                 onClick={onExit}
-                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="w-5 h-5" aria-hidden="true" />
                 Exit
               </button>
             </div>

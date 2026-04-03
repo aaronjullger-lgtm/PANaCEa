@@ -299,7 +299,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
           <div className="text-center space-y-4">
             {isWon ? (
               <>
-                <Trophy className="w-12 h-12 text-data-provisional mx-auto" />
+                <Trophy className="w-12 h-12 text-data-provisional mx-auto" aria-hidden="true" />
                 <h2 className="text-2xl font-bold text-data-pass">Excellent Diagnosis!</h2>
                 <p className="text-[var(--color-text-primary)]">
                   You identified <span className="font-bold text-data-provisional">{puzzle.conditionName}</span> in {userState.guesses.length}/{MAX_ATTEMPTS} clues.
@@ -307,7 +307,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
               </>
             ) : (
               <>
-                <X className="w-12 h-12 text-data-fail mx-auto" />
+                <X className="w-12 h-12 text-data-fail mx-auto" aria-hidden="true" />
                 <h2 className="text-2xl font-bold text-data-fail">Better Luck Tomorrow</h2>
                 <p className="text-[var(--color-text-primary)]">
                   The diagnosis was:{' '}
@@ -319,14 +319,14 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleShare}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass/90 text-white rounded-lg font-semibold transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass/90 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-4 h-4" aria-hidden="true" />
                 Share
               </button>
               <button
                 onClick={onExit}
-                className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral/90 text-white rounded-lg font-semibold transition-colors"
+                className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral/90 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
                 Exit
               </button>

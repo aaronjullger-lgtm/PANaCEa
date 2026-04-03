@@ -158,6 +158,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       const data = await res.json();
       if (Array.isArray(data)) {
         setSystems(data);
+      } else if (data && typeof data === 'object' && data.error) {
+        // Server returned an error object that slipped through as 200
+        throw new Error(data.message || data.error || 'Unable to load organ systems');
       } else {
         console.error('[ClinicalReferenceLibrary] systems response is not an array:', data);
         setSystems([]);
@@ -892,21 +895,21 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   <button
                     onClick={handlePrevCondition}
                     disabled={selectedIndex <= 0}
-                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Previous (← or k)"
+                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                    aria-label="Previous condition"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                   </button>
-                  <span className="text-sm text-[var(--color-text-muted)]">
+                  <span className="text-sm text-[var(--color-text-muted)] tabular-nums">
                     {selectedIndex + 1} / {filteredContent.length}
                   </span>
                   <button
                     onClick={handleNextCondition}
                     disabled={selectedIndex >= filteredContent.length - 1}
-                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    title="Next (→ or j)"
+                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                    aria-label="Next condition"
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="flex items-center gap-1">

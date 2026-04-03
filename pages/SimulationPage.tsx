@@ -285,6 +285,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                   type="button"
                   key={option.id}
                   onClick={() => setSelectedFocus(option.id)}
+                  aria-pressed={isSelected}
                   className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none ${
                     isSelected
                       ? `${tone.border} ${tone.bg}`

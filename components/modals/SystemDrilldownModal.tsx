@@ -314,7 +314,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           </span>
                           {isWeak && (
                             <span className="text-[11px] text-[var(--color-data-provisional)] font-medium">
-                              Weak area
+                              Needs review
                             </span>
                           )}
                           {!isWeak && sub.total < 3 && (

@@ -157,6 +157,7 @@ export function BlueprintProgressBar({
             size={16}
             style={{ color: 'var(--color-text-secondary)' }}
             className="cursor-help"
+            aria-hidden="true"
           />
           <div
             className="pointer-events-none absolute left-0 top-6 w-48 rounded bg-black/80 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto"
@@ -243,7 +244,7 @@ export function BlueprintProgressBar({
                   className="text-xs font-medium"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
-                  {actualCount}/{targetCount}
+                  <span className="tabular-nums">{actualCount}/{targetCount}</span>
                 </span>
               </div>
             </motion.div>
@@ -264,7 +265,7 @@ export function BlueprintProgressBar({
             Overall alignment:
           </span>
           <motion.span
-            className="text-sm font-semibold"
+            className="text-sm font-semibold tabular-nums"
             style={{ color: 'var(--color-accent)' }}
             initial={prefersReducedMotion ? 1 : 0}
             animate={1}

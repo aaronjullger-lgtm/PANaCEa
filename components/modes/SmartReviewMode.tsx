@@ -180,7 +180,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       case 'OVERDUE':
         return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-data-fail text-white' };
       case 'WEAK_SPOT':
-        return { Icon: AlertTriangle, label: 'Weak Area', color: 'bg-[var(--color-data-provisional)] text-white' };
+        return { Icon: AlertTriangle, label: 'Focus Area', color: 'bg-[var(--color-data-provisional)] text-white' };
       case 'NEW':
         return { Icon: Sparkles, label: 'New Concept', color: 'bg-[var(--color-category-practice)] text-white' };
       default:

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -19,7 +19,7 @@ const CreateCacheSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(CreateCacheSchema, async (context) => {
+export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
   const { env, auth, validated } = context as {
     env: { DATABASE_URL: string; GEMINI_API_KEY: string };
     auth: { userId: string };

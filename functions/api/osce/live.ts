@@ -15,7 +15,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -51,7 +51,7 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = aiEndpoint(
   QuerySchema,
   async (context) => {
     const { env, auth, validated } = context as {

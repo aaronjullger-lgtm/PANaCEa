@@ -154,6 +154,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({ preferences
                   type="checkbox"
                   checked={preferences.enableSmartWatchSync || false}
                   onChange={handleSmartWatchToggle}
+                  aria-label="Enable Smart Watch Integration"
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-[var(--color-bg-tertiary)] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--color-accent)]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-[var(--color-bg-primary)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-bg-primary)] after:border-[var(--color-border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent)]"></div>

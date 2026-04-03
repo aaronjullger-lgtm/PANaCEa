@@ -62,6 +62,11 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
   };
 
   return (
+    <div role="figure" aria-label="Stability pyramid showing card distribution across memory stability buckets">
+      <span className="sr-only">
+        Horizontal bar chart showing how many cards fall into each stability range:
+        {sortedData.map((d) => ` ${d.bucket}: ${d.count} cards`).join(',')}. Higher stability means longer-lasting memory.
+      </span>
     <ChartContainer minHeight={300} className="min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
         <BarChart
@@ -102,6 +107,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
+    </div>
   );
 };
 

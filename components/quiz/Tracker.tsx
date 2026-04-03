@@ -14,12 +14,19 @@ import React, {
   useRef,
   type ReactNode,
 } from 'react';
-import type { TelemetryData } from '@/types/telemetry';
+import type { TelemetryData, OptionInteractionTelemetry } from '@/types/telemetry';
 import { getMVRTThreshold, type QuestionType } from '@/types/telemetry';
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
+
+/** A single option selection event for Wave 2 chronometry tracking. */
+interface OptionInteraction {
+  optionId: string;       // 'A', 'B', 'C', 'D'
+  selectedAt: number;     // timestamp (performance.now relative to question start)
+  deselectedAt?: number;  // when user switched away (undefined if still selected)
+}
 
 export interface BehavioralPayload {
   time_to_first_interaction_ms: number | null;
@@ -31,12 +38,16 @@ export interface BehavioralPayload {
   question_type: QuestionType;
   mvrt_threshold_ms: number;
   rapid_guess: boolean;
+  /** Wave 2: Full sequence of option selections for distractor chronometry & switch direction analysis */
+  optionInteractions: OptionInteraction[];
 }
 
 export interface BehavioralTrackerApi {
   start: (questionType?: QuestionType) => void;
   recordFirstInteraction: () => void;
   recordAnswerChange: () => void;
+  /** Wave 2: Record a full option selection (with chronometry). Call this when the user selects an option. */
+  recordOptionSelect: (optionId: string) => void;
   recordHover: (optionIndex: number, optionLabel: string, deltaMs: number) => void;
   finalize: (sessionId?: string) => BehavioralPayload | null;
   getElapsedMs: () => number;
@@ -48,6 +59,7 @@ const defaultApi: BehavioralTrackerApi = {
   start: () => {},
   recordFirstInteraction: () => {},
   recordAnswerChange: () => {},
+  recordOptionSelect: () => {},
   recordHover: () => {},
   finalize: () => null,
   getElapsedMs: () => 0,
@@ -72,6 +84,9 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
   const hoverEnterTimeRef = useRef<Record<string, number>>({});
   const questionTypeRef = useRef<QuestionType>('unknown');
   const activeRef = useRef<boolean>(false);
+  // Wave 2: Option interaction sequence tracking
+  const optionInteractionsRef = useRef<OptionInteraction[]>([]);
+  const currentSelectionRef = useRef<OptionInteraction | null>(null);
 
   const start = useCallback((questionType: QuestionType = 'unknown') => {
     activeRef.current = true;
@@ -82,6 +97,8 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
     hoverMsRef.current = { A: 0, B: 0, C: 0, D: 0 };
     hoverEnterTimeRef.current = {};
     questionTypeRef.current = questionType;
+    optionInteractionsRef.current = [];
+    currentSelectionRef.current = null;
   }, []);
 
   const recordFirstInteraction = useCallback(() => {
@@ -92,6 +109,20 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
   const recordAnswerChange = useCallback(() => {
     if (!activeRef.current) return;
     answerChangeCountRef.current += 1;
+  }, []);
+
+  /** Wave 2: Record a full option selection with timing for chronometry analysis. */
+  const recordOptionSelect = useCallback((optionId: string) => {
+    if (!activeRef.current) return;
+    const now = Date.now() - startTimeRef.current; // relative to question start
+    // Close previous selection
+    if (currentSelectionRef.current && !currentSelectionRef.current.deselectedAt) {
+      currentSelectionRef.current.deselectedAt = now;
+    }
+    // Push new interaction
+    const interaction: OptionInteraction = { optionId, selectedAt: now };
+    optionInteractionsRef.current.push(interaction);
+    currentSelectionRef.current = interaction;
   }, []);
 
   const recordHover = useCallback((optionIndex: number, optionLabel: string, deltaMs: number) => {
@@ -106,9 +137,20 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
     const now = Date.now();
     const duration_ms = now - startTimeRef.current;
     const threshold = getMVRTThreshold(questionTypeRef.current);
+
+    // Wave 2: Close the current selection at finalization
+    if (currentSelectionRef.current && !currentSelectionRef.current.deselectedAt) {
+      currentSelectionRef.current.deselectedAt = duration_ms; // relative ms
+    }
+
+    // Backward compat: answer_change_count = optionInteractions.length - 1 (if interactions were tracked)
+    const trackedChanges = optionInteractionsRef.current.length > 0
+      ? Math.max(0, optionInteractionsRef.current.length - 1)
+      : answerChangeCountRef.current;
+
     return {
       time_to_first_interaction_ms: firstInteractionMsRef.current,
-      answer_change_count: answerChangeCountRef.current,
+      answer_change_count: trackedChanges,
       mouse_hover_duration_ms: { ...hoverMsRef.current },
       duration_ms,
       question_displayed_at: startIsoRef.current,
@@ -116,6 +158,7 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
       question_type: questionTypeRef.current,
       mvrt_threshold_ms: threshold,
       rapid_guess: duration_ms < threshold,
+      optionInteractions: [...optionInteractionsRef.current],
     };
   }, []);
 
@@ -129,11 +172,12 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
       start,
       recordFirstInteraction,
       recordAnswerChange,
+      recordOptionSelect,
       recordHover,
       finalize,
       getElapsedMs,
     }),
-    [start, recordFirstInteraction, recordAnswerChange, recordHover, finalize, getElapsedMs]
+    [start, recordFirstInteraction, recordAnswerChange, recordOptionSelect, recordHover, finalize, getElapsedMs]
   );
 
   return (
@@ -251,6 +295,16 @@ export function behavioralPayloadToTelemetryData(
       input_method: microKinetics.inputMethod,
     }),
     ...(eliminationVelocity !== undefined && { elimination_velocity: eliminationVelocity }),
+    // Wave 2: Option interaction chronometry
+    ...(payload.optionInteractions.length > 0 && {
+      option_interactions: payload.optionInteractions.map(i => ({
+        option_id: i.optionId,
+        selected_at_ms: Math.round(i.selectedAt),
+        deselected_at_ms: i.deselectedAt != null ? Math.round(i.deselectedAt) : null,
+        dwell_ms: i.deselectedAt != null ? Math.round(i.deselectedAt - i.selectedAt) : null,
+      })),
+      unique_options_considered: new Set(payload.optionInteractions.map(i => i.optionId)).size,
+    }),
   };
 }
 

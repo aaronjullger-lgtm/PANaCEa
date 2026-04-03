@@ -11,6 +11,9 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Bug, Search, Star, Shield, AlertTriangle } from 'lucide-react';
 
+const FONT_HEADING = "'Poppins', system-ui, sans-serif";
+const FONT_BODY = "'Inter', system-ui, sans-serif";
+
 interface AntibioticGuideline {
   id: string;
   organism: string;
@@ -106,9 +109,9 @@ export default function AntibioticRefCards() {
           background: 'var(--color-bg-secondary)',
         }}>
           <Search size={16} style={{ color: 'var(--color-text-secondary)' }} />
-          <input type="text" placeholder="Search organisms, infections..." value={searchQuery}
+          <input type="text" aria-label="Search antibiotic guidelines" placeholder="Search organisms, infections..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)' }}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)', fontFamily: FONT_BODY }}
           />
         </div>
         <select value={gramFilter} onChange={(e) => setGramFilter(e.target.value)}
@@ -146,7 +149,7 @@ export default function AntibioticRefCards() {
                 <Bug size={20} style={{ color: gramColor, flexShrink: 0, marginTop: 2 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)' }}>{org.organism}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{org.organism}</span>
                     {org.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>HY</span>}
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
@@ -184,8 +187,8 @@ export default function AntibioticRefCards() {
                 <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} style={{ borderTop: '1px solid var(--color-border)', padding: '14px 16px' }}>
                   {org.classicPresentation && (
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 2 }}>Classic Presentation</div>
-                      <div style={{ fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>{org.classicPresentation}</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 2, fontFamily: FONT_BODY, textTransform: 'uppercase', letterSpacing: 0.5 }}>Classic Presentation</div>
+                      <div style={{ fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.5, fontFamily: FONT_BODY }}>{org.classicPresentation}</div>
                     </div>
                   )}
                   {org.firstLineAntibiotics && org.firstLineAntibiotics.length > 0 && (

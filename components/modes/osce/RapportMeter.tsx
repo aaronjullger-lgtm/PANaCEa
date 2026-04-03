@@ -107,8 +107,8 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
 
       {/* Main Score */}
       <div className="flex items-center gap-4 mb-4">
-        <div className={`relative w-16 h-16 rounded-full ${colors.ring} ring-4`}>
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+        <div className={`relative w-16 h-16 rounded-full ${colors.ring} ring-4`} role="img" aria-label={`Rapport score: ${meter.score} out of 100`}>
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
             <path
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               fill="none"

@@ -533,7 +533,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
 
   return (
     <div
-      className={`bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)]/50 ${className}`}
+      className={`bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)]/50 hover:shadow-md transition-shadow duration-300 ${className}`}
     >
       <AnimatePresence mode="wait">
         {/* Show Calibration Protocol UI for new users (< 60 questions) */}

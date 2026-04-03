@@ -41,6 +41,10 @@ export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
   };
 
   return (
+    <div role="figure" aria-label="Memory decay curve showing retention probability over 30 days">
+      <span className="sr-only">
+        Chart showing how memory retention decays over time. A reference line at 90% marks the critical threshold.
+      </span>
     <ChartContainer minHeight={300} className="min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -98,6 +102,7 @@ export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
         </AreaChart>
       </ResponsiveContainer>
     </ChartContainer>
+    </div>
   );
 };
 

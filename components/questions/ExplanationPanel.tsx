@@ -102,6 +102,10 @@ export interface StructuredRationale {
   clinicalPearl?: string;
   /** Common Pitfalls: Pre-written pitfalls (no unmoderated comments). @see docs/AUDIT_WISDOM_OF_THE_CROWDS.md */
   commonPitfalls?: string[];
+  /** Grounding sources from Google Search (URIs + titles for evidence citations) */
+  groundingSources?: Array<{ uri: string; title: string }>;
+  /** PubMed citations (PMIDs with structured metadata) */
+  pubmedCitations?: Array<{ pmid: string; title: string; authors: string; journal: string; year: number; url: string }>;
 }
 
 /**
@@ -146,6 +150,10 @@ export interface ExplanationPanelProps {
   contentSource?: string;
   /** Optional: content source title (e.g. book name) */
   contentSourceTitle?: string;
+  /** Optional: grounding sources from Google Search for evidence citations */
+  groundingSources?: Array<{ uri: string; title: string }>;
+  /** Optional: PubMed citations for peer-reviewed references */
+  pubmedCitations?: Array<{ pmid: string; title: string; authors: string; journal: string; year: number; url: string }>;
 }
 
 /**
@@ -168,6 +176,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   fontSizeAdjustment = 0,
   contentSource,
   contentSourceTitle,
+  groundingSources: propGroundingSources,
+  pubmedCitations: propPubmedCitations,
 }) => {
   const [showWrongAnswers, setShowWrongAnswers] = useState(false);
   const [userReaction, setUserReaction] = useState<'helpful' | 'not_helpful' | null>(null);
@@ -674,6 +684,91 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             </button>
           </div>
         </motion.div>
+
+        {/* Evidence Sources — from Google Search grounding */}
+        {(() => {
+          // Merge sources from prop and structured rationale
+          const rationaleSourcesRaw = isStructuredRationale(rationale) ? rationale.groundingSources : undefined;
+          const allSources = propGroundingSources || rationaleSourcesRaw;
+          if (!allSources || allSources.length === 0) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-4 pt-3 border-t border-[var(--color-border)]/40"
+            >
+              <div className="flex items-center gap-1.5 mb-2">
+                <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  Evidence Sources
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {allSources.map((source, idx) => (
+                  <a
+                    key={`${source.uri}-${idx}`}
+                    href={source.uri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md
+                      bg-[var(--color-bg-secondary)] border border-[var(--color-border)]/50
+                      text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]
+                      hover:border-[var(--color-accent)]/30 transition-colors
+                      max-w-[280px] truncate"
+                    title={source.title}
+                  >
+                    <span className="truncate">{source.title}</span>
+                    <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
+
+        {/* PubMed References — peer-reviewed citations */}
+        {(() => {
+          const citations = propPubmedCitations || (isStructuredRationale(rationale) ? (rationale as any).pubmedCitations : undefined);
+          if (!citations || citations.length === 0) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mt-3 pt-3 border-t border-[var(--color-border)]/40"
+            >
+              <div className="flex items-center gap-1.5 mb-2">
+                <BookOpen className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                  References
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {citations.map((cite: any, idx: number) => (
+                  <a
+                    key={`pubmed-${cite.pmid}-${idx}`}
+                    href={cite.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs leading-relaxed px-2 py-1.5 rounded-md
+                      bg-[var(--color-bg-secondary)] border border-[var(--color-border)]/50
+                      text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]
+                      hover:border-[var(--color-accent)]/30 transition-colors"
+                  >
+                    <span className="font-medium">{cite.authors}</span>
+                    {' '}({cite.year}).{' '}
+                    <span className="italic">{cite.title}</span>
+                    {' '}{cite.journal}.{' '}
+                    <span className="text-[var(--color-accent)] font-medium">PMID: {cite.pmid}</span>
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {contentSource === 'openstax' && (
           <OpenStaxAttributionFooter

@@ -141,9 +141,9 @@ const DetailSection: React.FC<{
           </h3>
         </div>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden="true" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden="true" />
         )}
       </button>
 

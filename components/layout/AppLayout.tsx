@@ -3,7 +3,7 @@
  * Provides header, NavRail, and main content area structure
  */
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Settings, X, Shield, HelpCircle } from 'lucide-react';
@@ -15,6 +15,8 @@ import { useUser } from '@clerk/clerk-react';
 import ThemeToggleButton from '@/components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '@/components/ui/MasteryHeatmapToggle';
 import { OfflineSyncIndicator } from '@/components/offline/OfflineSyncIndicator';
+import { useStreakAutoFreeze } from '@/hooks/useStreakAutoFreeze';
+import { toast } from '@/lib/toast';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -34,6 +36,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const navigate = useNavigate();
   const { user } = useUser();
   const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  // Auto-apply streak freezes on app mount (non-blocking)
+  const autoFreezeResult = useStreakAutoFreeze();
+  useEffect(() => {
+    if (autoFreezeResult && autoFreezeResult.freezesApplied > 0) {
+      const count = autoFreezeResult.freezesApplied;
+      const remaining = autoFreezeResult.remainingFreezes;
+      toast.info(
+        `Streak saved! ${count} freeze${count > 1 ? 's' : ''} applied for missed day${count > 1 ? 's' : ''}. ${remaining} freeze${remaining !== 1 ? 's' : ''} remaining.`,
+        { id: 'streak-auto-freeze', duration: 6000 }
+      );
+    }
+  }, [autoFreezeResult]);
 
   return (
     <>

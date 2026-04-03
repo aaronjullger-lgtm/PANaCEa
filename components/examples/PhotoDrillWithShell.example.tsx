@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, RotateCcw, Shuffle } from 'lucide-react';
-import { DrillShell } from '@/components/layout/DrillShell';
+import DrillShell from '@/components/drill/DrillShell';
 import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 

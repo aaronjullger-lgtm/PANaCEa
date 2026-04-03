@@ -200,11 +200,11 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                 <Plus className="w-4 h-4" />
                 New Content
               </button>
-              <button className="px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/80 transition-colors">
-                <Upload className="w-4 h-4" />
+              <button className="px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/80 transition-colors" aria-label="Upload content">
+                <Upload className="w-4 h-4" aria-hidden="true" />
               </button>
-              <button className="px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/80 transition-colors">
-                <Download className="w-4 h-4" />
+              <button className="px-4 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/80 transition-colors" aria-label="Download content">
+                <Download className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -375,14 +375,14 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                              <Eye className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors" aria-label="Preview content">
+                              <Eye className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                             </button>
-                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                              <Edit className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors" aria-label="Edit content">
+                              <Edit className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                             </button>
-                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors">
-                              <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+                            <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors" aria-label="View history">
+                              <Clock className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                             </button>
                           </div>
                         </td>

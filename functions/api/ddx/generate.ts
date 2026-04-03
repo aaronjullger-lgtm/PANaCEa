@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { callGeminiText } from '../../../services/ai/geminiService';
@@ -120,7 +120,7 @@ Return a single, valid JSON object with the following structure, and no other te
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = aiEndpoint(
   GenerateDdxSchema,
   async (context) => {
     // AI cost endpoint: rate limit enforced at 10 req/min via options below

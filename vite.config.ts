@@ -409,8 +409,16 @@ export default defineConfig(({ mode }) => {
               // though they are never needed for the first render, bloating it by
               // 200-500 KB per package.
               if (
-                id.includes('/cytoscape/') ||  // ~200 KB – CrossSystemExplorer only
-                id.includes('/jspdf/')          // ~250 KB – DataExport (Settings) only
+                id.includes('/cytoscape/') ||              // ~200 KB – CrossSystemExplorer only
+                id.includes('/jspdf/') ||                  // ~250 KB – DataExport (Settings) only
+                id.includes('/react-markdown/') ||         // Markdown rendering (ExplanationPanel / KB only)
+                id.includes('/remark-gfm/') ||             // Markdown plugins (lazy knowledge base only)
+                id.includes('/remark-parse/') ||           // Markdown parsing (lazy content only)
+                id.includes('/rehype-raw/') ||             // HTML rendering in markdown (lazy only)
+                id.includes('/@supabase/') ||              // Supabase client (only useSupabase.ts hook)
+                id.includes('/canvas-confetti/') ||        // Celebration animations (lazy drill completion only)
+                id.includes('/papaparse/') ||              // CSV processing (lazy export/import only)
+                id.includes('/react-force-graph-2d/')      // Graph visualization (lazy visualizer only)
               ) {
                 return undefined;
               }

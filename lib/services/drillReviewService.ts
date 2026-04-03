@@ -41,6 +41,9 @@ import { computeLapseSeverity } from './lapseSeverityService';
 import { computeRtTrajectory } from './rtTrajectoryService';
 import { recordOutcome as recordAccuracyOutcome, getConfidenceModifier as getAccuracySlopeModifier } from './sessionAccuracySlopeService';
 import { computeIntervalDeviation } from './intervalDeviationService';
+// Wave 2 behavioral signal services
+import { analyzeDistractorChronometry, type DistractorChronometryResult, type OptionInteractionRecord } from './distractorChronometryService';
+import { analyzeSwitchDirections, type SwitchDirectionResult } from './switchDirectionService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -335,6 +338,9 @@ export async function submitDrillReview(
   let implicitConfidence: number;
   let rtClassification: string | null = null;
   let rtSignalQuality = 1.0;
+  // Wave 2: Distractor chronometry & switch direction results (set when option_interactions present)
+  let wave2Chronometry: DistractorChronometryResult | undefined;
+  let wave2SwitchDirection: SwitchDirectionResult | undefined;
   const switches = answerSwitches ?? 0;
 
   if (isRapidGuess) {
@@ -378,6 +384,33 @@ export async function submitDrillReview(
     // Capture ex-Gaussian RT classification for telemetry (lapse detection)
     rtClassification = continuousResult.rtClassification ?? null;
     rtSignalQuality = continuousResult.rtSignalQuality ?? 1.0;
+
+    // ── Wave 2: Distractor chronometry & switch direction (additive, backward-compatible) ──
+    const optionInteractionsRaw = telemetry?.option_interactions as OptionInteractionRecord[] | undefined;
+    if (optionInteractionsRaw && Array.isArray(optionInteractionsRaw) && optionInteractionsRaw.length > 0) {
+      wave2Chronometry = analyzeDistractorChronometry(
+        optionInteractionsRaw,
+        correctAnswer,
+        normalizedSelectedAnswer
+      );
+      implicitConfidence *= wave2Chronometry.confidenceMultiplier;
+
+      wave2SwitchDirection = analyzeSwitchDirections(
+        optionInteractionsRaw,
+        correctAnswer
+      );
+      implicitConfidence *= wave2SwitchDirection.confidenceMultiplier;
+
+      logger?.debug?.('Wave 2 signals applied', {
+        questionId,
+        chronometryMultiplier: wave2Chronometry.confidenceMultiplier,
+        correctAbandoned: wave2Chronometry.correctOptionAbandoned,
+        uniqueOptions: wave2Chronometry.uniqueOptionsConsidered,
+        switchDirectionMultiplier: wave2SwitchDirection.confidenceMultiplier,
+        metacognitivePrecision: wave2SwitchDirection.metacognitivePrecision,
+        netSwitchValue: wave2SwitchDirection.netSwitchValue,
+      });
+    }
 
     // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
     // Binary system: Again(1) / Good(3). Hard(2) and Easy(4) are deprecated.
@@ -781,8 +814,8 @@ export async function submitDrillReview(
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
 
         // ══════════════════════════════════════════════════════════════════════
-        // CONFIDENCE PIPELINE v3 (8-step → 12-step with Wave 1)
-        // accumulate → calibrate → fatigue → accuracy_slope → interference → fluency → stability → rt_trajectory → interval_deviation → difficulty → trend
+        // CONFIDENCE PIPELINE v3 (8-step → 14-step with Wave 1 + Wave 2)
+        // distractor_chronometry → switch_direction → accumulate → calibrate → fatigue → accuracy_slope → interference → fluency → stability → rt_trajectory → interval_deviation → difficulty → trend
         // ══════════════════════════════════════════════════════════════════════
 
         // Step 1: Bayesian accumulation — blend current confidence with card history
@@ -1070,6 +1103,17 @@ export async function submitDrillReview(
                   interval_deviation_ratio: intervalDev.deviationRatio,
                   interval_deviation_multiplier: intervalDev.informationMultiplier,
                   interval_deviation_class: intervalDev.classification,
+                  // Wave 2 behavioral signals
+                  distractor_unique_options: wave2Chronometry?.uniqueOptionsConsidered ?? null,
+                  distractor_correct_abandoned: wave2Chronometry?.correctOptionAbandoned ?? null,
+                  distractor_longest_dwell_ms: wave2Chronometry?.longestDistractorDwellMs ?? null,
+                  distractor_chronometry_multiplier: wave2Chronometry?.confidenceMultiplier ?? null,
+                  switch_wrong_to_right: wave2SwitchDirection?.wrongToRight ?? null,
+                  switch_right_to_wrong: wave2SwitchDirection?.rightToWrong ?? null,
+                  switch_wrong_to_wrong: wave2SwitchDirection?.wrongToWrong ?? null,
+                  switch_net_value: wave2SwitchDirection?.netSwitchValue ?? null,
+                  switch_metacognitive_precision: wave2SwitchDirection?.metacognitivePrecision ?? null,
+                  switch_direction_multiplier: wave2SwitchDirection?.confidenceMultiplier ?? null,
                   final_stability: updatedCard.stability,
                   final_difficulty: updatedCard.difficulty,
                 },

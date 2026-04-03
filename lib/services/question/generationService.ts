@@ -1,13 +1,24 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type MedicalContentData } from '../content/types';
 
+export interface GroundingSource {
+  uri: string;
+  title: string;
+}
+
 export class QuestionGenerationService {
   private genAI: GoogleGenerativeAI;
   private model: any;
+  private groundedModel: any;
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Model with Google Search grounding enabled for evidence-backed generation
+    this.groundedModel = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      tools: [{ googleSearch: {} } as any],
+    });
   }
 
   /**
@@ -70,12 +81,62 @@ Return ONLY valid JSON (no markdown):
 }`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const text = result.response.text();
-      return this.parseResponse(text);
+      // Use grounded model for evidence-backed generation
+      const result = await this.groundedModel.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      const parsed = this.parseResponse(text);
+
+      if (parsed) {
+        // Extract grounding sources from response metadata
+        const groundingSources = this.extractGroundingSources(response);
+        if (groundingSources.length > 0) {
+          parsed.rationale = parsed.rationale || {};
+          parsed.rationale.groundingSources = groundingSources;
+        }
+      }
+
+      return parsed;
     } catch (error) {
-      console.error('[QuestionGenerationService] Generation failed:', error);
-      return null;
+      // Fallback to ungrounded model if search grounding fails
+      console.warn('[QuestionGenerationService] Grounded generation failed, falling back to standard:', error);
+      try {
+        const result = await this.model.generateContent(prompt);
+        const text = result.response.text();
+        return this.parseResponse(text);
+      } catch (fallbackError) {
+        console.error('[QuestionGenerationService] Generation failed completely:', fallbackError);
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Extract Google Search grounding sources from the Gemini response.
+   * These provide evidence citations (URIs + titles) from real web sources.
+   */
+  private extractGroundingSources(response: any): GroundingSource[] {
+    try {
+      const candidates = response?.candidates || [];
+      const firstCandidate = candidates[0];
+      const groundingMetadata = firstCandidate?.groundingMetadata;
+      if (!groundingMetadata?.groundingChunks) return [];
+
+      const sources: GroundingSource[] = [];
+      const seen = new Set<string>();
+
+      for (const chunk of groundingMetadata.groundingChunks) {
+        const uri = chunk?.web?.uri;
+        const title = chunk?.web?.title;
+        if (uri && title && !seen.has(uri)) {
+          seen.add(uri);
+          sources.push({ uri, title });
+        }
+      }
+
+      return sources.slice(0, 5); // Cap at 5 sources
+    } catch {
+      return [];
     }
   }
 

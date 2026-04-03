@@ -2117,6 +2117,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       }
                     : undefined
                 }
+                avState={currentAVState}
                 onClose={() => setShowLiveSession(false)}
               />
             </div>

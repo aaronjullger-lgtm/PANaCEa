@@ -22,18 +22,50 @@ const QuerySchema = z.object({
   patientName: z.string().optional(),
   painLevel: z.number().min(0).max(10).optional(),
   mood: z.string().optional(),
+  /** AV state voice modulation fields — injected into speechConfig and system prompt */
+  voiceId: z.string().optional(),
+  voiceRate: z.number().min(0.5).max(2.0).optional(),
+  voicePitch: z.number().min(-12).max(12).optional(),
+  toneDescriptors: z.string().optional(), // comma-separated
+  vocalStrain: z.enum(['true', 'false']).optional(),
+  clinicalContext: z.string().optional(),
 });
 
-/** Dynamic persona: pain and mood shift based on student empathy. */
+/**
+ * Dynamic persona: pain and mood shift based on student empathy,
+ * with voice modulation directives from the AV state machine.
+ */
 function buildSystemInstruction(params: {
   patientName?: string;
   painLevel?: number;
   mood?: string;
+  toneDescriptors?: string[];
+  vocalStrain?: boolean;
+  clinicalContext?: string;
+  voiceRate?: number;
 }): string {
   const name = params.patientName ?? 'Marcus';
   const pain = params.painLevel ?? 8;
   const mood = params.mood ?? 'Anxious';
-  return `You are ${name}, a patient in an OSCE encounter. Current Pain: ${pain}/10. Mood: ${mood}.
+
+  // Voice modulation directives from AV engine
+  let voiceDirective = '';
+  if (params.toneDescriptors?.length) {
+    voiceDirective += ` Speak in a ${params.toneDescriptors.join(', ')} tone.`;
+  }
+  if (params.vocalStrain) {
+    voiceDirective += ' Your voice is strained — pause occasionally to catch your breath or wince in pain.';
+  }
+  if (params.voiceRate != null && params.voiceRate < 0.8) {
+    voiceDirective += ' Speak slowly and deliberately.';
+  } else if (params.voiceRate != null && params.voiceRate > 1.3) {
+    voiceDirective += ' Speak rapidly, as if rushed or panicked.';
+  }
+  if (params.clinicalContext) {
+    voiceDirective += ` Clinical state: ${params.clinicalContext}.`;
+  }
+
+  return `You are ${name}, a patient in an OSCE encounter. Current Pain: ${pain}/10. Mood: ${mood}.${voiceDirective}
 If the student validates your pain and shows empathy, lower Pain to 5/10 and Mood to 'Cooperative'.
 If they ignore your concerns or are dismissive, raise Mood to 'Hostile' and keep Pain high.
 Stay in character. When asked about vitals or labs, use get_current_vitals() or reveal_lab_result(test_name) and report the results naturally (e.g. "I think it's high, doc... 180 over 110.").
@@ -75,11 +107,30 @@ export const onRequestGet = authenticatedEndpoint(
     const logger = createEndpointLogger('/api/osce/live-engine');
 
     try {
+      const toneDescriptors = validated.toneDescriptors
+        ? validated.toneDescriptors.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : undefined;
+
       const systemInstruction = buildSystemInstruction({
         patientName: validated.patientName,
         painLevel: validated.painLevel,
         mood: validated.mood,
+        toneDescriptors,
+        vocalStrain: validated.vocalStrain === 'true',
+        clinicalContext: validated.clinicalContext,
+        voiceRate: validated.voiceRate,
       });
+
+      // Build speechConfig from AV state voice modulation or default to Aoede
+      const speechConfigObj: Record<string, unknown> = {
+        voiceName: validated.voiceId || 'Aoede',
+      };
+      if (validated.voiceRate != null && validated.voiceRate !== 1.0) {
+        speechConfigObj.speechRate = validated.voiceRate;
+      }
+      if (validated.voicePitch != null && validated.voicePitch !== 0) {
+        speechConfigObj.pitchShift = validated.voicePitch;
+      }
 
       const setup = {
         model: `models/${LIVE_MODEL}`,
@@ -88,7 +139,7 @@ export const onRequestGet = authenticatedEndpoint(
         },
         generationConfig: {
           responseModalities: ['AUDIO', 'TEXT'],
-          speechConfig: { voiceName: 'Aoede' },
+          speechConfig: speechConfigObj,
           temperature: 0.8,
         },
         tools: TOOLS,

@@ -110,10 +110,10 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
           {onReset && (
             <button
               onClick={onReset}
-              className={`p-2 rounded-lg ${cardBg} hover:opacity-80 transition-colors border ${cardBorder}`}
-              title="Reset"
+              className={`p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg ${cardBg} hover:opacity-80 transition-colors duration-200 border ${cardBorder} focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
+              aria-label="Reset"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -126,9 +126,10 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
           {onExit && (
             <button
               onClick={onExit}
-              className={`p-2 rounded-lg ${cardBg} hover:opacity-80 transition-colors border ${cardBorder}`}
+              className={`p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg ${cardBg} hover:opacity-80 transition-colors duration-200 border ${cardBorder} focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
+              aria-label="Exit"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

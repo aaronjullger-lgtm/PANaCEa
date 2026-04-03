@@ -43,7 +43,7 @@ const REFLECTION_PROMPTS = [
   {
     id: 'patterns',
     icon: Brain,
-    title: 'Patterns in Missed Questions',
+    title: 'Patterns in Learning Opportunities',
     question: 'What patterns did you notice in the questions you missed?',
     placeholder: 'I noticed I struggled with...',
     hint: 'Consider: Were they from certain organ systems? Similar question types? Time-pressured decisions?',
@@ -202,6 +202,10 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                             max="5"
                             value={confidenceRating}
                             onChange={(e) => setConfidenceRating(parseInt(e.target.value))}
+                            aria-label={`Confidence rating: ${confidenceRating} of 5`}
+                            aria-valuemin={1}
+                            aria-valuemax={5}
+                            aria-valuenow={confidenceRating}
                             className="w-full h-3 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent)]"
                           />
                           <div className="flex justify-between text-xs text-[var(--color-text-muted)]">

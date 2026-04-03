@@ -21,6 +21,7 @@ typecheck-output.txt
 delete-log.txt
 unmapped-conditions.txt
 backups/
+backup/
 .cache
 .temp
 .tmp
@@ -30,6 +31,18 @@ coverage/
 weekly-report-latest.txt
 content-health-report.json
 
+# Build artifacts missed by original gitignore
+test-output.log
+*.jpeg
+
+# Dead AI-generated images
+Gemini_Generated_Image_*
+
+# Diagnostic scripts at root
+query.ts
+audit-queries.*
+
+# Logs
 # Logs
 npm-debug.log*
 yarn-debug.log*

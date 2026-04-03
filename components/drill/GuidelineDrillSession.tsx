@@ -207,7 +207,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                         animate={{ y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => handleSelectGuideline(g.id)}
-                        className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition-all group"
+                        className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 group"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
@@ -218,7 +218,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                               {g.description}
                             </p>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] flex-shrink-0 ml-2" />
+                          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] flex-shrink-0 ml-2" aria-hidden="true" />
                         </div>
                         <div className="mt-2 text-xs text-[var(--color-text-muted)]">
                           {g.vignettes.length} case{g.vignettes.length !== 1 ? 's' : ''} • Max
@@ -249,7 +249,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           </div>
           <button
             onClick={handleSubmitScore}
-            className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white font-semibold rounded-lg transition-colors"
+            className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             aria-label="Submit calculated score"
           >
             Submit Score
@@ -473,16 +473,17 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <div className="mt-4">
               <button
                 onClick={() => setShowDeepDive(!showDeepDive)}
-                className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors text-sm"
+                className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 text-sm"
+                aria-pressed={showDeepDive}
               >
                 <span className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
-                  <BookOpen className="w-4 h-4 text-[var(--color-category-practice)]" />
+                  <BookOpen className="w-4 h-4 text-[var(--color-category-practice)]" aria-hidden="true" />
                   Deep Dive - Related Reference Material
                 </span>
                 {showDeepDive ? (
-                  <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                 )}
               </button>
 
@@ -533,24 +534,24 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             animate={{ scale: 1 }}
             className="text-center"
           >
-            <Award className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
+            <Award className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" aria-hidden="true" />
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">{sessionResult.guidelineName}</h2>
-            <p className="text-4xl font-bold text-[var(--color-accent)] mb-2">
+            <p className="text-4xl font-bold text-[var(--color-accent)] mb-2 tabular-nums">
               {sessionResult.totalCorrect}/{sessionResult.totalAttempts}
             </p>
-            <p className="text-[var(--color-text-secondary)] mb-6">{percentage}% Accuracy</p>
+            <p className="text-[var(--color-text-secondary)] mb-6"><span className="tabular-nums">{percentage}%</span> Accuracy</p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handleReset}
-                className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Retry the same guideline"
               >
                 Try Again
               </button>
               <button
                 onClick={backToSelection}
-                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Choose a different guideline"
               >
                 Choose Another Guideline

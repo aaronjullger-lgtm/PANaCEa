@@ -698,9 +698,10 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -859,9 +860,10 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -937,17 +939,18 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             </div>
             <button
               onClick={handleReset}
-              className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
-              title="Reset Score"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Reset score"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="w-5 h-5" aria-hidden="true" />
             </button>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>

@@ -215,7 +215,7 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
               <StarOff className="w-4 h-4" />
             )}
           </button>
-          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" />
+          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" aria-hidden="true" />
         </div>
       </div>
 

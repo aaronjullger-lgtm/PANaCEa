@@ -11,6 +11,10 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { FlaskConical, Activity, Search, AlertTriangle } from 'lucide-react';
 
+const FONT_HEADING = "'Poppins', system-ui, sans-serif";
+const FONT_BODY = "'Inter', system-ui, sans-serif";
+const FONT_MONO = "'JetBrains Mono', 'Fira Code', monospace";
+
 interface LabValue {
   id: string;
   name?: string;
@@ -114,9 +118,9 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
           padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)',
         }}>
           <Search size={16} style={{ color: 'var(--color-text-secondary)' }} />
-          <input type="text" placeholder={`Search ${isVitals ? 'vitals' : 'lab tests'}...`} value={searchQuery}
+          <input type="text" aria-label={`Search ${isVitals ? 'vital signs' : 'lab values'}`} placeholder={`Search ${isVitals ? 'vitals' : 'lab tests'}...`} value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)' }} />
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)', fontFamily: FONT_BODY }} />
         </div>
         {categories.length > 2 && (
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
@@ -156,7 +160,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <Icon size={16} style={{ color: accentColor, flexShrink: 0, marginTop: 2 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)' }}>{name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{name}</div>
                   {item.category && (
                     <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{item.category}</span>
                   )}
@@ -171,7 +175,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
                 padding: '8px 12px', borderRadius: 8, marginBottom: 6,
                 background: `${accentColor}0a`, border: `1px solid ${accentColor}20`,
               }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: accentColor }}>{range}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: accentColor, fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>{range}</div>
                 {unit && <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{unit}</div>}
               </div>
 
@@ -201,7 +205,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
               )}
 
               {notes && (
-                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{notes}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4, fontFamily: FONT_BODY }}>{notes}</div>
               )}
             </div>
           );

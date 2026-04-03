@@ -144,10 +144,10 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                 </div>
                 <button
                   onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
                   aria-label="Proceed to next dermatology case"
                 >
-                  Next Case <ArrowRight className="w-4 h-4" />
+                  Next Case <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
               {currentCase.explanation && (
@@ -206,7 +206,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                    <Eye className="w-16 h-16 text-[var(--color-text-muted)]" />
+                    <Eye className="w-16 h-16 text-[var(--color-text-muted)]" aria-hidden="true" />
                     <button
                       onClick={() => setImageRevealed(true)}
                       className="px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
@@ -238,26 +238,26 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
             animate={{ scale: 1 }}
             className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
           >
-            <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
+            <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" aria-hidden="true" />
             <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
             <p className="text-[var(--color-text-secondary)] mb-6">Great work on dermatology!</p>
             <div className="flex justify-center gap-8 mb-8">
               <div className="text-center">
-                <div className="text-4xl font-bold text-[var(--color-data-pass)]">{score}</div>
+                <div className="text-4xl font-bold text-[var(--color-data-pass)] tabular-nums">{score}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
               </div>
             </div>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleReset}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Start a new dermatology session"
               >
-                <RotateCcw className="w-4 h-4" /> Start New Session
+                <RotateCcw className="w-4 h-4" aria-hidden="true" /> Start New Session
               </button>
               <button
                 onClick={handleExit}
-                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
+                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit to drill menu"
               >
                 Exit to Menu

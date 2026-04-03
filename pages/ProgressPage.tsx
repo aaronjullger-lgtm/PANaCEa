@@ -91,7 +91,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           </h3>
           <button
             onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all min-h-[36px] ${
+            aria-pressed={showAdvancedAnalytics}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all min-h-[36px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
               showAdvancedAnalytics
                 ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'

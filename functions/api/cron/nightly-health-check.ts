@@ -26,14 +26,15 @@ import { prisma } from '../_shared/prisma-edge';
  */
 export default async function nightlyHealthCheck(
   request: Request,
-  _context: unknown
+  context: any
 ): Promise<Response> {
   const startTime = Date.now();
+  const env = context.env;
 
   try {
-    // Verify cron request
+    // Verify cron request with CRON_SECRET
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.includes('Bearer')) {
+    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
       });

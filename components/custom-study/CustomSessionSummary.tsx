@@ -43,7 +43,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
   // Get grade icon based on accuracy
   const getGradeIcon = (accuracy: number) => {
     const Icon = accuracy >= 90 ? Star : accuracy >= 80 ? Target : accuracy >= 70 ? ThumbsUp : accuracy >= 60 ? BookOpen : Zap;
-    return <Icon className="w-16 h-16 mx-auto text-white" />;
+    return <Icon className="w-16 h-16 mx-auto text-white" aria-hidden="true" />;
   };
 
   return (
@@ -64,25 +64,25 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
         <div className="p-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <StatCard
-              icon={<CheckCircle className="w-5 h-5" />}
+              icon={<CheckCircle className="w-5 h-5" aria-hidden="true" />}
               label="Correct (1st Try)"
               value={summary.correctFirstAttempt}
               color="green"
             />
             <StatCard
-              icon={<RotateCcw className="w-5 h-5" />}
+              icon={<RotateCcw className="w-5 h-5" aria-hidden="true" />}
               label="Correct (Retry)"
               value={summary.correctOnRetry}
               color="amber"
             />
             <StatCard
-              icon={<Target className="w-5 h-5" />}
+              icon={<Target className="w-5 h-5" aria-hidden="true" />}
               label="Accuracy"
               value={`${summary.firstAttemptAccuracy.toFixed(0)}%`}
               color="blue"
             />
             <StatCard
-              icon={<Clock className="w-5 h-5" />}
+              icon={<Clock className="w-5 h-5" aria-hidden="true" />}
               label="Avg Time"
               value={formatTime(summary.avgTimePerQuestion)}
               color="purple"
@@ -95,7 +95,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
             {summary.strongAreas.length > 0 && (
               <div className="p-4 bg-data-pass dark:bg-data-pass/20 rounded-xl">
                 <div className="flex items-center gap-2 text-data-pass dark:text-data-pass mb-2">
-                  <TrendingUp className="w-4 h-4" />
+                  <TrendingUp className="w-4 h-4" aria-hidden="true" />
                   <span className="font-medium">Strong Areas</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -111,11 +111,11 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
               </div>
             )}
 
-            {/* Weak Areas */}
+            {/* Focus Areas */}
             {summary.weakAreas.length > 0 && (
               <div className="p-4 bg-data-provisional dark:bg-data-provisional/20 rounded-xl">
                 <div className="flex items-center gap-2 text-data-provisional dark:text-data-provisional mb-2">
-                  <AlertTriangle className="w-4 h-4" />
+                  <AlertTriangle className="w-4 h-4" aria-hidden="true" />
                   <span className="font-medium">Needs Review</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -158,7 +158,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                         }`}
                       />
                     </div>
-                    <div className="w-16 text-right text-sm font-medium">
+                    <div className="w-16 text-right text-sm font-medium tabular-nums">
                       {system.correct}/{system.total}
                     </div>
                   </div>
@@ -194,7 +194,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                             : 'text-data-fail dark:text-data-fail'
                       }`}
                     >
-                      {fa.accuracy.toFixed(0)}%
+                      <span className="tabular-nums">{fa.accuracy.toFixed(0)}%</span>
                     </div>
                   </div>
                 ))}
@@ -205,7 +205,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           {/* Info Banner */}
           <div className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-sm mb-6">
             <div className="flex items-center gap-2 mb-1">
-              <Zap className="w-4 h-4" />
+              <Zap className="w-4 h-4" aria-hidden="true" />
               <span className="font-medium">Practice Session</span>
             </div>
             <p>
@@ -218,16 +218,16 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <div className="flex gap-3">
             <button
               onClick={onGoHome}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-data-neutral dark:border-data-neutral rounded-xl text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-data-neutral dark:border-data-neutral rounded-xl text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <Home className="w-5 h-5" />
+              <Home className="w-5 h-5" aria-hidden="true" />
               Back to Menu
             </button>
             <button
               onClick={onStartNew}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-category-practice)] text-white rounded-xl hover:bg-[var(--color-category-practice)] transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-category-practice)] text-white rounded-xl hover:bg-[var(--color-category-practice)] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="w-5 h-5" aria-hidden="true" />
               New Session
             </button>
           </div>

@@ -83,6 +83,8 @@ import type { SRSScheduleResult } from '@/lib/services/srsService';
 // ExplanationPanel moved to AnswerFeedback component
 import QuizToolbar from '@/components/session/QuizToolbar';
 import AnswerFeedback from '@/components/session/AnswerFeedback';
+import { SessionPacer } from '@/components/session/SessionPacer';
+import { useSessionWellness } from '@/hooks/useSessionWellness';
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
@@ -372,6 +374,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const behavioralTracker = useBehavioralTracker();
   const microKinetics = useUnifiedKinetics();
   const fatigueTracking = useFatigueTracking(isExamSimulator);
+  const sessionWellness = useSessionWellness();
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -380,6 +383,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
+  const [lastImplicitConfidence, setLastImplicitConfidence] = useState<number | undefined>(undefined);
 
   // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
@@ -942,6 +946,9 @@ const QuizView: React.FC<QuizViewProps> = ({
     const timeToAnswer = Date.now() - questionStartTime;
     const questionId = currentQuestion.id || `temp-${questionNumber}`;
 
+    // Feed the wellness engine for mid-session diminishing returns detection
+    sessionWellness.recordAttempt(isCorrect, timeToAnswer);
+
     const behavioralPayload = behavioralTracker.finalize();
     const microMetrics = microKinetics.getMetrics();
     const elimTimestamps = eliminationTimestampsRef.current;
@@ -1094,6 +1101,9 @@ const QuizView: React.FC<QuizViewProps> = ({
             ? confidenceResult
             : (confidenceResult?.score ?? 0.5);
       }
+      // Store for CalibrationFeedbackBadge in AnswerFeedback
+      setLastImplicitConfidence(inferredConfidenceValue);
+
       if (typeof updatePerformancePrediction === 'function') {
         updatePerformancePrediction({
           correct: isCorrect,
@@ -1760,6 +1770,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               showNotes={showNotes}
               setShowNotes={setShowNotes}
               onNoteChange={handleNoteChange}
+              implicitConfidence={lastImplicitConfidence}
             />
           )}
 
@@ -1790,6 +1801,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         isOpen={showWellnessModal}
         onClose={() => setShowWellnessModal(false)}
         reason={wellnessReason}
+      />
+
+      {/* Session Pacer — diminishing returns detection (non-blocking) */}
+      <SessionPacer
+        check={sessionWellness.check}
+        dismissed={sessionWellness.dismissed}
+        onDismiss={sessionWellness.dismiss}
+        onEndSession={() => setShowSessionEndSummary(true)}
       />
 
       {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}

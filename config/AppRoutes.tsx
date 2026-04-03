@@ -48,6 +48,8 @@ import {
   ProgressPage,
   DailyChallengesHub,
   StudyPathDashboard,
+  LectureConverterPage,
+  TechniqueCheckPage,
 } from './lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/loading';
@@ -384,6 +386,26 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           <Suspense fallback={<Loader message="Loading visualizer…" />}>
             <ErrorBoundary variant="page">
               <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
+          </Suspense>
+        }
+      />
+      <Route
+        path="/lecture-converter"
+        element={
+          <Suspense fallback={<Loader message="Loading lecture converter…" />}>
+            <ErrorBoundary variant="page">
+              <LectureConverterPage onClose={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
+          </Suspense>
+        }
+      />
+      <Route
+        path="/technique-check"
+        element={
+          <Suspense fallback={<Loader message="Loading technique check…" />}>
+            <ErrorBoundary variant="page">
+              <TechniqueCheckPage onClose={() => navigate(ROUTES.STUDY)} />
             </ErrorBoundary>
           </Suspense>
         }

@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "safety-audit-imaging-config",
+  "prompt": "Audit the imaging reference config for safety — I want to make sure contraindications and safety warnings are properly highlighted and not using standard rendering.",
+  "assertions": [
+    {"text": "Runs Tier Assignment Audit on all safety fields", "type": "completeness"},
+    {"text": "Runs Truncation Audit for overflow/ellipsis issues", "type": "completeness"},
+    {"text": "Runs Completeness Audit comparing interface vs rendered fields", "type": "completeness"},
+    {"text": "Runs Ordering Audit checking safety content position", "type": "completeness"},
+    {"text": "Identifies at least one actionable finding", "type": "quality"},
+    {"text": "Provides severity ratings for each finding", "type": "quality"}
+  ]
+}

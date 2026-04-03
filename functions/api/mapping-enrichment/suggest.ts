@@ -48,7 +48,17 @@ export const onRequestPost = async (context: any) => {
     }
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const requestBody = await context.request.json().catch(() => ({}));
+
+    let requestBody: any;
+    try {
+      requestBody = await context.request.json();
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: jsonHeaders }
+      );
+    }
+
     const taxonomyCodes: string[] | undefined = requestBody.taxonomyCodes;
     // Optional limit to avoid excessive processing
     const limit = requestBody.limit ? Math.min(Number(requestBody.limit), 50) : 10;

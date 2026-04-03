@@ -14,7 +14,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, ClinicalInput, ResultDisplay } from '../shared';
+import { CalculatorHeader, ClinicalInput, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult } from '../types';
 import { calculateGFR } from '@/lib/calculators';
 
@@ -89,11 +89,30 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="GFR Calculator (MDRD)"
-        subtitle="Glomerular Filtration Rate Estimation"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="GFR Calculator (MDRD)"
+          subtitle="Glomerular Filtration Rate Estimation"
+          onBack={onBack}
+        />
+        <div className="flex gap-2">
+          <ResetButton
+            onReset={() => {
+              setAge('');
+              setSex('male');
+              setRace('other');
+              setCreatinine('');
+            }}
+          />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `GFR Calculator (MDRD)\nAge: ${age} | Sex: ${sex} | Race: ${race} | Creatinine: ${creatinine} mg/dL\n\neGFR: ${gfr} mL/min/1.73m²\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
+      </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6 space-y-6">
         <ClinicalInput

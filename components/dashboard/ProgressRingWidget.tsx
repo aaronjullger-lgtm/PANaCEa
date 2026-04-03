@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import type { SystemCode } from '@/types';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -50,6 +51,7 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
   className = '',
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const circumference = 2 * Math.PI * 28; // radius = 28
   const strokeDashoffset = circumference - (circumference * percent) / 100;
@@ -59,10 +61,11 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
     <>
       {/* Floating ring button */}
       <motion.button
-        initial={{ scale: 0.8 }}
+        initial={prefersReducedMotion ? false : { scale: 0.8 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         onClick={() => setIsExpanded(true)}
         className={`
           fixed top-20 right-4 z-30

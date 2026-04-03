@@ -103,7 +103,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
                 key={sys}
                 onClick={() => onStartDrill?.(sys)}
                 className={`
-                  px-2.5 py-1 rounded-md text-xs font-medium transition-colors
+                  px-2.5 py-1 rounded-md text-xs font-medium transition-colors duration-200
                   ${isWeak
                     ? 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/25'
                     : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/80'
@@ -112,7 +112,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
               >
                 {sys}
                 {acc !== undefined && (
-                  <span className="ml-1 opacity-70">{Math.round(acc * 100)}%</span>
+                  <span className="ml-1 opacity-70 tabular-nums">{Math.round(acc * 100)}%</span>
                 )}
               </button>
             );
@@ -124,13 +124,13 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
       {weakestSystem && weakestSystem.accuracy < 0.65 && (
         <button
           onClick={() => onStartDrill?.(weakestSystem.system)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 mb-4 rounded-lg bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/15 transition-colors group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 mb-4 rounded-lg bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/15 transition-colors duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
-          <Target className="w-4 h-4 text-[var(--color-data-fail)]" />
+          <Target className="w-4 h-4 text-[var(--color-data-fail)]" aria-hidden="true" />
           <span className="text-sm text-[var(--color-text-secondary)]">
-            <span className="font-semibold text-[var(--color-data-fail)]">{weakestSystem.system}</span> needs work — {Math.round(weakestSystem.accuracy * 100)}% accuracy
+            <span className="font-semibold text-[var(--color-data-fail)]">{weakestSystem.system}</span> needs work — <span className="tabular-nums">{Math.round(weakestSystem.accuracy * 100)}%</span> accuracy
           </span>
-          <ChevronRight className="w-4 h-4 ml-auto text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight className="w-4 h-4 ml-auto text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform duration-200" aria-hidden="true" />
         </button>
       )}
 

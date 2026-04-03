@@ -290,9 +290,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+              className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Close media approval panel"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             </button>
           )}
         </div>

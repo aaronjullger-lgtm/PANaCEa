@@ -254,7 +254,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
         >
           <Filter className="w-4 h-4" />
           <span className="font-medium">Filters</span>
-          {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {showFilters ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
         </button>
       </div>
 

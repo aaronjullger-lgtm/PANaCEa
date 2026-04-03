@@ -73,11 +73,11 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
           <div key={type} className="space-y-1">
             <div className="flex justify-between text-sm">
               <span className="font-medium">{taskTypeLabels[type] || type}</span>
-              <span className="text-muted-foreground">{Math.round(stats.mastery * 100)}%</span>
+              <span className="text-muted-foreground tabular-nums">{Math.round(stats.mastery * 100)}%</span>
             </div>
             <Progress value={stats.mastery * 100} className="h-2" />
             <div className="text-xs text-muted-foreground">
-              Stability: {stats.stability.toFixed(1)} days
+              Stability: <span className="tabular-nums">{stats.stability.toFixed(1)}</span> days
             </div>
           </div>
         ))}

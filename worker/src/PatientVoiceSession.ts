@@ -302,13 +302,19 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
   }
 
   /**
-   * Update Gemini voice configuration.
+   * Update Gemini voice configuration and re-inject tone descriptors.
+   *
+   * When the AV state machine transitions (e.g., patient goes from stable to
+   * critical), the voice modulation changes. We send both the audio-level config
+   * (voiceId, rate, pitch) and a system prompt update with the new tone directives
+   * so Gemini adapts its verbal delivery mid-conversation.
    */
   private updateGeminiVoiceConfig(
     voice: import('@/types/patient-av-state-machine').VoiceModulation
   ): void {
     if (!this.geminiConnection) return;
 
+    // Audio-level voice parameters
     const configUpdate = {
       voiceConfig: {
         voiceId: voice.voiceId,
@@ -317,8 +323,32 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
         volume: voice.volume,
       },
     };
-
     this.geminiConnection.send(JSON.stringify({ updateVoice: configUpdate }));
+
+    // Re-inject tone context as a system-level content turn so Gemini adapts
+    // its speaking style (the raw WebSocket protocol allows clientContent injections
+    // that act like system instructions mid-stream)
+    const currentState = this.avEngine?.getCurrentAVState();
+    if (currentState) {
+      const toneDirective = voice.toneDescriptors?.length
+        ? `[Voice update: Speak in a ${voice.toneDescriptors.join(', ')} tone now. ${
+            voice.applyVocalStrain
+              ? 'Your voice is strained — pause to catch your breath.'
+              : ''
+          } Clinical state: ${currentState.clinicalContext ?? 'unchanged'}.]`
+        : null;
+
+      if (toneDirective) {
+        this.geminiConnection.send(
+          JSON.stringify({
+            clientContent: {
+              turns: [{ role: 'user', parts: [{ text: toneDirective }] }],
+              turnComplete: true,
+            },
+          })
+        );
+      }
+    }
   }
 
   /**

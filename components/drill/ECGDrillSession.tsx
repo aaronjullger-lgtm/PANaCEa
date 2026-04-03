@@ -273,9 +273,9 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
   // Fallback loading
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
-      <div className="text-center">
+      <div className="text-center" role="status" aria-live="polite">
         <p className="text-[var(--color-text-secondary)] mb-4">Loading ECG drill...</p>
-        <button onClick={handleExit} className="text-[var(--color-accent)] hover:opacity-90" aria-label="Exit ECG drill">
+        <button onClick={handleExit} className="text-[var(--color-accent)] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded-lg px-2 py-1" aria-label="Exit ECG drill">
           Exit
         </button>
       </div>

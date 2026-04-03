@@ -163,24 +163,24 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Your Accuracy:</span>
-          <span className="font-semibold text-[var(--color-accent)]">{data.accuracy}%</span>
+          <span className="font-semibold text-[var(--color-accent)] tabular-nums">{data.accuracy}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Cohort Average:</span>
-          <span className="font-semibold text-[var(--color-text-primary)]">
+          <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
             {data.cohortAverage}%
           </span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Top 10%:</span>
-          <span className="font-semibold text-[var(--color-data-provisional)]">
+          <span className="font-semibold text-[var(--color-data-provisional)] tabular-nums">
             {data.cohortP90}%
           </span>
         </div>
         <div className="border-t border-[var(--color-border)] pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
             <span className="text-[var(--color-text-secondary)]">Gap to Close:</span>
-            <span className="font-bold text-[var(--color-data-provisional)]">
+            <span className="font-bold text-[var(--color-data-provisional)] tabular-nums">
               +{Math.round(data.topPerformerGap)}%
             </span>
           </div>

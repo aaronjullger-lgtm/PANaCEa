@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRolling360Stats, SystemStats } from '../../../hooks/useRolling360Stats';
 
 // =============================================================================
@@ -36,7 +36,12 @@ const BLUEPRINT_TARGETS: Record<string, number> = {
 
 function SystemPerformanceSkeleton() {
   return (
-    <div className="bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] animate-pulse">
+    <motion.div
+      key="system-perf-skeleton"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] animate-pulse">
       <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-48 mb-6" />
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -47,7 +52,7 @@ function SystemPerformanceSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -152,7 +157,7 @@ export function SystemPerformanceWidget({
 
   // Loading state
   if (isLoading) {
-    return <SystemPerformanceSkeleton />;
+    return <AnimatePresence mode="wait"><SystemPerformanceSkeleton /></AnimatePresence>;
   }
 
   // Error state

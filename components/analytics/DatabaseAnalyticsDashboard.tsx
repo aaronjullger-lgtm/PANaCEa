@@ -22,6 +22,7 @@ import {
   Calendar,
   Stethoscope,
   BarChart2,
+  Download,
 } from 'lucide-react';
 import { useDatabaseStats, DatabaseStats } from '../../hooks/useDatabaseStats';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -151,6 +152,33 @@ function SystemRow({
   );
 }
 
+/** Export analytics data as CSV for external analysis */
+function exportAnalyticsCSV(stats: DatabaseStats) {
+  const rows: string[] = ['System,Total Questions,Correct,Accuracy %,Avg Response Time (s)'];
+  const systems = Object.entries(stats.bySystems)
+    .filter(([, s]) => s.total > 0)
+    .sort((a, b) => b[1].total - a[1].total);
+
+  for (const [sys, data] of systems) {
+    const fullName = ABBREVIATION_TO_TOPIC_MAP[sys] || sys;
+    const accuracy = data.total > 0 ? ((data.correct / data.total) * 100).toFixed(1) : '0.0';
+    const avgTime = data.avgResponseTime ? (data.avgResponseTime / 1000).toFixed(1) : 'N/A';
+    rows.push(`"${fullName}",${data.total},${data.correct},${accuracy},${avgTime}`);
+  }
+
+  // Summary row
+  rows.push('');
+  rows.push(`"Overall",${stats.totalQuestions},${stats.correctAnswers},${stats.totalQuestions > 0 ? ((stats.correctAnswers / stats.totalQuestions) * 100).toFixed(1) : '0.0'},`);
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `panacea-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export const DatabaseAnalyticsDashboard: React.FC = () => {
   const { stats, isLoading, error, refetch, lastFetched } = useDatabaseStats();
   const [activeTab, setActiveTab] = useState<'overview' | 'systems' | 'conditions'>('overview');
@@ -198,18 +226,28 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
           Performance Analytics
         </h2>
-        <button
-          onClick={() => refetch()}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          {lastFetched && (
-            <span className="hidden sm:inline">
-              Updated {new Date(lastFetched).toLocaleTimeString()}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportAnalyticsCSV(stats)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            aria-label="Export analytics as CSV"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </button>
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            {lastFetched && (
+              <span className="hidden sm:inline">
+                Updated {new Date(lastFetched).toLocaleTimeString()}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -366,7 +404,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Weak Areas */}
+          {/* Focus Areas */}
           {stats.weakAreas.length > 0 && (
             <div className="p-4 rounded-xl border border-muted-amber/30 bg-data-provisional/10 dark:bg-data-provisional/5 dark:border-muted-amber/20">
               <div className="flex items-center gap-2 text-muted-amber text-sm mb-3">

@@ -163,16 +163,16 @@ export const GoalCard: React.FC<GoalCardProps> = ({
               <button
                 onClick={onEdit}
                 aria-label="Edit goal"
-                className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
+                <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" aria-hidden="true" />
               </button>
               <button
                 onClick={onDelete}
                 aria-label="Delete goal"
-                className="p-2 hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <Trash2 className="w-4 h-4 text-data-fail" />
+                <Trash2 className="w-4 h-4 text-data-fail" aria-hidden="true" />
               </button>
             </>
           )}

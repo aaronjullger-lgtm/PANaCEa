@@ -239,6 +239,26 @@ a,
       0 0 0 4px var(--color-focus-ring);
   }
 
+  /* Touch target — WCAG 2.1 AA minimum 44×44px for interactive elements */
+  .touch-target {
+    min-height: var(--spacing-min-touch-target, 44px);
+    min-width: var(--spacing-min-touch-target, 44px);
+  }
+
+  /* Ensure all standalone buttons meet touch target minimum */
+  button:not(.btn-icon-only):not(.inline-btn) {
+    min-height: 44px;
+  }
+
+  /* Skip-to-content link — screen reader shortcut */
+  .sr-skip-link {
+    @apply absolute -top-10 left-0 z-[9999] px-4 py-2 bg-[var(--color-accent)] text-white font-medium rounded-b-lg;
+    transition: top 0.2s;
+  }
+  .sr-skip-link:focus {
+    top: 0;
+  }
+
   /* Ghost button - transparent, Deep Navy text on light, slate on dark */
   .btn-ghost {
     @apply px-4 py-2 rounded-xl font-medium transition-all duration-200

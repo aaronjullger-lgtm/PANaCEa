@@ -486,7 +486,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             transition={{ type: 'spring', delay: 0.2 }}
             className="mb-4"
           >
-            <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} />
+            <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} aria-hidden="true" />
           </motion.div>
           <h2
             id="session-summary-title"
@@ -497,10 +497,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           <div className="flex items-center justify-center gap-4">
             <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
             <div className="text-left">
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.accuracy}%
               </div>
-              <div className="text-sm text-[var(--color-text-secondary)]">
+              <div className="text-sm text-[var(--color-text-secondary)] tabular-nums">
                 {overallStats.correct}/{overallStats.total} correct
               </div>
             </div>
@@ -510,19 +510,19 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs">
               {syncStatus === 'pending' && (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-[var(--color-text-muted)] animate-pulse" />
+                  <Cloud className="w-3.5 h-3.5 text-[var(--color-text-muted)] animate-pulse" aria-hidden="true" />
                   <span className="text-[var(--color-text-secondary)]">Saving progress...</span>
                 </>
               )}
               {syncStatus === 'synced' && (
                 <>
-                  <Cloud className="w-3.5 h-3.5 text-[var(--color-data-pass)]" />
+                  <Cloud className="w-3.5 h-3.5 text-[var(--color-data-pass)]" aria-hidden="true" />
                   <span className="text-[var(--color-data-pass)]">Progress saved</span>
                 </>
               )}
               {syncStatus === 'failed' && (
                 <>
-                  <CloudOff className="w-3.5 h-3.5 text-[var(--color-data-provisional)]" />
+                  <CloudOff className="w-3.5 h-3.5 text-[var(--color-data-provisional)]" aria-hidden="true" />
                   <span className="text-[var(--color-data-provisional)]">Saved locally</span>
                 </>
               )}
@@ -534,32 +534,32 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Target className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <Target className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" aria-hidden="true" />
+              <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.total}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Questions</div>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Clock className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <Clock className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" aria-hidden="true" />
+              <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.durationMinutes}m
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Duration</div>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Zap className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <Zap className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" aria-hidden="true" />
+              <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.questionsPerMinute}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Q/min</div>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
-              <Flame className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <Flame className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" aria-hidden="true" />
+              <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.maxStreak}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Best Streak</div>
@@ -570,7 +570,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           <div className="mb-6 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
+                <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
                 <span className="font-medium text-[var(--color-text-primary)]">
                   PANCE Distribution Score
                 </span>
@@ -578,7 +578,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <span
                 className={`text-xl font-bold ${getDistributionScoreClass(summary.distributionScore)}`}
               >
-                {summary.distributionScore}/100
+                <span className="tabular-nums">{summary.distributionScore}/100</span>
               </span>
             </div>
             <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
@@ -627,7 +627,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
           )}
 
-          {/* Weak Areas Alert */}
+          {/* Focus Areas Alert */}
           {weakAreas.length > 0 && (
             <div className="mb-6 p-4 bg-[var(--color-data-provisional)]/10 rounded-xl border border-[var(--color-data-provisional)]/30">
               <div className="flex items-center gap-2 mb-2">
@@ -747,9 +747,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {overallStats.incorrect > 0 && onReviewMissed && (
             <button
               onClick={onReviewMissed}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors min-h-[44px]"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors duration-200 min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <XCircle className="w-5 h-5" />
+              <XCircle className="w-5 h-5" aria-hidden="true" />
               Review {overallStats.incorrect} To Review
             </button>
           )}
@@ -757,9 +757,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {/* Metacognitive Reflection Button - Research shows 15-20% learning gains */}
           <button
             onClick={() => setShowReflection(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium hover:bg-[var(--color-accent)]/30 transition-colors min-h-[44px]"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium hover:bg-[var(--color-accent)]/30 transition-colors duration-200 min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
-            <BookOpen className="w-5 h-5" />
+            <BookOpen className="w-5 h-5" aria-hidden="true" />
             Reflect
           </button>
 
@@ -774,16 +774,16 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 resetPauseTracking();
                 onStartNewSession();
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent-cta)] text-[var(--color-text-inverse)] font-medium hover:bg-[var(--color-accent-cta)]/90 transition-colors min-h-[44px]"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent-cta)] text-[var(--color-text-inverse)] font-medium hover:bg-[var(--color-accent-cta)]/90 transition-colors duration-200 min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <Zap className="w-5 h-5" />
+              <Zap className="w-5 h-5" aria-hidden="true" />
               New Session
             </button>
           )}
 
           <button
             onClick={handleClose}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition-colors border border-[var(--color-border)] min-h-[44px]"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition-colors duration-200 border border-[var(--color-border)] min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Done
           </button>

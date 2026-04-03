@@ -47,6 +47,7 @@ export const API_ENDPOINTS = {
   OSCE_STATS: '/api/osce/stats',
   OSCE_ANALYTICS: '/api/osce/analytics',
   // Analytics (use getApiEndpoint for base URL consistency)
+  ANALYTICS_SESSION: '/api/analytics/session',
   ANALYTICS_CALIBRATION: '/api/analytics/calibration',
   ANALYTICS_PERFORMANCE_DELTAS: '/api/analytics/performance-deltas',
   ANALYTICS_PEER_STATS: (questionId: string) => `/api/analytics/peer-stats?questionId=${questionId}`,

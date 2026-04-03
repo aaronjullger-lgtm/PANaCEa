@@ -35,6 +35,8 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
+import { useRelevantTrials } from '@/hooks/useRelevantTrials';
+import { formatTrialStatus } from '@/lib/services/question/trialEnricher';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -316,6 +318,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
   const [curatedPassage, setCuratedPassage] = useState<CuratedPassageView | null>(null);
 
+  // Clinical trials — non-blocking, supplementary content
+  const { trials: relevantTrials } = useRelevantTrials(condition);
+  const [showTrials, setShowTrials] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -573,6 +579,81 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                 </a>
               ))}
             </div>
+          </section>
+        )}
+
+        {/* Active Research — Clinical Trials */}
+        {relevantTrials.length > 0 && (
+          <section className="mb-6">
+            <button
+              onClick={() => setShowTrials(!showTrials)}
+              className="flex items-center gap-2 w-full text-left group"
+              aria-expanded={showTrials}
+            >
+              <FlaskConical className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                Active Research ({relevantTrials.length})
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 ml-auto transition-transform ${showTrials ? 'rotate-180' : ''}`}
+                style={{ color: 'var(--color-text-muted)' }}
+              />
+            </button>
+            <AnimatePresence>
+              {showTrials && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 space-y-2">
+                    {relevantTrials.map((trial) => {
+                      const status = formatTrialStatus(trial.status);
+                      return (
+                        <a
+                          key={trial.nctId}
+                          href={trial.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-3 rounded-lg border transition-colors"
+                          style={{
+                            backgroundColor: 'var(--color-bg-secondary)',
+                            borderColor: 'var(--color-border)',
+                          }}
+                          aria-label={`View trial: ${trial.title}`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <span className="text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                              {trial.title.length > 100 ? `${trial.title.slice(0, 100)}...` : trial.title}
+                            </span>
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
+                              style={{
+                                backgroundColor: `color-mix(in srgb, ${status.color} 15%, transparent)`,
+                                color: status.color,
+                              }}
+                            >
+                              {status.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                            <span>{trial.nctId}</span>
+                            <span>{trial.phase}</span>
+                            {trial.interventions.length > 0 && (
+                              <span className="truncate">{trial.interventions.join(', ')}</span>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      Source: ClinicalTrials.gov · Phase III/IV trials
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
         )}
 

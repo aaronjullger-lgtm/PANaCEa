@@ -130,7 +130,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative scroll-mt-16">
         <DrillErrorBoundary drillName={title}>
           {children}
         </DrillErrorBoundary>

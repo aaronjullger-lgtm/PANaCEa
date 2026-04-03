@@ -1,0 +1,11 @@
+{
+  "eval_id": 7,
+  "eval_name": "verify-three-modified-files",
+  "prompt": "I just edited referenceConfigs.tsx, GenericReferenceView.tsx, and the ABG interpreter. Verify everything compiles.",
+  "assertions": [
+    {"text": "Runs ts.transpileModule on all 3 files", "type": "execution"},
+    {"text": "Reports OK/FAIL status for each file", "type": "output_format"},
+    {"text": "Runs clinical safety grep on library files", "type": "execution"},
+    {"text": "Provides concise pass/fail summary", "type": "output_format"}
+  ]
+}

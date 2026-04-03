@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
@@ -60,7 +60,7 @@ function parseGeminiMnemonicResponse(text: string): {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = aiEndpoint(
   GenerateMnemonicSchema,
   async (context) => {
     const { env, validated } = context as {

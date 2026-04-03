@@ -14,14 +14,15 @@ import { prisma } from '../_shared/prisma-edge';
  */
 export default async function generateDailyPlans(
   request: Request,
-  _context: unknown
+  context: any
 ): Promise<Response> {
   const startTime = Date.now();
+  const env = context.env;
 
   try {
-    // Verify request is from cron
+    // Verify request is from cron with CRON_SECRET
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.includes('Bearer')) {
+    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
       });

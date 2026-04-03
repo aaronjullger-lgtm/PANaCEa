@@ -175,18 +175,18 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="mb-4">
-              <Trophy className="w-16 h-16 text-[var(--color-accent)] mx-auto" />
+              <Trophy className="w-16 h-16 text-[var(--color-accent)] mx-auto" aria-hidden="true" />
             </div>
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               Session Complete!
             </h2>
             <p className="text-lg text-[var(--color-text-secondary)] mb-4">
-              Score: {drill.score}/{drill.totalAttempts} ({accuracy}%)
+              Score: <span className="tabular-nums">{drill.score}/{drill.totalAttempts} ({accuracy}%)</span>
             </p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => drill.startSession(selectedCategory)}
-                className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+                className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Start a new DDx drill session"
               >
                 Play Again
@@ -194,7 +194,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
               <button
                 onClick={drill.exitToMenu}
                 className="px-6 py-2 border border-[var(--color-border)] rounded-lg
-                           text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]"
+                           text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit to drill menu"
               >
                 Exit

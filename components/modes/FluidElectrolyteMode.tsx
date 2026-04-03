@@ -232,9 +232,10 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -389,9 +390,10 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -456,7 +458,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm text-data-neutral dark:text-data-neutral">Score</p>
-              <p className="text-xl font-bold text-data-neutral dark:text-data-neutral">
+              <p className="text-xl font-bold text-data-neutral dark:text-data-neutral tabular-nums">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
                   <span className="text-sm ml-2 text-[var(--color-accent)]">
@@ -467,17 +469,18 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
             <button
               onClick={handleReset}
-              className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
-              title="Reset Score"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Reset score"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="w-5 h-5" aria-hidden="true" />
             </button>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                aria-label="Exit"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>

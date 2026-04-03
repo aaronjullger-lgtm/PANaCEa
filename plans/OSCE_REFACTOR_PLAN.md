@@ -1,7 +1,7 @@
 # OSCE Mode Refactor Plan
 
 **Date:** 2026-04-01
-**Status:** PHASES A1/A2/A3/B/C1/C2/C3/D1/E1/E2/E3 IMPLEMENTED + misc cleanup — D2 remaining
+**Status:** ALL PHASES COMPLETE (A1/A2/A3/B/C1/C2/C3/D1/D2/E1/E2/E3)
 **Scope:** Performance, grading accuracy, UI immersion, architecture cleanup
 
 ## Implementation Log (2026-04-01)
@@ -28,8 +28,9 @@
 
 - **C1** ✅ `EncounterWorkstation` clinical layout: created `components/modes/osce/EncounterWorkstation.tsx` (~240 lines) with 12-col grid (7-8 main + 4-5 sidebar), responsive based on active sidebar panel. Features: `AVStateBadge` (severity-colored dot + name + context + voice tone descriptors), `SidebarTab` toggles for Orders/Exam, `AnimatePresence` slide-in panels (max-h-[50vh]). Integrated into `PatientEncounterMode.tsx` replacing old modal overlays. Sidebar content extracted to `sidebarJsx` variable with full feature parity: Rapport Meter, Encounter Log (history/exam/diagnostics with sparkline trends), typing indicator with bounce dots + `TYPING_STATUS_MESSAGES`, `ChatSkeleton` loading state, diagnosis feedback entry, and `clinicalFidelity.rawLabValues` conditional for trend visualization.
 
-### Still Pending
-- **D2**: Apply voice modulation from AV state to TTS output (requires Gemini Live WebSocket integration)
+- **D2** ✅ Voice modulation wired to Gemini Live TTS: `OSCELiveSession.tsx` now accepts `avState` prop, injects `VoiceModulation.toneDescriptors` into system instruction (tone directives, vocal strain, clinical context, rate-based pacing), and maps `voiceId`/`rate`/`pitch` to Gemini `speechConfig`. `live-engine.ts` accepts voice params via query string. `PatientVoiceSession.ts` Durable Object re-injects tone directives as `clientContent` mid-conversation on AV state transitions. `PatientEncounterMode.tsx` passes `currentAVState` to `OSCELiveSession`.
+
+### All Phases Complete
 
 ---
 

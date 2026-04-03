@@ -30,13 +30,26 @@ import { ClinicalSkeleton } from '@/components/loading';
 import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
 import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
+import CalibrationChart from './CalibrationChart';
 import { RetentionForecastCard } from './RetentionForecastCard';
 import { StudyActionList, type StudyAction } from './StudyActionCard';
 import { BlueprintProgressBar } from './BlueprintProgressBar';
+import { BlueprintGapHeatmap } from './BlueprintGapHeatmap';
+import { useBlueprintGaps } from '@/hooks/useBlueprintGaps';
+import { ConfusionPairCard } from './ConfusionPairCard';
+import { useConfusionPairs } from '@/hooks/useConfusionPairs';
+import { ReviewCalendar } from './ReviewCalendar';
+import { useReviewForecast } from '@/hooks/useReviewForecast';
+import { InfoTooltip } from '@/components/ui/InfoTooltip';
+import { TOOLTIP_STABILITY, TOOLTIP_MASTERY } from '@/lib/constants/copy';
 import { RotationFocusCard } from './RotationFocusCard';
 import { WellnessWidget } from './WellnessWidget';
-import { computeWellnessState, type StudySession } from '@/hooks/useStudyWellness';
+import { computeWellnessState } from '@/hooks/useStudyWellness';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useRecentSessions } from '@/hooks/useRecentSessions';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
+import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
+import { getDashboardConfig, type DashboardConfig, type WidgetId } from '@/lib/services/dashboardPersonalization';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
 
@@ -202,6 +215,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
   const { performanceData } = useUserStats();
+  const { profile: userProfile } = useUserProfile();
+  const { sessions: recentSessions } = useRecentSessions();
+  const { data: blueprintGaps } = useBlueprintGaps();
+  const { data: confusionPairsData } = useConfusionPairs(5);
+  const { data: reviewForecast } = useReviewForecast();
+  const { stage } = useResolvedBlueprint();
+  const dashboardConfig = useMemo(() => getDashboardConfig(stage), [stage]);
   const prefersReducedMotion = useReducedMotion();
   const retentionFetcher = useCallback(
     async (url: string) => {
@@ -210,7 +230,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     },
     [getToken]
   );
-  const { data, error, isLoading } = useSWR<RetentionData>(
+  const { data, error, isLoading, mutate } = useSWR<RetentionData>(
     user ? '/api/stats/retention' : null,
     retentionFetcher
   );
@@ -228,6 +248,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       // ignore
     }
   }, [view]);
+
+  // Widget visibility helper — driven by learner stage
+  const showWidget = useCallback(
+    (widget: WidgetId) =>
+      dashboardConfig.pilotWidgets.includes(widget) ||
+      dashboardConfig.dataWidgets.includes(widget),
+    [dashboardConfig]
+  );
+
+  const showPilotWidget = useCallback(
+    (widget: WidgetId) => dashboardConfig.pilotWidgets.includes(widget),
+    [dashboardConfig]
+  );
+
+  const showDataWidget = useCallback(
+    (widget: WidgetId) => dashboardConfig.dataWidgets.includes(widget),
+    [dashboardConfig]
+  );
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -293,7 +331,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               : 'Unable to load your study data. Please try again.'}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => mutate()}
             className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             {isOffline ? 'Check Connection & Retry' : 'Retry'}
@@ -305,7 +343,29 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   const totalCardsLearned = data.totalCards || 0;
 
-  // Derive system-level question counts from performance data for blueprint progress
+  // Derive system-level accuracy from performance data for blueprint progress & rotation card
+  const systemAccuracy = useMemo(() => {
+    const stats: Record<string, { correct: number; total: number }> = {};
+    if (performanceData) {
+      for (const entry of performanceData) {
+        const e = entry as { system?: string; isCorrect?: boolean };
+        const sys = e.system;
+        if (sys) {
+          if (!stats[sys]) stats[sys] = { correct: 0, total: 0 };
+          stats[sys].total += 1;
+          if (e.isCorrect) stats[sys].correct += 1;
+        }
+      }
+    }
+    // Convert to 0-1 accuracy; require ≥3 attempts for a meaningful ratio
+    const accuracy: Record<string, number> = {};
+    for (const [sys, s] of Object.entries(stats)) {
+      accuracy[sys] = s.total >= 3 ? s.correct / s.total : 0;
+    }
+    return accuracy;
+  }, [performanceData]);
+
+  // Keep a simple count for BlueprintProgressBar (coverage, not accuracy)
   const systemCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     if (performanceData) {
@@ -318,6 +378,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
     return counts;
   }, [performanceData]);
+
+  // Compute rotation week from rotationStartDate
+  const rotationWeek = useMemo(() => {
+    if (!userProfile?.rotationStartDate) return undefined;
+    const start = new Date(userProfile.rotationStartDate);
+    const now = new Date();
+    const diffMs = now.getTime() - start.getTime();
+    if (diffMs < 0) return 1; // hasn't started yet
+    return Math.floor(diffMs / (7 * 86400000)) + 1;
+  }, [userProfile?.rotationStartDate]);
+
+  // Compute wellness state from real session history
+  const wellnessState = useMemo(
+    () => computeWellnessState(recentSessions, 0),
+    [recentSessions]
+  );
 
   // Build prioritized study actions from retention data
   const studyActions = useMemo<StudyAction[]>(() => {
@@ -397,14 +473,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 </span>
               </h1>
               <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
-                Here's where you left off.
+                {dashboardConfig.greetingSuffix}
               </p>
             </div>
           </div>
         </motion.div>
 
         {/* ===== DASHBOARD VIEW TABS ===== */}
-        <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-tertiary)]">
+        <div role="tablist" aria-label="Dashboard views" className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-tertiary)]">
           {DASHBOARD_VIEWS.map((v) => {
             const Icon = v.icon;
             const isActive = view === v.id;
@@ -412,6 +488,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <button
                 key={v.id}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`tabpanel-${v.id}`}
+                id={`tab-${v.id}`}
                 onClick={() => setView(v.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                   isActive
@@ -419,7 +499,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
                 }`}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">{v.label}</span>
                 <span className="sm:hidden">{v.shortLabel}</span>
               </button>
@@ -431,6 +511,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'pilot' && (
             <motion.div
               key="pilot"
+              role="tabpanel"
+              id="tabpanel-pilot"
+              aria-labelledby="tab-pilot"
               initial={prefersReducedMotion ? false : { y: 8 }}
               animate={{ y: 0 }}
               exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
@@ -439,14 +522,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             >
               {/* Quick Stats Row */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <QuickStat
-                  icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
-                  label="Day Streak"
-                  value={currentStreak}
-                  trend={currentStreak > 0 ? { value: currentStreak, isPositive: true } : undefined}
-                  accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
-                  delay={0}
-                />
+                {dashboardConfig.showStreakPressure && (
+                  <QuickStat
+                    icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
+                    label="Day Streak"
+                    value={currentStreak}
+                    trend={currentStreak > 0 ? { value: currentStreak, isPositive: true } : undefined}
+                    accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
+                    delay={0}
+                  />
+                )}
                 <QuickStat
                   icon={<Brain className="w-5 h-5 text-[var(--color-accent)]" />}
                   label="Due Reviews"
@@ -464,6 +549,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Study Actions — "What should I do right now?" */}
+              {/* Review Forecast Calendar — 7-day SRS load visualization */}
+              {reviewForecast && (
+                <ReviewCalendar
+                  overdue={reviewForecast.overdue}
+                  today={reviewForecast.today}
+                  forecast={reviewForecast.forecast}
+                  totalActive={reviewForecast.totalActive}
+                />
+              )}
+
               <SectionHeader
                 title="What To Study"
                 subtitle="Prioritized actions based on your FSRS schedule"
@@ -471,35 +566,58 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               />
               <StudyActionList actions={studyActions} />
 
-              {/* Blueprint Progress */}
-              <BlueprintProgressBar
-                systemCounts={systemCounts}
-                targetWeights={NCCPA_BLUEPRINT_WEIGHTS}
-                totalAnswered={totalCardsLearned}
-              />
+              {/* Blueprint Progress — shown for late-didactic, clinical, and PANCE */}
+              {dashboardConfig.showBlueprintGaps && (
+                <>
+                  <BlueprintProgressBar
+                    systemCounts={systemCounts}
+                    targetWeights={NCCPA_BLUEPRINT_WEIGHTS}
+                    totalAnswered={totalCardsLearned}
+                  />
+                  {blueprintGaps && (
+                    <BlueprintGapHeatmap data={blueprintGaps} />
+                  )}
+                </>
+              )}
 
-              {/* Rotation Focus + Wellness */}
+              {/* Confusion Pairs — conditions the student frequently confuses */}
+              {confusionPairsData && confusionPairsData.confusionPairs.length > 0 && (
+                <ConfusionPairCard
+                  pairs={confusionPairsData.confusionPairs}
+                  onDrillPair={(correctId, selectedId) => {
+                    handleNavigation(`/study/drill/contrastive?conditionA=${correctId}&conditionB=${selectedId}`);
+                  }}
+                />
+              )}
+
+              {/* Rotation Focus + Wellness — stage-aware layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <RotationFocusCard
-                  rotationName={user?.publicMetadata?.currentRotation as string | undefined}
-                  onStartDrill={(system) => handleNavigation(`/study/main-session?system=${system}`)}
-                  systemPerformance={systemCounts ? Object.fromEntries(
-                    Object.entries(systemCounts).map(([sys, count]) => [sys, Math.min(1, (count as number) / 20)])
-                  ) : {}}
-                />
-                <WellnessWidget
-                  signal={computeWellnessState([] as StudySession[], 0).signal}
-                />
+                {dashboardConfig.showRotationContext && (
+                  <RotationFocusCard
+                    rotationName={userProfile?.currentRotation ?? undefined}
+                    rotationWeek={rotationWeek}
+                    eorDate={userProfile?.eorTestDate ?? undefined}
+                    onStartDrill={(system) => handleNavigation(`/study/main-session?system=${system}`)}
+                    systemPerformance={systemAccuracy}
+                  />
+                )}
+                {showPilotWidget('wellness_status') && (
+                  <WellnessWidget signal={wellnessState.signal} />
+                )}
               </div>
 
               {/* Exam Readiness + Retention Forecast */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ExamReadinessCard />
-                <RetentionForecastCard
-                  dueCount={data.dueCount}
-                  decayCurveData={data.decayCurveData}
-                  onStartReview={() => handleNavigation('/study/main-session')}
-                />
+                {(dashboardConfig.showPanceCountdown || dashboardConfig.showEorCountdown) && (
+                  <ExamReadinessCard />
+                )}
+                {showPilotWidget('retention_forecast') && (
+                  <RetentionForecastCard
+                    dueCount={data.dueCount}
+                    decayCurveData={data.decayCurveData}
+                    onStartReview={() => handleNavigation('/study/main-session')}
+                  />
+                )}
               </div>
 
               {/* Daily Practice */}
@@ -511,12 +629,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
                   onClick={() => handleNavigation('/modes/rapid-recall')}
-                  className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 transition-all duration-300 w-full text-left overflow-hidden"
+                  className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 w-full text-left overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="flex items-center gap-3 mb-3">
                     <div className="p-2.5 rounded-lg bg-[var(--color-data-provisional)]/15">
-                      <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" />
+                      <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" aria-hidden="true" />
                     </div>
                     <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                       Rapid Recall
@@ -527,7 +645,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   </p>
                   <div className="flex items-center text-[var(--color-data-provisional)] text-sm font-semibold group-hover:gap-2 transition-all">
                     Start Drill
-                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                   </div>
                 </button>
                 <DailyTriad />
@@ -538,39 +656,58 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'data' && (
             <motion.div
               key="data"
+              role="tabpanel"
+              id="tabpanel-data"
+              aria-labelledby="tab-data"
               initial={prefersReducedMotion ? false : { y: 8 }}
               animate={{ y: 0 }}
               exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="space-y-6"
             >
-              {/* Data Scientist: System Performance + Calibration */}
+              {/* System Performance + Calibration — stage-aware */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SystemPerformanceWidget maxSystems={5} />
-                <CalibrationQuadrantWidget className="w-full" />
+                {showDataWidget('system_performance') && (
+                  <SystemPerformanceWidget maxSystems={5} />
+                )}
+                {dashboardConfig.showCalibrationQuadrant && showDataWidget('calibration_quadrant') && (
+                  <CalibrationQuadrantWidget className="w-full" />
+                )}
+                {showDataWidget('calibration_chart') && (
+                  <CalibrationChart />
+                )}
               </div>
 
-              {/* Memory Health */}
-              <SectionHeader
-                title="Memory Health"
-                subtitle="Retention and stability over time"
-                icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
-              />
+              {/* Memory Health — decay + stability */}
+              <div className="flex items-center gap-1.5">
+                <SectionHeader
+                  title="Memory Health"
+                  subtitle="Retention and stability over time"
+                  icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
+                />
+                <InfoTooltip text={TOOLTIP_STABILITY} />
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
-                  <DecayCurve data={data.decayCurveData} />
-                </div>
-                <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
-                  <StabilityPyramid data={data.stabilityBuckets} />
-                </div>
+                {showDataWidget('decay_curve') && (
+                  <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
+                    <DecayCurve data={data.decayCurveData} />
+                  </div>
+                )}
+                {showDataWidget('stability_pyramid') && (
+                  <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
+                    <StabilityPyramid data={data.stabilityBuckets} />
+                  </div>
+                )}
               </div>
 
-              {/* Algorithm Status */}
-              <AlgorithmStatusWidget
-                lastTuned={new Date(data.lastTuned)}
-                reason={data.tuningReason}
-                adjustment={data.adjustment}
-              />
+              {/* Algorithm Status — only for advanced stages */}
+              {showDataWidget('algorithm_status') && (
+                <AlgorithmStatusWidget
+                  lastTuned={new Date(data.lastTuned)}
+                  reason={data.tuningReason}
+                  adjustment={data.adjustment}
+                />
+              )}
 
               {/* Link to full analytics */}
               <div className="flex justify-center pt-2">

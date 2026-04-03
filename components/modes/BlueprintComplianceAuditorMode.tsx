@@ -131,8 +131,8 @@ export function BlueprintComplianceAuditorMode() {
   const currentCorrectiveActions = activeTab === 'medical' ? medicalCorrectiveActions : activeTab === 'questions' ? questionsCorrectiveActions : null;
 
   const renderScoreGauge = (score: number) => (
-    <div className="relative w-32 h-32 mx-auto">
-      <svg className="w-full h-full" viewBox="0 0 100 100">
+    <div className="relative w-32 h-32 mx-auto" role="img" aria-label={`Compliance score: ${Math.round(score)}%`}>
+      <svg className="w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
         <circle
           cx="50"
           cy="50"

@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/src/lib/logger';
+import { offlineStore, isIndexedDBAvailable } from './offlineStore';
 
 const SCOPE = 'SyncManager';
 
@@ -228,7 +229,8 @@ class SyncManager {
     answers.push(offlineAnswer);
     this.saveOfflineAnswers(answers);
 
-    // Debug logging removed for production
+    // Dual-write to IndexedDB for Background Sync support
+    this.writeToIndexedDB('answers', offlineAnswer);
 
     // Try immediate sync if online
     if (this.isOnline()) {
@@ -239,6 +241,9 @@ class SyncManager {
         this.scheduleRetry();
         logger.error(SCOPE, 'Immediate sync failed', err);
       });
+    } else {
+      // Register Background Sync so the SW retries when connectivity returns
+      this.registerBackgroundSync('sync-answers');
     }
 
     return id;
@@ -331,6 +336,9 @@ class SyncManager {
     reviews.push(offlineReview);
     this.saveOfflineReviews(reviews);
 
+    // Dual-write to IndexedDB for Background Sync support
+    this.writeToIndexedDB('reviews', offlineReview);
+
     // Try immediate sync if online
     if (this.isOnline()) {
       this.syncReviews().catch((err) => {
@@ -340,6 +348,9 @@ class SyncManager {
         this.scheduleRetry();
         logger.error(SCOPE, 'Immediate sync failed (reviews)', err);
       });
+    } else {
+      // Register Background Sync so the SW retries when connectivity returns
+      this.registerBackgroundSync('sync-reviews');
     }
 
     return id;
@@ -699,12 +710,64 @@ class SyncManager {
   }
 
   // ===========================================================================
+  // INDEXEDDB + BACKGROUND SYNC
+  // ===========================================================================
+
+  /**
+   * Dual-write a record to IndexedDB (for Background Sync / service worker access).
+   * Fire-and-forget — localStorage remains the primary store.
+   */
+  private writeToIndexedDB(
+    store: 'answers' | 'reviews' | 'pearlActions',
+    record: OfflineAnswer | OfflineReview | OfflinePearlAction
+  ): void {
+    isIndexedDBAvailable().then((available) => {
+      if (!available) return;
+      const target = offlineStore[store];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (target as any).add(record).catch((err: unknown) => {
+        logger.warn(SCOPE, `IndexedDB write failed for ${store}`, err);
+      });
+    }).catch(() => {});
+  }
+
+  /**
+   * Register a Background Sync event with the service worker.
+   * Progressive enhancement — silently no-ops if not supported.
+   */
+  private registerBackgroundSync(tag: string): void {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        // Background Sync API (Chrome/Edge/Android)
+        if ('sync' in reg) {
+          return (reg as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register(tag);
+        }
+      })
+      .then(() => {
+        logger.debug(SCOPE, `Background sync registered: ${tag}`);
+      })
+      .catch((err) => {
+        // Expected on iOS/Firefox — they don't support Background Sync
+        logger.debug(SCOPE, `Background sync registration failed (expected on some browsers): ${tag}`, err);
+      });
+  }
+
+  // ===========================================================================
   // CLEANUP
   // ===========================================================================
 
   public clearAllPending(): void {
     this.saveOfflineAnswers([]);
     this.saveOfflinePearlActions([]);
+    // Also clear IndexedDB stores
+    isIndexedDBAvailable().then((available) => {
+      if (available) {
+        offlineStore.answers.clear().catch(() => {});
+        offlineStore.pearlActions.clear().catch(() => {});
+        offlineStore.reviews.clear().catch(() => {});
+      }
+    }).catch(() => {});
     logger.debug(SCOPE, 'Cleared all pending items');
   }
 }

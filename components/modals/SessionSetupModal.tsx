@@ -3,7 +3,7 @@ import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUt
 import type { SessionSettings } from '@/types';
 import { STUDY_PRESETS, type StudyPreset } from '@/config/training-modes';
 import { getAllSystems } from '@/lib/constants/blueprint';
-import { Zap, HeartPulse, TrendingDown, Sparkles, Stethoscope } from 'lucide-react';
+import { Zap, HeartPulse, TrendingDown, Sparkles, Stethoscope, Shuffle, HelpCircle } from 'lucide-react';
 
 const iconMap = {
   Zap,
@@ -53,6 +53,8 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
   });
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
+  const [interleaveMode, setInterleaveMode] = useState<'interleaved' | 'focused'>('interleaved');
+  const [showInterleaveInfo, setShowInterleaveInfo] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
@@ -74,9 +76,10 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
       count: 20, // Default custom count
       ...customSettings,
       focus: (customSettings.focus ?? 'all') as SessionSettings['focus'],
+      interleaveMode,
     };
 
-    // Add selected system if user chose one
+    // Add selected system if user chose one (implies focused mode)
     if (selectedSystem) {
       settings.systems = [selectedSystem];
     }
@@ -152,6 +155,53 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   ? `Practice questions exclusively from ${selectedSystem}`
                   : 'Questions will follow official NCCPA 2025 Blueprint distribution'}
               </p>
+            </div>
+
+            {/* Interleaving Toggle */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent)]">
+                  <Shuffle className="w-4 h-4" />
+                  Interleaved Practice
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowInterleaveInfo(!showInterleaveInfo)}
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+                    aria-label="Learn about interleaved practice"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={interleaveMode === 'interleaved'}
+                    onClick={() => setInterleaveMode(interleaveMode === 'interleaved' ? 'focused' : 'interleaved')}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                      interleaveMode === 'interleaved'
+                        ? 'bg-[var(--color-accent)]'
+                        : 'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                        interleaveMode === 'interleaved' ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-data-neutral dark:text-data-neutral mt-1">
+                {interleaveMode === 'interleaved'
+                  ? 'Questions mix across organ systems for stronger discrimination skills.'
+                  : 'Questions focus on a single system for deep practice.'}
+              </p>
+              {showInterleaveInfo && (
+                <div className="mt-2 p-2.5 rounded-lg bg-[var(--color-bg-tertiary)] text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                  Research shows interleaved practice improves diagnostic accuracy by ~9% compared to blocked (single-system) study. Your brain builds stronger discrimination skills when alternating between different conditions. (Rohrer & Taylor, 2007; Birnbaum et al., 2013)
+                </div>
+              )}
             </div>
 
             {/* PANCE-Level Notice */}

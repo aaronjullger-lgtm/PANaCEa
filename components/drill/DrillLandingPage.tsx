@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   LucideIcon,
   Play,
@@ -83,6 +84,8 @@ export function DrillLandingPage({
   children,
   isLoading = false,
 }: DrillLandingPageProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   // Semantic design tokens (consistent across all drill modes)
   const colors = {
     bg: 'bg-[var(--color-bg-tertiary)]',
@@ -153,17 +156,17 @@ export function DrillLandingPage({
 
           {/* Start Button */}
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             onClick={onStart}
             disabled={isLoading}
             aria-label={isLoading ? 'Starting drill...' : `Start ${title} drill`}
-            className={`w-full ${colors.button} text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full ${colors.button} text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
           >
             {isLoading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />
             ) : (
-              <Play className="w-6 h-6" />
+              <Play className="w-6 h-6" aria-hidden="true" />
             )}
             {isLoading ? 'Starting...' : 'Start Drill'}
           </motion.button>
@@ -172,9 +175,9 @@ export function DrillLandingPage({
         {/* Learning Objectives */}
         {objectives && objectives.length > 0 && (
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.1 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 mb-6"
           >
             <div className="flex items-center gap-2 mb-4">

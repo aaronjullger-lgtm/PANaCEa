@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QUESTION_RESPONSE_SCHEMA, GeneratedQuestionStrict } from './question-schema';
 import { validateGeneratedQuestion } from './question-validator';
+import { enrichWithPubMed, formatCitationsForPrompt, type PubMedCitation } from '../../../lib/services/question/pubmedEnricher';
 
 export interface ConditionData {
   condition: string;
@@ -11,6 +12,11 @@ export interface ConditionData {
     diagnostics: string;
     treatment: string;
   };
+}
+
+export interface GroundingSource {
+  uri: string;
+  title: string;
 }
 
 export interface GeneratedQuestion {
@@ -29,10 +35,59 @@ export interface GeneratedQuestion {
   metadata?: any;
   id?: string;
   text?: string; // Fallback for some interfaces
+  groundingSources?: GroundingSource[];
+  pubmedCitations?: PubMedCitation[];
 }
 
 // Re-export strict interface for type-safe usage
 export { GeneratedQuestionStrict };
+
+/**
+ * Fetch current clinical evidence for a condition via Google Search grounding.
+ * Returns grounding context text and source citations to inject into generation prompts.
+ * This is a separate call because structured output (responseMimeType: 'application/json')
+ * is incompatible with Google Search tool in the Gemini API.
+ */
+async function fetchGroundingContext(
+  apiKey: string,
+  condition: string
+): Promise<{ context: string; sources: GroundingSource[] }> {
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      tools: [{ googleSearch: {} } as any],
+    });
+
+    const result = await model.generateContent(
+      `Summarize the current clinical guidelines for ${condition}, including diagnostic criteria, first-line treatment, and any recent guideline updates (AHA, ACC, ATS, IDSA, etc.). Focus on evidence-based recommendations. Be concise (under 300 words).`
+    );
+
+    const response = result.response;
+    const text = response.text();
+
+    // Extract grounding sources
+    const sources: GroundingSource[] = [];
+    const seen = new Set<string>();
+    try {
+      const candidates = (response as any)?.candidates || [];
+      const chunks = candidates[0]?.groundingMetadata?.groundingChunks || [];
+      for (const chunk of chunks) {
+        const uri = chunk?.web?.uri;
+        const title = chunk?.web?.title;
+        if (uri && title && !seen.has(uri)) {
+          seen.add(uri);
+          sources.push({ uri, title });
+        }
+      }
+    } catch { /* grounding metadata extraction is best-effort */ }
+
+    return { context: text, sources: sources.slice(0, 5) };
+  } catch (error) {
+    console.warn('[question-generator] Grounding context fetch failed, proceeding without:', error);
+    return { context: '', sources: [] };
+  }
+}
 
 /**
  * Few-shot examples demonstrating clinical reasoning (via <thinking> tags)
@@ -133,6 +188,14 @@ export async function generateSingleQuestion(
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+  // Phase 1a: Fetch current clinical evidence via Google Search grounding
+  // This is a separate call because structured output is incompatible with search tools
+  const grounding = await fetchGroundingContext(apiKey, condition.condition);
+
+  // Phase 1b: Fetch PubMed citations for peer-reviewed evidence
+  const pubmedCitations = await enrichWithPubMed(condition.condition);
+  const pubmedBlock = formatCitationsForPrompt(pubmedCitations);
+
   const textbookBlock =
     textbookContext && textbookContext.excerpts.length > 0
       ? `
@@ -157,10 +220,19 @@ export async function generateSingleQuestion(
     .filter(Boolean)
     .join('\n');
 
+  const groundingBlock = grounding.context
+    ? `
+    CURRENT CLINICAL EVIDENCE (from Google Search — use to verify accuracy):
+    ${grounding.context}
+    `
+    : '';
+
   const prompt = `
     CONTEXT - Use these clinical findings to build the vignette. Do NOT include condition name or diagnosis in the vignette.
     ${findingsContext}
     ${textbookBlock}
+    ${groundingBlock}
+    ${pubmedBlock}
 
     CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals).
 
@@ -212,6 +284,16 @@ export async function generateSingleQuestion(
     if (!validation.valid) {
       console.error('Question validation failed:', validation.errors);
       return null;
+    }
+
+    // Attach grounding sources for evidence citations in the UI
+    if (grounding.sources.length > 0) {
+      (question as any).groundingSources = grounding.sources;
+    }
+
+    // Attach PubMed citations for peer-reviewed references
+    if (pubmedCitations.length > 0) {
+      (question as any).pubmedCitations = pubmedCitations;
     }
 
     return question;

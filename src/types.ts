@@ -135,6 +135,9 @@ export interface SessionSettings {
 
   /** Question count (legacy field name, kept for compatibility with 'count') */
   questionCount?: number;
+
+  /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
+  interleaveMode?: 'interleaved' | 'focused';
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)

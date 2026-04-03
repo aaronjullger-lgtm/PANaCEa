@@ -29,6 +29,11 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { selectSessionQuestions } from '../../../../lib/services/conceptQuestionSelector';
 import { MIN_SESSION_SIZE, MAX_SESSION_SIZE } from '../../../../lib/constants/sessionDefaults';
+import {
+  reserveFromReservoir,
+  requestRefill,
+  deriveScope,
+} from '../../../../lib/services/reservoir';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 
@@ -100,22 +105,80 @@ export const onRequestPost = authenticatedEndpoint(
         select: { id: true },
       });
 
-      // Generate session
-      const result = await selectSessionQuestions(prisma, {
-        userId: user.id,
-        mode: body.mode as any,
-        size: body.size,
-        blueprintWeights: body.blueprintWeights,
-        system: body.system,
-        subcategory: body.subcategory,
-        conditionId: body.conditionId,
-        boostSystems: body.boostSystems,
-        suppressSystems: body.suppressSystems,
-        perSystemCaps: body.perSystemCaps,
-        blueprintStage: body.blueprintStage as any,
-        urgencyMultiplier: body.urgencyMultiplier,
-        gatedSystems: body.gatedSystems,
-      });
+      const scope = deriveScope(body.mode, { system: body.system, conditionId: body.conditionId });
+      const sessionId = `ses_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+      // ── Step 1: Try reservoir first ──
+      let reservoirSource = false;
+      let reservoirCount = 0;
+      let result: any;
+
+      try {
+        const reserved = await reserveFromReservoir(
+          prisma, user.id, scope, body.size, sessionId
+        );
+        reservoirCount = reserved.length;
+
+        if (reserved.length >= body.size) {
+          // Happy path: full session from reservoir
+          const questions = await hydrateReservoirQuestions(prisma, reserved);
+          reservoirSource = true;
+
+          result = {
+            sessionId,
+            questions,
+            metadata: {
+              dueReviewCount: reserved.filter((r: any) => r.isReview).length,
+              newCardCount: reserved.filter((r: any) => !r.isReview).length,
+              systemDistribution: countSystems(questions),
+              estimatedMinutes: Math.ceil((questions.length * 90) / 60),
+              mode: body.mode,
+              blueprintStage: body.blueprintStage,
+              source: 'reservoir',
+            },
+          };
+        }
+      } catch (reservoirErr: any) {
+        // Reservoir failed — fall through to on-demand
+        logger.info('Reservoir unavailable, falling back to on-demand', {
+          error: reservoirErr.message,
+        });
+      }
+
+      // ── Step 2: Fall back to on-demand if reservoir didn't fully cover ──
+      if (!result) {
+        const onDemandResult = await selectSessionQuestions(prisma, {
+          userId: user.id,
+          mode: body.mode as any,
+          size: body.size,
+          blueprintWeights: body.blueprintWeights,
+          system: body.system,
+          subcategory: body.subcategory,
+          conditionId: body.conditionId,
+          boostSystems: body.boostSystems,
+          suppressSystems: body.suppressSystems,
+          perSystemCaps: body.perSystemCaps,
+          blueprintStage: body.blueprintStage as any,
+          urgencyMultiplier: body.urgencyMultiplier,
+          gatedSystems: body.gatedSystems,
+        });
+
+        result = {
+          ...onDemandResult,
+          metadata: {
+            ...onDemandResult.metadata,
+            source: reservoirCount > 0 ? 'mixed' : 'on_demand',
+          },
+        };
+      }
+
+      // ── Step 3: Trigger background refill (fire-and-forget) ──
+      if (context.waitUntil) {
+        context.waitUntil(
+          requestRefill(prisma, user.id, scope, 'post_session')
+            .catch((err: any) => logger.info('Background refill request failed', { error: err.message }))
+        );
+      }
 
       logger.info('Session generated', {
         sessionId: result.sessionId,
@@ -124,6 +187,8 @@ export const onRequestPost = authenticatedEndpoint(
         dueReviews: result.metadata.dueReviewCount,
         newCards: result.metadata.newCardCount,
         stage: body.blueprintStage,
+        source: result.metadata.source || 'on_demand',
+        reservoirHit: reservoirSource,
       });
 
       return new Response(JSON.stringify(result), {
@@ -144,3 +209,108 @@ export const onRequestPost = authenticatedEndpoint(
     }
   }
 );
+
+// ─── Reservoir Helpers ──────────────────────────────────────────────────────
+
+/**
+ * Hydrate reserved reservoir items into full SelectedQuestion objects.
+ */
+async function hydrateReservoirQuestions(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  reserved: any[]
+): Promise<any[]> {
+  const questionIds = reserved.map((r: any) => r.questionId);
+
+  // Fetch from PreGeneratedQuestion
+  const preGenerated = await prisma.preGeneratedQuestion.findMany({
+    where: { id: { in: questionIds } },
+    select: {
+      id: true,
+      questionData: true,
+      system: true,
+      difficulty: true,
+      conditionId: true,
+    },
+  });
+
+  // Fetch from Question table (for any not found in PreGeneratedQuestion)
+  const preGenIds = new Set(preGenerated.map((q: any) => q.id));
+  const remainingIds = questionIds.filter((id: string) => !preGenIds.has(id));
+  let standardQuestions: any[] = [];
+  if (remainingIds.length > 0) {
+    standardQuestions = await prisma.question.findMany({
+      where: { id: { in: remainingIds } },
+      select: {
+        id: true,
+        question: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        system: true,
+        difficulty: true,
+        conditionId: true,
+        category: true,
+        topic: true,
+        vignette: true,
+      },
+    });
+  }
+
+  // Build lookup
+  const questionMap = new Map<string, any>();
+  for (const q of preGenerated) {
+    const data = q.questionData as any;
+    questionMap.set(q.id, {
+      id: q.id,
+      question: data?.question || data?.stem || '',
+      vignette: data?.vignette || null,
+      options: data?.options || [],
+      correctAnswer: data?.correctAnswer || data?.answer || '',
+      correctAnswerIndex: data?.correctAnswerIndex ?? 0,
+      explanation: data?.explanation || data?.rationale || null,
+      system: q.system || data?.system || null,
+      category: data?.subcategory || null,
+      topic: data?.conditionName || null,
+      difficulty: q.difficulty || data?.difficulty || null,
+      conditionId: q.conditionId || null,
+    });
+  }
+  for (const q of standardQuestions) {
+    questionMap.set(q.id, {
+      id: q.id,
+      question: q.question || '',
+      vignette: q.vignette || null,
+      options: q.options || [],
+      correctAnswer: q.correctAnswer || '',
+      correctAnswerIndex: 0,
+      explanation: q.explanation || null,
+      system: q.system || null,
+      category: q.category || null,
+      topic: q.topic || null,
+      difficulty: q.difficulty || null,
+      conditionId: q.conditionId || null,
+    });
+  }
+
+  // Return in reservoir priority order, with source annotation
+  return reserved
+    .map((r: any) => {
+      const q = questionMap.get(r.questionId);
+      if (!q) return null;
+      return {
+        ...q,
+        source: r.isReview ? 'due_review' : 'new_card',
+      };
+    })
+    .filter(Boolean);
+}
+
+/** Count questions per system for metadata */
+function countSystems(questions: any[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const q of questions) {
+    const sys = q.system || 'UNKNOWN';
+    counts[sys] = (counts[sys] || 0) + 1;
+  }
+  return counts;
+}

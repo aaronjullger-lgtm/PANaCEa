@@ -82,6 +82,7 @@ const WeaknessCheatsheetExporter = lazy(
 );
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import { ARCHIVE_AND_RESET, TO_REVIEW_LABEL, CLEAR_TO_REVIEW } from '@/config/labels';
+import { LABEL_NOT_YET_ASSESSED } from '@/lib/constants/copy';
 const EnhancedSettingsTab = lazy(() => import('@/components/settings/EnhancedSettingsTab'));
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useUserContext } from '@/hooks/useUserContext';
@@ -1394,8 +1395,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               style={{ width: `${sys.accuracy}%` }}
                             />
                           </div>
-                          <div className="w-12 text-right text-sm font-medium text-[var(--color-text-primary)]">
-                            {sys.accuracy}%
+                          <div className={`text-right text-sm font-medium ${sys.accuracy === 0 ? 'w-auto' : 'w-12'}`} style={{ color: sys.accuracy === 0 ? 'var(--color-text-muted)' : 'var(--color-text-primary)' }}>
+                            {sys.accuracy === 0 ? LABEL_NOT_YET_ASSESSED : `${sys.accuracy}%`}
                           </div>
                           <div className="w-16 text-right text-xs text-[var(--color-text-muted)]">
                             {sys.correct}/{sys.total}
@@ -1473,7 +1474,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   onResetToDefaults={handleResetWidgets}
                 />
 
-                {/* Weakness Cheatsheet Export */}
+                {/* Focus Areas Export */}
                 <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                   <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
                 </Suspense>

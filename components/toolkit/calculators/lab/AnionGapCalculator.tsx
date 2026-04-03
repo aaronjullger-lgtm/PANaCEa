@@ -15,7 +15,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Beaker } from 'lucide-react';
-import { CalculatorHeader, ClinicalInput, ResultDisplay } from '../shared';
+import { CalculatorHeader, ClinicalInput, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult } from '../types';
 import { anionGap as calcAnionGap, correctedAnionGap } from '@/lib/calculators';
 
@@ -103,11 +103,30 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="Anion Gap Calculator"
-        subtitle="Metabolic Acidosis Assessment"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="Anion Gap Calculator"
+          subtitle="Metabolic Acidosis Assessment"
+          onBack={onBack}
+        />
+        <div className="flex gap-2">
+          <ResetButton
+            onReset={() => {
+              setSodium('');
+              setChloride('');
+              setBicarb('');
+              setAlbumin('');
+            }}
+          />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `Anion Gap Calculator\nNa: ${sodium} | Cl: ${chloride} | HCO₃: ${bicarb} | Albumin: ${albumin || 'N/A'}\n\nAnion Gap: ${displayAG}\n${correctedAG ? 'Corrected AG: ' + correctedAG : ''}\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
+      </div>
 
       {/* Formula Display */}
       <div className="bg-gradient-to-r from-[var(--color-bg-primary)]/40 to-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-xl p-4">

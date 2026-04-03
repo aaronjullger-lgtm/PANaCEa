@@ -134,6 +134,8 @@ export interface SessionSettings {
   /** Optional: when present, Gemini should target this specific condition */
   conditionName?: string;
   subcategoryName?: string;
+  /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
+  interleaveMode?: 'interleaved' | 'focused';
 }
 
 // ============================================================================

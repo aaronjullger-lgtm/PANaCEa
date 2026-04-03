@@ -51,12 +51,12 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
         className="absolute top-2 right-2 p-2.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         aria-label="Dismiss welcome card"
       >
-        <X className="w-4 h-4" />
+        <X className="w-4 h-4" aria-hidden="true" />
       </button>
 
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <RotateCcw className="w-5 h-5 text-[var(--color-accent)]" />
+        <RotateCcw className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
         <h3 className="font-bold text-[var(--color-text-primary)]">Welcome back!</h3>
       </div>
 
@@ -73,9 +73,9 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
         </div>
         <div className="flex items-center gap-1.5">
           {isGoodSession ? (
-            <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />
+            <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" aria-hidden="true" />
           ) : (
-            <TrendingDown className="w-4 h-4 text-[var(--color-data-provisional)]" />
+            <TrendingDown className="w-4 h-4 text-[var(--color-data-provisional)]" aria-hidden="true" />
           )}
           <span
             className={`text-sm font-semibold ${
@@ -84,7 +84,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
                 : 'text-[var(--color-data-provisional)]'
             }`}
           >
-            {Math.round(accuracy * 100)}%
+            <span className="tabular-nums">{Math.round(accuracy * 100)}%</span>
           </span>
         </div>
       </div>
@@ -117,7 +117,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
         className="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:opacity-90 transition-opacity group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         <span>Continue where you left off</span>
-        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
       </button>
     </motion.div>
   );

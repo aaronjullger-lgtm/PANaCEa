@@ -78,8 +78,8 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
       </div>
 
       {isLoading && (
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-          <Loader2 className="w-4 h-4 animate-spin" />
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]" role="status" aria-live="polite">
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           Loading confusion data...
         </div>
       )}
@@ -100,7 +100,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
               className="flex items-center gap-3 rounded-lg border border-[var(--color-border)]/70 bg-[var(--color-bg-secondary)]/50 px-3 py-2"
             >
               <div className="flex flex-1 items-center gap-2">
-                <ArrowRightLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ArrowRightLeft className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
                 <div>
                   <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                     {pair.correctCondition}{' '}
@@ -123,13 +123,13 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
               {pair.correctConditionId && pair.selectedConditionId && (
                 <button
                   onClick={() => handleCompare(pair)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-text-inverse)] shadow-sm transition hover:opacity-90"
+                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-text-inverse)] shadow-sm transition-all duration-200 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   disabled={prefetchingId === pair.id}
                 >
                   {prefetchingId === pair.id ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Sparkles className="w-3 h-3" />
+                    <Sparkles className="w-3 h-3" aria-hidden="true" />
                   )}
                   Compare
                 </button>

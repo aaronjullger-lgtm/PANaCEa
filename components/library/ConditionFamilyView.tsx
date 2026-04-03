@@ -105,7 +105,7 @@ export function ConditionFamilyView({
             {data.canonicalName} Family
           </h3>
           <Button variant="ghost" onClick={() => setExpanded(!expanded)}>
-            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {expanded ? <ChevronDown className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
           </Button>
         </div>
         {data.stats && (

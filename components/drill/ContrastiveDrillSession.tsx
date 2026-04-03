@@ -135,7 +135,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                 <button
                   key={set.id}
                   onClick={() => handleSelectSet(set)}
-                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] dark:hover:border-[var(--color-accent)] transition-all group text-left"
+                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] dark:hover:border-[var(--color-accent)] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 group text-left"
                 >
                   <div>
                     <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)]">
@@ -151,7 +151,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                       )}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-data-neutral group-hover:text-[var(--color-accent)] transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-data-neutral group-hover:text-[var(--color-accent)] transition-colors" aria-hidden="true" />
                 </button>
               ))}
             </div>

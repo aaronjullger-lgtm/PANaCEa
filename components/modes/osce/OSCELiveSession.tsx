@@ -10,6 +10,8 @@ import { Mic, MicOff, Loader2, Phone, PhoneOff } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
 
+import type { VoiceModulation, AVState } from '@/types/patient-av-state-machine';
+
 const DEFAULT_SYSTEM_INSTRUCTION =
   'You are Marcus, a 55-year-old male with crushing chest pain. You are anxious and short of breath. If the student interrupts you, stop talking immediately. When asked about your vitals, use the get_current_vitals tool to look them up.';
 
@@ -21,29 +23,88 @@ export interface LivePatientContext {
   chiefComplaint?: string;
 }
 
-function buildSystemInstruction(context: LivePatientContext | null | undefined): string {
-  if (!context?.patientName && !context?.chiefComplaint) return DEFAULT_SYSTEM_INSTRUCTION;
-  const name = context.patientName ?? 'the patient';
-  const ageStr = context.age != null ? `${context.age}-year-old` : '';
-  const sexStr = context.sex ?? '';
+/**
+ * Builds a Gemini system instruction that includes voice tone descriptors and clinical context
+ * from the AV state machine, so the AI's verbal delivery matches the patient's clinical state.
+ *
+ * The tone descriptors (e.g. "breathless", "agitated", "weak") tell Gemini how to speak,
+ * while the clinical context (e.g. "Acute MI — compensating") gives narrative grounding.
+ * Vocal strain and background sounds are described so the AI can incorporate verbal cues
+ * (e.g. pausing to cough, speaking through labored breathing).
+ */
+function buildSystemInstruction(
+  context: LivePatientContext | null | undefined,
+  avState?: AVState | null,
+): string {
+  if (!context?.patientName && !context?.chiefComplaint && !avState) return DEFAULT_SYSTEM_INSTRUCTION;
+  const name = context?.patientName ?? 'the patient';
+  const ageStr = context?.age != null ? `${context.age}-year-old` : '';
+  const sexStr = context?.sex ?? '';
   const demo = [ageStr, sexStr].filter(Boolean).join(' ') || 'adult';
-  const cc = context.chiefComplaint?.trim() ? ` Chief complaint: ${context.chiefComplaint}.` : '';
-  return `You are ${name}, a ${demo} patient.${cc} Stay in character. If the student interrupts you, stop talking immediately. When asked about your vitals, use the get_current_vitals tool to look them up.`;
+  const cc = context?.chiefComplaint?.trim() ? ` Chief complaint: ${context.chiefComplaint}.` : '';
+
+  // Voice modulation directives from AV state
+  let voiceDirective = '';
+  if (avState?.voice) {
+    const v = avState.voice;
+    const tones = v.toneDescriptors?.length
+      ? `Speak in a ${v.toneDescriptors.join(', ')} tone.`
+      : '';
+    const strain = v.applyVocalStrain
+      ? ' Your voice is strained — pause occasionally to catch your breath or wince in pain.'
+      : '';
+    const bgSounds = v.backgroundSounds?.length
+      ? ` You are ${v.backgroundSounds.join(' and ')} between sentences.`
+      : '';
+    const clinicalCtx = avState.clinicalContext
+      ? ` Clinical state: ${avState.clinicalContext}.`
+      : '';
+    const rate = v.rate < 0.8
+      ? ' Speak slowly and deliberately.'
+      : v.rate > 1.3
+        ? ' Speak rapidly, as if rushed or panicked.'
+        : '';
+
+    voiceDirective = ` ${tones}${strain}${bgSounds}${rate}${clinicalCtx}`;
+  }
+
+  return `You are ${name}, a ${demo} patient.${cc}${voiceDirective} Stay in character. If the student interrupts you, stop talking immediately. When asked about your vitals, use the get_current_vitals tool to look them up.`;
+}
+
+/**
+ * Maps VoiceModulation from the AV state machine to Gemini Live speechConfig.
+ * Gemini Live supports voiceName and (on some models) rate/pitch overrides.
+ */
+function buildSpeechConfig(voice?: VoiceModulation | null): Record<string, unknown> {
+  if (!voice) return { voiceName: 'Aoede' };
+  return {
+    voiceName: voice.voiceId || 'Aoede',
+    // Gemini Live experimental models may support these; they're ignored if unsupported
+    ...(voice.rate !== 1.0 && { speechRate: voice.rate }),
+    ...(voice.pitch !== 0 && { pitchShift: voice.pitch }),
+  };
 }
 
 interface OSCELiveSessionProps {
   sessionId: string;
   /** When provided, the voice persona matches this encounter (name, age, sex, chief complaint). */
   patientContext?: LivePatientContext | null;
+  /** Current AV state from the PatientAVEngine — drives voice modulation and tone descriptors. */
+  avState?: AVState | null;
   onClose?: () => void;
 }
 
 export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
   sessionId,
   patientContext,
+  avState,
   onClose,
 }) => {
-  const systemInstruction = useMemo(() => buildSystemInstruction(patientContext), [patientContext]);
+  const systemInstruction = useMemo(
+    () => buildSystemInstruction(patientContext, avState),
+    [patientContext, avState],
+  );
+  const speechConfig = useMemo(() => buildSpeechConfig(avState?.voice), [avState?.voice]);
   const patientLabel = patientContext?.patientName ?? 'Marcus';
   const { getToken } = useAuth();
   const { logAction, calculateMetrics } = useOSCEMetrics();
@@ -84,6 +145,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         model,
         config: {
           responseModalities: [Modality.AUDIO],
+          speechConfig: speechConfig as Record<string, unknown>,
           systemInstruction,
           tools: [
             {
@@ -157,7 +219,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Failed to connect');
     }
-  }, [sessionId, getToken, systemInstruction]);
+  }, [sessionId, getToken, systemInstruction, speechConfig]);
 
   const disconnect = useCallback(() => {
     if (sessionRef.current?.close) {

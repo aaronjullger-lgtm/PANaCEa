@@ -90,42 +90,43 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleZoomOut}
-              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
-              title="Zoom Out"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Zoom out"
             >
-              <ZoomOut className="w-5 h-5" />
+              <ZoomOut className="w-5 h-5" aria-hidden="true" />
             </button>
             <span className="text-sm text-data-neutral w-16 text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
-              title="Zoom In"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Zoom in"
             >
-              <ZoomIn className="w-5 h-5" />
+              <ZoomIn className="w-5 h-5" aria-hidden="true" />
             </button>
             <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={handleRotate}
-              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
-              title="Rotate"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Rotate image"
             >
-              <RotateCw className="w-5 h-5" />
+              <RotateCw className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
               onClick={handleReset}
-              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white text-sm"
-              title="Reset View"
+              className="p-2.5 min-h-[36px] hover:bg-data-neutral rounded-lg transition-colors text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Reset view"
             >
               Reset
             </button>
             <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={onClose}
-              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              aria-label="Close viewer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         </div>

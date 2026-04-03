@@ -109,6 +109,7 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
       <div
         className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-[0_10px_40px_-10px_rgba(15,23,42,0.5)] flex flex-col animate-fade-in"
         role="dialog"
+        aria-modal="true"
         aria-label="Normal Labs reference"
       >
         {/* Header */}

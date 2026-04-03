@@ -67,8 +67,14 @@ export async function onRequestPost(
     try {
       const body = (await context.request.json()) as { notes?: string };
       notes = body?.notes;
-    } catch {
-      // No body or invalid JSON, that's fine
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Use transaction to ensure atomicity

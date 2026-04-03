@@ -301,6 +301,40 @@ export interface TelemetryData {
    * Allows server to apply method-appropriate thresholds if needed.
    */
   input_method?: 'mouse' | 'touch';
+
+  // =========================================================================
+  // Wave 2: Option Interaction Chronometry Fields
+  // =========================================================================
+
+  /**
+   * Full sequence of option selections during this question.
+   * Each entry records which option was selected, when, and for how long.
+   * Used server-side for distractor chronometry (2A) and switch direction (2B) analysis.
+   * @see lib/services/distractorChronometryService.ts
+   * @see lib/services/switchDirectionService.ts
+   */
+  option_interactions?: OptionInteractionTelemetry[];
+
+  /**
+   * Count of distinct options the learner clicked/tapped during this question.
+   * Derived from option_interactions for quick access without parsing the array.
+   */
+  unique_options_considered?: number;
+}
+
+/**
+ * Telemetry record for a single option interaction (Wave 2).
+ * Captures selection timing for server-side distractor chronometry and switch direction analysis.
+ */
+export interface OptionInteractionTelemetry {
+  /** Option identifier: 'A', 'B', 'C', 'D' */
+  option_id: string;
+  /** Timestamp when this option was selected (ms since question display, performance.now relative) */
+  selected_at_ms: number;
+  /** Timestamp when user switched away from this option (null if this was the final selection) */
+  deselected_at_ms: number | null;
+  /** Time spent on this option before switching (null if still selected at submission) */
+  dwell_ms: number | null;
 }
 
 /**

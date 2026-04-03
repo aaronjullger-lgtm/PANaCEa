@@ -1,7 +1,8 @@
 /**
  * Layout Components Index
  * Central exports for PANaCEa layout system.
- * Active: NavRail, AppBrand, PageContainer, SiteFooter, SectorGrid, DrillShell.
+ * Active: NavRail, AppBrand, PageContainer, SiteFooter, SectorGrid.
+ * DrillShell re-exported from components/drill for backwards compat.
  * Deprecated (deleted): MainLayout, Sidebar, AppSidebar, AccountFooter — see LAYOUT_README.md.
  */
 
@@ -17,4 +18,4 @@ export { SiteFooter } from './SiteFooter';
 export type { SiteFooterProps } from './SiteFooter';
 export { SectorGrid } from './SectorGrid';
 export type { SectorItem } from './SectorGrid';
-export { DrillShell, DrillShellCompact } from './DrillShell';
+export { default as DrillShell } from '../drill/DrillShell';

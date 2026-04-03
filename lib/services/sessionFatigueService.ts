@@ -58,3 +58,40 @@ export function applyFatigueCorrection(parTimeMs: number, questionNumber: number
   const factor = computeFatigueFactor(questionNumber);
   return Math.round(parTimeMs * factor);
 }
+
+/**
+ * Compute a confidence dampener based on session position.
+ *
+ * Late-session reviews produce behavioral signals under cognitive fatigue
+ * (Warm, 1984; Helton & Russell, 2015). A correct answer at Q35 feels
+ * fluent because the student is on "autopilot," not because memory is strong.
+ *
+ * Dampener ramps from 1.0 (no adjustment) to 0.85 (15% confidence reduction)
+ * using the same logarithmic shape as the par time correction.
+ *
+ * At Q15 or below: factor = 1.0 (no dampening)
+ * At Q20: factor ≈ 0.94
+ * At Q30: factor ≈ 0.90
+ * At Q40+: factor ≈ 0.88
+ * Floor: 0.85 (15% max reduction)
+ *
+ * Research basis:
+ * - Warm (1984): Sustained attention task performance declines after ~15 min
+ * - Helton & Russell (2015): Vigilance decrement reflects cognitive resource depletion
+ * - Pattyn et al. (2008): Task-unrelated thoughts increase with time-on-task
+ *
+ * @param questionNumber - 1-based position in the session
+ * @returns Multiplicative confidence dampener [0.85, 1.0]
+ */
+export function computeFatigueConfidenceDampener(questionNumber: number): number {
+  if (!Number.isFinite(questionNumber) || questionNumber <= FATIGUE_THRESHOLD) {
+    return 1.0;
+  }
+
+  const questionsOverThreshold = questionNumber - FATIGUE_THRESHOLD;
+  // Mirror the par time fatigue curve but invert for confidence dampening
+  const fatiguePenalty = FATIGUE_RATE * Math.log(1 + questionsOverThreshold);
+  const dampener = 1.0 - fatiguePenalty;
+
+  return Math.max(0.85, dampener);
+}

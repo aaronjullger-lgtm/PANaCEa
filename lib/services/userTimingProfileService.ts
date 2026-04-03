@@ -19,6 +19,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
+import { fitExGaussian, type ExGaussianParams } from '../confidence/exGaussianRT';
 
 // ── Tier boundaries (word count) ──
 const TIER_THRESHOLDS = {
@@ -250,6 +251,8 @@ export interface UserBehavioralBaseline {
     p25Ms: number;
     p75Ms: number;
     n: number;
+    /** Ex-Gaussian fit for RT distribution (Ratcliff, 1978) */
+    exGaussian?: ExGaussianParams;
   };
   switchBaseline: {
     medianSwitches: number;
@@ -356,6 +359,10 @@ export async function computeBehavioralBaseline(
   const rtStats = percentileStats(rtValues);
   const switchStats = percentileStats(switchValues);
 
+  // Fit ex-Gaussian distribution to RT values (Ratcliff, 1978; Luce, 1986)
+  // Returns null if insufficient data — caller falls back to Gaussian z-score
+  const exGaussianParams = fitExGaussian(rtValues);
+
   return {
     rtBaseline: {
       medianMs: Math.round(rtStats.median),
@@ -363,6 +370,7 @@ export async function computeBehavioralBaseline(
       p25Ms: Math.round(rtStats.p25),
       p75Ms: Math.round(rtStats.p75),
       n: rtValues.length,
+      exGaussian: exGaussianParams ?? undefined,
     },
     switchBaseline: {
       medianSwitches: Math.round(switchStats.median * 100) / 100,

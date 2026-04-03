@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -91,7 +91,7 @@ function parseVisionResponse(text: string): {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;

@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import { Brain, CheckCircle, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
@@ -123,16 +123,22 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
 
   if (isLoading) {
     return (
-      <div
-        className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 animate-pulse ${className}`}
-      >
-        <div className="h-5 w-32 bg-[var(--color-bg-secondary)] rounded mb-4" />
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 bg-[var(--color-bg-secondary)] rounded-xl" />
-          ))}
-        </div>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="calibration-skeleton"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 animate-pulse ${className}`}
+        >
+          <div className="h-5 w-32 bg-[var(--color-bg-secondary)] rounded mb-4" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-20 bg-[var(--color-bg-secondary)] rounded-xl" />
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -188,7 +194,7 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
           const label = getQuadrantLabel(quadrantType);
           const pct = total > 0 ? Math.round((count / total) * 100) : 0;
           return (
-            <div key={key} className={`rounded-xl border p-3 ${bgClass} ${borderClass}`}>
+            <div key={key} className={`rounded-xl border p-3 hover:shadow-sm transition-shadow duration-200 ${bgClass} ${borderClass}`}>
               <div className="flex items-center gap-2 mb-1">
                 <Icon className={`w-4 h-4 shrink-0 ${textClass}`} />
                 <span className={`text-xs font-medium ${textClass}`}>{label.short}</span>

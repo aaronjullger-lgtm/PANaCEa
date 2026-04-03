@@ -45,6 +45,9 @@ const CONFIDENT_TREMOR_CEILING = 0.2;
 const ELIM_VELOCITY_STRONG = 0.8; // Fast systematic elimination → positive signal
 const ELIM_VELOCITY_WEAK = 0.2;   // Slow/absent elimination → soft negative
 
+/** Z-score threshold: signal must be 2+ stddevs above user's personal median */
+const Z_SCORE_THRESHOLD = 2.0;
+
 /** Latency ratio below which confidence boost is eligible */
 const BOOST_LATENCY_RATIO_MAX = 0.8;
 
@@ -54,6 +57,22 @@ const ELIM_BOOST_AMOUNT = 0.15;           // Additional lift for fast eliminatio
 const ELIM_PENALTY_AMOUNT = 0.10;         // Soft penalty for absent elimination
 const INDECISION_GRADE_CAP = 1.5;         // Cap grade_continuous when Ghost Grader fires
 // ── Types ──
+
+/** Per-user behavioral baseline for z-score normalization (Sprint 7) */
+export interface GhostGraderBaseline {
+  /** Median oscillation count from historical reviews */
+  oscillationMedian: number;
+  /** Std dev of oscillation count */
+  oscillationStdDev: number;
+  /** Median tremor score */
+  tremorMedian: number;
+  /** Std dev of tremor score */
+  tremorStdDev: number;
+  /** Median selection drift (ms) */
+  driftMedianMs: number;
+  /** Std dev of selection drift */
+  driftStdDevMs: number;
+}
 
 export interface GhostGraderInput {
   /** FSRS rating from implicit or explicit input (1-4) */
@@ -74,6 +93,8 @@ export interface GhostGraderInput {
   eliminationVelocity?: number;
   /** Number of answer options available (typically 4 for MCQ) */
   optionCount?: number;
+  /** Per-user behavioral baseline for z-score normalization (Sprint 7) */
+  baseline?: GhostGraderBaseline | null;
 }
 
 export interface GhostGraderResult {
@@ -119,6 +140,7 @@ export function applyHonestRatingWithDetail(input: GhostGraderInput): GhostGrade
     latencyRatio,
     eliminationVelocity,
     optionCount = 4,
+    baseline = null,
   } = input;
   const neutralResult: GhostGraderResult = {
     rating: userRating,
@@ -136,15 +158,33 @@ export function applyHonestRatingWithDetail(input: GhostGraderInput): GhostGrade
     return neutralResult;
   }
 
-  // ── Count indecision signals ──
+  // ── Count indecision signals (z-score when baseline available, absolute otherwise) ──
   let signalCount = 0;
-
   const effectiveOscillations = oscillations + Math.min(vignetteRegressions, 2);
-  if (effectiveOscillations > OSCILLATION_THRESHOLD) signalCount++;
 
-  if (selectionDriftMs != null && selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS) signalCount++;
+  if (baseline && baseline.oscillationStdDev > 0) {
+    // Z-score: how many stddevs above the user's personal median?
+    const oscZ = (effectiveOscillations - baseline.oscillationMedian) / baseline.oscillationStdDev;
+    if (oscZ > Z_SCORE_THRESHOLD) signalCount++;
+  } else {
+    if (effectiveOscillations > OSCILLATION_THRESHOLD) signalCount++;
+  }
 
-  if (tremorScore >= TREMOR_THRESHOLD) signalCount++;
+  if (selectionDriftMs != null) {
+    if (baseline && baseline.driftStdDevMs > 0) {
+      const driftZ = (selectionDriftMs - baseline.driftMedianMs) / baseline.driftStdDevMs;
+      if (driftZ > Z_SCORE_THRESHOLD) signalCount++;
+    } else {
+      if (selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS) signalCount++;
+    }
+  }
+
+  if (baseline && baseline.tremorStdDev > 0) {
+    const tremorZ = (tremorScore - baseline.tremorMedian) / baseline.tremorStdDev;
+    if (tremorZ > Z_SCORE_THRESHOLD) signalCount++;
+  } else {
+    if (tremorScore >= TREMOR_THRESHOLD) signalCount++;
+  }
 
   // ── DOWNGRADE path: any indecision → Again ──
   if (signalCount > 0) {
@@ -203,6 +243,7 @@ export const GHOST_GRADER_CONSTANTS = {
   OSCILLATION_THRESHOLD,
   TREMOR_THRESHOLD,
   CONFIDENT_TREMOR_CEILING,
+  Z_SCORE_THRESHOLD,
   ELIM_VELOCITY_STRONG,
   ELIM_VELOCITY_WEAK,
   BOOST_LATENCY_RATIO_MAX,

@@ -15,7 +15,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -128,7 +128,7 @@ function parseTutorSuccessResponse(data: TutorSuccessData): {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(TutorChatBodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(TutorChatBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;

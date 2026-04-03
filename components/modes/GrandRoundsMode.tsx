@@ -622,12 +622,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                 {completedStats.correctCount}/{completedStats.totalQuestions}
               </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
@@ -636,14 +636,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             {!isTargeted && (
               <>
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-                  <div className="text-4xl font-bold text-muted-amber-500">
+                  <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                     {completedStats.percentile}%
                   </div>
                   <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
                 </div>
 
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-                  <div className="text-4xl font-bold text-muted-amber-500">
+                  <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                     #{completedStats.ranking}
                   </div>
                   <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
@@ -694,7 +694,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               type="button"
               onClick={fetchReview}
               disabled={reviewLoading}
-              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               {reviewLoading ? (
                 <>
@@ -1064,9 +1064,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ type: 'spring', bounce: 0.5 }}
             >
               {isTopPercentile ? (
-                <Crown className="w-20 h-20 text-muted-amber-500 mx-auto" />
+                <Crown className="w-20 h-20 text-muted-amber-500 mx-auto" aria-hidden="true" />
               ) : (
-                <Trophy className="w-20 h-20 text-muted-amber-500 mx-auto" />
+                <Trophy className="w-20 h-20 text-muted-amber-500 mx-auto" aria-hidden="true" />
               )}
             </motion.div>
 
@@ -1089,7 +1089,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.1 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
             </motion.div>
 
@@ -1099,7 +1099,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.2 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-muted-amber-500">
+              <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                 {completedStats.correctCount}/{completedStats.totalQuestions}
               </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
@@ -1113,7 +1113,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   transition={{ delay: 0.3 }}
                   className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
                 >
-                  <div className="text-4xl font-bold text-muted-amber-500">
+                  <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                     {completedStats.percentile}%
                   </div>
                   <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
@@ -1125,7 +1125,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   transition={{ delay: 0.4 }}
                   className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
                 >
-                  <div className="text-4xl font-bold text-muted-amber-500">
+                  <div className="text-4xl font-bold text-muted-amber-500 tabular-nums">
                     #{completedStats.ranking}
                   </div>
                   <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
@@ -1186,7 +1186,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               type="button"
               onClick={fetchReview}
               disabled={reviewLoading}
-              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               {reviewLoading ? (
                 <>
@@ -1201,7 +1201,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <button
             onClick={onExit}
-            className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all"
+            className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Back to Menu
           </button>

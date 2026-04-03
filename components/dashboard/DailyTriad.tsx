@@ -67,13 +67,13 @@ function ErrorCard({ onRetry }: { onRetry: () => void }) {
             We couldn't fetch a gold standard or clinical pearl. Try again in a moment.
           </p>
         </div>
-        <RefreshCw className="w-5 h-5 text-[var(--color-data-fail)]" />
+        <RefreshCw className="w-5 h-5 text-[var(--color-data-fail)]" aria-hidden="true" />
       </div>
       <button
         onClick={onRetry}
-        className="mt-4 inline-flex items-center gap-2 px-3 py-2 min-h-[36px] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 rounded-lg text-sm font-semibold text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+        className="mt-4 inline-flex items-center gap-2 px-3 py-2 min-h-[36px] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 rounded-lg text-sm font-semibold text-[var(--color-text-primary)] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
-        <RefreshCw className="w-4 h-4" /> Retry
+        <RefreshCw className="w-4 h-4" aria-hidden="true" /> Retry
       </button>
     </motion.div>
   );
@@ -135,18 +135,18 @@ export default function DailyTriadCard() {
 
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
         <span className="inline-flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-[var(--color-data-pass)]" aria-hidden />
+          <ShieldCheck className="w-4 h-4 text-[var(--color-data-pass)]" aria-hidden="true" />
           {data.system}
         </span>
         {data.subcategory && (
           <span className="inline-flex items-center gap-1.5">
-            <BookOpen className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
+            <BookOpen className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
             {data.subcategory}
           </span>
         )}
         {typeof data.panceYield === 'number' && (
           <span className="inline-flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" aria-hidden />
+            <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" aria-hidden="true" />
             Yield <span className="tabular-nums">{data.panceYield}</span>
           </span>
         )}
@@ -165,7 +165,7 @@ export default function DailyTriadCard() {
             aria-label="Mark triad as reviewed"
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 min-h-[36px] rounded-lg bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
-            <Check className="w-4 h-4" />
+            <Check className="w-4 h-4" aria-hidden="true" />
             {isMarkingReviewed ? 'Saving...' : 'Reviewed'}
           </button>
           <button
@@ -173,7 +173,7 @@ export default function DailyTriadCard() {
             aria-label="Shuffle for a different triad"
             className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 min-h-[36px] rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
             Shuffle
           </button>
         </div>

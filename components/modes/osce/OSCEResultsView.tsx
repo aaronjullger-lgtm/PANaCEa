@@ -83,9 +83,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
         >
           <div className="flex items-center gap-3 mb-4">
             {isCorrectDiagnosis ? (
-              <CheckCircle className="w-8 h-8 text-data-pass" />
+              <CheckCircle className="w-8 h-8 text-data-pass" aria-hidden="true" />
             ) : (
-              <XCircle className="w-8 h-8 text-data-provisional" />
+              <XCircle className="w-8 h-8 text-data-provisional" aria-hidden="true" />
             )}
             <div>
               <h2
@@ -122,9 +122,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             transition={{ delay: 0.1 }}
             className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral text-center shadow-sm"
           >
-            <Award className="w-8 h-8 text-data-neutral mx-auto mb-2" />
+            <Award className="w-8 h-8 text-data-neutral mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-data-neutral mb-1">Overall Score</p>
-            <p className={`text-4xl font-bold ${getScoreColor(score.overall)}`}>
+            <p className={`text-4xl font-bold tabular-nums ${getScoreColor(score.overall)}`}>
               {Math.round(score.overall)}%
             </p>
           </motion.div>
@@ -135,9 +135,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             transition={{ delay: 0.2 }}
             className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
           >
-            <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" />
+            <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-muted-foreground mb-1">Thoroughness</p>
-            <p className={`text-4xl font-bold ${getScoreColor(score.thoroughness)}`}>
+            <p className={`text-4xl font-bold tabular-nums ${getScoreColor(score.thoroughness)}`}>
               {Math.round(score.thoroughness)}%
             </p>
           </motion.div>
@@ -148,9 +148,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             transition={{ delay: 0.3 }}
             className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
           >
-            <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
+            <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
-            <p className={`text-4xl font-bold ${getScoreColor(score.efficiency)}`}>
+            <p className={`text-4xl font-bold tabular-nums ${getScoreColor(score.efficiency)}`}>
               {Math.round(score.efficiency)}%
             </p>
           </motion.div>
@@ -184,7 +184,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           <ul className="space-y-2">
             {idealWorkup.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-data-neutral">
-                <CheckCircle className="w-5 h-5 text-data-neutral flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-data-neutral flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{item}</span>
               </li>
             ))}
@@ -196,7 +196,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           <motion.button
             onClick={onNewCase}
             className="flex-1 bg-data-neutral-bg hover:opacity-90 py-4 rounded-xl font-semibold text-white
-                       transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                       transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -207,7 +207,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             <motion.button
               onClick={onExit}
               className="px-8 py-4 bg-data-neutral-bg hover:opacity-90 rounded-xl font-semibold
-                         text-white transition-colors border border-data-neutral"
+                         text-white transition-colors border border-data-neutral focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

@@ -15,6 +15,7 @@
 import React from 'react';
 import ExplanationPanel from '@/components/questions/ExplanationPanel';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
+import { CalibrationFeedbackBadge } from '@/components/session/CalibrationFeedbackBadge';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 import { MessageCircle, PenLine } from 'lucide-react';
@@ -38,6 +39,8 @@ export interface AnswerFeedbackProps {
   showNotes: boolean;
   setShowNotes: (show: boolean) => void;
   onNoteChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  /** Implicit confidence score (0-1) from behavioral telemetry. If provided, shows calibration feedback. */
+  implicitConfidence?: number;
 }
 
 const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
@@ -56,6 +59,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   showNotes,
   setShowNotes,
   onNoteChange,
+  implicitConfidence,
 }) => {
   if (isExamSimulator) return null;
 
@@ -64,6 +68,14 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
 
   return (
     <div className="mt-6 animate-fade-in space-y-4">
+      {/* Calibration Feedback Badge — metacognitive awareness */}
+      {implicitConfidence !== undefined && (
+        <CalibrationFeedbackBadge
+          wasCorrect={isCorrect}
+          confidence={implicitConfidence}
+        />
+      )}
+
       {topicStats && (
         <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
           <div className="flex justify-between items-center mb-1 text-sm">
@@ -115,12 +127,12 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
         <ExplanationPanel
           rationale={(() => {
             const r = currentQuestion.rationale;
-            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r;
+            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as any;
             if (typeof r === 'string') {
               try {
                 const parsed = JSON.parse(r) as unknown;
                 if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
-                  return parsed;
+                  return parsed as any;
               } catch {
                 /* not JSON */
               }
@@ -140,6 +152,18 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           fontSizeAdjustment={fontSizeAdjustment}
           contentSource={currentQuestion.contentSource}
           contentSourceTitle={currentQuestion.contentSourceTitle}
+          groundingSources={
+            (currentQuestion as any).groundingSources ||
+            (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
+              ? (currentQuestion.rationale as any).groundingSources
+              : undefined)
+          }
+          pubmedCitations={
+            (currentQuestion as any).pubmedCitations ||
+            (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
+              ? (currentQuestion.rationale as any).pubmedCitations
+              : undefined)
+          }
         />
 
         {!isCorrect && (

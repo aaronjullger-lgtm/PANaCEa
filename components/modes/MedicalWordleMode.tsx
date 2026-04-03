@@ -390,7 +390,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             <div className="text-center space-y-4">
               {status === 'won' ? (
                 <>
-                  <Trophy className="w-12 h-12 text-data-provisional mx-auto" />
+                  <Trophy className="w-12 h-12 text-data-provisional mx-auto" aria-hidden="true" />
                   <h2 className="text-2xl font-bold text-data-pass">Excellent!</h2>
                   <p className="text-data-neutral">
                     You got it in {guesses.length}/{MAX_ATTEMPTS} tries
@@ -398,7 +398,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
                 </>
               ) : (
                 <>
-                  <X className="w-12 h-12 text-data-fail mx-auto" />
+                  <X className="w-12 h-12 text-data-fail mx-auto" aria-hidden="true" />
                   <h2 className="text-2xl font-bold text-data-fail">Better luck tomorrow</h2>
                   <p className="text-data-neutral">
                     The word was:{' '}
@@ -410,14 +410,14 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleShare}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-4 h-4" aria-hidden="true" />
                   Share
                 </button>
                 <button
                   onClick={onExit}
-                  className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   Exit
                 </button>

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/services/dashboardPersonalization.ts",
+    "lib/services/wellnessEngine.ts",
+    "lib/services/calibrationEngine.ts",
+    "lib/services/difficultyCalibrator.ts",
+    "hooks/useResolvedBlueprint.ts",
+    "hooks/useSessionWellness.ts",
+    "hooks/useDifficultyCalibration.ts",
+    "components/session/CalibrationFeedbackBadge.tsx",
+    "components/session/SessionPacer.tsx",
+    "components/session/AnswerFeedback.tsx",
+    "components/dashboard/DashboardPage.tsx",
+    "components/dashboard/TrainingMenu.tsx"
+  ],
+  "exclude": ["node_modules"]
+}

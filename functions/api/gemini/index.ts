@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
 interface Env {
@@ -34,7 +34,7 @@ export const onRequestOptions = withCors();
  * POST /api/gemini
  * Synchronous Gemini API proxy (requires authentication)
  */
-export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (context) => {
+export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => {
   const { request, env, validated } = context as {
     request: Request;
     env: Env;

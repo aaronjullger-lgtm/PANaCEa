@@ -704,6 +704,32 @@ export function adminAuthenticatedEndpoint<T>(
 }
 
 /**
+ * AI/Gemini endpoint stack — authenticated with aggressive rate limiting.
+ * Use for any endpoint that calls the Gemini API (generation, analysis, chat,
+ * OSCE, mnemonics, vision, etc.) to prevent abuse and control API costs.
+ *
+ * Default: 25 req/min per user (vs 300 for normal authenticated endpoints).
+ * Override via options.requestsPerMinute for lighter endpoints (e.g. cache list).
+ */
+export function aiEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params'; requestsPerMinute?: number }
+) {
+  const rateLimit = options?.requestsPerMinute ?? 25;
+  return withMiddleware(
+    withCors(),
+    withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    withAuth(),
+    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'api', keyPrefix: 'ai' }),
+    withValidation(schema, options),
+    withLogging(),
+    handler
+  );
+}
+
+/**
  * Public endpoint stack (no auth required)
  * Includes env validation and rate limiting (600 req/min by IP)
  */

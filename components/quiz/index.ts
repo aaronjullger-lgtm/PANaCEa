@@ -6,7 +6,7 @@
 
 export { default as AnswerChoice } from './AnswerChoice';
 export { default as ErrorTagger } from './ErrorTagger';
-export { AnswerFeedback, useAnswerFeedback } from './AnswerFeedback';
+export { default as AnswerFeedback } from '../session/AnswerFeedback';
 export { SessionStatsOverlay } from './SessionStatsOverlay';
 export { SessionEndSummary } from './SessionEndSummary';
 export { SocraticTutorChat } from './SocraticTutorChat';

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -65,7 +65,7 @@ function parse3DResponse(text: string): Array<{ label: string; box_3d: Box3D }> 
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(Analyze3DBodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(Analyze3DBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;

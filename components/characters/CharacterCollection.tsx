@@ -278,9 +278,10 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                       ? 'bg-[var(--color-accent)] text-white'
                       : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                   }`}
-                  title="Grid view"
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === 'grid'}
                 >
-                  <Grid3x3 className="w-5 h-5" />
+                  <Grid3x3 className="w-5 h-5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
@@ -289,9 +290,10 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                       ? 'bg-[var(--color-accent)] text-white'
                       : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                   }`}
-                  title="List view"
+                  aria-label="List view"
+                  aria-pressed={viewMode === 'list'}
                 >
-                  <List className="w-5 h-5" />
+                  <List className="w-5 h-5" aria-hidden="true" />
                 </button>
               </div>
 
@@ -303,9 +305,9 @@ const CharacterCollection: React.FC<CharacterCollectionProps> = ({
                 <Filter className="w-4 h-4" />
                 <span className="text-sm font-medium">Filters</span>
                 {showFilters ? (
-                  <ChevronUp className="w-4 h-4" />
+                  <ChevronUp className="w-4 h-4" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4" aria-hidden="true" />
                 )}
               </button>
             </div>

@@ -92,7 +92,7 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
       whileHover={prefersReducedMotion ? {} : { translateY: -2 }}
       whileTap={prefersReducedMotion ? {} : { translateY: 0 }}
       onClick={handleClick}
-      className="w-full text-left transition-shadow hover:shadow-md"
+      className="w-full text-left transition-shadow hover:shadow-md rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
     >
       <div
         className={`
@@ -130,7 +130,7 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: animDuration, delay: animDuration * 0.5 }}
-                className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold"
+                className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold tabular-nums"
                 style={{
                   backgroundColor: `${action.accentColor}25`,
                   color: action.accentColor,
@@ -175,7 +175,7 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
             ease: 'easeInOut',
           }}
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5" aria-hidden="true" />
         </motion.div>
       </div>
     </motion.button>

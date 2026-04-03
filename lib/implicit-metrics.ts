@@ -17,6 +17,7 @@
 
 import { Rating } from './fsrs';
 import { type TrajectoryMetrics, interpretTrajectoryForRating } from './micro-kinetics';
+import { exGaussianRTSignal, type ExGaussianParams } from './confidence/exGaussianRT';
 
 /**
  * Raw behavioral metrics captured during question interaction
@@ -92,6 +93,10 @@ export interface ContinuousRatingResult {
   confidence: number;
   /** Discrete rating for FSRS.next() (round of grade) */
   discreteRating: Rating;
+  /** Ex-Gaussian RT classification if available: 'automatic' | 'normal' | 'effortful' | 'lapse' | null */
+  rtClassification?: string | null;
+  /** RT signal quality (1.0 = normal, 0.6 = lapse-detected) */
+  rtSignalQuality?: number;
 }
 
 /**
@@ -110,6 +115,10 @@ export interface UserBaseline {
   commitmentGapMedianMs: number;
   cursorEntropyMedian: number;
   oscillationMedian: number;
+  /** Ex-Gaussian RT distribution params (Ratcliff, 1978). When present, enables
+   *  lapse detection: attentional lapses reduce signal quality instead of
+   *  being misinterpreted as weak memory. */
+  exGaussian?: ExGaussianParams;
 }
 
 /**
@@ -437,6 +446,8 @@ export function deriveContinuousRating(
   // - Kornell & Bjork (2008): fluency ≠ durability (addressed via fluency illusion in drillReviewService)
   const cp = config.confidenceParams;
   let confidence: number;
+  let _rtClassification: string | null = null;
+  let _rtSignalQuality = 1.0;
 
   if (!metrics.isCorrect) {
     // Incorrect: high confidence that the error classification is correct.
@@ -444,23 +455,30 @@ export function deriveContinuousRating(
     confidence = cp.incorrectConfidence;
   } else {
     // Signal 1: Response time (fast correct = strong automatic retrieval)
-    // When baseline available: z-score against student's own RT distribution
-    // Fallback: log-transform of latency ratio (absolute threshold)
+    // Priority: ex-Gaussian > z-score > log-transform
     let sRT: number;
-    if (baseline && baseline.rtStdDevMs > 0) {
-      // Z-score: how many stddevs above/below the student's own median
+    let rtSignalQuality = 1.0; // Reduced for attentional lapses
+
+    if (baseline?.exGaussian && baseline.exGaussian.n >= 30) {
+      // Best path: ex-Gaussian classification (Ratcliff, 1978; Luce, 1986)
+      // Decomposes RT into cognitive processing (mu+sigma) and attentional lapses (tau).
+      // Lapses are flagged with reduced signal quality — prevents random slowness
+      // from being misinterpreted as weak memory.
+      const egResult = exGaussianRTSignal(safeTimeToFirstClick, baseline.exGaussian);
+      sRT = egResult.signal;
+      rtSignalQuality = egResult.quality;
+      _rtClassification = egResult.classification;
+      _rtSignalQuality = rtSignalQuality;
+    } else if (baseline && baseline.rtStdDevMs > 0) {
+      // Fallback: z-score against student's own RT distribution
       const zScore = (safeTimeToFirstClick - baseline.rtMedianMs) / baseline.rtStdDevMs;
       // Map z-score to [0, 1]: z=-2 → 1.0 (very fast for them), z=0 → 0.67, z=+2 → 0.33, z=+3 → 0.0
       sRT = Math.max(0, Math.min(1, 1 - zScore / 3));
     } else {
-      // Uses log-transform: diminishing penalty beyond 1.5× par time (clinical reasoning)
+      // Final fallback: log-transform of latency ratio (absolute threshold)
       // Range: 0.0 (very slow) → 1.0 (instant recall)
       const rtRatio = latencyRatio; // already computed above: effectiveLatency / parTime
       sRT = Math.max(0, Math.min(1, 1 - Math.log(Math.max(rtRatio, 0.1)) / Math.log(3)));
-      // rtRatio 0.3 → sRT ≈ 1.0 (instant recall)
-      // rtRatio 1.0 → sRT ≈ 1.0 (at par, log(1)=0)
-      // rtRatio 1.5 → sRT ≈ 0.63
-      // rtRatio 3.0 → sRT ≈ 0.0 (3× par time)
     }
 
     // Signal 2: Answer stability (no switches = confident)
@@ -513,11 +531,20 @@ export function deriveContinuousRating(
     const weights = QUESTION_TYPE_WEIGHTS[qtKey] ?? QUESTION_TYPE_WEIGHTS.unknown;
 
     // Weighted sum of signals (question-type-aware)
+    // When an attentional lapse is detected via ex-Gaussian, the RT signal's
+    // contribution is reduced (rtSignalQuality < 1.0) and its weight is
+    // redistributed equally to other signals. This prevents a random "zone-out"
+    // from tanking confidence when the student actually knows the material.
+    const effectiveRtWeight = weights.rtWeight * rtSignalQuality;
+    const redistributedWeight = weights.rtWeight * (1 - rtSignalQuality);
+    const otherWeightSum = weights.switchWeight + weights.trajectoryWeight + weights.hesitationWeight;
+    const boostFactor = otherWeightSum > 0 ? 1 + redistributedWeight / otherWeightSum : 1;
+
     confidence =
-      weights.rtWeight * sRT +
-      weights.switchWeight * sSwitch +
-      weights.trajectoryWeight * sTrajectory +
-      weights.hesitationWeight * sHesitation;
+      effectiveRtWeight * sRT +
+      weights.switchWeight * boostFactor * sSwitch +
+      weights.trajectoryWeight * boostFactor * sTrajectory +
+      weights.hesitationWeight * boostFactor * sHesitation;
 
     // Hint dampener: aided recall produces weaker retrieval strength signal
     if (metrics.hintViewed) {
@@ -529,7 +556,7 @@ export function deriveContinuousRating(
 
   const discreteRating = gradeToRating(grade);
 
-  return { grade, confidence, discreteRating };
+  return { grade, confidence, discreteRating, rtClassification: _rtClassification, rtSignalQuality: _rtSignalQuality };
 }/** Map continuous grade to discrete FSRS Rating */
 function gradeToRating(grade: number): Rating {
   if (grade < 1.5) return Rating.Again;

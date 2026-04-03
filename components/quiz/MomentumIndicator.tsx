@@ -99,9 +99,10 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         transition={noMotion ? { duration: 0 } : undefined}
         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color} border ${config.borderColor}`}
         style={{ transform: 'translateZ(0)' }}
+        aria-label={`Momentum: ${config.label} — ${momentum.score}%`}
       >
-        <Icon className="w-3 h-3" />
-        <span>{momentum.score}</span>
+        <Icon className="w-3 h-3" aria-hidden="true" />
+        <span className="tabular-nums">{momentum.score}</span>
       </motion.div>
     );
   }

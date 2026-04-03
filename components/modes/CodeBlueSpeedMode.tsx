@@ -358,7 +358,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
         >
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
-              <Trophy className="w-20 h-20 text-data-fail mx-auto" />
+              <Trophy className="w-20 h-20 text-data-fail mx-auto" aria-hidden="true" />
 
               <h1 className="text-4xl font-bold">Code Blue Complete!</h1>
 
@@ -367,7 +367,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
               <div className="text-center space-y-2">
-                <div className="text-6xl font-bold text-data-fail">{accuracy}%</div>
+                <div className="text-6xl font-bold text-data-fail tabular-nums">{accuracy}%</div>
                 <div className="text-lg text-[var(--color-text-muted)]">
                   {score.correct} correct out of {score.total}
                 </div>
@@ -375,12 +375,12 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                  <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{score.correct}</div>
+                  <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" aria-hidden="true" />
+                  <div className="text-2xl font-bold tabular-nums">{score.correct}</div>
                   <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
                 </div>
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                  <XCircle className="w-8 h-8 text-data-fail mx-auto mb-2" />
+                  <XCircle className="w-8 h-8 text-data-fail mx-auto mb-2" aria-hidden="true" />
                   <div className="text-2xl font-bold">{score.total - score.correct}</div>
                   <div className="text-sm text-[var(--color-text-muted)]">Missed</div>
                 </div>
@@ -391,9 +391,9 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleRestart}
-                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-5 h-5" aria-hidden="true" />
                   Try Again
                 </motion.button>
 
@@ -401,7 +401,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onExit}
-                  className="flex-1 bg-[var(--color-bg-primary)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] font-semibold py-3 px-6 rounded-lg transition-colors"
+                  className="flex-1 bg-[var(--color-bg-primary)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] font-semibold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   Exit
                 </motion.button>

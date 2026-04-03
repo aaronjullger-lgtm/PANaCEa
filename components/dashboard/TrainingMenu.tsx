@@ -41,6 +41,8 @@ import {
   MODES_WITH_DEDICATED_ROUTES,
 } from '@/config/training-modes';
 import { useUserContext } from '@/hooks/useUserContext';
+import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
+import { getDashboardConfig } from '@/lib/services/dashboardPersonalization';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -120,6 +122,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 }) => {
   const { careerStage } = useUserContext();
   const isPracticing = careerStage === 'practicing';
+  const { stage } = useResolvedBlueprint();
+  const dashboardConfig = useMemo(() => getDashboardConfig(stage), [stage]);
 
   // Localized state for the Core Adaptive focus toggle
   const [focus, setFocus] = useState<FocusOption>('all');
@@ -130,8 +134,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const coreMode = MODE_REGISTRY.find((mode) => mode.id === 'core_adaptive');
 
   // Filter out the core mode and condition_drill (accessed via Condition Page) for the Bento grid
+  // Then further filter by learner-stage visible modes
   const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill', 'core_adaptive'];
-  const drillModes = MODE_REGISTRY.filter((mode) => !HIDDEN_DRILL_MODES.includes(mode.id));
+  const drillModes = useMemo(() => {
+    const allModes = MODE_REGISTRY.filter((mode) => !HIDDEN_DRILL_MODES.includes(mode.id));
+    // When searching, show all modes so the user can discover hidden ones
+    if (searchQuery.trim()) return allModes;
+    // Otherwise, filter to stage-appropriate modes + always show coming-soon for discovery
+    return allModes.filter(
+      (mode) => dashboardConfig.visibleModes.includes(mode.id) || mode.isComingSoon
+    );
+  }, [dashboardConfig.visibleModes, searchQuery]);
 
   // Category-based sections for clearer navigation (using TrainingCategory)
   const CATEGORY_SECTIONS: Array<{
@@ -613,12 +626,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* Core PANCE Simulation / Knowledge Maintenance - Unified Premium Card */}
         {coreMode && !searchQuery && (
           <DashboardActionCard
-            title={isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation'}
-            subtitle={isPracticing ? 'PANRE-LA Check-in' : 'Comprehensive Board Prep'}
+            title={isPracticing ? 'Knowledge Maintenance' : `Core ${dashboardConfig.examLabel} Simulation`}
+            subtitle={isPracticing ? 'PANRE-LA Check-in' : dashboardConfig.readinessLabel}
             description={getFocusDescription()}
             icon={Brain}
             stats={[
-              { label: 'Questions', value: '120+', icon: Target },
+              { label: 'Questions', value: `${dashboardConfig.defaultSessionSize}+`, icon: Target },
               {
                 label: 'Mode',
                 value:
@@ -632,7 +645,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               },
               { label: 'Algorithm', value: 'FSRS', icon: TrendingUp },
             ]}
-            buttonText="Start Session"
+            buttonText={dashboardConfig.sessionCTA}
             onAction={handleCoreStart}
             variant="default"
             buttonVariant="secondary"

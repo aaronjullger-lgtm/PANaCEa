@@ -19,7 +19,7 @@
 
 import { z } from 'zod';
 import {
-  authenticatedEndpoint,
+  aiEndpoint,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../_shared/middleware';
@@ -437,7 +437,7 @@ async function callGeminiTutor(
 // Main Handler
 // -----------------------------------------------------------------------------
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = aiEndpoint(
   TutorMessageSchema,
   async (context: TutorHandlerContext) => {
     const { env, auth, validated } = context;

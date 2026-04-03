@@ -1,0 +1,44 @@
+{
+  "skill_name": "react-refactor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "PatientEncounterMode.tsx has 52 useState calls and is 3500 lines. I need to consolidate the state into a useReducer. Don't change any behavior, just extract the state management into a custom hook.",
+      "expected_output": "A new useEncounterReducer hook that replaces all 52 useState calls with a single useReducer, with stable setter references that match the old setter names",
+      "files": [],
+      "expectations": [
+        "Creates a new hook file with useReducer",
+        "Preserves functional updater pattern support",
+        "Provides named setters matching original useState setter names",
+        "Includes SET_FIELD, SET_FIELDS, UPDATE_FIELD, and RESET actions",
+        "No behavioral changes to the component"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The OSCE encounter currently uses modal overlays for OrderPanel and ExamPanel. Convert them to persistent inline sidebar panels in a clinical workstation grid layout. The main content should take 7-8 columns and the sidebar 4-5 columns on medium+ screens.",
+      "expected_output": "An EncounterWorkstation component with 12-column grid, slot props for panels, and AnimatePresence transitions for sidebar content",
+      "files": [],
+      "expectations": [
+        "Creates a layout wrapper component with responsive grid",
+        "Uses named slot props (children, sidebarContent, orderPanel, examPanel)",
+        "Extracts complex JSX into variables before passing as props",
+        "Replaces modal overlays with inline panel rendering",
+        "Preserves all existing functionality in the sidebar"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "QuizView.tsx is 2274 lines. I want to extract the timer logic (elapsed time, pause/resume, display formatting) into a reusable useSessionTimer hook. Make sure the hook returns everything the component currently uses for timer display.",
+      "expected_output": "A useSessionTimer hook encapsulating timer state, pause/resume, and formatted display values",
+      "files": [],
+      "expectations": [
+        "Extracts timer-related useState and useEffect into the hook",
+        "Returns pause/resume controls wrapped in useCallback",
+        "Returns formatted time display values",
+        "Handles cleanup on unmount",
+        "Component integration requires minimal changes"
+      ]
+    }
+  ]
+}

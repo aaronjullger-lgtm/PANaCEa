@@ -252,11 +252,12 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
-        className="w-full flex items-center gap-2 text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 group cursor-pointer"
+        className="w-full flex items-center gap-2 text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
         aria-expanded={isOpen}
       >
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'} text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)]`}
+          aria-hidden="true"
         />
         {Icon && <Icon className={`w-4 h-4 ${iconColor ?? 'text-[var(--color-accent)]'}`} />}
         {title}

@@ -89,6 +89,8 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
             whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             title={fullName}
+            aria-pressed={isSelected}
+            aria-label={`${fullName} — ${isSelected ? 'enabled' : 'disabled'}`}
             data-mastery={isWeak ? 'weak' : undefined}
             className={`
               relative flex flex-col justify-between p-3 min-h-0 rounded-xl text-left

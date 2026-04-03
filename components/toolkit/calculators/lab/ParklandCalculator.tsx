@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { Droplet } from 'lucide-react';
-import { CalculatorHeader, ClinicalInput } from '../shared';
+import { CalculatorHeader, ClinicalInput, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps } from '../types';
 import { parkland as parklandFormula } from '@/lib/calculators';
 
@@ -24,11 +24,28 @@ export const ParklandCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="Parkland Formula"
-        subtitle="Burn resuscitation (first 24 hours)"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="Parkland Formula"
+          subtitle="Burn resuscitation (first 24 hours)"
+          onBack={onBack}
+        />
+        <div className="flex gap-2">
+          <ResetButton
+            onReset={() => {
+              setWeightKg('');
+              setTbsaPercent('');
+            }}
+          />
+          {total24 !== null && (
+            <CopyResultButton
+              getText={() =>
+                `Parkland Formula\nWeight: ${weightKg} kg | TBSA: ${tbsaPercent}%\n\nTotal 24h: ${total24?.toLocaleString()} mL LR\nFirst 8h: ${first8h?.toLocaleString()} mL\nNext 16h: ${next16h?.toLocaleString()} mL`
+              }
+            />
+          )}
+        </div>
+      </div>
       <div className="bg-gradient-to-r from-[var(--color-bg-primary)]/40 to-[var(--color-bg-secondary)]/40 border border-[var(--color-border)] rounded-xl p-4">
         <div className="flex items-center gap-3">
           <Droplet className="w-6 h-6 text-[var(--color-accent)]" />

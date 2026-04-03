@@ -11,6 +11,9 @@ import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Heart, Search, Star, Zap, Pill } from 'lucide-react';
 
+const FONT_HEADING = "'Poppins', system-ui, sans-serif";
+const FONT_BODY = "'Inter', system-ui, sans-serif";
+
 interface ACLSStep {
   id: string;
   algorithmName: string;
@@ -117,9 +120,9 @@ export default function ACLSRefCards() {
           padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)',
         }}>
           <Search size={16} style={{ color: 'var(--color-text-secondary)' }} />
-          <input type="text" placeholder="Search rhythms, interventions..." value={searchQuery}
+          <input type="text" aria-label="Search ACLS algorithms" placeholder="Search rhythms, interventions..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)' }} />
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)', fontFamily: FONT_BODY }} />
         </div>
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
           style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', fontSize: 13, color: 'var(--color-text-primary)', cursor: 'pointer' }}>
@@ -132,7 +135,7 @@ export default function ACLSRefCards() {
         <div key={algoName} style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <Heart size={18} style={{ color: '#ef4444' }} />
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)' }}>{algoName}</h3>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{algoName}</h3>
             <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 9999, background: 'var(--color-bg-secondary)', color: 'var(--color-text-secondary)' }}>
               {steps.length} step{steps.length !== 1 ? 's' : ''}
             </span>
@@ -152,8 +155,8 @@ export default function ACLSRefCards() {
                         {step.algorithmStep}
                       </span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>{step.rhythm}</div>
-                        <div style={{ fontSize: 13, color: 'var(--color-accent)', marginTop: 2 }}>{step.correctIntervention}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{step.rhythm}</div>
+                        <div style={{ fontSize: 13, color: 'var(--color-accent)', marginTop: 2, fontFamily: FONT_BODY }}>{step.correctIntervention}</div>
                       </div>
                       {step.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>HY</span>}
                     </div>

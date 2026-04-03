@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -330,7 +330,7 @@ class StudyChatError extends Error {
   }
 }
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = aiEndpoint(
   StudyChatSchema,
   async (context) => {
     const { env, validated } = context as {

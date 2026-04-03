@@ -167,16 +167,3 @@ export function addCorsHeaders(
   });
 }
 
-/**
- * Development mode: Allow all origins (use sparingly!)
- * Only use this for truly public, non-sensitive endpoints
- */
-export function getCorsHeadersPermissive(): Record<string, string> {
-  console.warn('[CORS] Using permissive CORS - only use for public endpoints');
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Max-Age': '86400',
-  };
-}

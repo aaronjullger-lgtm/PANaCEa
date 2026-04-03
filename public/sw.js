@@ -199,17 +199,224 @@ self.addEventListener('message', (event) => {
 });
 
 /**
- * Background sync - retry failed requests when online
+ * Background Sync — retry offline submissions when connectivity returns.
+ *
+ * Reads unsynced records from IndexedDB (panacea_offline) and POSTs them
+ * to the appropriate API endpoints. Marks records as synced on success.
+ * Works even if the app tab is closed (service worker stays alive).
+ *
+ * Tags:
+ * - 'sync-answers': Question attempt submissions
+ * - 'sync-reviews': Drill review submissions (FSRS)
+ * - 'sync-data': Legacy catch-all (syncs everything)
  */
 self.addEventListener('sync', (event) => {
   console.log('[Service Worker] Background sync triggered:', event.tag);
 
-  if (event.tag === 'sync-data') {
-    event.waitUntil(
-      // Implement your sync logic here
-      Promise.resolve()
-    );
+  if (event.tag === 'sync-answers' || event.tag === 'sync-data') {
+    event.waitUntil(syncOfflineAnswers());
   }
+  if (event.tag === 'sync-reviews' || event.tag === 'sync-data') {
+    event.waitUntil(syncOfflineReviews());
+  }
+});
+
+/**
+ * Open the IndexedDB offline store from within the service worker.
+ */
+function openOfflineDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('panacea_offline', 1);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    // Don't create stores here — they're created by the main thread
+  });
+}
+
+/**
+ * Get all unsynced records from a store.
+ */
+function getUnsyncedRecords(db, storeName) {
+  return new Promise((resolve, reject) => {
+    try {
+      const tx = db.transaction(storeName, 'readonly');
+      const index = tx.objectStore(storeName).index('synced');
+      const request = index.getAll(IDBKeyRange.only(false));
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    } catch (err) {
+      // Store may not exist yet
+      resolve([]);
+    }
+  });
+}
+
+/**
+ * Mark a record as synced in IndexedDB.
+ */
+function markRecordSynced(db, storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const getReq = store.get(id);
+    getReq.onsuccess = () => {
+      const record = getReq.result;
+      if (record) {
+        record.synced = true;
+        store.put(record);
+      }
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/**
+ * Sync offline answers (question attempts) to the API.
+ */
+async function syncOfflineAnswers() {
+  try {
+    const db = await openOfflineDB();
+    const answers = await getUnsyncedRecords(db, 'answers');
+    if (answers.length === 0) return;
+
+    console.log(`[Service Worker] Syncing ${answers.length} offline answers`);
+
+    for (const answer of answers) {
+      try {
+        const response = await fetch('/api/questions/attempt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionId: answer.questionId,
+            selectedAnswer: answer.selectedAnswer,
+            isCorrect: answer.isCorrect,
+            timeSpentMs: answer.timeSpentMs,
+            system: answer.system,
+            conditionId: answer.conditionId,
+            confidence: answer.confidence,
+            rating: answer.rating,
+            sessionId: answer.sessionId,
+            telemetry: answer.telemetryJson,
+          }),
+        });
+
+        if (response.ok || response.status === 409) {
+          // 409 = duplicate, treat as success
+          await markRecordSynced(db, 'answers', answer.id);
+          console.log(`[Service Worker] Synced answer ${answer.id}`);
+        } else {
+          console.warn(`[Service Worker] Answer sync failed: HTTP ${response.status}`);
+        }
+      } catch (err) {
+        console.warn(`[Service Worker] Answer sync error for ${answer.id}:`, err);
+      }
+    }
+  } catch (err) {
+    console.error('[Service Worker] syncOfflineAnswers failed:', err);
+  }
+}
+
+/**
+ * Sync offline drill reviews to the FSRS API.
+ */
+async function syncOfflineReviews() {
+  try {
+    const db = await openOfflineDB();
+    const reviews = await getUnsyncedRecords(db, 'reviews');
+    if (reviews.length === 0) return;
+
+    console.log(`[Service Worker] Syncing ${reviews.length} offline reviews`);
+
+    for (const review of reviews) {
+      try {
+        const response = await fetch('/api/drills/submit-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionId: review.questionId,
+            selectedAnswer: review.selectedAnswer,
+            timeSpentMs: review.timeSpentMs,
+            timeToFirstClick: review.timeToFirstClick,
+            answerSwitches: review.answerSwitches,
+            totalDwellTime: review.totalDwellTime,
+            timezone: review.timezone,
+            sessionType: review.sessionType || 'drill',
+            telemetry: review.telemetry,
+          }),
+        });
+
+        if (response.ok || response.status === 409) {
+          await markRecordSynced(db, 'reviews', review.id);
+          console.log(`[Service Worker] Synced review ${review.id}`);
+        } else {
+          console.warn(`[Service Worker] Review sync failed: HTTP ${response.status}`);
+        }
+      } catch (err) {
+        console.warn(`[Service Worker] Review sync error for ${review.id}:`, err);
+      }
+    }
+  } catch (err) {
+    console.error('[Service Worker] syncOfflineReviews failed:', err);
+  }
+}
+
+/**
+ * Push notification handler.
+ * Displays notifications from the push server.
+ */
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push notification received');
+
+  let data = { title: 'PANaCEa', body: 'Time to review!', url: '/' };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (err) {
+    console.warn('[Service Worker] Failed to parse push data:', err);
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    vibrate: [100, 50, 100],
+    data: { url: data.url || '/' },
+    actions: [
+      { action: 'open', title: 'Start Reviewing' },
+      { action: 'dismiss', title: 'Later' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'PANaCEa', options)
+  );
+});
+
+/**
+ * Notification click handler — opens the app to the review page.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      // Focus existing tab if open
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // Open new tab
+      return self.clients.openWindow(targetUrl);
+    })
+  );
 });
 
 console.log('[Service Worker] Loaded successfully');

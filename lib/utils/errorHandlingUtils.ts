@@ -3,7 +3,8 @@
  * Provides consistent error handling across the application
  */
 
-import * as Sentry from '@sentry/react';
+// Import Sentry utilities from lazy-loading module (avoids static @sentry/react import)
+import { captureError, captureMessage } from '@/lib/monitoring/sentry';
 
 // Error severity levels
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -209,23 +210,28 @@ export function reportError(appError: AppError): void {
     critical: 'fatal' as const,
   }[appError.severity];
 
-  Sentry.withScope((scope) => {
-    scope.setLevel(sentryLevel);
-    scope.setTag('error_category', appError.category);
-    scope.setTag('error_code', appError.code);
-    scope.setTag('recoverable', String(appError.recoverable));
-    scope.setTag('retryable', String(appError.retryable));
-
-    if (appError.context) {
-      scope.setExtras(appError.context);
-    }
-
-    if (appError.originalError) {
-      Sentry.captureException(appError.originalError);
-    } else {
-      Sentry.captureMessage(appError.message);
-    }
-  });
+  if (appError.originalError) {
+    captureError(appError.originalError, {
+      tags: {
+        error_category: appError.category,
+        error_code: appError.code,
+        recoverable: String(appError.recoverable),
+        retryable: String(appError.retryable),
+      },
+      extra: appError.context,
+      level: sentryLevel,
+    });
+  } else {
+    captureMessage(appError.message, sentryLevel, {
+      tags: {
+        error_category: appError.category,
+        error_code: appError.code,
+        recoverable: String(appError.recoverable),
+        retryable: String(appError.retryable),
+      },
+      extra: appError.context,
+    });
+  }
 }
 
 /**

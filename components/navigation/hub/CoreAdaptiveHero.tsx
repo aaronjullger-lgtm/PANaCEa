@@ -34,7 +34,7 @@ export const CoreAdaptiveHero: React.FC<{
   // Core PANCE Simulation: no weak-area copy — strict NCCIPA blueprint only
   const subtitle = isPracticing
     ? growthAreas.length > 0
-      ? `Focusing on your weak areas: ${growthAreas.slice(0, 3).join(', ')}.`
+      ? `Focusing on your growth areas: ${growthAreas.slice(0, 3).join(', ')}.`
       : 'Maintain your certification knowledge with adaptive questions.'
     : 'Strict NCCPA blueprint weighting. Exam-representative mix — no adaptive bias.';
   return (
