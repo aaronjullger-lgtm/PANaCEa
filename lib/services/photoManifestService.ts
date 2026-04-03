@@ -7,6 +7,9 @@
  */
 
 import { prisma } from '../prisma';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'PhotoManifest';
 
 export type PhotoCategory = 'ecg' | 'derm' | 'radiology';
 
@@ -65,7 +68,7 @@ export async function getImageForCondition(
       };
     }
   } catch (error) {
-    console.warn(`Failed to fetch image for ${conditionName}:`, error);
+    logger.warn(`[${LOG_SCOPE}] Failed to fetch image for ${conditionName}`, { error });
   }
 
   // Fallback to placeholder
@@ -118,7 +121,7 @@ export async function getImagesForCondition(
       }));
     }
   } catch (error) {
-    console.warn(`Failed to fetch images for ${conditionName}:`, error);
+    logger.warn(`[${LOG_SCOPE}] Failed to fetch images for ${conditionName}`, { error });
   }
 
   // Fallback to single placeholder
@@ -208,5 +211,5 @@ function getDefaultFindings(conditionName: string): string[] {
 export async function preloadCategoryImages(category: PhotoCategory): Promise<void> {
   // This could be enhanced to fetch and cache all images for a category
   // For now, it's a placeholder for future optimization
-  console.log(`Preloading images for category: ${category}`);
+  logger.debug(`[${LOG_SCOPE}] Preloading images for category: ${category}`);
 }

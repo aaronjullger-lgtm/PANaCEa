@@ -33,16 +33,23 @@ content-health-report.json
 
 # Build artifacts missed by original gitignore
 test-output.log
-*.jpeg
+
+# Screenshots and images at root (use public/ or docs/images/ instead)
+/*.jpeg
+/*.jpg
+/*.png
+/*.gif
+/*.webp
 
 # Dead AI-generated images
 Gemini_Generated_Image_*
+public/Gemini_Generated_Image_*
+public/HEADER*.png
 
 # Diagnostic scripts at root
 query.ts
 audit-queries.*
 
-# Logs
 # Logs
 npm-debug.log*
 yarn-debug.log*
@@ -284,3 +291,17 @@ docker-compose.yml
 /*_COMPLETE*.md
 /*_SUMMARY*.md
 /*_STATUS*.md
+/*_CHECKLIST*.md
+/SESSION_*.md
+/DEPLOYMENT_STATUS*.md
+/PLAN.md
+
+# Archived/backup directories (should not be tracked)
+backup/
+src/archived/
+prisma/*.backup*
+
+# One-off temp/test scripts in scripts/ (use tests/ for real tests)
+scripts/temp-*
+scripts/temp_*
+scripts/test-*

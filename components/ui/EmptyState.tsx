@@ -8,6 +8,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Button } from '@/components/ui/button';
 import {
   Inbox,
   Search,
@@ -28,7 +29,7 @@ export type EmptyStateVariant =
   | 'content'
   | 'getting-started';
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   /** The main title */
   title: string;
   /** Descriptive message */
@@ -168,27 +169,22 @@ export function EmptyState({
           className={`flex flex-col sm:flex-row items-center gap-3 ${compact ? 'mt-2' : 'mt-4'}`}
         >
           {action && (
-            <button
+            <Button
+              variant={action.variant === 'secondary' ? 'secondary' : 'primary'}
+              size="md"
               onClick={action.onClick}
-              className={`
-                px-4 py-2 rounded-lg font-medium transition-colors
-                ${
-                  action.variant === 'secondary'
-                    ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]'
-                    : 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90'
-                }
-              `}
             >
               {action.label}
-            </button>
+            </Button>
           )}
           {secondaryAction && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={secondaryAction.onClick}
-              className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-sm transition-colors"
             >
               {secondaryAction.label}
-            </button>
+            </Button>
           )}
         </div>
       )}

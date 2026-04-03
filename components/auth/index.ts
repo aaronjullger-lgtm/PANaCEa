@@ -6,3 +6,4 @@
 
 export { AuthButton } from './AuthButton';
 export { AuthProvider } from './AuthProvider';
+export { AdminRoute } from './AdminRoute';

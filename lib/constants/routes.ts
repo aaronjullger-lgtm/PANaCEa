@@ -51,7 +51,9 @@ export {
 export type { TrainingModeId } from '../../config/training-modes';
 
 // Re-export navigation items
-export { NAV_RAIL_ITEMS, CANONICAL_PATHS as NAVIGATION_CANONICAL_PATHS } from '../../config/navigation';
+export { NAV_RAIL_ITEMS } from '../../config/navigation';
+/** @deprecated Use CANONICAL_PATHS from config/routeRegistry instead */
+export { CANONICAL_PATHS as NAVIGATION_CANONICAL_PATHS } from '../../config/navigation';
 
 // ============================================================================
 // Convenience exports with common route patterns

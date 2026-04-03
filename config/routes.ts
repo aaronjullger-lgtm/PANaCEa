@@ -11,9 +11,7 @@ export const ROUTES = {
   ADMIN_REFINERY: '/admin/refinery',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
-  /** @deprecated Not yet routed in AppRoutes */
   LECTURE_CONVERTER: '/lecture-converter',
-  /** @deprecated Not yet routed in AppRoutes */
   TECHNIQUE_CHECK: '/technique-check',
   CROSS_SYSTEM_EXPLORER: '/explorer',
   /** Study hub; path→view sync in App.tsx */
@@ -22,10 +20,16 @@ export const ROUTES = {
   PROGRESS: '/progress',
   STUDY_KNOWLEDGE: '/study/knowledge',
   STUDY_UTILITIES: '/study/utilities',
-  /** @deprecated Use STUDY_KNOWLEDGE */
-  STUDY_REFERENCE: '/study/reference',
-  /** @deprecated Use STUDY_UTILITIES */
-  STUDY_TOOLKIT: '/study/toolkit',
+  /**
+   * @deprecated Use STUDY_KNOWLEDGE ('/study/knowledge') — legacy path redirects automatically.
+   * TODO: Remove once all callsites are migrated (Sprint 3).
+   */
+  STUDY_REFERENCE: '/study/knowledge',
+  /**
+   * @deprecated Use STUDY_UTILITIES ('/study/utilities') — legacy path redirects automatically.
+   * TODO: Remove once all callsites are migrated (Sprint 3).
+   */
+  STUDY_TOOLKIT: '/study/utilities',
   STUDY_PATH: '/study/path',
   DAILY_CHALLENGES: '/daily-challenges',
   MENU: '/menu',

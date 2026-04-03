@@ -42,7 +42,8 @@ export async function requestRefill(
   prisma: PrismaClientLike,
   userId: string,
   scope: string,
-  reason: RefillReason
+  reason: RefillReason,
+  learnerPhase?: 'didactic' | 'clinical' | 'pance_prep'
 ): Promise<RefillRequest> {
   try {
     // 1. Cooldown check — is there already a recent/active refill job?
@@ -98,6 +99,7 @@ export async function requestRefill(
         reason,
         isReservoirRefill: true, // Distinguishes from legacy generate_questions jobs
         requestedAt: new Date().toISOString(),
+        ...(learnerPhase ? { learnerPhase } : {}),
       },
       priority,
       maxAttempts: 3,

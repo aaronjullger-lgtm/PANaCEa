@@ -34,6 +34,7 @@ import {
   requestRefill,
   deriveScope,
 } from '../../../../lib/services/reservoir';
+import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 
@@ -99,11 +100,22 @@ export const onRequestPost = authenticatedEndpoint(
         );
       }
 
-      // Look up internal user ID from Clerk ID
+      // Look up internal user ID + profile fields for phase inference
       const user = await prisma.user.findUniqueOrThrow({
         where: { clerkId: auth.userId },
-        select: { id: true },
+        select: {
+          id: true,
+          currentRotation: true,
+          eorTestDate: true,
+          rotationEndDate: true,
+          examDate: true,
+          yearInProgram: true,
+          trainingPhase: true,
+        },
       });
+
+      // Infer learner phase from profile (didactic / clinical / pance_prep)
+      const learnerPhase = inferLearnerPhase(user);
 
       const scope = deriveScope(body.mode, { system: body.system, conditionId: body.conditionId });
       const sessionId = `ses_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -134,6 +146,7 @@ export const onRequestPost = authenticatedEndpoint(
               estimatedMinutes: Math.ceil((questions.length * 90) / 60),
               mode: body.mode,
               blueprintStage: body.blueprintStage,
+              learnerPhase,
               source: 'reservoir',
             },
           };
@@ -167,6 +180,7 @@ export const onRequestPost = authenticatedEndpoint(
           ...onDemandResult,
           metadata: {
             ...onDemandResult.metadata,
+            learnerPhase,
             source: reservoirCount > 0 ? 'mixed' : 'on_demand',
           },
         };
@@ -175,7 +189,7 @@ export const onRequestPost = authenticatedEndpoint(
       // ── Step 3: Trigger background refill (fire-and-forget) ──
       if (context.waitUntil) {
         context.waitUntil(
-          requestRefill(prisma, user.id, scope, 'post_session')
+          requestRefill(prisma, user.id, scope, 'post_session', learnerPhase)
             .catch((err: any) => logger.info('Background refill request failed', { error: err.message }))
         );
       }

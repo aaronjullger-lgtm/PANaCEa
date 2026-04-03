@@ -43,13 +43,14 @@ const URGENCY_COLORS = {
 
 function scaleY(score: number, minScore: number, maxScore: number): number {
   const chartArea = CHART_HEIGHT - PADDING.top - PADDING.bottom;
-  const normalized = (score - minScore) / (maxScore - minScore);
+  const range = maxScore - minScore;
+  const normalized = range > 0 ? (score - minScore) / range : 0.5;
   return CHART_HEIGHT - PADDING.bottom - normalized * chartArea;
 }
 
 function scaleX(day: number, maxDays: number): number {
   const chartArea = CHART_WIDTH - PADDING.left - PADDING.right;
-  return PADDING.left + (day / maxDays) * chartArea;
+  return PADDING.left + (maxDays > 0 ? (day / maxDays) : 0) * chartArea;
 }
 
 // =============================================================================
@@ -104,9 +105,9 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
     );
   }
 
-  const currentScore = projections[0]?.predictedScore || 0;
-  const day7Score = projections[7]?.predictedScore || currentScore;
-  const day14Score = projections[14]?.predictedScore || day7Score;
+  const currentScore = projections[0]?.predictedScore ?? 0;
+  const day7Score = projections[7]?.predictedScore ?? currentScore;
+  const day14Score = projections[14]?.predictedScore ?? day7Score;
 
   return (
     <svg
@@ -136,14 +137,14 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         y1={passingY}
         x2={CHART_WIDTH - PADDING.right}
         y2={passingY}
-        stroke="#EF4444"
+        stroke="var(--color-data-fail)"
         strokeWidth="2"
         strokeDasharray="8,4"
       />
       <text
         x={CHART_WIDTH - PADDING.right + 5}
         y={passingY + 4}
-        fill="#EF4444"
+        fill="var(--color-data-fail)"
         fontSize="10"
         fontWeight="bold"
       >
@@ -154,7 +155,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
       <motion.path
         d={ghostPathD}
         fill="none"
-        stroke="#F87171"
+        stroke="var(--color-data-fail)"
         strokeWidth="2"
         strokeDasharray="6,4"
         strokeLinecap="round"
@@ -168,8 +169,8 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         cx={scaleX(0, 14)}
         cy={scaleY(currentScore, minScore, maxScore)}
         r="6"
-        fill="#3B82F6"
-        stroke="#1D4ED8"
+        fill="var(--color-accent)"
+        stroke="var(--color-accent-hover)"
         strokeWidth="2"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -181,8 +182,8 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         cx={scaleX(7, 14)}
         cy={scaleY(day7Score, minScore, maxScore)}
         r="4"
-        fill="#F87171"
-        stroke="#EF4444"
+        fill="var(--color-data-fail)"
+        stroke="var(--color-data-fail)"
         strokeWidth="2"
         opacity={0.7}
         initial={{ scale: 0 }}
@@ -195,8 +196,8 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         cx={scaleX(14, 14)}
         cy={scaleY(day14Score, minScore, maxScore)}
         r="4"
-        fill="#F87171"
-        stroke="#EF4444"
+        fill="var(--color-data-fail)"
+        stroke="var(--color-data-fail)"
         strokeWidth="2"
         opacity={0.5}
         initial={{ scale: 0 }}
@@ -252,7 +253,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         x={scaleX(0, 14)}
         y={scaleY(currentScore, minScore, maxScore) - 12}
         textAnchor="middle"
-        fill="#3B82F6"
+        fill="var(--color-accent)"
         fontSize="12"
         fontWeight="bold"
       >
@@ -262,7 +263,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         x={scaleX(7, 14)}
         y={scaleY(day7Score, minScore, maxScore) - 10}
         textAnchor="middle"
-        fill="#F87171"
+        fill="var(--color-data-fail)"
         fontSize="10"
         opacity={0.8}
       >

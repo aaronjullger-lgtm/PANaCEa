@@ -71,6 +71,85 @@ export function calculateOrderDistribution(
   return { first, second, third };
 }
 
+/**
+ * User profile fields relevant to phase inference.
+ * Matches a subset of the Prisma User model.
+ */
+export interface LearnerProfile {
+  currentRotation?: string | null;
+  eorTestDate?: Date | string | null;
+  rotationEndDate?: Date | string | null;
+  examDate?: Date | string | null;
+  yearInProgram?: string | null;
+  trainingPhase?: 'DIDACTIC' | 'CLINICAL' | 'GRADUATED' | null;
+}
+
+/**
+ * Infer the learner phase from user profile data.
+ *
+ * Priority order:
+ *   1. PANCE exam date < 8 weeks → pance_prep
+ *   2. EOR exam date < 4 weeks → pance_prep (rotation crunch)
+ *   3. On a clinical rotation with EOR > 4 weeks → clinical
+ *   4. trainingPhase === CLINICAL or yearInProgram >= 2 → clinical
+ *   5. trainingPhase === GRADUATED → pance_prep (recert / PANRE)
+ *   6. Default → didactic
+ *
+ * @param profile  User profile fields (all optional/nullable for resilience)
+ * @param now      Optional override for "today" (useful for testing)
+ */
+export function inferLearnerPhase(profile: LearnerProfile, now?: Date): LearnerPhase {
+  const today = now ?? new Date();
+
+  // Helper: parse a date field that may be a Date object or ISO string
+  const toDate = (v: Date | string | null | undefined): Date | null => {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const weeksUntil = (target: Date): number =>
+    (target.getTime() - today.getTime()) / (7 * 24 * 60 * 60 * 1000);
+
+  // ── Check PANCE exam date first (highest priority) ──
+  const examDate = toDate(profile.examDate);
+  if (examDate && weeksUntil(examDate) <= 8 && weeksUntil(examDate) >= -1) {
+    return 'pance_prep';
+  }
+
+  // ── Check EOR / rotation end proximity ──
+  const eorDate = toDate(profile.eorTestDate) ?? toDate(profile.rotationEndDate);
+  if (eorDate) {
+    const weeksToEor = weeksUntil(eorDate);
+    if (weeksToEor <= 4 && weeksToEor >= -1) {
+      // Rotation crunch — shift to exam-format questions
+      return 'pance_prep';
+    }
+  }
+
+  // ── Currently on a clinical rotation ──
+  if (profile.currentRotation) {
+    return 'clinical';
+  }
+
+  // ── Infer from DB training phase enum ──
+  if (profile.trainingPhase === 'GRADUATED') {
+    return 'pance_prep'; // PANRE / recertification
+  }
+  if (profile.trainingPhase === 'CLINICAL') {
+    return 'clinical';
+  }
+
+  // ── Infer from year in program ──
+  const year = profile.yearInProgram ? parseInt(profile.yearInProgram, 10) : NaN;
+  if (!isNaN(year) && year >= 2) {
+    return 'clinical';
+  }
+
+  // ── Default: didactic (first-year or unknown) ──
+  return 'didactic';
+}
+
 export interface SystemWeight {
   system: string;
   percentage: number;

@@ -69,9 +69,12 @@ interface SystemRowProps {
 
 function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
   const targetPercent = BLUEPRINT_TARGETS[system] || 5;
-  const actualPercent = (stats.total / totalQuestions) * 100;
+  const safeTotalQuestions = totalQuestions > 0 ? totalQuestions : 1;
+  const actualPercent = (stats.total / safeTotalQuestions) * 100;
   const deficit = targetPercent - actualPercent;
   const isUnderStudied = deficit > 5;
+  // Guard: clamp accuracy to 0-100 for display
+  const safeAccuracy = isFinite(stats.accuracy) ? Math.max(0, Math.min(100, stats.accuracy)) : 0;
 
   return (
     <motion.div
@@ -95,14 +98,14 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
         </div>
         <span
           className={`text-sm font-semibold tabular-nums ${
-            stats.accuracy >= 70
+            safeAccuracy >= 70
               ? 'text-[var(--color-data-pass)]'
-              : stats.accuracy >= 50
+              : safeAccuracy >= 50
                 ? 'text-[var(--color-data-provisional)]'
                 : 'text-[var(--color-data-fail)]'
           }`}
         >
-          {stats.accuracy.toFixed(0)}%
+          {safeAccuracy.toFixed(0)}%
         </span>
       </div>
 
@@ -110,14 +113,14 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <motion.div
           className={`h-full ${
-            stats.accuracy >= 70
+            safeAccuracy >= 70
               ? 'bg-[var(--color-data-pass)]'
-              : stats.accuracy >= 50
+              : safeAccuracy >= 50
                 ? 'bg-[var(--color-data-provisional)]'
                 : 'bg-[var(--color-data-fail)]'
           }`}
           initial={{ width: 0 }}
-          animate={{ width: `${stats.accuracy}%` }}
+          animate={{ width: `${safeAccuracy}%` }}
           transition={{ duration: 0.6, delay: index * 0.05 }}
         />
       </div>

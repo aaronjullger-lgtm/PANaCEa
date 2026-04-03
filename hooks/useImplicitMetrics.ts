@@ -13,7 +13,7 @@
  * after submitAnswer is called, enabling backend persistence for personalization.
  */
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getBrowserTimezone } from '../lib/circadian';
 
@@ -273,16 +273,24 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
     };
   }, []);
 
-  return {
-    metrics: metricsRef.current,
-    startQuestion,
-    recordAnswerSelection,
-    submitAnswer,
-    reset,
-    getApiPayload,
-    isSubmitting: isSubmittingRef.current,
-    submissionError: submissionErrorRef.current,
-  };
+  // Memoize the return value so consumers that list this hook in useEffect
+  // dependency arrays don't re-fire on every render. All callbacks are already
+  // stable (useCallback with []). metricsRef is read by reference at call-time,
+  // so the snapshot here is fine — callers read .current when they need it.
+  // (Finding 11 fix: unstable return object caused startQuestion() re-calls.)
+  return useMemo(
+    () => ({
+      metrics: metricsRef.current,
+      startQuestion,
+      recordAnswerSelection,
+      submitAnswer,
+      reset,
+      getApiPayload,
+      isSubmitting: isSubmittingRef.current,
+      submissionError: submissionErrorRef.current,
+    }),
+    [startQuestion, recordAnswerSelection, submitAnswer, reset, getApiPayload]
+  );
 }
 
 /**

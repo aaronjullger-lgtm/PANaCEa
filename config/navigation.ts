@@ -184,36 +184,18 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
 
 /**
  * Get all known paths in the application.
- * SINGLE SOURCE OF TRUTH for route validation.
  *
- * Combines:
- * - CANONICAL_PATHS (static app routes)
- * - TRAINING_MODES routes (dynamic drill/mode routes)
- *
- * Used by useAppNavigation for 404 detection.
+ * @deprecated Prefer importing KNOWN_PATHS or isKnownPath from config/routeRegistry.ts.
+ * Training mode routes are already included in the registry (spread from TRAINING_MODES).
+ * This function is kept only for backward compatibility.
  */
 export const getKnownPaths = (): string[] => {
-  // Import here to avoid circular dependency at module load time
-  // (navigation.ts is imported early, training-modes may import from navigation)
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy require to break circular dependency
-  const { TRAINING_MODES } = require('./training-modes');
-
-  const paths = new Set<string>(CANONICAL_PATHS);
-
-  // Add all training mode routes
-  for (const mode of TRAINING_MODES) {
-    paths.add(mode.route);
-  }
-
-  return Array.from(paths);
+  return Array.from(new Set(CANONICAL_PATHS));
 };
 
 /**
  * Check if a path is a known, valid application route.
- * Delegates to config/routeRegistry.ts for the unified validation logic.
  *
- * Used by useAppNavigation for 404 detection.
- *
- * @deprecated Use lib/constants/routes.ts or config/routeRegistry.ts instead
+ * @deprecated Import isKnownPath from config/routeRegistry.ts or lib/constants/routes.ts instead.
  */
 export const isKnownPath = checkKnownPath;

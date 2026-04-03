@@ -524,6 +524,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       answerChangeCount: answerChangeCountRef.current,
       firstSelectedAnswer: firstSelectedAnswerRef.current,
     });
+    // Finding 5 fix: Ref .current values don't trigger re-renders and shouldn't
+    // be in dependency arrays. They are read inside the effect body (above) where
+    // they'll be current at execution time. The effect fires when state deps
+    // (selectedAnswerIndex, isAnswered, etc.) change, which is when saves matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     queue,
     currentQuestion,
@@ -532,8 +537,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     questionNumber,
     eliminatedAnswers,
     localNote,
-    answerChangeCountRef.current,
-    firstSelectedAnswerRef.current,
     debouncedSave,
   ]);
 
@@ -791,6 +794,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const showNextQuestion = useCallback(() => {
     try {
       setIsAnswered(false);
+      submittingRef.current = false;
       setIsSubmitting(false);
       setSelectedAnswerIndex(null);
       setShowRationale(false);
@@ -860,7 +864,13 @@ const QuizView: React.FC<QuizViewProps> = ({
     microKinetics,
   ]);
 
-  // Initialize from incoming queue once
+  // Initialize from incoming queue once.
+  // Deps: only initialQueue (identity changes when a new session starts) and
+  // currentQuestion (null → first question). Hook objects (implicitMetrics,
+  // behavioralTracker, microKinetics) are now memoized/stable and read via refs
+  // inside the effect body, so they don't need to be in the dep array.
+  // (Finding 11 fix: previously, unstable hook object refs caused this effect
+  // to re-fire on every render, resetting the dwell timer.)
   useEffect(() => {
     if (!currentQuestion && initialQueue.length > 0) {
       setCurrentQuestion(initialQueue[0] ?? null);
@@ -876,7 +886,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       const q = initialQueue[0];
       behavioralTracker.start(q ? inferQuestionType(questionToInferShape(q)) : 'unknown');
     }
-  }, [initialQueue, currentQuestion, implicitMetrics, behavioralTracker, microKinetics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQueue, currentQuestion]);
 
   // Handler for toggling elimination state
   const handleToggleEliminate = useCallback(
@@ -896,10 +907,19 @@ const QuizView: React.FC<QuizViewProps> = ({
     [isAnswered]
   );
 
+  // Ref-based guard: synchronous, immune to React batching delays.
+  // State-based guards (isAnswered, isSubmitting) can have a window where
+  // a second call sneaks through before the state update is committed.
+  // (Finding 6 fix: prevents theoretical double-submit from held Enter key.)
+  const submittingRef = useRef(false);
+
   // Keyboard shortcuts
   const handleSubmitAnswer = useCallback(async () => {
     // Guard against submitting without selection or already submitting
     if (selectedAnswerIndex === null || !currentQuestion || isAnswered || isSubmitting) return;
+    // Synchronous ref guard — set immediately, before any async work
+    if (submittingRef.current) return;
+    submittingRef.current = true;
 
     setIsSubmitting(true);
 
@@ -1019,10 +1039,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
     });
-    // Fire-and-forget: metrics and review sync in background (or when back online).
-    void implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
-      logger.warn(LOG_SCOPE, 'Implicit metrics submission failed (will retry when online)', err);
-    });
+    // Finding 12 fix: Removed redundant implicitMetrics.submitAnswer() POST to
+    // /api/user/behavior-metrics. The same behavioral data is already carried in
+    // queueAnswer's telemetryJson and queueReview's telemetry fields. The third
+    // HTTP request per question was purely duplicative, wasting bandwidth and
+    // creating confusion about the source of truth for behavioral metrics.
 
     // Note: Removed showOptimisticFeedback() call - user feedback on correctness
     // is already shown via the answer button color change and rationale panel
@@ -1233,7 +1254,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       try {
         syncManager.queueReview({
           questionId: currentQuestion.id,
-          selectedAnswer: selectedAnswerIndex,
+          // Pass the option text (not numeric index) so drillReviewService can
+          // compare it against correctAnswer text for isCorrect determination.
+          // Drills already pass text; main session was passing a numeric index
+          // which caused every review to be marked incorrect (Finding 9 fix).
+          selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
           timeSpentMs: timeToAnswer,
           timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
           answerSwitches: answerChangeCountRef.current,
@@ -1275,7 +1300,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       setShowWellnessModal(true);
     }
 
-    // Clear submitting state
+    // Clear submitting state (both ref and state)
+    submittingRef.current = false;
     setIsSubmitting(false);
   }, [
     selectedAnswerIndex,

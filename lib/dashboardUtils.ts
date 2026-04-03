@@ -14,8 +14,10 @@ export const WIDGET_PREFS_KEY = StorageKeys.WIDGET_PREFS;
  * Calculate accuracy percentage from correct and total counts
  */
 export function calculateAccuracy(correct: number, total: number): number {
-  if (total === 0) return 0;
-  return Math.round((correct / total) * 100);
+  if (!isFinite(total) || total <= 0) return 0;
+  if (!isFinite(correct)) return 0;
+  const result = (correct / total) * 100;
+  return isFinite(result) ? Math.max(0, Math.min(100, Math.round(result))) : 0;
 }
 
 /**

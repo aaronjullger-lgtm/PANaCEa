@@ -320,6 +320,28 @@ export interface TelemetryData {
    * Derived from option_interactions for quick access without parsing the array.
    */
   unique_options_considered?: number;
+
+  // =========================================================================
+  // Wave 3: Post-Answer Engagement Fields
+  // =========================================================================
+
+  /**
+   * Explanation panel engagement data captured after answer submission.
+   * Tracks how deeply the learner engaged with the rationale/explanation.
+   * Used server-side for explanation engagement analysis (3A).
+   * @see lib/services/explanationEngagementService.ts
+   * @see hooks/useExplanationEngagement.ts
+   */
+  explanation_engagement?: {
+    /** Time spent viewing the explanation panel (ms) */
+    viewed_ms: number;
+    /** Maximum scroll depth reached (0.0–1.0) */
+    scroll_depth: number;
+    /** Number of collapsible sections expanded (e.g. "Why not B?") */
+    expanded_sections: number;
+    /** Whether the learner answered correctly (context for server analysis) */
+    was_correct: boolean;
+  };
 }
 
 /**

@@ -6,6 +6,9 @@
  */
 
 import type { SystemCode, PerformanceRecord } from '../../types';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'OrganCharacter';
 import {
   ORGAN_VARIANTS,
   ORGAN_ACCESSORIES,
@@ -58,7 +61,7 @@ export function loadOrganProgress(): UserOrganProgress {
       specialModeProgress: new Map(Object.entries(data.specialModeProgress || {})),
     };
   } catch (error) {
-    console.error('Failed to load organ progress:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to load organ progress`, { error });
     return initializeOrganProgress();
   }
 }
@@ -90,7 +93,7 @@ export function saveOrganProgress(progress: UserOrganProgress): void {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to save organ progress:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to save organ progress`, { error });
   }
 }
 
@@ -107,7 +110,7 @@ export function loadCharacterCustomization(): Map<SystemCode | 'SPECIAL', Charac
     const data = JSON.parse(stored);
     return new Map(Object.entries(data) as [SystemCode | 'SPECIAL', CharacterCustomization][]);
   } catch (error) {
-    console.error('Failed to load character customization:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to load character customization`, { error });
     return initializeCustomization();
   }
 }
@@ -139,7 +142,7 @@ export function saveCharacterCustomization(
     const data = Object.fromEntries(customization);
     localStorage.setItem(CUSTOMIZATION_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to save character customization:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to save character customization`, { error });
   }
 }
 

@@ -760,6 +760,10 @@ class SyncManager {
   public clearAllPending(): void {
     this.saveOfflineAnswers([]);
     this.saveOfflinePearlActions([]);
+    // Finding 8 fix: also clear offline reviews from localStorage.
+    // IndexedDB reviews were already cleared below, but localStorage reviews
+    // were not — stale reviews could re-sync as ghost records.
+    this.saveOfflineReviews([]);
     // Also clear IndexedDB stores
     isIndexedDBAvailable().then((available) => {
       if (available) {

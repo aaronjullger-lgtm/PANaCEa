@@ -57,6 +57,8 @@ export interface RefillJobPayload {
   deficit: number;
   reason: string;
   isReservoirRefill: boolean;
+  /** Learner phase for Bloom's-level question ordering (didactic/clinical/pance_prep) */
+  learnerPhase?: 'didactic' | 'clinical' | 'pance_prep';
 }
 
 /**
@@ -209,11 +211,34 @@ export async function executeRefill(
       })),
     ];
 
-    // Sort: unseen first, then least-seen, then by quality
+    // Build phase-aware order preference weights.
+    // Higher weight = more likely to be selected first in the sort.
+    const phaseOrderWeights: Record<string, number> = {};
+    if (payload.learnerPhase) {
+      // Map phase to preferred Bloom's order weights
+      const weights = {
+        didactic:   { first: 0.30, second: 0.50, third: 0.20 },
+        clinical:   { first: 0.15, second: 0.40, third: 0.45 },
+        pance_prep: { first: 0.10, second: 0.35, third: 0.55 },
+      }[payload.learnerPhase];
+      if (weights) {
+        phaseOrderWeights.first  = weights.first;
+        phaseOrderWeights.second = weights.second;
+        phaseOrderWeights.third  = weights.third;
+      }
+    }
+
+    // Sort: unseen first, then phase-preferred order, then least-seen, then by quality
     allNewCandidates.sort((a, b) => {
       const aSeen = seenMap.get(a.id) || 0;
       const bSeen = seenMap.get(b.id) || 0;
       if (aSeen !== bSeen) return aSeen - bSeen;
+      // Boost questions matching the phase's preferred Bloom's level
+      if (payload.learnerPhase && a.questionOrder && b.questionOrder) {
+        const aWeight = phaseOrderWeights[a.questionOrder] || 0;
+        const bWeight = phaseOrderWeights[b.questionOrder] || 0;
+        if (aWeight !== bWeight) return bWeight - aWeight; // Higher weight first
+      }
       return (b.qualityScore || 0) - (a.qualityScore || 0);
     });
 

@@ -44,6 +44,11 @@ import { computeIntervalDeviation } from './intervalDeviationService';
 // Wave 2 behavioral signal services
 import { analyzeDistractorChronometry, type DistractorChronometryResult, type OptionInteractionRecord } from './distractorChronometryService';
 import { analyzeSwitchDirections, type SwitchDirectionResult } from './switchDirectionService';
+// Wave 3 behavioral signal services
+import { analyzeExplanationEngagement, type ExplanationEngagementResult } from './explanationEngagementService';
+import { computeSessionRegularity, type SessionRegularityResult } from './sessionRegularityService';
+import { computeRelearningSpeed, getOriginalLearningRt, type RelearningSpeedResult } from './relearningSpeedService';
+import { analyzeConfusionRecurrence, type ConfusionPairAction } from './confusionPairRecurrenceService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -341,6 +346,11 @@ export async function submitDrillReview(
   // Wave 2: Distractor chronometry & switch direction results (set when option_interactions present)
   let wave2Chronometry: DistractorChronometryResult | undefined;
   let wave2SwitchDirection: SwitchDirectionResult | undefined;
+  // Wave 3: Post-answer engagement + DB extension results
+  let wave3ExplanationEngagement: ExplanationEngagementResult | undefined;
+  let wave3SessionRegularity: SessionRegularityResult | undefined;
+  let wave3RelearningSpeed: RelearningSpeedResult | undefined;
+  let wave3ConfusionAction: ConfusionPairAction | undefined;
   const switches = answerSwitches ?? 0;
 
   if (isRapidGuess) {
@@ -410,6 +420,21 @@ export async function submitDrillReview(
         metacognitivePrecision: wave2SwitchDirection.metacognitivePrecision,
         netSwitchValue: wave2SwitchDirection.netSwitchValue,
       });
+    }
+
+    // ── Wave 3A: Explanation engagement confidence modifier (post-correct surprise detection) ──
+    const explanationRaw = telemetry?.explanation_engagement as
+      | { viewed_ms: number; scroll_depth: number; expanded_sections: number; was_correct: boolean }
+      | undefined;
+    if (explanationRaw && typeof explanationRaw.viewed_ms === 'number') {
+      wave3ExplanationEngagement = analyzeExplanationEngagement(
+        explanationRaw.viewed_ms,
+        explanationRaw.scroll_depth ?? 0,
+        explanationRaw.expanded_sections ?? 0,
+        explanationRaw.was_correct ?? isCorrect
+      );
+      implicitConfidence *= wave3ExplanationEngagement.confidenceModifier;
+      // stabilityModifier is applied later in the stability pipeline
     }
 
     // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
@@ -793,7 +818,11 @@ export async function submitDrillReview(
               : new Date(),
         };
 
-        const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
+        // Use the discrete rating (Again=1, Good=3) for FSRS scheduling, not the
+        // continuous grade float. The continuous grade is useful for ReviewLog telemetry
+        // but FSRS.next() should receive the binary rating the system is designed around.
+        // (Finding 2 fix: gradeContinuous caused interpolated scheduling drift.)
+        const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
 
         // ── Wave 1A: Lapse severity — amplify difficulty for severe lapses ──
         let lapseSeverityResult: { severity: number; difficultyMultiplier: number; preLapseReps: number; preLapseStability: number } | undefined;
@@ -814,8 +843,12 @@ export async function submitDrillReview(
         modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
 
         // ══════════════════════════════════════════════════════════════════════
-        // CONFIDENCE PIPELINE v3 (8-step → 14-step with Wave 1 + Wave 2)
-        // distractor_chronometry → switch_direction → accumulate → calibrate → fatigue → accuracy_slope → interference → fluency → stability → rt_trajectory → interval_deviation → difficulty → trend
+        // CONFIDENCE PIPELINE v4 (18-step with Wave 1 + Wave 2 + Wave 3)
+        // distractor_chronometry → switch_direction → explanation_engagement →
+        // accumulate → calibrate → fatigue → accuracy_slope → session_regularity →
+        // interference → fluency → stability → explanation_stability →
+        // rt_trajectory → interval_deviation → relearning_speed →
+        // difficulty → confusion_recurrence → trend
         // ══════════════════════════════════════════════════════════════════════
 
         // Step 1: Bayesian accumulation — blend current confidence with card history
@@ -925,6 +958,16 @@ export async function submitDrillReview(
         const accuracySlope = getAccuracySlopeModifier(userId);
         adjustedConfidence *= accuracySlope.confidenceMultiplier;
 
+        // Step 4c (Wave 3B): Session regularity — erratic study patterns → noisier behavioral signals
+        try {
+          wave3SessionRegularity = await computeSessionRegularity(prisma, userId);
+          adjustedConfidence *= wave3SessionRegularity.telemetryTrustMultiplier;
+        } catch (regErr) {
+          logger?.warn?.('Session regularity computation failed (non-fatal)', {
+            error: regErr instanceof Error ? regErr.message : String(regErr),
+          });
+        }
+
         adjustedConfidence *= interferenceResult.discount;
         adjustedConfidence *= fluencyIllusionDampener(elapsedDays);
 
@@ -953,6 +996,39 @@ export async function submitDrillReview(
           isCorrect
         );
         modifiedStability *= intervalDev.informationMultiplier;
+
+        // Step 6b.1 (Wave 3A): Explanation engagement stability modifier
+        // After errors: deep engagement → stability bonus; shallow → penalty
+        if (wave3ExplanationEngagement && wave3ExplanationEngagement.stabilityModifier !== 1.0) {
+          modifiedStability *= wave3ExplanationEngagement.stabilityModifier;
+          logger?.debug?.('Explanation engagement stability modifier applied', {
+            stabilityModifier: wave3ExplanationEngagement.stabilityModifier,
+            engagementScore: wave3ExplanationEngagement.engagementScore,
+          });
+        }
+
+        // Step 6b.2 (Wave 3C): Relearning speed — Ebbinghaus savings (post-lapse only)
+        if (!isCorrect && currentCard.lapses >= 1) {
+          try {
+            const originalRt = await getOriginalLearningRt(prisma, userId, questionId);
+            wave3RelearningSpeed = computeRelearningSpeed(
+              effectiveDurationMs,
+              originalRt,
+              currentCard.lapses
+            );
+            if (wave3RelearningSpeed.hasSavings && wave3RelearningSpeed.postLapseStabilityBonus > 1.0) {
+              modifiedStability *= wave3RelearningSpeed.postLapseStabilityBonus;
+              logger?.debug?.('Relearning speed savings bonus applied', {
+                savingsRatio: wave3RelearningSpeed.savingsRatio,
+                bonus: wave3RelearningSpeed.postLapseStabilityBonus,
+              });
+            }
+          } catch (rlErr) {
+            logger?.warn?.('Relearning speed computation failed (non-fatal)', {
+              error: rlErr instanceof Error ? rlErr.message : String(rlErr),
+            });
+          }
+        }
 
         // Step 6c: Desirable difficulty bonus (Bjork & Bjork, 2011)
         // Correct answers with LOW confidence = effortful retrieval → stability BONUS
@@ -1114,6 +1190,19 @@ export async function submitDrillReview(
                   switch_net_value: wave2SwitchDirection?.netSwitchValue ?? null,
                   switch_metacognitive_precision: wave2SwitchDirection?.metacognitivePrecision ?? null,
                   switch_direction_multiplier: wave2SwitchDirection?.confidenceMultiplier ?? null,
+                  // Wave 3 behavioral signals
+                  explanation_engagement_score: wave3ExplanationEngagement?.engagementScore ?? null,
+                  explanation_confidence_modifier: wave3ExplanationEngagement?.confidenceModifier ?? null,
+                  explanation_stability_modifier: wave3ExplanationEngagement?.stabilityModifier ?? null,
+                  session_regularity: wave3SessionRegularity?.regularity ?? null,
+                  session_regularity_cv: wave3SessionRegularity?.intervalCV ?? null,
+                  session_regularity_streak: wave3SessionRegularity?.streakDays ?? null,
+                  session_regularity_trust_multiplier: wave3SessionRegularity?.telemetryTrustMultiplier ?? null,
+                  relearning_savings_ratio: wave3RelearningSpeed?.savingsRatio ?? null,
+                  relearning_stability_bonus: wave3RelearningSpeed?.postLapseStabilityBonus ?? null,
+                  confusion_pair_count: wave3ConfusionAction?.pairCount ?? null,
+                  confusion_escalated: wave3ConfusionAction?.escalate ?? null,
+                  confusion_difficulty_boost: wave3ConfusionAction?.difficultyBoost ?? null,
                   final_stability: updatedCard.stability,
                   final_difficulty: updatedCard.difficulty,
                 },
@@ -1311,6 +1400,34 @@ export async function submitDrillReview(
             mistakenForId: selectedContent.conditionId,
           },
         });
+
+        // ── Wave 3D: Confusion pair recurrence analysis ──
+        // Check updated count and determine if escalation is needed
+        try {
+          const updatedPair = await prisma.confusionPair.findFirst({
+            where: {
+              userId,
+              correctConditionId: correctContent.id,
+              selectedConditionId: selectedContent.id,
+            },
+            select: { count: true },
+          });
+          wave3ConfusionAction = analyzeConfusionRecurrence(updatedPair?.count ?? 1);
+          if (wave3ConfusionAction.escalate) {
+            logger?.info?.('Confusion pair escalation triggered', {
+              correctCondition: correctContent.condition,
+              selectedCondition: selectedContent.condition,
+              pairCount: wave3ConfusionAction.pairCount,
+              difficultyBoost: wave3ConfusionAction.difficultyBoost,
+              queueContrastiveDrill: wave3ConfusionAction.queueContrastiveDrill,
+              generateDifferentiation: wave3ConfusionAction.generateDifferentiation,
+            });
+          }
+        } catch (recurrenceErr) {
+          logger?.warn?.('Confusion pair recurrence analysis failed (non-fatal)', {
+            error: recurrenceErr instanceof Error ? recurrenceErr.message : String(recurrenceErr),
+          });
+        }
       }
     } catch (confusionError) {
       logger?.warn?.('Failed to record confusion pair', {

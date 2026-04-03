@@ -11,6 +11,7 @@ import {
   SessionService,
   type SessionQuestionRequest,
 } from '../../../lib/services/session/sessionService';
+import { inferLearnerPhase } from '../../../lib/nccpa-question-weighting';
 
 const SessionGetSchema = z.object({
   count: z.string().optional(),
@@ -64,7 +65,16 @@ export const onRequestGet = authenticatedEndpoint(
         try {
           user = await prisma.user.findUnique({
             where: { clerkId: auth.userId },
-            select: { id: true, rotationExamDate: true },
+            select: {
+              id: true,
+              rotationExamDate: true,
+              currentRotation: true,
+              eorTestDate: true,
+              rotationEndDate: true,
+              examDate: true,
+              yearInProgram: true,
+              trainingPhase: true,
+            },
           });
           break;
         } catch (error) {
@@ -105,6 +115,7 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       sessionService = new SessionService(env.DATABASE_URL, env);
+      const learnerPhase = inferLearnerPhase(user);
       const result = await sessionService.getSessionQuestions({
         userId: user.id,
         count,
@@ -113,6 +124,7 @@ export const onRequestGet = authenticatedEndpoint(
         simulationStrict,
         eorMode,
         eorDeadline,
+        learnerPhase,
       });
 
       logger.info('Session questions fetched (GET)', {
@@ -181,7 +193,16 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
         try {
           user = await prisma.user.findUnique({
             where: { clerkId: auth.userId },
-            select: { id: true, rotationExamDate: true },
+            select: {
+              id: true,
+              rotationExamDate: true,
+              currentRotation: true,
+              eorTestDate: true,
+              rotationEndDate: true,
+              examDate: true,
+              yearInProgram: true,
+              trainingPhase: true,
+            },
           });
           break;
       } catch (error) {
@@ -212,6 +233,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     }
 
     sessionService = new SessionService(env.DATABASE_URL, env);
+    const learnerPhasePost = inferLearnerPhase(user);
     const eorDeadline =
       validated.eorDeadline ??
       (validated.eorMode && user?.rotationExamDate ? user.rotationExamDate.toISOString() : undefined);
@@ -222,6 +244,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       simulationStrict: validated.simulationStrict === true,
       eorMode: validated.eorMode === true,
       eorDeadline,
+      learnerPhase: learnerPhasePost,
     });
 
     logger.info('Session questions fetched (POST)', {

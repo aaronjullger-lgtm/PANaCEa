@@ -19,6 +19,7 @@ import {
 import {
   type LearnerPhase,
   calculateOrderDistribution,
+  selectQuestionOrder,
 } from '../../nccpa-question-weighting';
 
 /** Pick a random task category per NCCPA Blueprint weights (Sprint 5). */
@@ -125,6 +126,7 @@ export class SessionService {
       simulationStrict = false,
       eorMode = false,
       eorDeadline,
+      learnerPhase,
     } = params;
 
     // Core PANCE Simulation: ignore single-system/weakness — strict blueprint only
@@ -164,6 +166,7 @@ export class SessionService {
         panceLevelOnly,
         seenIds,
         poolCount,
+        learnerPhase,
       });
     }
 
@@ -179,6 +182,7 @@ export class SessionService {
       poolCount,
       eorMode,
       eorDeadline,
+      learnerPhase,
     });
   }
 
@@ -193,12 +197,17 @@ export class SessionService {
     poolCount: number;
     eorMode?: boolean;
     eorDeadline?: string;
+    learnerPhase?: LearnerPhase;
   }): Promise<{
     questions: EnrichedQuestion[];
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count, system, conditionId, mode, panceLevelOnly, seenIds, poolCount, eorMode = false, eorDeadline } = options;
+    const { userId, count, system, conditionId, mode, panceLevelOnly, seenIds, poolCount, eorMode = false, eorDeadline, learnerPhase } = options;
+
+    // Use learner phase to prefer questions at the right Bloom's level.
+    // selectQuestionOrder picks a weighted random order per the phase distribution.
+    const preferredOrder = learnerPhase ? selectQuestionOrder(learnerPhase) : undefined;
 
     // Fetch from all sources in parallel with reasonable limits
     const [poolResult, seedQuestions, mainQuestions] = await Promise.all([
@@ -209,6 +218,7 @@ export class SessionService {
         panceLevelOnly,
         eorMode,
         eorDeadline,
+        questionOrder: preferredOrder,
       }),
       mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
         count: Math.max(0, Math.min(count - 5, 10)), // Reserve some for pool
@@ -311,12 +321,13 @@ export class SessionService {
     poolCount: number;
     eorMode?: boolean;
     eorDeadline?: string;
+    learnerPhase?: LearnerPhase;
   }): Promise<{
     questions: EnrichedQuestion[];
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count, simulationStrict, minSystems, panceLevelOnly, mode, seenIds, poolCount, eorMode = false, eorDeadline } = options;
+    const { userId, count, simulationStrict, minSystems, panceLevelOnly, mode, seenIds, poolCount, eorMode = false, eorDeadline, learnerPhase } = options;
 
     // Calculate system distribution
     const systemQuotas = simulationStrict
@@ -331,6 +342,9 @@ export class SessionService {
         ? (PANCE_SIMULATION_TO_ABBREVIATION[targetSystem] ?? targetSystem)
         : getSystemAbbreviation(targetSystem);
 
+      // Pick a Bloom's level per system based on learner phase distribution
+      const systemOrder = learnerPhase ? selectQuestionOrder(learnerPhase) : undefined;
+
       // Fetch from all sources in parallel for this system
       const [poolResult, seedQuestions, mainQuestions] = await Promise.all([
         this.fetchFromPool(userId, seenIds, {
@@ -339,6 +353,7 @@ export class SessionService {
           panceLevelOnly,
           eorMode,
           eorDeadline,
+          questionOrder: systemOrder,
         }),
         mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
           count: Math.max(0, Math.min(targetCount - 2, 8)), // Reserve some for pool

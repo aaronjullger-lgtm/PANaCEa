@@ -12,6 +12,10 @@
  * - Integration with existing monitoring systems
  */
 
+import { perfLogger } from '../logger';
+
+const LOG_SCOPE = 'MemoryMonitor';
+
 export interface MemoryMetrics {
   /** Timestamp of measurement */
   timestamp: number;
@@ -257,15 +261,15 @@ class MemoryMonitor {
       const leaks = this.detectLeaks();
       
       if (leaks.detected) {
-        console.warn('[MemoryMonitor] Potential memory leak detected:', leaks);
+        perfLogger.warn(`[${LOG_SCOPE}] Potential memory leak detected`, { leaks });
       }
       
       if (metrics.pressure === 'high') {
-        console.warn('[MemoryMonitor] High memory pressure detected:', metrics);
+        perfLogger.warn(`[${LOG_SCOPE}] High memory pressure detected`, { metrics });
       }
     }, this.checkInterval);
 
-    console.log('[MemoryMonitor] Started memory monitoring');
+    perfLogger.info(`[${LOG_SCOPE}] Started memory monitoring`);
   }
 
   /**
@@ -275,7 +279,7 @@ class MemoryMonitor {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log('[MemoryMonitor] Stopped memory monitoring');
+      perfLogger.info(`[${LOG_SCOPE}] Stopped memory monitoring`);
     }
   }
 

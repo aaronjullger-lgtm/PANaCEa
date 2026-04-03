@@ -10,6 +10,7 @@ import {
   Cell,
 } from 'recharts';
 import ChartContainer from '../../shared/ChartContainer';
+import { getStabilityColor } from '@/lib/chartTheme';
 
 interface StabilityData {
   bucket: string;
@@ -101,7 +102,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
 
           <Bar dataKey="count" radius={[0, 8, 8, 0]} animationDuration={1000}>
             {sortedData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} opacity={0.85} />
+              <Cell key={`cell-${index}`} fill={getStabilityColor(entry.bucket)} opacity={0.85} />
             ))}
           </Bar>
         </BarChart>

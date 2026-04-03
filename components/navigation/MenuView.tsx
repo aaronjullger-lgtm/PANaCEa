@@ -38,7 +38,7 @@ import DrugDetailModal from '@/components/modals/DrugDetailModal';
 import { findConditionMetaById } from '@/src/lib/conditionSearch';
 import { findDrugByName } from '@/src/lib/drugSearch';
 import { unifiedSearch, type UnifiedSearchResult } from '@/src/lib/unifiedSearch';
-import type { DrugEntry } from '@/src/archived/pharm-old/drugTypes';
+import type { DrugEntry } from '@/types/pharm';
 import { StreakTracker } from '@/components/analytics/StreakTracker';
 import { QuickReviewMode } from '@/components/session/QuickReviewMode';
 import { BookmarksPanel } from '@/components/panels/BookmarksPanel';

@@ -1,157 +1,158 @@
 # PANaCEa Documentation Index
 
-**Last Updated:** January 10, 2026
-
-This index provides quick navigation to all documentation in the PANaCEa codebase.
-
----
-
-## 📌 Start Here (Essential Docs)
-
-| Document                                                               | Description                    |
-| ---------------------------------------------------------------------- | ------------------------------ |
-| [MASTER_DOCUMENTATION.md](../MASTER_DOCUMENTATION.md)                  | Comprehensive project overview |
-| [README.md](./README.md)                                               | Documentation folder guide     |
-| [CRITICAL_FIXES_SPRINT_TRACKER.md](./CRITICAL_FIXES_SPRINT_TRACKER.md) | Current sprint progress        |
+**Last Updated:** April 3, 2026
+**Source of Truth:** `CLAUDE.md` (root) is the canonical project context for AI agents and developers.
 
 ---
 
-## 🔴 Active Development
+## Start Here
 
-### Current Sprints & Plans
-
-- [CRITICAL_FIXES_SPRINT_TRACKER.md](./CRITICAL_FIXES_SPRINT_TRACKER.md) - **Current** security, UX, service consolidation
-- [STRATEGIC_10_SPRINT_ROADMAP.md](./STRATEGIC_10_SPRINT_ROADMAP.md) - Long-term roadmap
-- [PHASE_2_ROADMAP.md](./PHASE_2_ROADMAP.md) - Phase 2 features
-
-### Sprint Completion Reports
-
-- [SPRINT_1_COMPLETION_SUMMARY.md](./SPRINT_1_COMPLETION_SUMMARY.md)
-- [SPRINT_2_COMPLETION_SUMMARY.md](./SPRINT_2_COMPLETION_SUMMARY.md)
-- [SPRINT_3_COMPLETION_SUMMARY.md](./SPRINT_3_COMPLETION_SUMMARY.md)
-- [SPRINT_4_COMPLETION_SUMMARY.md](./SPRINT_4_COMPLETION_SUMMARY.md)
-- [SPRINT_5_COMPLETION_SUMMARY.md](./SPRINT_5_COMPLETION_SUMMARY.md)
+| Document | Description |
+| --- | --- |
+| [CLAUDE.md](../CLAUDE.md) | Canonical project context: stack, architecture rules, FSRS pipeline, build commands |
+| [README.md](../README.md) | Public-facing project overview |
+| [docs/README.md](./README.md) | Guide to this docs folder |
 
 ---
 
-## 🔧 Technical Guides
+## Currently Relevant (updated within last 30 days)
+
+### Architecture & Systems
+
+- [PANCE_BLUEPRINT.md](./PANCE_BLUEPRINT.md) - NCCPA blueprint mapping
+- [FSRS_DATA_ISOLATION.md](./FSRS_DATA_ISOLATION.md) - FSRS data separation strategy
+- [ROUTES_AND_VIEWS.md](./ROUTES_AND_VIEWS.md) - Route and view registry
+- [LOADING_PATTERNS.md](./LOADING_PATTERNS.md) - Loading state patterns
+- [LIBRARY_REDESIGN_IMPLEMENTATION.md](./LIBRARY_REDESIGN_IMPLEMENTATION.md) - Library feature redesign
+- [LIBRARY_SEARCH_BEHAVIOR.md](./LIBRARY_SEARCH_BEHAVIOR.md) - Search UX spec
+
+### OSCE & Drills
+
+- [OSCE_ENHANCEMENT_SYSTEM.md](./OSCE_ENHANCEMENT_SYSTEM.md) - OSCE simulation system
+- [OSCE_GRADING_AUDIT.md](./OSCE_GRADING_AUDIT.md) - Grading rubric audit
+- [AUDIT_VIRTUAL_OSCE_AI_PATIENT.md](./AUDIT_VIRTUAL_OSCE_AI_PATIENT.md) - AI patient simulation
+
+### Audits & Quality
+
+- [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) - Active audit findings
+- [AUDIT_CORE_SESSION_CHECKLIST.md](./AUDIT_CORE_SESSION_CHECKLIST.md) - Core session verification
+- [AUDIT_COMPREHENSIVE_POST_IMPLEMENTATION.md](./AUDIT_COMPREHENSIVE_POST_IMPLEMENTATION.md) - Post-implementation review
+- [INTELLIGENCE_LAYER_AUDIT.md](./INTELLIGENCE_LAYER_AUDIT.md) - Intelligence layer review
+- [SECURITY_AUDIT.md](./SECURITY_AUDIT.md) - Security posture review
+
+### Operations
+
+- [AUTOMATION_RUNBOOK.md](./AUTOMATION_RUNBOOK.md) - Automation playbook
+- [AUTOMATION_SETUP_GUIDE.md](./AUTOMATION_SETUP_GUIDE.md) - Setup instructions
+- [SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md) - Deployment smoke tests
+- [GIT_HISTORY_REWRITE_RUNBOOK.md](./GIT_HISTORY_REWRITE_RUNBOOK.md) - Git history cleanup
+
+### Design
+
+- [COLOR_TOKEN_REMEDIATION_PLAN.md](./COLOR_TOKEN_REMEDIATION_PLAN.md) - Design token fixes
+
+---
+
+## Reference Guides (stable, not frequently updated)
 
 ### Architecture
 
 - [architecture/](./architecture/) - System architecture docs
-- [ARCHITECTURAL_REFACTORING_SUMMARY.md](./ARCHITECTURAL_REFACTORING_SUMMARY.md)
-- [ORGANIZATION_SUMMARY.md](../ORGANIZATION_SUMMARY.md)
+- [EDGE_RUNTIME_PATTERNS.md](./EDGE_RUNTIME_PATTERNS.md) - Cloudflare Edge patterns
+- [VALIDATION_PATTERNS.md](./VALIDATION_PATTERNS.md) - Zod/validation patterns
 
 ### Database & Deployment
 
 - [deployment/](./deployment/) - Deployment guides
-- [MULTI_REGION_DEPLOYMENT.md](./MULTI_REGION_DEPLOYMENT.md)
-- [RLS_IMPLEMENTATION.md](./RLS_IMPLEMENTATION.md)
-- [QUERY_OPTIMIZATION_GUIDE.md](./QUERY_OPTIMIZATION_GUIDE.md)
+- [RLS_IMPLEMENTATION.md](./RLS_IMPLEMENTATION.md) - Row-level security
+- [QUERY_OPTIMIZATION_GUIDE.md](./QUERY_OPTIMIZATION_GUIDE.md) - Query performance
+- [DATABASE_INDEXING_STRATEGY.md](./DATABASE_INDEXING_STRATEGY.md) - Index strategy
 
 ### Security
 
 - [security/](./security/) - Security documentation
-- [AUTH_HEADER_AUDIT_REPORT.md](./AUTH_HEADER_AUDIT_REPORT.md)
+- [AUTH_HEADER_AUDIT_REPORT.md](./AUTH_HEADER_AUDIT_REPORT.md) - Auth header patterns
 
----
+### FSRS & Spaced Repetition
 
-## 📚 Feature Documentation
+- [FSRS_V6_IMPLEMENTATION_SUMMARY.md](./FSRS_V6_IMPLEMENTATION_SUMMARY.md) - FSRS v6 overview
+- [FSRS_V6_QUICK_REFERENCE.md](./FSRS_V6_QUICK_REFERENCE.md) - Quick reference
+- [FSRS_STATISTICAL_OPTIMIZATION.md](./FSRS_STATISTICAL_OPTIMIZATION.md) - Statistical approach
 
-### Learning Features
+### Features
 
-- [INTELLIGENT_SESSION_SPRINTS.md](./INTELLIGENT_SESSION_SPRINTS.md) - Adaptive session engine
+- [features/](./features/) - Feature specifications
+- [INTELLIGENT_SESSION_SPRINTS.md](./INTELLIGENT_SESSION_SPRINTS.md) - Adaptive sessions
 - [PEARL_HARVESTER_PATTERN.md](./PEARL_HARVESTER_PATTERN.md) - Clinical pearl extraction
-- [PEARL_HARVESTER_TESTING.md](./PEARL_HARVESTER_TESTING.md)
 
-### Media & Content
+### Content & Media
 
 - [MEDIA_INTEGRATION.md](./MEDIA_INTEGRATION.md) - Image/media system
-- [PHOTO_DRILL_IMAGE_REQUIREMENTS.md](./PHOTO_DRILL_IMAGE_REQUIREMENTS.md)
-- [LAB_MODE_ENHANCEMENT.md](./LAB_MODE_ENHANCEMENT.md)
+- [CONTENT_ENRICHMENT_SYSTEM.md](./CONTENT_ENRICHMENT_SYSTEM.md) - Content pipeline
+- [SCRIPTS_REFERENCE.md](./SCRIPTS_REFERENCE.md) - Script documentation
 
-### Automation
+### UI/UX
 
-- [AUTOMATION_SETUP_GUIDE.md](./AUTOMATION_SETUP_GUIDE.md)
-- [PRODUCTION_READINESS_MASTER_PLAN.md](./PRODUCTION_READINESS_MASTER_PLAN.md)
-
----
-
-## 📁 Guides
-
-- [guides/](./guides/) - How-to guides
-- [features/](./features/) - Feature specifications
-- [implementation/](./implementation/) - Implementation details
+- [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Design system tokens
+- [MOBILE_FIRST_GUIDE.md](./MOBILE_FIRST_GUIDE.md) - Mobile design patterns
+- [SPACING_SYSTEM_GUIDE.md](./SPACING_SYSTEM_GUIDE.md) - Spacing guidelines
 
 ---
 
-## 🗂️ Archive (Historical)
+## Subdirectories
 
-The `archive/` folder contains 71 historical documents from previous development phases:
-
-### Categories:
-
-- **Sprint Reports:** SPRINT*\*\_COMPLETE.md, SPRINT*\*\_SUMMARY.md
-- **Implementation Summaries:** IMPLEMENTATION*SUMMARY*_.md, IMPLEMENTATION*COMPLETE*_.md
-- **Migration Docs:** MIGRATION\_\*.md
-- **Phase Docs:** PHASE*\*\_IMPLEMENTATION.md, PHASE*\*\_SUMMARY.md
-- **Performance:** PERFORMANCE\_\*.md, BUNDLE_OPTIMIZATION.md
-- **UI/UX:** UI*\*.md, MODAL_SCROLLING*\*.md
-
-> 💡 **Tip:** Use grep to search archive: `grep -r "keyword" docs/archive/`
+| Directory | Contents |
+| --- | --- |
+| [api/](./api/) | API endpoint documentation |
+| [architecture/](./architecture/) | System architecture |
+| [audits/](./audits/) | Historical audit reports |
+| [automation/](./automation/) | Automation & cron docs |
+| [deployment/](./deployment/) | Deployment & CI/CD |
+| [features/](./features/) | Feature specifications |
+| [guides/](./guides/) | How-to guides |
+| [implementation/](./implementation/) | Implementation details |
+| [plans/](./plans/) | Development plans |
+| [research/](./research/) | Research & exploration |
+| [security/](./security/) | Security documentation |
 
 ---
 
-## 🛠️ Developer Scripts
+## Historical / Archive
 
-Located in `scripts/`:
+The remaining ~200 markdown files in this directory are historical documents from previous sprints and development phases (Jan-Mar 2026). They are kept for reference but are **not guaranteed to be current**. Key categories:
+
+- `SPRINT_*_COMPLETION_SUMMARY.md` - Sprint completion reports (Sprints 1-5, B, C)
+- `PHASE_*_*.md` - Phase implementation docs (Phases 1-10)
+- `AUDIT_*.md` - Point-in-time audit reports
+- `*_IMPROVEMENT_PLAN.md` - Historical improvement plans
+- `*_IMPLEMENTATION_SUMMARY.md` - Implementation records
+
+To search historical docs: `grep -ri "keyword" docs/`
+
+---
+
+## Build & Dev Commands
 
 ```bash
-# Audits (via npm)
-npm run audit:prisma      # Check Prisma disconnect patterns
-npm run audit:zod         # Check Zod validation coverage
-npm run audit:loading     # Check loading state consistency
-npm run audit:services    # Analyze service consolidation
-npm run audit:all         # Run all audits
-
-# Database
-npm run db:push           # Push schema changes
-npm run db:generate       # Generate Prisma client
-npm run db:studio         # Open Prisma Studio
-
-# Content
-npm run health-check      # Content health check
-npm run orchestrate:full  # Full content pipeline
+npm run dev            # Vite frontend
+npm run dev:all        # Frontend + Express backend
+npm run dev:wrangler   # Cloudflare Pages (production-like)
+npm run typecheck      # TypeScript check
+npm test               # Unit tests (vitest)
+npm run test:e2e       # Playwright E2E
+npm run db:studio      # Prisma Studio
 ```
 
 ---
 
-## Quick Reference
-
-### Key Files
+## Key Files Quick Reference
 
 ```
-.clinerules              # AI coding standards
-App.tsx                  # Main React app
-functions/api/           # Cloudflare API endpoints
-services/                # Business logic services
-prisma/schema.prisma     # Database schema
+CLAUDE.md                          # Canonical project context (source of truth)
+App.tsx                            # Main React app entry
+functions/api/                     # Cloudflare Edge API endpoints
+lib/fsrs.ts                        # FSRS v6 implementation
+lib/services/drillReviewService.ts # Core submission pipeline
+components/session/QuizView.tsx    # Main session UI
+prisma/schema.prisma               # Database schema
 ```
-
-### Service Barrel Exports
-
-```typescript
-import { questionService, sessionService } from '@/services/core';
-import { performanceService, predictionService } from '@/services/analytics';
-import { geminiService, virtualPreceptor } from '@/services/ai';
-import { fsrsService, examService } from '@/services/domain';
-```
-
----
-
-## Need Help?
-
-1. Check the [MASTER_DOCUMENTATION.md](../MASTER_DOCUMENTATION.md) first
-2. Search archive docs: `grep -r "topic" docs/`
-3. Review `.clinerules` for coding standards
-4. Check [DEBUGGING_SESSION_SUMMARY.md](./DEBUGGING_SESSION_SUMMARY.md) for common issues

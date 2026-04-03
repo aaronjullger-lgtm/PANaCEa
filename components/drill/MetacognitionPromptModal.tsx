@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Lightbulb, ArrowRight, X, AlertTriangle, Target } from 'lucide-react';
 import type { MetacognitionPrompt } from '@/lib/metacognition';
+import { Button } from '@/components/ui/button';
 
 interface MetacognitionPromptModalProps {
   prompt: MetacognitionPrompt;
@@ -124,7 +125,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
               </div>
               <button
                 onClick={handleSkipAll}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0"
                 aria-label="Skip reflection"
               >
                 <X className="w-5 h-5" />
@@ -194,25 +195,27 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={handleSkipAll}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                className="flex-1"
               >
                 Skip
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
                 onClick={handleNextQuestion}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-text-inverse)] bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] rounded-lg transition-colors flex items-center justify-center gap-2"
+                iconRight={
+                  currentQuestionIndex < prompt.reflectionQuestions.length - 1
+                    ? <ArrowRight className="w-4 h-4" />
+                    : undefined
+                }
+                className="flex-1"
               >
-                {currentQuestionIndex < prompt.reflectionQuestions.length - 1 ? (
-                  <>
-                    Next
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  'Continue'
-                )}
-              </button>
+                {currentQuestionIndex < prompt.reflectionQuestions.length - 1 ? 'Next' : 'Continue'}
+              </Button>
             </div>
           </div>
 

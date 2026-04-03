@@ -248,7 +248,7 @@ function ProvisionalState({
           className="inline-block"
         >
           <span className="text-6xl font-bold text-[var(--color-text-primary)]">
-            {stats.predictedScore || '---'}
+            {stats.predictedScore != null && isFinite(stats.predictedScore) ? stats.predictedScore : '---'}
           </span>
           <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
@@ -264,7 +264,7 @@ function ProvisionalState({
       <div className="flex items-center justify-center gap-8 py-2">
         <div className="text-center">
           <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
-            {stats.accuracyPercent?.toFixed(1) || '0'}%
+            {stats.accuracyPercent != null && isFinite(stats.accuracyPercent) ? stats.accuracyPercent.toFixed(1) : '0'}%
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
         </div>
@@ -326,8 +326,10 @@ function ConfidentState({
   isStarting,
   examLabel = 'PANCE',
 }: ConfidentStateProps) {
-  const isPassing = (stats.predictedScore || 0) >= 350;
-  const passLikelihood = stats.passLikelihood || 0;
+  const isPassing = (stats.predictedScore ?? 0) >= 350;
+  const rawPassLikelihood = stats.passLikelihood;
+  const passLikelihood =
+    rawPassLikelihood != null && isFinite(rawPassLikelihood) ? rawPassLikelihood : 0;
   const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';
 
   return (
@@ -361,7 +363,7 @@ function ConfidentState({
           <span
             className={`text-6xl font-bold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
           >
-            {stats.predictedScore || '---'}
+            {stats.predictedScore != null && isFinite(stats.predictedScore) ? stats.predictedScore : '---'}
           </span>
           <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
@@ -377,7 +379,7 @@ function ConfidentState({
       <div className="grid grid-cols-3 gap-4 py-2">
         <div className="text-center">
           <span className="text-xl font-semibold text-[var(--color-text-primary)]">
-            {stats.accuracyPercent?.toFixed(1) || '0'}%
+            {stats.accuracyPercent != null && isFinite(stats.accuracyPercent) ? stats.accuracyPercent.toFixed(1) : '0'}%
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
         </div>

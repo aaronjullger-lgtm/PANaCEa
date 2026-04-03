@@ -32,7 +32,9 @@ export function blendAccuracy(rolling360: number | null, lifetime: number | null
   if (rolling360 === null && lifetime === null) return 0;
   if (rolling360 === null) return lifetime!;
   if (lifetime === null) return rolling360;
-  return rolling360 * 0.7 + lifetime * 0.3;
+  const blended = rolling360 * 0.7 + lifetime * 0.3;
+  // Guard against NaN/Infinity from upstream garbage
+  return isFinite(blended) ? blended : 0;
 }
 
 /** Determine trend from recent performance data */
@@ -50,8 +52,8 @@ export function determineTrend(
 export function capOutliers(values: number[], percentile = 0.9): number[] {
   if (values.length === 0) return [];
   const sorted = [...values].sort((a, b) => a - b);
-  const index = Math.floor(sorted.length * percentile);
-  const cap = sorted[index];
+  const index = Math.min(Math.floor(sorted.length * percentile), sorted.length - 1);
+  const cap = sorted[index] ?? sorted[sorted.length - 1] ?? 0;
   return values.map(v => Math.min(v, cap));
 }
 
@@ -71,8 +73,12 @@ export function deriveAccuracy(
   rolling360: Rolling360Stats | null,
   database: DatabaseStats | null
 ): UnifiedStats['accuracy'] {
-  const rolling360Accuracy = rolling360?.accuracyPercent !== null ? rolling360.accuracyPercent / 100 : null;
-  const lifetimeAccuracy = database?.overall.accuracy !== undefined ? database.overall.accuracy / 100 : null;
+  const rawRolling = rolling360?.accuracyPercent;
+  const rolling360Accuracy =
+    rawRolling != null && isFinite(rawRolling) ? rawRolling / 100 : null;
+  const rawLifetime = database?.overall?.accuracy;
+  const lifetimeAccuracy =
+    rawLifetime != null && isFinite(rawLifetime) ? rawLifetime / 100 : null;
 
   const global = blendAccuracy(rolling360Accuracy, lifetimeAccuracy);
 
@@ -116,11 +122,14 @@ export function deriveQuestionCounts(
 export function deriveStudyTime(
   database: DatabaseStats | null
 ): UnifiedStats['studyTime'] {
-  const totalMs = database?.overall.avgTimeMs
-    ? database.overall.avgTimeMs * (database.overall.totalAttempts || 1)
-    : 0;
-  const avgPerQuestionMs = database?.overall.avgTimeMs ?? null;
-  const todayMs = database?.overall.todayTimeMs ?? 0;
+  const rawAvg = database?.overall?.avgTimeMs;
+  const rawTotal = database?.overall?.totalAttempts;
+  const safeAvg = rawAvg != null && isFinite(rawAvg) && rawAvg > 0 ? rawAvg : 0;
+  const safeTotal = rawTotal != null && isFinite(rawTotal) && rawTotal > 0 ? rawTotal : 1;
+  const totalMs = safeAvg > 0 ? safeAvg * safeTotal : 0;
+  const avgPerQuestionMs = safeAvg > 0 ? safeAvg : null;
+  const rawToday = database?.overall?.todayTimeMs;
+  const todayMs = rawToday != null && isFinite(rawToday) ? rawToday : 0;
 
   return {
     totalMs,
@@ -140,8 +149,10 @@ export function deriveStudyTime(
 export function derivePredictions(
   rolling360: Rolling360Stats | null
 ): UnifiedStats['predictions'] {
-  const panceScore = rolling360?.predictedScore ?? null;
-  const passLikelihood = rolling360?.passLikelihood ?? null;
+  const rawPance = rolling360?.predictedScore;
+  const panceScore = rawPance != null && isFinite(rawPance) ? rawPance : null;
+  const rawPass = rolling360?.passLikelihood;
+  const passLikelihood = rawPass != null && isFinite(rawPass) ? rawPass : null;
   const readinessScore = panceScore !== null ? Math.min(100, Math.max(0, panceScore)) : 0;
 
   return {
@@ -187,13 +198,16 @@ export function deriveSystemMastery(
     const db = databaseSystems[system];
 
     const attempts = rolling?.total ?? db?.total ?? 0;
-    const accuracy = rolling?.accuracy ?? db?.accuracy ?? 0;
+    const rawAccuracy = rolling?.accuracy ?? db?.accuracy ?? 0;
+    // Guard: accuracy should be 0–1; clamp and protect against NaN
+    const accuracy = isFinite(rawAccuracy) ? Math.max(0, Math.min(1, rawAccuracy)) : 0;
     const masteryPercent = Math.round(accuracy * 100);
 
     // Map decision time (capped)
     let avgDecisionTimeSec = null;
-    if (db?.avgTimeMs) {
-      avgDecisionTimeSec = Math.round(cappedTimes[timeIndex++] / 1000);
+    if (db?.avgTimeMs && timeIndex < cappedTimes.length) {
+      const capped = cappedTimes[timeIndex++];
+      avgDecisionTimeSec = capped != null && isFinite(capped) ? Math.round(capped / 1000) : null;
     }
 
     // Determine trend

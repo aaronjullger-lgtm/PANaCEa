@@ -75,7 +75,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               }}
             >
               <OfflineSyncIndicator />
-              {user?.publicMetadata?.role === 'admin' && (
+              {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
                   to={ROUTES.ADMIN}
                   className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"

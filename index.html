@@ -173,7 +173,11 @@
       /* Background color to prevent white flash in dark mode */
       body { background-color: var(--color-bg-primary); color: var(--color-text-primary); }
     </style>
-    <link rel="stylesheet" href="/index.css" />
+    <!-- data-cfasync="false" prevents Cloudflare Rocket Loader / Auto Minify
+         from rewriting this <link> to media="print" with an onload flipback.
+         Vite already minifies in production, so CF optimization is redundant
+         and has caused intermittent total style loss (see AUDIT_DASHBOARD_SHELL Finding 1). -->
+    <link rel="stylesheet" href="/index.css" data-cfasync="false" />
     <script>
       // Cloudflare CSS optimization safety:
       // If any stylesheet is rewritten to media="print" and onload is stripped,

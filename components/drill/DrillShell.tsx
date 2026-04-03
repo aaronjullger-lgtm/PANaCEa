@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { DrillErrorBoundary } from '@/components/error/DrillErrorBoundary';
@@ -80,14 +81,15 @@ const DrillShell: React.FC<DrillShellProps> = ({
               {backTo !== undefined ? (
                 <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
               ) : (
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={onBackToHub}
-                  className="flex items-center gap-1 hover:text-[var(--color-accent)] transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded-lg px-2 py-1"
+                  icon={<Home className="w-4 h-4" />}
                   aria-label="Back to hub"
                 >
-                  <Home className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                  <span>Hub</span>
-                </button>
+                  Hub
+                </Button>
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
@@ -109,13 +111,14 @@ const DrillShell: React.FC<DrillShellProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {onBack && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={onBack}
-                    className="p-2 min-h-[44px] min-w-[44px] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     aria-label="Go back"
                   >
-                    <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:-translate-x-1 transition-all" />
-                  </button>
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
                 )}
                 <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-accent)]">
                   {title}

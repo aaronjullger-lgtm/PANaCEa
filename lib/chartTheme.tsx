@@ -97,12 +97,29 @@ export const chartTheme = {
     neutral: 'var(--color-text-muted)',
     /** Brand-safe bar sequence for multi-series (Recharts/Chart.js) */
     barSequence: [
-      'var(--color-accent)',           // Base blue
-      'hsl(207, 90%, 45%)',            // Base blue hue -20°, lighter
-      'hsl(227, 90%, 52%)',            // Base blue hue +20°, lighter
-      'hsl(200, 85%, 48%)',
-      'hsl(235, 85%, 55%)',
+      'var(--color-accent)',
+      'var(--color-accent-secondary)',
+      'var(--color-data-pass)',
+      'var(--color-data-provisional)',
+      'var(--color-data-fail)',
     ],
+  },
+
+  /**
+   * SVG-safe color tokens for custom SVG charts (DriftVectorChart, etc.)
+   * These return CSS variable references usable in fill/stroke attributes.
+   */
+  svg: {
+    primary: 'var(--color-accent)',
+    danger: 'var(--color-data-fail)',
+    dangerLight: 'var(--color-data-fail)',
+    warning: 'var(--color-data-provisional)',
+    success: 'var(--color-data-pass)',
+    muted: 'var(--color-text-muted)',
+    gridStroke: 'var(--chart-grid-stroke)',
+    axisStroke: 'var(--color-border)',
+    textPrimary: 'var(--color-text-primary)',
+    textMuted: 'var(--color-text-muted)',
   },
 
   /**
@@ -154,5 +171,35 @@ export const getResponsiveHeight = (width: number): number => {
   if (width < 1024) return 250; // Tablet
   return 300; // Desktop
 };
+
+/**
+ * Stability bucket color mapping — theme-aware.
+ * Returns CSS variable-based fills for StabilityPyramid bars.
+ */
+export const stabilityBucketColor: Record<string, string> = {
+  '<1d': 'var(--color-data-fail)',
+  '1-3d': 'var(--color-data-provisional)',
+  '3-7d': 'var(--color-data-provisional)',
+  '7-21d': 'var(--color-accent)',
+  '21d+': 'var(--color-data-pass)',
+};
+
+/**
+ * Get a theme-safe fill color for a stability bucket.
+ * Falls back to accent if bucket is unrecognized.
+ */
+export function getStabilityColor(bucket: string): string {
+  return stabilityBucketColor[bucket] ?? 'var(--color-accent)';
+}
+
+/**
+ * Safe number formatter for chart tooltips/labels.
+ * Returns '—' for NaN/Infinity/null/undefined.
+ */
+export function safeChartValue(value: unknown, fallback = '—'): string {
+  if (value == null) return fallback;
+  if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) return fallback;
+  return String(value);
+}
 
 export default chartTheme;

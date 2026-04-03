@@ -207,13 +207,13 @@ export const NavRail: React.FC<NavRailProps> = ({
     return () => document.removeEventListener('keydown', handler);
   }, [hidden, collapsed]);
 
-  // Sync CSS variable for main content margin
+  // Sync CSS variable for main content margin.
+  // NOTE: No cleanup function — the variable must persist for the lifetime of
+  // the authenticated shell. Removing it on unmount caused layout collapse
+  // during AnimatePresence page transitions (see AUDIT_DASHBOARD_SHELL Finding 3).
   useEffect(() => {
     const width = hidden || isMobile ? 0 : collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED;
     document.documentElement.style.setProperty('--nav-rail-width', `${width}px`);
-    return () => {
-      document.documentElement.style.removeProperty('--nav-rail-width');
-    };
   }, [collapsed, hidden, isMobile]);
 
   // On mobile, render bottom tab bar instead
@@ -332,7 +332,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="list-none m-0 p-0 space-y-1">{items.map(renderItem)}</ul>
+      <ul className="list-none m-0 p-0 space-y-1" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{items.map(renderItem)}</ul>
     </div>
   );
 

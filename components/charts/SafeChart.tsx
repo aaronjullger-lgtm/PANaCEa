@@ -1,15 +1,16 @@
 /**
  * SafeChart Component
- * 
+ *
  * Recharts wrapper with:
- * - NaN protection (empty state fallback)
+ * - NaN/Infinity protection (empty state fallback)
  * - Formatted X/Y axis labels
- * - Stormy Slate styling
+ * - Theme-aware styling via chartTheme (light + dark safe)
  */
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import chartTheme, { safeChartValue } from '@/lib/chartTheme';
 
 interface SafeChartProps {
   data: Array<{ x: string | number; y: number }>;
@@ -19,16 +20,16 @@ interface SafeChartProps {
   onStartSession?: () => void;
 }
 
-export function SafeChart({ 
-  data, 
-  xLabel, 
-  yLabel, 
+export function SafeChart({
+  data,
+  xLabel,
+  yLabel,
   emptyMessage = 'No data yet',
-  onStartSession 
+  onStartSession,
 }: SafeChartProps) {
   // Filter out NaN/invalid values
-  const validData = data.filter(d => 
-    typeof d.y === 'number' && !isNaN(d.y) && isFinite(d.y)
+  const validData = data.filter(
+    (d) => typeof d.y === 'number' && !isNaN(d.y) && isFinite(d.y)
   );
 
   if (validData.length === 0) {
@@ -51,31 +52,54 @@ export function SafeChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={validData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-        <XAxis 
-          dataKey="x" 
-          stroke="#94a3b8"
-          label={{ value: xLabel, position: 'insideBottom', offset: -5, fill: '#cbd5e1' }}
+        <CartesianGrid
+          strokeDasharray={chartTheme.grid.strokeDasharray}
+          stroke={chartTheme.grid.stroke}
+          vertical={chartTheme.grid.vertical}
         />
-        <YAxis 
-          stroke="#94a3b8"
-          label={{ value: yLabel, angle: -90, position: 'insideLeft', fill: '#cbd5e1' }}
-          tickFormatter={(value) => `${Math.round(value)}%`}
-        />
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: '#1e293b', 
-            border: '1px solid #334155',
-            borderRadius: '8px',
-            color: '#f1f5f9'
+        <XAxis
+          dataKey="x"
+          stroke={chartTheme.axis.line.stroke}
+          tick={chartTheme.axis.tick}
+          label={{
+            value: xLabel,
+            position: 'insideBottom',
+            ...chartTheme.axisLabel,
           }}
         />
-        <Line 
-          type="monotone" 
-          dataKey="y" 
-          stroke="#3b82f6" 
+        <YAxis
+          stroke={chartTheme.axis.line.stroke}
+          tick={chartTheme.axis.tick}
+          label={{
+            value: yLabel,
+            angle: -90,
+            position: 'insideLeft',
+            style: chartTheme.axisLabel.style,
+          }}
+          tickFormatter={(value) =>
+            safeChartValue(typeof value === 'number' ? `${Math.round(value)}%` : value)
+          }
+        />
+        <Tooltip
+          contentStyle={chartTheme.tooltip.contentStyle}
+          labelStyle={chartTheme.tooltip.labelStyle}
+          itemStyle={chartTheme.tooltip.itemStyle}
+          formatter={(value: unknown, name?: string) => {
+            if (
+              value == null ||
+              (typeof value === 'number' && (!isFinite(value) || isNaN(value)))
+            ) {
+              return ['—', name ?? ''];
+            }
+            return [value, name ?? ''];
+          }}
+        />
+        <Line
+          type="monotone"
+          dataKey="y"
+          stroke={chartTheme.colors.primary}
           strokeWidth={2}
-          dot={{ fill: '#3b82f6', r: 4 }}
+          dot={{ fill: chartTheme.colors.primary, r: 4 }}
         />
       </LineChart>
     </ResponsiveContainer>

@@ -83,9 +83,11 @@ export function useUnifiedStats(
     return timestamps.length > 0 ? Math.max(...timestamps) : null;
   }, [rolling360Fetched, databaseFetched]);
 
-  // Compute unified stats when all sources are ready
+  // Compute unified stats when at least one source is available.
+  // We intentionally do NOT gate on `error` — partial data is better than
+  // a blank dashboard when one source failed but the other loaded.
   const stats = useMemo(() => {
-    if (isLoading || error) return null;
+    if (isLoading) return null;
     if (!rolling360Stats && !databaseStats) return null;
 
     const rawSources = {

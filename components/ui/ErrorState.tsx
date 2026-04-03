@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createAppError, getUserFacingError } from '@/lib/utils/errorHandlingUtils';
 
@@ -61,26 +62,24 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
         <div className="flex flex-wrap items-center justify-center gap-3">
           {onRetry && (
-            <motion.button
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<RefreshCw className="w-4 h-4" />}
               onClick={onRetry}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-sm"
             >
-              <RefreshCw className="w-4 h-4" />
               Try Again
-            </motion.button>
+            </Button>
           )}
           {secondaryAction && (
-            <motion.button
+            <Button
+              variant="secondary"
+              size="lg"
+              icon={<Home className="w-4 h-4" />}
               onClick={secondaryAction.onClick}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
             >
-              <Home className="w-4 h-4" />
               {secondaryAction.label}
-            </motion.button>
+            </Button>
           )}
         </div>
       </div>

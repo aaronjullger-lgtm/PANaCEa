@@ -65,16 +65,17 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const styles = variantStyles[variant];
-  const baseLift = 'shadow-sm dark:shadow-none';
+  // Use CSS-var-aware shadow tokens instead of hardcoded dark: prefixes
+  const baseLift = 'shadow-sm';
   const hoverStyles = hoverable
-    ? `${baseLift} hover:shadow-md dark:hover:shadow-black/20 transition-all duration-300`
+    ? `${baseLift} hover:shadow-md transition-all duration-300`
     : baseLift;
   const paddingStyles = noPadding ? '' : 'p-6';
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={`
         relative overflow-hidden rounded-xl
@@ -124,7 +125,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   return (
     <div className="flex items-start gap-4 mb-4">
       <div
-        className={`p-3 rounded-xl bg-[var(--color-bg-tertiary)] dark:bg-white/5 backdrop-blur-sm border border-[var(--color-border)]`}
+        className={`p-3 rounded-xl bg-[var(--color-bg-tertiary)] backdrop-blur-sm border border-[var(--color-border)]`}
       >
         <Icon className={`w-7 h-7 ${iconColor}`} />
       </div>

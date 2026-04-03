@@ -12,7 +12,7 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'warning' | 'accent' | 'success';
-type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -35,11 +35,12 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  xs: 'px-2 py-1 text-xs',
-  sm: 'px-3 py-1.5 text-sm',
+  xs: 'px-2.5 py-1 text-xs min-h-[32px]',
+  sm: 'px-3 py-1.5 text-sm min-h-[36px]',
   md: 'px-4 py-2 text-base min-h-[44px]',
   lg: 'px-6 py-3 text-lg min-h-[44px]',
   xl: 'px-8 py-4 text-xl min-h-[52px]',
+  icon: 'p-2 min-h-[44px] min-w-[44px]',
 };
 
 export function Button({

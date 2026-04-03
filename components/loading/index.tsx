@@ -230,7 +230,7 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
             }}
             className={`
               ${isCompact ? 'h-4' : 'h-5'}
-              bg-gradient-to-r from-slate-800 to-slate-700
+              bg-gradient-to-r from-slate-200 to-slate-300
               dark:from-slate-700 dark:to-slate-600
               rounded
             `}

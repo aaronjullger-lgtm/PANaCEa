@@ -5,6 +5,10 @@
  * Integrates with Todoist API to create projects, tasks, and subtasks.
  */
 
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'Todoist';
+
 export interface TodoistTask {
   content: string;
   description?: string;
@@ -267,7 +271,7 @@ async function getStoredTokens(): Promise<TodoistTokens | null> {
     const encryptedTokens = JSON.parse(stored);
     return await decryptTokens(encryptedTokens);
   } catch (error) {
-    console.error('Failed to decrypt stored tokens:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to decrypt stored tokens`, { error });
     localStorage.removeItem('todoist_tokens');
     return null;
   }
@@ -396,7 +400,7 @@ export async function exportTasksToTodoist(tasks: TodoistTask[]): Promise<void> 
         });
 
         if (!response.ok) {
-          console.error(`Failed to create task: ${task.content}`, response.statusText);
+          logger.error(`[${LOG_SCOPE}] Failed to create task: ${task.content}`, { statusText: response.statusText });
         }
       })
     );

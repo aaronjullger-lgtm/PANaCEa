@@ -55,6 +55,8 @@ import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/loading';
 import { EnhancedErrorMessage } from '../components/shared/EnhancedErrorMessage';
 import { NotFoundPage } from '../components/error/NotFoundPage';
+import { AdminRoute } from '../components/auth/AdminRoute';
+import { useUser } from '@clerk/clerk-react';
 import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '../components/ui/MasteryHeatmapToggle';
 import { OfflineSyncIndicator } from '../components/offline/OfflineSyncIndicator';
@@ -264,6 +266,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
+  const isUserAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin';
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
   // Scroll to top on route change (replaces ScrollRestoration which requires data router)
@@ -310,64 +314,77 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           </Suspense>
         }
       />
+      {/* ── Admin routes — client-side guarded by AdminRoute ── */}
       <Route
         path="/admin"
         element={
-          <Suspense fallback={<Loader message="Loading admin…" />}>
-            <ErrorBoundary variant="page">
-              <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading admin…" />}>
+              <ErrorBoundary variant="page">
+                <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/curation"
         element={
-          <Suspense fallback={<Loader message="Loading curation…" />}>
-            <ErrorBoundary variant="page">
-              <QuestionCurationPanel />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading curation…" />}>
+              <ErrorBoundary variant="page">
+                <QuestionCurationPanel />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/refinery"
         element={
-          <Suspense fallback={<Loader message="Loading refinery…" />}>
-            <ErrorBoundary variant="page">
-              <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading refinery…" />}>
+              <ErrorBoundary variant="page">
+                <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/taxonomies"
         element={
-          <Suspense fallback={<Loader message="Loading taxonomies…" />}>
-            <ErrorBoundary variant="page">
-              <TaxonomiesPage />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading taxonomies…" />}>
+              <ErrorBoundary variant="page">
+                <TaxonomiesPage />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/system-mappings"
         element={
-          <Suspense fallback={<Loader message="Loading system mappings…" />}>
-            <ErrorBoundary variant="page">
-              <SystemMappingsPage />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading system mappings…" />}>
+              <ErrorBoundary variant="page">
+                <SystemMappingsPage />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
         path="/admin/question-generator"
         element={
-          <Suspense fallback={<Loader message="Loading question generator…" />}>
-            <ErrorBoundary variant="page">
-              <QuestionGeneratorPage />
-            </ErrorBoundary>
-          </Suspense>
+          <AdminRoute>
+            <Suspense fallback={<Loader message="Loading question generator…" />}>
+              <ErrorBoundary variant="page">
+                <QuestionGeneratorPage />
+              </ErrorBoundary>
+            </Suspense>
+          </AdminRoute>
         }
       />
       <Route
@@ -434,7 +451,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                 </a>
                 {/* Header - fixed height so NavRail (sidebar) starts below it; z-50 above rail */}
                 <header
-                  className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
+                  className="sticky top-0 z-50 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
                   style={{ height: 'var(--header-height, 4rem)' }}
                 >
                   <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
@@ -447,13 +464,15 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       }}
                     >
                       <OfflineSyncIndicator />
-                      <Link
-                        to={ROUTES.ADMIN}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
-                        aria-label="Admin Dashboard"
-                      >
-                        <Shield className="w-5 h-5" />
-                      </Link>
+                      {isUserAdmin && (
+                        <Link
+                          to={ROUTES.ADMIN}
+                          className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                          aria-label="Admin Dashboard"
+                        >
+                          <Shield className="w-5 h-5" />
+                        </Link>
+                      )}
                       <motion.button
                         ref={settingsButtonRef}
                         onClick={() => setIsSettingsModalOpen(true)}
@@ -662,8 +681,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                           />
                         )}
 
-                        {/* Removed mode="wait" to allow overlapping transitions for faster perceived navigation */}
-                        <AnimatePresence>
+                        {/* popLayout: exiting view is removed from layout flow immediately
+                            (position: absolute) while still animating out. Gives the "fast"
+                            feel without overlapping content or broken alignment.
+                            See AUDIT_DASHBOARD_SHELL Finding 4. */}
+                        <AnimatePresence mode="popLayout">
                           {view === 'command_center' && (
                             <motion.div
                               key="command_center"
@@ -688,7 +710,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                   onNavigateToDrillWithSystem={
                                     _handleNavigateToDrillWithSystem
                                   }
-                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
+                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_UTILITIES)}
                                   onNavigateToGapAnalysis={() =>
                                     startViewTransition(() => setView('gap_analysis'))
                                   }
@@ -698,7 +720,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                   onNavigateToIntegrations={() => setView('integrations')}
                                   onNavigateToSimulation={handleNavigateToSimulation}
                                   onNavigateToReference={() =>
-                                    navigate(ROUTES.STUDY_REFERENCE)
+                                    navigate(ROUTES.STUDY_KNOWLEDGE)
                                   }
                                   onNavigateToMyLibrary={() => setView('my_library')}
                                   onNavigateToCustomStudy={handleNavigateToCustomStudy}
@@ -761,7 +783,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                   onNavigateToIntegrations={() => setView('integrations')}
                                   // HIDDEN: Social feature disabled until API implemented
                                   // onNavigateToSocial={() => setView('social_dashboard')}
-                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
+                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_UTILITIES)}
                                   onNavigateToGapAnalysis={() =>
                                     startViewTransition(() => setView('gap_analysis'))
                                   }
@@ -1024,14 +1046,14 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                     onStartSession={handleStartSession}
                                     onNavigateToDrillMode={handleNavigateToDrillMode}
                                     onNavigateToToolkit={() =>
-                                      navigate(ROUTES.STUDY_TOOLKIT)
+                                      navigate(ROUTES.STUDY_UTILITIES)
                                     }
                                     onNavigateToGapAnalysis={() =>
                                       startViewTransition(() => setView('gap_analysis'))
                                     }
                                     onNavigateToIntegrations={() => setView('integrations')}
                                     onNavigateToReference={() =>
-                                      navigate(ROUTES.STUDY_REFERENCE)
+                                      navigate(ROUTES.STUDY_KNOWLEDGE)
                                     }
                                     onNavigateToMyLibrary={() => setView('my_library')}
                                     onNavigateToStudyCompanion={() =>

@@ -3,6 +3,9 @@
 
 import type { GradingResult } from './soapGradingService';
 import { StorageKeys } from '../storage/storageRegistry';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'SOAPAnalytics';
 
 interface SoapGradingEvent {
   caseId: string;
@@ -21,7 +24,7 @@ function loadEvents(): SoapGradingEvent[] {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.error('Failed to load SOAP grading analytics from storage:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to load SOAP grading analytics from storage`, { error });
     return [];
   }
 }
@@ -30,7 +33,7 @@ function saveEvents(events: SoapGradingEvent[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
   } catch (error) {
-    console.error('Failed to save SOAP grading analytics to storage:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to save SOAP grading analytics to storage`, { error });
   }
 }
 
@@ -59,7 +62,7 @@ export async function storeSoapGradingEvent(
     const trimmed = existing.slice(-500);
     saveEvents(trimmed);
   } catch (error) {
-    console.error('Failed to record SOAP grading analytics locally:', error);
+    logger.error(`[${LOG_SCOPE}] Failed to record SOAP grading analytics locally`, { error });
   }
 
   // Best-effort sync to backend (non-blocking for the UI caller)

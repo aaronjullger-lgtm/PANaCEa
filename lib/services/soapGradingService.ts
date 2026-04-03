@@ -2,6 +2,9 @@
 // SOAP Note grading via Gemini proxy (Cloudflare /api/gemini)
 
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { geminiLogger } from '../logger';
+
+const LOG_SCOPE = 'SOAPGrading';
 
 export interface GradingResult {
   totalScore: number; // 0-100
@@ -117,7 +120,7 @@ interface GradingResult {
   });
 
   if (!response.ok) {
-    console.error('Gemini proxy returned error status', response.status);
+    geminiLogger.error(`[${LOG_SCOPE}] Gemini proxy returned error status`, { status: response.status });
     throw new Error('Gemini proxy error');
   }
 
@@ -172,7 +175,7 @@ interface GradingResult {
 
     return parsed;
   } catch (error) {
-    console.error('Failed to parse SOAP grading JSON:', error, jsonString);
+    geminiLogger.error(`[${LOG_SCOPE}] Failed to parse SOAP grading JSON`, { error, jsonString });
     throw new Error('Failed to parse grading result from AI');
   }
 }
