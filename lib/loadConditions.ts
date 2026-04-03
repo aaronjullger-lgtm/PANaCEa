@@ -1,3 +1,5 @@
+import { getApiEndpoint, API_ENDPOINTS } from './utils/apiConfig';
+
 // Lazy load conditions to improve initial bundle size
 let conditionsCache: Record<string, unknown> | null = null;
 const CONTENT_API_PATH = '/api/content/all';
@@ -7,8 +9,6 @@ async function getConditions(): Promise<Record<string, unknown>> {
     return conditionsCache;
   }
 
-  // Import shared API config utility
-  const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
   const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
   try {
@@ -311,7 +311,6 @@ export async function getConditionById(id: string): Promise<ConditionEntry | und
 
   // Fast path: fetch only this condition so the UI can render without waiting for /api/content/all.
   try {
-    const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
     const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_BY_ID(encodeURIComponent(id)));
     const response = await fetch(apiUrl);
 

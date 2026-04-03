@@ -19,7 +19,13 @@ id = "b576c43270a3407a8e5ae65afad0fe7e"
 # Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
 # Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
 
+# Build environment — CF Pages runs `npm ci` automatically before this command.
+# Do NOT add `npm ci &&` prefix; that causes a wasteful second install + prisma generate.
+[build]
+command = "npm run build"
+
 [vars]
+NODE_VERSION = "22"
 VITE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuc3R1ZHlwYW5hY2VhLmNvbSQ"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmVzY2RycGV6empoZ3Zlb3R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNTgxNzYsImV4cCI6MjA4MDczNDE3Nn0.iIb2xtAPWLGtN_g75YGESf7WyN6W9pfhA0dCxNx2GaQ"
 VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"

@@ -16,6 +16,7 @@
 import type { AppError, ErrorSeverity } from './types';
 import { isAppError, toAppError } from './types';
 import { StorageKeys } from '../storage/storageRegistry';
+import { captureError as sentryCaptureError, addBreadcrumb as sentryAddBreadcrumb } from '../monitoring/sentry';
 
 /**
  * Breadcrumb for tracking user actions leading to errors
@@ -46,38 +47,21 @@ export interface ErrorLogEntry {
 }
 
 /**
- * Lazy-loaded Sentry functions (production only)
+ * Sentry functions — statically imported since ErrorBoundary already
+ * forces sentry.ts into the main bundle. No benefit from dynamic import().
  */
-let sentryModule: {
-  captureError: (error: Error, context?: Record<string, unknown>) => void;
-  addBreadcrumb: (
-    message: string,
-    category: string,
-    level?: ErrorSeverity,
-    data?: Record<string, unknown>
-  ) => void;
-} | null = null;
+const sentryModule = {
+  captureError: sentryCaptureError,
+  addBreadcrumb: sentryAddBreadcrumb,
+};
 
 /**
- * Initialize Sentry module (lazy load in production)
+ * Return Sentry module (production only)
  */
 async function initSentry() {
-  if (sentryModule) return sentryModule;
-
   if (import.meta.env.PROD) {
-    try {
-      const sentry = await import('../monitoring/sentry');
-      sentryModule = {
-        captureError: sentry.captureError,
-        addBreadcrumb: sentry.addBreadcrumb,
-      };
-      return sentryModule;
-    } catch (error) {
-      console.warn('[ErrorLogger] Failed to load Sentry module:', error);
-      return null;
-    }
+    return sentryModule;
   }
-
   return null;
 }
 

@@ -364,12 +364,9 @@ export default defineConfig(({ mode }) => {
         // sharp is a Node.js-only image processing library - must never be bundled for browser
         external: ['sharp'],
         onwarn(warning, warn) {
-          if (
-            warning.code === 'SOURCEMAP_ERROR' &&
-            warning.loc?.file &&
-            (warning.loc.file.includes('components/navigation/CommandCenterHub.tsx') ||
-              warning.loc.file.includes('components/dashboard/TrainingMenu.tsx'))
-          ) {
+          // Suppress sourcemap resolution warnings from transform phase —
+          // these are input-sourcemap issues, not output; production maps are fine.
+          if (warning.code === 'SOURCEMAP_ERROR') {
             return;
           }
           warn(warning);
@@ -382,17 +379,44 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             // Vendor chunks
             if (id.includes('node_modules')) {
+              // React core — MUST be its own chunk so it loads before anything
+              // that calls React.forwardRef / React.createElement at module eval time
+              if (
+                id.includes('node_modules/react/') ||
+                id.includes('node_modules/react-dom/') ||
+                id.includes('node_modules/scheduler/')
+              ) {
+                return 'vendor-react';
+              }
               // Charting - heavy; split out so route-level chunks load it on demand
-              if (id.includes('recharts')) {
+              if (
+                id.includes('recharts') ||
+                id.includes('node_modules/d3') ||
+                id.includes('node_modules/victory')
+              ) {
                 return 'charting';
               }
-              // UI libraries
-              if (id.includes('framer-motion') || id.includes('lucide-react')) {
+              // UI libraries that depend on React.forwardRef — load after vendor-react
+              if (
+                id.includes('framer-motion') ||
+                id.includes('lucide-react') ||
+                id.includes('@radix-ui/') ||
+                id.includes('class-variance-authority') ||
+                id.includes('cmdk')
+              ) {
                 return 'vendor-ui';
               }
               // State management and utilities
               if (id.includes('zustand') || id.includes('immer') || id.includes('date-fns')) {
                 return 'vendor-state';
+              }
+              // React Router
+              if (id.includes('react-router')) {
+                return 'vendor-router';
+              }
+              // Sentry
+              if (id.includes('@sentry')) {
+                return 'vendor-sentry';
               }
               // Clerk authentication
               if (id.includes('@clerk')) {

@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { ConditionPreviewCard } from './ConditionPreviewCard';
 import type { ConditionMeta } from '../../src/types/conditions';
+import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 
 interface ConditionPreviewGridProps {
   conditions: ConditionMeta[];
@@ -25,8 +26,6 @@ export const ConditionPreviewGrid: React.FC<ConditionPreviewGridProps> = ({
   useEffect(() => {
     async function loadContent() {
       try {
-        // Import API config
-        const { getApiEndpoint, API_ENDPOINTS } = await import('../../lib/utils/apiConfig');
         const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
         const response = await fetch(apiUrl);
