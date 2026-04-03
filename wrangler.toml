@@ -19,10 +19,9 @@ id = "b576c43270a3407a8e5ae65afad0fe7e"
 # Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
 # Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
 
-# Build environment — CF Pages runs `npm ci` automatically before this command.
-# Do NOT add `npm ci &&` prefix; that causes a wasteful second install + prisma generate.
-[build]
-command = "npm run build"
+# Note: [build] section is NOT supported in wrangler.toml for Pages projects.
+# Build command is configured in Cloudflare Pages dashboard or via CI.
+# Node version is set via .node-version file (22) at repo root.
 
 [vars]
 NODE_VERSION = "22"
