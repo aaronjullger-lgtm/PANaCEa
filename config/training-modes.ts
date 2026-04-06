@@ -541,7 +541,7 @@ export function getModeById(id: TrainingModeId): TrainingModeConfig | undefined 
 }
 
 export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = MODE_REGISTRY.filter(
-  (m) => m.route !== 'core_adaptive'
+  (m) => m.id !== 'core_adaptive'
 ).map((m) => m.id);
 
 export const ALL_MINI_MODES: TrainingModeId[] = MODE_REGISTRY.filter(
