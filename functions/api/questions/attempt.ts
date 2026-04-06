@@ -14,7 +14,11 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { getRolling360Service } from '../../../lib/services/rolling360Service';
-// FSRS imports removed — scheduling is handled exclusively by drillReviewService (Improvement 5)
+import { computeFSRSUpdate } from '../../../lib/services/fsrsScheduleService';
+import { Rating } from '../../../lib/fsrs';
+import { buildCircadianContext } from '../../../lib/circadian';
+import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
+import { propagateRecallToSiblings } from '../../../lib/services/semanticSiblingService';
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 // DEFAULT_PAR_TIME_MS removed — was only used by the FSRS block now in drillReviewService
@@ -244,18 +248,166 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       }
     }
 
-    // FSRS v6 DEDUP NOTE (Improvement 5):
-    // FSRS scheduling is handled exclusively by drillReviewService.submitDrillReview()
-    // via the queueReview() → POST /api/drills/submit-reviews path. That pipeline is
-    // authoritative and applies the full modifier chain: Ghost Grader, circadian modifier,
-    // urgency dampener, EOR clamp, and sibling propagation.
-    //
-    // Previously this endpoint ran an independent FSRS pipeline writing to UserTopicProgress,
-    // which diverged from drillReviewService's UserProgress writes (different modifier chains
-    // → inconsistent scheduling intervals for the same card). Removed to prevent double-write.
-    //
-    // UserTopicProgress is now updated by drillReviewService as part of the authoritative flow.
-    const nextReviewDate: Date | null = null;
+    // FSRS v6: Schedule via shared helper (same pipeline as drillReviewService)
+    // When conditionId is present and we have a correctness result, derive a binary rating
+    // and run the full confidence pipeline through computeFSRSUpdate.
+    let nextReviewDate: Date | null = null;
+
+    if (isMainSession && conditionId && typeof correctness === 'boolean') {
+      try {
+        const rating = correctness ? Rating.Good : Rating.Again;
+        const gradeContinuous = correctness ? 3.0 : 1.0;
+        const implicitConfidence = correctness ? 0.7 : 0.3;
+        const effectiveDurationMs = timeSpentMillis ?? 30000;
+
+        const circadianContext = buildCircadianContext({});
+
+        const fsrsResult = await computeFSRSUpdate(prisma, {
+          userId,
+          questionId,
+          conditionId,
+          system,
+          rating,
+          gradeContinuous,
+          implicitConfidence,
+          isCorrect: correctness,
+          effectiveDurationMs,
+          circadianContext,
+          telemetry: telemetryJson as Record<string, unknown> | undefined,
+        }, logger);
+
+        // ── Transactional core writes: ReviewLog + UserProgress + UserTopicProgress ──
+        await prisma.$transaction(async (tx: any) => {
+          await tx.reviewLog.create({
+            data: {
+              userId,
+              conditionId,
+              medicalContentId: medicalContentId ?? undefined,
+              questionId,
+              questionType: questionType ?? 'pre_generated',
+              grade: rating,
+              grade_continuous: gradeContinuous,
+              state: fsrsResult.previousCard.state,
+              stability: fsrsResult.previousCard.stability,
+              difficulty: fsrsResult.previousCard.difficulty,
+              retrievability: fsrsResult.retrievability,
+              implicit_confidence: implicitConfidence,
+              scheduledAt: new Date(
+                fsrsResult.previousCard.last_review.getTime()
+                + fsrsResult.previousCard.scheduled_days * 86400000
+              ),
+              reviewedAt: new Date(),
+              responseTimeMs: effectiveDurationMs,
+              review_type: 'real',
+              elapsedDays: fsrsResult.previousCard.elapsed_days,
+              wasCorrect: correctness,
+              sessionType: isMainSession ? 'MAIN' : 'DRILL',
+              attemptId: result.attemptId,
+              system: system ?? undefined,
+              telemetry: {
+                ...(telemetryJson ?? {}),
+                server_computed: {
+                  source: 'attempt_endpoint',
+                  implicit_confidence: implicitConfidence,
+                  grade_continuous: gradeContinuous,
+                  par_time_ms: 30000,
+                  is_rapid_guess: false,
+                },
+                confidence_pipeline_v3: fsrsResult.confidenceTelemetry,
+              },
+            },
+          });
+
+          await updateUserProgressWithHistory(tx, {
+            userId,
+            conditionId,
+            fsrsCard: fsrsResult.updatedCard,
+            rating,
+            accuracy: correctness ? 1.0 : 0.0,
+          });
+
+          const taskType = questionType === 'diagnosis' ? 'diagnosis' : (questionType ?? 'diagnosis');
+          await tx.userTopicProgress.upsert({
+            where: {
+              userId_conditionId_taskType: { userId, conditionId, taskType },
+            },
+            create: {
+              userId,
+              conditionId,
+              taskType,
+              stability: fsrsResult.updatedCard.stability,
+              difficulty: fsrsResult.updatedCard.difficulty,
+              state: fsrsResult.updatedCard.state,
+              reps: fsrsResult.updatedCard.reps,
+              lapses: fsrsResult.updatedCard.lapses,
+              lastReviewDate: new Date(),
+              nextReviewDate: fsrsResult.clampedNextDue,
+            },
+            update: {
+              stability: fsrsResult.updatedCard.stability,
+              difficulty: fsrsResult.updatedCard.difficulty,
+              state: fsrsResult.updatedCard.state,
+              reps: fsrsResult.updatedCard.reps,
+              lapses: fsrsResult.updatedCard.lapses,
+              lastReviewDate: new Date(),
+              nextReviewDate: fsrsResult.clampedNextDue,
+            },
+          });
+        }, { timeout: 10000 });
+
+        // Card dual-write (non-blocking)
+        try {
+          await prisma.card.upsert({
+            where: { userId_questionId: { userId, questionId } },
+            create: {
+              id: `${userId}_${questionId}`,
+              userId,
+              questionId,
+              due: fsrsResult.clampedNextDue,
+              stability: fsrsResult.updatedCard.stability,
+              difficulty: fsrsResult.updatedCard.difficulty,
+              elapsed_days: fsrsResult.updatedCard.elapsed_days,
+              scheduled_days: fsrsResult.updatedCard.scheduled_days,
+              reps: fsrsResult.updatedCard.reps,
+              lapses: fsrsResult.updatedCard.lapses,
+              state: fsrsResult.updatedCard.state,
+              last_review: new Date(),
+            },
+            update: {
+              due: fsrsResult.clampedNextDue,
+              stability: fsrsResult.updatedCard.stability,
+              difficulty: fsrsResult.updatedCard.difficulty,
+              elapsed_days: fsrsResult.updatedCard.elapsed_days,
+              scheduled_days: fsrsResult.updatedCard.scheduled_days,
+              reps: fsrsResult.updatedCard.reps,
+              lapses: fsrsResult.updatedCard.lapses,
+              state: fsrsResult.updatedCard.state,
+              last_review: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+        } catch (cardErr) {
+          logger.warn('Card dual-write failed (non-fatal)', {
+            error: cardErr instanceof Error ? cardErr.message : String(cardErr),
+          });
+        }
+
+        // Sibling propagation (non-blocking)
+        try {
+          await propagateRecallToSiblings(conditionId, rating);
+        } catch (sibErr) {
+          logger.warn('Sibling propagation failed (non-fatal)', {
+            error: sibErr instanceof Error ? sibErr.message : String(sibErr),
+          });
+        }
+
+        nextReviewDate = fsrsResult.clampedNextDue;
+      } catch (fsrsErr) {
+        logger.warn('FSRS scheduling via shared helper failed (non-fatal)', {
+          error: fsrsErr instanceof Error ? fsrsErr.message : String(fsrsErr),
+        });
+      }
+    }
 
     // Rolling 360: update circular buffer and stats for main-session attempts
     if (isMainSession && typeof correctness === 'boolean') {

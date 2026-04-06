@@ -154,12 +154,12 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 flex-shrink-0">
-          {/* Session Stats Toggle */}
+          {/* Session Stats Toggle — hidden on mobile (available in overflow) */}
           <button
             onClick={onToggleStatsOverlay}
             title="Toggle session stats (S)"
             aria-pressed={showStatsOverlay}
-            className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
+            className={`hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors border ${
               showStatsOverlay
                 ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-text-primary)] hover:border-[var(--color-accent)]'
@@ -183,13 +183,13 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             <FlagIcon className="w-5 h-5" aria-hidden="true" />
           </button>
 
-          {/* Normal Labs reference (slide-out panel) */}
+          {/* Normal Labs reference — hidden on mobile (available in overflow) */}
           <button
             onClick={onToggleNormalLabs}
             title="Normal Labs reference"
             aria-label="Toggle Normal Labs reference"
             aria-pressed={showNormalLabsPanel}
-            className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
+            className={`hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors border ${
               showNormalLabsPanel
                 ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
@@ -214,6 +214,30 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             </button>
             {showOverflowMenu && (
               <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                {/* Mobile-only: Session Stats — has dedicated button on desktop */}
+                <button
+                  onClick={() => {
+                    onToggleStatsOverlay();
+                    setShowOverflowMenu(false);
+                  }}
+                  className="md:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  {showStatsOverlay ? 'Hide Session Stats' : 'Session Stats'}
+                </button>
+                {/* Mobile-only: Normal Labs — has dedicated button on desktop */}
+                <button
+                  onClick={() => {
+                    onToggleNormalLabs();
+                    setShowOverflowMenu(false);
+                  }}
+                  className="md:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <Beaker className="w-4 h-4" />
+                  Normal Labs
+                </button>
+                {/* Divider between mobile-only and always-visible items */}
+                <div className="md:hidden border-t border-[var(--color-border)] my-1" />
                 {/* Report Issue */}
                 <button
                   onClick={() => {

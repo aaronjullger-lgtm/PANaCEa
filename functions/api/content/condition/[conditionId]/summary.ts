@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { ConditionSummarySchema } from '@/lib/schemas/medicalContent';
 
@@ -16,7 +16,7 @@ const ParamsSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(
+export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,
   async (context) => {
     const { env, validated } = context;
@@ -32,7 +32,8 @@ export const onRequestGet = publicEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const content = await prisma.medicalContent.findFirst({
+      // Try exact conditionId match first (fast path for UUID)
+      let content = await prisma.medicalContent.findFirst({
         where: { conditionId, status: 'published' },
         select: {
           id: true,
@@ -45,6 +46,7 @@ export const onRequestGet = publicEndpoint(
           classic_triad: true,
           clinical_pearls: true,
           mnemonic: true,
+          updatedAt: true,
           ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: {
             select: {
               MedicalContent_ConfusionPair_selectedConditionIdToMedicalContent: {
@@ -54,6 +56,41 @@ export const onRequestGet = publicEndpoint(
           },
         },
       });
+
+      if (!content) {
+        // Fallback: try matching by condition name (slug / display name) when UUID fails
+        // This handles cases where the client passes a slugified name instead of a UUID
+        const slug = conditionId.replace(/-/g, ' ').toLowerCase();
+        content = await prisma.medicalContent.findFirst({
+          where: {
+            status: 'published',
+            OR: [
+              { condition: { equals: conditionId, mode: 'insensitive' } },
+              { condition: { equals: slug, mode: 'insensitive' } },
+            ],
+          },
+          select: {
+            id: true,
+            condition: true,
+            conditionId: true,
+            system: true,
+            pance_yield: true,
+            buzzwords: true,
+            synonyms: true,
+            classic_triad: true,
+            clinical_pearls: true,
+            mnemonic: true,
+            updatedAt: true,
+            ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: {
+              select: {
+                MedicalContent_ConfusionPair_selectedConditionIdToMedicalContent: {
+                  select: { id: true, conditionId: true, condition: true },
+                },
+              },
+            },
+          },
+        });
+      }
 
       if (!content) {
         return {

@@ -58,10 +58,20 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
     if (highYield === 'true') where.isHighYield = true;
     if (firstLine === 'true') where.isFirstLine = true;
     if (search && search.trim()) {
+      // Partial, case-insensitive matching on indications array elements
+      const indicationMatches = await prisma.$queryRaw<Array<{ id: string }>>`
+        SELECT id FROM "Drug"
+        WHERE EXISTS (
+          SELECT 1 FROM unnest(indications) AS ind
+          WHERE ind ILIKE ${'%' + search + '%'}
+        )
+      `;
+      const indicationIds = indicationMatches.map((r) => r.id);
+
       where.OR = [
         { genericName: { contains: search, mode: 'insensitive' } },
         { brandName: { contains: search, mode: 'insensitive' } },
-        { indications: { hasSome: [search] } },
+        ...(indicationIds.length > 0 ? [{ id: { in: indicationIds } }] : []),
       ];
     }
 

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { ConditionDetailsSchema } from '@/lib/schemas/medicalContent';
 
@@ -16,7 +16,7 @@ const ParamsSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(
+export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,
   async (context) => {
     const { env, validated } = context;
@@ -32,9 +32,7 @@ export const onRequestGet = publicEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const content = await prisma.medicalContent.findFirst({
-        where: { conditionId, status: 'published' },
-        select: {
+      const detailsSelect = {
           id: true,
           conditionId: true,
           condition: true,
@@ -59,6 +57,7 @@ export const onRequestGet = publicEndpoint(
           disposition: true,
           patient_education: true,
           prevention: true,
+          updatedAt: true,
           age_demographic: true,
           gender_bias: true,
           classic_patient: true,
@@ -126,8 +125,27 @@ export const onRequestGet = publicEndpoint(
             where: { status: 'published' },
             select: { id: true, conditionId: true, condition: true, system: true },
           },
-        },
+        } as const;
+
+      let content = await prisma.medicalContent.findFirst({
+        where: { conditionId, status: 'published' },
+        select: detailsSelect,
       });
+
+      if (!content) {
+        // Fallback: try matching by condition name (slug / display name) when UUID fails
+        const slug = conditionId.replace(/-/g, ' ').toLowerCase();
+        content = await prisma.medicalContent.findFirst({
+          where: {
+            status: 'published',
+            OR: [
+              { condition: { equals: conditionId, mode: 'insensitive' } },
+              { condition: { equals: slug, mode: 'insensitive' } },
+            ],
+          },
+          select: detailsSelect,
+        });
+      }
 
       if (!content) {
         return {

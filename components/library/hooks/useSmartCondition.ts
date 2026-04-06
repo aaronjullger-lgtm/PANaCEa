@@ -25,6 +25,7 @@ export interface ConditionSummary {
   classic_triad: unknown;
   clinical_pearls: unknown;
   mnemonic: string | null;
+  updatedAt: string | null;
   confusedWith: ConfusedWithItem[];
 }
 

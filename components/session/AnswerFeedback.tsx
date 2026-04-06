@@ -67,37 +67,41 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   const getBarColor = (score: number): string => getAccuracyBarClass(score);
 
   return (
-    <div className="mt-6 animate-fade-in space-y-4">
-      {/* Calibration Feedback Badge — metacognitive awareness */}
-      {implicitConfidence !== undefined && (
-        <CalibrationFeedbackBadge
-          wasCorrect={isCorrect}
-          confidence={implicitConfidence}
-        />
-      )}
+    <div className="mt-6 animate-fade-in space-y-3">
+      {/* Result meta: calibration + topic stats */}
+      {(implicitConfidence !== undefined || topicStats) && (
+        <div className="pb-3 mb-4 border-b border-[var(--color-border)]">
+          {implicitConfidence !== undefined && (
+            <CalibrationFeedbackBadge
+              wasCorrect={isCorrect}
+              confidence={implicitConfidence}
+            />
+          )}
 
-      {topicStats && (
-        <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
-          <div className="flex justify-between items-center mb-1 text-sm">
-            <span className="font-semibold text-[var(--color-text-secondary)]">
-              {currentQuestion.topic}
-            </span>
-            <span className="font-medium text-[var(--color-text-muted)]">
-              {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
-            </span>
-          </div>
-          <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
-            <div
-              className={`h-2.5 rounded-full ${getBarColor(
-                topicStats.score
-              )} transition-all duration-500 ease-out`}
-              style={{ width: `${topicStats.score}%` }}
-            ></div>
-          </div>
+          {topicStats && (
+            <div className="mt-2">
+              <div className="flex justify-between items-center mb-1 text-sm">
+                <span className="font-semibold text-[var(--color-text-secondary)]">
+                  {currentQuestion.topic}
+                </span>
+                <span className="font-medium text-[var(--color-text-muted)]">
+                  {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
+                </span>
+              </div>
+              <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${getBarColor(
+                    topicStats.score
+                  )} transition-all duration-500 ease-out`}
+                  style={{ width: `${topicStats.score}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg feedback-content">
+      <div className="feedback-content space-y-4">
         {/* Error Tagger - Only show when incorrect */}
         {!isCorrect && (
           <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
@@ -112,7 +116,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
             const entry = answerDistribution.find((d) => d.optionLetter === letter);
             if (!entry || entry.count === 0) return null;
             return (
-              <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
+              <p className="mb-3 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 rounded-md px-3 py-2">
                 <span className="font-medium text-[var(--color-text-secondary)]">
                   {entry.percent}% of students also chose {letter}.
                 </span>
@@ -167,7 +171,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
         />
 
         {!isCorrect && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-5 pt-4 border-t border-[var(--color-border)]/60 flex flex-wrap gap-2">
             <button
               onClick={onExplainDifferently}
               disabled={isExplainerLoading}
@@ -214,11 +218,11 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
 
         {/* Clinical Pearls Section */}
         {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+          <div className="mt-4 pt-4 border-t border-[var(--color-border)]/60">
+            <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)]">
               Key Pearls: {currentQuestion.condition}
             </h3>
-            <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
+            <ul className="list-disc list-inside space-y-1.5 text-[var(--color-text-secondary)] text-sm leading-relaxed">
               {currentQuestion.pearls.map((pearl, index) => (
                 <li
                   key={`${currentQuestion.id}-pearl-${index}`}
@@ -229,7 +233,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           </div>
         )}
 
-        <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+        <div className="mt-4 pt-4 border-t border-[var(--color-border)]/60">
           {!showNotes && !localNote ? (
             <button
               onClick={() => setShowNotes(true)}

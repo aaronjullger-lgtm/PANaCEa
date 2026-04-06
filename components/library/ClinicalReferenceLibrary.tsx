@@ -320,29 +320,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     if (str !== current.toString()) setSearchParams(next, { replace: true });
   }, [activeSystem, activeSubcategory, highYieldOnly, selected?.id, setSearchParams]);
 
-  // Filter content for display (server does FTS when search param is sent; no client-side search filter)
-  const filteredContent = useMemo(() => {
-    let result = content;
-
-    // Filter by system only when a specific system is selected (when 'all', pass all items)
-    if (activeSystem && activeSystem !== 'all') {
-      result = result.filter((item) => item.system === activeSystem);
-    }
-
-    // Filter by subcategory if selected
-    if (activeSubcategory) {
-      result = result.filter((item) => item.subcategory === activeSubcategory);
-    }
-
-    // Filter by high yield
-    if (highYieldOnly) {
-      result = result.filter((item) => (item.pance_yield ?? 0) >= 3);
-    }
-
-    return result;
-  }, [content, activeSystem, activeSubcategory, highYieldOnly]);
-
-  const displayContent = filteredContent;
+  // Server already filters by system, subcategory, and highYield via query params.
+  // No client-side re-filtering needed.
+  const displayContent = content;
 
   // Restore selected condition from URL when content loads
   useEffect(() => {
@@ -418,7 +398,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       string,
       { system: string; subcategory: string; items: Partial<MedicalContentDisplay>[] }
     >();
-    for (const item of filteredContent) {
+    for (const item of content) {
       const system = item.system || 'Unknown';
       const subcategory = item.subcategory || 'Uncategorized';
       const key = `${system}\0${subcategory}`;
@@ -429,7 +409,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       const sysCmp = a.system.localeCompare(b.system);
       return sysCmp !== 0 ? sysCmp : a.subcategory.localeCompare(b.subcategory);
     });
-  }, [filteredContent]);
+  }, [content]);
 
   // Handlers
   const handleSystemSelect = (systemId: string) => {
@@ -752,7 +732,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
             <EmptyState title="Failed to load content" description={error} action={{ label: 'Try Again', onClick: fetchContent }} />
           ) : loading ? (
             <LoadingOverlay message="Loading clinical content..." />
-          ) : filteredContent.length === 0 ? (
+          ) : content.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
@@ -819,7 +799,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     {/* Cards Grid - Vertical stacking for better information density */}
                     <div className="flex flex-col gap-4">
                       {displayItems.map((item) => {
-                        const globalIndex = filteredContent.indexOf(item);
+                        const globalIndex = content.indexOf(item);
                         return (
                           <EnhancedConditionCard
                             key={item.id}
@@ -901,11 +881,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                   </button>
                   <span className="text-sm text-[var(--color-text-muted)] tabular-nums">
-                    {selectedIndex + 1} / {filteredContent.length}
+                    {selectedIndex + 1} / {content.length}
                   </span>
                   <button
                     onClick={handleNextCondition}
-                    disabled={selectedIndex >= filteredContent.length - 1}
+                    disabled={selectedIndex >= content.length - 1}
                     className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     aria-label="Next condition"
                   >

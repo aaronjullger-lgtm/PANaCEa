@@ -5,7 +5,7 @@ import { submitDrillReview } from '../lib/services/drillReviewService';
 import type { SubmitDrillReviewInput } from '../lib/services/drillReviewService';
 import { buildCircadianContext } from '../lib/circadian';
 import { deriveContinuousRating } from '../lib/implicit-metrics';
-import { applyHonestRating } from '../lib/srs/ghostGrader';
+import { applyHonestRating, applyHonestRatingWithDetail } from '../lib/srs/ghostGrader';
 import { propagateRecallToSiblings } from '../lib/services/semanticSiblingService';
 import { updateUserProgressWithHistory } from '../lib/services/userProgressService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from '../lib/services/userStatisticsService';
@@ -14,15 +14,19 @@ import { updateReviewOutcome } from '../lib/services/srsService';
 // Mock all external dependencies
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(function() {
-    return {
+    const self: any = {
       questionAttempt: { create: vi.fn(), findFirst: vi.fn() },
-      reviewLog: { create: vi.fn() },
+      reviewLog: { create: vi.fn(), findMany: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
-      confusionPair: { upsert: vi.fn() },
+      confusionPair: { upsert: vi.fn(), findMany: vi.fn() },
       preGeneratedQuestion: { update: vi.fn() },
+      card: { upsert: vi.fn() },
+      userTopicProgress: { upsert: vi.fn() },
+      $transaction: vi.fn(function(fn: Function) { return fn(self); }),
       $disconnect: vi.fn(),
     };
+    return self;
   }),
 }));
 
@@ -73,6 +77,10 @@ vi.mock('../lib/implicit-metrics', () => ({
 
 vi.mock('../lib/srs/ghostGrader', () => ({
   applyHonestRating: vi.fn(function({ userRating }) { return userRating; }),
+  applyHonestRatingWithDetail: vi.fn(function({ userRating }) {
+    return { rating: userRating, rule: 'none', gradeContinuousAdjustment: 0 };
+  }),
+  GHOST_GRADER_CONSTANTS: { INDECISION_GRADE_CAP: 1.5 },
 }));
 
 vi.mock('../lib/services/semanticSiblingService', () => ({
@@ -103,6 +111,7 @@ vi.mock('../lib/services/userTimingProfileService', () => ({
 
 vi.mock('../lib/services/sessionFatigueService', () => ({
   applyFatigueCorrection: vi.fn(function(parTimeMs) { return parTimeMs; }),
+  computeFatigueConfidenceDampener: vi.fn(function() { return 1.0; }),
 }));
 
 vi.mock('../lib/services/rolling360Service', () => ({
@@ -113,6 +122,73 @@ vi.mock('../lib/services/rolling360Service', () => ({
 
 vi.mock('../lib/fsrs/eorScheduler', () => ({
   applyEorClampIfNeeded: vi.fn(function(due) { return { due, clamped: false }; }),
+}));
+
+// Mocks for services used by fsrsScheduleService (extracted helper)
+vi.mock('../lib/services/fsrsOptimizerService', () => ({
+  getOptimizedParameters: vi.fn(function() { return Promise.resolve(undefined); }),
+}));
+
+vi.mock('../lib/services/calibrationService', () => ({
+  getUserCalibration: vi.fn(function() { return Promise.resolve({ dampenerFactor: 1.0 }); }),
+}));
+
+vi.mock('../lib/services/retrievabilityCalibrationService', () => ({
+  getStabilityCorrectionFactor: vi.fn(function() { return Promise.resolve(1.0); }),
+}));
+
+vi.mock('../lib/services/sessionRegularityService', () => ({
+  computeSessionRegularity: vi.fn(function() { return Promise.resolve({ regularity: 'regular', intervalCV: 0.2, streakDays: 3, telemetryTrustMultiplier: 1.0 }); }),
+}));
+
+vi.mock('../lib/services/relearningSpeedService', () => ({
+  getOriginalLearningRt: vi.fn(function() { return Promise.resolve(null); }),
+  computeRelearningSpeed: vi.fn(function() { return { hasSavings: false, savingsRatio: 0, postLapseStabilityBonus: 1.0 }; }),
+}));
+
+vi.mock('../lib/services/lapseSeverityService', () => ({
+  computeLapseSeverity: vi.fn(function() { return { severity: 'minor', difficultyMultiplier: 1.0, preLapseReps: 0, preLapseStability: 0 }; }),
+}));
+
+vi.mock('../lib/services/rtTrajectoryService', () => ({
+  computeRtTrajectory: vi.fn(function() { return { hasHistory: false, rtChangeRatio: 0, stabilityMultiplier: 1.0 }; }),
+}));
+
+vi.mock('../lib/services/sessionAccuracySlopeService', () => ({
+  recordOutcome: vi.fn(),
+  getConfidenceModifier: vi.fn(function() { return { slope: 0, confidenceMultiplier: 1.0, rollingAccuracy: 0.5 }; }),
+}));
+
+vi.mock('../lib/services/intervalDeviationService', () => ({
+  computeIntervalDeviation: vi.fn(function() { return { deviationRatio: 1.0, informationMultiplier: 1.0, classification: 'on_schedule' }; }),
+}));
+
+vi.mock('../lib/confidence/bayesianAccumulator', () => ({
+  accumulateConfidence: vi.fn(function() { return { posterior: 0.78, priorWeight: 0.5 }; }),
+}));
+
+vi.mock('../lib/confidence/desirableDifficultyBonus', () => ({
+  computeDesirableDifficultyBonus: vi.fn(function() { return { activated: false, multiplier: 1.0 }; }),
+}));
+
+vi.mock('../lib/confidence/interferenceDetector', () => ({
+  detectInterference: vi.fn(function() { return { discount: 1.0, detected: false, details: { interferingCount: 0, closestDistance: null, type: 'none' } }; }),
+}));
+
+vi.mock('../lib/confidence/trendDetector', () => ({
+  detectConfidenceTrend: vi.fn(function() { return { slope: 0, category: 'stable', trendMultiplier: 1.0, rSquared: 0 }; }),
+}));
+
+vi.mock('../lib/confidence/difficultyModulator', () => ({
+  modulateDifficultyDelta: vi.fn(function() { return { modulatedDelta: 0, modulationFactor: 1.0 }; }),
+}));
+
+vi.mock('../lib/utils/questionComplexity', () => ({
+  calculateParTime: vi.fn(function() { return 30000; }),
+}));
+
+vi.mock('../../types/telemetry', () => ({
+  getMVRTThreshold: vi.fn(function() { return 2000; }),
 }));
 
 describe('submitDrillReview', () => {
@@ -507,7 +583,7 @@ describe('submitDrillReview', () => {
       await submitDrillReview(prisma, userId, input, question);
 
       // Expect rating to be Good after override
-      expect(applyHonestRating).toHaveBeenCalled();
+      expect(applyHonestRatingWithDetail).toHaveBeenCalled();
       // Verify ReviewLog grade is Good (3)
       expect(prisma.reviewLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -540,7 +616,7 @@ describe('submitDrillReview', () => {
       await submitDrillReview(prisma, userId, input, question);
 
       // Binary system: Easy(4)→Good(3) normalize, switches>2→Again(1)
-      expect(applyHonestRating).toHaveBeenCalledWith(
+      expect(applyHonestRatingWithDetail).toHaveBeenCalledWith(
         expect.objectContaining({ userRating: Rating.Again })
       );
     });

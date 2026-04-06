@@ -407,6 +407,11 @@ const QuizView: React.FC<QuizViewProps> = ({
   const setAnswerChangeCount = (value: number) => { answerChangeCountRef.current = value; };
   const setFirstSelectedAnswer = (value: number | null) => { firstSelectedAnswerRef.current = value; };
 
+  /** Recovered session score base from tab crash recovery (Finding 4 fix).
+   *  After restore, this ref holds the correct/total count from the previous
+   *  session fragment so the score display isn't zeroed out. */
+  const recoveredSessionScoreRef = useRef<{ correct: number; total: number } | null>(null);
+
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
@@ -501,6 +506,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       if (restored.localNote !== undefined) setLocalNote(restored.localNote);
       if (restored.answerChangeCount !== undefined) setAnswerChangeCount(restored.answerChangeCount);
       if (restored.firstSelectedAnswer !== undefined) setFirstSelectedAnswer(restored.firstSelectedAnswer);
+      // Finding 4 fix: restore running session score so displays aren't zeroed
+      if (restored.sessionScore) {
+        recoveredSessionScoreRef.current = restored.sessionScore;
+      }
     },
   });
 
@@ -523,6 +532,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       localNote,
       answerChangeCount: answerChangeCountRef.current,
       firstSelectedAnswer: firstSelectedAnswerRef.current,
+      // Finding 4 fix: persist running session score so it survives tab crash/reload
+      sessionScore: {
+        correct: performanceData.filter((p) => p.isCorrect).length,
+        total: performanceData.length,
+      },
     });
     // Finding 5 fix: Ref .current values don't trigger re-renders and shouldn't
     // be in dependency arrays. They are read inside the effect body (above) where
@@ -1250,14 +1264,19 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
 
     // Queue review for offline sync (batch submission)
-    if (user?.id && currentQuestion.id) {
+    // Single-write fix: main sessions now use attempt.ts as the sole FSRS writer.
+    // Only non-main sessions (rapid_recall, cram) still need queueReview for FSRS,
+    // since they don't go through the drillReviewService path.
+    const isNonMainSession =
+      sessionSettings.mode === 'rapid_recall' ||
+      sessionSettings.mode === 'cram_mode' ||
+      sessionSettings.mode === 'cram';
+    if (isNonMainSession && user?.id && currentQuestion.id) {
       try {
         syncManager.queueReview({
           questionId: currentQuestion.id,
           // Pass the option text (not numeric index) so drillReviewService can
           // compare it against correctAnswer text for isCorrect determination.
-          // Drills already pass text; main session was passing a numeric index
-          // which caused every review to be marked incorrect (Finding 9 fix).
           selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
           timeSpentMs: timeToAnswer,
           timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
@@ -1267,9 +1286,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           sessionType:
             sessionSettings.mode === 'rapid_recall'
               ? 'rapid_recall'
-              : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
-                ? 'cram'
-                : 'main',
+              : 'cram',
           telemetry: telemetryWithPosition,
         });
       } catch (err) {
@@ -1733,7 +1750,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
           {!isAnswered && selectedAnswerIndex !== null && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
               <button
                 type="button"
                 onClick={handleSubmitAnswer}
@@ -1801,7 +1818,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           )}
 
           {isAnswered && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-t border-[var(--color-border)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-4">
               <button
                 ref={nextButtonRef}
                 onClick={() => {
@@ -1812,7 +1829,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}
-                className="px-8 py-3 btn-glass font-bold rounded-lg min-h-[44px]"
+                className="px-8 py-3 btn-primary-cta font-bold rounded-lg min-h-[44px]"
               >
                 Next Question
               </button>
@@ -1870,7 +1887,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       <SessionStatsOverlay
         isVisible={showStatsOverlay}
         onToggle={() => setShowStatsOverlay((prev) => !prev)}
-        performanceData={sessionStatsData}
+        performanceData={performanceData.map((p) => ({ topic: p.topic, correct: p.isCorrect }))}
         currentQuestionNumber={questionNumber}
       />
 

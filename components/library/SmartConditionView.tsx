@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/loading';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { ImageGallery } from './SmartImage';
+import { parseListField, parseTextField } from '@/lib/utils/normalization';
 
 type TabId = 'highyield' | 'presentation' | 'diagnostics' | 'management';
 
@@ -122,6 +123,7 @@ export interface MedicalContent {
   subcategory?: string | null;
   condition: string;
   status?: string;
+  updatedAt?: string | null;
   relatedSystems?: string[];
 
   // High Yield
@@ -182,40 +184,6 @@ export interface MedicalContent {
   }>;
 
   [key: string]: any;
-}
-
-// ---------------------------------------------------------------------------
-// Utility Functions
-// ---------------------------------------------------------------------------
-
-function parseListField(value: any): string[] {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) return parsed.filter((v) => typeof v === 'string');
-    } catch {
-      return value
-        .split(/[,;]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-  }
-  return [];
-}
-
-function parseTextField(value: any): string | null {
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return null;
-    }
-  }
-  return String(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -1189,6 +1157,30 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                   {data.subcategory && ` • ${data.subcategory}`}
                 </Badge>
               )}
+              {/* Freshness indicator */}
+              {data.updatedAt && (() => {
+                const ageMs = Date.now() - new Date(data.updatedAt).getTime();
+                const ageDays = ageMs / (1000 * 60 * 60 * 24);
+                const color =
+                  ageDays <= 30
+                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                    : ageDays <= 90
+                      ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                      : 'bg-red-500/10 text-red-600 border-red-500/20';
+                const label =
+                  ageDays <= 1
+                    ? 'Updated today'
+                    : ageDays <= 30
+                      ? `Updated ${Math.round(ageDays)}d ago`
+                      : ageDays <= 90
+                        ? `Updated ${Math.round(ageDays / 7)}w ago`
+                        : `Updated ${Math.round(ageDays / 30)}mo ago`;
+                return (
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
+                    {label}
+                  </span>
+                );
+              })()}
             </div>
           )}
 
@@ -1449,6 +1441,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
     classic_triad: summary.classic_triad,
     clinical_pearls: summary.clinical_pearls,
     mnemonic: summary.mnemonic,
+    updatedAt: summary.updatedAt ?? null,
     ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: summary.confusedWith.map(
       (c) => ({
         id: c.id,
