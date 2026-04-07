@@ -31,7 +31,7 @@ export const CoreAdaptiveHero: React.FC<{
   const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
   const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
   // Core PANCE Simulation: no weak-area copy — strict NCCPA blueprint only
-  subtitle = isPracticing
+  const subtitle = isPracticing
  ? growthAreas.length > 0 ? `Focusing on your growth areas: ${growthAreas.slice(0, 3).join(', ')}.`
      : 'Maintain your certification knowledge with adaptive questions.'
      : 'Strict NCCPA blueprint weighting. Exam-representative mix — no adaptive bias.';
