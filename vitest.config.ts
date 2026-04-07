@@ -45,5 +45,36 @@ export default defineConfig({
     restoreMocks: true,
     clearMocks: true,
     mockReset: true,
+    // Coverage configuration (run with: npm run test:coverage)
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      // Critical subsystems that must maintain coverage
+      thresholds: {
+        // Global floor — raise as coverage improves
+        statements: 40,
+        branches: 35,
+        functions: 35,
+        lines: 40,
+        // Per-file overrides for critical paths
+        perFile: false,
+      },
+      include: [
+        'lib/fsrs.ts',
+        'lib/implicit-metrics.ts',
+        'lib/services/drillReviewService.ts',
+        'lib/confidence/**',
+        'lib/srs/**',
+        'store/**',
+        'functions/api/_shared/**',
+      ],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/node_modules/**',
+        'vitest-mocks/**',
+      ],
+    },
   },
 });

@@ -6,7 +6,7 @@ import { Calendar, Clock, Target, TrendingUp, Zap, AlertTriangle, ChevronRight, 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { RecommendationResponse, StudyPlan } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
-import { CARD_RING_SHADOW } from '@/components/ui/Card';
+import { CARD_RING_SHADOW } from '@/components/ui/card';
 import ProgressProjectionChart from './ProgressProjectionChart';
 import PlanAlternativesModal from './PlanAlternativesModal';
 import FatigueAlertBanner from './FatigueAlertBanner';

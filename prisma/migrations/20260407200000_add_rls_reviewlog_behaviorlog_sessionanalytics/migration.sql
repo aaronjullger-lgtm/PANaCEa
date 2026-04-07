@@ -32,7 +32,7 @@ CREATE POLICY "review_log_admin" ON "ReviewLog"
   );
 
 -- ============================================================================
--- 2. BehaviorLog — Behavioral telemetry (userId via direct column)
+-- 2. BehaviorLog — Behavioral telemetry (no userId; join via QuestionAttempt)
 -- ============================================================================
 
 DO $$
@@ -42,12 +42,20 @@ BEGIN
 
     EXECUTE 'CREATE POLICY "behavior_log_select_own" ON "BehaviorLog"
       FOR SELECT USING (
-        "userId" IN (SELECT id FROM "User" WHERE "clerkId" = auth.uid()::text)
+        "questionAttemptId" IN (
+          SELECT qa.id FROM "QuestionAttempt" qa
+          JOIN "User" u ON qa."userId" = u.id
+          WHERE u."clerkId" = auth.uid()::text
+        )
       )';
 
     EXECUTE 'CREATE POLICY "behavior_log_insert_own" ON "BehaviorLog"
       FOR INSERT WITH CHECK (
-        "userId" IN (SELECT id FROM "User" WHERE "clerkId" = auth.uid()::text)
+        "questionAttemptId" IN (
+          SELECT qa.id FROM "QuestionAttempt" qa
+          JOIN "User" u ON qa."userId" = u.id
+          WHERE u."clerkId" = auth.uid()::text
+        )
       )';
 
     EXECUTE 'CREATE POLICY "behavior_log_admin" ON "BehaviorLog"

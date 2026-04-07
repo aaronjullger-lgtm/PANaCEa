@@ -1,6 +1,10 @@
 // functions/api/gemini/stream.ts
 // Edge-compatible streaming endpoint for Gemini AI responses
 // Uses Web Streams API (not Node.js streams) for Cloudflare Pages Functions compatibility
+//
+// NOTE: This endpoint uses buildGeminiUrl from ai-service.ts for URL construction
+// but keeps custom SSE parsing logic for thought signature extraction and detailed
+// error handling that streamGemini() doesn't support.
 
 import {
   ApiError,
@@ -18,6 +22,7 @@ import { authenticateRequest } from '../_shared/auth';
 import { getCorsHeaders, handleCorsPreflightSecure } from '../_shared/cors';
 import { geminiStreamRequestSchema, enforcePayloadSize } from '../_shared/zodSchemas';
 import { trackTokenUsage } from '../_shared/tokenTracking';
+import { buildGeminiUrl, supportsThinking } from '../_shared/ai-service';
 
 interface Env {
   GEMINI_API_KEY: string;
@@ -358,9 +363,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       'You are PANaCEa. Before answering, internally rank the top 3 differentials. If the user is wrong, explain the pathophysiology of their error. Be concise but rigorous.';
     const systemInstruction = clientSystemInstruction?.trim() || defaultSystemInstruction;
 
-    // Construct Gemini API URL for streaming
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
-    const geminiUrlRedacted = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=[REDACTED]&alt=sse`;
+    // Construct Gemini API URL for streaming (centralized via ai-service)
+    const geminiUrl = buildGeminiUrl(apiKey, modelName, 'streamGenerateContent') + '&alt=sse';
+    const geminiUrlRedacted = geminiUrl.replace(/key=[^&]+/, 'key=[REDACTED]');
 
     const streamBody: Record<string, unknown> = {
       contents,

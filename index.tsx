@@ -25,6 +25,57 @@ if (import.meta.env.PROD) {
     });
 }
 
+// ─── Global Unhandled Error Handlers ──────────────────────────────────────────
+// Catches promise rejections and errors that escape React's error boundary tree.
+// In production, these are forwarded to Sentry; in dev they log to console.
+window.addEventListener('unhandledrejection', (event) => {
+  const error =
+    event.reason instanceof Error
+      ? event.reason
+      : new Error(String(event.reason ?? 'Unhandled promise rejection'));
+
+  console.error('[UnhandledRejection]', error);
+
+  if (import.meta.env.PROD) {
+    import('./lib/monitoring/sentry')
+      .then(({ captureError }) => {
+        captureError(error, {
+          tags: { handler: 'unhandledrejection' },
+          level: 'error',
+        });
+      })
+      .catch(() => {});
+  }
+});
+
+window.addEventListener('error', (event) => {
+  // Skip errors already caught by React error boundaries (they re-throw)
+  if (event.error?.__reactErrorBoundary) return;
+
+  const error =
+    event.error instanceof Error
+      ? event.error
+      : new Error(event.message || 'Uncaught error');
+
+  console.error('[UncaughtError]', error);
+
+  if (import.meta.env.PROD) {
+    import('./lib/monitoring/sentry')
+      .then(({ captureError }) => {
+        captureError(error, {
+          tags: { handler: 'window.onerror' },
+          extra: {
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+          },
+          level: 'error',
+        });
+      })
+      .catch(() => {});
+  }
+});
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Could not find root element to mount to');

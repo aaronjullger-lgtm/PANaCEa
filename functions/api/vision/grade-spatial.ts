@@ -11,9 +11,7 @@ import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation'
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const VISION_MODEL = 'gemini-2.5-pro';
+import { callGemini, GeminiModel } from '../_shared/ai-service';
 const OVERLAP_THRESHOLD = 0.5;
 
 const BodySchema = z.object({
@@ -67,7 +65,7 @@ function overlap(
 }
 
 async function callGeminiForCorrectBox(
-  apiKey: string,
+  env: Env,
   imageBase64: string,
   mimeType: string,
   pathology?: string
@@ -75,39 +73,33 @@ async function callGeminiForCorrectBox(
   const prompt = pathology
     ? `Identify the ${pathology} in this medical image. Return ONLY a JSON object: {"bounding_box": [ymin, xmin, ymax, xmax]} with coordinates normalized 0-1000.`
     : `Identify the primary pathology/finding in this medical image. Return ONLY a JSON object: {"bounding_box": [ymin, xmin, ymax, xmax]} with coordinates normalized 0-1000.`;
-  const url = `${GEMINI_BASE}/v1beta/models/${VISION_MODEL}:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
-        },
-      ],
+
+  try {
+    const result = await callGemini({ env }, {
+      model: GeminiModel.PRO_2_5,
+      contents: [{
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType, data: imageBase64 } },
+          { text: prompt },
+        ],
+      }],
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 256,
         responseMimeType: 'application/json',
       },
-    }),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) return null;
-  try {
+      endpoint: '/api/vision/grade-spatial',
+    });
+
+    if (result.blocked || !result.text) return null;
+
     const parsed = JSON.parse(
-      text
+      result.text
         .replace(/^```json\s*/i, '')
         .replace(/\s*```\s*$/i, '')
         .trim()
-    ) as {
-      bounding_box?: number[];
-    };
+    ) as { bounding_box?: number[] };
     const raw = parsed.bounding_box;
     if (Array.isArray(raw) && raw.length >= 4) {
       const n = raw.map(Number);
@@ -125,7 +117,7 @@ async function callGeminiForCorrectBox(
       }
     }
   } catch {
-    /* ignore */
+    /* callGemini throws GeminiError on non-OK; treat as no box found */
   }
   return null;
 }
@@ -178,7 +170,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
   if (!correctBox) {
     correctBox = await callGeminiForCorrectBox(
-      env.GEMINI_API_KEY,
+      env,
       imageBase64,
       mimeType,
       pathology

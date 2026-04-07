@@ -3413,6 +3413,13 @@ model UserPreferences {
   pushQuietStart        String? /// HH:MM quiet hours start (default 22:00)
   pushQuietEnd          String? /// HH:MM quiet hours end (default 07:00)
   pushMaxPerDay         Int? /// Max push notifications per day (default 2)
+  /// Pre-sleep consolidation session settings (Tier 2, Feature 5)
+  bedtimeHour           Int?               /// 0-23, user's local time
+  bedtimeMinute         Int?     @default(0)  /// 0-59
+  consolidationEnabled  Boolean  @default(false)
+  consolidationMinutes  Int      @default(15) /// Session length cap (5-30 min)
+  consolidationTimezone String?              /// IANA timezone for notification scheduling
+  pushSubscription      Json?               /// Web Push VAPID subscription object
   shareAnonymousData    Boolean  @default(true)
   showOnLeaderboard     Boolean  @default(true)
   customSettings        Json?
@@ -4216,6 +4223,7 @@ enum SessionType {
   CRAM
   RAPID_RECALL
   TARGETED
+  CONSOLIDATION
 }
 
 /// Partitions FSRS state. Three-mode taxonomy (April 2026):

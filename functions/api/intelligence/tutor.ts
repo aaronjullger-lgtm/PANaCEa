@@ -30,6 +30,11 @@ import {
 } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import {
+  callGemini,
+  type GeminiContent,
+  type GeminiGenerationConfig,
+} from '../_shared/ai-service';
 
 // -----------------------------------------------------------------------------
 // Request / Response Schemas
@@ -235,7 +240,7 @@ async function createWeakSpotCache(
     };
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/cachedContents?key=${env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/cachedContents?key=${env.GEMINI_API_KEY}`, // NOTE: cachedContents is a separate API, not covered by callGemini
       {
         method: 'POST',
         headers: {
@@ -263,6 +268,36 @@ async function createWeakSpotCache(
 // Helper: Call Gemini 3 generateContent with optional cachedContent + thinking
 // -----------------------------------------------------------------------------
 
+/**
+ * Determine whether Google Search grounding should be enabled based on
+ * explicit flag or keyword heuristic matching clinical guideline queries.
+ */
+function shouldEnableGoogleSearch(message: string, explicit: boolean): boolean {
+  if (explicit) return true;
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('guideline') ||
+    lower.includes('cdc') ||
+    lower.includes('who recommendation') ||
+    lower.includes('first-line') ||
+    lower.includes('first line') ||
+    lower.includes('treatment for') ||
+    lower.includes('management of') ||
+    lower.includes('dose for') ||
+    lower.includes('dosing for') ||
+    lower.includes('antibiotic') ||
+    lower.includes('therapy for') ||
+    lower.includes('latest recommendation') ||
+    lower.includes('up to date') ||
+    lower.includes('202') || // heuristic for year-based guideline queries
+    lower.includes('vaccination schedule')
+  );
+}
+
+/**
+ * Call Gemini via the unified ai-service layer, then extract tutor-specific
+ * fields (thought signatures, grounding sources) from the raw response.
+ */
 async function callGeminiTutor(
   env: { GEMINI_API_KEY: string },
   modelName: string,
@@ -279,127 +314,80 @@ async function callGeminiTutor(
     reasoningEffort,
   } = input;
 
-  const contents: Array<{ role?: string; parts: Array<Record<string, unknown>> }> = [];
-
+  // Build multi-turn contents
+  const contents: GeminiContent[] = [];
   if (history && history.length > 0) {
     for (const turn of history) {
       contents.push({
-        role: turn.role,
+        role: turn.role as 'user' | 'model',
         parts: [{ text: turn.text }],
       });
     }
   }
+  contents.push({ role: 'user', parts: [{ text: message }] });
 
-  contents.push({
-    role: 'user',
-    parts: [{ text: message }],
-  });
-
-  const generationConfig: Record<string, unknown> = {
-    temperature,
+  // Generation config with thinking support
+  const generationConfig: GeminiGenerationConfig = {
+    temperature: temperature ?? 0.6,
     topK: 40,
     topP: 0.95,
-    maxOutputTokens: maxTokens,
+    maxOutputTokens: maxTokens ?? 2048,
   };
 
-  // Hint to Gemini 3 about the desired reasoning depth.
-  if (thinkingLevel) {
-    (generationConfig as Record<string, unknown>).thinkingLevel = thinkingLevel;
-  }
-  // "Deep Search": high reasoning budget when combining Search with complex questions.
+  // Reasoning effort overrides thinkingLevel when set (explicit budget control).
+  // Otherwise, pass thinkingLevel as a hint to Gemini 3 models.
   if (reasoningEffort === 'high') {
-    (generationConfig as Record<string, unknown>).thinkingConfig = { thinkingBudget: 24576 };
+    generationConfig.thinkingConfig = { thinkingBudget: 24576 };
   } else if (reasoningEffort === 'medium') {
-    (generationConfig as Record<string, unknown>).thinkingConfig = { thinkingBudget: 8192 };
+    generationConfig.thinkingConfig = { thinkingBudget: 8192 };
+  } else if (thinkingLevel) {
+    // Map thinkingLevel string to approximate budget for models that support it
+    const budgetMap: Record<string, number> = {
+      minimal: 1024,
+      low: 4096,
+      medium: 8192,
+      high: 16384,
+    };
+    const budget = budgetMap[thinkingLevel];
+    if (budget) {
+      generationConfig.thinkingConfig = { thinkingBudget: budget };
+    }
   }
 
-  const body: Record<string, unknown> = {
-    contents,
-    generationConfig,
-  };
+  // Tools: Google Search grounding
+  const tools = shouldEnableGoogleSearch(message, enableGoogleSearch === true)
+    ? [{ googleSearch: {} }]
+    : undefined;
 
-  // Enable guideline-aware grounding with Google Search (External Brain).
-  // Use explicit enableGoogleSearch or keyword heuristic.
-  const lowerMessage = message.toLowerCase();
-  const shouldEnableSearch =
-    enableGoogleSearch === true ||
-    lowerMessage.includes('guideline') ||
-    lowerMessage.includes('cdc') ||
-    lowerMessage.includes('who recommendation') ||
-    lowerMessage.includes('first-line') ||
-    lowerMessage.includes('first line') ||
-    lowerMessage.includes('treatment for') ||
-    lowerMessage.includes('management of') ||
-    lowerMessage.includes('dose for') ||
-    lowerMessage.includes('dosing for') ||
-    lowerMessage.includes('antibiotic') ||
-    lowerMessage.includes('therapy for') ||
-    lowerMessage.includes('latest recommendation') ||
-    lowerMessage.includes('up to date') ||
-    lowerMessage.includes('202') || // heuristic for year-based guideline queries
-    lowerMessage.includes('vaccination schedule');
+  // Call through unified ai-service
+  const result = await callGemini(
+    { env },
+    {
+      model: modelName,
+      contents,
+      generationConfig,
+      tools,
+      cachedContent: sessionCacheName,
+      endpoint: '/api/intelligence/tutor',
+    }
+  );
 
-  if (shouldEnableSearch) {
-    body.tools = [{ googleSearch: {} }];
-  }
-
-  if (sessionCacheName) {
-    body.cachedContent = sessionCacheName;
-  }
-
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
-
-  const response = await fetch(geminiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[Tutor] Gemini error', response.status, errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-
-  const data = (await response.json()) as {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{
-          text?: string;
-          thought?: boolean;
-          thoughtSignature?: string;
-        }>;
-      };
-      groundingMetadata?: {
-        groundingChunks?: Array<{ web?: { uri?: string; title?: string } }>;
-      };
-    }>;
-  };
-
-  const candidate = data.candidates?.[0];
-  const parts = candidate?.content?.parts ?? [];
-
-  const replyText = parts
-    .filter((p) => !p.thought && p.text)
-    .map((p) => p.text ?? '')
-    .join('\n')
-    .trim();
-
-  const thoughtSignatures = parts
-    .filter((p) => p.thought && p.thoughtSignature)
-    .map((p) => p.thoughtSignature ?? '')
-    .filter((sig) => sig.length > 0);
-
-  if (!replyText) {
+  if (!result.text) {
     throw new Error('Gemini returned no usable text content');
   }
 
   const payload: TutorReplyPayload = {
-    reply: replyText,
+    reply: result.text,
     model: modelName,
   };
+
+  // Extract thought signatures from raw response (tutor-specific)
+  const candidate = result.raw?.candidates?.[0];
+  const parts = candidate?.content?.parts ?? [];
+  const thoughtSignatures = parts
+    .filter((p: any) => p.thought && p.thoughtSignature)
+    .map((p: any) => p.thoughtSignature as string)
+    .filter((sig: string) => sig.length > 0);
 
   if (thoughtSignatures.length > 0) {
     payload.thoughtSignatures = thoughtSignatures;
@@ -410,10 +398,10 @@ async function callGeminiTutor(
   }
 
   // Strict citation return when Search was used (groundingMetadata).
-  const chunks = candidate?.groundingMetadata?.groundingChunks;
+  const chunks = result.groundingMetadata?.groundingChunks;
   if (chunks && Array.isArray(chunks) && chunks.length > 0) {
     payload.groundingSources = chunks
-      .map((c) => {
+      .map((c: any) => {
         const uri = c.web?.uri;
         const title = c.web?.title;
         if (uri && title) return { title, uri };
@@ -427,7 +415,7 @@ async function callGeminiTutor(
         }
         return null;
       })
-      .filter((s): s is GroundingSource => s !== null);
+      .filter((s: any): s is GroundingSource => s !== null);
   }
 
   return payload;

@@ -4,6 +4,8 @@
  * Socratic Remediation: Returns a guiding question (NOT the answer) based on the
  * student's wrong answer. Used for "Tutor Me" in Review Mode when reviewing incorrect answers.
  * Forces the student to generate the logic and fix the knowledge gap.
+ *
+ * Migrated to unified ai-service.ts (Phase 5).
  */
 
 import { z } from 'zod';
@@ -11,9 +13,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { buildSystemPrompt } from '../_shared/socraticZpd';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+import { callGemini, GeminiModel } from '../_shared/ai-service';
 
 const BodySchema = z.object({
   body: z.object({
@@ -40,9 +40,6 @@ interface Env {
   GEMINI_API_KEY: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
-
-// Legacy prompt kept for reference; now dynamically generated via buildSystemPrompt()
-// with ZPD calibration when FSRS state is provided (Tier 3)
 
 export const onRequestOptions = withCors();
 
@@ -88,37 +85,39 @@ Student's wrong answer: "${userWrongAnswer}"
 ${options?.length ? `All options: ${options.join(' | ')}` : ''}
 ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
 
-  const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: {
-        temperature: 0.5,
-        // Hint level 4 (full explanation) needs more tokens than levels 1-3
-        maxOutputTokens: (turnNumber ?? 0) >= 3 ? 512 : 256,
-      },
-    }),
-  });
+  const FALLBACK_QUESTION = 'What detail in the vignette suggests your answer might not fit this patient?';
 
-  if (!res.ok) {
+  try {
+    const result = await callGemini(
+      { env, auth },
+      {
+        model: GeminiModel.FLASH_2_5,
+        systemInstruction: systemPrompt,
+        prompt: userPrompt,
+        generationConfig: {
+          temperature: 0.5,
+          // Hint level 4 (full explanation) needs more tokens than levels 1-3
+          maxOutputTokens: (turnNumber ?? 0) >= 3 ? 512 : 256,
+        },
+        endpoint: '/api/intelligence/socratic-remediation',
+      }
+    );
+
+    if (result.blocked) {
+      return { data: { guidingQuestion: FALLBACK_QUESTION } };
+    }
+
     return {
-      status: res.status === 429 ? 429 : 502,
-      error: res.status === 429 ? 'Rate limit exceeded' : 'Socratic remediation failed',
+      data: {
+        guidingQuestion: result.text.trim() || FALLBACK_QUESTION,
+      },
     };
+  } catch (err: unknown) {
+    // Graceful degradation: return a generic Socratic question rather than failing
+    const status = (err as { status?: number })?.status;
+    if (status === 429) {
+      return { status: 429, error: 'Rate limit exceeded' };
+    }
+    return { data: { guidingQuestion: FALLBACK_QUESTION } };
   }
-
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-
-  return {
-    data: {
-      guidingQuestion:
-        text || 'What detail in the vignette suggests your answer might not fit this patient?',
-    },
-  };
 });

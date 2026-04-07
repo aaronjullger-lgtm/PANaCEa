@@ -17,8 +17,8 @@ import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { callGemini, type GeminiContent } from '../_shared/ai-service';
 
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 /** Gemini 3 Pro for best spatial understanding; fallback to gemini-2.5-pro if 3 not available. */
 const VISION_MODEL = 'gemini-3-pro-preview';
 const MAX_IMAGE_BASE64 = 4 * 1024 * 1024;
@@ -134,49 +134,34 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     });
   }
 
-  const requestBody: Record<string, unknown> = {
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType: mimeType || 'image/png', data: imageBase64 } },
-          { text: prompt },
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-      responseMimeType: 'application/json',
+  // Build contents with inline image data
+  const contents: GeminiContent[] = [
+    {
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: mimeType || 'image/png', data: imageBase64 } },
+        { text: prompt },
+      ],
     },
-  };
-  if (isEcg) requestBody.tools = [{ code_execution: {} }];
+  ];
 
-  const url = `${GEMINI_BASE}/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
-  let res: Response;
   try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    });
-  } catch (err) {
-    log.warn('Vision analyze fetch error', {
-      msg: err instanceof Error ? err.message : String(err),
-    });
-    return new Response(JSON.stringify({ error: 'Vision service unavailable' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    });
-  }
+    const result = await callGemini(
+      { env, auth },
+      {
+        model: modelName,
+        contents,
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 8192,
+          responseMimeType: 'application/json',
+        },
+        tools: isEcg ? [{ code_execution: {} }] : undefined,
+        endpoint: '/api/vision/analyze',
+      }
+    );
 
-  if (res.ok) {
-    const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      usageMetadata?: { totalTokenCount?: number };
-    };
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    const parsed = parseVisionResponse(text);
+    const parsed = parseVisionResponse(result.text);
     return new Response(
       JSON.stringify({
         data: {
@@ -184,23 +169,25 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
           reasoning: parsed.reasoning,
           bounding_box: parsed.bounding_box,
           model: modelName,
-          usageMetadata: data.usageMetadata,
+          usageMetadata: result.usage,
         },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
     );
-  }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    log.warn('Vision analyze error', { msg });
 
-  const text = await res.text();
-  log.warn('Vision Gemini error', { status: res.status, text: text.slice(0, 300) });
-  return new Response(
-    JSON.stringify({
-      error: res.status === 429 ? 'Rate limit exceeded' : 'Analysis failed',
-      details: text.slice(0, 500),
-    }),
-    {
-      status: res.status === 429 ? 429 : 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    }
-  );
+    const isRateLimit = msg.includes('429');
+    return new Response(
+      JSON.stringify({
+        error: isRateLimit ? 'Rate limit exceeded' : 'Analysis failed',
+        details: msg.slice(0, 500),
+      }),
+      {
+        status: isRateLimit ? 429 : 502,
+        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      }
+    );
+  }
 });

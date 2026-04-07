@@ -4,12 +4,14 @@
  *
  * This endpoint handles synchronous (non-streaming) requests to the Gemini API.
  * For streaming responses, use /api/gemini/stream instead.
+ *
+ * Migrated to use the unified ai-service.ts layer (Phase 5).
  */
 
 import { z } from 'zod';
 import { aiEndpoint, withCors } from '../_shared/middleware';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
-import { trackTokenUsage } from '../_shared/tokenTracking';
+import { callGemini, GeminiModel, thinkingBudget, supportsThinking } from '../_shared/ai-service';
 
 interface Env {
   GEMINI_API_KEY: string;
@@ -24,7 +26,7 @@ const GeminiRequestSchema = z.object({
   systemInstruction: z.string().optional(),
   /** Optional: use Gemini context cache (e.g. cachedContents/xxx) for "Chat with your Library" */
   cachedContent: z.string().min(1).startsWith('cachedContents/').optional(),
-  /** Optional: Gemini 3 thinking level for reasoning control */
+  /** Optional: Gemini thinking level for reasoning control */
   thinkingLevel: z.enum(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH']).optional(),
 });
 
@@ -41,8 +43,6 @@ export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => 
     env: Env;
     validated: z.infer<typeof GeminiRequestSchema>;
   };
-
-  // GEMINI_API_KEY must be set in Cloudflare env or .dev.vars for local wrangler
 
   // Rate limit AI requests (user ID if available, else IP)
   const identifier = getRateLimitIdentifier(request);
@@ -64,152 +64,65 @@ export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => 
     cachedContent,
     thinkingLevel,
   } = validated;
-  // Use context.env only (Edge/Workers). For local dev, set GEMINI_API_KEY in .dev.vars so wrangler injects it into env.
-  const apiKey = (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) || '';
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error:
-          'GEMINI_API_KEY is not configured. Set it in Cloudflare Pages Environment Variables or in .dev.vars for local dev.',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
 
   try {
-    // Construct Gemini API URL
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-    // Build request body.
-    // For visual drills (ECG/imaging/derm), contents[0].parts can include inlineData with
-    // base64 image (mimeType + data) so the model can describe findings; keep payload
-    // within Edge size limits (e.g. ~4MB request body).
-    // When cachedContent is set, Gemini uses the cache as context; only the new turn is sent in contents.
-    const requestBody: Record<string, unknown> = {
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: maxTokens,
-      },
+    // Build generation config
+    const generationConfig: Record<string, unknown> = {
+      temperature,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: maxTokens,
     };
 
-    if (cachedContent) {
-      requestBody.cachedContent = cachedContent;
-    }
-
-    if (thinkingLevel) {
-      requestBody.thinkingConfig = { thinkingLevel };
-    }
-
-    // Add system instruction if provided (ignored when cachedContent already has one)
-    if (systemInstruction) {
-      requestBody.systemInstruction = {
-        parts: [{ text: systemInstruction }],
+    // Map thinking level to thinkingConfig budget when supported
+    if (thinkingLevel && supportsThinking(modelName)) {
+      const levelMap: Record<string, 'minimal' | 'low' | 'medium' | 'high'> = {
+        MINIMAL: 'minimal',
+        LOW: 'low',
+        MEDIUM: 'medium',
+        HIGH: 'high',
       };
+      const mapped = levelMap[thinkingLevel];
+      if (mapped) {
+        generationConfig.thinkingConfig = { thinkingBudget: thinkingBudget(mapped) };
+      }
     }
 
-    // Call Gemini API
-    const geminiResponse = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const result = await callGemini({ env }, {
+      model: modelName,
+      prompt,
+      systemInstruction,
+      cachedContent,
+      generationConfig,
+      endpoint: '/api/gemini',
     });
 
-    // Handle non-OK responses
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      const statusCode = geminiResponse.status;
-
-      console.error(`[Gemini] API error ${statusCode}:`, errorText);
-
-      // Map Gemini errors to appropriate status codes
-      if (statusCode === 429) {
-        return {
-          status: 429,
-          error: 'Rate limit exceeded. Please try again later.',
-        };
-      }
-
-      if (statusCode === 401 || statusCode === 403) {
-        return {
-          status: 500,
-          error: 'API authentication failed. Please contact support.',
-        };
-      }
-
-      return {
-        status: statusCode >= 500 ? 503 : 500,
-        error: `Gemini API error: ${statusCode}`,
-      };
-    }
-
-    // Parse response
-    const responseData = (await geminiResponse.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-        finishReason?: string;
-      }>;
-      promptFeedback?: {
-        blockReason?: string;
-      };
-      usageMetadata?: {
-        promptTokenCount?: number;
-        candidatesTokenCount?: number;
-        totalTokenCount?: number;
-      };
-    };
-
     // Check for blocked content
-    if (responseData.promptFeedback?.blockReason) {
+    if (result.blocked) {
       return {
         status: 400,
-        error: `Content blocked: ${responseData.promptFeedback.blockReason}`,
+        error: `Content blocked: ${result.blockReason}`,
       };
     }
 
-    // Extract generated text
-    const generatedText = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!generatedText) {
-      console.error('[Gemini] No text in response:', responseData);
+    if (!result.text) {
       return {
         status: 500,
         error: 'No response generated. Please try again.',
       };
     }
 
-    // Track token usage: structured log + DB persistence (non-blocking)
-    const usage = responseData.usageMetadata;
-    trackTokenUsage(context as any, {
-      endpoint: '/api/gemini',
-      model: modelName,
-      usage,
-      statusCode: 200,
-      cacheHit: false,
-    });
-
     return new Response(
       JSON.stringify({
         data: {
-          text: generatedText,
+          text: result.text,
           model: modelName,
-          finishReason: responseData.candidates?.[0]?.finishReason,
-          usage: usage
+          finishReason: result.raw.candidates?.[0]?.finishReason,
+          usage: result.usage
             ? {
-                promptTokenCount: usage.promptTokenCount ?? 0,
-                candidatesTokenCount: usage.candidatesTokenCount ?? 0,
-                totalTokenCount: usage.totalTokenCount ?? 0,
+                promptTokenCount: result.usage.promptTokenCount ?? 0,
+                candidatesTokenCount: result.usage.candidatesTokenCount ?? 0,
+                totalTokenCount: result.usage.totalTokenCount ?? 0,
               }
             : undefined,
         },
@@ -222,10 +135,27 @@ export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => 
         },
       }
     );
-  } catch (error) {
-    console.error('[Gemini] Unexpected error:', error);
+  } catch (err: unknown) {
+    const status = (err as { status?: number })?.status;
+
+    // Map GeminiError to appropriate response
+    if (status === 429) {
+      return {
+        status: 429,
+        error: 'Rate limit exceeded. Please try again later.',
+      };
+    }
+
+    if (status === 403) {
+      return {
+        status: 500,
+        error: 'API authentication failed. Please contact support.',
+      };
+    }
+
+    console.error('[Gemini] Unexpected error:', err);
     return {
-      status: 500,
+      status: (status && status >= 500) ? 503 : 500,
       error: 'Failed to process request. Please try again.',
     };
   }

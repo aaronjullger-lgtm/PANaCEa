@@ -78,7 +78,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
         >
           <div className="max-w-7xl mx-auto px-4 py-2.5">
             {/* Breadcrumb Navigation */}
-            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
               {backTo !== undefined ? (
                 <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
               ) : (
@@ -94,19 +94,20 @@ const DrillShell: React.FC<DrillShellProps> = ({
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  <span className="text-[var(--color-border)]">/</span>
+                  <span className="text-[var(--color-border)]" aria-hidden="true">/</span>
                   <span
                     className={
                       index === breadcrumb.length - 1
                         ? 'text-[var(--color-text-primary)] font-medium'
                         : ''
                     }
+                    {...(index === breadcrumb.length - 1 ? { 'aria-current': 'page' as const } : {})}
                   >
                     {crumb}
                   </span>
                 </React.Fragment>
               ))}
-            </div>
+            </nav>
 
             {/* Title and Navigation */}
             <div className="flex items-center justify-between">
@@ -133,8 +134,8 @@ const DrillShell: React.FC<DrillShellProps> = ({
         </motion.header>
       )}
 
-      {/* Main Content Area */}
-      <main className="flex-1 relative scroll-mt-16">
+      {/* Main Content Area — aria-live announces question transitions to screen readers */}
+      <main className="flex-1 relative scroll-mt-16" aria-live="polite" aria-atomic="false">
         <DrillErrorBoundary drillName={title}>
           {children}
         </DrillErrorBoundary>

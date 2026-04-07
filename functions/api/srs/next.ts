@@ -146,40 +146,56 @@ export const onRequestGet = authenticatedEndpoint(
         return { data: { message: 'No items due' } };
       }
 
+      // ─── Batch queries to avoid N+1 ──────────────────────────────────────────
+      // Fetch all PreGeneratedQuestions and legacy Questions for due conditions
+      // in two batch queries instead of up to 3 queries per loop iteration.
+      const dueConditionIds = dueProgress.map((p) => p.conditionId);
+
+      const [preGenBatch, legacyBatch] = await Promise.all([
+        prisma.preGeneratedQuestion.findMany({
+          where: { conditionId: { in: dueConditionIds } },
+          orderBy: { generatedAt: 'desc' },
+        }),
+        prisma.question.findMany({
+          where: { conditionId: { in: dueConditionIds } },
+          take: dueConditionIds.length, // one per condition is enough
+        }),
+      ]);
+
+      // Index by conditionId for O(1) lookup
+      const preGenByCondition = new Map<string, typeof preGenBatch>();
+      for (const q of preGenBatch) {
+        const arr = preGenByCondition.get(q.conditionId) ?? [];
+        arr.push(q);
+        preGenByCondition.set(q.conditionId, arr);
+      }
+      const legacyByCondition = new Map<string, (typeof legacyBatch)[0]>();
+      for (const q of legacyBatch) {
+        if (!legacyByCondition.has(q.conditionId)) {
+          legacyByCondition.set(q.conditionId, q);
+        }
+      }
+
       // Try to find a question for the first due condition
       for (const progress of dueProgress) {
         const card = progress.fsrsCard as { state?: number } | null;
         const fsrsState = card?.state ?? 0;
+        const conditionPreGen = preGenByCondition.get(progress.conditionId) ?? [];
 
-        // Check for variants if in learning/relearning state
         let questionContent: any = null;
         let isVariant = false;
 
-        if (fsrsState === 1 || fsrsState === 3) {
-          // Query PreGeneratedQuestion siblings (unified variant pool — same as due-siblings path).
-          const sibling = await prisma.preGeneratedQuestion.findFirst({
-            where: { conditionId: progress.conditionId },
-            orderBy: { generatedAt: 'desc' },
-          });
-          if (sibling) {
-            questionContent = sibling;
-            isVariant = true;
-          }
+        // Prefer variant (newest) if in learning/relearning state
+        if ((fsrsState === 1 || fsrsState === 3) && conditionPreGen.length > 0) {
+          questionContent = conditionPreGen[0]; // already sorted by generatedAt desc
+          isVariant = true;
         }
 
         if (!questionContent) {
-          // Find a PreGeneratedQuestion for this condition
-          const preGenQ = await prisma.preGeneratedQuestion.findFirst({
-            where: { conditionId: progress.conditionId },
-          });
-          if (preGenQ) {
-            questionContent = preGenQ;
+          if (conditionPreGen.length > 0) {
+            questionContent = conditionPreGen[0];
           } else {
-            // Try legacy Question table
-            const legacyQ = await prisma.question.findFirst({
-              where: { conditionId: progress.conditionId },
-            });
-            if (legacyQ) questionContent = legacyQ;
+            questionContent = legacyByCondition.get(progress.conditionId) ?? null;
           }
         }
 

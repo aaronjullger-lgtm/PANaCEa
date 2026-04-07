@@ -27,6 +27,7 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
   const Icon = iconMap[preset.iconName as keyof typeof iconMap] || Sparkles;
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/15 dark:border-data-neutral transition-colors"
     >
@@ -120,6 +121,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
             </div>
             <div className="mt-6 text-center">
               <button
+                type="button"
                 onClick={() => setIsCustomizing(true)}
                 className="text-sm font-semibold text-[var(--color-accent)] hover:underline"
               >
@@ -215,6 +217,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
             {/* Action Buttons */}
             <div className="flex justify-between items-center">
               <button
+                type="button"
                 onClick={() => {
                   setIsCustomizing(false);
                   setSelectedSystem(''); // Reset selection
@@ -225,12 +228,14 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
               </button>
               <div className="flex space-x-3">
                 <button
+                  type="button"
                   onClick={onClose}
                   className="px-4 py-2 rounded-md font-semibold text-sm bg-data-neutral text-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:text-data-neutral dark:hover:bg-data-neutral"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleCustomStart}
                   className="px-6 py-2 rounded-md font-semibold text-sm bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity"
                 >

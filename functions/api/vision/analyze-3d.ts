@@ -11,9 +11,7 @@ import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const VISION_3D_MODEL = 'gemini-2.5-pro';
+import { callGemini, GeminiModel } from '../_shared/ai-service';
 const MAX_IMAGE_BASE64 = 4 * 1024 * 1024;
 
 const BOX_3D_PROMPT = `
@@ -102,69 +100,46 @@ export const onRequestPost = aiEndpoint(Analyze3DBodySchema, async (context) => 
     : 'anatomical structures visible in the image (e.g. femur, tibia, talus)';
   const prompt = customPrompt ?? `Detect the following: ${structureList}. ${BOX_3D_PROMPT}`.trim();
 
-  const requestBody: Record<string, unknown> = {
-    contents: [
-      {
+  try {
+    const result = await callGemini({ env }, {
+      model: GeminiModel.PRO_2_5,
+      contents: [{
         role: 'user',
         parts: [
           { inlineData: { mimeType: mimeType || 'image/png', data: imageBase64 } },
           { text: prompt },
         ],
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
       },
-    ],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-      responseMimeType: 'application/json',
-    },
-  };
+      endpoint: '/api/vision/analyze-3d',
+    });
 
-  const url = `${GEMINI_BASE}/v1beta/models/${VISION_3D_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    });
-  } catch (err) {
-    log.warn('Vision analyze-3d fetch error', {
-      msg: err instanceof Error ? err.message : String(err),
-    });
-    return new Response(JSON.stringify({ error: 'Vision 3D service unavailable' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    });
-  }
-
-  if (res.ok) {
-    const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      usageMetadata?: { totalTokenCount?: number };
-    };
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    const boxes = parse3DResponse(text);
+    const boxes = parse3DResponse(result.text);
     return new Response(
       JSON.stringify({
         data: {
           boxes,
-          usageMetadata: data.usageMetadata,
+          usageMetadata: result.usage,
         },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
     );
+  } catch (err: unknown) {
+    const status = (err as { status?: number })?.status;
+    const errMsg = (err as { error?: string })?.error ?? 'Unknown error';
+    log.warn('Vision 3D Gemini error', { status, error: errMsg });
+    return new Response(
+      JSON.stringify({
+        error: status === 429 ? 'Rate limit exceeded' : '3D analysis failed',
+      }),
+      {
+        status: status === 429 ? 429 : 502,
+        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      }
+    );
   }
-
-  const text = await res.text();
-  log.warn('Vision 3D Gemini error', { status: res.status, text: text.slice(0, 300) });
-  return new Response(
-    JSON.stringify({
-      error: res.status === 429 ? 'Rate limit exceeded' : '3D analysis failed',
-      details: text.slice(0, 500),
-    }),
-    {
-      status: res.status === 429 ? 429 : 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    }
-  );
 });

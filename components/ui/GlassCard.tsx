@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { CARD_RING_SHADOW } from '@/components/ui/Card';
+import { CARD_RING_SHADOW } from '@/components/ui/card';
 
 /**
  * GlassCard - Elevated card component with semantic variant system

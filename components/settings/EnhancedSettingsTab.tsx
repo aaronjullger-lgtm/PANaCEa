@@ -56,6 +56,7 @@ import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/S
 import FSRSOptimizer from './FSRSOptimizer';
 import WorkloadProjector from './WorkloadProjector';
 import DataExport from './DataExport';
+import LearningAnalyticsDisclosure from './LearningAnalyticsDisclosure';
 
 interface EnhancedSettingsTabProps {
   theme: 'light' | 'dark';
@@ -851,6 +852,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
 
       {/* Data Export Section */}
       <DataExport />
+
+      {/* Learning Analytics Privacy Disclosure */}
+      <LearningAnalyticsDisclosure />
 
       {/* Info Tip */}
       <div className="p-4 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30">

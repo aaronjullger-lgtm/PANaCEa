@@ -49,11 +49,15 @@ jobs:
       - name: Check bundle size budget
         run: npm run build:check-size
 
-      - name: Run FSRS Algorithm Tests (critical gate)
-        run: npx vitest run tests/fsrs.test.ts tests/fsrs-optimizer-bridge.test.ts tests/retrievability.test.ts tests/fsrs-eor-scheduler.test.ts
+      - name: Run Critical Algorithm Tests (gate)
+        run: npm run test:critical
 
       - name: Run Unit Tests
         run: npm test
+
+      - name: Run Coverage (critical subsystems)
+        run: npm run test:coverage -- --reporter=default
+        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
