@@ -45,6 +45,9 @@ import {
   PANRELASimulator,
   MediaApproval,
   CoreAdaptiveSession,
+  ElaborationDrill,
+  ICDCodingDrill,
+  TeachBackDrill,
 } from '@/config/lazyComponents';
 import type { View } from '@/config/appViews';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
@@ -450,6 +453,39 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
         <WithGeminiErrorBoundary viewName="core_adaptive" onRetry={() => setView('core_adaptive')}>
           <Suspense fallback={<Loader />}>
             <CoreAdaptiveSession onExit={exit} {...sharedQuizProps} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
+      {view === 'elaboration_drill' && (
+        <WithGeminiErrorBoundary
+          viewName="elaboration_drill"
+          onRetry={() => setView('elaboration_drill')}
+        >
+          <Suspense fallback={<Loader />}>
+            <ElaborationDrill onExit={exit} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
+      {view === 'icd_coding_drill' && (
+        <WithGeminiErrorBoundary
+          viewName="icd_coding_drill"
+          onRetry={() => setView('icd_coding_drill')}
+        >
+          <Suspense fallback={<Loader />}>
+            <ICDCodingDrill onExit={exit} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
+      {view === 'teach_back_drill' && (
+        <WithGeminiErrorBoundary
+          viewName="teach_back_drill"
+          onRetry={() => setView('teach_back_drill')}
+        >
+          <Suspense fallback={<Loader />}>
+            <TeachBackDrill onExit={exit} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

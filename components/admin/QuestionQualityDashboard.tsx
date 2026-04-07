@@ -252,7 +252,7 @@ export function QuestionQualityDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Validation Status Breakdown */}
-        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <h2 className="text-lg font-semibold mb-4">Validation Status</h2>
           <div className="space-y-3">
             {stats.statusBreakdown.map((item) => {
@@ -292,7 +292,7 @@ export function QuestionQualityDashboard() {
         </div>
 
         {/* Quality Distribution */}
-        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <h2 className="text-lg font-semibold mb-4">Quality Distribution</h2>
           <div className="space-y-3">
             {Object.entries(stats.qualityDistribution).map(([tier, count]) => {
@@ -328,7 +328,7 @@ export function QuestionQualityDashboard() {
         </div>
 
         {/* System Coverage */}
-        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <h2 className="text-lg font-semibold mb-4">System Coverage</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -361,7 +361,7 @@ export function QuestionQualityDashboard() {
         </div>
 
         {/* Top Flagged Questions */}
-        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Flag className="w-5 h-5 text-[var(--color-data-fail)]" />
             Top Flagged Questions
@@ -412,7 +412,7 @@ function StatCard({
     <motion.div
       initial={{ y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--color-bg-primary)] rounded-xl p-4 shadow-sm"
+      className="bg-[var(--color-bg-primary)] rounded-xl p-4 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
     >
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>

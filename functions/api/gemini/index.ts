@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import { aiEndpoint, withCors } from '../_shared/middleware';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
+import { trackTokenUsage } from '../_shared/tokenTracking';
 
 interface Env {
   GEMINI_API_KEY: string;
@@ -162,6 +163,11 @@ export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => 
       promptFeedback?: {
         blockReason?: string;
       };
+      usageMetadata?: {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        totalTokenCount?: number;
+      };
     };
 
     // Check for blocked content
@@ -183,12 +189,29 @@ export const onRequestPost = aiEndpoint(GeminiRequestSchema, async (context) => 
       };
     }
 
+    // Track token usage: structured log + DB persistence (non-blocking)
+    const usage = responseData.usageMetadata;
+    trackTokenUsage(context as any, {
+      endpoint: '/api/gemini',
+      model: modelName,
+      usage,
+      statusCode: 200,
+      cacheHit: false,
+    });
+
     return new Response(
       JSON.stringify({
         data: {
           text: generatedText,
           model: modelName,
           finishReason: responseData.candidates?.[0]?.finishReason,
+          usage: usage
+            ? {
+                promptTokenCount: usage.promptTokenCount ?? 0,
+                candidatesTokenCount: usage.candidatesTokenCount ?? 0,
+                totalTokenCount: usage.totalTokenCount ?? 0,
+              }
+            : undefined,
         },
       }),
       {

@@ -3,6 +3,24 @@ import { QUESTION_RESPONSE_SCHEMA, GeneratedQuestionStrict } from './question-sc
 import { validateGeneratedQuestion } from './question-validator';
 import { enrichWithPubMed, formatCitationsForPrompt, type PubMedCitation } from '../../../lib/services/question/pubmedEnricher';
 
+/**
+ * High-yield PANCE-specific anchors from MedicalContent.
+ * These are never derived from question text — they're curated ground truth
+ * for the most exam-tested aspects of each condition.
+ */
+export interface PanceAnchors {
+  /** Classic presentation archetype, e.g. "60-year-old smoker with hemoptysis" */
+  classicPatient?: string;
+  /** Pathognomonic triad or key symptom cluster */
+  classicTriad?: string[];
+  /** First-line pharmacologic treatment */
+  firstLineRx?: string;
+  /** Gold-standard diagnostic test */
+  goldStandardDx?: string;
+  /** Best initial test (may differ from gold standard) */
+  bestInitialTest?: string;
+}
+
 export interface ConditionData {
   condition: string;
   sections: {
@@ -12,6 +30,8 @@ export interface ConditionData {
     diagnostics: string;
     treatment: string;
   };
+  /** PANCE-specific anchors injected from MedicalContent curated fields */
+  panceAnchors?: PanceAnchors;
 }
 
 export interface GroundingSource {
@@ -192,8 +212,17 @@ export async function generateSingleQuestion(
   // This is a separate call because structured output is incompatible with search tools
   const grounding = await fetchGroundingContext(apiKey, condition.condition);
 
-  // Phase 1b: Fetch PubMed citations for peer-reviewed evidence
-  const pubmedCitations = await enrichWithPubMed(condition.condition);
+  // Phase 1b: Fetch PubMed citations for peer-reviewed evidence (best-effort — never blocks generation)
+  let pubmedCitations: Awaited<ReturnType<typeof enrichWithPubMed>> = [];
+  try {
+    pubmedCitations = await enrichWithPubMed(condition.condition);
+  } catch (pubmedErr) {
+    // PubMed is enrichment-only; a timeout or 503 should never crash question generation
+    console.warn('[QuestionGen] PubMed enrichment failed — continuing without citations', {
+      condition: condition.condition,
+      error: pubmedErr instanceof Error ? pubmedErr.message : String(pubmedErr),
+    });
+  }
   const pubmedBlock = formatCitationsForPrompt(pubmedCitations);
 
   const textbookBlock =
@@ -227,9 +256,26 @@ export async function generateSingleQuestion(
     `
     : '';
 
+  // Inject curated PANCE anchor fields when available.
+  // These are the highest-yield, most frequently tested aspects of the condition.
+  // Use them to anchor the question and its distractors — do NOT reveal them verbatim.
+  const anchors = condition.panceAnchors;
+  const panceBlock = anchors && Object.values(anchors).some(Boolean)
+    ? `
+    HIGH-YIELD PANCE ANCHORS (curated ground truth — anchor question accuracy here):
+    ${anchors.classicPatient ? `Classic Patient Archetype: ${anchors.classicPatient}` : ''}
+    ${anchors.classicTriad?.length ? `Classic Triad: ${anchors.classicTriad.join(', ')}` : ''}
+    ${anchors.firstLineRx ? `First-Line Rx: ${anchors.firstLineRx}` : ''}
+    ${anchors.goldStandardDx ? `Gold Standard Dx: ${anchors.goldStandardDx}` : ''}
+    ${anchors.bestInitialTest ? `Best Initial Test: ${anchors.bestInitialTest}` : ''}
+    IMPORTANT: Use these anchors to create distractors that are plausible alternatives (e.g., if gold standard is "punch biopsy", make "incisional biopsy" or "shave biopsy" credible wrong options that would be correct in other scenarios).
+    `
+    : '';
+
   const prompt = `
     CONTEXT - Use these clinical findings to build the vignette. Do NOT include condition name or diagnosis in the vignette.
     ${findingsContext}
+    ${panceBlock}
     ${textbookBlock}
     ${groundingBlock}
     ${pubmedBlock}

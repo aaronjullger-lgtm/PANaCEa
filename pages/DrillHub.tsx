@@ -78,7 +78,7 @@ export default function DrillHub(): JSX.Element {
 
     const fetchOverview = async () => {
       try {
-        const response = await fetch('/api/drill/overview');
+        const response = await fetch('/api/drills/overview');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

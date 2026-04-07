@@ -1,51 +1,17 @@
 /**
- * Cloudflare Function: Get Drill Overview
+ * @deprecated MOVED to /api/drills/overview — this file is a backward-compat
+ * redirect only. Remove after confirming no clients hit this path.
  *
- * Returns drill statistics overview for DrillHub dashboard
- *
- * Endpoint: GET /api/drill/overview
- *
- * @module functions/api/drill/overview
+ * Cloudflare Function: Get Drill Overview (legacy redirect)
+ * Endpoint: GET /api/drill/overview → 301 → /api/drills/overview
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { getDrillOverview } from '../../../services/drill/drillSessionManager';
+import { withCors } from '../_shared/middleware';
 
-export async function onRequestGet(context: any) {
-  const { request, env } = context;
-  let prisma: any = null;
+export const onRequestOptions = withCors();
 
-  try {
-    // Create edge Prisma client
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    // Authenticate
-    const authContext = await authenticateRequest(request, env);
-    if (!authContext) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    const userId = authContext.userId;
-
-    // Get overview
-    const overview = await getDrillOverview(prisma, userId);
-
-    return new Response(JSON.stringify(overview), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Error fetching drill overview:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch drill overview',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}
+export const onRequestGet: PagesFunction = async (context) => {
+  const url = new URL(context.request.url);
+  url.pathname = url.pathname.replace('/api/drill/overview', '/api/drills/overview');
+  return Response.redirect(url.toString(), 301);
+};

@@ -235,7 +235,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
           <div className="flex gap-4 justify-center">
             <button
               onClick={handleStartProcedure}
-              className="px-8 py-4 rounded-xl bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity"
+              className="px-8 py-4 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold hover:opacity-90 transition-opacity"
             >
               Start Procedure
             </button>
@@ -319,7 +319,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
               <button
                 onClick={handleEquipmentComplete}
                 disabled={selectedEquipment.length === 0}
-                className="w-full mt-4 px-6 py-3 rounded-xl bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-4 px-6 py-3 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Proceed to Procedure
               </button>
@@ -422,7 +422,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                       setViewState('results');
                     }
                   }}
-                  className="px-6 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+                  className="px-6 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity"
                 >
                   {currentStep < procedure.steps.length - 1 ? 'Next Step' : 'Complete Procedure'}
                 </button>
@@ -535,7 +535,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 setSterileBreaches(0);
                 setCurrentStep(0);
               }}
-              className="px-6 py-3 rounded-xl bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity"
+              className="px-6 py-3 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold hover:opacity-90 transition-opacity"
             >
               Try Another Procedure
             </button>

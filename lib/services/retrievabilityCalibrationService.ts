@@ -50,8 +50,9 @@ export interface CalibrationReport {
 // ── Constants ──
 
 const NUM_BINS = 10;
-const MIN_BIN_COUNT = 10; // Minimum reviews in a bin to be statistically meaningful
-const MIN_SYSTEM_REVIEWS = 50; // Minimum reviews for per-system correction
+const MIN_BIN_COUNT = 30; // Minimum reviews in a bin to be statistically meaningful
+const MIN_SYSTEM_REVIEWS = 200; // Minimum reviews for per-system correction
+const SHRINKAGE_N = 200; // Shrinkage toward 1.0: factor = 1 + (raw - 1) * min(1, n/SHRINKAGE_N)
 const CORRECTION_CLAMP_MIN = 0.7; // Don't over-correct: max 30% reduction
 const CORRECTION_CLAMP_MAX = 1.4; // Don't over-correct: max 40% increase
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -69,33 +70,43 @@ let cacheTimestamp = 0;
 export function bucketReviews(
   reviews: Array<{ retrievability: number; wasCorrect: boolean }>
 ): CalibrationBin[] {
-  const bins: Array<{ correct: number; total: number }> = Array.from(
-    { length: NUM_BINS },
-    () => ({ correct: 0, total: 0 })
-  );
+  if (reviews.length === 0) return [];
 
-  for (const review of reviews) {
-    const r = Math.max(0, Math.min(0.9999, review.retrievability));
-    const binIdx = Math.floor(r * NUM_BINS);
-    bins[binIdx].total++;
-    if (review.wasCorrect) bins[binIdx].correct++;
-  }
+  // Sort by retrievability for quantile binning (equal-count bins)
+  const sorted = [...reviews].sort((a, b) => a.retrievability - b.retrievability);
+  const binSize = Math.max(1, Math.floor(sorted.length / NUM_BINS));
 
-  return bins.map((bin, idx) => {
-    const predictedCenter = (idx + 0.5) / NUM_BINS;
-    const actualRecallRate = bin.total >= MIN_BIN_COUNT
-      ? bin.correct / bin.total
+  const result: CalibrationBin[] = [];
+
+  for (let i = 0; i < NUM_BINS; i++) {
+    const start = i * binSize;
+    const end = i === NUM_BINS - 1 ? sorted.length : start + binSize;
+    const binReviews = sorted.slice(start, end);
+
+    if (binReviews.length === 0) continue;
+
+    const correct = binReviews.filter(r => r.wasCorrect).length;
+    const total = binReviews.length;
+    const predictedCenter = binReviews.reduce((sum, r) => sum + r.retrievability, 0) / total;
+    const actualRecallRate = total >= MIN_BIN_COUNT
+      ? correct / total
       : predictedCenter; // Insufficient data → assume calibrated
-    const calibrationRatio = predictedCenter > 0
+    const rawRatio = predictedCenter > 0
       ? actualRecallRate / predictedCenter
       : 1;
-    return {
+    // Shrinkage toward 1.0 proportional to sample size
+    const shrinkage = Math.min(1, total / SHRINKAGE_N);
+    const calibrationRatio = 1.0 + (rawRatio - 1.0) * shrinkage;
+
+    result.push({
       predictedCenter,
       actualRecallRate,
-      count: bin.total,
+      count: total,
       calibrationRatio,
-    };
-  });
+    });
+  }
+
+  return result;
 }
 /**
  * Compute a single correction factor from calibration bins.

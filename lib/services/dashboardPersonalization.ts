@@ -267,6 +267,7 @@ const PANRE_CONFIG: DashboardConfig = {
     'daily_triad',
     'retention_forecast',
     'overlearning_alert',
+    'wellness_status',
     'circadian_insight',
   ],
   dataWidgets: [

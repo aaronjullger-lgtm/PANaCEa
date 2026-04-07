@@ -242,7 +242,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               transition={{ delay: revealDelay / 1000, duration: 0.3 }}
               className={`
                 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center
-                text-xl sm:text-2xl font-bold text-white uppercase
+                text-xl sm:text-2xl font-bold text-[var(--color-text-inverse)] uppercase
                 border-2 rounded-lg transition-colors
                 ${bgClass}
               `}
@@ -277,7 +277,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
                 className={`
                   ${isWide ? 'px-3 sm:px-4' : 'w-8 sm:w-10'}
                   h-12 sm:h-14 rounded-lg font-semibold text-sm sm:text-base
-                  text-white transition-colors
+                  text-[var(--color-text-inverse)] transition-colors
                   ${bgClass}
                   disabled:opacity-50
                 `}
@@ -293,14 +293,14 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
   if (!game) {
     return (
-      <div className="fixed inset-0 z-50 bg-data-neutral dark:bg-data-neutral flex items-center justify-center">
+      <div className="fixed inset-0 z-50 bg-data-neutral flex items-center justify-center">
         {error ? (
           <div className="text-center space-y-3">
             <p className="text-lg font-semibold text-data-neutral">Daily challenge unavailable</p>
             <p className="text-sm text-data-neutral">{error}</p>
             <button
               onClick={refetch}
-              className="px-4 py-2 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold"
+              className="px-4 py-2 bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)] rounded-lg font-semibold"
             >
               Retry
             </button>
@@ -313,7 +313,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-data-neutral dark:bg-data-neutral text-data-neutral flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-data-neutral text-data-neutral flex flex-col overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-data-neutral/50">
         <button
@@ -410,14 +410,14 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleShare}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   <Share2 className="w-4 h-4" aria-hidden="true" />
                   Share
                 </button>
                 <button
                   onClick={onExit}
-                  className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   Exit
                 </button>

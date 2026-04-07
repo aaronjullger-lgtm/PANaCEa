@@ -10,6 +10,7 @@ import type { DatabaseStats } from '@/hooks/useDatabaseStats';
 import type { LearningProfile } from '@/types/unified-stats';
 import type { UnifiedStats } from '@/types/unified-stats';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { wilsonScoreBounds, MASTERY_THRESHOLD, GOLD_MASTERY_THRESHOLD, MIN_OBSERVATIONS } from '@/lib/services/wilsonMasteryService';
 
 // =============================================================================
 // Helper Functions
@@ -30,8 +31,8 @@ export function formatStudyTime(ms: number): string {
 /** Blend two accuracy values with weights (rolling‑360 weight 0.7, lifetime 0.3) */
 export function blendAccuracy(rolling360: number | null, lifetime: number | null): number {
   if (rolling360 === null && lifetime === null) return 0;
-  if (rolling360 === null) return lifetime!;
-  if (lifetime === null) return rolling360;
+  if (rolling360 === null) return isFinite(lifetime!) ? lifetime! : 0;
+  if (lifetime === null) return isFinite(rolling360) ? rolling360 : 0;
   const blended = rolling360 * 0.7 + lifetime * 0.3;
   // Guard against NaN/Infinity from upstream garbage
   return isFinite(blended) ? blended : 0;
@@ -125,8 +126,8 @@ export function deriveStudyTime(
   const rawAvg = database?.overall?.avgTimeMs;
   const rawTotal = database?.overall?.totalAttempts;
   const safeAvg = rawAvg != null && isFinite(rawAvg) && rawAvg > 0 ? rawAvg : 0;
-  const safeTotal = rawTotal != null && isFinite(rawTotal) && rawTotal > 0 ? rawTotal : 1;
-  const totalMs = safeAvg > 0 ? safeAvg * safeTotal : 0;
+  const safeTotal = rawTotal != null && isFinite(rawTotal) && rawTotal > 0 ? rawTotal : 0;
+  const totalMs = safeAvg > 0 && safeTotal > 0 ? safeAvg * safeTotal : 0;
   const avgPerQuestionMs = safeAvg > 0 ? safeAvg : null;
   const rawToday = database?.overall?.todayTimeMs;
   const todayMs = rawToday != null && isFinite(rawToday) ? rawToday : 0;
@@ -201,7 +202,19 @@ export function deriveSystemMastery(
     const rawAccuracy = rolling?.accuracy ?? db?.accuracy ?? 0;
     // Guard: accuracy should be 0–1; clamp and protect against NaN
     const accuracy = isFinite(rawAccuracy) ? Math.max(0, Math.min(1, rawAccuracy)) : 0;
-    const masteryPercent = Math.round(accuracy * 100);
+
+    // Wilson score lower bound for conservative mastery estimation.
+    // Prevents 5/5 (100% raw) from being treated identically to 50/50 (100% raw).
+    // Research (Wilson, 1927): handles small sample sizes and extreme proportions.
+    let masteryPercent: number;
+    if (attempts >= MIN_OBSERVATIONS) {
+      const successes = Math.round(accuracy * attempts);
+      const { lower } = wilsonScoreBounds(successes, attempts);
+      masteryPercent = Math.round(lower * 100);
+    } else {
+      // Too few observations: show raw accuracy but flag as uncertain
+      masteryPercent = Math.round(accuracy * 100);
+    }
 
     // Map decision time (capped)
     let avgDecisionTimeSec = null;
@@ -233,18 +246,44 @@ export function deriveSystemMastery(
   return mastery;
 }
 
+/** Raw session data input for deriveRecentActivity */
+export interface RecentSessionInput {
+  date: string;
+  durationMinutes: number;
+  questionsCompleted: number;
+  accuracy: number;
+  hour?: number;
+}
+
 /**
  * Compute recent activity (sessions, streak, trend)
  */
 export function deriveRecentActivity(
-  database: DatabaseStats | null
+  database: DatabaseStats | null,
+  rawSessions?: RecentSessionInput[]
 ): UnifiedStats['recentActivity'] {
-  const sessions: UnifiedStats['recentActivity']['sessions'] = [];
-  // TODO: integrate with real session history endpoint
-  // For now, use placeholder from database recent performance
   const streakDays = database?.overall.currentStreak ?? 0;
+  const performanceTrend = database?.recentPerformance?.trend ?? 'insufficient_data';
 
-  const performanceTrend = database?.recentPerformance.trend ?? 'insufficient_data';
+  const sessions: UnifiedStats['recentActivity']['sessions'] = [];
+  if (rawSessions && rawSessions.length > 0) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    for (let i = 0; i < rawSessions.length; i++) {
+      const s = rawSessions[i]!;
+      if (s.date < cutoffStr) continue;
+      sessions.push({
+        id: `session-${s.date}-${i}`,
+        date: s.date,
+        mode: 'study',
+        questions: s.questionsCompleted,
+        accuracy: s.accuracy === 0 ? null : s.accuracy,
+        durationMs: s.durationMinutes * 60_000,
+      });
+    }
+  }
 
   return {
     sessions,

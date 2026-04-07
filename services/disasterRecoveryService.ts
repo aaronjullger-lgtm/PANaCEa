@@ -260,11 +260,8 @@ export class DisasterRecoveryService {
         filename: 'performance_records.json',
         accessor: () => this.prisma.performanceRecord.findMany(),
       },
-      {
-        name: 'SRSItem',
-        filename: 'srs_items.json',
-        accessor: () => this.prisma.sRSItem.findMany(),
-      },
+      // SRSItem — DEPRECATED: Replaced by UserProgress + FSRS v6.
+      // Model scheduled for removal. Backup excluded to avoid referencing stale data.
       {
         name: 'SavedQuestion',
         filename: 'saved_questions.json',

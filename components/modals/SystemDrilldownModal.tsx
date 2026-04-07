@@ -349,7 +349,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           });
                           props.onClose();
                         }}
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-accent)]/10 shadow-sm transition"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-accent)]/10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition"
                       >
                         Drill this subcategory
                       </button>
@@ -376,7 +376,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                   {filteredConditionStats.map((cond) => (
                     <div
                       key={`${cond.subcategory}__${cond.condition}`}
-                      className="p-4 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] shadow-sm"
+                      className="p-4 rounded-lg bg-[var(--color-bg-tertiary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                     >
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm font-medium text-[var(--color-text-primary)]">

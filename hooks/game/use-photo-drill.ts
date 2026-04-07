@@ -424,7 +424,14 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
  *
  * @returns Game state and actions
  */
-export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoDrillReturn {
+/**
+ * @param initialCases - Real cases from API. Falls back to MOCK_CASES only when
+ *   VITE_USE_MOCK=true (dev/test). In production, an empty array triggers the
+ *   "no cases available" empty state instead of silently serving mock data.
+ */
+export function usePhotoDrill(
+  initialCases: PhotoCase[] = (import.meta as any).env?.VITE_USE_MOCK === 'true' ? MOCK_CASES : [],
+): UsePhotoDrillReturn {
   // MUST call all hooks at top level - Rules of Hooks requirement
   const auth = useAuth();
   const getToken: () => Promise<string | null> = auth?.getToken || (async () => null);

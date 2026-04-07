@@ -189,7 +189,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm"
+                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-bg-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
               >
                 <span className="text-xs font-medium text-[var(--color-text-secondary)]">
                   <RichText accentColor="blue">{item.text}</RichText>

@@ -12,6 +12,14 @@ interface EncounterTimerProps {
   compact?: boolean;
 }
 
+// ─── Time Thresholds (seconds) ──────────────────────────────────────────────
+/** Seconds remaining before "approaching deadline" pulse animation triggers */
+const APPROACHING_THRESHOLD_SEC = 120;
+/** Time boundary for green → yellow color transition (minutes) */
+const COMFORTABLE_MINUTES = 10;
+/** Time boundary for orange → red color transition (minutes) */
+const OVERTIME_WARNING_MINUTES = 20;
+
 export const EncounterTimer: React.FC<EncounterTimerProps> = ({
   startTime,
   isActive,
@@ -39,21 +47,21 @@ export const EncounterTimer: React.FC<EncounterTimerProps> = ({
 
   const targetSeconds = targetMinutes * 60;
   const secondsRemaining = Math.max(0, targetSeconds - elapsed);
-  const isApproaching = secondsRemaining <= 120 && secondsRemaining > 0;
+  const isApproaching = secondsRemaining <= APPROACHING_THRESHOLD_SEC && secondsRemaining > 0;
   const isOver = elapsed > targetSeconds;
 
   // Color based on time
   const getColor = () => {
-    if (elapsed < 10 * 60) return 'text-green-600';
+    if (elapsed < COMFORTABLE_MINUTES * 60) return 'text-green-600';
     if (elapsed < targetSeconds) return 'text-yellow-600';
-    if (elapsed < 20 * 60) return 'text-orange-600';
+    if (elapsed < OVERTIME_WARNING_MINUTES * 60) return 'text-orange-600';
     return 'text-red-600';
   };
 
   const getProgressColor = () => {
-    if (elapsed < 10 * 60) return 'from-green-500 to-green-600';
+    if (elapsed < COMFORTABLE_MINUTES * 60) return 'from-green-500 to-green-600';
     if (elapsed < targetSeconds) return 'from-yellow-500 to-yellow-600';
-    if (elapsed < 20 * 60) return 'from-orange-500 to-orange-600';
+    if (elapsed < OVERTIME_WARNING_MINUTES * 60) return 'from-orange-500 to-orange-600';
     return 'from-red-500 to-red-600';
   };
 

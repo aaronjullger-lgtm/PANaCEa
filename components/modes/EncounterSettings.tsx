@@ -106,14 +106,14 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                   Customize Your Encounter
                 </h2>
-                <p className="text-sm text-data-neutral dark:text-data-neutral">
+                <p className="text-sm text-data-neutral">
                   Tailor the patient encounter to your learning needs
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors"
             >
               <span className="text-2xl">&times;</span>
             </button>
@@ -132,7 +132,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Age Group
                 </label>
                 <select
@@ -151,7 +151,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Sex
                 </label>
                 <select
@@ -169,7 +169,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Acuity
                 </label>
                 <select
@@ -200,7 +200,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   System/Specialty
                 </label>
                 <select
@@ -227,7 +227,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Complexity
                 </label>
                 <select
@@ -254,7 +254,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('includeRedHerrings', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Include red herrings (distractors in history)
                 </span>
               </label>
@@ -266,7 +266,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('requireDifferential', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Require differential diagnosis (3-5 diagnoses)
                 </span>
               </label>
@@ -276,7 +276,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           {/* Diagnostics & Imaging */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <BrainCircuit className="w-5 h-5 text-data-pass dark:text-data-pass" />
+              <BrainCircuit className="w-5 h-5 text-data-pass" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Diagnostics & Imaging
               </h3>
@@ -289,7 +289,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('imagingAvailable', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-pass focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Enable imaging orders (X-ray, CT, MRI, Ultrasound)
                 </span>
               </label>
@@ -301,7 +301,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('labsAvailable', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-pass focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Enable lab orders (CBC, CMP, cultures, etc.)
                 </span>
               </label>
@@ -314,7 +314,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   disabled={!settings.imagingAvailable && !settings.labsAvailable}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-pass focus:ring-[var(--color-focus-ring)] disabled:opacity-50"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Show actual images/results and require interpretation
                 </span>
               </label>
@@ -331,7 +331,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Patient Language
                 </label>
                 <select
@@ -352,7 +352,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Communication Style
                 </label>
                 <select
@@ -377,14 +377,14 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           {/* Time & Feedback */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-data-fail dark:text-data-fail" />
+              <Clock className="w-5 h-5 text-data-fail" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Time & Feedback
               </h3>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+                <label className="block text-sm font-medium text-data-neutral mb-2">
                   Time Limit (minutes)
                 </label>
                 <div className="flex items-center gap-4">
@@ -415,7 +415,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('showTimer', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-fail focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Show timer during encounter
                 </span>
               </label>
@@ -427,7 +427,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('realTimeFeedback', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-fail focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Real-time feedback (show question relevance immediately)
                 </span>
               </label>
@@ -439,7 +439,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('showQuestionRelevance', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-fail focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Show question relevance in results
                 </span>
               </label>
@@ -451,7 +451,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) => updateSetting('detailedAAR', e.target.checked)}
                   className="w-5 h-5 rounded border-[var(--color-border)] text-data-fail focus:ring-[var(--color-focus-ring)]"
                 />
-                <span className="text-sm text-data-neutral dark:text-data-neutral">
+                <span className="text-sm text-data-neutral">
                   Generate detailed After Action Report
                 </span>
               </label>
@@ -464,13 +464,13 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <div className="flex items-center justify-between">
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-lg border border-[var(--color-border)] dark:border-data-neutral hover:bg-[var(--color-bg-tertiary)] transition-colors text-data-neutral dark:text-data-neutral font-medium"
+              className="px-6 py-3 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors text-data-neutral font-medium"
             >
               Cancel
             </button>
             <button
               onClick={onStart}
-              className="px-8 py-3 rounded-lg bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-semibold transition-colors shadow-lg hover:shadow-xl"
+              className="px-8 py-3 rounded-lg bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] font-semibold transition-colors shadow-lg hover:shadow-xl"
             >
               Start Customized Encounter
             </button>

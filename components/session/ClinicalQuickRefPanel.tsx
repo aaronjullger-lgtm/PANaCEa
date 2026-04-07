@@ -42,15 +42,15 @@ function CollapsibleSection({ title, icon, children, defaultOpen = true }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 last:border-0">
+    <div className="last:border-0" style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-800"
+        className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-tertiary)] transition-colors duration-200"
       >
-        <span className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
           {icon}{title}
         </span>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        {open ? <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />}
       </button>
       {open && <div className="px-3 pb-3">{children}</div>}
     </div>
@@ -58,11 +58,11 @@ function CollapsibleSection({ title, icon, children, defaultOpen = true }: {
 }
 
 function LabTable({ labs }: { labs: NormalLabRef[] }) {
-  if (labs.length === 0) return <p className="text-xs text-gray-500">No labs linked to this topic.</p>;
+  if (labs.length === 0) return <p className="text-xs text-[var(--color-text-muted)]">No labs linked to this topic.</p>;
   return (
     <table className="w-full text-xs">
       <thead>
-        <tr className="text-left text-gray-500 border-b dark:border-gray-700">
+        <tr className="text-left text-[var(--color-text-muted)]" style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
           <th className="pb-1 font-medium">Lab</th>
           <th className="pb-1 font-medium">Normal Range</th>
           <th className="pb-1 font-medium">Unit</th>
@@ -70,10 +70,10 @@ function LabTable({ labs }: { labs: NormalLabRef[] }) {
       </thead>
       <tbody>
         {labs.map((lab, i) => (
-          <tr key={i} className="border-b border-gray-100 dark:border-gray-800 last:border-0">
-            <td className="py-1 text-gray-900 dark:text-gray-100 font-medium">{lab.name}</td>
-            <td className="py-1 text-gray-600 dark:text-gray-400">{lab.normalRange}</td>
-            <td className="py-1 text-gray-500">{lab.unit}</td>
+          <tr key={i} className="last:border-0" style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
+            <td className="py-1 text-[var(--color-text-primary)] font-medium">{lab.name}</td>
+            <td className="py-1 text-[var(--color-text-secondary)]">{lab.normalRange}</td>
+            <td className="py-1 text-[var(--color-text-muted)]">{lab.unit}</td>
           </tr>
         ))}
       </tbody>
@@ -106,62 +106,62 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-900 shadow-xl border-l border-gray-200 dark:border-gray-700 z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 w-80 bg-[var(--color-bg-secondary)] shadow-xl z-50 flex flex-col" style={{ boxShadow: '-1px 0 0 0 var(--color-border), -4px 0 12px rgba(0,0,0,0.08)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+      <div className="flex items-center justify-between p-3" style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
+        <h2 className="text-sm font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <BookOpen className="w-4 h-4" />Clinical Reference
         </h2>
-        <button onClick={onClose} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-          <X className="w-4 h-4 text-gray-500" />
+        <button onClick={onClose} className="p-1 rounded hover:bg-[var(--color-bg-tertiary)] transition-colors duration-200" aria-label="Close clinical reference panel">
+          <X className="w-4 h-4 text-[var(--color-text-muted)]" />
         </button>
       </div>
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {loading && (
           <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
           </div>
         )}
 
         {!loading && data && (
           <>
-            <CollapsibleSection title="Vital Ranges" icon={<Heart className="w-4 h-4 text-red-500" />}>
+            <CollapsibleSection title="Vital Ranges" icon={<Heart className="w-4 h-4 text-[var(--color-data-fail)]" />}>
               <div className="space-y-1">
                 {data.vitalRanges.map((v, i) => (
                   <div key={i} className="flex justify-between text-xs">
-                    <span className="text-gray-700 dark:text-gray-300">{v.name}</span>
-                    <span className="text-gray-500">{v.normalRange} {v.unit}</span>
+                    <span className="text-[var(--color-text-secondary)]">{v.name}</span>
+                    <span className="text-[var(--color-text-muted)]">{v.normalRange} {v.unit}</span>
                   </div>
                 ))}
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Normal Labs" icon={<FlaskConical className="w-4 h-4 text-blue-500" />}>
+            <CollapsibleSection title="Normal Labs" icon={<FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />}>
               <LabTable labs={data.normalLabs} />
             </CollapsibleSection>
 
             {data.relevantPearls.length > 0 && (
-              <CollapsibleSection title="Clinical Pearls" icon={<Stethoscope className="w-4 h-4 text-emerald-500" />}>
+              <CollapsibleSection title="Clinical Pearls" icon={<Stethoscope className="w-4 h-4 text-[var(--color-data-pass)]" />}>
                 <ul className="space-y-2">
                   {data.relevantPearls.map((p, i) => (
-                    <li key={i} className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <li key={i} className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                       {p.content}
-                      {p.source && <span className="text-gray-400 ml-1">({p.source})</span>}
+                      {p.source && <span className="text-[var(--color-text-muted)] ml-1">({p.source})</span>}
                     </li>
                   ))}
                 </ul>
               </CollapsibleSection>
             )}
             {data.differentialFeatures.length > 0 && (
-              <CollapsibleSection title="Differential Features" icon={<BookOpen className="w-4 h-4 text-purple-500" />} defaultOpen={false}>
+              <CollapsibleSection title="Differential Features" icon={<BookOpen className="w-4 h-4 text-[var(--color-text-secondary)]" />} defaultOpen={false}>
                 <div className="space-y-3">
                   {data.differentialFeatures.map((ddx, i) => (
                     <div key={i}>
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{ddx.conditionName}</p>
+                      <p className="text-xs font-medium text-[var(--color-text-primary)]">{ddx.conditionName}</p>
                       <ul className="mt-1 space-y-0.5">
                         {ddx.distinguishingFeatures.map((f, j) => (
-                          <li key={j} className="text-xs text-gray-600 dark:text-gray-400 pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-gray-400">
+                          <li key={j} className="text-xs text-[var(--color-text-secondary)] pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[var(--color-text-muted)]">
                             {f}
                           </li>
                         ))}
@@ -175,7 +175,7 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
         )}
 
         {!loading && !data && (
-          <p className="text-xs text-gray-500 text-center p-6">
+          <p className="text-xs text-[var(--color-text-muted)] text-center p-6">
             Select a question to see relevant clinical references.
           </p>
         )}

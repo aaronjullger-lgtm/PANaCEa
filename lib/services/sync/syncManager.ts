@@ -115,6 +115,8 @@ class SyncManager {
   private listeners: Map<SyncEventType, Set<SyncEventCallback>> = new Map();
   private isSyncing = false;
   private syncRetryTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** Tracks consecutive sync failures for true exponential backoff (Finding 7 fix). */
+  private consecutiveFailures = 0;
   /** Async token provider (e.g., Clerk's getToken). Called before each sync to get a fresh JWT. */
   private tokenProvider: (() => Promise<string | null>) | null = null;
 
@@ -398,6 +400,20 @@ class SyncManager {
       this.setLastSyncTime(Date.now());
       this.clearLastSyncError();
 
+      // Only reset consecutiveFailures if all pending items synced successfully.
+      // If some items failed (partial sync), increment the counter so backoff
+      // increases on the next retry — this covers per-item failures inside
+      // syncAnswers/syncReviews/syncPearlActions that don't throw at syncAll level.
+      const hadPartialFailure =
+        this.getOfflineAnswers().some((a) => !a.synced && a.syncAttempts > 0 && a.syncAttempts < 5) ||
+        this.getOfflineReviews().some((r) => !r.synced && r.syncAttempts > 0 && r.syncAttempts < 5) ||
+        this.getOfflinePearlActions().some((p) => !p.synced && p.syncAttempts > 0 && p.syncAttempts < 5);
+      if (hadPartialFailure) {
+        this.consecutiveFailures++;
+      } else {
+        this.consecutiveFailures = 0;
+      }
+
       this.isSyncing = false;
       this.emit('sync-complete', this.getStatus());
 
@@ -409,6 +425,7 @@ class SyncManager {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
       this.setLastSyncError(errorMessage);
+      this.consecutiveFailures++;
       this.isSyncing = false;
       this.emit('sync-error', this.getStatus());
 
@@ -445,9 +462,10 @@ class SyncManager {
             system: answer.system,
             conditionId: answer.conditionId,
             mode: 'session',
+            // isMainSession is recorded on the QuestionAttempt for stats/Rolling360 dedup
+            // but is NOT used for FSRS — that flows through queueReview → drillReviewService.
             isMainSession: answer.isMainSession ?? false,
-            selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
-            ...(answer.rating != null && { rating: answer.rating }),
+            selectedAnswer: ['A', 'B', 'C', 'D', 'E'][answer.selectedAnswer],
             ...(answer.telemetryJson && { telemetryJson: answer.telemetryJson }),
             ...(answer.answerChangedCount != null && {
               answerChangedCount: answer.answerChangedCount,
@@ -666,11 +684,15 @@ class SyncManager {
       clearTimeout(this.syncRetryTimeout);
     }
 
-    // Exponential backoff: 30s, 60s, 120s, max 5 minutes
-    const retryDelay = Math.min(
-      30000 * Math.pow(2, this.getStatus().pendingAnswers > 0 ? 1 : 0),
+    // Exponential backoff using consecutive failure count: 30s → 60s → 120s → 240s → 300s (cap)
+    const baseDelay = Math.min(
+      30000 * Math.pow(2, Math.min(this.consecutiveFailures, 4)),
       300000
     );
+
+    // ±25% jitter to prevent thundering herd when multiple clients reconnect simultaneously
+    const jitter = baseDelay * (0.75 + Math.random() * 0.5);
+    const retryDelay = Math.round(jitter);
 
     this.syncRetryTimeout = setTimeout(() => {
       if (this.isOnline()) {

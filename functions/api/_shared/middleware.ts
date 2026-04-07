@@ -23,6 +23,7 @@ import { validateFunctionEnv, MissingEnvError, type EnvRequirement } from './env
 import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
+import { withStructuredLogging } from './structuredLogger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -295,6 +296,9 @@ function getAdminIdsFromEnv(env: any): { adminIds: string[]; superadminIds: stri
  * Admin role check middleware - requires authenticated user to have admin role
  * Must be used after withAuth() middleware
  * Checks: env SUPERADMIN_USER_IDS/ADMIN_USER_IDS (clerkIds), then DB role
+ *
+ * On success, attaches context.auth.metadata.dbUserId and context.auth.metadata.dbRole
+ * so downstream handlers can audit-log without a second DB round-trip.
  */
 export function withAdminRole(): Middleware<AuthenticatedContext> {
   return async (context, next) => {
@@ -307,6 +311,11 @@ export function withAdminRole(): Middleware<AuthenticatedContext> {
 
     const { adminIds, superadminIds } = getAdminIdsFromEnv(context.env);
     if (superadminIds.includes(clerkId) || adminIds.includes(clerkId)) {
+      // env allowlist — no DB query needed; mark role from env
+      context.auth.metadata = {
+        ...context.auth.metadata,
+        dbRole: superadminIds.includes(clerkId) ? 'SUPERADMIN' : 'ADMIN',
+      };
       return next();
     }
 
@@ -314,11 +323,17 @@ export function withAdminRole(): Middleware<AuthenticatedContext> {
     try {
       const user = await prisma.user.findUnique({
         where: { clerkId },
-        select: { role: true },
+        select: { id: true, role: true },
       });
 
       const role = (user?.role ?? '').toUpperCase();
-      if (role === 'ADMIN' || role === 'SUPERADMIN') {
+      if (user && (role === 'ADMIN' || role === 'SUPERADMIN')) {
+        // Attach user info so handlers don't need a second DB call for audit logging
+        context.auth.metadata = {
+          ...context.auth.metadata,
+          dbUserId: user.id,
+          dbRole: role,
+        };
         return next();
       }
 
@@ -365,6 +380,50 @@ export function withRefineryRole(): Middleware<AuthenticatedContext> {
       return next();
     } catch (error) {
       logger.error('Error checking refinery role', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: context.auth.userId,
+      });
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  };
+}
+
+/**
+ * CMS role check middleware — requires editor or higher (editor, approver, admin, superadmin).
+ * Used by content-management endpoints where editors and approvers need access.
+ * Attaches user DB id and role to context.auth.metadata for downstream audit logging.
+ */
+export function withCMSRole(): Middleware<AuthenticatedContext> {
+  return async (context, next) => {
+    if (!context.auth?.userId) {
+      return { status: 401, error: 'Authentication required' };
+    }
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    try {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: context.auth.userId },
+        select: { role: true, id: true },
+      });
+      const role = (user?.role ?? '').toUpperCase();
+      const allowed = ['EDITOR', 'APPROVER', 'ADMIN', 'SUPERADMIN'].includes(role);
+      if (!user || !allowed) {
+        logger.warn('Non-editor attempted CMS access', {
+          userId: context.auth.userId,
+          path: new URL(context.request.url).pathname,
+        });
+        return { status: 403, error: 'Editor or higher access required' };
+      }
+      // Attach user info so handlers can audit-log without a second DB call
+      context.auth.metadata = {
+        ...context.auth.metadata,
+        dbUserId: user.id,
+        dbRole: role,
+      };
+      return next();
+    } catch (error) {
+      logger.error('Error checking CMS role', {
         error: error instanceof Error ? error.message : String(error),
         userId: context.auth.userId,
       });
@@ -578,21 +637,27 @@ function getRateLimitErrorMessage(endpointType?: string): string {
 }
 
 /**
- * Admin endpoint stack with rate limiting
- * Includes env validation for DATABASE + AUTH
+ * Admin endpoint stack with rate limiting.
+ * Includes env validation for DATABASE + AUTH.
+ *
+ * @deprecated Prefer `adminAuthenticatedEndpoint` for new code — identical
+ * middleware chain. Kept as an alias for backward compatibility; both now use
+ * 60 req/min (previously 30).
  */
 export function adminEndpoint<T>(
   schema: z.ZodSchema<T>,
-  handler: Handler<AuthenticatedContext & ValidatedContext<T>>
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params'; requestsPerMinute?: number }
 ) {
+  const rateLimit = options?.requestsPerMinute ?? 60;
   return withMiddleware(
     withCors(),
     withErrorHandling(),
     withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     withAuth(),
-    withAdminRole(), // Admin role check added
-    withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
-    withValidation(schema),
+    withAdminRole(),
+    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'admin' }),
+    withValidation(schema, options),
     withLogging(),
     handler
   );
@@ -620,38 +685,44 @@ export function refineryEndpoint<T>(
   );
 }
 
+/**
+ * CMS content endpoint stack — requires editor or higher (editor, approver, admin, superadmin).
+ * Provides full middleware chain: CORS, error handling, env check, auth, CMS role, rate limiting,
+ * validation, and structured logging. Handlers receive context.auth.metadata.dbUserId and
+ * context.auth.metadata.dbRole for audit logging without a second DB round-trip.
+ */
+export function cmsEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params'; requestsPerMinute?: number }
+) {
+  const rateLimit = options?.requestsPerMinute ?? 60;
+  return withMiddleware(
+    withCors(),
+    withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    withAuth(),
+    withCMSRole(),
+    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'admin', keyPrefix: 'cms' }),
+    withValidation(schema, options),
+    withLogging(),
+    handler
+  );
+}
+
 // ============================================================================
 // LOGGING MIDDLEWARE
 // ============================================================================
 
 /**
- * Request logging middleware
+ * Request logging middleware.
+ *
+ * Now delegates to withStructuredLogging() from structuredLogger.ts which
+ * provides requestId correlation, Sentry user tagging, and exception capture.
+ * Kept as a named export for backward compatibility.
  */
-export function withLogging(options: { logBody?: boolean } = {}): Middleware {
-  return async (context, next) => {
-    const start = Date.now();
-    const url = new URL(context.request.url);
-
-    logger.info('Request started', {
-      method: context.request.method,
-      path: url.pathname,
-      query: url.search,
-    });
-
-    const response = await next();
-    const duration = Date.now() - start;
-
-    const status: number = response instanceof Response ? response.status : response.status || 200;
-
-    logger.info('Request completed', {
-      method: context.request.method,
-      path: url.pathname,
-      status,
-      duration,
-    });
-
-    return response;
-  };
+export function withLogging(_options: { logBody?: boolean } = {}): Middleware {
+  return withStructuredLogging();
 }
 
 // ============================================================================

@@ -42,8 +42,8 @@ export const onRequestGet = authenticatedEndpoint(
         select: { selectedAnswer: true },
       });
 
-      const letters = ['A', 'B', 'C', 'D'] as const;
-      const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+      const letters = ['A', 'B', 'C', 'D', 'E'] as const;
+      const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, E: 0 };
       for (const a of attempts) {
         const letter = a.selectedAnswer?.toUpperCase();
         if (letter && counts[letter] !== undefined) counts[letter]++;

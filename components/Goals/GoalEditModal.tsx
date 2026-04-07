@@ -85,10 +85,10 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
           className="bg-[var(--color-bg-primary)] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-data-neutral dark:border-data-neutral">
+          <div className="flex items-center justify-between p-6 border-b border-data-neutral">
             <h2
               id="goal-edit-title"
-              className="text-2xl font-bold text-data-neutral dark:text-data-neutral flex items-center gap-2"
+              className="text-2xl font-bold text-data-neutral flex items-center gap-2"
             >
               <Edit2 className="w-6 h-6 text-[var(--color-category-practice)]" />
               Edit Goal
@@ -97,7 +97,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
               type="button"
               onClick={onClose}
               aria-label="Close goal editor"
-              className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -119,7 +119,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
             <div>
               <label
                 htmlFor="goal-edit-title-input"
-                className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
+                className="block text-sm font-medium text-data-neutral mb-1"
               >
                 Goal Title *
               </label>
@@ -128,7 +128,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 aria-invalid={!!error && !formData.title.trim()}
                 aria-describedby={!!error && !formData.title.trim() ? 'goal-edit-error' : undefined}
                 required
@@ -139,7 +139,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
             <div>
               <label
                 htmlFor="goal-edit-description"
-                className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
+                className="block text-sm font-medium text-data-neutral mb-1"
               >
                 Description
               </label>
@@ -147,21 +147,21 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 id="goal-edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 rows={2}
               />
             </div>
 
             {/* Status */}
             <div>
-              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
+              <label className="block text-sm font-medium text-data-neutral mb-1">
                 Status
               </label>
               <select
                 aria-label="Goal status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
               >
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
@@ -172,7 +172,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
 
             {/* Current Value */}
             <div>
-              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
+              <label className="block text-sm font-medium text-data-neutral mb-1">
                 Current Progress
               </label>
               <div className="flex items-center gap-2">
@@ -183,10 +183,10 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                   onChange={(e) =>
                     setFormData({ ...formData, currentValue: parseInt(e.target.value) })
                   }
-                  className="flex-1 px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                  className="flex-1 px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                   min="0"
                 />
-                <span className="text-data-neutral dark:text-data-neutral">
+                <span className="text-data-neutral">
                   / {goal.targetValue || '∞'} {goal.targetUnit || 'units'}
                 </span>
               </div>
@@ -194,27 +194,27 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
 
             {/* Motivation */}
             <div>
-              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
+              <label className="block text-sm font-medium text-data-neutral mb-1">
                 Motivation Notes
               </label>
               <input
                 type="text"
                 value={formData.motivationNotes}
                 onChange={(e) => setFormData({ ...formData, motivationNotes: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
               />
             </div>
 
             {/* Reward Message */}
             <div>
-              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
+              <label className="block text-sm font-medium text-data-neutral mb-1">
                 Reward Message
               </label>
               <input
                 type="text"
                 value={formData.rewardMessage}
                 onChange={(e) => setFormData({ ...formData, rewardMessage: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
+                className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
               />
             </div>
 
@@ -223,7 +223,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-data-neutral dark:border-data-neutral rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 border border-data-neutral rounded-lg hover:bg-data-neutral transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 Cancel

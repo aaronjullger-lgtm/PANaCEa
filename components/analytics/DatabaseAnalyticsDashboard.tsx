@@ -256,7 +256,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'overview'
-              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
               : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
@@ -267,7 +267,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('systems')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'systems'
-              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
               : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >
@@ -278,7 +278,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
           onClick={() => setActiveTab('conditions')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'conditions'
-              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
               : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
           }`}
         >

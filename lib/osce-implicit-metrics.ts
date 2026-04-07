@@ -322,11 +322,11 @@ export function deriveOSCEImplicitRating(telemetry: OSCETelemetry): OSCEImplicit
   grade = Math.max(1.0, Math.min(4.0, grade));
   
   // Discrete rating mapping
+  // Binary rating system (FSRS-6): Again(1) / Good(3) only.
+  // Hard(2) and Easy(4) are deprecated — collapse to binary.
   let discreteRating: Rating;
-  if (grade < 1.5) discreteRating = Rating.Again;
-  else if (grade < 2.5) discreteRating = Rating.Hard;
-  else if (grade < 3.5) discreteRating = Rating.Good;
-  else discreteRating = Rating.Easy;
+  if (grade < 2.0) discreteRating = Rating.Again;
+  else discreteRating = Rating.Good;
   
   // Confidence calculation
   let confidence = 0.7;

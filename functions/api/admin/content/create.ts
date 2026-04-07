@@ -1,119 +1,87 @@
 /**
  * API: Create new medical content
  * POST /api/admin/content/create
+ *
+ * Requires: editor+ role (via cmsEndpoint).
+ * Includes: rate limiting (60 req/min), structured logging, audit trail.
  */
 
-import {
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-  type Env,
-} from '../../_shared/auth';
-import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
-import { canEditContent, type UserRole } from '../../_shared/rbac';
-import { createDraft } from '../../../../lib/services/cms/contentService';
+import { z } from 'zod';
+import { cmsEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { validateRequest, AdminContentCreateSchema } from '../../_shared/schemas';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
+import { AdminContentCreateSchema } from '../../_shared/schemas';
+import { createDraft } from '../../../../lib/services/cms/contentService';
+import { type UserRole } from '../../_shared/rbac';
 
-export async function onRequestPost(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const logger = createEndpointLogger('/api/admin/content/create');
 
-  try {
-    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
-  } catch (e) {
-    if (e instanceof MissingEnvError) return e.toResponse();
-    throw e;
-  }
+export const onRequestOptions = withCors();
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions(context);
-  }
+export const onRequestPost = cmsEndpoint(
+  z.object({
+    body: AdminContentCreateSchema,
+  }),
+  async (context) => {
+    const { env, auth, validated } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
-  }
+    try {
+      const dbUserId = auth.metadata?.dbUserId;
+      const dbRole = auth.metadata?.dbRole;
+      const { conditionId, system, subcategory, condition, content, description } =
+        validated?.body ?? validated;
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+      // Check if conditionId already exists
+      const existing = await prisma.medicalContent.findUnique({
+        where: { conditionId },
+      });
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: authContext.clerkId },
-      select: { id: true, role: true },
-    });
+      if (existing) {
+        return { status: 409, error: 'Content with this conditionId already exists' };
+      }
 
-    if (!user || !canEditContent(user.role as UserRole)) {
-      return createErrorResponse(
-        request,
-        'Forbidden: Insufficient permissions',
-        403,
-        undefined,
-        env
+      // Get client IP and user agent for audit logging
+      const ipAddress =
+        context.request.headers.get('x-forwarded-for') ||
+        context.request.headers.get('x-real-ip') ||
+        'unknown';
+      const userAgent = context.request.headers.get('user-agent') || 'unknown';
+
+      const newContent = await createDraft(
+        prisma as any,
+        {
+          conditionId,
+          system,
+          subcategory,
+          condition,
+          content: content || {},
+        },
+        {
+          userId: dbUserId,
+          userRole: dbRole as UserRole,
+          ipAddress,
+          userAgent,
+          description: description || 'Created new content',
+        }
       );
-    }
 
-    // Validate input with Zod schema
-    const validation = await validateRequest(
-      request.clone() as Request<unknown, unknown>,
-      AdminContentCreateSchema
-    );
-    if (!validation.success) {
-      return (validation as { success: false; response: Response }).response;
-    }
-    const { conditionId, system, subcategory, condition, content, description } = (
-      validation as { success: true; data: any }
-    ).data;
-
-    // Check if conditionId already exists
-    const existing = await prisma.medicalContent.findUnique({
-      where: { conditionId },
-    });
-
-    if (existing) {
-      return createErrorResponse(
-        request,
-        'Content with this conditionId already exists',
-        409,
-        undefined,
-        env
-      );
-    }
-
-    // Get client IP and user agent for audit logging
-    const ipAddress =
-      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-
-    const newContent = await createDraft(
-      prisma as any,
-      {
+      auditLog('admin_content_create', {
+        userId: auth.userId,
+        dbUserId,
         conditionId,
         system,
-        subcategory,
-        condition,
-        content: content || {},
-      },
-      {
-        userId: user.id,
-        userRole: user.role as UserRole,
-        ipAddress,
-        userAgent,
-        description: description || 'Created new content',
-      }
-    );
+      });
 
-    return createSuccessResponse(request, newContent, 201, 0, env);
-  } catch (error: any) {
-    console.error('Error creating content:', error);
-    return createErrorResponse(
-      request,
-      error.message || 'Failed to create content',
-      500,
-      undefined,
-      env
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
+      logger.info('Content created', { conditionId, system });
+
+      return { status: 201, data: newContent };
+    } catch (error: any) {
+      logger.error('Error creating content', error);
+      return { status: 500, error: error.message || 'Failed to create content' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);

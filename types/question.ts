@@ -14,9 +14,20 @@ export interface ConditionSection {
   [key: string]: string | undefined;
 }
 
+/** High-yield PANCE-specific anchors from curated MedicalContent fields. */
+export interface PanceAnchors {
+  classicPatient?: string;
+  classicTriad?: string[];
+  firstLineRx?: string;
+  goldStandardDx?: string;
+  bestInitialTest?: string;
+}
+
 export interface ConditionData {
   condition: string;
   sections: ConditionSection;
+  /** PANCE-specific anchors — inject into prompt to improve distractor quality */
+  panceAnchors?: PanceAnchors;
 }
 
 export interface QuestionExplanation {

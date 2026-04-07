@@ -14,6 +14,7 @@ import {
   getNextDifficultyLevel,
   DifficultyLevel,
 } from '@/lib/services/progressiveDifficultyService';
+import { createApiClient, createSessionsClient } from '@/lib/sdk';
 
 // =============================================================================
 // TYPES
@@ -69,7 +70,6 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
       setError(null);
 
       try {
-        const token = await getToken();
         let initialDifficulty: DifficultyLevel | undefined = undefined;
 
         if (options.adaptive && userId) {
@@ -77,26 +77,17 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
           initialDifficulty = getNextDifficultyLevel(metrics, 'medium'); // Start with medium and adjust
         }
 
-        const response = await fetch('/api/study/session/generate', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            mode: options.mode,
-            size: options.size || 20,
-            systems: options.systems,
-            initialDifficulty,
-          }),
+        const api = createApiClient(getToken);
+        const sessions = createSessionsClient(api);
+
+        const result = await sessions.generate({
+          mode: options.mode,
+          size: options.size || 20,
+          systems: options.systems,
+          initialDifficulty,
         });
 
-        if (!response.ok) {
-          throw new Error(`Failed to generate session: ${response.statusText}`);
-        }
-
-        const json = await response.json();
-        const session: GeneratedSession = (json?.data ?? json) as GeneratedSession;
+        const session: GeneratedSession = result as unknown as GeneratedSession;
         setLastSession(session);
 
         // Navigate to the session

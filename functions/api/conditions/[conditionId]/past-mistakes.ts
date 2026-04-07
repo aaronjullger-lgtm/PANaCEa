@@ -10,7 +10,7 @@ import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
+import { ANSWER_LETTERS, letterToIndex } from '../../../../lib/answerLetterMap';
 
 const PastMistakesSchema = z.object({
   conditionId: z.string().min(1).max(200),
@@ -21,8 +21,8 @@ function getOptionText(
   letter: string
 ): string {
   if (!Array.isArray(options) || options.length === 0) return letter;
-  const idx = LETTERS.indexOf(letter as (typeof LETTERS)[number]);
-  if (idx < 0 || idx >= options.length) return letter;
+  const idx = letterToIndex(letter);
+  if (idx === null || idx >= options.length) return letter;
   const opt = options[idx];
   if (typeof opt === 'string') return opt;
   if (opt && typeof opt === 'object') {

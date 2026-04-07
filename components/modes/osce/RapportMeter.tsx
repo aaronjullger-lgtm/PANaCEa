@@ -69,7 +69,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <div className={`w-2 h-2 rounded-full ${colors.bg} animate-pulse`} />
-        <div className="flex-1 h-1.5 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+        <div className="flex-1 h-1.5 bg-data-neutral rounded-full overflow-hidden">
           <motion.div
             className={`h-full ${colors.bg}`}
             initial={{ width: 0 }}
@@ -93,12 +93,12 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Heart className={`w-5 h-5 ${colors.text}`} />
-          <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Patient Rapport</h3>
+          <h3 className="font-semibold text-data-neutral">Patient Rapport</h3>
         </div>
         {emotionalState && (
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-data-neutral dark:bg-data-neutral rounded-lg">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-data-neutral rounded-lg">
             <span className="text-lg">{getEmotionIcon(emotionalState.current)}</span>
-            <span className="text-xs text-data-neutral dark:text-data-neutral capitalize">
+            <span className="text-xs text-data-neutral capitalize">
               {emotionalState.current}
             </span>
           </div>
@@ -114,7 +114,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="text-data-neutral dark:text-data-neutral"
+              className="text-data-neutral"
             />
             <motion.path
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -135,7 +135,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
           <div className={`text-lg font-semibold ${colors.text}`}>
             {getRapportLabel(meter.score)}
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-data-neutral dark:text-data-neutral">
+          <div className="flex items-center gap-3 mt-1 text-xs text-data-neutral">
             <span className="flex items-center gap-1">
               <Heart className="w-3 h-3" /> {meter.empathyPoints} empathy
             </span>
@@ -152,18 +152,18 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
       {/* Milestones */}
       {showMilestones && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-data-neutral dark:text-data-neutral mb-2">
+          <div className="text-xs font-medium text-data-neutral mb-2">
             Milestones
           </div>
           {meter.milestones.map((milestone, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 p-2 rounded-lg transition-all ${
+              className={`flex items-center gap-2 p-2 rounded-lg transition-colors duration-200 ${
                 milestone.achieved
-                  ? 'bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass'
+                  ? 'bg-data-pass/20 border border-data-pass'
                   : meter.score >= milestone.threshold - 10
-                    ? 'bg-data-provisional dark:bg-data-provisional/20 border border-data-provisional dark:border-data-provisional'
-                    : 'bg-data-neutral dark:bg-data-neutral/50 border border-data-neutral dark:border-data-neutral'
+                    ? 'bg-data-provisional/20 border border-data-provisional'
+                    : 'bg-data-neutral/50 border border-data-neutral'
               }`}
             >
               {milestone.achieved ? (
@@ -177,10 +177,10 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
                 <div
                   className={`text-xs font-medium truncate ${
                     milestone.achieved
-                      ? 'text-data-pass dark:text-data-pass'
+                      ? 'text-data-pass'
                       : meter.score >= milestone.threshold - 10
-                        ? 'text-data-provisional dark:text-data-provisional'
-                        : 'text-data-neutral dark:text-data-neutral'
+                        ? 'text-data-provisional'
+                        : 'text-data-neutral'
                   }`}
                 >
                   {milestone.unlocks}
@@ -204,25 +204,25 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
 
       {/* Personality Info (optional) */}
       {personality && (
-        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
+        <div className="mt-4 pt-4 border-t border-data-neutral">
           <div className="flex items-center gap-2 mb-2">
             <User className="w-4 h-4 text-data-neutral" />
-            <span className="text-xs font-medium text-data-neutral dark:text-data-neutral">
+            <span className="text-xs font-medium text-data-neutral">
               Patient Personality
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <span className="px-2 py-0.5 text-xs bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 text-[var(--color-accent)] dark:text-[var(--color-accent)] rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-full">
               {personality.communicationStyle}
             </span>
             <span className="px-2 py-0.5 text-xs bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] rounded-full">
               {personality.healthLiteracy} literacy
             </span>
-            <span className="px-2 py-0.5 text-xs bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-data-provisional/30 text-data-provisional rounded-full">
               {personality.painBehavior} pain
             </span>
             {personality.hiddenAgenda !== 'none' && (
-              <span className="px-2 py-0.5 text-xs bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail rounded-full">
+              <span className="px-2 py-0.5 text-xs bg-data-fail/30 text-data-fail rounded-full">
                 hidden agenda
               </span>
             )}
@@ -247,7 +247,7 @@ export const RapportChangeNotification: React.FC<{
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.9 }}
         className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${
-          isPositive ? 'bg-data-pass text-white' : 'bg-data-fail text-white'
+          isPositive ? 'bg-data-pass text-[var(--color-text-inverse)]' : 'bg-data-fail text-[var(--color-text-inverse)]'
         }`}
       >
         <div className="flex items-center gap-2">

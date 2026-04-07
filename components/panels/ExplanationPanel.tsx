@@ -167,7 +167,7 @@ const SectionHeader: React.FC<{
 }> = ({ icon, title, className = '' }) => (
   <div className={`flex items-center gap-2 mb-3 ${className}`}>
     <span className="text-[var(--color-text-muted)]">{icon}</span>
-    <h3 className="font-bold text-lg text-[var(--color-text-primary)]">{title}</h3>
+    <h3 className="font-semibold text-lg text-[var(--color-text-primary)]">{title}</h3>
   </div>
 );
 
@@ -705,7 +705,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {/* Curated textbook excerpt (e.g. OpenStax) */}
         {curatedPassage && (
           <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+            <h3 className="font-semibold text-lg mb-2 text-[var(--color-text-primary)]">
               From textbook: {curatedPassage.title}
             </h3>
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">

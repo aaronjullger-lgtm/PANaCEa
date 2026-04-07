@@ -95,13 +95,14 @@ export const chartTheme = {
     error: 'var(--color-data-fail)',
     info: 'var(--color-accent)',
     neutral: 'var(--color-text-muted)',
-    /** Brand-safe bar sequence for multi-series (Recharts/Chart.js) */
+    /** Brand-safe bar sequence for multi-series (Recharts/Chart.js) (audit H4) */
     barSequence: [
-      'var(--color-accent)',
-      'var(--color-accent-secondary)',
-      'var(--color-data-pass)',
-      'var(--color-data-provisional)',
-      'var(--color-data-fail)',
+      'var(--color-primary, var(--color-accent))',
+      'var(--color-blue, var(--color-accent-secondary))',
+      'var(--color-success, var(--color-data-pass))',
+      'var(--color-gold, var(--color-data-provisional))',
+      'var(--color-orange, var(--color-data-fail))',
+      'var(--color-purple, var(--color-accent))',
     ],
   },
 
@@ -120,6 +121,14 @@ export const chartTheme = {
     axisStroke: 'var(--color-border)',
     textPrimary: 'var(--color-text-primary)',
     textMuted: 'var(--color-text-muted)',
+    // Semantic aliases for SVG chart components (audit M1)
+    axis: 'var(--color-border)',
+    grid: 'var(--chart-grid-stroke)',
+    label: 'var(--color-text-muted)',
+    positive: 'var(--color-data-pass)',
+    negative: 'var(--color-data-fail)',
+    neutral: 'var(--color-text-muted)',
+    accent: 'var(--color-accent)',
   },
 
   /**
@@ -177,11 +186,18 @@ export const getResponsiveHeight = (width: number): number => {
  * Returns CSS variable-based fills for StabilityPyramid bars.
  */
 export const stabilityBucketColor: Record<string, string> = {
+  // Time-based keys (original)
   '<1d': 'var(--color-data-fail)',
   '1-3d': 'var(--color-data-provisional)',
   '3-7d': 'var(--color-data-provisional)',
   '7-21d': 'var(--color-accent)',
   '21d+': 'var(--color-data-pass)',
+  // Semantic keys (audit M3) — aliases for readability
+  new: 'var(--color-data-fail)',
+  learning: 'var(--color-data-provisional)',
+  young: 'var(--color-data-provisional)',
+  mature: 'var(--color-accent)',
+  mastered: 'var(--color-data-pass)',
 };
 
 /**
@@ -193,13 +209,22 @@ export function getStabilityColor(bucket: string): string {
 }
 
 /**
- * Safe number formatter for chart tooltips/labels.
+ * Safe display formatter for chart tooltips/labels.
  * Returns '—' for NaN/Infinity/null/undefined.
  */
-export function safeChartValue(value: unknown, fallback = '—'): string {
+export function safeChartDisplay(value: unknown, fallback = '—'): string {
   if (value == null) return fallback;
   if (typeof value === 'number' && (!isFinite(value) || isNaN(value))) return fallback;
   return String(value);
+}
+
+/**
+ * Safe numeric coercion for chart data values (audit M2).
+ * Returns a finite number or the fallback — never NaN/Infinity.
+ */
+export function safeChartValue(value: number | null | undefined, fallback = 0): number {
+  if (value == null) return fallback;
+  return isFinite(value) ? value : fallback;
 }
 
 export default chartTheme;

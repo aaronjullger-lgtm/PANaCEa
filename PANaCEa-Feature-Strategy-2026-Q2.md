@@ -523,11 +523,14 @@ The `generate-variants.ts` cron exists but is underutilized. Enhance it to speci
 These require no new dependencies and unlock value from already-built systems.
 
 1. ~~**Wire the four unused confidence pipeline modules**~~ --- **VERIFIED COMPLETE** (2026-04-03). All four modules (`detectInterference` at line 937, `computeDesirableDifficultyBonus` at line 1036, `detectConfidenceTrend` at line 1050, `modulateDifficultyDelta` at line 1087) are fully wired into `drillReviewService.ts` with research citations, proper error handling, and debug logging.
-2. **Session fatigue detection + proactive breaks** --- 1-2 days. Uses trendDetector output + existing wellness UI.
-3. **Auto-detect learner phase from rotation schedule** --- 2-3 days. Addresses CLAUDE.md priority #3 (wire RotationFocusCard) and unlocks automatic curriculum adaptation.
-4. **Confusion-aware reservoir pre-warming** --- 2-3 days. Extends existing reservoir with confusion scope.
+2. ~~**Session fatigue detection + proactive breaks**~~ --- **IMPLEMENTED** (2026-04-06). Added `detectProactiveFatigue()` to wellnessEngine with rolling-window RT slope + accuracy analysis. Three-level system: `fresh → warming → break_suggested`. New components: `BreakTimer` (full-screen countdown overlay with progress ring), `FatigueBreakPrompt` (inline between feedback and Next button). Wired into QuizView — proactive breaks surface before hard-stop thresholds trigger.
+3. ~~**Auto-detect learner phase from rotation schedule**~~ --- **IMPLEMENTED** (2026-04-03). `inferLearnerPhase()` in `nccpa-question-weighting.ts`. Wired into session generation, reservoir refill, and question selection.
+4. ~~**Confusion-aware reservoir pre-warming**~~ --- **IMPLEMENTED** (2026-04-06). Wired existing `confusionPairBoost.ts` (was dead code) into `refillWorker.ts` Phase 2.5. Reservoir items targeting active confusion pairs receive tiered priority boosts (+1/+2/+4). Enabled by default via `confusionScope: true` in orchestrator payload.
 
-**Total: ~5-8 days. Result: Fatigue detection is live, curriculum adapts to rotation, and confusion remediation is automated.**
+**Additionally completed:**
+- ~~**Internal SDK client layer**~~ --- **IMPLEMENTED** (2026-04-06). `lib/sdk/` with typed core client, 5 domain modules (drills, sessions, srs, user, content), barrel export. 5 hooks migrated from raw fetch. Retry with exponential backoff for transient errors.
+
+**Total: NOW roadmap complete. All 4 foundation items + SDK layer shipped.**
 
 ### NEXT (Weeks 3-6) --- Learner-Facing Intelligence
 

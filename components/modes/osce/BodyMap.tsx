@@ -235,12 +235,12 @@ export const BodyMap: React.FC<BodyMapProps> = ({
   );
 
   const getRegionColor = (region: BodyRegion) => {
-    if (hoveredRegion === region) return '#60a5fa'; // blue-400
+    if (hoveredRegion === region) return 'var(--color-accent)'; // hover highlight
     if (examinedRegions.includes(region)) {
-      return findingsMap[region] ? '#f97316' : '#22c55e'; // orange if finding, green if normal
+      return findingsMap[region] ? 'var(--color-data-provisional)' : 'var(--color-data-pass)'; // finding or normal
     }
     // No visual hints for suggested regions - make it harder/more realistic
-    return '#cbd5e1'; // slate-300
+    return 'var(--color-border)'; // unexamined
   };
 
   // Simplified body outline SVG
@@ -253,7 +253,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           cy="30"
           r="22"
           fill={getRegionColor('head')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1.5"
           onMouseEnter={() => setHoveredRegion('head')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -268,7 +268,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           height="18"
           rx="3"
           fill={getRegionColor('neck')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('neck')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -279,7 +279,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         <path
           d="M 65 70 L 135 70 L 140 85 L 145 85 L 145 145 L 135 145 L 135 215 L 115 215 L 115 220 L 85 220 L 85 215 L 65 215 L 65 145 L 55 145 L 55 85 L 60 85 Z"
           fill={getRegionColor('chest_anterior')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1.5"
           onMouseEnter={() => setHoveredRegion('chest_anterior')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -293,7 +293,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           r="12"
           fill={getRegionColor('heart')}
           fillOpacity="0.7"
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('heart')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -307,7 +307,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="30"
           height="35"
           fill={getRegionColor('abdomen_ruq')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="0.5"
           onMouseEnter={() => setHoveredRegion('abdomen_ruq')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -320,7 +320,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="30"
           height="35"
           fill={getRegionColor('abdomen_luq')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="0.5"
           onMouseEnter={() => setHoveredRegion('abdomen_luq')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -333,7 +333,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="30"
           height="35"
           fill={getRegionColor('abdomen_rlq')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="0.5"
           onMouseEnter={() => setHoveredRegion('abdomen_rlq')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -346,7 +346,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="30"
           height="35"
           fill={getRegionColor('abdomen_llq')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="0.5"
           onMouseEnter={() => setHoveredRegion('abdomen_llq')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -357,7 +357,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         <path
           d="M 55 85 L 40 170 L 50 170 L 65 90 Z"
           fill={getRegionColor('arm_right')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('arm_right')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -367,7 +367,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         <path
           d="M 145 85 L 160 170 L 150 170 L 135 90 Z"
           fill={getRegionColor('arm_left')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('arm_left')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -381,7 +381,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           rx="8"
           ry="12"
           fill={getRegionColor('hand_right')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('hand_right')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -394,7 +394,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           rx="8"
           ry="12"
           fill={getRegionColor('hand_left')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('hand_left')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -405,7 +405,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         <path
           d="M 75 220 L 95 220 L 85 340 L 65 340 Z"
           fill={getRegionColor('leg_right')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('leg_right')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -415,7 +415,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
         <path
           d="M 105 220 L 125 220 L 135 340 L 115 340 Z"
           fill={getRegionColor('leg_left')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('leg_left')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -429,7 +429,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           rx="12"
           ry="8"
           fill={getRegionColor('foot_right')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('foot_right')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -442,7 +442,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           rx="12"
           ry="8"
           fill={getRegionColor('foot_left')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onMouseEnter={() => setHoveredRegion('foot_left')}
           onMouseLeave={() => setHoveredRegion(null)}
@@ -458,7 +458,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           cy="30"
           r="22"
           fill={getRegionColor('head')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1.5"
           onClick={() => handleRegionClick('head')}
           className="cursor-pointer"
@@ -469,7 +469,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="70"
           height="60"
           fill={getRegionColor('back_upper')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onClick={() => handleRegionClick('back_upper')}
           className="cursor-pointer"
@@ -480,7 +480,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           width="70"
           height="60"
           fill={getRegionColor('back_lower')}
-          stroke="#334155"
+          stroke="var(--color-text-secondary)"
           strokeWidth="1"
           onClick={() => handleRegionClick('back_lower')}
           className="cursor-pointer"
@@ -501,7 +501,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
             initial={{ y: 5 }}
             animate={{ y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-data-neutral text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-data-neutral text-[var(--color-text-inverse)] text-sm rounded-lg shadow-lg whitespace-nowrap"
           >
             {REGION_PATHS[hoveredRegion]?.label || hoveredRegion}
             {findingsMap[hoveredRegion] && <span className="ml-2 text-[var(--color-data-provisional)]">• Finding</span>}

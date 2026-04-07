@@ -17,12 +17,18 @@
  * 2. Selection drift > 3s: Time between selecting answer and Submit
  * 3. Tremor score > 0.6: Erratic mouse movement (cognitive load)
  *
+ * Hint-assisted rules (correct + hint viewed):
+ * 1. Hint viewed → blocks confidence boost, applies grade penalty (-0.20)
+ * 2. Hint viewed > 10s → heavier penalty (-0.30, heavy reliance)
+ * 3. Does NOT force Again (weaker than indecision — user still got it right)
+ *
  * Confidence boost rules (all must be true):
  * 1. Zero oscillations + zero regressions
  * 2. Selection drift < 1s (or null — immediate submit)
  * 3. Tremor score < 0.2 (calm, directed movement)
  * 4. Correct answer
  * 5. Latency ratio < 0.8 (answered well under par time)
+ * 6. No hint viewed
  *
  * @see hooks/useMicroKinetics.ts - Provides micro-kinetic metrics
  * @see hooks/useTouchKinetics.ts - Touch-equivalent signals
@@ -50,6 +56,11 @@ const Z_SCORE_THRESHOLD = 2.0;
 
 /** Latency ratio below which confidence boost is eligible */
 const BOOST_LATENCY_RATIO_MAX = 0.8;
+
+/** Hint-assisted thresholds */
+const HINT_GRADE_CAP = 2.0;              // Cap grade_continuous when hint was viewed (weaker than indecision cap)
+const HINT_PENALTY_AMOUNT = 0.20;        // Penalty for hint-assisted correct answer
+const HINT_LONG_VIEW_MS = 10_000;        // Hint viewed > 10s = relied heavily on it
 
 /** Grade continuous adjustments */
 const CONFIDENCE_BOOST_AMOUNT = 0.25;     // Lift grade_continuous when all signals clean
@@ -95,6 +106,10 @@ export interface GhostGraderInput {
   optionCount?: number;
   /** Per-user behavioral baseline for z-score normalization (Sprint 7) */
   baseline?: GhostGraderBaseline | null;
+  /** Whether the user viewed a hint before answering */
+  hintViewed?: boolean;
+  /** How long the hint was displayed (ms). Longer = heavier reliance. */
+  hintDurationMs?: number | null;
 }
 
 export interface GhostGraderResult {
@@ -103,7 +118,7 @@ export interface GhostGraderResult {
   /** Adjustment to apply to grade_continuous (can be positive or negative) */
   gradeContinuousAdjustment: number;
   /** Which rule fired (for logging/telemetry) */
-  rule: 'indecision' | 'confidence_boost' | 'elimination_boost' | 'elimination_penalty' | 'none';
+  rule: 'indecision' | 'hint_assisted' | 'confidence_boost' | 'elimination_boost' | 'elimination_penalty' | 'none';
   /** Number of indecision signals that fired */
   indecisionSignalCount: number;
   /** Whether confidence boost criteria were all met */
@@ -115,7 +130,8 @@ export interface GhostGraderResult {
  * Apply honest-history override with bidirectional adjustment.
  *
  * DOWNGRADE path: any indecision signal → Again + cap grade_continuous at 1.5
- * BOOST path: all signals clean + fast response → lift grade_continuous by 0.25
+ * HINT path: hint viewed on correct → keep rating, penalize grade_continuous by 0.20–0.30
+ * BOOST path: all signals clean + fast response + no hint → lift grade_continuous by 0.25
  * ELIMINATION path: fast elimination → additional +0.15; absent → -0.10
  *
  * @param input - Current rating, correctness, and behavioral metrics
@@ -141,6 +157,8 @@ export function applyHonestRatingWithDetail(input: GhostGraderInput): GhostGrade
     eliminationVelocity,
     optionCount = 4,
     baseline = null,
+    hintViewed = false,
+    hintDurationMs = null,
   } = input;
   const neutralResult: GhostGraderResult = {
     rating: userRating,
@@ -196,6 +214,22 @@ export function applyHonestRatingWithDetail(input: GhostGraderInput): GhostGrade
       confidenceBoostEligible: false,
     };
   }
+  // ── HINT-ASSISTED path: hint viewed on correct answer → weaker recall ──
+  // Hint-assisted retrieval is not true free recall — memory trace is weaker.
+  // This is a softer penalty than indecision (doesn't force Again), but blocks
+  // confidence boost and penalizes grade_continuous.
+  if (hintViewed) {
+    const longHintView = hintDurationMs != null && hintDurationMs >= HINT_LONG_VIEW_MS;
+    const penalty = longHintView ? HINT_PENALTY_AMOUNT * 1.5 : HINT_PENALTY_AMOUNT;
+    return {
+      rating: userRating, // keep original rating (not forced to Again)
+      gradeContinuousAdjustment: -penalty,
+      rule: 'hint_assisted',
+      indecisionSignalCount: 0,
+      confidenceBoostEligible: false,
+    };
+  }
+
   // ── BOOST path: all signals clean + fast response ──
   const zeroOscillations = oscillations === 0 && vignetteRegressions === 0;
   const fastDrift = selectionDriftMs == null || selectionDriftMs < CONFIDENT_DRIFT_THRESHOLD_MS;
@@ -251,4 +285,7 @@ export const GHOST_GRADER_CONSTANTS = {
   ELIM_BOOST_AMOUNT,
   ELIM_PENALTY_AMOUNT,
   INDECISION_GRADE_CAP,
+  HINT_GRADE_CAP,
+  HINT_PENALTY_AMOUNT,
+  HINT_LONG_VIEW_MS,
 } as const;

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { adminEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
 
 const UpdateBodySchema = z.object({
   body: z.object({
@@ -45,6 +46,11 @@ export const onRequestPatch = adminEndpoint(UpdateBodySchema, async (context) =>
       data,
     });
     log.info('Staging updated', { id, fields: Object.keys(data) });
+    auditLog('admin_staging_update', {
+      userId: context.auth.userId,
+      stagingId: id,
+      fields: Object.keys(data),
+    });
     return { data: { success: true, message: 'Updated' } };
   } catch (e) {
     log.error('Staging update error', e);

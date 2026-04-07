@@ -14,11 +14,8 @@
  * @see public/sw.js — push event handler
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { z } from 'zod';
-
-const bodySchema = z.object({}).optional().default({});
 
 const MIN_DUE_CARDS = 5;
 const DEFAULT_MAX_PUSH_PER_DAY = 2;
@@ -95,16 +92,27 @@ async function sendPushNotification(
   }
 }
 
-export const onRequestPost = authenticatedEndpoint(
-  bodySchema,
-  async (context) => {
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    const now = new Date();
-    const todayStart = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-    );
+export const onRequestOptions = withCors();
 
-    try {
+export const onRequestPost: PagesFunction<any> = async (context) => {
+  const { env, request } = context;
+
+  // Auth check — requires CRON_SECRET bearer token (same as other cron endpoints)
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const now = new Date();
+  const todayStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+
+  try {
       // Find users with push enabled and active subscriptions
       const usersWithPush = await prisma.userPreferences.findMany({
         where: {
@@ -199,5 +207,4 @@ export const onRequestPost = authenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
-);
+};

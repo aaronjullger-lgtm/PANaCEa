@@ -7,12 +7,12 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { isRankedMode } from '../../../config/training-modes';
 import { updateGlobalAccuracy } from '../../../lib/services/userStatsService';
 
 const QuestionRecordSchema = z.object({
   body: z.object({
-    userId: z.string(),
     questionId: z.string(),
     questionType: z.string(),
     system: z.string().optional(),
@@ -30,8 +30,17 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } =
+    const { questionId, questionType, system, conditionId, wasCorrect, mode } =
       validated.body;
+
+    // Resolve internal user ID from Clerk auth — never trust client-supplied userId
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      logger.warn('User not found for question record', { clerkId: auth.userId });
+      return { status: 404, error: 'User not found' };
+    }
+    const userId = user.id;
+
     const isRankedAttempt = isRankedMode(mode);
     const now = new Date();
 

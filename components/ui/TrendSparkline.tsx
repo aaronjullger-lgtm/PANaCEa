@@ -32,29 +32,29 @@ export interface TrendSparklineProps {
 
 const COLOR_SCHEMES = {
   success: {
-    line: '#10b981',
-    gradient: 'rgba(16, 185, 129, 0.2)',
+    line: 'var(--color-data-pass)',
+    gradient: 'color-mix(in srgb, var(--color-data-pass) 20%, transparent)',
     text: 'text-data-pass',
   },
   /** Clinical: accent color for success; avoids red/yellow (medical alarm semantics) */
   clinical: {
     line: 'var(--color-accent)',
-    gradient: 'var(--color-accent)',
+    gradient: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
     text: 'text-[var(--color-accent)]',
   },
   warning: {
     line: 'var(--color-accent)',
-    gradient: 'var(--color-accent)',
+    gradient: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
     text: 'text-[var(--color-accent)]',
   },
   danger: {
-    line: '#ef4444',
-    gradient: 'rgba(239, 68, 68, 0.2)',
+    line: 'var(--color-data-fail)',
+    gradient: 'color-mix(in srgb, var(--color-data-fail) 20%, transparent)',
     text: 'text-data-fail',
   },
   neutral: {
-    line: '#6b7280',
-    gradient: 'rgba(107, 114, 128, 0.2)',
+    line: 'var(--color-text-muted)',
+    gradient: 'color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
     text: 'text-[var(--color-text-muted)]',
   },
 };

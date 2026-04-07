@@ -1,19 +1,8 @@
 import { authenticatedEndpoint } from '../../_shared/middleware';
-import { z } from 'zod';
 
-// Schema for flagging a question (any authenticated user can flag)
-const FlagQuestionSchema = z.object({
-  userEmail: z.string().email().optional(),
-  userFirstName: z.string().max(100).optional(),
-  questionId: z.string().min(1).max(100),
-  questionText: z.string().optional(),
-  correctAnswer: z.string().max(500).optional(),
-  topic: z.string().max(100).optional(),
-  system: z.string().max(100).optional(),
-  flagType: z.enum(['typo', 'incorrect_answer', 'unclear', 'outdated', 'other']),
-  description: z.string().min(1).max(1000),
-  priority: z.enum(['low', 'medium', 'high']).optional().default('medium'),
-});
+// Shared schema — single source of truth for this endpoint's request contract.
+// To change the /api/questions/flag contract, edit lib/api/schemas/questions.ts.
+import { FlagQuestionRequestSchema as FlagQuestionSchema } from '../../../../lib/api/schemas/questions';
 
 export const onRequestPost = authenticatedEndpoint(
   FlagQuestionSchema,

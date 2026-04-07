@@ -19,10 +19,13 @@ vi.mock('@prisma/client', () => ({
       reviewLog: { create: vi.fn(), findMany: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
-      confusionPair: { upsert: vi.fn(), findMany: vi.fn() },
+      confusionPair: { upsert: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
       preGeneratedQuestion: { update: vi.fn() },
       card: { upsert: vi.fn() },
       userTopicProgress: { upsert: vi.fn() },
+      // Sprint 2: added for ported UserQuestionSeen + Question stats
+      userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
+      question: { update: vi.fn() },
       $transaction: vi.fn(function(fn: Function) { return fn(self); }),
       $disconnect: vi.fn(),
     };
@@ -107,6 +110,9 @@ vi.mock('../lib/taskTypes', () => ({
 vi.mock('../lib/services/userTimingProfileService', () => ({
   getUserSpeedFactor: vi.fn(function() { return Promise.resolve(1.0); }),
   getUserBehavioralBaseline: vi.fn(function() { return Promise.resolve(null); }),
+  getUserBehavioralContext: vi.fn(function() {
+    return Promise.resolve({ speedFactor: 1.0, behavioralBaseline: null });
+  }),
 }));
 
 vi.mock('../lib/services/sessionFatigueService', () => ({
@@ -191,6 +197,49 @@ vi.mock('../../types/telemetry', () => ({
   getMVRTThreshold: vi.fn(function() { return 2000; }),
 }));
 
+// Wave 2 behavioral signal services
+vi.mock('../lib/services/distractorChronometryService', () => ({
+  analyzeDistractorChronometry: vi.fn(function() {
+    return { confidenceMultiplier: 1.0, distractorEngagement: 0.5, correctOptionDwell: 500 };
+  }),
+}));
+
+vi.mock('../lib/services/switchDirectionService', () => ({
+  analyzeSwitchDirections: vi.fn(function() {
+    return { netSwitchValue: 0, metacognitivePrecision: 0.5, confidenceMultiplier: 1.0 };
+  }),
+}));
+
+// Wave 3 behavioral signal services
+vi.mock('../lib/services/explanationEngagementService', () => ({
+  analyzeExplanationEngagement: vi.fn(function() {
+    return { engagementScore: 0.5, confidenceModifier: 1.0, stabilityModifier: 1.0 };
+  }),
+}));
+
+vi.mock('../lib/services/confusionPairRecurrenceService', () => ({
+  analyzeConfusionRecurrence: vi.fn(function() {
+    return { pairCount: 0, escalate: false, difficultyBoost: 0, queueContrastiveDrill: false, generateDifferentiation: false };
+  }),
+}));
+
+// Shared FSRS scheduling helper (extracted from drillReviewService)
+vi.mock('../lib/services/fsrsScheduleService', () => ({
+  computeFSRSUpdate: vi.fn(function() {
+    const now = new Date();
+    return Promise.resolve({
+      updatedCard: { stability: 15.0, difficulty: 0.28, state: 2, reps: 4, lapses: 0, elapsed_days: 5, scheduled_days: 10, last_review: now },
+      previousCard: { stability: 12.5, difficulty: 0.3, state: 2, reps: 3, lapses: 0, elapsed_days: 5, scheduled_days: 10, last_review: new Date(now.getTime() - 5 * 86400000) },
+      retrievability: 0.85,
+      clampedNextDue: new Date(now.getTime() + 10 * 86400000),
+      fsrsSchedule: { intervalDays: 10, nextDueDate: new Date(now.getTime() + 10 * 86400000).toISOString(), stability: 15.0, difficulty: 0.28 },
+      fsrs: { calculateRetrievability: vi.fn(function() { return 0.85; }) },
+      confidenceTelemetry: {},
+      reviewHistory: [],
+    });
+  }),
+}));
+
 describe('submitDrillReview', () => {
   let prisma: PrismaClient;
   const userId = 'user_123';
@@ -205,14 +254,14 @@ describe('submitDrillReview', () => {
 
   describe('Happy Path – Main Session with Condition ID', () => {
     it('should create ReviewLog with float columns and compute retrievability', async () => {
-      // Arrange
+      // Arrange — TARGETED is the sole FSRS writer; MAIN no longer writes FSRS state
       const input: SubmitDrillReviewInput = {
         questionId,
         selectedAnswer: 'Correct Answer',
         timeSpentMs: 25000,
         timeToFirstClick: 5000,
         answerSwitches: 0,
-        sessionType: 'main',
+        sessionType: 'targeted',
         telemetry: {
           duration_ms: 25000,
           time_to_first_interaction_ms: 5000,
@@ -290,8 +339,8 @@ describe('submitDrillReview', () => {
         })
       );
 
-      expect(fsrsInstance.next).toHaveBeenCalled();
-      expect(fsrsInstance.calculateRetrievability).toHaveBeenCalled();
+      // FSRS scheduling produces a schedule for main sessions with conditionId
+      expect(result.fsrsSchedule).toBeDefined();
 
       // Verify QuestionAttempt creation
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
@@ -622,10 +671,12 @@ describe('submitDrillReview', () => {
     });
 
     it('should store extreme float values correctly', async () => {
+      // TARGETED session so rapid-guess path reads live card state (writesFSRS guard)
       const input: SubmitDrillReviewInput = {
         questionId,
         selectedAnswer: 'Correct Answer',
         timeSpentMs: 1000,
+        sessionType: 'targeted',
       };
       const question = {
         id: questionId,

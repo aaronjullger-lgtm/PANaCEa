@@ -33,6 +33,47 @@ import {
 // CONSTANTS
 // =============================================================================
 
+/**
+ * Phase 2 Review Gate — When true, only APPROVED questions are served in sessions.
+ * Set to false to revert to permissive mode (approved + pending) if question supply
+ * drops below acceptable levels.
+ *
+ * Reads from environment variable ENABLE_REVIEW_GATE (Cloudflare: context.env,
+ * Vite client: import.meta.env.VITE_ENABLE_REVIEW_GATE). Defaults to true if unset.
+ *
+ * @see lib/services/questionReviewGate.ts for auto-approval thresholds
+ */
+export const ENABLE_REVIEW_GATE: boolean = (() => {
+  // Edge runtime (Cloudflare Pages Functions) — env passed via context, not process.env.
+  // This constant is evaluated at module load; callers in Edge functions should
+  // override via getReviewGateEnabled(env) when context.env is available.
+  if (typeof process !== 'undefined' && process.env?.ENABLE_REVIEW_GATE !== undefined) {
+    return process.env.ENABLE_REVIEW_GATE !== 'false';
+  }
+  // Vite client bundle
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENABLE_REVIEW_GATE !== undefined) {
+    return (import.meta as any).env.VITE_ENABLE_REVIEW_GATE !== 'false';
+  }
+  // Default: gate enabled
+  return true;
+})();
+
+/**
+ * Runtime helper for Edge Functions where env is passed via request context.
+ * Use this instead of the module-level constant in Cloudflare Pages Functions.
+ */
+export function getReviewGateEnabled(env?: Record<string, string | undefined>): boolean {
+  if (env?.ENABLE_REVIEW_GATE !== undefined) {
+    return env.ENABLE_REVIEW_GATE !== 'false';
+  }
+  return ENABLE_REVIEW_GATE;
+}
+
+/** Allowed validation statuses based on the review gate feature flag */
+export const ALLOWED_VALIDATION_STATUSES: string[] = ENABLE_REVIEW_GATE
+  ? ['approved']
+  : ['approved', 'pending'];
+
 /** Default session size */
 export const DEFAULT_SESSION_SIZE = 20;
 
@@ -485,7 +526,7 @@ export class MainSessionQuestionSelector {
       const question = await this.prisma.preGeneratedQuestion.findFirst({
         where: {
           conditionId: card.conditionId,
-          validationStatus: { in: ['approved', 'pending'] },
+          validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
         },
         select: { id: true, system: true, conditionId: true },
       });
@@ -575,7 +616,7 @@ export class MainSessionQuestionSelector {
         const question = await this.prisma.preGeneratedQuestion.findFirst({
           where: {
             conditionId: r.conditionId,
-            validationStatus: { in: ['approved', 'pending'] },
+            validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
           },
           select: { id: true, system: true, conditionId: true },
         });
@@ -645,7 +686,7 @@ export class MainSessionQuestionSelector {
       const question = await this.prisma.preGeneratedQuestion.findFirst({
         where: {
           conditionId: card.conditionId,
-          validationStatus: { in: ['approved', 'pending'] },
+          validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
           id: { notIn: excludeArray },
         },
         select: { id: true, system: true, conditionId: true },
@@ -710,7 +751,7 @@ export class MainSessionQuestionSelector {
       const newQuestions = await this.prisma.preGeneratedQuestion.findMany({
         where: {
           system,
-          validationStatus: { in: ['approved', 'pending'] },
+          validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
           id: { notIn: allExcluded },
         },
         select: { id: true, system: true, conditionId: true },

@@ -9,9 +9,10 @@
 import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEndpointLogger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const CACHE_MODEL = 'gemini-1.5-pro';
+const CACHE_MODEL = 'gemini-2.5-flash';
 const DEFAULT_CACHE_DISPLAY_NAME = 'cache_pance_master_v1';
 const TTL_24H = 86400; // 24 hours
 
@@ -119,6 +120,13 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
       cacheName,
       category: category ?? 'all',
       userId: auth.userId?.substring(0, 10),
+    });
+
+    auditLog('admin_knowledge_ingest', {
+      userId: auth.userId,
+      cacheName,
+      category: category ?? 'all',
+      ttl,
     });
 
     return new Response(

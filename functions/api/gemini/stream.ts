@@ -17,6 +17,7 @@ import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { authenticateRequest } from '../_shared/auth';
 import { getCorsHeaders, handleCorsPreflightSecure } from '../_shared/cors';
 import { geminiStreamRequestSchema, enforcePayloadSize } from '../_shared/zodSchemas';
+import { trackTokenUsage } from '../_shared/tokenTracking';
 
 interface Env {
   GEMINI_API_KEY: string;
@@ -103,9 +104,10 @@ async function processGeminiStream(
   geminiStream: ReadableStream<Uint8Array>,
   writer: WritableStreamDefaultWriter<Uint8Array>,
   encoder: TextEncoder
-): Promise<{ chunksReceived: number; thoughtSignatures: string[]; error?: AppError }> {
+): Promise<{ chunksReceived: number; thoughtSignatures: string[]; error?: AppError; usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } }> {
   let chunksReceived = 0;
   const thoughtSignatures: string[] = [];
+  let usageMetadata: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined;
   const reader = geminiStream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -126,6 +128,10 @@ async function processGeminiStream(
 
         try {
           const data = JSON.parse(jsonStr);
+          // Capture usageMetadata from the last chunk that includes it
+          if (data.usageMetadata) {
+            usageMetadata = data.usageMetadata;
+          }
           const parts = data.candidates?.[0]?.content?.parts ?? [];
           for (const p of parts) {
             if (p?.text) {
@@ -162,7 +168,7 @@ async function processGeminiStream(
       chunksReceived,
       thoughtSignatureCount: thoughtSignatures.length,
     });
-    return { chunksReceived, thoughtSignatures };
+    return { chunksReceived, thoughtSignatures, usageMetadata };
   } catch (error) {
     const streamError = new ExternalServiceError(
       'Stream processing interrupted',
@@ -191,7 +197,7 @@ async function processGeminiStream(
     } catch {
       // Writer may already be closed
     }
-    return { chunksReceived, thoughtSignatures: [], error: streamError };
+    return { chunksReceived, thoughtSignatures: [], error: streamError, usageMetadata };
   }
 }
 
@@ -453,7 +459,23 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();
-    processGeminiStream(geminiStream, writer, encoder);
+    const streamPromise = processGeminiStream(geminiStream, writer, encoder);
+
+    // Track token usage after stream completes: structured log + DB persistence (non-blocking)
+    streamPromise.then((result) => {
+      trackTokenUsage(
+        { env, waitUntil: (context as any).waitUntil, auth },
+        {
+          endpoint: '/api/gemini/stream',
+          model: modelName,
+          usage: result.usageMetadata,
+          statusCode: result.error ? 500 : 200,
+          cacheHit: false,
+        }
+      );
+    }).catch(() => {
+      // Tracking failure should not affect the stream
+    });
 
     // Return SSE stream to client (include CORS and rate limit headers)
     return new Response(readable, {

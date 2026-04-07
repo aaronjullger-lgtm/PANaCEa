@@ -56,7 +56,6 @@ export const StudyCard: React.FC<StudyCardProps> = ({
     <div
       className={`
         ${cardBg}
-        backdrop-blur
         rounded-xl
         p-4
         border

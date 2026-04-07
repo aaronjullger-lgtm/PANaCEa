@@ -82,10 +82,10 @@ const DdxTrainer = () => {
             variant={selectedAnswer === dx.name ? 'default' : 'outline'}
             onClick={() => handleSelectAnswer(dx.name)}
             className={`h-auto text-wrap justify-start p-4 ${
-              isRevealed && dx.isCorrect ? 'bg-data-pass hover:bg-data-pass text-white' : ''
+              isRevealed && dx.isCorrect ? 'bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)]' : ''
             } ${
               isRevealed && selectedAnswer === dx.name && !dx.isCorrect
-                ? 'bg-data-fail hover:bg-data-fail text-white'
+                ? 'bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)]'
                 : ''
             }`}
           >

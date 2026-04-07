@@ -63,7 +63,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   const isToday = (date: string) => date === today;
 
   return (
-    <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)]">
+    <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">

@@ -29,6 +29,45 @@ const DueSiblingsPostSchema = z.object({
   dueItems: z.array(DueItemSchema).min(1).max(50),
 });
 
+/**
+ * Resolve a correctAnswerIndex from questionData stored in PreGeneratedQuestion.
+ *
+ * Handles all storage formats in use:
+ *   - correctAnswerIndex: number (preferred, most generation paths)
+ *   - correctAnswer: "A"|"B"|"C"|"D"|"E" (letter, generate-batch path)
+ *   - correctAnswer: "full option text" (text-match, variant generator path)
+ *
+ * Returns null only when the answer truly cannot be determined — callers should
+ * surface this as a data-quality warning rather than silently defaulting to 0.
+ */
+function resolveCorrectAnswerIndex(
+  data: Record<string, unknown>,
+  optionsArr: string[]
+): number | null {
+  // 1. Explicit numeric index — most reliable, always prefer
+  if (typeof data.correctAnswerIndex === 'number') {
+    const idx = data.correctAnswerIndex;
+    if (idx >= 0 && idx < optionsArr.length) return idx;
+  }
+
+  if (typeof data.correctAnswer === 'string') {
+    const ca = data.correctAnswer.trim();
+
+    // 2. Single-letter answer A–E (generate-batch.ts format)
+    const LETTER_TO_INDEX: Record<string, number> = { A: 0, B: 1, C: 2, D: 3, E: 4 };
+    const letterIdx = LETTER_TO_INDEX[ca.toUpperCase()];
+    if (letterIdx !== undefined && letterIdx < optionsArr.length) return letterIdx;
+
+    // 3. Full-text answer — find in options array (variant generator format)
+    const textIdx = optionsArr.findIndex(
+      (o) => typeof o === 'string' && o.trim().toLowerCase() === ca.toLowerCase()
+    );
+    if (textIdx !== -1) return textIdx;
+  }
+
+  return null;
+}
+
 function parsePreGenToQuestion(q: {
   id: string;
   system: string | null;
@@ -37,21 +76,42 @@ function parsePreGenToQuestion(q: {
   questionData: unknown;
 }) {
   const data = (q.questionData || {}) as Record<string, unknown>;
-  const optionsData = data.options ?? data.answers ?? data.choices;
-  const optionsArr = Array.isArray(optionsData) ? (optionsData as string[]) : [];
-  let correctAnswerIndex = 0;
-  if (typeof data.correctAnswerIndex === 'number') {
-    correctAnswerIndex = data.correctAnswerIndex;
-  } else if (typeof data.correctAnswer === 'string') {
-    const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-    correctAnswerIndex = letterToIndex[data.correctAnswer.toUpperCase()] ?? 0;
+
+  // Normalise options: handle string[], {A:"...",B:"..."}, or [{value,text,label}]
+  const rawOptions = data.options ?? data.answers ?? data.choices;
+  let optionsArr: string[] = [];
+  if (Array.isArray(rawOptions)) {
+    optionsArr = rawOptions.map((o) =>
+      typeof o === 'string'
+        ? o
+        : String(
+            (o as { value?: string; text?: string; label?: string })?.value ??
+            (o as { value?: string; text?: string; label?: string })?.text ??
+            (o as { value?: string; text?: string; label?: string })?.label ??
+            o
+          )
+    );
+  } else if (rawOptions && typeof rawOptions === 'object' && !Array.isArray(rawOptions)) {
+    // Record<string,string> format: {A:"opt1",B:"opt2",...}
+    optionsArr = Object.keys(rawOptions as Record<string, string>)
+      .sort()
+      .map((k) => (rawOptions as Record<string, string>)[k]);
   }
+
+  const resolvedIndex = resolveCorrectAnswerIndex(data, optionsArr);
+  // resolvedIndex=null means we genuinely cannot determine the answer.
+  // We use -1 as a sentinel so the frontend can surface this to the user
+  // rather than silently marking option 0 as correct.
+  const correctAnswerIndex = resolvedIndex ?? -1;
+
   return {
     id: q.id,
     question: (data.question || data.vignette || '') as string,
     vignette: data.vignette as string | undefined,
     options: optionsArr,
     correctAnswerIndex,
+    /** Raw correctAnswer string preserved for client-side fallback validation */
+    correctAnswer: typeof data.correctAnswer === 'string' ? data.correctAnswer : undefined,
     rationale: (data.rationale || data.explanation || '') as string,
     system: q.system || 'General',
     subcategory: data.subcategory as string | undefined,
@@ -113,7 +173,8 @@ async function tryGenerateAndFetchSibling(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   item: { conditionId: string; taskType: string | null; originalQuestionId: string },
   apiKey: string | undefined,
-  logger: { info: (msg: string, ctx?: Record<string, unknown>) => void; warn: (msg: string, ctx?: Record<string, unknown>) => void }
+  logger: { info: (msg: string, ctx?: Record<string, unknown>) => void; warn: (msg: string, ctx?: Record<string, unknown>) => void },
+  userId?: string
 ): Promise<PreGenRow | null> {
   if (!apiKey) return null;
   const where: Prisma.PreGeneratedQuestionWhereInput = {
@@ -143,7 +204,8 @@ async function tryGenerateAndFetchSibling(
         questionData: preGenOriginal.questionData,
       },
       apiKey,
-      { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
+      { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+      userId
     );
   } else {
     const questionOriginal = await prisma.question.findUnique({
@@ -163,10 +225,13 @@ async function tryGenerateAndFetchSibling(
     });
     if (questionOriginal) {
       const forVariant = questionToPreGenForVariant(questionOriginal);
-      await ensureDueVariant(prisma, forVariant, apiKey, {
-        info: logger.info.bind(logger),
-        warn: logger.warn.bind(logger),
-      });
+      await ensureDueVariant(
+        prisma,
+        forVariant,
+        apiKey,
+        { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+        userId
+      );
     }
   }
   const retryCandidates = await prisma.preGeneratedQuestion.findMany({
@@ -199,6 +264,8 @@ export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async 
       question: ReturnType<typeof parsePreGenToQuestion> | null;
       dueConceptKey: { conditionId: string; taskType: string | null };
     }> = [];
+    // Collect IDs of PreGeneratedQuestion rows actually served so timesServed can be incremented.
+    const servedPreGenIds: string[] = [];
 
     for (const item of validated.dueItems) {
       const where: Prisma.PreGeneratedQuestionWhereInput = {
@@ -230,10 +297,12 @@ export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async 
           prisma,
           { conditionId: item.conditionId, taskType: item.taskType ?? null, originalQuestionId: item.originalQuestionId },
           env.GEMINI_API_KEY as string,
-          logger
+          logger,
+          user.id // pass userId so confusion pairs are injected into the variant prompt
         );
       }
 
+      if (sibling) servedPreGenIds.push(sibling.id);
       results.push({
         question: sibling ? parsePreGenToQuestion(sibling) : null,
         dueConceptKey: { conditionId: item.conditionId, taskType: item.taskType ?? null },
@@ -245,6 +314,20 @@ export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async 
       requested: validated.dueItems.length,
       found: results.filter((r) => r.question !== null).length,
     });
+
+    // Fire-and-forget: increment timesServed for all served siblings.
+    if (servedPreGenIds.length > 0) {
+      prisma.preGeneratedQuestion
+        .updateMany({
+          where: { id: { in: servedPreGenIds } },
+          data: { timesServed: { increment: 1 } },
+        })
+        .catch((err: unknown) =>
+          logger.warn('due-siblings timesServed increment failed (non-fatal)', {
+            error: err instanceof Error ? err.message : String(err),
+          })
+        );
+    }
 
     return { data: { results } };
   } catch (error) {

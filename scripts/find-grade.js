@@ -27,10 +27,8 @@ function calculateGrade(metric) {
 }
 
 function gradeToRating(grade) {
-  if (grade < 1.5) return 1; // Again
-  if (grade < 2.5) return 2; // Hard
-  if (grade < 3.5) return 3; // Good
-  return 4; // Easy
+  if (grade < 2.0) return 1; // Again
+  return 3; // Good (binary system — Hard/Easy deprecated)
 }
 
 // brute force some combos

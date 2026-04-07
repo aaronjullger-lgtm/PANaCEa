@@ -110,7 +110,7 @@ export async function findSimilarCachedQuestion(
         where: { id: bestMatch.cacheId },
         data: {
           lastUsedAt: new Date(),
-          hitCount: { increment: 1 },
+          useCount: { increment: 1 },
         },
       });
     }
@@ -136,7 +136,7 @@ export async function cacheGeneratedQuestion(
         difficulty: query.difficulty,
         cachedQuestion: question,
         lastUsedAt: new Date(),
-        hitCount: 1,
+        useCount: 1,
       },
     });
   } catch (error) {

@@ -61,10 +61,10 @@ const CATEGORY_LABELS: Record<OrderCategory, string> = {
 };
 
 const COST_COLORS: Record<string, string> = {
-  $: 'text-data-pass dark:text-data-pass',
-  $$: 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]',
-  $$$: 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]',
-  $$$$: 'text-data-fail dark:text-data-fail',
+  $: 'text-data-pass',
+  $$: 'text-[var(--color-data-provisional)]',
+  $$$: 'text-[var(--color-data-provisional)]',
+  $$$$: 'text-data-fail',
 };
 
 export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
@@ -337,14 +337,14 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
             {/* Alerts Banner */}
             {alerts.length > 0 && (
-              <div className="px-4 py-2 bg-data-provisional dark:bg-data-provisional/20 border-b border-data-provisional dark:border-data-provisional">
+              <div className="px-4 py-2 bg-data-provisional/20 border-b border-data-provisional">
                 {alerts.map((alert, idx) => (
                   <div
                     key={idx}
                     className={`flex items-start gap-2 text-sm ${
                       alert.severity === 'critical'
-                        ? 'text-data-fail dark:text-data-fail'
-                        : 'text-data-provisional dark:text-data-provisional'
+                        ? 'text-data-fail'
+                        : 'text-data-provisional'
                     }`}
                   >
                     {alert.severity === 'critical' ? (
@@ -385,8 +385,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                       <button
                         key={bundle.id}
                         onClick={() => selectBundle(bundle)}
-                        className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20
-                               border border-data-provisional dark:border-data-provisional rounded-lg text-left
+                        className="p-3 bg-[var(--color-data-provisional)]/5
+                               border border-data-provisional rounded-lg text-left
                                hover:shadow-md transition-all group"
                       >
                         <div className="flex items-center gap-2 mb-1">
@@ -398,7 +398,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                         <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1">
                           {bundle.description}
                         </p>
-                        <div className="mt-2 flex items-center gap-1 text-xs text-data-provisional dark:text-data-provisional">
+                        <div className="mt-2 flex items-center gap-1 text-xs text-data-provisional">
                           <span>{bundle.items.length} items</span>
                           <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </div>
@@ -434,10 +434,10 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                         className={`w-full p-3 rounded-lg border transition-all text-left flex items-center gap-3
                         ${
                           isSelected
-                            ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)] shadow-sm'
+                            ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
                             : isAlreadyOrdered
                               ? 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-60'
-                              : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-sm'
+                              : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
                         }`}
                       >
                         {/* Selection indicator */}
@@ -449,7 +449,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                             : 'border-[var(--color-border)]'
                         }`}
                         >
-                          {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
+                          {isSelected && <CheckCircle className="w-3 h-3 text-[var(--color-text-inverse)]" />}
                         </div>
 
                         {/* Item info */}
@@ -459,7 +459,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                               {item.name}
                             </span>
                             {item.isHighYield && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded">
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-data-provisional/30 text-data-provisional rounded">
                                 HY
                               </span>
                             )}
@@ -516,9 +516,9 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                 <button
                   onClick={handlePlaceOrders}
                   disabled={selectedItems.size === 0}
-                  className="px-6 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white
+                  className="px-6 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)]
                          font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed
-                         flex items-center gap-2 shadow-sm"
+                         flex items-center gap-2 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                 >
                   <Plus className="w-4 h-4" />
                   Place Orders

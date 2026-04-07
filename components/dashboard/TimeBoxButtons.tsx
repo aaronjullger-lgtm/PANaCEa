@@ -69,12 +69,12 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
     <div className={`space-y-3 ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <Clock className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
         <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">Quick Start</h3>
       </div>
 
-      {/* Time preset buttons */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Time preset buttons — stacks to 1-col on very small screens, 3-col from sm+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Time-boxed session presets">
         {TIME_PRESETS.map((preset, index) => {
           const Icon = preset.icon;
           return (
@@ -86,17 +86,19 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
               transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -2 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              aria-label={`Start ${preset.label} session — approximately ${preset.questionEstimate} questions`}
               className={`
                 relative overflow-hidden
                 p-4 rounded-xl border border-[var(--color-border)]
                 bg-gradient-to-br ${preset.gradient}
                 hover:shadow-md transition-all duration-200
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
+                min-h-[44px]
                 group
               `}
             >
               {/* Icon */}
-              <div className="flex items-center justify-center mb-2">
+              <div className="flex items-center justify-center mb-2" aria-hidden="true">
                 <Icon className="w-6 h-6 text-[var(--color-accent)] group-hover:scale-110 transition-transform" />
               </div>
 

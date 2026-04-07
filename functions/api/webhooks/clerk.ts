@@ -127,15 +127,33 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
           return new Response('Error: No user ID', { status: 400 });
         }
 
+        // FIX (Audit 8/F5): Replace hard cascade delete with soft-delete.
+        // prisma.user.delete() with onDelete:Cascade in the schema would
+        // permanently and irrecoverably destroy all QuestionAttempts, ReviewLogs,
+        // UserProgress, SRSItems, OSCE sessions, and the entire learning history
+        // the moment a Clerk account is removed (whether accidentally or by admin).
+        //
+        // Instead: mark the account as 'deleted' with a 30-day grace period.
+        // A nightly cron (cron/purge-deleted-users) can permanently remove
+        // accounts where deletionScheduledAt < now() after the retention window.
         try {
-          // Attempt to delete the user
-          await prisma.user.delete({
+          const retentionDays = 30;
+          const deletionScheduledAt = new Date();
+          deletionScheduledAt.setDate(deletionScheduledAt.getDate() + retentionDays);
+
+          await prisma.user.update({
             where: { clerkId: id },
+            data: {
+              accountStatus: 'deleted',
+              deletionScheduledAt,
+            },
           });
-          console.log(`User deleted: ${id}`);
+          console.log(
+            `User soft-deleted: ${id} — data retained until ${deletionScheduledAt.toISOString()}`
+          );
         } catch (error) {
-          // User might already be deleted or not exist - log but don't fail
-          console.warn(`Could not delete user ${id}:`, error);
+          // User might not exist (webhook fired before user.created, or already soft-deleted)
+          console.warn(`Could not soft-delete user ${id}:`, error);
           // Return 200 anyway so Clerk stops retrying
         }
 

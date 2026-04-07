@@ -126,7 +126,7 @@ export async function quickRecognitionCheck(
   questionId: string
 ): Promise<boolean> {
   const card = await prisma.card.findUnique({
-    where: { userId_questionId: { userId, questionId } },
+    where: { userId_questionId_progressContext: { userId, questionId, progressContext: 'READINESS' } },
     select: { reps: true },
   });
   return (card?.reps ?? 0) >= RECENT_REVIEW_WINDOW;
@@ -237,7 +237,7 @@ async function checkAccuracyDivergence(
   // Get topic-level stability (proxy for true understanding)
   const topicProgress = await prisma.userTopicProgress.findUnique({
     where: {
-      userId_conditionId_taskType: { userId, conditionId, taskType },
+      userId_conditionId_taskType_progressContext: { userId, conditionId, taskType, progressContext: 'READINESS' },
     },
     select: { stability: true, difficulty: true },
   });
@@ -271,7 +271,7 @@ async function checkHighRepsLowStability(
 ): Promise<RecognitionSignal | null> {
   const topicProgress = await prisma.userTopicProgress.findUnique({
     where: {
-      userId_conditionId_taskType: { userId, conditionId, taskType },
+      userId_conditionId_taskType_progressContext: { userId, conditionId, taskType, progressContext: 'READINESS' },
     },
     select: { stability: true, reps: true, lapses: true },
   });

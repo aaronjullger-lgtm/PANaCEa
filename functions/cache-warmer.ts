@@ -15,6 +15,7 @@ import type { KVNamespace, ScheduledEvent, ExecutionContext } from '@cloudflare/
 interface Env {
   DATABASE_URL: string;
   CACHE?: KVNamespace;
+  REQUIRE_APPROVED_QUESTIONS?: string;
 }
 
 /**
@@ -99,9 +100,12 @@ export default {
       for (const system of systems) {
         const cacheKey = getQuestionPoolCacheKey({ system });
 
-        // Fetch questions for this system (exclude kill-switch rejected)
+        // Phase 2: Feature-flagged approval gate for cached questions
+        const validationFilter = env.REQUIRE_APPROVED_QUESTIONS === 'true'
+          ? 'approved'
+          : { not: 'rejected' };
         const questions = await prisma.preGeneratedQuestion.findMany({
-          where: { system, validationStatus: { not: 'rejected' } },
+          where: { system, validationStatus: validationFilter as any },
           take: 50, // Cache 50 questions per system
           orderBy: { generatedAt: 'asc' },
         });

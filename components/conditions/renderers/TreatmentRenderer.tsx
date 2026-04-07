@@ -26,11 +26,11 @@ const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({ items }) => {
           )}
 
           {/* Numbered Circle */}
-          <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] flex items-center justify-center text-sm font-bold text-[var(--color-category-practice)] z-10 shadow-sm">
+          <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] flex items-center justify-center text-sm font-bold text-[var(--color-category-practice)] z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             {idx + 1}
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow">
             <h4 className="font-bold text-[var(--color-text-primary)] mb-2 capitalize">
               {step.title}
             </h4>

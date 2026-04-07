@@ -42,72 +42,21 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getBrowserTimezone } from '@/lib/circadian';
+import { createApiClient, createDrillsClient, ApiError } from '@/lib/sdk';
+import { syncManager } from '@/lib/services/sync/syncManager';
+import { toast } from '@/lib/toast';
 
-/**
- * Options for the useDrillFSRS hook
- */
-export interface UseDrillFSRSOptions {
-  /** Drill type for logging/analytics (e.g., 'condition', 'pharm', 'ddx') */
-  drillType: string;
-}
+// Types are now imported from the shared library.
+// Interfaces defined here previously are re-exported for backward compatibility
+// so existing drill components that import from this file continue to work.
+import type {
+  UseDrillFSRSOptions,
+  SubmitAnswerParams,
+  DrillFSRSResponse,
+  FSRSNextReview,
+} from '@/lib/api/types/drills';
 
-/**
- * Parameters for submitAnswer method
- */
-export interface SubmitAnswerParams {
-  /** The question's unique ID */
-  questionId: string;
-  /** The user's selected answer (string or index) */
-  selectedAnswer: string | number;
-  /** Total time spent on question in milliseconds */
-  timeSpentMs: number;
-}
-
-/**
- * FSRS response from the server
- */
-export interface DrillFSRSResponse {
-  success: boolean;
-  isCorrect: boolean;
-  quality: number;
-  parTimeMs: number;
-  timeSpentMs: number;
-  implicitMetrics: {
-    rating: number;
-    gradeContinuous: number;
-    confidence: number;
-    latencyRatio: number;
-    answerSwitches: number;
-  };
-  circadian: {
-    phase: string;
-    stabilityModifier: number;
-    localHour: number;
-  };
-  fsrsSchedule?: {
-    intervalDays: number;
-    nextDueDate: string;
-    stability: number;
-    difficulty: number;
-  };
-  isRapidGuess?: boolean;
-  nextReview?: {
-    intervalDays: number;
-    nextDueDate: string;
-    stability: number;
-    difficulty: number;
-  } | null;
-}
-
-/**
- * Normalized shape for EnhancedFeedbackPanel's nextReview prop
- */
-export interface FSRSNextReview {
-  intervalDays: number;
-  nextDueDate: string;
-  stability: number;
-  difficulty: number;
-}
+export type { UseDrillFSRSOptions, SubmitAnswerParams, DrillFSRSResponse, FSRSNextReview };
 
 /**
  * Hook return type
@@ -218,37 +167,27 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
       setIsSubmitting(true);
       setError(null);
 
-      try {
-        const token = await getToken();
-        const timezone = getBrowserTimezone();
+      // Compute timezone before try so it's available in catch for offline fallback
+      const timezone = getBrowserTimezone();
 
-        const response = await fetch('/api/drills/submit-review', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            questionId,
-            selectedAnswer,
-            timeSpentMs,
-            timeToFirstClick: timeToFirstClickRef.current,
-            answerSwitches: answerSwitchesRef.current,
-            totalDwellTime: totalDwellTimeRef.current,
-            timezone,
-            sessionType: 'drill', // Mark as drill submission
-          }),
+      try {
+        const api = createApiClient(getToken, {
+          retryablePosts: ['/api/drills/submit-review'],
+        });
+        const drills = createDrillsClient(api);
+
+        const submitted = await drills.submitReview({
+          questionId,
+          selectedAnswer,
+          timeSpentMs,
+          timeToFirstClick: timeToFirstClickRef.current,
+          answerSwitches: answerSwitchesRef.current,
+          totalDwellTime: totalDwellTimeRef.current,
+          timezone,
+          sessionType: 'drill', // Mark as drill submission
         });
 
-        if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-            error?: string;
-            details?: string;
-          };
-          throw new Error(errorData.error || errorData.details || `HTTP ${response.status}`);
-        }
-
-        const result = (await response.json()) as DrillFSRSResponse;
+        const result = (submitted?.data ?? submitted) as unknown as DrillFSRSResponse;
 
         // Store the response for access by session components
         setLastFSRSResponse(result);
@@ -269,6 +208,46 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
         const error = err instanceof Error ? err : new Error('Failed to submit answer');
         setError(error);
         console.error(`[useDrillFSRS:${drillType}] Error:`, error);
+
+        // Surface a user-friendly message via toast.
+        // ApiError.userMessage is categorized (network/timeout/auth/server) to avoid
+        // scaring users with raw error text while still being honest.
+        const isApiError = err instanceof ApiError;
+        if (isApiError && err.isAuthError) {
+          toast.error(err.userMessage);
+        } else {
+          // For transient errors: reassure user their answer is queued offline
+          const queuedOffline = (() => {
+            try {
+              syncManager.queueReview({
+                questionId,
+                selectedAnswer: String(selectedAnswer),
+                timeSpentMs,
+                timeToFirstClick: timeToFirstClickRef.current ?? undefined,
+                answerSwitches: answerSwitchesRef.current,
+                totalDwellTime: totalDwellTimeRef.current,
+                timezone,
+                sessionType: 'drill',
+              });
+              return true;
+            } catch (queueErr) {
+              console.error(`[useDrillFSRS:${drillType}] Failed to queue offline review:`, queueErr);
+              return false;
+            }
+          })();
+
+          if (queuedOffline) {
+            toast.warning('Answer saved offline — it will sync when your connection returns.', {
+              duration: 4000,
+            });
+          } else {
+            toast.error(
+              isApiError ? err.userMessage : 'Failed to save your answer. Please try again.',
+              { duration: 5000 }
+            );
+          }
+        }
+
         return null;
       } finally {
         setIsSubmitting(false);

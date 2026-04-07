@@ -182,7 +182,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onCom
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 pointer-events-auto z-[9999]"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 pointer-events-auto z-[60]"
         >
           <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden">
             <div className="p-6">

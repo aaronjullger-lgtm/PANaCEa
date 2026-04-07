@@ -61,9 +61,9 @@ export const ConfidenceBadge: React.FC<{
     low: {
       label: 'Hesitant',
       icon: Clock,
-      bg: 'bg-data-neutral dark:bg-data-neutral',
-      text: 'text-data-neutral dark:text-data-neutral',
-      border: 'border-data-neutral dark:border-data-neutral',
+      bg: 'bg-data-neutral',
+      text: 'text-data-neutral',
+      border: 'border-data-neutral',
     },
   }[confidence];
 
@@ -108,12 +108,12 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-data-neutral dark:hover:bg-data-neutral/50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-data-neutral transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Brain className="w-4 h-4 text-data-neutral" />
-            <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
+            <span className="text-sm font-medium text-data-neutral">
               Behavioral Patterns
             </span>
           </div>
@@ -148,7 +148,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral dark:border-data-neutral pt-3">
+            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral pt-3">
               {/* High Confidence (fast, no changes) */}
               <BehaviorRow
                 label="Quick & Confident"
@@ -188,7 +188,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                   {stats.insights.map((insight, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-2 text-xs text-data-neutral dark:text-data-neutral"
+                      className="flex items-start gap-2 text-xs text-data-neutral"
                     >
                       <Lightbulb className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" />
                       <span>{insight}</span>
@@ -198,7 +198,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
               )}
 
               {/* Footer explanation */}
-              <div className="pt-2 text-xs text-data-neutral leading-relaxed border-t border-data-neutral dark:border-data-neutral">
+              <div className="pt-2 text-xs text-data-neutral leading-relaxed border-t border-data-neutral">
                 Based on your response time, answer changes, and elimination usage
               </div>
             </div>
@@ -243,7 +243,7 @@ const BehaviorRow: React.FC<{
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon className={`w-4 h-4 ${iconColors[color]}`} />
-          <span className="text-sm text-data-neutral dark:text-data-neutral">{label}</span>
+          <span className="text-sm text-data-neutral">{label}</span>
           <span className="text-xs text-data-neutral">({count})</span>
         </div>
         <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ const BehaviorRow: React.FC<{
       {/* Progress bar */}
       {accuracy !== null && (
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${accuracy}%` }}

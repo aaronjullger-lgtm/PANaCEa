@@ -4,19 +4,20 @@
  *
  * Request: { concept, context?, existingMnemonics? }
  * Response: { data: { mnemonic, explanation, type } }
- * type: 'acronym' | 'story' | 'visual' | 'rhyme'
+ *
+ * Refactored to use unified ai-service layer for Gemini API calls.
+ * Semantic cache still handled locally (endpoint-specific concern).
  */
 
 import { z } from 'zod';
 import { aiEndpoint, withCors } from '../_shared/middleware';
-import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
-import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
-
-interface Env {
-  GEMINI_API_KEY: string;
-  CLERK_SECRET_KEY: string;
-  RATE_LIMIT_KV?: unknown;
-}
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import {
+  findSimilarCachedQuestion,
+  cacheGeneratedQuestion,
+} from '../_shared/semantic-cache';
+import { trackTokenUsage } from '../_shared/tokenTracking';
+import { callGemini, GeminiModel, type GeminiError } from '../_shared/ai-service';
 
 const GenerateMnemonicSchema = z.object({
   concept: z.string().min(1, 'Concept is required'),
@@ -27,13 +28,12 @@ const GenerateMnemonicSchema = z.object({
 const MNEMONIC_TYPES = ['acronym', 'story', 'visual', 'rhyme'] as const;
 type MnemonicType = (typeof MNEMONIC_TYPES)[number];
 
-function parseGeminiMnemonicResponse(text: string): {
+function parseMnemonicResponse(text: string): {
   mnemonic: string;
   explanation: string;
   type: MnemonicType;
 } {
   const trimmed = text.trim();
-  // Try to parse as JSON first (ask model to return JSON)
   const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
@@ -51,11 +51,7 @@ function parseGeminiMnemonicResponse(text: string): {
       // fall through to plain text
     }
   }
-  return {
-    mnemonic: trimmed,
-    explanation: 'Generated mnemonic.',
-    type: 'acronym',
-  };
+  return { mnemonic: trimmed, explanation: 'Generated mnemonic.', type: 'acronym' };
 }
 
 export const onRequestOptions = withCors();
@@ -64,37 +60,36 @@ export const onRequestPost = aiEndpoint(
   GenerateMnemonicSchema,
   async (context) => {
     const { env, validated } = context as {
-      env: Env;
+      env: { GEMINI_API_KEY: string; DATABASE_URL?: string; [k: string]: any };
       validated: z.infer<typeof GenerateMnemonicSchema>;
     };
 
-    try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-    } catch (error) {
-      if (error instanceof MissingEnvError) {
-        return error.toResponse();
-      }
-      throw error;
-    }
-
-    const { request } = context;
-    const identifier = getRateLimitIdentifier(request);
-    const { response: rateLimitResponse } = await withRateLimit(
-      env as { RATE_LIMIT_KV?: KVNamespace },
-      identifier,
-      'gemini'
-    );
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
     const { concept, context: contextOpt, existingMnemonics = [] } = validated;
-    const apiKey = env.GEMINI_API_KEY;
-    const modelName = 'gemini-2.0-flash';
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    const model = GeminiModel.FLASH_2_0;
 
-    const systemInstruction = `You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners. Respond with a JSON object only, no markdown: {"mnemonic": "...", "explanation": "brief explanation", "type": "acronym"|"story"|"visual"|"rhyme"}.`;
+    // ─── Semantic Cache Check ──────────────────────────────────────
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const cacheHit = await findSimilarCachedQuestion(prisma, {
+        queryText: concept,
+        questionType: 'mnemonic',
+        system: contextOpt,
+      });
+      if (cacheHit) {
+        trackTokenUsage(context as any, {
+          endpoint: '/api/ai/generate-mnemonic',
+          model,
+          usage: null,
+          statusCode: 200,
+          cacheHit: true,
+        });
+        return { data: cacheHit.question };
+      }
+    } catch {
+      // Cache lookup failure should not block generation
+    }
 
+    // ─── Build Prompt ──────────────────────────────────────────────
     const userPrompt = [
       `Concept: ${concept}`,
       contextOpt ? `Context: ${contextOpt}` : '',
@@ -105,66 +100,51 @@ export const onRequestPost = aiEndpoint(
       .filter(Boolean)
       .join('\n');
 
-    const requestBody = {
-      contents: [{ parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 512,
-      },
-    };
-
+    // ─── Call Gemini via Unified Service ────────────────────────────
     try {
-      const geminiResponse = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+      const result = await callGemini(context as any, {
+        model,
+        systemInstruction:
+          'You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners. Respond with a JSON object only, no markdown: {"mnemonic": "...", "explanation": "brief explanation", "type": "acronym"|"story"|"visual"|"rhyme"}.',
+        prompt: userPrompt,
+        generationConfig: { temperature: 0.8, maxOutputTokens: 512 },
+        endpoint: '/api/ai/generate-mnemonic',
       });
 
-      if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text();
-        const statusCode = geminiResponse.status;
-        if (statusCode === 429) {
-          return { status: 429, error: 'Rate limit exceeded. Please try again later.' };
-        }
-        return {
-          status: statusCode >= 500 ? 503 : 500,
-          error: 'Failed to generate mnemonic. Please try again.',
-        };
+      if (result.blocked) {
+        return { status: 400, error: `Content blocked: ${result.blockReason}` };
       }
 
-      const responseData = (await geminiResponse.json()) as {
-        candidates?: Array<{
-          content?: { parts?: Array<{ text?: string }> };
-        }>;
-        promptFeedback?: { blockReason?: string };
-      };
-
-      if (responseData.promptFeedback?.blockReason) {
-        return {
-          status: 400,
-          error: `Content blocked: ${responseData.promptFeedback.blockReason}`,
-        };
+      if (!result.text) {
+        return { status: 500, error: 'No response generated. Please try again.' };
       }
 
-      const generatedText = responseData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const { mnemonic, explanation, type } = parseMnemonicResponse(result.text);
 
-      if (!generatedText) {
-        return {
-          status: 500,
-          error: 'No response generated. Please try again.',
-        };
+      // Cache the result for future similar queries
+      try {
+        await cacheGeneratedQuestion(
+          prisma,
+          { queryText: concept, questionType: 'mnemonic', system: contextOpt },
+          { mnemonic, explanation, type }
+        );
+      } catch {
+        // Cache write failure should not block the response
       }
-
-      const { mnemonic, explanation, type } = parseGeminiMnemonicResponse(generatedText);
 
       return { data: { mnemonic, explanation, type } };
     } catch (error) {
+      const geminiError = error as GeminiError;
+      if (geminiError.status) {
+        return {
+          status: geminiError.status === 429 ? 429 : geminiError.retryable ? 503 : 500,
+          error: geminiError.error,
+        };
+      }
       console.error('[generate-mnemonic] Error:', error);
-      return {
-        status: 500,
-        error: 'Failed to process request. Please try again.',
-      };
+      return { status: 500, error: 'Failed to process request. Please try again.' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
   },
   { source: 'body', requestsPerMinute: 30 }

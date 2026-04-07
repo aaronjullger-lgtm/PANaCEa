@@ -18,8 +18,8 @@ import {
   FSRSCard,
 } from '../../../lib/fsrs';
 import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
-import { VariantQueueService } from '../../../services/core/variantQueueService';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
+import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import {
   analyzeBehaviorGemini,
   type BehaviorTelemetryInput,
@@ -186,10 +186,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
         if (conditionId && taskType) {
           topicProgress = await prisma.userTopicProgress.findUnique({
             where: {
-              userId_conditionId_taskType: {
+              userId_conditionId_taskType_progressContext: {
                 userId: dbUserId,
                 conditionId: conditionId,
                 taskType: taskType,
+                progressContext: 'READINESS',
               },
             },
           });
@@ -277,7 +278,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
         });
         if (dbUser) {
           await prisma.userProgress.upsert({
-            where: { userId_conditionId: { userId: dbUser.id, conditionId } },
+            where: { userId_conditionId_progressContext: { userId: dbUser.id, conditionId, progressContext: 'READINESS' } },
             create: {
               id: `${dbUser.id}_${conditionId}`,
               userId: dbUser.id,
@@ -292,6 +293,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
                 lapses: reviewState.lapses,
                 last_review: now.toISOString(),
               },
+              // Dual-write scalar FSRS fields for readers that query these directly.
+              fsrsStability: reviewState.stability,
+              fsrsDifficulty: reviewState.difficulty,
+              fsrsState: reviewState.state,
+              fsrsReps: reviewState.reps,
               totalAttempts: 1,
               correctCount: isCorrect ? 1 : 0,
               accuracy: isCorrect ? 1.0 : 0.0,
@@ -310,6 +316,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
                 lapses: reviewState.lapses,
                 last_review: now.toISOString(),
               },
+              // Dual-write scalar FSRS fields for readers that query these directly.
+              fsrsStability: reviewState.stability,
+              fsrsDifficulty: reviewState.difficulty,
+              fsrsState: reviewState.state,
+              fsrsReps: reviewState.reps,
               totalAttempts: { increment: 1 },
               correctCount: isCorrect ? { increment: 1 } : undefined,
               lastReviewAt: now,
@@ -326,8 +337,11 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       }
     }
 
-    // Update SRSItem (Legacy/Specific Question tracking)
+    // Update SRSItem (DEPRECATED — Legacy per-question tracking)
+    // TODO: Remove once all frontend callers stop sending srsItemId.
+    // UserProgress + UserTopicProgress are the authoritative FSRS stores.
     if (srsItemId) {
+      logger.info('SRSItem legacy write (deprecated)', { srsItemId: srsItemId.substring(0, 10) });
       const item = await prisma.sRSItem.findUnique({ where: { id: srsItemId } });
       if (item) {
         const card: FSRSCard = {
@@ -359,21 +373,77 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       }
     }
 
-    // Variant Queue Logic
-    let queuedVariantId = null;
-    if (!isCorrect && conditionId && taskType) {
-      const queueService = new VariantQueueService(prisma as any, env.GEMINI_API_KEY);
-      queuedVariantId = await queueService.queueVariantForReview(dbUserId, questionId, taskType);
-    }
-
-    // Mark variant as used
-    if (variantId && questionId) {
-      await prisma.questionVariant.update({
-        where: { id: variantId },
-        data: {
-          usedByUsers: { push: dbUserId },
+    // Variant pre-generation: when a question is answered incorrectly, ensure a sibling variant
+    // exists in PreGeneratedQuestion so the Due session can serve a different question for the
+    // same concept without waiting for generation at review time.
+    // Replaces the old VariantQueueService → QuestionVariant path; now unified under PreGeneratedQuestion.
+    if (!isCorrect && conditionId) {
+      // Look up the source question to pass its data to the generator
+      const preGenSource = await prisma.preGeneratedQuestion.findUnique({
+        where: { id: questionId },
+        select: {
+          id: true,
+          conditionId: true,
+          system: true,
+          difficulty: true,
+          questionType: true,
+          questionData: true,
         },
       });
+      const sourceForVariant = preGenSource ?? (await prisma.question.findUnique({
+        where: { id: questionId },
+        select: {
+          id: true,
+          conditionId: true,
+          system: true,
+          difficulty: true,
+          taskType: true,
+          vignette: true,
+          question: true,
+          options: true,
+          correctAnswer: true,
+          explanation: true,
+        },
+      }).then((q) =>
+        q
+          ? {
+              id: q.id,
+              conditionId: q.conditionId,
+              system: q.system,
+              difficulty: q.difficulty ?? 'medium',
+              questionType: q.taskType ?? 'mcq',
+              questionData: {
+                question: [q.vignette, q.question].filter(Boolean).join('\n\n') || q.question,
+                vignette: q.vignette,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
+                explanation: q.explanation,
+              },
+            }
+          : null
+      ));
+
+      if (sourceForVariant) {
+        ensureDueVariant(
+          prisma,
+          {
+            id: sourceForVariant.id,
+            conditionId: sourceForVariant.conditionId,
+            system: sourceForVariant.system,
+            difficulty: sourceForVariant.difficulty ?? 'medium',
+            questionType: sourceForVariant.questionType ?? 'mcq',
+            questionData: sourceForVariant.questionData,
+          },
+          env.GEMINI_API_KEY as string | undefined,
+          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+          dbUserId
+        ).catch((err: unknown) => {
+          logger.warn('srs/submit ensureDueVariant failed (non-fatal)', {
+            questionId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
     }
 
     logger.info('SRS review submitted', {
@@ -381,7 +451,6 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       questionId: questionId.substring(0, 10),
       rating,
       isCorrect,
-      queuedVariant: !!queuedVariantId,
     });
 
     // Pillar 4: When user rates "Again" (1), suggest re-generation with exaggerated mnemonic (frontend calls POST /api/srs/generate-visual with style: "exaggerated").
@@ -391,7 +460,6 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       data: {
         success: true,
         nextReviewDate,
-        queuedVariantId,
         ...(triggerVisualRegeneration && {
           triggerVisualRegeneration: true,
           questionId: questionId ?? undefined,

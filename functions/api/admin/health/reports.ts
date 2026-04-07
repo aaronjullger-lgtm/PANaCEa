@@ -2,96 +2,75 @@
  * API: Get content health reports
  * GET /api/admin/health/reports
  *
+ * Security: cmsEndpoint() middleware — requires editor+ role.
+ * Audit: Logs access via auditLog('admin_health_report_access').
+ *
  * Query parameters:
  * - latest: Get only the latest report (default true)
  * - limit: Number of reports to return (default 10)
  */
 
-import {
-  authenticateRequest,
-  createErrorResponse,
-  createSuccessResponse,
-  handleCorsOptions,
-  type Env,
-} from '../../_shared/auth';
-import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
-import { canViewCMS, type UserRole } from '../../_shared/rbac';
+import { z } from 'zod';
+import { cmsEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { auditLog } from '../../_shared/auditLog';
 
-export async function onRequestGet(context: { request: Request; env: Env }) {
-  const { request, env } = context;
+const HealthReportsSchema = z.object({
+  latest: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v !== 'false'),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+});
 
-  try {
-    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
-  } catch (e) {
-    if (e instanceof MissingEnvError) return e.toResponse();
-    throw e;
-  }
+export const onRequestGet = cmsEndpoint(
+  HealthReportsSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions(context);
-  }
+    try {
+      const { latest, limit } = validated;
 
-  const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
-    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
-  }
+      if (latest) {
+        const report = await prisma.contentHealthReport.findFirst({
+          orderBy: { timestamp: 'desc' },
+        });
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+        if (!report) {
+          return { status: 404, error: 'No health reports found' };
+        }
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: authContext.clerkId },
-      select: { role: true },
-    });
+        auditLog('admin_health_report_access', {
+          userId: auth.userId,
+          mode: 'latest',
+        });
 
-    if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse(
-        request,
-        'Forbidden: Insufficient permissions',
-        403,
-        undefined,
-        env
-      );
-    }
+        return { data: report };
+      } else {
+        const reports = await prisma.contentHealthReport.findMany({
+          orderBy: { timestamp: 'desc' },
+          take: limit,
+        });
 
-    const url = new URL(request.url);
-    const latest = url.searchParams.get('latest') !== 'false';
-    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-
-    if (latest) {
-      // Get only the latest report
-      const report = await prisma.contentHealthReport.findFirst({
-        orderBy: { timestamp: 'desc' },
-      });
-
-      if (!report) {
-        return createErrorResponse(request, 'No health reports found', 404, undefined, env);
-      }
-
-      return createSuccessResponse(request, report, 200, 0, env);
-    } else {
-      // Get multiple reports
-      const reports = await prisma.contentHealthReport.findMany({
-        orderBy: { timestamp: 'desc' },
-        take: limit,
-      });
-
-      return createSuccessResponse(
-        request,
-        {
-          reports,
+        auditLog('admin_health_report_access', {
+          userId: auth.userId,
+          mode: 'list',
           count: reports.length,
-        },
-        200,
-        0,
-        env
-      );
+        });
+
+        return { data: { reports, count: reports.length } };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      auditLog('admin_health_report_access', {
+        userId: auth.userId,
+        error: message,
+      });
+      return { status: 500, error: 'Failed to fetch health reports' };
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-  } catch (error: any) {
-    console.error('Error fetching health reports:', error);
-    return createErrorResponse(request, 'Failed to fetch health reports', 500, undefined, env);
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}
+  },
+  { source: 'query' }
+);

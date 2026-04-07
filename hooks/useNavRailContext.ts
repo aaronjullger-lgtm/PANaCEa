@@ -1,10 +1,7 @@
-import { useContext } from 'react';
-import { NavRailContext, NavRailContextType } from '@/contexts/NavRailContext';
-
-export const useNavRailContext = (): NavRailContextType => {
-  const context = useContext(NavRailContext);
-  if (context === undefined) {
-    throw new Error('useNavRailContext must be used within a NavRailProvider');
-  }
-  return context;
-};
+/**
+ * Backward-compatible re-export.
+ * Phase 3: Migrated from React Context to Zustand store.
+ * All consumers can import from here or directly from '@/lib/stores/useNavRailStore'.
+ */
+export { useNavRailStore as useNavRailContext } from '@/lib/stores/useNavRailStore';
+export type { NavRailCurrentContext, NavRailModule } from '@/lib/stores/useNavRailStore';

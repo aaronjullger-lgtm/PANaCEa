@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 
 const BASE_CLASS =
-  'w-full flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl text-left transition-all duration-200 ease-out ' +
+  'w-full flex items-center gap-2 min-h-[44px] px-3 py-2 rounded-lg text-left transition-colors duration-150 ease-out ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]';
 
 /** Collapsed: fixed width so parent can center us; no full-width stretch; no min-h so NavRail's h-12 controls row height. */
@@ -16,10 +16,10 @@ const COLLAPSED_WRAPPER_CLASS =
   'w-10 h-10 shrink-0 justify-center items-center px-0 min-w-0 min-h-0';
 
 const ACTIVE_CLASS =
-  'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20';
+  'text-[var(--color-text-primary)] font-semibold';
 
 const INACTIVE_CLASS =
-  'border border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/80 hover:text-[var(--color-text-primary)]';
+  'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]';
 
 const COMPACT_CLASS = 'min-h-0 py-2 text-xs';
 
@@ -78,15 +78,15 @@ function SidebarItemContent({
       <span
         className={`inline-flex w-10 h-10 shrink-0 items-center justify-center overflow-hidden transition-colors ${
           active
-            ? 'text-[var(--color-accent)]'
-            : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)]'
+            ? 'text-[var(--color-text-primary)]'
+            : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]'
         }`}
       >
         <span
           className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
             active
-              ? 'bg-[var(--color-accent)]/15'
-              : 'group-hover:bg-[var(--color-bg-tertiary)]'
+              ? 'bg-[var(--color-bg-tertiary)]'
+              : 'group-hover:bg-[var(--color-bg-tertiary)]/50'
           }`}
         >
           <Icon className="h-5 w-5" aria-hidden />
@@ -102,13 +102,13 @@ function SidebarItemContent({
       {Icon != null &&
         (iconVariant === 'box' ? (
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors ${
               active
-                ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-                : 'text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
+                ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+                : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]'
             }`}
           >
-            <Icon className="h-5 w-5" aria-hidden />
+            <Icon className="h-[18px] w-[18px]" aria-hidden />
           </span>
         ) : (
           <Icon className={`h-4 w-4 shrink-0 ${iconClass}`} aria-hidden />

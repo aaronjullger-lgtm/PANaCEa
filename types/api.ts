@@ -1,49 +1,27 @@
 /**
- * Comprehensive API Response Types for PANaCEa
+ * API Response Types for PANaCEa
  *
- * Provides type safety for all API endpoints and responses.
- * Replaces usage of `any` types throughout the application.
+ * Generic envelope types are now canonical in `lib/api/types/common.ts`
+ * and re-exported here so existing `import { X } from '@/types/api'`
+ * call sites continue to work without changes.
+ *
+ * Domain-specific types (questions, drills, sessions, user) live in
+ * `lib/api/types/` and should be imported from there directly.
  */
 
 // ============================================================================
-// GENERIC API RESPONSE TYPES
+// GENERIC API RESPONSE TYPES — re-exported from shared library
 // ============================================================================
 
-/**
- * Standard API response wrapper
- */
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  code?: string;
-  timestamp?: string;
-}
+// ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse (discriminated union)
+export type {
+  ApiResponse,
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  PaginatedResponse,
+} from '@/lib/api/types/common';
 
-/**
- * Paginated API response
- */
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
-
-/**
- * API error response
- */
-export interface ApiErrorResponse {
-  success: false;
-  error: string;
-  code?: string;
-  details?: Record<string, unknown>;
-  timestamp: string;
-}
+export { isApiError, isApiSuccess } from '@/lib/api/types/common';
 
 // ============================================================================
 // AUTHENTICATION & USER TYPES

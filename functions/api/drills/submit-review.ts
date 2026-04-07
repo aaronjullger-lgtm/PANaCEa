@@ -1,92 +1,26 @@
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { attachLogMeta, getRequestId } from '../_shared/requestLogger';
+import { createSpan } from '../_shared/structuredLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
+import { createPipelineTracer } from '../../../lib/observability/pipelineTracer';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
-import { z } from 'zod';
+import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';
 
-// Zod schema for TelemetryData (Phase 3: Telemetry Injection)
-const TelemetrySchema = z
-  .object({
-    duration_ms: z.number().int().min(0),
-    time_to_first_interaction_ms: z.number().int().min(0).nullable(),
-    rapid_guess: z.boolean(),
-    question_type: z.enum(['vignette', 'recall', 'image', 'rapid_recall', 'unknown']),
-    mvrt_threshold_ms: z.number().int().min(0),
-    question_displayed_at: z.string(),
-    answer_submitted_at: z.string(),
-    answer_changes: z.number().int().min(0),
-    hint_viewed: z.boolean(),
-    hint_view_duration_ms: z.number().int().min(0).nullable(),
-    interactions: z
-      .array(
-        z.object({
-          type: z.enum([
-            'click',
-            'hover',
-            'scroll',
-            'keypress',
-            'option_select',
-            'hint_view',
-            'explanation_expand',
-          ]),
-          timestamp_ms: z.number().int().min(0),
-          target: z.string().optional(),
-        })
-      )
-      .optional(),
-    session_id: z.string().optional(),
-    device_info: z
-      .object({
-        viewport_width: z.number().int().min(0),
-        viewport_height: z.number().int().min(0),
-        device_pixel_ratio: z.number().min(0),
-        is_touch_device: z.boolean(),
-        user_agent_short: z.string().optional(),
-      })
-      .optional(),
-    /** Ghost Grader: hover oscillations (A→B→A revisits) */
-    hover_oscillations: z.number().int().min(0).optional(),
-    /** Ghost Grader: vignette regressions (scroll direction changes after reveal) */
-    vignette_regressions: z.number().int().min(0).optional(),
-    /** Ghost Grader: selection drift (ms from selection to submit) */
-    selection_drift_ms: z.number().int().min(0).optional(),
-    /** Ghost Grader: mouse tremor score 0-1 */
-    tremor_score: z.number().min(0).max(1).optional(),
-    /** Ghost Grader: cursor entropy (movement randomness) */
-    cursor_entropy: z.number().min(0).optional(),
-    /** Elimination velocity (eliminations per second) */
-    elimination_velocity: z.number().min(0).optional(),
-    /** Trajectory metrics from micro-kinetics (distractorHovers, etc.) */
-    trajectory_metrics: z.record(z.string(), z.unknown()).optional(),
-  })
-  .strict();
+// Request schema — single source of truth lives in the shared library.
+// To change the /api/drills/submit-review contract, edit lib/api/schemas/drills.ts.
+import { DrillSubmitReviewRequestSchema } from '../../../lib/api/schemas/drills';
+export const DrillSubmitReviewSchema = DrillSubmitReviewRequestSchema;
 
-// Request validation schema
-export const DrillSubmitReviewSchema = z.object({
-  // Accept UUID and ephemeral/generated IDs so resolver can handle pool/main/attempt-backed questions.
-  questionId: z.string().min(1),
-  selectedAnswer: z.union([z.string(), z.number()]),
-  timeSpentMs: z.number().int().min(0).max(3600000),
-  timeToFirstClick: z.number().int().min(0).optional(),
-  answerSwitches: z.number().int().min(0).optional(),
-  totalDwellTime: z.number().int().min(0).optional(),
-  timezone: z.string().optional(),
-  wakeTimeHHMM: z.string().optional(),
-  telemetry: TelemetrySchema.optional(),
-  /** When 'main', 'drill', or omitted, review is counted for FSRS (UserProgress.reviewHistory). When 'cram' or 'rapid_recall', FSRS is not updated and Card/UserTopicProgress are not modified. */
-  sessionType: z.enum(['main', 'drill', 'cram', 'rapid_recall']).optional(),
-});
-
-export const onRequestOptions = async (context: any) => {
-  return authenticatedEndpoint(DrillSubmitReviewSchema, async () => ({
-    data: { message: 'Method not allowed' },
-    status: 405,
-  }))(context);
-};
+// FIX (Audit 8/F6): CORS preflight must NOT require auth.
+// Browser OPTIONS requests never include Authorization headers,
+// so wrapping in authenticatedEndpoint silently broke all cross-origin
+// drill submissions (staging, preview deploys, etc.).
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, async (context) => {
   const { env, auth, validated } = context;
@@ -95,6 +29,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
   try {
     logger.addContext({ userId: auth.userId });
+    const requestId = getRequestId(context);
 
     const {
       questionId,
@@ -108,6 +43,18 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       telemetry,
       sessionType,
     } = validated;
+
+    // Create pipeline tracer for structured observability across the entire review pipeline.
+    // Pass the endpoint logger so tracer output flows through SecureLogger's redaction layer
+    // rather than bypassing it with raw console.log(JSON.stringify(...)).
+    const tracer = createPipelineTracer({
+      pipeline: 'drill_review',
+      requestId,
+      userId: auth.userId,
+      questionId,
+      sessionType: sessionType ?? 'drill',
+      logger,
+    });
 
     if (!env.DATABASE_URL) {
       logger.error('Database not configured');
@@ -154,6 +101,20 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
     });
 
+    // Enrich tracer context with internal userId and session_id from telemetry.
+    // session_id groups multiple submissions in one study session — lets you filter logs
+    // with sessionId:"xyz" to see every question in the same session at once.
+    tracer.addContext({
+      internalUserId: user.id,
+      ...(telemetry?.session_id ? { sessionId: telemetry.session_id } : {}),
+    });
+
+    tracer.step('request_validated', {
+      hastelemetry: !!telemetry,
+      hasTelemetryRapidGuess: telemetry?.rapid_guess ?? false,
+    });
+
+    const pipelineSpan = createSpan('drill_review_pipeline');
     const result = await submitDrillReview(
       prisma,
       user.id,
@@ -171,8 +132,34 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       },
       question,
       { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
-      eorRotationEnd
+      eorRotationEnd,
+      undefined, // urgencyMultiplier
+      tracer
     );
+    const { durationMs: pipelineMs } = pipelineSpan.end({
+      userId: user.id,
+      questionId,
+      sessionType: sessionType ?? 'drill',
+    });
+
+    // Attach the full pipeline trace summary for structured log indexing
+    const traceSummary = tracer.getSummary();
+
+    // Attach structured metadata for request logging (Phase 1 + Phase 2 observability)
+    attachLogMeta(context, {
+      pipelineMs,
+      isCorrect: result.isCorrect,
+      sessionType: sessionType ?? 'drill',
+      system: question.system,
+      conditionId: question.conditionId,
+      isRapidGuess: telemetry?.rapid_guess ?? false,
+      fsrsUpdated: !!result.fsrsSchedule,
+      // Phase 2: Pipeline trace summary for debugging
+      traceDecisions: traceSummary.decisions.map(d => `${d.gate}:${d.outcome}`),
+      traceSpans: traceSummary.spans.map(s => ({ name: s.name, ms: s.durationMs })),
+      traceWarnings: traceSummary.warnings.length,
+      traceTotalMs: traceSummary.totalDurationMs,
+    });
 
     // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
     if (typeof result.isCorrect === 'boolean') {
@@ -197,8 +184,15 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
             questionData: question.questionData,
           },
           env.GEMINI_API_KEY as string | undefined,
-          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
-        ).catch(() => {});
+          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+          user.id // pass userId so confusion pairs can be injected into the variant prompt
+        ).catch((variantError: unknown) => {
+          logger.warn('ensureDueVariant failed (non-fatal)', {
+            questionId,
+            conditionId: question.conditionId,
+            error: variantError instanceof Error ? variantError.message : String(variantError),
+          });
+        });
       }
     }
 
@@ -213,19 +207,61 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         }
       : null;
 
+    // ── Relative drill performance feedback (read-after-write) ──────────────
+    // Only computed for DRILL sessions; lightweight and non-blocking on failure.
+    // conditionFamily is fetched from the Question table (not in reviewQuestionResolver result).
+    let drillFeedback = null;
+    if (sessionType === 'drill' || !sessionType) {
+      try {
+        // Look up conditionFamily — nullable, best effort
+        let conditionFamily: string | null = null;
+        if (question.conditionId) {
+          const qDetail = await prisma.question.findUnique({
+            where: { id: question.id },
+            select: { conditionFamily: true },
+          });
+          conditionFamily = qDetail?.conditionFamily ?? null;
+        }
+
+        drillFeedback = await getRelativeDrillPerformance(
+          prisma,
+          user.id,
+          conditionFamily,
+          question.system ?? null
+        );
+      } catch {
+        // Non-fatal: drill feedback is supplementary
+      }
+    }
+
     return {
       data: {
         ...result,
         isRapidGuess,
         nextReview,
+        drillFeedback,
       },
     };
   } catch (error: unknown) {
-    logger.error('submit-review error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isDbError = errorMessage.includes('prisma') || errorMessage.includes('database') || errorMessage.includes('connection');
+    const isTimeoutError = errorMessage.includes('timeout') || errorMessage.includes('timed out');
+
+    logger.error('submit-review error:', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      category: isTimeoutError ? 'timeout' : isDbError ? 'database' : 'unknown',
+      userId: auth.userId,
+      questionId: validated.questionId,
+      sessionType: validated.sessionType ?? 'drill',
+    });
+
     return {
-      status: 500,
+      status: isTimeoutError ? 504 : 500,
       error: 'Failed to submit review',
+      code: isTimeoutError ? 'SUBMISSION_TIMEOUT' : isDbError ? 'DATABASE_ERROR' : 'INTERNAL_ERROR',
       details: error instanceof Error ? error.message : String(error),
+      retryable: isTimeoutError || isDbError,
     };
   } finally {
     if (prisma) {

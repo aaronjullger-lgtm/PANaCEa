@@ -467,8 +467,24 @@ CRITICAL RULES:
     const verificationConfidence =
       verificationResult?.overallConfidence ?? quickVerifyResult?.confidence ?? 0;
 
+    // Minimum confidence required to write the staging record for admin review.
+    // Below this threshold the question failed every attempt and is not salvageable
+    // without a full re-generation — return 422 rather than polluting the pipeline.
+    const MIN_CONFIDENCE_FOR_STAGING = 0.35;
+
     if (!verificationPassed && attempt >= MAX_COVE_RETRIES) {
-      logger.warn(`[CoVe] Max retries exhausted, accepting with warnings`, {
+      if (verificationConfidence < MIN_CONFIDENCE_FOR_STAGING) {
+        logger.error(`[CoVe] All retries failed and confidence too low — aborting write`, {
+          userId: auth.userId,
+          conditionId,
+          finalConfidence: verificationConfidence,
+          attempts: attempt,
+        });
+        throw new Error(
+          `Question generation failed verification after ${attempt} attempts (confidence: ${verificationConfidence.toFixed(2)}). Please retry.`
+        );
+      }
+      logger.warn(`[CoVe] Max retries exhausted, saving to staging for review`, {
         userId: auth.userId,
         conditionId,
         finalConfidence: verificationConfidence,
@@ -488,7 +504,7 @@ CRITICAL RULES:
           vignette: questionData.vignette,
           question: questionData.question,
           options: questionData.options as object,
-          correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] ?? 'A',
+          correctAnswer: ['A', 'B', 'C', 'D', 'E'][questionData.correctAnswerIndex] ?? 'A',
           explanation: typeof questionData.rationale === 'string'
             ? questionData.rationale
             : JSON.stringify(questionData.rationale),
@@ -524,7 +540,17 @@ CRITICAL RULES:
       });
     }
 
-    // 2. Promote to Question table (live)
+    // 2. Promote to Question table (live) — ONLY if CoVe verification passed.
+    // Unverified questions remain in staging (status: 'pending') for admin review
+    // and will not be served to students until promoted manually or re-verified.
+    if (!verificationPassed) {
+      logger.info('[CoVe] Skipping live promotion — question did not pass verification', {
+        userId: auth.userId,
+        stagingId,
+        verificationConfidence,
+        coveAttempts: attempt,
+      });
+    } else
     try {
       await prisma.question.create({
         data: {
@@ -532,7 +558,7 @@ CRITICAL RULES:
           vignette: questionData.vignette,
           question: `${questionData.vignette}\n\n${questionData.question}`,
           options: questionData.options as object,
-          correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] ?? 'A',
+          correctAnswer: ['A', 'B', 'C', 'D', 'E'][questionData.correctAnswerIndex] ?? 'A',
           explanation: typeof questionData.rationale === 'string'
             ? questionData.rationale
             : JSON.stringify(questionData.rationale),

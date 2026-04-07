@@ -31,6 +31,17 @@ export interface SwitchDirectionResult {
   metacognitivePrecision: number | null;
   /** Confidence modifier based on switch quality: 0.80–1.03 */
   confidenceMultiplier: number;
+  /** Direction of the first switch: 'WR' | 'RW' | 'WW' | null */
+  firstSwitchDirection: 'WR' | 'RW' | 'WW' | null;
+  /** Total number of switches (for downstream first-only weighting) */
+  totalSwitches: number;
+  /**
+   * Grade penalty recommendation based on switch direction analysis.
+   * Accounts for research finding that only first change is informative
+   * and subsequent changes approach guessing probability.
+   * Range: -0.30 (strong RW penalty) to +0.10 (clean WR correction).
+   */
+  gradePenaltyRecommendation: number;
 }
 
 // ── Constants ──
@@ -46,6 +57,19 @@ const FLAILING_PENALTY = 0.95;
 
 /** Bonus for clean self-correction (wrong→right with no right→wrong) */
 const GOOD_METACOGNITION_BONUS = 1.03;
+
+/**
+ * Grade penalty constants based on switch direction research.
+ * Research (ScienceDirect 2022, Bauer et al. BMC Med Ed 2007):
+ * - Only first change is informative; subsequent changes approach guessing
+ * - WR ratio is ~3:1 (62% of changes are wrong→right)
+ * - RW is strong negative signal (initial correct may have been lucky)
+ * - Second+ changes carry no positive signal
+ */
+const FIRST_SWITCH_WR_BONUS = 0.10;    // First change was wrong→right: metacognitive recovery
+const FIRST_SWITCH_RW_PENALTY = -0.25; // First change was right→wrong: knowledge fragility
+const FIRST_SWITCH_WW_PENALTY = -0.10; // First change was wrong→wrong: no anchor
+const SUBSEQUENT_SWITCH_PENALTY = -0.05; // Each additional switch beyond first (diminishing signal)
 
 // ── Main function ──
 
@@ -70,20 +94,31 @@ export function analyzeSwitchDirections(
       netSwitchValue: 0,
       metacognitivePrecision: null,
       confidenceMultiplier: 1.0,
+      firstSwitchDirection: null,
+      totalSwitches: 0,
+      gradePenaltyRecommendation: 0,
     };
   }
 
   let wrongToRight = 0;
   let rightToWrong = 0;
   let wrongToWrong = 0;
+  let firstSwitchDirection: 'WR' | 'RW' | 'WW' | null = null;
 
   for (let i = 1; i < interactions.length; i++) {
     const prevCorrect = interactions[i - 1].option_id === correctOptionId;
     const currCorrect = interactions[i].option_id === correctOptionId;
 
-    if (!prevCorrect && currCorrect) wrongToRight++;
-    else if (prevCorrect && !currCorrect) rightToWrong++;
-    else if (!prevCorrect && !currCorrect) wrongToWrong++;
+    if (!prevCorrect && currCorrect) {
+      wrongToRight++;
+      if (!firstSwitchDirection) firstSwitchDirection = 'WR';
+    } else if (prevCorrect && !currCorrect) {
+      rightToWrong++;
+      if (!firstSwitchDirection) firstSwitchDirection = 'RW';
+    } else if (!prevCorrect && !currCorrect) {
+      wrongToWrong++;
+      if (!firstSwitchDirection) firstSwitchDirection = 'WW';
+    }
     // right → right = re-selected same correct option, not a meaningful switch
   }
 
@@ -104,6 +139,21 @@ export function analyzeSwitchDirections(
   // Good metacognitive revision gets a small boost
   if (wrongToRight > 0 && rightToWrong === 0) multiplier *= GOOD_METACOGNITION_BONUS;
 
+  // ── Grade penalty recommendation (research-backed first-change weighting) ──
+  // Research: only the first answer change improves scores; additional changes
+  // approach guessing probability (ScienceDirect, 2022).
+  let gradePenalty = 0;
+  if (firstSwitchDirection === 'WR') {
+    gradePenalty = FIRST_SWITCH_WR_BONUS;
+  } else if (firstSwitchDirection === 'RW') {
+    gradePenalty = FIRST_SWITCH_RW_PENALTY;
+  } else if (firstSwitchDirection === 'WW') {
+    gradePenalty = FIRST_SWITCH_WW_PENALTY;
+  }
+  // Subsequent switches beyond the first: diminishing penalty
+  const subsequentSwitches = Math.max(0, totalSwitches - 1);
+  gradePenalty += subsequentSwitches * SUBSEQUENT_SWITCH_PENALTY;
+
   return {
     wrongToRight,
     rightToWrong,
@@ -113,5 +163,8 @@ export function analyzeSwitchDirections(
       ? Math.round(metacognitivePrecision * 1000) / 1000
       : null,
     confidenceMultiplier: Math.round(Math.max(MIN_MULTIPLIER, multiplier) * 1000) / 1000,
+    firstSwitchDirection,
+    totalSwitches,
+    gradePenaltyRecommendation: Math.round(gradePenalty * 1000) / 1000,
   };
 }

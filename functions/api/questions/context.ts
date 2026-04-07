@@ -1,7 +1,6 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../_shared/auth';
-import { errorHandler } from '../_shared/error-handler';
-import { prisma } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 /**
  * GET /api/questions/:questionId/context
@@ -16,14 +15,20 @@ import { prisma } from '../_shared/prisma-edge';
  *
  * Used by QuizView to show contextual learning panel
  */
-export async function onRequestGet(
-  request: Request,
-  context: { params: { questionId: string } }
-): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
-    const questionId = context.params.questionId;
 
+const ContextSchema = z.object({
+  params: z.object({ questionId: z.string().min(1) }).optional(),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = authenticatedEndpoint(ContextSchema, async (context) => {
+  const { env, auth } = context;
+  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
+  const questionId = (context.params?.questionId ?? '').toString();
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
     // Get the question and its condition
     const question = await prisma.question.findUnique({
       where: { id: questionId },
@@ -45,10 +50,7 @@ export async function onRequestGet(
     });
 
     if (!question) {
-      return new Response(JSON.stringify({ error: 'Question not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 404, data: { error: 'Question not found' } };
     }
 
     const conditionId = question.conditionId;
@@ -59,7 +61,7 @@ export async function onRequestGet(
     if (conditionId) {
       const reviewLogs = await prisma.reviewLog.findMany({
         where: {
-          userId: user.id,
+          userId: auth.userId,
           conditionId: conditionId,
         },
         select: {
@@ -94,7 +96,7 @@ export async function onRequestGet(
         conditionId: conditionId,
         lifecycleStatus: 'ACTIVE',
         qaStatus: 'APPROVED',
-        contentHealthScore: { gte: 0.6 }, // Only high-quality questions
+        contentHealthScore: { gte: 0.6 },
       },
     });
 
@@ -127,7 +129,7 @@ export async function onRequestGet(
     const relatedPerformance = conditionId
       ? await prisma.reviewLog.findMany({
           where: {
-            userId: user.id,
+            userId: auth.userId,
             conditionId: { in: relatedConditions.map((c) => c.id) },
           },
           distinct: ['conditionId'],
@@ -140,6 +142,15 @@ export async function onRequestGet(
           take: 5,
         })
       : [];
+
+    const systemQuestions = await prisma.question.count({
+      where: {
+        system: system,
+        lifecycleStatus: 'ACTIVE',
+        qaStatus: 'APPROVED',
+        contentHealthScore: { gte: 0.6 },
+      },
+    });
 
     // Build response
     const contextData = {
@@ -162,14 +173,7 @@ export async function onRequestGet(
       },
       availableQuestions: {
         forCondition: availableQuestions,
-        forSystem: await prisma.question.count({
-          where: {
-            system: system,
-            lifecycleStatus: 'ACTIVE',
-            qaStatus: 'APPROVED',
-            contentHealthScore: { gte: 0.6 },
-          },
-        }),
+        forSystem: systemQuestions,
       },
       relatedConditions: relatedConditions.map((c) => ({
         id: c.id,
@@ -178,7 +182,6 @@ export async function onRequestGet(
         questionCount: c._count.Question,
       })),
       actions: {
-        // Suggest actions based on performance
         suggestedActions: buildSuggestedActions(
           conditionPerformance,
           availableQuestions
@@ -186,14 +189,16 @@ export async function onRequestGet(
       },
     };
 
-    return new Response(JSON.stringify(contextData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { data: contextData };
   } catch (error) {
-    return errorHandler(error);
+    return {
+      status: 500,
+      data: { error: 'Failed to fetch question context' },
+    };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-}
+});
 
 /**
  * Build suggested learning actions based on performance

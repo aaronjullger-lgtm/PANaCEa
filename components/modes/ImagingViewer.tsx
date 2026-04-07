@@ -77,7 +77,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
         {/* Header */}
         <div className="bg-data-neutral border-b border-data-neutral p-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-xl font-bold text-[var(--color-text-inverse)] flex items-center gap-3">
               <span className="px-3 py-1 rounded-lg bg-[var(--color-category-practice)] text-sm">
                 {getModalityLabel(image.type)}
               </span>
@@ -90,7 +90,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleZoomOut}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-[var(--color-text-inverse)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Zoom out"
             >
               <ZoomOut className="w-5 h-5" aria-hidden="true" />
@@ -100,7 +100,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-[var(--color-text-inverse)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Zoom in"
             >
               <ZoomIn className="w-5 h-5" aria-hidden="true" />
@@ -108,14 +108,14 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
             <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={handleRotate}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-[var(--color-text-inverse)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Rotate image"
             >
               <RotateCw className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
               onClick={handleReset}
-              className="p-2.5 min-h-[36px] hover:bg-data-neutral rounded-lg transition-colors text-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] hover:bg-data-neutral rounded-lg transition-colors text-[var(--color-text-inverse)] text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Reset view"
             >
               Reset
@@ -123,7 +123,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
             <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={onClose}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral rounded-lg transition-colors text-[var(--color-text-inverse)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Close viewer"
             >
               <X className="w-5 h-5" aria-hidden="true" />
@@ -155,7 +155,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
               {requireInterpretation && !showAnswer ? (
                 <>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">Your Interpretation</h3>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-inverse)] mb-2">Your Interpretation</h3>
                     <p className="text-sm text-data-neutral mb-4">
                       Describe the key findings you observe in this {image.type}.
                     </p>
@@ -163,14 +163,14 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                       value={userInterpretation}
                       onChange={(e) => setUserInterpretation(e.target.value)}
                       placeholder="Describe findings, abnormalities, and your interpretation..."
-                      className="w-full h-48 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg text-white placeholder-data-neutral focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent resize-none"
+                      className="w-full h-48 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg text-[var(--color-text-inverse)] placeholder-data-neutral focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent resize-none"
                     />
                   </div>
 
                   <button
                     onClick={handleSubmitInterpretation}
                     disabled={!userInterpretation.trim()}
-                    className="w-full px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] disabled:bg-data-neutral disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                    className="w-full px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] disabled:bg-data-neutral disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-semibold rounded-lg transition-colors"
                   >
                     Submit Interpretation
                   </button>
@@ -191,12 +191,12 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                       <h4 className="text-sm font-semibold text-data-neutral mb-2">
                         Your Interpretation:
                       </h4>
-                      <p className="text-white text-sm">{userInterpretation}</p>
+                      <p className="text-[var(--color-text-inverse)] text-sm">{userInterpretation}</p>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">Key Findings</h3>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-inverse)] mb-3">Key Findings</h3>
                     <ul className="space-y-2">
                       {image.findings.map((finding, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-data-neutral">
@@ -231,7 +231,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                   {!requireInterpretation && (
                     <button
                       onClick={onClose}
-                      className="w-full px-6 py-3 bg-data-neutral hover:bg-data-neutral text-white font-semibold rounded-lg transition-colors"
+                      className="w-full px-6 py-3 bg-data-neutral hover:bg-data-neutral text-[var(--color-text-inverse)] font-semibold rounded-lg transition-colors"
                     >
                       Continue Encounter
                     </button>

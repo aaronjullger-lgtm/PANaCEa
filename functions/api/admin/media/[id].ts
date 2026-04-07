@@ -8,21 +8,14 @@
 
 import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { createSuccessResponse } from '../../_shared/auth';
 import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withAuth,
-  withAdminRole,
-  withRateLimit,
-  withLogging,
-  withValidation,
   adminEndpoint,
+  adminAuthenticatedEndpoint,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../../_shared/middleware';
 import { logger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
 
 // Schema for media asset update (PUT body)
 const MediaAssetUpdateSchema = z.object({
@@ -41,17 +34,16 @@ type MediaAssetUpdate = z.infer<typeof MediaAssetUpdateSchema>;
 
 const MEDIA_BUCKET = 'medical-images';
 
+const MediaGetSchema = z.object({
+  id: z.string().max(100).optional(),
+});
+
 /**
  * GET /api/admin/media/[id] - Get a single media asset
  */
-export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withAdminRole(),
-  withRateLimit({ requestsPerMinute: 60, endpointType: 'admin' }),
-  withLogging(),
-  async (context: AuthenticatedContext & { params: { id: string } }) => {
+export const onRequestGet = adminAuthenticatedEndpoint(
+  MediaGetSchema,
+  async (context: AuthenticatedContext & ValidatedContext<any> & { params: { id: string } }) => {
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
@@ -79,24 +71,19 @@ export const onRequestGet = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse(context.request, media, 200, 0, context.env);
+      return { data: media };
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'params' }
 );
 
 /**
  * PUT /api/admin/media/[id] - Update media asset metadata
  */
-export const onRequestPut = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withAdminRole(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
-  withValidation(MediaAssetUpdateSchema),
-  withLogging(),
+export const onRequestPut = adminEndpoint(
+  MediaAssetUpdateSchema,
   async (
     context: AuthenticatedContext & ValidatedContext<MediaAssetUpdate> & { params: { id: string } }
   ) => {
@@ -156,16 +143,13 @@ export const onRequestPut = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse(
-        context.request,
-        {
-          id: updatedMedia.id,
-          message: 'Media updated successfully',
-        },
-        200,
-        0,
-        context.env
-      );
+      auditLog('admin_media_update', {
+        userId: context.auth.userId,
+        mediaId: id,
+        updatedFields: Object.keys(updateData).filter((k) => k !== 'updatedAt'),
+      });
+
+      return { data: { id: updatedMedia.id, message: 'Media updated successfully' } };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -175,13 +159,8 @@ export const onRequestPut = withMiddleware(
 /**
  * DELETE /api/admin/media/[id] - Delete a media asset
  */
-export const onRequestDelete = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withAdminRole(),
-  withRateLimit({ requestsPerMinute: 20, endpointType: 'admin' }),
-  withLogging(),
+export const onRequestDelete = adminEndpoint(
+  z.object({ id: z.string().max(100).optional() }),
   async (context: AuthenticatedContext & { params: { id: string } }) => {
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
@@ -226,7 +205,6 @@ export const onRequestDelete = withMiddleware(
               storagePath,
               error: await deleteResponse.text(),
             });
-            // Continue with DB deletion even if storage fails
           }
         } catch (storageError) {
           logger.warn('Storage delete error', {
@@ -268,18 +246,15 @@ export const onRequestDelete = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse(
-        context.request,
-        {
-          id,
-          message: 'Media deleted successfully',
-        },
-        200,
-        0,
-        context.env
-      );
+      auditLog('admin_media_delete', {
+        userId: context.auth.userId,
+        mediaId: id,
+      });
+
+      return { data: { id, message: 'Media deleted successfully' } };
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'params' }
 );

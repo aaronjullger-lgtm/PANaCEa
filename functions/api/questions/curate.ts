@@ -51,7 +51,7 @@ export const onRequestPost = adminEndpoint(CurationRequestSchema, async (context
 
         const opts = Array.isArray(questionData.options) ? questionData.options : [];
         const idx = Number(questionData.correctAnswerIndex ?? 0);
-        const correctLetter = ['A', 'B', 'C', 'D'][idx] ?? (opts[idx] as string) ?? 'A';
+        const correctLetter = ['A', 'B', 'C', 'D', 'E'][idx] ?? (opts[idx] as string) ?? 'A';
         const now = new Date();
         await prisma.question.create({
           data: {

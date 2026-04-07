@@ -98,6 +98,7 @@ export async function requestRefill(
         deficit,
         reason,
         isReservoirRefill: true, // Distinguishes from legacy generate_questions jobs
+        confusionScope: true, // Enable confusion-pair priority boosting
         requestedAt: new Date().toISOString(),
         ...(learnerPhase ? { learnerPhase } : {}),
       },

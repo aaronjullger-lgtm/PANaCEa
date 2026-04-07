@@ -178,7 +178,7 @@ export async function selectSecondChanceQuestion(
   // Get the user's variant history for this condition
   const topicProgress = await prisma.userTopicProgress.findUnique({
     where: {
-      userId_conditionId_taskType: { userId, conditionId, taskType },
+      userId_conditionId_taskType_progressContext: { userId, conditionId, taskType, progressContext: 'READINESS' },
     },
     select: { variantsUsed: true, stability: true, difficulty: true, lapses: true, nextReviewDate: true },
   });
@@ -203,25 +203,32 @@ export async function selectSecondChanceQuestion(
     priorityScore: 0, // Will be set by caller
   };
 
-  // ── Strategy 1: Unused QuestionVariant matching taskType ──
-  const unusedVariant = await prisma.questionVariant.findFirst({
+  // ── Strategy 1: PreGeneratedQuestion sibling matching conditionId + taskType ──
+  // (QuestionVariant table retired in Phase 2 — all variants now stored in PreGeneratedQuestion)
+  const preGenSiblings = await (prisma as any).preGeneratedQuestion.findMany({
     where: {
-      baseQuestion: { conditionId },
-      taskType,
-      NOT: { usedByUsers: { has: userId } },
-      id: { notIn: [...excludeQuestionIds] },
+      conditionId,
+      id: { notIn: [...excludeQuestionIds, ...variantsUsed] },
     },
-    select: { id: true, baseQuestionId: true },
-  });
+    select: { id: true, questionData: true },
+    take: 10,
+    orderBy: { generatedAt: 'desc' },
+  }) as Array<{ id: string; questionData: unknown }>;
 
-  if (unusedVariant) {
-    // Check recognition risk on the base question
+  // Prefer taskType match within the sibling pool
+  const taskMatchedPreGen = preGenSiblings.filter((q) => {
+    const data = (q.questionData ?? {}) as Record<string, unknown>;
+    return data.taskType === taskType;
+  });
+  const bestPreGen = (taskMatchedPreGen[0] ?? preGenSiblings[0]) ?? null;
+
+  if (bestPreGen) {
     const risk = await detectRecognitionRisk(
-      prisma, userId, unusedVariant.baseQuestionId, conditionId, taskType
+      prisma, userId, bestPreGen.id, conditionId, taskType
     );
 
     return {
-      questionId: unusedVariant.id,
+      questionId: bestPreGen.id,
       learningTarget,
       isVariant: true,
       isSecondChance: risk.shouldForceVariant,

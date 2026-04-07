@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import type { MedicalContentDisplay } from '@/types/medical-content';
+import { createApiClient, createContentClient } from '@/lib/sdk';
 
 const DEBOUNCE_MS = 320;
 const DEFAULT_LIMIT = 20;
@@ -88,54 +89,22 @@ export function useSemanticSearch(
       const isQuestion = requestAnswer && looksLikeQuestion(q);
       setAskedForAnswer(isQuestion);
 
-      const token = await getToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
+      const api = createApiClient(getToken);
+      const content = createContentClient(api);
 
       try {
         if (isQuestion) {
-          // One request: answer API returns both answer and top-K results
-          const res = await fetch('/api/library/answer', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ query: q.trim(), topK: Math.min(limit, 10) }),
-            signal,
-          });
-          const data = (await res.json()) as {
-            error?: string;
-            data?: { answer?: string; results?: unknown[] };
-            results?: unknown[];
-          };
-          if (!res.ok) {
-            const msg = data?.error ?? `Answer request failed: ${res.status}`;
-            throw new Error(msg);
-          }
-          const payload = (data?.data ?? data) as {
+          // Answer API — still uses raw api.post until we add answerClient
+          const payload = await api.post<{
             answer?: string;
             results?: SemanticSearchResult[];
-          };
-          setAnswer(payload.answer ?? null);
-          setResults(Array.isArray(payload.results) ? payload.results : []);
+          }>('/api/library/answer', { query: q.trim(), topK: Math.min(limit, 10) });
+          setAnswer(payload?.answer ?? null);
+          setResults(Array.isArray(payload?.results) ? payload.results : []);
         } else {
-          const res = await fetch('/api/library/semantic-search', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ query: q.trim(), limit }),
-            signal,
-          });
-          const data = (await res.json()) as {
-            error?: string;
-            data?: { results?: unknown[] };
-            results?: unknown[];
-          };
-          if (!res.ok) {
-            const msg = data?.error ?? `Search failed: ${res.status}`;
-            throw new Error(msg);
-          }
-          const payload = (data?.data ?? data) as { results?: SemanticSearchResult[] };
-          setResults(Array.isArray(payload.results) ? payload.results : []);
+          const payload = await content.semanticSearch({ query: q.trim(), limit });
+          const results = (payload as any)?.results ?? [];
+          setResults(Array.isArray(results) ? results : []);
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;

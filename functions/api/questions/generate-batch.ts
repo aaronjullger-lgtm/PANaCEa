@@ -11,6 +11,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { fetchWithTimeout } from '../_shared/timeout';
+import { computeSemanticHash } from '../../../lib/utils/semanticHash';
 
 // Flattened schema for body parsing (no nested 'body' object)
 const GenerateBatchSchema = z.object({
@@ -119,10 +120,40 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       difficulty: selectedDifficulty,
       questionData: q,
       generatedAt: new Date(),
+      // Phase 4: populate taxonomy + dedup columns at creation time
+      questionOrder: (q as any).questionOrder ?? 'third',
+      taskCategory: (q as any).taskCategory ?? selectedCategory,
+      semanticHash: computeSemanticHash((q as any).question ?? ''),
     }));
 
+    // Phase 4: dedup — skip questions whose semanticHash already exists in the pool
+    const hashValues = records
+      .map((r) => r.semanticHash)
+      .filter((h): h is string => typeof h === 'string' && h.length > 0);
+    const existingHashSet =
+      hashValues.length > 0
+        ? new Set(
+            (
+              await prisma.preGeneratedQuestion.findMany({
+                where: { semanticHash: { in: hashValues } },
+                select: { semanticHash: true },
+              })
+            ).map((d) => d.semanticHash ?? '')
+          )
+        : new Set<string>();
+    const dedupedRecords =
+      existingHashSet.size > 0
+        ? records.filter((r) => !existingHashSet.has(r.semanticHash ?? ''))
+        : records;
+    if (dedupedRecords.length < records.length) {
+      logger.info('Deduped questions by semanticHash', {
+        removed: records.length - dedupedRecords.length,
+        kept: dedupedRecords.length,
+      });
+    }
+
     const result = await prisma.preGeneratedQuestion.createMany({
-      data: records,
+      data: dedupedRecords,
       skipDuplicates: true,
     });
 
@@ -245,9 +276,9 @@ Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
    - PREFER: "Which finding would most likely be seen on [imaging/lab] if [complication] develops?"
    - Correct answer should not be obviously longer or more detailed
 
-3. ANSWER OPTIONS - KAPLAN-LEVEL DISTRACTORS (5 OPTIONS REQUIRED, PANCE-style):
-   - Provide exactly 5 options (A through E). DO NOT prefix with "A.", "B.", etc. - just the option text
-   - Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic, E = another plausible distractor).
+3. ANSWER OPTIONS - KAPLAN-LEVEL DISTRACTORS (4 OPTIONS REQUIRED, PANCE-style):
+   - Provide exactly 4 options (A through D). DO NOT prefix with "A.", "B.", etc. - just the option text
+   - Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic).
    - BAD: Obviously wrong options (e.g. chemotherapy for simple otitis). GOOD: Each distractor appropriate for a different scenario.
    - Avoid "all of the above" or "none of the above"
 
@@ -295,22 +326,64 @@ Return ONLY a JSON array (no markdown, no code blocks):
   }
 ]`;
 
+  // Retry wrapper for transient Gemini failures (429 rate limit, 503 overload, timeouts).
+  // Max 3 attempts with exponential backoff capped at 6 seconds.
+  // Edge-safe: total worst-case wait is ~9 seconds before giving up.
+  const MAX_GEMINI_RETRIES = 3;
+  const RETRY_BASE_MS = 1500;
+
+  let response: Response | null = null;
+  for (let attempt = 1; attempt <= MAX_GEMINI_RETRIES; attempt++) {
+    try {
+      response = await fetchWithTimeout(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.8,
+              maxOutputTokens: 16384,
+            },
+          }),
+        },
+        30000
+      );
+
+      // Retry on 429 (rate limit) and 5xx (server errors)
+      if (response.status === 429 || response.status >= 500) {
+        const errorText = await response.text();
+        logger.warn('Gemini transient error, will retry', {
+          attempt,
+          status: response.status,
+          error: errorText.slice(0, 200),
+        });
+        if (attempt < MAX_GEMINI_RETRIES) {
+          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1); // 1.5s, 3s, 6s
+          await new Promise((r) => setTimeout(r, delay));
+          response = null;
+          continue;
+        }
+      }
+      break; // Success or non-retryable error
+    } catch (fetchErr) {
+      logger.warn('Gemini fetch threw, will retry', {
+        attempt,
+        error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+      });
+      if (attempt < MAX_GEMINI_RETRIES) {
+        const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
   try {
-    const response = await fetchWithTimeout(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 16384,
-          },
-        }),
-      },
-      30000
-    );
+    if (!response) {
+      logger.error('Gemini API unreachable after all retries');
+      return [];
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -359,7 +432,7 @@ Return ONLY a JSON array (no markdown, no code blocks):
       return (
         q.question &&
         Array.isArray(q.options) &&
-        (q.options.length === 4 || q.options.length === 5) &&
+        q.options.length === 4 &&
         q.correctAnswer &&
         hasRationale
       );

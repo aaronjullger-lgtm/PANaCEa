@@ -1,127 +1,82 @@
 /**
  * API Endpoint: POST /api/user/update-fsrs-params
  *
- * Saves optimized FSRS parameters to UserProgress.fsrsParams
- * This creates a global fsrsParams entry that applies to all cards
+ * Saves optimized FSRS parameters to UserProgress.fsrsParams.
+ * Creates a global fsrsParams entry that applies to all cards.
+ *
+ * Migrated to authenticatedEndpoint: adds rate limiting (60/min for this
+ * write-heavy endpoint), CORS, structured logging, Zod validation.
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-interface Env {
-  DATABASE_URL: string;
-}
+const UpdateFSRSParamsSchema = z.object({
+  body: z.object({
+    parameters: z
+      .array(z.number())
+      .length(21, 'Must be array of exactly 21 numbers'),
+    metadata: z
+      .object({
+        rmse: z.number().optional(),
+        logLoss: z.number().optional(),
+        recordCount: z.number().optional(),
+        improvementVsDefault: z.number().optional(),
+      })
+      .optional(),
+  }),
+});
 
-interface RequestBody {
-  parameters: number[];
-  metadata?: {
-    rmse?: number;
-    logLoss?: number;
-    recordCount?: number;
-    improvementVsDefault?: number;
-  };
-}
+export const onRequestOptions = withCors();
 
-export const onRequestPost = async (context: { request: Request; env: Env }) => {
-  let prisma;
+export const onRequestPost = authenticatedEndpoint(
+  UpdateFSRSParamsSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    // Authenticate request
-    const auth = await authenticateRequest(context.request, context.env);
-    if (!auth || !auth.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
+    try {
+      const { parameters, metadata } = validated?.body ?? validated;
+
+      // Resolve Clerk ID → internal user ID
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
       });
-    }
 
-    const userId = auth.userId;
-
-    // Parse request body
-    const body: RequestBody = await context.request.json();
-
-    if (!body.parameters || !Array.isArray(body.parameters) || body.parameters.length !== 21) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid parameters: must be array of 21 numbers' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Validate all parameters are numbers
-    if (!body.parameters.every((p: number) => typeof p === 'number' && !isNaN(p))) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid parameters: all values must be valid numbers' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Connect to database
-    prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-    // Store optimization metadata in User table (if it exists)
-    // This will be a new field we'll add in a migration
-    const optimizationData = {
-      w: body.parameters,
-      optimizedAt: new Date().toISOString(),
-      ...body.metadata,
-    };
-
-    // Apply optimized params to all UserProgress for this user (MAIN session scheduling only).
-    // Data isolation: these params are used only for FSRS scheduler/optimizer; CRAM/RAPID_RECALL
-    // and OSCE do not use or aggregate this table.
-    const updated = await prisma.userProgress.updateMany({
-      where: { userId },
-      data: {
-        fsrsParams: optimizationData,
-      },
-    });
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Updated ${updated.count} progress records with optimized parameters`,
-        parameters: body.parameters,
-        metadata: body.metadata,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
+      if (!user) {
+        return { status: 404, error: 'User not found' };
       }
-    );
-  } catch (error) {
-    console.error('Failed to update FSRS parameters:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to update parameters' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
-  }
-};
 
-export const onRequestOptions = async () =>
-  new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    },
-  });
+      const optimizationData = {
+        w: parameters,
+        optimizedAt: new Date().toISOString(),
+        ...metadata,
+      };
+
+      // Apply optimized params to all UserProgress for this user
+      const updated = await prisma.userProgress.updateMany({
+        where: { userId: user.id },
+        data: {
+          fsrsParams: optimizationData,
+        },
+      });
+
+      return {
+        data: {
+          success: true,
+          message: `Updated ${updated.count} progress records with optimized parameters`,
+          parameters,
+          metadata,
+        },
+      };
+    } catch (error) {
+      console.error('Failed to update FSRS parameters:', error);
+      return { status: 500, error: 'Failed to update parameters' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { requestsPerMinute: 60 }
+);

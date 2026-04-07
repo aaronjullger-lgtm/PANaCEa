@@ -68,8 +68,8 @@ function AccessDenied() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4 text-center">
-      <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/30">
-        <Shield className="w-10 h-10 text-red-600 dark:text-red-400" />
+      <div className="p-4 rounded-full bg-[var(--color-data-fail)]/10">
+        <Shield className="w-10 h-10 text-[var(--color-data-fail)]" />
       </div>
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">

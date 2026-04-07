@@ -49,22 +49,22 @@ const STATUS_MESSAGES: Record<CalibrationStatus, { title: string; description: s
   'well-calibrated': {
     title: 'Well Calibrated',
     description: 'Your confidence aligns well with your actual performance. Keep it up!',
-    color: 'text-emerald-600',
+    color: 'text-[var(--color-data-pass)]',
   },
   'overconfident': {
     title: 'Slightly Overconfident',
     description: 'You tend to feel more confident than your performance warrants. The system is adjusting your review schedule to compensate.',
-    color: 'text-amber-600',
+    color: 'text-[var(--color-data-provisional)]',
   },
   'underconfident': {
     title: 'Slightly Underconfident',
     description: 'You perform better than your behavior suggests! The system is giving you credit for your actual knowledge.',
-    color: 'text-blue-600',
+    color: 'text-[var(--color-accent)]',
   },
   'insufficient-data': {
     title: 'Building Your Profile',
     description: 'We need about 30 more review pairs to calibrate your confidence profile. Keep studying!',
-    color: 'text-slate-500',
+    color: 'text-[var(--color-text-muted)]',
   },
 };
 
@@ -94,17 +94,17 @@ export default function CalibrationChart() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 animate-pulse">
-        <div className="h-4 bg-slate-200 rounded w-1/3 mb-4" />
-        <div className="h-48 bg-slate-100 rounded" />
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 animate-pulse">
+        <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/3 mb-4" />
+        <div className="h-48 bg-[var(--color-bg-tertiary)] rounded" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
-        <p className="text-sm text-slate-500">Unable to load calibration data.</p>
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
+        <p className="text-sm text-[var(--color-text-muted)]">Unable to load calibration data.</p>
       </div>
     );
   }
@@ -147,9 +147,14 @@ export default function CalibrationChart() {
                     />
                     {/* Actual (overlay) */}
                     <div
-                      className={`absolute inset-y-0 left-0 rounded ${
-                        isOverconfident ? 'bg-amber-400' : isUnderconfident ? 'bg-blue-400' : 'bg-emerald-400'
-                      }`}
+                      className="absolute inset-y-0 left-0 rounded"
+                      style={{
+                        backgroundColor: isOverconfident
+                          ? 'var(--color-data-provisional)'
+                          : isUnderconfident
+                          ? 'var(--color-accent)'
+                          : 'var(--color-data-pass)',
+                      }}
                       style={{ width: `${Math.round(actual * 100)}%`, opacity: 0.8 }}
                     />
                     {/* Count label */}

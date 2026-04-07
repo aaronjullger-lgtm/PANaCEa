@@ -2,6 +2,11 @@
  * POST /api/srs/sync
  * Sync SRS items from localStorage to database for authenticated users
  *
+ * @deprecated SRSItem is legacy (SM-2). The authoritative FSRS stores are
+ * UserProgress (condition-level) and UserTopicProgress (condition+taskType).
+ * This endpoint is kept for backward compatibility with the offline-first
+ * localStorage sync pipeline. New features should NOT add SRSItem writes.
+ *
  * Security: Authenticated endpoint with Zod validation
  * Sprint: Security Hardening Sprint 3 - Middleware Pattern
  */

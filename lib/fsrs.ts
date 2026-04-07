@@ -119,6 +119,27 @@ export const v5CompatibleParameters: FSRSParameters = {
   ],
 };
 
+/**
+ * FSRS-7 reference defaults (from srs-benchmark README, April 2026)
+ * NOT FOR PRODUCTION USE — FSRS-7 has no production implementation yet.
+ * Stored here as a migration reference for when ts-fsrs ships v7 support.
+ *
+ * 29 parameters total: w[0..20] are analogous to v6 (but may be reinterpreted),
+ * w[21..28] are the 8-parameter forgetting curve replacing v6's single w[20].
+ */
+export const FSRS7_REFERENCE_DEFAULTS = {
+  w: [
+    0.041, 2.4175, 4.1283, 11.9709, 5.6385, 0.4468, 3.262, 2.3054,
+    0.1688, 1.3325, 0.3524, 0.0049, 0.7503, 0.0896, 0.6625, 1.15,
+    0.882, 0.3072, 3.5875, 0.303, 0.0107, 0.2279, 2.6413, 0.5594,
+    1.15, 2.5, 1.0, 0.0723, 0.1634,
+  ],
+  paramCount: 29,
+  forgettingCurveParams: 8, // w[21]..w[28]
+  description: 'FSRS-7 "final version" — fractional intervals, 8-param forgetting curve',
+  status: 'NOT_PRODUCTION_READY' as const,
+};
+
 // Minimum stability constant
 const S_MIN = 0.01;
 
@@ -158,17 +179,31 @@ export class FSRS {
   /**
    * Normalize parameters to ensure v6 compatibility
    * Adds default values for w[19] and w[20] if missing (v5 migration)
+   *
+   * FSRS-7 Migration Stub:
+   * When FSRS-7 lands in ts-fsrs, this function will need a new branch:
+   *   if (w.length === 21) { // add w[21]..w[28] defaults for v7 }
+   * The 29-parameter default array is published in srs-benchmark README.
+   * The first ~21 params likely map to analogous v6 functions, with w[21]-w[28]
+   * constituting the 8-parameter forgetting curve. However, reoptimization
+   * will be required — v6 params are NOT directly compatible with v7.
+   *
+   * Expected FSRS-7 default w[21..28]:
+   *   0.2279, 2.6413, 0.5594, 1.15, 2.5, 1.0, 0.0723, 0.1634
+   * (from srs-benchmark README, subject to change before production release)
    */
   private normalizeParameters(params: FSRSParameters): FSRSParameters {
     const w = [...params.w];
 
-    // Add v6 parameters if missing (v5 � v6 migration)
+    // Add v6 parameters if missing (v5 → v6 migration)
     if (w.length === 19) {
       w.push(9.0); // w[19]: retrievability factor
       w.push(1.0); // w[20]: retrievability decay exponent
     } else if (w.length === 20) {
       w.push(1.0); // w[20]: retrievability decay exponent
     }
+    // Future: v6 → v7 migration (29 params, 8-parameter forgetting curve)
+    // if (w.length === 21) { w.push(...FSRS7_DEFAULT_CURVE_PARAMS); }
 
     return {
       ...params,

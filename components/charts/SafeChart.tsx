@@ -10,7 +10,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import chartTheme, { safeChartValue } from '@/lib/chartTheme';
+import chartTheme, { safeChartDisplay } from '@/lib/chartTheme';
 
 interface SafeChartProps {
   data: Array<{ x: string | number; y: number }>;
@@ -77,7 +77,7 @@ export function SafeChart({
             style: chartTheme.axisLabel.style,
           }}
           tickFormatter={(value) =>
-            safeChartValue(typeof value === 'number' ? `${Math.round(value)}%` : value)
+            typeof value === 'number' && isFinite(value) ? `${Math.round(value)}%` : '—'
           }
         />
         <Tooltip

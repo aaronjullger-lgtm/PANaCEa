@@ -9,6 +9,7 @@ import { adminEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { discardStagingQuestion } from '../../_shared/staging-questions';
+import { auditLog } from '../../_shared/auditLog';
 
 const RejectBodySchema = z.object({
   body: z.object({
@@ -33,6 +34,11 @@ export const onRequestPost = adminEndpoint(RejectBodySchema, async (context) => 
     }
 
     await discardStagingQuestion(prisma, stagingId);
+    auditLog('admin_staging_reject', {
+      userId: context.auth.userId,
+      stagingId,
+      system: staging.system,
+    });
     log.info('Staging rejected', { stagingId });
     return { data: { success: true, message: 'Rejected' } };
   } catch (e) {

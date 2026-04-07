@@ -48,6 +48,8 @@ import { analyzeSwitchDirections, type SwitchDirectionResult } from './switchDir
 import { analyzeExplanationEngagement, type ExplanationEngagementResult } from './explanationEngagementService';
 import { computeSessionRegularity, type SessionRegularityResult } from './sessionRegularityService';
 import { computeRelearningSpeed, getOriginalLearningRt, type RelearningSpeedResult } from './relearningSpeedService';
+// Behavioral analysis grade modulation coordinator (Phase 1 — Behavioral Analysis Audit)
+import { modulateGrade, type BehavioralContext, type GradeModulation } from './gradeModulationCoordinator';
 import { analyzeConfusionRecurrence, type ConfusionPairAction } from './confusionPairRecurrenceService';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
@@ -332,9 +334,16 @@ export async function submitDrillReview(
   const questionTypeMvrt = getMVRTThreshold(
     ((telemetry?.question_type as string) ?? 'unknown') as QuestionType
   );
+  // Research (Wise & DeMars, 2006): rapid-guess threshold at ~10% of median item RT.
+  // When per-user behavioral baseline exists, use 10% of their personal median RT
+  // as a more individualized rapid-guess filter. Fall back to fixed thresholds
+  // when no baseline is available.
+  const perUserMvrt = behavioralBaseline?.rtBaseline?.medianMs
+    ? Math.max(SERVER_MVRT_THRESHOLD_MS, behavioralBaseline.rtBaseline.medianMs * 0.10)
+    : null;
   const effectiveMvrt = Math.max(
     SERVER_MVRT_THRESHOLD_MS,
-    (telemetry?.mvrt_threshold_ms as number) ?? questionTypeMvrt
+    perUserMvrt ?? (telemetry?.mvrt_threshold_ms as number) ?? questionTypeMvrt
   );
   const isRapidGuess = (telemetry?.rapid_guess as boolean) ?? numericTime < effectiveMvrt;
 
@@ -385,6 +394,8 @@ export async function submitDrillReview(
       hintViewDurationMs: (telemetry?.hint_view_duration_ms as number | null) ?? null,
       // Question type for type-specific confidence weight profiles (Sprint 3)
       questionType: (telemetry?.question_type as string) ?? 'unknown',
+      // Streak modifier: consecutive correct answers in current session (optional)
+      consecutiveCorrectStreak: (telemetry?.consecutive_correct as number | undefined) ?? undefined,
     };
 
     const continuousResult = deriveContinuousRating(behaviorMetrics, undefined, userBaseline);
@@ -443,10 +454,41 @@ export async function submitDrillReview(
     if (rating === Rating.Easy) {
       rating = Rating.Good;
     }
-    // Rule 2: If answerChanges > 2 (high indecision) → downgrade to Again
-    if (switches > 2 && rating > Rating.Again) {
+    // Rule 2: Switch-direction-aware indecision detection
+    // Research (ScienceDirect 2022): only the first answer change is informative;
+    // subsequent changes approach guessing probability. RW is a strong negative signal.
+    if (wave2SwitchDirection && wave2SwitchDirection.totalSwitches > 0) {
+      // Apply direction-aware grade penalty from Wave 2 analysis
+      gradeContinuous = Math.max(1.0, Math.min(4.0,
+        gradeContinuous + wave2SwitchDirection.gradePenaltyRecommendation
+      ));
+      // Re-sync discrete rating with continuous grade after penalty.
+      // Binary system: grade < 2.0 → Again, grade ≥ 2.0 → Good.
+      // This prevents grade_continuous and discrete rating from diverging.
+      if (gradeContinuous < 2.0 && rating > Rating.Again) {
+        rating = Rating.Again;
+        logger?.info?.('Behavioral override: Again (grade dropped below 2.0 after switch-direction penalty)', {
+          questionId,
+          gradeContinuous,
+          firstSwitch: wave2SwitchDirection.firstSwitchDirection,
+          totalSwitches: wave2SwitchDirection.totalSwitches,
+          gradePenalty: wave2SwitchDirection.gradePenaltyRecommendation,
+        });
+      }
+      // RW first switch with multiple total switches = strong indecision → downgrade
+      if (wave2SwitchDirection.firstSwitchDirection === 'RW' && wave2SwitchDirection.totalSwitches > 1 && rating > Rating.Again) {
+        rating = Rating.Again;
+        logger?.info?.('Behavioral override: Again (right→wrong first switch + multiple changes)', {
+          questionId,
+          firstSwitch: wave2SwitchDirection.firstSwitchDirection,
+          totalSwitches: wave2SwitchDirection.totalSwitches,
+          gradePenalty: wave2SwitchDirection.gradePenaltyRecommendation,
+        });
+      }
+    } else if (switches > 2 && rating > Rating.Again) {
+      // Fallback when Wave 2 option_interactions unavailable: legacy threshold
       rating = Rating.Again;
-      logger?.info?.('Behavioral override: Again (high indecision)', {
+      logger?.info?.('Behavioral override: Again (high indecision, legacy path)', {
         questionId,
         answerSwitches: switches,
       });
@@ -487,6 +529,8 @@ export async function submitDrillReview(
       eliminationVelocity,
       optionCount: (question.questionData as any)?.options?.length ?? 4,
       baseline: ghostBaseline,
+      hintViewed: behaviorMetrics.hintViewed,
+      hintDurationMs: behaviorMetrics.hintViewDurationMs,
     });
     rating = ghostResult.rating;
 
@@ -494,6 +538,12 @@ export async function submitDrillReview(
     if (ghostResult.rule === 'indecision') {
       // Indecision: cap grade_continuous at 1.5 (Again range)
       gradeContinuous = Math.min(gradeContinuous, GHOST_GRADER_CONSTANTS.INDECISION_GRADE_CAP);
+    } else if (ghostResult.rule === 'hint_assisted') {
+      // Hint-assisted: apply penalty and cap at HINT_GRADE_CAP (weaker than indecision)
+      gradeContinuous = Math.min(
+        Math.max(1.0, gradeContinuous + ghostResult.gradeContinuousAdjustment),
+        GHOST_GRADER_CONSTANTS.HINT_GRADE_CAP
+      );
     } else if (ghostResult.gradeContinuousAdjustment !== 0) {
       // Confidence boost or elimination adjustment
       gradeContinuous = Math.max(1.0, Math.min(4.0,
@@ -760,6 +810,9 @@ export async function submitDrillReview(
             questionType: 'pre_generated',
             grade: Rating.Again, // Force grade to 1 (Again) for rapid guesses
             grade_continuous: 1.0,
+            rawGrade: 1.0,
+            effectiveGrade: 1.0,
+            behavioralDeltas: null, // No behavioral modulation for rapid guesses
             state: liveState,
             stability: liveStability,
             difficulty: liveDifficulty,
@@ -1095,12 +1148,63 @@ export async function submitDrillReview(
           difficulty: modulatedDifficulty,
         };
 
+        // ── Behavioral grade modulation (Phase 1 — Behavioral Analysis Audit) ──
+        // Runs AFTER the full confidence pipeline and FSRS state update.
+        // Produces rawGrade/effectiveGrade/behavioralDeltas for ReviewLog storage.
+        // Does NOT retroactively change the FSRS scheduling — the discrete rating
+        // fed to fsrs.next() remains the binary rating (Finding 2 fix preserved).
+        // Instead, the modulated grade provides the FSRS optimizer with richer
+        // training signal and enables future shadow-mode A/B testing.
+        let gradeModulationResult: GradeModulation | null = null;
+        try {
+          const streakCount = (telemetry?.consecutive_correct as number | undefined) ?? 0;
+          const behavioralContext: BehavioralContext = {
+            responseTimeMs: effectiveDurationMs,
+            isCorrect,
+            rawGrade: gradeContinuous,
+            streakCount,
+            sessionQuestionIndex: questionNumber ?? 0,
+            userMedianRtMs: null, // Populated when UserSRSConfig.medianResponseTimeMs is available
+            rollingWindowAccuracy: null, // Populated when DrillSessionRecord rolling fields are wired
+            rollingWindowMeanRtMs: null,
+            sessionMeanAccuracy: null,
+          };
+
+          // Attempt to read per-user RT baseline from UserSRSConfig
+          try {
+            const srsConfig = await prisma.userSRSConfig.findUnique({
+              where: { userId },
+              select: { medianResponseTimeMs: true, responseTimeSampleN: true },
+            });
+            if (srsConfig?.medianResponseTimeMs != null) {
+              behavioralContext.userMedianRtMs = srsConfig.medianResponseTimeMs;
+            }
+          } catch { /* non-fatal: use default median */ }
+
+          gradeModulationResult = modulateGrade(behavioralContext);
+          logger?.debug?.('Grade modulation computed', {
+            rawGrade: gradeModulationResult.rawGrade,
+            effectiveGrade: gradeModulationResult.effectiveGrade,
+            discreteGrade: gradeModulationResult.discreteGrade,
+            deltas: gradeModulationResult.deltas,
+            rtZone: gradeModulationResult.signals.rtZone,
+            fatigueScore: gradeModulationResult.signals.fatigueScore,
+          });
+        } catch (modErr) {
+          logger?.warn?.('Grade modulation failed (non-fatal, using raw grade)', {
+            error: modErr instanceof Error ? modErr.message : String(modErr),
+          });
+        }
+
         const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
         const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
 
         // Capture real FSRS schedule for the API response (use clamped date when in EOR mode)
+        // Round intervalDays for display/API consumers; raw float in updatedCard.scheduled_days.
+        // FSRS-7 migration: fractional intervals will flow through here — rounding at this
+        // boundary keeps UI components and notification logic working unchanged.
         fsrsSchedule = {
-          intervalDays: updatedCard.scheduled_days,
+          intervalDays: Math.max(1, Math.round(updatedCard.scheduled_days)),
           nextDueDate: clampedNextDue.toISOString(),
           stability: updatedCard.stability,
           difficulty: updatedCard.difficulty,
@@ -1129,6 +1233,9 @@ export async function submitDrillReview(
               questionType: 'pre_generated',
               grade: rating,
               grade_continuous: gradeContinuous,
+              rawGrade: gradeModulationResult?.rawGrade ?? gradeContinuous,
+              effectiveGrade: gradeModulationResult?.effectiveGrade ?? gradeContinuous,
+              behavioralDeltas: gradeModulationResult?.deltas ?? null,
               state: currentCard.state,
               stability: currentCard.stability,
               difficulty: currentCard.difficulty,
@@ -1436,6 +1543,15 @@ export async function submitDrillReview(
     }
   }
 
+  // ── RT baseline update (non-blocking, Phase 1 — Behavioral Analysis Audit) ──
+  // Incrementally update per-user median RT for future grade modulation.
+  // Fires asynchronously to avoid adding latency to the response.
+  if (effectiveDurationMs > 0 && countForFSRS) {
+    updateUserMedianRtAsync(prisma, userId, logger).catch(() => {
+      // Swallowed — non-fatal background task
+    });
+  }
+
   return {
     success: true,
     isCorrect,
@@ -1457,4 +1573,48 @@ export async function submitDrillReview(
     // Real FSRS schedule data — undefined when FSRS was skipped (cram, rapid_recall, rapid guess, no conditionId)
     fsrsSchedule,
   };
+}
+
+/**
+ * Non-blocking RT baseline update for UserSRSConfig.
+ * Queries last 50 ReviewLogs for the user, computes median RT,
+ * and upserts to UserSRSConfig.medianResponseTimeMs.
+ *
+ * Called at the end of each FSRS-eligible review to keep the
+ * baseline fresh for grade modulation RT zone classification.
+ */
+async function updateUserMedianRtAsync(
+  prisma: PrismaClient,
+  userId: string,
+  logger?: { warn?: (...args: unknown[]) => void; debug?: (...args: unknown[]) => void }
+): Promise<void> {
+  const { computeMedianRt, MAX_RT_SAMPLE_WINDOW } = await import('./userRtBaselineService');
+
+  const recentReviews = await prisma.reviewLog.findMany({
+    where: { userId, responseTimeMs: { not: null, gt: 0 } },
+    orderBy: { reviewedAt: 'desc' },
+    take: MAX_RT_SAMPLE_WINDOW,
+    select: { responseTimeMs: true },
+  });
+
+  const samples = recentReviews
+    .filter((r): r is { responseTimeMs: number } => r.responseTimeMs != null)
+    .map(r => ({ responseTimeMs: r.responseTimeMs }));
+
+  const result = computeMedianRt(samples);
+  if (!result) return; // Not enough valid data
+
+  await prisma.userSRSConfig.update({
+    where: { userId },
+    data: {
+      medianResponseTimeMs: result.medianMs,
+      responseTimeSampleN: result.sampleCount,
+    },
+  });
+
+  logger?.debug?.('Updated user RT baseline', {
+    userId,
+    medianMs: result.medianMs,
+    sampleCount: result.sampleCount,
+  });
 }

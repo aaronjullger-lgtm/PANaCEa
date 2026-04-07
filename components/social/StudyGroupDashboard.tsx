@@ -234,7 +234,7 @@ export default function StudyGroupDashboard() {
               {/* Create Group Card */}
               <div
                 onClick={() => setShowCreateModal(true)}
-                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
+                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer border border-transparent hover:border-[var(--color-accent)] transition-colors group"
               >
                 <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Plus className="w-6 h-6 text-[var(--color-accent)]" />
@@ -248,7 +248,7 @@ export default function StudyGroupDashboard() {
               {/* Join Group Card */}
               <div
                 onClick={() => setShowJoinModal(true)}
-                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-sm border border-[var(--color-border)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer hover:border-[var(--color-accent)] transition-colors group"
+                className="bg-[var(--color-bg-primary)] rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center min-h-[160px] cursor-pointer border border-transparent hover:border-[var(--color-accent)] transition-colors group"
               >
                 <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Users className="w-6 h-6 text-[var(--color-accent)]" />
@@ -356,7 +356,7 @@ export default function StudyGroupDashboard() {
             animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">
+            <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] overflow-hidden">
               <div className="p-4 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] flex justify-between items-center">
                 <h3 className="font-semibold flex items-center gap-2 text-[var(--color-text-primary)]">
                   <Trophy className="w-5 h-5 text-[var(--color-accent)]" />

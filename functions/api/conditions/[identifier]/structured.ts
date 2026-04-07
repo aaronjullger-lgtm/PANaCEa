@@ -11,7 +11,8 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const PARSE_MODEL = 'gemini-2.0-flash-exp';
+// Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
+const PARSE_MODEL = 'gemini-2.0-flash';
 
 const StructuredSchema = z.object({
   params: z.object({
@@ -118,7 +119,7 @@ export const onRequestGet = authenticatedEndpoint(
             },
             source: 'fallback',
           }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
+          { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' } }
         );
       }
 
@@ -234,7 +235,7 @@ Output valid JSON only, no markdown.`;
 
       return new Response(JSON.stringify({ data: parsed, source: 'gemini' }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
       });
     } catch (error) {
       logger.error('Structured condition error', {

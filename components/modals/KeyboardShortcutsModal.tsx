@@ -167,7 +167,7 @@ const ShortcutRow: React.FC<{ shortcut: ShortcutItem }> = ({ shortcut }) => (
     <div className="flex items-center gap-1">
       {shortcut.keys.map((key, idx) => (
         <React.Fragment key={idx}>
-          <kbd className="px-2 py-1 text-xs font-mono font-semibold bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-md shadow-sm min-w-[28px] text-center">
+          <kbd className="px-2 py-1 text-xs font-mono font-semibold bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] rounded-md shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] min-w-[28px] text-center">
             {key}
           </kbd>
           {idx < shortcut.keys.length - 1 && (

@@ -7,9 +7,9 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 
 const QuestionFetchSchema = z.object({
-  userId: z.string(),
   system: z.string().optional(),
   conditionId: z.string().optional(),
   difficulty: z.string().optional(),
@@ -25,7 +25,15 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = validated;
+    const { system, conditionId, difficulty, questionType, limit = 10 } = validated;
+
+    // Resolve internal user ID from Clerk auth — never trust client-supplied userId
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      logger.warn('User not found for question fetch', { clerkId: auth.userId });
+      return { status: 404, error: 'User not found' };
+    }
+    const userId = user.id;
 
     // Get seen question IDs
     const historyWhere: { userId: string; questionType?: string } = { userId };
@@ -39,7 +47,12 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
     const seenQuestionIds = history.map((h: HistoryItem) => h.questionId);
 
     // Build query
-    const where: any = { validationStatus: { not: 'rejected' } };
+    // Phase 2: Feature-flagged approval gate (env.REQUIRE_APPROVED_QUESTIONS)
+    const where: any = {
+      validationStatus: env?.REQUIRE_APPROVED_QUESTIONS === 'true'
+        ? 'approved'
+        : { not: 'rejected' },
+    };
     if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (questionType) where.questionType = questionType;
@@ -57,6 +70,22 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
       count: questions.length,
       filters: { system, conditionId, questionType },
     });
+
+    // Increment timesServed for all served questions (fire-and-forget).
+    // Enables the flag-rate kill switch: questions with flagRate > 0.1 AND timesServed >= 20
+    // are auto-rejected by contentHealthService. Without timesServed the kill switch never fires.
+    if (questions.length > 0) {
+      prisma.preGeneratedQuestion
+        .updateMany({
+          where: { id: { in: questions.map((q) => q.id) } },
+          data: { timesServed: { increment: 1 } },
+        })
+        .catch((err: unknown) =>
+          logger.warn('timesServed increment failed (non-fatal)', {
+            error: err instanceof Error ? err.message : String(err),
+          })
+        );
+    }
 
     return {
       data: {

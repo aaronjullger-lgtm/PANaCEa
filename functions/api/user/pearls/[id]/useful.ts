@@ -2,94 +2,58 @@
  * POST /api/user/pearls/[id]/useful - Mark pearl as useful/mastered
  *
  * Sprint 8: My Pearls Dashboard
- * Records that a user found a pearl useful and increments the global vote count
+ * Records that a user found a pearl useful and increments the global vote count.
+ *
+ * Migrated to authenticatedEndpoint: adds rate limiting (300/min), CORS,
+ * structured logging, error handling.
  */
 
-import type { EventContext, KVNamespace } from '@cloudflare/workers-types';
-import type { PrismaClient } from '@prisma/client';
-import { authenticateRequest } from '../../../_shared/auth';
-import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { v4 as uuidv4 } from 'uuid';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY?: string;
-  CACHE?: KVNamespace;
-}
+const UsefulSchema = z.object({
+  body: z
+    .object({
+      notes: z.string().max(2000).optional(),
+    })
+    .optional()
+    .default({}),
+});
 
-export async function onRequestPost(
-  context: EventContext<Env, string, unknown>
-): Promise<Response> {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestOptions = withCors();
 
-  try {
-    // Authenticate user
-    const authResult = await authenticateRequest(
-      context.request as unknown as Request,
-      context.env
-    );
-    if (!authResult?.userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+export const onRequestPost = authenticatedEndpoint(
+  UsefulSchema,
+  async (context) => {
+    const { env, auth, validated, params } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const userId = authResult.userId;
-
-    // Extract pearl ID from URL path
-    const url = new URL(context.request.url);
-    const pathParts = url.pathname.split('/');
-    const pearlId = pathParts[pathParts.length - 2]; // /api/user/pearls/[id]/useful
-
-    if (!pearlId) {
-      return new Response(JSON.stringify({ error: 'Pearl ID required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check if pearl exists
-    const pearl = await prisma.clinicalPearl.findUnique({
-      where: { id: pearlId },
-      select: { id: true },
-    });
-
-    if (!pearl) {
-      return new Response(JSON.stringify({ error: 'Pearl not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Parse optional notes from request body
-    let notes: string | undefined;
     try {
-      const body = (await context.request.json()) as { notes?: string };
-      notes = body?.notes;
-    } catch (parseError) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+      const pearlId = params?.id;
+      if (!pearlId) {
+        return { status: 400, error: 'Pearl ID required' };
+      }
 
-    // Use transaction to ensure atomicity
-    await prisma.$transaction(
-      async (
-        tx: Omit<
-          PrismaClient,
-          '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
-        >
-      ) => {
+      // Check if pearl exists
+      const pearl = await prisma.clinicalPearl.findUnique({
+        where: { id: pearlId },
+        select: { id: true },
+      });
+      if (!pearl) {
+        return { status: 404, error: 'Pearl not found' };
+      }
+
+      const notes = validated?.body?.notes || validated?.notes;
+
+      // Use transaction to ensure atomicity
+      await prisma.$transaction(async (tx: any) => {
         // Upsert user pearl interaction
         await tx.userPearl.upsert({
           where: {
             userId_pearlId: {
-              userId,
+              userId: auth.userId,
               pearlId,
             },
           },
@@ -100,7 +64,7 @@ export async function onRequestPost(
           },
           create: {
             id: uuidv4(),
-            userId,
+            userId: auth.userId,
             pearlId,
             markedUseful: true,
             viewedAt: new Date(),
@@ -115,32 +79,19 @@ export async function onRequestPost(
             usefulVotes: { increment: 1 },
           },
         });
-      }
-    );
+      });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Pearl marked as mastered',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('[POST /api/user/pearls/[id]/useful] Error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to mark pearl',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } finally {
-    await prisma.$disconnect();
+      return {
+        data: {
+          success: true,
+          message: 'Pearl marked as mastered',
+        },
+      };
+    } catch (error) {
+      console.error('[POST /api/user/pearls/[id]/useful] Error:', error);
+      return { status: 500, error: 'Failed to mark pearl' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);

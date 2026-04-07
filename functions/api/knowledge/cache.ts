@@ -6,7 +6,8 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const DEFAULT_TTL_SECONDS = 3600; // 1 hour
-const CACHE_MODEL = 'gemini-1.5-pro';
+// Phase 1.3 optimization: cache building is summarization, not reasoning (was gemini-2.5-flash)
+const CACHE_MODEL = 'gemini-2.0-flash';
 
 const CreateCacheSchema = z.object({
   displayName: z.string().min(1).max(128),

@@ -9,6 +9,7 @@ import { adminEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { processStagingQueueWithCritic } from '../../_shared/stagingExports';
+import { auditLog } from '../../_shared/auditLog';
 
 const BodySchema = z.object({
   body: z
@@ -28,6 +29,11 @@ export const onRequestPost = adminEndpoint(BodySchema, async (context) => {
   try {
     const results = await processStagingQueueWithCritic(prisma, env, limit);
     log.info('Critic run completed', { processed: results.length, results });
+    auditLog('admin_staging_run_critic', {
+      userId: context.auth.userId,
+      processed: results.length,
+      limit,
+    });
     return { data: { success: true, processed: results.length, results } };
   } catch (e) {
     log.error('Run critic error', e);

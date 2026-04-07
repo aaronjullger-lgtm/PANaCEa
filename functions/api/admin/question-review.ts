@@ -6,16 +6,26 @@
  * POST /api/admin/question-review - Update validation status
  *
  * Workflow: pending → approved | rejected | needs_revision
+ *
+ * Phase 2 Enhancement: Added review queue stats and batch auto-approve
+ * via query param ?action=stats or ?action=auto-approve
  */
 
 import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { isAdmin, type UserRole } from '../_shared/rbac';
+import { auditLog } from '../_shared/auditLog';
+import { autoApproveHighQuality, getReviewQueueStats } from '../../../lib/services/questionReviewGate';
 
 // Query schema for GET requests
 const GetQuerySchema = z.object({
+  // Phase 2: action param for stats and batch operations
+  // ?action=stats → returns review queue statistics
+  // ?action=auto-approve → batch approve high-quality pending questions
+  // ?action=auto-approve&dryRun=true → preview without applying
+  action: z.enum(['stats', 'auto-approve']).optional(),
+  dryRun: z.string().optional(),
   validationStatus: z.enum(['pending', 'approved', 'rejected', 'needs_revision']).optional(),
   system: z.string().optional(),
   minQualityScore: z.string().optional(),
@@ -52,23 +62,28 @@ export const onRequestGet = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      // Check if user is admin or content_creator
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { role: true, id: true },
-      });
+      // withAdminRole() in adminAuthenticatedEndpoint already verified admin access.
+      const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
 
-      const role = String(user?.role).toLowerCase() as UserRole | undefined;
+      // Phase 2: Handle special actions (stats, auto-approve)
+      if (validated.action === 'stats') {
+        const stats = await getReviewQueueStats(prisma);
+        logger.info('Review queue stats requested', { userId: adminUserId, stats });
+        return { data: { success: true, data: stats } };
+      }
 
-      if (!user || !role || (!isAdmin(role) && (user.role as string) !== 'content_creator')) {
-        logger.warn('Non-admin attempted to access question review', {
-          userId: auth.userId,
-          role: user?.role,
-        });
-
+      if (validated.action === 'auto-approve') {
+        const dryRun = validated.dryRun === 'true';
+        const result = await autoApproveHighQuality(prisma, { dryRun });
+        logger.info('Auto-approve executed', { userId: adminUserId, dryRun, ...result });
         return {
-          data: { error: 'Admin access required' },
-          status: 403,
+          data: {
+            success: true,
+            data: result,
+            message: dryRun
+              ? `Would auto-approve ${result.approved} questions (${result.alreadyApproved} already approved)`
+              : `Auto-approved ${result.approved} questions (${result.alreadyApproved} were already approved)`,
+          },
         };
       }
 
@@ -142,7 +157,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
       const pages = Math.ceil(totalCount / limit);
 
       logger.info('Questions retrieved for review', {
-        userId: user.id,
+        userId: adminUserId,
         validationStatus,
         count: questions.length,
         total: totalCount,
@@ -183,25 +198,8 @@ export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Check if user is admin or content_creator
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { role: true, id: true },
-    });
-
-    const role = String(user?.role).toLowerCase() as UserRole | undefined;
-
-    if (!user || !role || (!isAdmin(role) && (user.role as string) !== 'content_creator')) {
-      logger.warn('Non-admin attempted to update question validation', {
-        userId: auth.userId,
-        role: user?.role,
-      });
-
-      return {
-        data: { error: 'Admin access required' },
-        status: 403,
-      };
-    }
+    // withAdminRole() in adminAuthenticatedEndpoint already verified admin access.
+    const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
 
     const validation = validated.body;
 
@@ -214,7 +212,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async 
     if (!existingQuestion) {
       logger.info('Question not found for validation', {
         questionId: validation.questionId,
-        userId: user.id,
+        userId: adminUserId,
       });
 
       return {
@@ -265,7 +263,13 @@ export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async 
     logger.info('Question validation updated', {
       questionId: validation.questionId,
       validationStatus: validation.validationStatus,
-      userId: user.id,
+      userId: adminUserId,
+    });
+
+    auditLog('admin_question_review', {
+      userId: auth.userId,
+      questionId: validation.questionId,
+      validationStatus: validation.validationStatus,
     });
 
     return {

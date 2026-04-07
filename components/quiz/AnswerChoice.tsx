@@ -81,39 +81,46 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     // Eliminated state styling
     if (isEliminated && !isAnswered) {
       buttonClasses +=
-        ' opacity-50 grayscale bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm';
+        ' opacity-50 grayscale bg-[var(--color-card-bg)]';
     } else if (isAnswered) {
       // After answering states
       if (isCorrect) {
         buttonClasses +=
-          ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-bold shadow-md';
+          ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-semibold shadow-md';
       } else if (isSelected) {
         buttonClasses +=
-          ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-bold shadow-md';
+          ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-semibold shadow-md';
         animationClass = 'animate-shake';
       } else {
         buttonClasses +=
-          ' bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] opacity-60 shadow-sm';
+          ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] opacity-60';
       }
     } else if (isSelected && !isAnswered) {
       // Selected but not yet submitted - show highlighted state
       buttonClasses +=
         ' bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)] shadow-md text-[var(--color-text-primary)] font-semibold';
     } else {
-      // Default hoverable state - use CSS variable for hover background to work in both light and dark mode
+      // Default hoverable state
       buttonClasses +=
-        ' bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] hover:shadow-lg hover:-translate-y-px';
+        ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:-translate-y-px';
     }
 
     return (
       <button
         ref={ref}
         type="button"
+        role="radio"
+        aria-checked={isSelected}
         onClick={handleMainClick}
         disabled={isAnswered}
         className={`${buttonClasses} ${animationClass}`}
-        style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)` }}
-        aria-label={`Option ${index + 1}: ${displayText}${isEliminated ? ' (eliminated)' : ''}`}
+        style={{
+          fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`,
+          ...(!isAnswered || (!isCorrect && !isSelected)
+            ? { boxShadow: isSelected ? undefined : '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }
+            : {}),
+        }}
+        aria-label={`Option ${String.fromCharCode(65 + index)}: ${displayText}${isEliminated ? ' (eliminated)' : ''}${isAnswered && isCorrect ? ' (correct answer)' : ''}${isAnswered && isSelected && !isCorrect ? ' (your incorrect answer)' : ''}`}
       >
         <span
           className={`flex items-center justify-between ${

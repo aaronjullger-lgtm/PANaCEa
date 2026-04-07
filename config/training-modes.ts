@@ -50,7 +50,10 @@ export type TrainingModeId =
   | 'pance_simulator'
   | 'full_sit_down_test'
   | 'radiology_scroll' // Future mode - not yet in MODE_REGISTRY
-  | 'commuter_mode';
+  | 'commuter_mode'
+  | 'elaboration_drill'
+  | 'icd_coding_drill'
+  | 'teach_back_drill';
 
 /**
  * Categories based on learning activity type
@@ -464,8 +467,19 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 300,
   },
 
+  // --- QUESTION PRACTICE (continued) ---
+  {
+    id: 'cram_mode',
+    label: 'Cram Mode',
+    description: 'High-yield rapid review of the 50 most important PANCE conditions',
+    category: 'question_practice',
+    iconName: 'Flame',
+    theme: 'orange',
+    route: '/modes/cram-mode',
+    estimatedMinutes: 15,
+  },
+
   // --- ADDITIONAL MODES FOR COVERAGE ---
-  // Note: cram_mode is still available as a separate mode (not merged into rapid_recall)
   // polypharmacy_puzzle removed — no backend API; will re-add when implemented
   {
     id: 'diagnostic_puzzle',
@@ -476,6 +490,49 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'gold',
     route: '/modes/diagnostic-puzzle',
     estimatedMinutes: 7,
+  },
+
+  {
+    id: 'medical_wordle',
+    label: 'Medical Wordle',
+    description: 'Daily medical term guessing game - Wordle-style with 6 attempts',
+    category: 'specialty_drills',
+    iconName: 'Type',
+    theme: 'amber',
+    route: '/modes/medical-wordle',
+    estimatedMinutes: 5,
+  },
+
+  // --- NEW DRILLS (Sprint 7) ---
+  {
+    id: 'elaboration_drill',
+    label: 'Elaboration Drill',
+    description: 'Explain concepts in your own words to deepen retention',
+    category: 'specialty_drills',
+    iconName: 'PenLine',
+    theme: 'emerald',
+    route: '/modes/elaboration-drill',
+    estimatedMinutes: 10,
+  },
+  {
+    id: 'icd_coding_drill',
+    label: 'ICD Coding Drill',
+    description: 'Match clinical scenarios to ICD-10 codes',
+    category: 'specialty_drills',
+    iconName: 'Code',
+    theme: 'orange',
+    route: '/modes/icd-coding-drill',
+    estimatedMinutes: 8,
+  },
+  {
+    id: 'teach_back_drill',
+    label: 'Teach-Back Drill',
+    description: 'Teach a concept to a virtual patient to solidify understanding',
+    category: 'specialty_drills',
+    iconName: 'GraduationCap',
+    theme: 'sky',
+    route: '/modes/teach-back-drill',
+    estimatedMinutes: 12,
   },
 ];
 

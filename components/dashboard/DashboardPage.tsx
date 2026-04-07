@@ -31,12 +31,19 @@ import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
 import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
 import CalibrationChart from './CalibrationChart';
+import { MetacognitiveMirror } from './metacognitive';
+import { DrillRecommendationCard } from './DrillRecommendationCard';
 import { RetentionForecastCard } from './RetentionForecastCard';
 import { StudyActionList, type StudyAction } from './StudyActionCard';
+import { TodayPlanCard } from './TodayPlanCard';
+import { useTodayPlan } from '@/hooks/useTodayPlan';
+import { RatingHealthCard } from './RatingHealthCard';
+import { useRatingAudit } from '@/hooks/useRatingAudit';
 import { BlueprintProgressBar } from './BlueprintProgressBar';
 import { BlueprintGapHeatmap } from './BlueprintGapHeatmap';
 import { useBlueprintGaps } from '@/hooks/useBlueprintGaps';
 import { ConfusionPairCard } from './ConfusionPairCard';
+import { ConfusionGraph } from './ConfusionGraph';
 import { useConfusionPairs } from '@/hooks/useConfusionPairs';
 import { ReviewCalendar } from './ReviewCalendar';
 import { useReviewForecast } from '@/hooks/useReviewForecast';
@@ -46,9 +53,11 @@ import { RotationFocusCard } from './RotationFocusCard';
 import { WellnessWidget } from './WellnessWidget';
 import { computeWellnessState } from '@/hooks/useStudyWellness';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { loadUserProfile } from '@/services/analytics/userProfileService';
 import { useRecentSessions } from '@/hooks/useRecentSessions';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
+import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 import { getDashboardConfig, type DashboardConfig, type WidgetId } from '@/lib/services/dashboardPersonalization';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
@@ -133,36 +142,32 @@ const QuickStat: React.FC<QuickStatProps> = ({
   const prefersReducedMotion = useReducedMotion();
   return (
   <motion.div
-    initial={prefersReducedMotion ? false : { y: 20 }}
-    animate={{ y: 0 }}
-    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay, ease: 'easeOut' }}
-    className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300"
+    initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, delay, ease: 'easeOut' }}
+    className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-5 transition-colors duration-200 hover:bg-[var(--color-bg-tertiary)]/40"
+    style={{
+      boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+    }}
   >
-    {/* Gradient accent line */}
-    <div
-      className={`absolute top-0 left-6 right-6 h-0.5 ${accentColor} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`}
-    />
-
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div
-          className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]"
-        >
+      <div className="flex items-center gap-3.5">
+        <div className="p-2.5 rounded-lg bg-[var(--color-bg-tertiary)]">
           {icon}
         </div>
         <div>
-          <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-0.5">{label}</p>
-          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight tabular-nums">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-1">{label}</p>
+          <p className="text-2xl sm:text-3xl font-semibold text-[var(--color-text-primary)] tracking-tight tabular-nums leading-none">
             {value}
           </p>
         </div>
       </div>
       {trend && (
         <div
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
             trend.isPositive
-              ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
-              : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
+              ? 'bg-[var(--color-data-pass)]/12 text-[var(--color-data-pass)]'
+              : 'bg-[var(--color-data-fail)]/12 text-[var(--color-data-fail)]'
           }`}
         >
           <TrendingUp className={`w-3 h-3 ${!trend.isPositive && 'rotate-180'}`} />
@@ -186,16 +191,16 @@ interface SectionHeaderProps {
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon, action }) => (
-  <div className="flex items-center justify-between mb-5">
-    <div className="flex items-center gap-3">
+  <div className="flex items-center justify-between mb-4 pt-2">
+    <div className="flex items-center gap-2.5">
       {icon && (
-        <div className="p-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-lg">
+        <span className="text-[var(--color-text-muted)]">
           {icon}
-        </div>
+        </span>
       )}
       <div>
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h2>
-        {subtitle && <p className="text-sm text-[var(--color-text-secondary)]">{subtitle}</p>}
+        <h2 className="text-base font-semibold text-[var(--color-text-primary)] tracking-tight">{title}</h2>
+        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
       </div>
     </div>
     {action}
@@ -215,13 +220,34 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
   const { performanceData } = useUserStats();
-  const { profile: userProfile } = useUserProfile();
+  const { profile: apiUserProfile } = useUserProfile();
+  // Merge API profile (authoritative) with localStorage cache (instant).
+  // LocalStorage is always populated by mergeEorFieldsFromApi after first API load,
+  // so the RotationFocusCard shows immediately without waiting for the network.
+  const localCachedProfile = useMemo(() => loadUserProfile(), []);
+  const userProfile = useMemo(() => {
+    if (apiUserProfile) return apiUserProfile;
+    // Seed from localStorage while API is loading
+    if (localCachedProfile) {
+      return {
+        currentRotation: localCachedProfile.currentRotation ?? null,
+        eorTestDate: localCachedProfile.eorTestDate ?? null,
+        rotationStartDate: localCachedProfile.rotationStartDate ?? null,
+        rotationEndDate: localCachedProfile.rotationEndDate ?? null,
+        yearInProgram: localCachedProfile.yearInProgram ?? null,
+      } as Partial<typeof apiUserProfile> as typeof apiUserProfile;
+    }
+    return null;
+  }, [apiUserProfile, localCachedProfile]);
   const { sessions: recentSessions } = useRecentSessions();
+  const { stats: dbStats } = useDatabaseStats();
   const { data: blueprintGaps } = useBlueprintGaps();
   const { data: confusionPairsData } = useConfusionPairs(5);
   const { data: reviewForecast } = useReviewForecast();
   const { stage } = useResolvedBlueprint();
   const dashboardConfig = useMemo(() => getDashboardConfig(stage), [stage]);
+  const { data: todayPlan, isLoading: todayPlanLoading, error: todayPlanError, refresh: refreshTodayPlan } = useTodayPlan();
+  const { data: ratingAudit, isLoading: ratingAuditLoading, error: ratingAuditError, refresh: refreshRatingAudit } = useRatingAudit();
   const prefersReducedMotion = useReducedMotion();
   const retentionFetcher = useCallback(
     async (url: string) => {
@@ -283,25 +309,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   };
 
   const currentStreak = useMemo(() => {
+    // Prefer server-side streak — authoritative across devices and sessions
+    if (dbStats?.overall.currentStreak !== undefined) return dbStats.overall.currentStreak;
+    // Fallback: compute streak from localStorage performance history
     const { current } = calculateDayStreak(performanceData ?? []);
     return current;
-  }, [performanceData]);
+  }, [dbStats, performanceData]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <ClinicalSkeleton variant="compact" lines={2} className="w-1/3 mb-4 min-h-[80px]" />
+      <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <ClinicalSkeleton variant="compact" lines={2} className="w-1/3 min-h-[60px]" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[120px]" />
-            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[120px]" />
-            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[120px]" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[100px]" />
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[100px]" />
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[100px]" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ClinicalSkeleton lines={8} className="min-h-[320px]" />
-            <ClinicalSkeleton lines={8} className="min-h-[320px]" />
+          <ClinicalSkeleton variant="compact" lines={4} className="min-h-[140px]" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ClinicalSkeleton lines={8} className="min-h-[280px]" />
+            <ClinicalSkeleton lines={8} className="min-h-[280px]" />
           </div>
         </div>
       </div>
@@ -312,39 +343,52 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     const isOffline = !navigator.onLine;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
         <motion.div
-          initial={prefersReducedMotion ? false : { y: 20 }}
-          animate={{ y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0 } : undefined}
-          className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-sm max-w-md"
+          initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
+          className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 max-w-sm"
+          style={{ boxShadow: '0 0 0 1px var(--color-border), 0 4px 12px -4px rgba(0,0,0,0.08)' }}
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
-            <Zap className="w-8 h-8 text-[var(--color-data-fail)]" />
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/10 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
           </div>
-          <p className="text-[var(--color-text-primary)] font-semibold mb-2">
-            {isOffline ? 'No Internet Connection' : 'Dashboard Unavailable'}
+          <p className="text-[var(--color-text-primary)] font-semibold text-base mb-1">
+            {isOffline ? 'No Connection' : 'Dashboard Unavailable'}
           </p>
-          <p className="text-[var(--color-text-secondary)] text-sm mb-4">
+          <p className="text-[var(--color-text-muted)] text-sm mb-5">
             {isOffline
               ? 'Check your connection and try again.'
               : 'Unable to load your study data. Please try again.'}
           </p>
           <button
             onClick={() => mutate()}
-            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            className="px-5 py-2 bg-[var(--color-accent)] hover:opacity-90 text-white text-sm font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
-            {isOffline ? 'Check Connection & Retry' : 'Retry'}
+            {isOffline ? 'Retry Connection' : 'Retry'}
           </button>
         </motion.div>
       </div>
     );
   }
 
-  const totalCardsLearned = data.totalCards || 0;
+  // Prefer DB's unique questions seen (cross-device authoritative); fallback to retention endpoint count
+  const totalCardsLearned = dbStats?.overall.questionsSeenCount ?? data.totalCards ?? 0;
 
-  // Derive system-level accuracy from performance data for blueprint progress & rotation card
+  // Derive system-level accuracy for blueprint progress & rotation card.
+  // Prefer DB-sourced accuracy (server-side, cross-device); fallback to localStorage.
   const systemAccuracy = useMemo(() => {
+    if (dbStats?.bySystems && Object.keys(dbStats.bySystems).length > 0) {
+      const accuracy: Record<string, number> = {};
+      for (const [sys, s] of Object.entries(dbStats.bySystems)) {
+        // require ≥3 attempts for a meaningful ratio (same threshold as localStorage path)
+        // DB accuracy is 0-100; normalize to 0-1 for RotationFocusCard
+        if (s.total >= 3) accuracy[sys] = Math.max(0, Math.min(1, s.accuracy / 100));
+      }
+      if (Object.keys(accuracy).length > 0) return accuracy;
+    }
+    // Fallback: compute from localStorage performanceData
     const stats: Record<string, { correct: number; total: number }> = {};
     if (performanceData) {
       for (const entry of performanceData) {
@@ -363,10 +407,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       accuracy[sys] = s.total >= 3 ? s.correct / s.total : 0;
     }
     return accuracy;
-  }, [performanceData]);
+  }, [dbStats, performanceData]);
 
-  // Keep a simple count for BlueprintProgressBar (coverage, not accuracy)
+  // Simple attempt counts per system for BlueprintProgressBar (coverage, not accuracy).
+  // Prefer DB totals (cross-device); fallback to localStorage.
   const systemCounts = useMemo(() => {
+    if (dbStats?.bySystems && Object.keys(dbStats.bySystems).length > 0) {
+      const counts: Record<string, number> = {};
+      for (const [sys, s] of Object.entries(dbStats.bySystems)) {
+        counts[sys] = s.total;
+      }
+      return counts;
+    }
+    // Fallback: count from localStorage performanceData
     const counts: Record<string, number> = {};
     if (performanceData) {
       for (const entry of performanceData) {
@@ -377,7 +430,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       }
     }
     return counts;
-  }, [performanceData]);
+  }, [dbStats, performanceData]);
 
   // Compute rotation week from rotationStartDate
   const rotationWeek = useMemo(() => {
@@ -452,35 +505,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   }, [data.dueCount, currentStreak]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] py-5 px-4 md:py-6 md:px-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* ===== HEADER SECTION - Enhanced with gradient text ===== */}
         <motion.div
-          initial={prefersReducedMotion ? false : { y: -20 }}
-          animate={{ y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
-          className="pt-2"
+          initial={prefersReducedMotion ? false : { y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
+          className="pt-3 pb-1"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
-              <Target className="w-6 h-6 text-[var(--color-text-inverse)]" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
-                {getGreeting()},{' '}
-                <span className="bg-[var(--color-accent)] bg-clip-text text-transparent">
-                  {user?.firstName || 'Student'}
-                </span>
-              </h1>
-              <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
-                {dashboardConfig.greetingSuffix}
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-light text-[var(--color-text-primary)] tracking-tight truncate max-w-full">
+            {getGreeting()},{' '}
+            <span className="font-semibold">
+              {user?.firstName || 'Student'}
+            </span>
+          </h1>
+          <p className="text-[var(--color-text-muted)] text-sm mt-1">
+            {dashboardConfig.greetingSuffix}
+          </p>
         </motion.div>
 
         {/* ===== DASHBOARD VIEW TABS ===== */}
-        <div role="tablist" aria-label="Dashboard views" className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-tertiary)]">
+        <div
+          role="tablist"
+          aria-label="Dashboard views"
+          className="inline-flex gap-0.5 p-0.5 rounded-lg"
+          style={{ backgroundColor: 'var(--color-bg-tertiary)' }}
+        >
           {DASHBOARD_VIEWS.map((v) => {
             const Icon = v.icon;
             const isActive = view === v.id;
@@ -493,13 +544,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 aria-controls={`tabpanel-${v.id}`}
                 id={`tab-${v.id}`}
                 onClick={() => setView(v.id)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-md text-[13px] font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 ${
                   isActive
-                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
+                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
+                style={isActive ? { boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.04)' } : undefined}
               >
-                <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">{v.label}</span>
                 <span className="sm:hidden">{v.shortLabel}</span>
               </button>
@@ -521,7 +573,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               className="space-y-6"
             >
               {/* Quick Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {dashboardConfig.showStreakPressure && (
                   <QuickStat
                     icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
@@ -559,10 +611,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 />
               )}
 
+              {/* Today's Plan — allocator-driven MAIN vs TARGETED split */}
+              <TodayPlanCard
+                data={todayPlan}
+                isLoading={todayPlanLoading}
+                error={todayPlanError}
+                onRefresh={refreshTodayPlan}
+                onStartMain={(systems) => {
+                  const params = systems?.length ? `?systems=${systems.join(',')}` : '';
+                  handleNavigation(`/study/main-session${params}`);
+                }}
+                onStartTargeted={(conditions) => {
+                  const params = conditions?.length ? `?conditions=${conditions.join(',')}` : '';
+                  handleNavigation(`/study/targeted-session${params}`);
+                }}
+              />
+
+              {/* Fallback study actions for quick-access */}
               <SectionHeader
-                title="What To Study"
-                subtitle="Prioritized actions based on your FSRS schedule"
-                icon={<Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />}
+                title="Quick Actions"
+                subtitle="Other ways to study"
+                icon={<Stethoscope className="w-4 h-4" />}
               />
               <StudyActionList actions={studyActions} />
 
@@ -590,8 +659,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 />
               )}
 
+              {/* Confusion Network Graph — interactive force-directed visualization */}
+              <ConfusionGraph maxPairs={20} />
+
               {/* Rotation Focus + Wellness — stage-aware layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {dashboardConfig.showRotationContext && (
                   <RotationFocusCard
                     rotationName={userProfile?.currentRotation ?? undefined}
@@ -607,7 +679,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Exam Readiness + Retention Forecast */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {(dashboardConfig.showPanceCountdown || dashboardConfig.showEorCountdown) && (
                   <ExamReadinessCard />
                 )}
@@ -624,28 +696,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <SectionHeader
                 title="Daily Practice"
                 subtitle="Quick drills to sharpen your skills"
-                icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
+                icon={<Zap className="w-4 h-4" />}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <button
                   onClick={() => handleNavigation('/modes/rapid-recall')}
-                  className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 w-full text-left overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-5 w-full text-left overflow-hidden transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  style={{
+                    boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+                  }}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2.5 rounded-lg bg-[var(--color-data-provisional)]/15">
-                      <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" aria-hidden="true" />
+                  <div className="flex items-center gap-3 mb-2.5">
+                    <div className="p-2 rounded-lg bg-[var(--color-bg-tertiary)]">
+                      <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" aria-hidden="true" />
                     </div>
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                       Rapid Recall
                     </h3>
                   </div>
-                  <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                  <p className="text-xs text-[var(--color-text-muted)] mb-3 leading-relaxed">
                     Quick-fire questions to test your speed
                   </p>
-                  <div className="flex items-center text-[var(--color-data-provisional)] text-sm font-semibold group-hover:gap-2 transition-all">
+                  <div className="flex items-center text-[var(--color-accent)] text-xs font-medium group-hover:gap-1.5 transition-all">
                     Start Drill
-                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                    <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                   </div>
                 </button>
                 <DailyTriad />
@@ -666,7 +740,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               className="space-y-6"
             >
               {/* System Performance + Calibration — stage-aware */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 {showDataWidget('system_performance') && (
                   <SystemPerformanceWidget maxSystems={5} />
                 )}
@@ -678,27 +752,45 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 )}
               </div>
 
+              {/* Rating Health — Again/Good distribution audit */}
+              <RatingHealthCard
+                data={ratingAudit}
+                isLoading={ratingAuditLoading}
+                error={ratingAuditError}
+                onRefresh={refreshRatingAudit}
+              />
+
               {/* Memory Health — decay + stability */}
-              <div className="flex items-center gap-1.5">
-                <SectionHeader
-                  title="Memory Health"
-                  subtitle="Retention and stability over time"
-                  icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
-                />
-                <InfoTooltip text={TOOLTIP_STABILITY} />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <SectionHeader
+                title="Memory Health"
+                subtitle="Retention and stability over time"
+                icon={<TrendingUp className="w-4 h-4" />}
+                action={<InfoTooltip text={TOOLTIP_STABILITY} />}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {showDataWidget('decay_curve') && (
-                  <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
+                  <div
+                    className="bg-[var(--color-bg-secondary)] rounded-xl p-5"
+                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+                  >
                     <DecayCurve data={data.decayCurveData} />
                   </div>
                 )}
                 {showDataWidget('stability_pyramid') && (
-                  <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
+                  <div
+                    className="bg-[var(--color-bg-secondary)] rounded-xl p-5"
+                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+                  >
                     <StabilityPyramid data={data.stabilityBuckets} />
                   </div>
                 )}
               </div>
+
+              {/* Metacognitive Mirror — behavioral self-awareness */}
+              <MetacognitiveMirror days={30} />
+
+              {/* Personalized Drill Recommendations */}
+              <DrillRecommendationCard days={60} />
 
               {/* Algorithm Status — only for advanced stages */}
               {showDataWidget('algorithm_status') && (
@@ -710,14 +802,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               )}
 
               {/* Link to full analytics */}
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-4 pb-2">
                 <button
                   type="button"
                   onClick={() => handleNavigation('/progress')}
-                  className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Open full analytics (radars, heatmaps, trends)
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  View full analytics
                 </button>
               </div>
             </motion.div>

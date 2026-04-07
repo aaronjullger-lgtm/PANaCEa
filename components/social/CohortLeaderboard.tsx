@@ -172,7 +172,7 @@ export function CohortLeaderboard({
                   px-3 py-1 text-xs font-medium rounded-md transition-colors
                   ${
                     timeFrame === tf.value
-                      ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+                      ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
                       : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                   }
                 `}

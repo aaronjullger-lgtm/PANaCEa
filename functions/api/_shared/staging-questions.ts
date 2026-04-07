@@ -67,7 +67,7 @@ export async function runAdequacyCheck(
   if (env.GEMINI_API_KEY) {
     try {
       const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
       const prompt = `
 You are a medical accuracy checker. Review this question and explanation for any medical inaccuracies or errors.
@@ -294,7 +294,7 @@ export async function processStagingQueueWithCritic(
   }
 
   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   for (const question of pending) {
     try {

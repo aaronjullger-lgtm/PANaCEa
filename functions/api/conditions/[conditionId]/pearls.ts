@@ -60,7 +60,7 @@ export const onRequestGet = authenticatedEndpoint(
             ? (content.pearls as string[])
             : [];
 
-      return { data: { pearls } };
+      return { data: { pearls }, headers: { 'Cache-Control': 'public, max-age=3600' } };
     } catch (error) {
       console.error('[pearls] Error fetching pearls:', error);
       return { status: 500, error: 'Failed to fetch clinical pearls' };

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTooltip } from '@/contexts/TooltipContext';
+import { useTooltipStore as useTooltip } from '@/lib/stores/useTooltipStore';
 import { Info } from 'lucide-react';
 
 /**
@@ -56,7 +56,7 @@ const DefinitionTooltip: React.FC = () => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.15 }}
-          className="fixed z-[9999] pointer-events-none"
+          className="fixed z-[20] pointer-events-none"
           style={{
             left: tooltipState.position.x,
             top: tooltipState.position.y + 20, // Offset below cursor

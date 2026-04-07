@@ -138,7 +138,7 @@ export function BlueprintComplianceAuditorMode() {
           cy="50"
           r="45"
           fill="none"
-          stroke="#e5e7eb"
+          stroke="var(--color-border)"
           strokeWidth="10"
         />
         <circle
@@ -146,7 +146,7 @@ export function BlueprintComplianceAuditorMode() {
           cy="50"
           r="45"
           fill="none"
-          stroke={score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444'}
+          stroke={score >= 80 ? 'var(--color-data-pass)' : score >= 60 ? 'var(--color-data-provisional)' : 'var(--color-data-fail)'}
           strokeWidth="10"
           strokeDasharray={`${score * 2.83} 283`}
           strokeDashoffset="0"
@@ -160,7 +160,7 @@ export function BlueprintComplianceAuditorMode() {
           dy="0.3em"
           fontSize="20"
           fontWeight="bold"
-          fill="#111827"
+          fill="var(--color-text-primary)"
         >
           {Math.round(score)}%
         </text>

@@ -670,4 +670,39 @@ Against an estimated current spend of $500-800/month at 100 users, this represen
 
 ---
 
-*This strategy is grounded in PANaCEa's actual codebase as of 2026-04-03. All file references, model names, and architectural patterns reflect the current implementation. Recommendations should be re-evaluated as the codebase evolves.*
+---
+
+## G. Implementation Status (Updated 2026-04-06)
+
+### Phase 1 — COMPLETE
+
+| Item | Status | Files Changed |
+|------|--------|---------------|
+| F1.1 Token counting middleware | ✅ Done | `functions/api/_shared/tokenTracking.ts` (new), `functions/api/gemini/index.ts`, `functions/api/gemini/stream.ts`, `functions/api/ai/generate-mnemonic.ts` |
+| F1.2 Wire RotationFocusCard + useStudyWellness | ⏳ Pending (wiring only) | — |
+| F1.3 Model audit + downgrades | ✅ Done | `conditions/[identifier]/structured.ts`, `admin/generate-draft.ts`, `_shared/analyzeBehaviorGemini.ts`, `knowledge/cache.ts` — 4 endpoints downgraded from `-exp`/2.5 to stable `gemini-2.0-flash` |
+| F1.4 AI output provenance metadata | ✅ Already done | (Migration `20260403100000`) |
+| F1.5 Semantic cache extension | ✅ Already covered | Mnemonics, questions, library answers all cached |
+| F1.6 Per-user MVRT calibration | ✅ Done | `types/telemetry.ts` (new `UserMVRTCalibration` type + `computeUserMVRTCalibration()`), `lib/services/drillReviewService.ts` |
+
+**New artifacts:**
+- `prisma/migrations/20260406120000_add_ai_token_usage_tracking/migration.sql` — AITokenUsage table + indexes
+- `functions/api/_shared/tokenTracking.ts` — Non-blocking token persistence + cost estimation
+
+### Phase 2 — COMPLETE
+
+| Item | Status | Files Changed |
+|------|--------|---------------|
+| F2.1 Batch question generation | ✅ Done | `functions/api/cron/batch-generate-questions.ts` (new) — blueprint gap analysis + batch generation + CoVe validation |
+| F2.2 Pre-generate explanations + hints | ✅ Done | Integrated into batch generation prompt (3 progressive hints per question) |
+| F2.3 Split OSCE grading | ✅ Done | `lib/services/osceStructuralScorer.ts` (new) — deterministic SOAP/elements/communication/safety scoring (<50ms) |
+| F2.4 Daily dashboard insights | ✅ Done | `functions/api/cron/generate-daily-insights.ts` (new) — per-user metrics + gemini-2.0-flash summary, cached in DailyStudyPlan |
+| F2.5 Confusion-pair drill targeting | ✅ Done | `lib/services/reservoir/confusionPairBoost.ts` (new) — tiered priority boost (high=+4, medium=+2, low=+1) |
+
+### Phase 3 — NOT STARTED
+
+Pending Phase 1-2 deployment and monitoring.
+
+---
+
+*This strategy is grounded in PANaCEa's actual codebase as of 2026-04-06. All file references, model names, and architectural patterns reflect the current implementation. Recommendations should be re-evaluated as the codebase evolves.*

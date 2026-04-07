@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react';
-import { isKnownPath as checkKnownPath, CANONICAL_PATHS as REGISTRY_CANONICAL_PATHS } from './routeRegistry';
+import { CANONICAL_PATHS as REGISTRY_CANONICAL_PATHS } from './routeRegistry';
 import {
   LayoutDashboard,
   LineChart,
@@ -157,45 +157,10 @@ export const CANONICAL_PATHS: string[] = REGISTRY_CANONICAL_PATHS;
  * SOURCE OF TRUTH:
  * - NAV_RAIL_ITEMS: Primary nav (NavRail, Command Palette). Add or change rail items here only.
  * - CANONICAL_PATHS: Paths used for 404 detection in App.tsx. Add new routes here.
- * - NAVIGATION_CONFIG / NAVIGATION_STRUCTURE: Legacy. Do not use for new features; see NAV_RAIL_ITEMS.
  */
-export const NAVIGATION_CONFIG: NavigationCategory[] = [
-  {
-    category: 'Overview',
-    items: [
-      { label: 'Dashboard', path: '/study', icon: 'LayoutDashboard' },
-      { label: 'Analytics', path: '/study?tab=analytics', icon: 'LineChart' },
-    ],
-  },
-  {
-    category: 'Resources',
-    items: [
-      { label: 'Clinical Reference', path: '/study/knowledge', icon: 'Library' },
-      { label: 'Toolkit', path: '/study/utilities', icon: 'Zap' },
-      { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
-      { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
-      { label: 'Cross‑System Explorer', path: '/explorer', icon: 'BrainCircuit' },
-    ],
-  },
-];
 
-// NAVIGATION_STRUCTURE and getNavigationWithIcons removed — contained dead links.
-// Use NAVIGATION_CONFIG or NAV_RAIL_ITEMS instead.
+// NAVIGATION_CONFIG removed — had dead links (/medical-database, /live-collaboration, /explorer
+// are view-state routes with no <Route> element). Use NAV_RAIL_ITEMS for navigation configuration.
 
-/**
- * Get all known paths in the application.
- *
- * @deprecated Prefer importing KNOWN_PATHS or isKnownPath from config/routeRegistry.ts.
- * Training mode routes are already included in the registry (spread from TRAINING_MODES).
- * This function is kept only for backward compatibility.
- */
-export const getKnownPaths = (): string[] => {
-  return Array.from(new Set(CANONICAL_PATHS));
-};
-
-/**
- * Check if a path is a known, valid application route.
- *
- * @deprecated Import isKnownPath from config/routeRegistry.ts or lib/constants/routes.ts instead.
- */
-export const isKnownPath = checkKnownPath;
+// getKnownPaths() and isKnownPath re-exports removed — import from config/routeRegistry.ts or
+// lib/constants/routes.ts instead.

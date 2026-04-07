@@ -1,104 +1,90 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../_shared/auth';
-import { errorHandler } from '../_shared/error-handler';
+/**
+ * API: Blueprint Coverage Analysis
+ *
+ * GET  /api/admin/blueprint-coverage          — list available exam types
+ * GET  /api/admin/blueprint-coverage/:examType — analyze coverage for an exam
+ * POST /api/admin/blueprint-coverage/:examType/targets — set blueprint targets
+ *
+ * All endpoints require admin role via adminEndpoint middleware.
+ */
+
+import { z } from 'zod';
+import { adminEndpoint, withCors } from '../_shared/middleware';
 import {
   analyzeBlueprintCoverage,
-  getCriticalGapSystems,
   getAvailableExamTypes,
   setBlueprintTargets,
 } from '../_shared/blueprintCoverageService';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 
-/**
- * GET /api/admin/blueprint-coverage/:examType
- * Analyze blueprint coverage for a specific exam
- *
- * Query params:
- * - examType: PANCE, PANRE, etc. (required in URL)
- *
- * Response:
- * {
- *   examType: string
- *   totalQuestions: number
- *   totalApproved: number
- *   systemCoverage: [{system, targetPercent, actualPercent, gap, priority}, ...]
- *   gapsByPriority: {critical, high, medium, low}
- * }
- */
-export async function onRequestGet(
-  request: Request,
-  context: { params: { examType: string } }
-): Promise<Response> {
-  try {
-    // Auth optional for now (can be admin-only)
-    const user = await requireAuth(request);
+const logger = createEndpointLogger('/api/admin/blueprint-coverage');
 
-    const examType = context.params.examType.toUpperCase();
+// Schemas
+const GetExamTypeSchema = z.object({
+  params: z.object({ examType: z.string().min(1) }).optional(),
+});
 
-    const analysis = await analyzeBlueprintCoverage(examType);
+const ListSchema = z.object({});
 
-    return new Response(JSON.stringify(analysis), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    return errorHandler(error);
-  }
-}
+const SetTargetsSchema = z.object({
+  params: z.object({ examType: z.string().min(1) }).optional(),
+  body: z.object({
+    targets: z.record(z.string(), z.number().min(0).max(1)),
+  }),
+});
+
+export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/blueprint-coverage
  * List available exam types
  */
-export async function onRequest(request: Request): Promise<Response> {
-  if (request.method === 'GET' && !request.url.includes('/blueprint-coverage/')) {
-    try {
-      const examTypes = await getAvailableExamTypes();
+export const onRequest = adminEndpoint(ListSchema, async () => {
+  const examTypes = await getAvailableExamTypes();
+  return { data: { examTypes } };
+});
 
-      return new Response(JSON.stringify({ examTypes }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (error) {
-      return errorHandler(error);
-    }
+/**
+ * GET /api/admin/blueprint-coverage/:examType
+ * Analyze blueprint coverage for a specific exam
+ */
+export const onRequestGet = adminEndpoint(GetExamTypeSchema, async (context) => {
+  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
+  const examType = (context.params?.examType ?? '').toString().toUpperCase();
+
+  if (!examType) {
+    return { status: 400, data: { error: 'examType path parameter is required' } };
   }
 
-  return new Response('Not Found', { status: 404 });
-}
+  const analysis = await analyzeBlueprintCoverage(examType);
+  logger.info('Blueprint coverage analyzed', { examType, totalQuestions: analysis.totalQuestions });
+  return { data: analysis };
+});
 
 /**
  * POST /api/admin/blueprint-coverage/:examType/targets
  * Set blueprint targets for an exam type
- *
- * Body:
- * {
- *   targets: {
- *     "Cardiology": 0.15,
- *     "Pulmonology": 0.10,
- *     ...
- *   }
- * }
  */
-export async function onRequestPost(
-  request: Request,
-  context: { params: { examType: string } }
-): Promise<Response> {
-  try {
-    await requireAuth(request, 'ADMIN');
+export const onRequestPost = adminEndpoint(SetTargetsSchema, async (context) => {
+  const { validated } = context;
+  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
+  const examType = (context.params?.examType ?? '').toString().toUpperCase();
+  const targets = (validated as any).body?.targets ?? (validated as any).targets ?? {};
 
-    const body = (await request.json()) as { targets: Record<string, number> };
-    const examType = context.params.examType.toUpperCase();
-
-    await setBlueprintTargets(examType, body.targets);
-
-    return new Response(
-      JSON.stringify({ success: true, examType, targetCount: Object.keys(body.targets).length }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return errorHandler(error);
+  if (!examType) {
+    return { status: 400, data: { error: 'examType path parameter is required' } };
   }
-}
+
+  await setBlueprintTargets(examType, targets);
+  logger.info('Blueprint targets updated', { examType, targetCount: Object.keys(targets).length });
+  auditLog('admin_blueprint_set_targets', {
+    userId: (context as any).auth?.userId,
+    examType,
+    targetCount: Object.keys(targets).length,
+  });
+
+  return {
+    data: { success: true, examType, targetCount: Object.keys(targets).length },
+  };
+});

@@ -127,6 +127,7 @@
     "images:curated": "tsx ./scripts/images/fetch-curated-images.ts",
     "images:local": "tsx ./scripts/images/process-local-images.ts",
     "build": "node scripts/inject-wrangler-env.js && vite build --mode production",
+    "build:check-size": "node scripts/check-bundle-size.mjs",
     "build:server": "tsc server.ts --outDir dist-server --module commonjs --target es2022",
     "preview": "vite preview",
     "test": "vitest run",
@@ -167,6 +168,7 @@
     "@open-spaced-repetition/binding": "^0.1.2",
     "@prisma/client": "^7.6.0",
     "@prisma/extension-accelerate": "^3.0.1",
+    "@prisma/studio-core": "^0.27.3",
     "@radix-ui/react-progress": "^1.1.8",
     "@sentry/react": "^10.34.0",
     "@sentry/vite-plugin": "^4.6.1",
@@ -227,7 +229,8 @@
     "vite": "^6.2.0",
     "vite-plugin-pwa": "^1.2.0",
     "ws": "^8.18.3",
-    "zod": "^4.3.5"
+    "zod": "^4.3.5",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

@@ -12,6 +12,7 @@ import { Prisma } from '@prisma/client';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { attachLogMeta } from '../_shared/requestLogger';
 import { getCached, setCached } from '../_shared/kv-cache';
 import { LibraryResponseSchema } from '@/lib/schemas/medicalContent';
 import { normalizeMedicalContent } from '../../../lib/utils/normalization';
@@ -62,7 +63,8 @@ export const onRequestGet = authenticatedEndpoint(
       const pageSize = Math.min(200, Math.max(1, parseInt(safeValidated.pageSize || '100', 10) || 100));
       const search = rawSearch?.trim().slice(0, MAX_SEARCH_LENGTH) || undefined;
 
-      const cacheKey = `content:library:${system ?? 'all'}:${subcategory ?? ''}:${search ?? ''}:${highYield ?? ''}:p${page}:ps${pageSize}`;
+      // v2: include published-only filter; old cache entries are stale
+      const cacheKey = `content:library:v2:${system ?? 'all'}:${subcategory ?? ''}:${search ?? ''}:${highYield ?? ''}:p${page}:ps${pageSize}`;
       if (!search) {
         const cached = await getCached<{ content: unknown[]; count: number }>(
           env as { CACHE?: KVNamespace },
@@ -73,8 +75,9 @@ export const onRequestGet = authenticatedEndpoint(
         }
       }
 
-      // Build where clause — when system is missing or 'all', return all conditions (no system filter)
-      const where: Record<string, unknown> = {};
+      // Build where clause — only published content is surfaced to learners.
+      // Drafts/pending/rejected conditions are excluded so clicking a card always resolves.
+      const where: Record<string, unknown> = { status: 'published' };
       if (system && system !== 'all') where.system = system;
       if (subcategory) where.subcategory = subcategory;
       if (highYield === 'true') where.pance_yield = { gte: 3 };
@@ -142,6 +145,11 @@ export const onRequestGet = authenticatedEndpoint(
           complications: true,
           prognosis: true,
           overview: true,
+          lastClinicalReviewAt: true,
+          evidenceGrade: true,
+          guidelineSource: true,
+          guidelineYear: true,
+          reviewedBy: true,
         },
         orderBy: searchResults
           ? undefined
@@ -165,6 +173,7 @@ export const onRequestGet = authenticatedEndpoint(
       );
 
       logger.info('Library content fetched', { count: normalizedContent.length, totalCount, system, search, page, pageSize });
+      attachLogMeta(context, { resultCount: normalizedContent.length, totalCount, usedFTS: !!searchResults, system, search });
       const totalPages = Math.ceil(totalCount / pageSize);
       const payload = { content: normalizedContent, count: normalizedContent.length, totalCount, page, pageSize, totalPages };
       if (!search) {

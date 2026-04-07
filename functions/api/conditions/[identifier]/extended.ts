@@ -116,6 +116,7 @@ export const onRequestGet = authenticatedEndpoint(
               }
             : null,
         },
+        headers: { 'Cache-Control': 'public, max-age=3600' },
       };
     } finally {
       await safePrismaDisconnect(prisma);

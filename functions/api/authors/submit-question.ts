@@ -1,7 +1,6 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../_shared/auth';
-import { errorHandler } from '../_shared/error-handler';
-import { prisma } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateNewQuestion } from '../_shared/aiQuestionService';
 
 /**
@@ -17,164 +16,143 @@ import { validateNewQuestion } from '../_shared/aiQuestionService';
  * - conditionId: string - Related condition ID
  * - vignette?: string - Clinical case vignette (optional)
  * - difficulty?: "easy" | "medium" | "hard" - Expected difficulty
- *
- * Returns:
- * - submissionId: string - ID of the submission
- * - status: "submitted" - Initial submission status
- * - validationResults: Object with:
- *   - isDuplicate: boolean
- *   - duplicateOf?: string - ID of duplicate question if found
- *   - coversGap: boolean
- *   - estimatedDifficulty: string
- *   - estimatedHealthScore: number
- * - message: string - Next steps for reviewer queue
  */
-export async function onRequestPost(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
 
-    // Get or create author profile
-    let author = await prisma.contentAuthor.findUnique({
-      where: { userId: user.id },
-    });
+const SubmitQuestionSchema = z.object({
+  body: z.object({
+    question: z.string().min(1),
+    options: z.array(z.string()).min(4).max(5),
+    correctAnswer: z.number().int().min(0),
+    explanation: z.string().min(1),
+    system: z.string().min(1),
+    conditionId: z.string().min(1),
+    vignette: z.string().optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  }),
+});
 
-    if (!author) {
-      author = await prisma.contentAuthor.create({
-        data: {
-          userId: user.id,
-          role: 'CONTRIBUTOR',
-        },
+export const onRequestOptions = withCors();
+
+export const onRequestPost = authenticatedEndpoint(
+  SubmitQuestionSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const userId = auth.userId;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const body = (validated as any).body;
+
+    try {
+      // Get or create author profile
+      let author = await prisma.contentAuthor.findUnique({
+        where: { userId },
       });
-    }
 
-    // Only CONTRIBUTOR role and above can submit
-    const roleHierarchy = { CONTRIBUTOR: 0, REVIEWER: 1, EDITOR: 2, ADMIN: 3 };
-    if (roleHierarchy[author.role as keyof typeof roleHierarchy] === undefined) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid author role' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+      if (!author) {
+        author = await prisma.contentAuthor.create({
+          data: {
+            userId,
+            role: 'CONTRIBUTOR',
+          },
+        });
+      }
 
-    // Parse request body
-    const body = await request.json() as {
-      question: string;
-      options: string[];
-      correctAnswer: number;
-      explanation: string;
-      system: string;
-      conditionId: string;
-      vignette?: string;
-      difficulty?: string;
-    };
+      // Only CONTRIBUTOR role and above can submit
+      const roleHierarchy = { CONTRIBUTOR: 0, REVIEWER: 1, EDITOR: 2, ADMIN: 3 };
+      if (roleHierarchy[author.role as keyof typeof roleHierarchy] === undefined) {
+        return { status: 400, data: { error: 'Invalid author role' } };
+      }
 
-    // Validate required fields
-    if (!body.question || !body.options || body.correctAnswer === undefined || !body.explanation || !body.system || !body.conditionId) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: question, options, correctAnswer, explanation, system, conditionId' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+      // Validate correct answer index against options length
+      if (body.correctAnswer >= body.options.length) {
+        return {
+          status: 400,
+          data: { error: `correctAnswer must be between 0 and ${body.options.length - 1}` },
+        };
+      }
 
-    // Validate options array
-    if (!Array.isArray(body.options) || body.options.length < 4 || body.options.length > 5) {
-      return new Response(
-        JSON.stringify({ error: 'Options must be an array of 4-5 items' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+      // Verify condition exists
+      const condition = await prisma.condition.findUnique({
+        where: { id: body.conditionId },
+        select: { id: true, system: true },
+      });
 
-    // Validate correct answer index
-    if (body.correctAnswer < 0 || body.correctAnswer >= body.options.length) {
-      return new Response(
-        JSON.stringify({ error: `correctAnswer must be between 0 and ${body.options.length - 1}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+      if (!condition) {
+        return { status: 404, data: { error: 'Condition not found' } };
+      }
 
-    // Verify condition exists
-    const condition = await prisma.condition.findUnique({
-      where: { id: body.conditionId },
-      select: { id: true, system: true },
-    });
+      if (condition.system !== body.system) {
+        return {
+          status: 400,
+          data: { error: "System does not match the condition's system" },
+        };
+      }
 
-    if (!condition) {
-      return new Response(
-        JSON.stringify({ error: 'Condition not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (condition.system !== body.system) {
-      return new Response(
-        JSON.stringify({ error: 'System does not match the condition\'s system' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Run validation checks
-    const validation = await validateNewQuestion({
-      question: body.question,
-      options: body.options,
-      correctAnswer: body.correctAnswer,
-      explanation: body.explanation,
-      system: body.system,
-      conditionId: body.conditionId,
-      vignette: body.vignette,
-      difficulty: body.difficulty,
-    });
-
-    // Create the submission record
-    const submission = await prisma.questionSubmission.create({
-      data: {
-        contentAuthorId: author.id,
+      // Run validation checks — pass Edge-safe prisma client
+      const validation = await validateNewQuestion({
         question: body.question,
         options: body.options,
         correctAnswer: body.correctAnswer,
         explanation: body.explanation,
         system: body.system,
         conditionId: body.conditionId,
-        vignette: body.vignette || null,
-        status: 'submitted',
-        passedDuplicateCheck: !validation.isDuplicate,
-        matchesBlueprintGap: validation.coversGap,
-        estimatedDifficulty: validation.estimatedDifficulty,
-        estimatedHealthScore: validation.estimatedHealthScore,
-        reviewComments: null,
-      },
-    });
+        vignette: body.vignette,
+        difficulty: body.difficulty,
+      }, prisma);
 
-    // Update author's submission count
-    await prisma.contentAuthor.update({
-      where: { id: author.id },
-      data: {
-        questionsCreated: { increment: 1 },
-      },
-    });
-
-    return new Response(
-      JSON.stringify({
-        submissionId: submission.id,
-        status: submission.status,
-        validationResults: {
-          isDuplicate: validation.isDuplicate,
-          duplicateOf: validation.duplicateOf,
-          coversGap: validation.coversGap,
+      // Create the submission record
+      const submission = await prisma.questionSubmission.create({
+        data: {
+          contentAuthorId: author.id,
+          question: body.question,
+          options: body.options,
+          correctAnswer: body.correctAnswer,
+          explanation: body.explanation,
+          system: body.system,
+          conditionId: body.conditionId,
+          vignette: body.vignette || null,
+          status: 'submitted',
+          passedDuplicateCheck: !validation.isDuplicate,
+          matchesBlueprintGap: validation.coversGap,
           estimatedDifficulty: validation.estimatedDifficulty,
           estimatedHealthScore: validation.estimatedHealthScore,
+          reviewComments: null,
         },
-        message: validation.isDuplicate
-          ? 'Submission created but flagged as potential duplicate. A reviewer will investigate.'
-          : validation.coversGap
-          ? 'Submission created and covers an identified blueprint gap. Expedited review recommended.'
-          : 'Submission created and queued for reviewer approval.',
-      }),
-      {
+      });
+
+      // Update author's submission count
+      await prisma.contentAuthor.update({
+        where: { id: author.id },
+        data: {
+          questionsCreated: { increment: 1 },
+        },
+      });
+
+      return {
         status: 201,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return errorHandler(error);
+        data: {
+          submissionId: submission.id,
+          status: submission.status,
+          validationResults: {
+            isDuplicate: validation.isDuplicate,
+            duplicateOf: validation.duplicateOf,
+            coversGap: validation.coversGap,
+            estimatedDifficulty: validation.estimatedDifficulty,
+            estimatedHealthScore: validation.estimatedHealthScore,
+          },
+          message: validation.isDuplicate
+            ? 'Submission created but flagged as potential duplicate. A reviewer will investigate.'
+            : validation.coversGap
+              ? 'Submission created and covers an identified blueprint gap. Expedited review recommended.'
+              : 'Submission created and queued for reviewer approval.',
+        },
+      };
+    } catch (error) {
+      return {
+        status: 500,
+        data: { error: 'Failed to submit question' },
+      };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   }
-}
+);

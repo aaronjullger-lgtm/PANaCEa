@@ -67,7 +67,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length || label == null) return null;
   return (
-    <div className="bg-[var(--color-bg-secondary)] rounded-lg px-3 py-2 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl px-3 py-2 shadow-sm">
       <p className="text-[var(--color-text-primary)] font-semibold text-sm mb-1">Day {label}</p>
       <p className="text-[var(--color-text-muted)] text-xs tabular-nums">
         Without review: {Math.round(payload[0]?.value ?? 0)}%

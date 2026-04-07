@@ -20,11 +20,13 @@ export async function computeUserPhenotype(userId: string): Promise<void> {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Get review logs for analysis
+  // Get review logs for analysis — READINESS only (MAIN/DRILL sessions).
+  // TARGETED, CRAM, and RAPID_RECALL sessions must not influence the readiness phenotype.
   const reviewLogs = await prisma.reviewLog.findMany({
     where: {
       userId,
       reviewedAt: { gte: thirtyDaysAgo },
+      sessionType: { in: ['MAIN', 'DRILL'] },
     },
     select: {
       reviewedAt: true,

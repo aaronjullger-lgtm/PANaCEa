@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import GoalsDashboard from '@/components/Goals/GoalsDashboard';
+import GoalsDashboard from '@/components/goals/GoalsDashboard';
 
 const mockGetToken = vi.fn().mockResolvedValue('mock-token');
 

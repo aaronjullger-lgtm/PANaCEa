@@ -1,24 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-}
-
-const Card: React.FC<CardProps> = ({ children, className, onClick }) => {
-  return (
-    <motion.div
-      initial={{ y: 20 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={`bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
-      onClick={onClick}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-export default Card;
+/**
+ * UnifiedDashboard Card — Re-exports the shared Card primitive.
+ *
+ * Previously a local motion.div wrapper with shadow-sm + backdrop-blur.
+ * Now delegates to the unified Card component for consistent ring-shadow
+ * elevation and design system alignment.
+ */
+export { Card as default } from '@/components/ui/Card';

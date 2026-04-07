@@ -9,7 +9,8 @@ import type { BasicScienceLink } from '../src/types/content';
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = 'gemini-2.5-pro';
+// Downgraded from gemini-2.5-pro: concept-linking is classification, not deep reasoning
+const MODEL_NAME = 'gemini-2.5-flash';
 const CONDITION_CONTENT_FILE = path.resolve('/workspaces/PANaCEa/conditionContent.correct.json');
 const REQUESTS_PER_MINUTE = 8; // Stay under 10/min limit
 // Add 20% buffer to account for API call processing time

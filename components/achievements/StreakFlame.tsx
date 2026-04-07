@@ -41,13 +41,13 @@ export function StreakFlame({
 
   // Flame color based on level
   const getFlameColor = () => {
-    if (!isActiveToday || streak === 0) return '#64748b'; // Gray for inactive
-    if (flameLevel === 0) return '#94a3b8'; // Light gray
-    if (flameLevel === 1) return '#f97316'; // Orange
-    if (flameLevel === 2) return '#f59e0b'; // Amber
-    if (flameLevel === 3) return '#eab308'; // Yellow
-    if (flameLevel === 4) return '#3b82f6'; // Blue (hot flame)
-    return '#8b5cf6'; // Purple (legendary)
+    if (!isActiveToday || streak === 0) return 'var(--color-text-muted)'; // Gray for inactive
+    if (flameLevel === 0) return 'var(--color-text-muted)'; // Light gray
+    if (flameLevel === 1) return 'var(--color-data-provisional)'; // Orange/Amber
+    if (flameLevel === 2) return 'var(--color-data-provisional)'; // Amber
+    if (flameLevel === 3) return 'var(--color-data-provisional)'; // Yellow
+    if (flameLevel === 4) return 'var(--color-accent)'; // Blue (hot flame)
+    return 'var(--color-accent)'; // Legendary
   };
 
   const flameColor = getFlameColor();
@@ -120,7 +120,7 @@ export function StreakFlame({
               transition={reduceAnimations ? { duration: 0 } : undefined}
               className={`absolute inset-0 flex items-center justify-center font-bold ${textSizes[size]}`}
               style={{
-                color: isActiveToday ? '#ffffff' : flameColor,
+                color: isActiveToday ? 'var(--color-text-inverse)' : flameColor,
                 textShadow: isActiveToday ? '0 1px 2px rgba(0, 0, 0, 0.8)' : 'none',
               }}
             >
@@ -186,12 +186,12 @@ export function StreakBadge({
   const lowPower = useLowPowerMode();
   const reduceAnimations = prefersReducedMotion || lowPower;
   const getFlameColor = () => {
-    if (!isActiveToday || streak === 0) return '#64748b';
-    if (streak < 3) return '#f97316';
-    if (streak < 7) return '#f59e0b';
-    if (streak < 30) return '#eab308';
-    if (streak < 100) return '#3b82f6';
-    return '#8b5cf6';
+    if (!isActiveToday || streak === 0) return 'var(--color-text-muted)';
+    if (streak < 3) return 'var(--color-data-provisional)';
+    if (streak < 7) return 'var(--color-data-provisional)';
+    if (streak < 30) return 'var(--color-data-provisional)';
+    if (streak < 100) return 'var(--color-accent)';
+    return 'var(--color-accent)';
   };
 
   const flameColor = getFlameColor();

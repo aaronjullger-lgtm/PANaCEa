@@ -98,10 +98,24 @@ function BottomTabBar({
   // Take max 5 for the bottom bar
   const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
 
+  // Light haptic tap for PWA standalone mode
+  const hapticTap = () => {
+    try { navigator?.vibrate?.(10); } catch { /* not available */ }
+  };
+
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
-      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}
+      className="fixed bottom-0 left-0 right-0 z-40"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 40,
+        backgroundColor: 'var(--color-bg-primary)',
+        boxShadow: '0 -1px 0 0 var(--color-border)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
       aria-label="Main navigation"
     >
       <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
@@ -143,6 +157,7 @@ function BottomTabBar({
               <li key={item.id} className="flex-1 relative">
                 <Link
                   to={item.href}
+                  onClick={hapticTap}
                   className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)] active:scale-[0.98] transition-transform"
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -155,7 +170,7 @@ function BottomTabBar({
             <li key={item.id} className="flex-1 relative">
               <button
                 type="button"
-                onClick={item.onClick}
+                onClick={() => { hapticTap(); item.onClick?.(); }}
                 className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)] active:scale-[0.98] transition-transform"
               >
                 {inner}
@@ -230,11 +245,11 @@ export const NavRail: React.FC<NavRailProps> = ({
           setHidden(false);
           setCollapsed(true);
         }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 p-1.5 rounded-r-lg bg-[var(--color-bg-secondary)] border border-l-0 border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors shadow-sm"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 p-1.5 rounded-r-md bg-[var(--color-bg-secondary)] border border-l-0 border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
         aria-label="Show sidebar"
         title="Show sidebar (press [)"
       >
-        <PanelLeftOpen className="h-4 w-4" />
+        <PanelLeftOpen className="h-3.5 w-3.5" />
       </button>
     );
   }
@@ -300,12 +315,12 @@ export const NavRail: React.FC<NavRailProps> = ({
               <>
                 <motion.div
                   layoutId="active-nav-pill"
-                  className="absolute inset-0 rounded-xl bg-[var(--color-bg-tertiary)] z-0"
+                  className="absolute inset-0 rounded-lg bg-[var(--color-bg-tertiary)]/60 z-0"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
                 />
                 <span
-                  className={`absolute top-1/2 z-0 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)] ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-2'}`}
+                  className={`absolute top-1/2 z-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)] ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1.5'}`}
                   aria-hidden
                 />
               </>
@@ -324,15 +339,15 @@ export const NavRail: React.FC<NavRailProps> = ({
   };
 
   const renderSection = (label: string, items: QuickActionItem[]) => (
-    <div key={label} className="mb-3 first:mt-0">
+    <div key={label} className="mb-2 first:mt-0">
       {!collapsed && (
-        <div className="px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+        <div className="px-3 py-1.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
             {label}
           </span>
         </div>
       )}
-      <ul className="list-none m-0 p-0 space-y-1" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{items.map(renderItem)}</ul>
+      <ul className="list-none m-0 p-0 space-y-0.5" style={{ listStyle: 'none', margin: 0, padding: 0 }}>{items.map(renderItem)}</ul>
     </div>
   );
 
@@ -341,13 +356,7 @@ export const NavRail: React.FC<NavRailProps> = ({
       initial={false}
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className={`
-        fixed left-0 z-40 flex flex-col
-        border-r border-[var(--color-border)]
-        bg-[var(--color-bg-primary)]/95 backdrop-blur-md
-        shadow-[0_4px_24px_var(--color-shadow-soft),4px_0_24px_-4px_rgba(15,23,42,0.15)]
-        ${className}
-      `}
+      className={`${className}`}
       style={{
         position: 'fixed',
         left: 0,
@@ -363,34 +372,34 @@ export const NavRail: React.FC<NavRailProps> = ({
       }}
       aria-label="Main navigation"
     >
-      {/* Header with collapse/hide controls — centered when collapsed; clear separation from nav items */}
+      {/* Header with collapse/hide controls */}
       <div
-        className={`flex h-12 shrink-0 items-center border-b border-[var(--color-border)] ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
+        className={`flex h-10 shrink-0 items-center ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
       >
         {!collapsed && (
           <button
             type="button"
             onClick={() => setHidden(true)}
-            className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label="Hide sidebar"
             title="Hide sidebar (press [)"
           >
-            <PanelLeftClose className="h-4 w-4" />
+            <PanelLeftClose className="h-3.5 w-3.5" />
           </button>
         )}
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+          className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
         >
-          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
       </div>
 
       <nav
-        className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-5 pb-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 pt-2 pb-4"
         aria-label="App sections"
       >
         {renderSection('Study', studyItems)}

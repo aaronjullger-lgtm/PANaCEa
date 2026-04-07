@@ -13,14 +13,10 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { computeCurrentStreak, type StreakGoalDays } from '../../../lib/streakCalc';
 import { calculateCoinsEarned, STREAK_FREEZE_CONFIG } from '../../../data/modes/dailyRitualsData';
 
-const RecordStreakSchema = z.object({
-  body: z.object({
-    date: z.string().optional(),
-    questionsAnswered: z.number().int().min(0),
-    accuracyPercent: z.number().min(0).max(100),
-    studyMinutes: z.number().int().min(0).optional(),
-  }),
-});
+// Shared schema — single source of truth for this endpoint's request contract.
+// To change the /api/streaks/record contract, edit lib/api/schemas/streaks.ts.
+import { StreakRecordRequestSchema } from '../../../lib/api/schemas/streaks';
+const RecordStreakSchema = z.object({ body: StreakRecordRequestSchema });
 
 export const onRequestOptions = withCors();
 

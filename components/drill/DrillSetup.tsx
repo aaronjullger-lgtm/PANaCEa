@@ -182,7 +182,7 @@ export function DrillSetup({
       >
         {/* Header */}
         <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-8 mb-6">
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h1>
+          <h1 className="text-3xl font-semibold text-[var(--color-text-primary)] mb-2">{title}</h1>
           <p className="text-lg text-[var(--color-text-secondary)]">{description}</p>
         </div>
 
@@ -193,7 +193,7 @@ export function DrillSetup({
             <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Filter className="w-5 h-5 text-[var(--color-accent)]" />
-                <label className="text-lg font-bold text-[var(--color-text-primary)]">
+                <label className="text-lg font-semibold text-[var(--color-text-primary)]">
                   Filter by System
                 </label>
               </div>
@@ -242,7 +242,7 @@ export function DrillSetup({
           <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-accent)]/30">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
-              <span className="font-bold text-[var(--color-accent)]">PANCE-Level Questions</span>
+              <span className="font-semibold text-[var(--color-accent)]">PANCE-Level Questions</span>
             </div>
             <p className="text-sm text-[var(--color-text-secondary)]">
               All questions are calibrated to match real PANCE exam difficulty for optimal
@@ -264,7 +264,7 @@ export function DrillSetup({
                 label={
                   <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-[var(--color-accent)]" />
-                    <span className="text-lg font-bold text-[var(--color-text-primary)]">
+                    <span className="text-lg font-semibold text-[var(--color-text-primary)]">
                       Number of Questions
                     </span>
                   </div>
@@ -275,7 +275,7 @@ export function DrillSetup({
 
           {/* Summary Card */}
           <div className="bg-gradient-to-r from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
               Drill Summary
             </h3>
             <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
@@ -310,7 +310,7 @@ export function DrillSetup({
             whileTap={{ scale: 0.98 }}
             onClick={handleStart}
             disabled={isStarting || filteredConditions.length === 0}
-            className="w-full bg-[var(--color-accent)] text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[var(--color-accent)] text-white font-semibold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isStarting ? (
               <>

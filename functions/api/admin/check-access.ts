@@ -2,33 +2,25 @@
  * Admin API - Check Access
  * GET /api/admin/check-access
  *
- * Verifies if the current user has admin access.
- * Returns 200 if admin, 403 if not authorized.
+ * Probe endpoint: any authenticated user can call this to check whether they
+ * have admin access. Returns { hasAccess, role } — no PII.
+ *
+ * Uses authenticatedEndpoint intentionally (not adminAuthenticatedEndpoint)
+ * so non-admins get a structured { hasAccess: false } instead of a raw 403.
+ *
+ * Hardened (Sprint 3):
+ * - Stripped email and internal userId from response (PII reduction)
+ * - Added audit logging for grant/deny
+ * - Removed duplicated getAdminIds helper (uses same env parsing as withAdminRole)
  */
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 
-// Admin user IDs (can be overridden by env vars)
-const ADMIN_USER_IDS: string[] = [];
-const SUPERADMIN_USER_IDS: string[] = [];
-
-/**
- * Get admin user IDs from environment or fallback to hardcoded list
- */
-function getAdminIds(env: any): { adminIds: string[]; superadminIds: string[] } {
-  const adminIds = env.ADMIN_USER_IDS
-    ? env.ADMIN_USER_IDS.split(',').map((id: string) => id.trim())
-    : ADMIN_USER_IDS;
-
-  const superadminIds = env.SUPERADMIN_USER_IDS
-    ? env.SUPERADMIN_USER_IDS.split(',').map((id: string) => id.trim())
-    : SUPERADMIN_USER_IDS;
-
-  return { adminIds, superadminIds };
-}
+const logger = createEndpointLogger('/api/admin/check-access');
 
 const CheckAccessSchema = z.object({
   query: z.object({}).optional(),
@@ -37,71 +29,50 @@ const CheckAccessSchema = z.object({
 export const onRequestOptions = withCors();
 
 /**
- * GET: Check if current user has admin access
+ * GET: Check if current user has admin access.
+ * Response: { hasAccess: boolean, role: string }
  */
 export const onRequestGet = authenticatedEndpoint(CheckAccessSchema, async (context) => {
   const { env, auth } = context;
-  const logger = createEndpointLogger('/api/admin/check-access');
   const clerkId = auth.userId;
 
   try {
-    // Check environment-based admin IDs first (for quick access without DB)
-    const { adminIds, superadminIds } = getAdminIds(env);
+    // Check environment-based admin IDs first (fast path, no DB)
+    const adminIds = env.ADMIN_USER_IDS
+      ? String(env.ADMIN_USER_IDS).split(',').map((id: string) => id.trim()).filter(Boolean)
+      : [];
+    const superadminIds = env.SUPERADMIN_USER_IDS
+      ? String(env.SUPERADMIN_USER_IDS).split(',').map((id: string) => id.trim()).filter(Boolean)
+      : [];
 
     if (superadminIds.includes(clerkId)) {
-      logger.info('Superadmin access granted', { userId: clerkId });
-
-      return {
-        data: {
-          success: true,
-          hasAccess: true,
-          role: 'superadmin',
-          userId: clerkId,
-        },
-      };
+      logger.info('Superadmin access granted (env)', { userId: clerkId });
+      auditLog('admin_check_access_granted', { clerkId, source: 'env', role: 'superadmin' });
+      return { data: { hasAccess: true, role: 'superadmin' } };
     }
 
     if (adminIds.includes(clerkId)) {
-      logger.info('Admin access granted', { userId: clerkId });
-
-      return {
-        data: {
-          success: true,
-          hasAccess: true,
-          role: 'admin',
-          userId: clerkId,
-        },
-      };
+      logger.info('Admin access granted (env)', { userId: clerkId });
+      auditLog('admin_check_access_granted', { clerkId, source: 'env', role: 'admin' });
+      return { data: { hasAccess: true, role: 'admin' } };
     }
 
-    // Check database for role if not in env vars
+    // Fall back to DB role check
     if (env.DATABASE_URL) {
       const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
       try {
         const user = await prisma.user.findUnique({
           where: { clerkId },
-          select: { id: true, role: true, email: true },
+          select: { role: true },
         });
 
         if (user) {
           const role = (user.role as string)?.toLowerCase() || 'user';
 
           if (role === 'admin' || role === 'superadmin') {
-            logger.info('Admin access granted from database', {
-              userId: user.id,
-              role,
-            });
-
-            return {
-              data: {
-                success: true,
-                hasAccess: true,
-                role,
-                userId: user.id,
-                email: user.email,
-              },
-            };
+            logger.info('Admin access granted (db)', { userId: clerkId, role });
+            auditLog('admin_check_access_granted', { clerkId, source: 'db', role });
+            return { data: { hasAccess: true, role } };
           }
         }
       } finally {
@@ -111,23 +82,13 @@ export const onRequestGet = authenticatedEndpoint(CheckAccessSchema, async (cont
 
     // Not an admin
     logger.warn('Admin access denied', { userId: clerkId });
-
-    return {
-      data: {
-        success: false,
-        hasAccess: false,
-        message: 'Forbidden - Admin access required',
-      },
-      status: 403,
-    };
+    auditLog('admin_check_access_denied', { clerkId });
+    return { status: 403, data: { hasAccess: false, role: 'user' } };
   } catch (error) {
     logger.error('Admin check-access error', {
       error: error instanceof Error ? error.message : String(error),
       userId: clerkId,
     });
-    return {
-      data: { error: 'Internal server error', hasAccess: false },
-      status: 500,
-    };
+    return { status: 500, error: 'Internal server error' };
   }
 });

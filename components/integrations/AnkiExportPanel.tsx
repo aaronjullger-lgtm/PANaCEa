@@ -65,7 +65,7 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
   };
 
   return (
-    <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm p-6 border border-[var(--color-border)]">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-6">
       <div className="flex items-center gap-3 mb-4">
         <FileDown className="w-6 h-6 text-[var(--color-accent)]" />
         <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Anki Export</h2>

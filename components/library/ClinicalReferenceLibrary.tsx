@@ -114,7 +114,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Semantic search (RAG): when user types, search by embedding + optional 1-sentence answer
   const {
-    results: _semanticResults,
+    results: semanticResults,
     answer: semanticAnswer,
     loading: semanticLoading,
     error: semanticError,
@@ -322,7 +322,14 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Server already filters by system, subcategory, and highYield via query params.
   // No client-side re-filtering needed.
-  const displayContent = content;
+  // When FTS returns no results in search mode, fall back to semantic search results.
+  // Semantic results carry a `similarity` field so cards can show "% match" badges.
+  const displayContent = useMemo(() => {
+    if (isSearchMode && content.length === 0 && semanticResults.length > 0) {
+      return semanticResults as Partial<MedicalContentDisplay>[];
+    }
+    return content;
+  }, [isSearchMode, content, semanticResults]);
 
   // Restore selected condition from URL when content loads
   useEffect(() => {
@@ -556,7 +563,13 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
         {/* Header with Global Search */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-sm sticky top-0 z-20">
+        <div
+          className="flex items-center justify-between px-5 py-2.5 sticky top-0 z-20"
+          style={{
+            backgroundColor: 'var(--color-bg-primary)',
+            boxShadow: '0 1px 0 0 var(--color-border)',
+          }}
+        >
           {/* Left: Breadcrumb Navigation */}
           <div className="flex items-center gap-3 min-w-0">
             <LibraryBreadcrumb
@@ -583,7 +596,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoComplete="off"
-                className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)]"
+                className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg-secondary)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+                style={{ boxShadow: '0 0 0 1px var(--color-border)' }}
               />
               {searchQuery && (
                 <button
@@ -603,7 +617,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
             <button
               type="button"
               onClick={() => setIsShortcutsOpen(true)}
-              className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors"
               aria-label="Keyboard shortcuts (?)"
               title="Keyboard shortcuts (?)"
             >
@@ -612,7 +626,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
             {onExit && (
               <button
                 onClick={onExit}
-                className="px-3 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors"
+                className="px-3 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 rounded-lg text-sm font-medium transition-colors"
               >
                 Back
               </button>
@@ -622,7 +636,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               aria-label="Refresh content"
               onClick={fetchContent}
               disabled={loading}
-              className="flex items-center gap-2 px-3 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-2.5 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -630,7 +644,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         </div>
 
         {/* Content Grid */}
-        <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
+        <div ref={contentRef} className="flex-1 overflow-y-auto p-5">
           {systemsError && systems.length === 0 ? (
             <EmptyState
               title="Failed to load systems"
@@ -675,10 +689,13 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   <p className="text-sm text-[var(--color-text-muted)]">Finding best answer...</p>
                 )}
                 {semanticAnswer && askedForAnswer && !semanticLoading && (
-                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 backdrop-blur-sm p-4 shadow-sm">
+                  <div
+                    className="rounded-xl bg-[var(--color-bg-secondary)] p-4"
+                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+                  >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[var(--color-accent)]/15 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-[var(--color-accent)]" />
+                      <div className="flex-shrink-0 w-7 h-7 rounded-md bg-[var(--color-bg-tertiary)] flex items-center justify-center">
+                        <Sparkles className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
@@ -757,7 +774,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               </button>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-5">
               {groupedContent.map((group) => {
                 const groupKey = `${group.system}\0${group.subcategory}`;
                 const isExpanded = expandedSubcats.has(groupKey);
@@ -771,33 +788,37 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 return (
                   <div
                     key={groupKey}
-                    className="bg-gradient-to-br from-[var(--color-bg-secondary)]/30 to-transparent rounded-2xl p-6 border border-[var(--color-border)]/40 shadow-sm"
+                    className="rounded-xl p-5"
+                    style={{
+                      backgroundColor: 'var(--color-bg-secondary)',
+                      boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+                    }}
                   >
-                    {/* Subcategory Header - uses each condition's own system + subcategory so no ID/label mismatch */}
-                    <div className="flex items-center justify-between mb-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-1 h-6 rounded-full bg-gradient-to-b from-[var(--color-accent)] to-[var(--color-accent)]/30" />
-                        <h3 className="text-sm uppercase tracking-wider text-[var(--color-text-primary)] font-bold flex items-center gap-3">
+                    {/* Subcategory Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-0.5 h-5 rounded-full bg-[var(--color-accent)]" />
+                        <h3 className="text-[13px] font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
                           {showSystemInHeader && (
-                            <span className="text-[var(--color-text-muted)] font-semibold normal-case">
-                              {group.system}
+                            <span className="text-[var(--color-text-muted)] font-medium">
+                              {group.system} /
                             </span>
                           )}
                           <span>{group.subcategory}</span>
-                          <Badge variant="category" className="tabular-nums">
+                          <span className="text-[11px] font-medium text-[var(--color-text-muted)] tabular-nums">
                             {group.items.length}
-                          </Badge>
+                          </span>
                         </h3>
                       </div>
                       {hasMore && !isExpanded && (
-                        <Badge variant="muted">
-                          Showing {ITEMS_PER_SUBCATEGORY} highest yield
-                        </Badge>
+                        <span className="text-[11px] font-medium text-[var(--color-text-muted)]">
+                          Top {ITEMS_PER_SUBCATEGORY} highest yield
+                        </span>
                       )}
                     </div>
 
-                    {/* Cards Grid - Vertical stacking for better information density */}
-                    <div className="flex flex-col gap-4">
+                    {/* Cards Grid */}
+                    <div className="flex flex-col gap-3">
                       {displayItems.map((item) => {
                         const globalIndex = content.indexOf(item);
                         return (
@@ -814,7 +835,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
                     {/* Show More / Show Less Button */}
                     {hasMore && (
-                      <div className="mt-4 text-center">
+                      <div className="mt-3 text-center">
                         <button
                           onClick={() => {
                             setExpandedSubcats((prev) => {
@@ -827,7 +848,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                               return next;
                             });
                           }}
-                          className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] transition-all hover:border-[var(--color-accent)]/60"
+                          className="px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
                         >
                           {isExpanded ? (
                             <>Show Less</>
@@ -867,10 +888,14 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-full md:w-[60%] min-w-0 md:min-w-[400px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-full md:w-[60%] min-w-0 md:min-w-[400px] max-w-4xl bg-[var(--color-bg-primary)] z-50 flex flex-col"
+              style={{ boxShadow: '-1px 0 0 0 var(--color-border), -8px 0 24px -8px rgba(0,0,0,0.08)' }}
             >
               {/* Panel Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
+              <div
+                className="flex items-center justify-between px-4 py-2.5"
+                style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}
+              >
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handlePrevCondition}

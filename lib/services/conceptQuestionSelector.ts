@@ -25,6 +25,7 @@
 import type { PrismaClient } from '@prisma/client';
 import type { LearnerStage } from './learnerStageBlueprint';
 import { batchGetLeastSeenQuestions } from './batchVariantService';
+import { letterToIndex, ANSWER_LETTERS } from '../answerLetterMap';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -600,11 +601,27 @@ function normalizeQuestion(
       ? Object.values(rawOpts as Record<string, string>)
       : [];
 
-  // Derive correctAnswerIndex from letter key (A=0, B=1, ...) or string match
-  const correctIdx =
-    typeof raw.correctAnswer === 'string' && /^[A-E]$/.test(raw.correctAnswer)
-      ? raw.correctAnswer.charCodeAt(0) - 65
-      : opts.findIndex((o) => o === raw.correctAnswer);
+  // Derive correctAnswerIndex from letter key (A=0, B=1, ..., E=4) or string match
+  // Uses canonical converter — returns null on invalid input instead of silently falling back to 0
+  let correctIdx: number | null = null;
+  if (typeof raw.correctAnswer === 'string') {
+    const letterIdx = letterToIndex(raw.correctAnswer);
+    if (letterIdx !== null && letterIdx < opts.length) {
+      correctIdx = letterIdx;
+    } else {
+      // Full-text match fallback
+      const textIdx = opts.findIndex((o) => o === raw.correctAnswer);
+      correctIdx = textIdx >= 0 ? textIdx : null;
+    }
+  }
+
+  if (correctIdx === null) {
+    // Log but don't crash — return with index -1 so callers can filter
+    console.warn(
+      `[normalizeQuestion] Could not resolve correctAnswerIndex for question ${raw.id}: correctAnswer="${raw.correctAnswer}", options=[${opts.length}]`
+    );
+    correctIdx = -1;
+  }
 
   return {
     id: raw.id,
@@ -612,7 +629,7 @@ function normalizeQuestion(
     vignette: raw.vignette ?? null,
     options: opts,
     correctAnswer: raw.correctAnswer,
-    correctAnswerIndex: Math.max(0, correctIdx),
+    correctAnswerIndex: correctIdx,
     explanation: raw.explanation ?? null,
     system: raw.system ?? null,
     category: raw.category ?? null,

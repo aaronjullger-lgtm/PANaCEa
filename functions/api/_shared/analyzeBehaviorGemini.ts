@@ -13,7 +13,8 @@ const geminiBehaviorOutputSchema = z.object({
 });
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const BEHAVIOR_MODEL = 'gemini-2.0-flash-exp';
+// Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
+const BEHAVIOR_MODEL = 'gemini-2.0-flash';
 
 export interface BehaviorTelemetryInput {
   time_to_first_interaction_ms?: number | null;

@@ -43,7 +43,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   onAction,
 }) => {
   return (
-    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg text-[var(--color-accent)]">

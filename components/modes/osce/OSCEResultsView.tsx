@@ -49,7 +49,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MessageSquare className="w-8 h-8 text-data-neutral" />
@@ -77,8 +77,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           animate={{ y: 0 }}
           className={`rounded-xl p-6 border ${
             isCorrectDiagnosis
-              ? 'bg-[var(--color-data-neutral)]/10 dark:bg-[var(--color-data-neutral)]/20 border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40'
-              : 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]/40'
+              ? 'bg-[var(--color-data-neutral)]/10 border-[var(--color-data-neutral)]/20'
+              : 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20'
           }`}
         >
           <div className="flex items-center gap-3 mb-4">
@@ -91,13 +91,13 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
               <h2
                 className={`text-2xl font-bold ${
                   isCorrectDiagnosis
-                    ? 'text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]'
-                    : 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
+                    ? 'text-[var(--color-data-neutral)]'
+                    : 'text-[var(--color-data-provisional)]'
                 }`}
               >
                 {isCorrectDiagnosis ? 'Correct Diagnosis!' : 'Diagnosis Review'}
               </h2>
-              <p className="text-[#364154] dark:text-[#cbd5e1]">Your diagnosis: {userDiagnosis}</p>
+              <p className="text-[var(--color-text-secondary)]">Your diagnosis: {userDiagnosis}</p>
             </div>
           </div>
 
@@ -110,7 +110,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
 
           <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
             <p className="text-sm text-data-neutral mb-1">Correct Diagnosis:</p>
-            <p className="text-lg font-semibold text-white">{correctDiagnosis}</p>
+            <p className="text-lg font-semibold text-[var(--color-text-inverse)]">{correctDiagnosis}</p>
           </div>
         </motion.div>
 
@@ -120,7 +120,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral text-center shadow-sm"
+            className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral text-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
             <Award className="w-8 h-8 text-data-neutral mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-data-neutral mb-1">Overall Score</p>
@@ -133,7 +133,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
+            className="bg-card rounded-xl p-6 text-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
             <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-muted-foreground mb-1">Thoroughness</p>
@@ -146,7 +146,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
+            className="bg-card rounded-xl p-6 text-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
             <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
@@ -162,9 +162,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
+            className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
-            <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+            <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-inverse)] flex items-center gap-2">
               <FileText className="w-5 h-5" /> After-Action Report
             </h3>
             <div className="prose dark:prose-invert max-w-none text-data-neutral whitespace-pre-wrap">
@@ -178,9 +178,9 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           initial={{ y: 20 }}
           animate={{ y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
+          className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
         >
-          <h3 className="text-xl font-semibold mb-4 text-white">Ideal Workup</h3>
+          <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-inverse)]">Ideal Workup</h3>
           <ul className="space-y-2">
             {idealWorkup.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2 text-data-neutral">
@@ -195,7 +195,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
         <div className="flex gap-4 pt-2">
           <motion.button
             onClick={onNewCase}
-            className="flex-1 bg-data-neutral-bg hover:opacity-90 py-4 rounded-xl font-semibold text-white
+            className="flex-1 bg-data-neutral-bg hover:opacity-90 py-4 rounded-xl font-semibold text-[var(--color-text-inverse)]
                        transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -207,7 +207,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             <motion.button
               onClick={onExit}
               className="px-8 py-4 bg-data-neutral-bg hover:opacity-90 rounded-xl font-semibold
-                         text-white transition-colors border border-data-neutral focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                         text-[var(--color-text-inverse)] transition-colors border border-data-neutral focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

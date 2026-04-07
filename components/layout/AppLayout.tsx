@@ -55,7 +55,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Skip to Main Content */}
       <a
         href="#main-content"
-        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
+        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[10] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
       >
         Skip to main content
       </a>
@@ -63,10 +63,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Header */}
       {showHeader && (
         <header
-          className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
-          style={{ position: 'sticky', top: 0, zIndex: 50, height: 'var(--header-height, 4rem)', backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}
+          className="sticky top-0 z-50 shrink-0"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            height: 'var(--header-height, 4rem)',
+            backgroundColor: 'var(--color-bg-primary)',
+            boxShadow: '0 1px 0 0 var(--color-border)',
+          }}
         >
-          <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="h-full w-full px-4 sm:px-6 flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <AppBrand
               size="sm"
               asLink
@@ -78,7 +85,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
                   to={ROUTES.ADMIN}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
                   aria-label="Admin Dashboard"
                 >
                   <Shield className="w-5 h-5" />
@@ -88,7 +95,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <motion.button
                   ref={settingsButtonRef}
                   onClick={onSettingsClick}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
                   aria-label="Settings and Stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -101,7 +108,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
                   aria-label="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />

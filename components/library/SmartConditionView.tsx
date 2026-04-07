@@ -278,7 +278,7 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
                 key={item}
                 className="flex items-start gap-3 p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
               >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-bold text-sm shrink-0">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-semibold text-sm shrink-0">
                   {idx + 1}
                 </div>
                 <span className="text-[var(--color-text-primary)] text-base leading-relaxed pt-1">
@@ -671,7 +671,7 @@ function DiagnosticsTab({
             {bestInitial && (
               <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
                 <div className="flex items-start gap-3">
-                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-data-pass/30 text-data-pass shrink-0">
+                  <div className="px-2 py-0.5 rounded text-xs font-semibold bg-data-pass/30 text-data-pass shrink-0">
                     SCREENING
                   </div>
                   <div>
@@ -688,7 +688,7 @@ function DiagnosticsTab({
             {goldStandard && (
               <div className="p-4 rounded-xl bg-data-provisional/10 border border-data-provisional/30">
                 <div className="flex items-start gap-3">
-                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-data-provisional/30 text-data-provisional shrink-0">
+                  <div className="px-2 py-0.5 rounded text-xs font-semibold bg-data-provisional/30 text-data-provisional shrink-0">
                     CONFIRMATORY
                   </div>
                   <div>
@@ -958,7 +958,7 @@ function ManagementTab({
         >
           <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-bold bg-data-pass/30 text-data-pass">
+              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-data-pass/30 text-data-pass">
                 FIRST-LINE
               </span>
             </div>
@@ -1120,7 +1120,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
           {/* Condition Name with close button */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-text-primary)]">
+              <h1 className="text-3xl md:text-4xl font-semibold text-[var(--color-text-primary)]">
                 {data.condition}
               </h1>
             </div>

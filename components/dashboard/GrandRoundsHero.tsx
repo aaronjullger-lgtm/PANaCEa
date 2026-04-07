@@ -166,7 +166,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
         {onDismiss && userStatus === 'completed' && (
           <button
             onClick={onDismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-[var(--color-bg-tertiary)]/30 hover:bg-[var(--color-bg-tertiary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all z-10"
+            className="absolute top-4 right-4 p-1.5 rounded-lg bg-[var(--color-bg-tertiary)]/30 hover:bg-[var(--color-bg-tertiary)]/60 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors duration-200 z-10"
             title="Minimize"
             aria-label="Minimize Grand Rounds hero"
           >

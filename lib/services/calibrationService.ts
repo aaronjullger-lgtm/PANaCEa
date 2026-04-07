@@ -51,7 +51,7 @@ export interface UserCalibration {
 // ── Constants ──
 
 /** Minimum review pairs needed for calibration */
-const MIN_PAIRS_FOR_CALIBRATION = 30;
+const MIN_PAIRS_FOR_CALIBRATION = 100;
 
 /** How often to recompute (reviews) */
 const RECOMPUTE_EVERY_N_REVIEWS = 50;

@@ -194,7 +194,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
                 <RefreshCw className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Quick Review</h2>
+                <h2 className="text-2xl font-semibold">Quick Review</h2>
                 <p className="text-[var(--color-text-inverse)]/80 text-sm">
                   Reinforce what you've learned
                 </p>
@@ -215,21 +215,21 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 text-center">
               <Clock className="w-5 h-5 text-[var(--color-accent)] mx-auto mb-2" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {todayMissed}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Today</div>
             </div>
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 text-center">
               <Target className="w-5 h-5 text-[var(--color-accent-hover)] mx-auto mb-2" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {weekMissed}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">This Week</div>
             </div>
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 text-center">
               <RefreshCw className="w-5 h-5 text-data-neutral mx-auto mb-2" />
-              <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {totalMissed}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Total</div>

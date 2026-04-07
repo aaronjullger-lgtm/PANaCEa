@@ -824,7 +824,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                     className="space-y-6"
                   >
                     {/* Sticky Header Bar */}
-                    <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-b border-[var(--color-border)] -mx-6 -mt-6 px-6 py-4">
+                    <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)] -mx-6 -mt-6 px-6 py-4">
                       <button
                         onClick={() => setSelectedCondition(null)}
                         className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"

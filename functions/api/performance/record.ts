@@ -10,7 +10,6 @@
  * - Safe Prisma disconnect
  */
 
-import { z } from 'zod';
 import {
   authenticatedEndpoint,
   withCors,
@@ -20,20 +19,10 @@ import {
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { logger } from '../_shared/secureLogger';
 
-// Zod schema for performance record submission
-const PerformanceRecordSchema = z.object({
-  drillType: z.string().min(1).max(100),
-  startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
-  questionsAttempted: z.number().int().min(0).max(1000),
-  correctAnswers: z.number().int().min(0).max(1000),
-  accuracy: z.number().min(0).max(1),
-  timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
-  bestStreak: z.number().int().min(0).max(1000).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
+// Shared schema — single source of truth for this endpoint's request contract.
+// To change the /api/performance/record contract, edit lib/api/schemas/performance.ts.
+import { PerformanceRecordRequestSchema as PerformanceRecordSchema } from '../../../lib/api/schemas/performance';
+import type { PerformanceRecordRequest as PerformanceRecordInput } from '../../../lib/api/schemas/performance';
 
 export const onRequestOptions = withCors();
 

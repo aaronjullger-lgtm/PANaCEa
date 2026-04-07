@@ -45,6 +45,7 @@ describe('TrainingMenu Component Logic', () => {
       'Beaker',
       'Brain',
       'ClipboardList',
+      'Code',
       'Droplets',
       'FileCheck',
       'FileText',
@@ -57,6 +58,7 @@ describe('TrainingMenu Component Logic', () => {
       'Layers',
       'MessageSquare',
       'Monitor',
+      'PenLine',
       'Pill',
       'PillBottle',
       'Scan',
@@ -64,6 +66,7 @@ describe('TrainingMenu Component Logic', () => {
       'Siren',
       'Target',
       'Trophy',
+      'Type',
       'Wind',
       'Zap',
     ];
@@ -100,6 +103,7 @@ describe('TrainingMenu Component Logic', () => {
       'indigo',
       'green',
       'gold',
+      'sky',
     ];
 
     it('should have valid theme values for all modes', () => {
@@ -126,6 +130,7 @@ describe('TrainingMenu Component Logic', () => {
         indigo: 'bg-[var(--color-bg-secondary)]',
         green: 'bg-[var(--color-bg-secondary)]',
         gold: 'bg-[var(--color-bg-secondary)]',
+        sky: 'bg-[var(--color-bg-secondary)]',
       };
 
       MODE_REGISTRY.forEach((mode) => {

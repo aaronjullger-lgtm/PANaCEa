@@ -132,7 +132,8 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
                 questionData: question.questionData,
               },
               env.GEMINI_API_KEY as string | undefined,
-              { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
+              { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+              user.id // pass userId so confusion pairs are injected into the variant prompt
             ).catch(() => {});
           }
         }

@@ -472,7 +472,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
                     ? 'Select exactly 2 medications to check for interactions'
                     : 'Check for drug-drug interaction'
                 }
-                className="w-full px-4 py-3 rounded-lg bg-data-provisional/20 hover:bg-data-provisional/30 disabled:opacity-50 disabled:cursor-not-allowed border border-data-provisional/50 text-data-provisional font-medium transition-all"
+                className="w-full px-4 py-3 rounded-lg bg-data-provisional/20 hover:bg-data-provisional/30 disabled:opacity-50 disabled:cursor-not-allowed border border-data-provisional/50 text-data-provisional font-medium transition-colors duration-200"
               >
                 <AlertTriangle className="w-5 h-5 inline mr-2" />
                 Check Interaction ({selectedDrugs.size}/2 selected)
@@ -481,7 +481,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
               {!showResults && (
                 <button
                   onClick={submitAnswer}
-                  className="w-full px-4 py-3 rounded-lg bg-[var(--color-accent)] hover:opacity-90 text-white font-medium transition-all"
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium transition-colors duration-200"
                 >
                   Submit Answer
                 </button>

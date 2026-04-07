@@ -1,100 +1,27 @@
 /**
- * Cloudflare Function: Log Drill Attempt
+ * @deprecated SUPERSEDED by POST /api/drills/submit-review which provides
+ * full FSRS scheduling, pipeline traces, and performance feedback.
  *
- * Logs a drill attempt with statistical isolation (isMainSession = false)
+ * This endpoint is no longer called by any frontend component. It remains
+ * only as a tombstone — safe to delete once confirmed no external clients
+ * depend on it.
  *
- * Endpoint: POST /api/drill/log-attempt
- * Body:
- * {
- *   questionId?: string;
- *   conditionId?: string;
- *   drillType: 'photo_drill' | 'contrastive_drill' | 'rapid_recall' | 'wordle';
- *   wasCorrect: boolean;
- *   responseTimeMs: number;
- *   metadata?: Record<string, any>;
- * }
- *
- * @module functions/api/drill/log-attempt
+ * Endpoint: POST /api/drill/log-attempt → 410 Gone
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { logDrillAttempt, DrillAttemptData } from '../../../services/drill/drillSessionManager';
+import { withCors } from '../_shared/middleware';
 
-export async function onRequestPost(context: any) {
-  const { request, env } = context;
-  let prisma: any = null;
+export const onRequestOptions = withCors();
 
-  try {
-    // Create edge Prisma client
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    // Authenticate
-    const authContext = await authenticateRequest(request, env);
-    if (!authContext) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+export const onRequestPost: PagesFunction = async () => {
+  return new Response(
+    JSON.stringify({
+      error: 'This endpoint has been deprecated. Use POST /api/drills/submit-review instead.',
+      migration: '/api/drills/submit-review',
+    }),
+    {
+      status: 410,
+      headers: { 'Content-Type': 'application/json' },
     }
-    const userId = authContext.userId;
-
-    // Parse body
-    const body = await request.json();
-    const { questionId, conditionId, drillType, wasCorrect, responseTimeMs, metadata } = body;
-
-    // Validate required fields
-    if (!drillType || typeof wasCorrect !== 'boolean' || typeof responseTimeMs !== 'number') {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields: drillType, wasCorrect, responseTimeMs',
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate drill type
-    const validDrillTypes = ['photo_drill', 'contrastive_drill', 'rapid_recall', 'wordle'];
-    if (!validDrillTypes.includes(drillType)) {
-      return new Response(
-        JSON.stringify({
-          error: `Invalid drillType. Must be one of: ${validDrillTypes.join(', ')}`,
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Log attempt (map responseTimeMs from request body to durationMs for interface)
-    const attemptData: DrillAttemptData = {
-      userId,
-      questionId,
-      conditionId,
-      drillType,
-      wasCorrect,
-      durationMs: responseTimeMs, // Map to correct interface property
-      metadata,
-    };
-
-    const attempt = await logDrillAttempt(prisma, attemptData);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        attemptId: attempt.id,
-        isMainSession: false, // Confirm statistical isolation
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Error logging drill attempt:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to log drill attempt',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}
+  );
+};

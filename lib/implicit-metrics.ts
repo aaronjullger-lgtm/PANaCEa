@@ -48,6 +48,11 @@ export interface ImplicitBehaviorMetrics {
   hintViewDurationMs?: number | null;
   /** Optional: Question type for type-specific weight profiles */
   questionType?: string;
+  /** Optional: Current consecutive correct streak (0 if last answer was wrong).
+   *  Research (Stanford, 2025): streak effects are real but small (1-8%),
+   *  reflecting sustained focus rather than skill change. Used as a
+   *  conservative ±0.5 grade modifier at most. */
+  consecutiveCorrectStreak?: number;
 }
 
 /**
@@ -420,6 +425,15 @@ export function deriveContinuousRating(
 
     const bonusFast = Math.min(bonusSpeed + bonusClean, 1.0);
 
+    // Streak modifier (conservative): Research (Stanford, 2025) found contestants
+    // were 1-8% more likely to answer correctly during winning streaks, reflecting
+    // sustained focus. Capped at ±0.15 (well under the research's ±0.5 max
+    // recommendation) since PANaCEa uses this as one signal among many.
+    // Positive streaks: +0.03 per consecutive correct (cap at +0.15 for 5+)
+    // The modifier only applies to correct answers (streak on incorrect is 0).
+    const streak = metrics.consecutiveCorrectStreak ?? 0;
+    const bonusStreak = Math.min(streak * 0.03, 0.15);
+
     grade =
       base -
       penaltySwitch -
@@ -428,7 +442,8 @@ export function deriveContinuousRating(
       penaltyEntropy -
       penaltyOscillation -
       penaltyHint +
-      bonusFast;
+      bonusFast +
+      bonusStreak;
   }
 
   // Final NaN guard: if any telemetry produced NaN, fall back to neutral grade.
@@ -557,22 +572,30 @@ export function deriveContinuousRating(
   const discreteRating = gradeToRating(grade);
 
   return { grade, confidence, discreteRating, rtClassification: _rtClassification, rtSignalQuality: _rtSignalQuality };
-}/** Map continuous grade to discrete FSRS Rating */
+}/** Map continuous grade to discrete FSRS Rating.
+ *
+ * PANaCEa uses a binary rating system: Again(1) / Good(3).
+ * Hard(2) and Easy(4) are deprecated per FSRS-6 research:
+ * the critical decision is the pass/fail threshold, not
+ * fine-grained passing distinctions (initial stability varies
+ * 39× between Again and Easy, making this the highest-leverage
+ * decision point).
+ *
+ * Threshold at 2.0: grades below 2.0 indicate failure-level
+ * behavioral signals; grades ≥ 2.0 indicate passing.
+ */
 function gradeToRating(grade: number): Rating {
-  if (grade < 1.5) return Rating.Again;
-  if (grade < 2.5) return Rating.Hard;
-  if (grade < 3.5) return Rating.Good;
-  return Rating.Easy;
+  if (grade < 2.0) return Rating.Again;
+  return Rating.Good;
 }
 
 /**
- * Map legacy quality score (1-5) to FSRS Rating
- * For backward compatibility during transition
+ * Map legacy quality score (1-5) to FSRS Rating.
+ * Binary system: quality ≤ 2 → Again, quality ≥ 3 → Good.
+ * Hard(2) and Easy(4) are deprecated in PANaCEa's binary rating system.
  */
 export function legacyQualityToRating(quality: number): Rating {
-  if (quality <= 1) return Rating.Again;
-  if (quality === 2) return Rating.Hard;
-  if (quality >= 5) return Rating.Easy;
+  if (quality <= 2) return Rating.Again;
   return Rating.Good;
 }
 
@@ -778,8 +801,60 @@ export function fluencyIllusionDampener(elapsedDays: number): number {
   return 0.7 + 0.3 * Math.max(0, Math.min(elapsedDays, 1.0));
 }
 
+/** Maximum response duration before capping for scoring purposes (ms) */
+export const DURATION_CAP_MS = 180000; // 3 minutes
+
+/**
+ * High-level implicit rating derivation for a single question response.
+ *
+ * Wraps `deriveContinuousRating()` with validation (flagging), percentile
+ * calculation, and produces the full `ImplicitReviewData` object expected
+ * by session analysis functions.
+ *
+ * @param metrics - Behavioral metrics captured during question interaction
+ * @param sessionStats - Optional running session latency statistics
+ * @param config - Implicit rating configuration (default: DEFAULT_IMPLICIT_CONFIG)
+ * @returns Full implicit review data with rating, confidence, flags, percentile
+ */
+export function deriveImplicitRating(
+  metrics: ImplicitBehaviorMetrics,
+  sessionStats?: SessionLatencyStats,
+  config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
+): ImplicitReviewData {
+  // Flag validation
+  let flagged = false;
+  let flagReason: string | undefined;
+
+  if (metrics.timeToFirstClick < config.minValidTime) {
+    flagged = true;
+    flagReason = `Suspiciously fast response (${metrics.timeToFirstClick}ms)`;
+  } else if (metrics.timeToFirstClick > config.maxValidTime) {
+    flagged = true;
+    flagReason = `Response time exceeded maximum (${metrics.timeToFirstClick}ms)`;
+  }
+
+  // Derive continuous rating
+  const continuous = deriveContinuousRating(metrics, config);
+
+  // Calculate latency percentile
+  const latencyPercentile = sessionStats
+    ? calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats)
+    : 0.5;
+
+  return {
+    rating: continuous.discreteRating,
+    continuousRating: continuous.grade,
+    metrics,
+    confidence: continuous.confidence,
+    latencyPercentile,
+    flagged,
+    flagReason,
+  };
+}
+
 export default {
   deriveContinuousRating,
+  deriveImplicitRating,
   applyStabilityModifierFromGrade,
   confidenceStabilityMultiplier,
   fluencyIllusionDampener,
@@ -792,4 +867,5 @@ export default {
   serializeImplicitMetrics,
   assessTelemetryQuality,
   DEFAULT_IMPLICIT_CONFIG,
+  DURATION_CAP_MS,
 };

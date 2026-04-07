@@ -150,7 +150,9 @@ desktop.ini
 *.temp
 .cache/
 .tmp/
+.tmp.driveupload/
 temp/
+_test_write
 
 # Legacy static data files (database-first pattern - these should not be in repo)
 data/*.json
@@ -223,6 +225,10 @@ heapdump-*.heapsnapshot
 *.backup*
 *_backup*
 .roomodes.*
+
+# Binary documents (use docs/ for markdown)
+*.docx
+*.rtf
 
 # Large generated repo-export artifacts (never commit these)
 codebase.md
@@ -305,3 +311,6 @@ prisma/*.backup*
 scripts/temp-*
 scripts/temp_*
 scripts/test-*
+
+# Accidental redirect artifacts
+-

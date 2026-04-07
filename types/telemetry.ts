@@ -161,9 +161,92 @@ export const MVRT_THRESHOLDS = {
 export type QuestionType = 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown';
 
 /**
- * Maps question types to their MVRT thresholds
+ * Per-user MVRT calibration data.
+ * When provided, MVRT thresholds are derived from the user's own response time
+ * distribution instead of using fixed constants. This prevents flagging naturally
+ * fast readers as "rapid guessers" and catches slow readers who are actually
+ * guessing relative to their own baseline.
+ *
+ * Phase 1.6 — Optimization Strategy Rank #9.
+ *
+ * Calibration requires >= MIN_CALIBRATION_ATTEMPTS to activate (default 20).
+ * Below that threshold, the system falls back to population-level constants.
  */
-export function getMVRTThreshold(questionType: QuestionType): number {
+export interface UserMVRTCalibration {
+  /** Per-type RT percentile data. Key = QuestionType, value = { p5, p10, median, count }. */
+  byType: Partial<Record<QuestionType, {
+    /** 5th percentile response time (ms) — faster than 95% of this user's responses */
+    p5: number;
+    /** 10th percentile response time (ms) */
+    p10: number;
+    /** Median response time (ms) */
+    median: number;
+    /** Number of attempts used to compute these percentiles */
+    count: number;
+  }>>;
+}
+
+/**
+ * Minimum number of attempts per question type before per-user calibration activates.
+ * Below this, population-level MVRT constants are used as fallback.
+ */
+const MIN_CALIBRATION_ATTEMPTS = 20;
+
+/**
+ * Safety floor: per-user MVRT can never go below these absolute minimums (ms).
+ * This prevents the system from accepting impossibly fast responses even if the
+ * user historically answers very quickly.
+ */
+const MVRT_ABSOLUTE_FLOOR: Record<string, number> = {
+  vignette: 1500,
+  recall: 800,
+  image: 1000,
+  rapid_recall: 400,
+  unknown: 800,
+};
+
+/**
+ * Maps question types to their MVRT thresholds.
+ *
+ * When `calibration` is provided and has sufficient data for the question type,
+ * uses the user's 10th percentile RT as the MVRT threshold (i.e., anything faster
+ * than 90% of their own responses is flagged as rapid guess). Falls back to the
+ * population-level constant if calibration data is insufficient.
+ *
+ * The threshold is floored at MVRT_ABSOLUTE_FLOOR to prevent pathological values.
+ */
+export function getMVRTThreshold(
+  questionType: QuestionType,
+  calibration?: UserMVRTCalibration | null
+): number {
+  // Population-level default
+  const populationThreshold = getPopulationMVRT(questionType);
+
+  // If no calibration data, use population default
+  if (!calibration?.byType) return populationThreshold;
+
+  const userStats = calibration.byType[questionType];
+  if (!userStats || userStats.count < MIN_CALIBRATION_ATTEMPTS) {
+    return populationThreshold;
+  }
+
+  // Per-user calibrated threshold: 10th percentile of their own RT distribution.
+  // Rationale: if the user answers faster than 90% of their own history for this
+  // question type, they're likely not reading carefully. This adapts to:
+  // - Naturally fast readers (who'd be wrongly flagged by population thresholds)
+  // - Slow deliberate readers (who can still be "rapid guessing" at 2500ms)
+  const calibratedThreshold = userStats.p10;
+
+  // Apply absolute floor — no MVRT below physical minimum for the question type
+  const floor = MVRT_ABSOLUTE_FLOOR[questionType] ?? MVRT_ABSOLUTE_FLOOR.unknown;
+  return Math.max(floor, calibratedThreshold);
+}
+
+/**
+ * Get population-level (uncalibrated) MVRT for a question type.
+ * Extracted for reuse in calibration logic.
+ */
+function getPopulationMVRT(questionType: QuestionType): number {
   switch (questionType) {
     case 'vignette':
       return MVRT_THRESHOLDS.VIGNETTE;
@@ -176,6 +259,37 @@ export function getMVRTThreshold(questionType: QuestionType): number {
     default:
       return MVRT_THRESHOLDS.DEFAULT;
   }
+}
+
+/**
+ * Compute per-user MVRT calibration from a list of response times.
+ * Call this periodically (e.g., after every N attempts or daily) and store
+ * the result on the user's profile (UserStatistics.timingProfile).
+ *
+ * @param rtsByType Map of question type → array of response times (ms)
+ * @returns Calibration object suitable for getMVRTThreshold()
+ */
+export function computeUserMVRTCalibration(
+  rtsByType: Partial<Record<QuestionType, number[]>>
+): UserMVRTCalibration {
+  const byType: UserMVRTCalibration['byType'] = {};
+
+  for (const [type, rts] of Object.entries(rtsByType) as [QuestionType, number[]][]) {
+    if (!rts || rts.length < MIN_CALIBRATION_ATTEMPTS) continue;
+
+    // Sort ascending for percentile computation
+    const sorted = [...rts].sort((a, b) => a - b);
+    const n = sorted.length;
+
+    byType[type] = {
+      p5: sorted[Math.floor(n * 0.05)] ?? sorted[0],
+      p10: sorted[Math.floor(n * 0.10)] ?? sorted[0],
+      median: sorted[Math.floor(n * 0.50)] ?? sorted[0],
+      count: n,
+    };
+  }
+
+  return { byType };
 }
 
 // ============================================================================

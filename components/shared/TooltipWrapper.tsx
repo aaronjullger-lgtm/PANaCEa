@@ -257,7 +257,7 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
               y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
             }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className={`fixed z-[9999] ${config.bgColor} ${config.textColor} ${config.borderColor} border rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none ${
+            className={`fixed z-[20] ${config.bgColor} ${config.textColor} ${config.borderColor} border rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none ${
               interactive ? 'pointer-events-auto' : ''
             }`}
             style={{ maxWidth: `${maxWidth}px` }}

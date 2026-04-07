@@ -114,7 +114,7 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
       {/* Full-Screen Modal */}
       {selectedInfographic && (
         <div
-          className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedInfographic(null)}
         >
           <div

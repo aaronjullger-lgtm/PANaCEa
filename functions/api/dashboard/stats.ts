@@ -96,9 +96,10 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
         orderBy: { startTime: 'desc' },
         take: 20,
       }),
+      // Readiness accuracy: only MAIN/DRILL sessions (TARGETED/CRAM/RAPID_RECALL excluded)
       prisma.questionAttempt.groupBy({
         by: ['wasCorrect'],
-        where: { userId },
+        where: { userId, isMainSession: true },
         _count: true,
       }),
     ]);

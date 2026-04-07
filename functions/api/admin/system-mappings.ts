@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 import { clearContentCache } from '../../../services/conditionContentService';
 
 const SystemMappingSchema = z.object({
@@ -182,6 +183,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         subcategory: mapping.subcategory,
         userId: auth.userId,
       });
+      auditLog('admin_system_mapping_create', { userId: auth.userId, taxonomyCode: mapping.taxonomyCode, subcategory: mapping.subcategory });
 
       // Invalidate content cache to reflect mapping changes
       clearContentCache();
@@ -267,6 +269,7 @@ export const onRequestPut = adminAuthenticatedEndpoint(
         subcategory: updated.subcategory,
         userId: auth.userId,
       });
+      auditLog('admin_system_mapping_update', { userId: auth.userId, taxonomyCode: updated.taxonomyCode, subcategory: updated.subcategory });
 
       // Invalidate content cache to reflect mapping changes
       clearContentCache();
@@ -350,6 +353,7 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
         subcategory: params.subcategory,
         userId: auth.userId,
       });
+      auditLog('admin_system_mapping_delete', { userId: auth.userId, taxonomyCode: params.taxonomyCode, subcategory: params.subcategory });
 
       // Invalidate content cache to reflect mapping changes
       clearContentCache();

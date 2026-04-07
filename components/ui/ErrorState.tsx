@@ -45,7 +45,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={`flex flex-col items-center justify-center text-center ${className}`}
     >
-      <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 shadow-sm">
+      <div className="w-full max-w-md rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
         {showIcon && (
           <motion.div
             initial={prefersReducedMotion ? false : { scale: 0 }}

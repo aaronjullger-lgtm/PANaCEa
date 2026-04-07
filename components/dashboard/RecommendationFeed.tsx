@@ -5,6 +5,7 @@ import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'l
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
 import { logger } from '@/src/lib/logger';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Cache configuration: Only fetch fresh data if user returns after 6+ hours
 const CACHE_KEY = 'panceai_recommendations';
@@ -45,6 +46,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
   className,
 }) => {
   const { getToken, isLoading, isSignedIn, user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [recommendations, setRecommendations] = useState<StudyRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -296,10 +298,10 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
           {recommendations.map((rec, index) => (
             <motion.div
               key={rec.id || `rec-${index}-${rec.topic}-${rec.type}`}
-              layout
-              initial={{ scale: 0.9 }}
+              layout={!prefersReducedMotion}
+              initial={prefersReducedMotion ? false : { scale: 0.95 }}
               animate={{ scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={prefersReducedMotion ? undefined : { scale: 0.95 }}
               className="relative p-5 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm group transition-all duration-200"
             >
               {/* Priority Indicator */}
@@ -325,7 +327,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleAction(rec.id, 'dismiss')}
-                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     title="Dismiss"
                     aria-label="Dismiss"
                   >
@@ -334,7 +336,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
                   <button
                     onClick={() => handleAction(rec.id, 'complete')}
-                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/10 transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     title="Mark as Done"
                     aria-label="Mark as done"
                   >

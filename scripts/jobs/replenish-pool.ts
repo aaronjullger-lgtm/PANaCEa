@@ -77,8 +77,8 @@ async function replenishPool() {
                   question: generated.question,
                   options: generated.options,
                   correctAnswerIndex:
-                    ['A', 'B', 'C', 'D'].indexOf(generated.correctAnswer?.charAt(0)) !== -1
-                      ? ['A', 'B', 'C', 'D'].indexOf(generated.correctAnswer?.charAt(0))
+                    ['A', 'B', 'C', 'D', 'E'].indexOf(generated.correctAnswer?.charAt(0)) !== -1
+                      ? ['A', 'B', 'C', 'D', 'E'].indexOf(generated.correctAnswer?.charAt(0))
                       : 0,
                   explanation: generated.explanation,
                   condition: content.condition,

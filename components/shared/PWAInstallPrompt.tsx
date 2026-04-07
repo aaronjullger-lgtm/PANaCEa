@@ -200,8 +200,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-data-pass dark:bg-data-pass/30 rounded-lg mt-0.5">
-                        <WifiOff className="w-4 h-4 text-data-pass dark:text-data-pass" />
+                      <div className="p-2 bg-[var(--color-data-pass)]/10 rounded-lg mt-0.5">
+                        <WifiOff className="w-4 h-4 text-data-pass" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Offline Study Mode</h5>
@@ -213,8 +213,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 rounded-lg mt-0.5">
-                        <Bell className="w-4 h-4 text-[var(--color-accent)] dark:text-[var(--color-accent)]" />
+                      <div className="p-2 bg-[var(--color-accent)]/20 rounded-lg mt-0.5">
+                        <Bell className="w-4 h-4 text-[var(--color-accent)]" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Smart Reminders</h5>

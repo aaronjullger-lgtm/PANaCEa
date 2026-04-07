@@ -44,6 +44,27 @@ export type StopReason =
   | 'daily_limit_reached'
   | 'optimal_session_complete';
 
+/**
+ * Early-warning fatigue level, surfaced BEFORE the hard shouldStop trigger.
+ * - 'fresh' — No signs of decline
+ * - 'warming' — Mild signal: RT trending up OR slight accuracy dip in last 5
+ * - 'break_suggested' — Moderate signal: break would help retention
+ */
+export type FatigueLevel = 'fresh' | 'warming' | 'break_suggested';
+
+export interface ProactiveFatigueCheck {
+  /** Graduated fatigue level — acts before shouldStop fires */
+  fatigueLevel: FatigueLevel;
+  /** Rolling 5-question accuracy (NaN if < 5 questions) */
+  recentAccuracy: number;
+  /** Rolling 5-question RT slope (ms/question; positive = slowing) */
+  recentRtSlope: number;
+  /** Strategy-framed nudge message (null if fresh) */
+  nudgeMessage: string | null;
+  /** Recommended break duration in minutes */
+  suggestedBreakMinutes: number;
+}
+
 export interface SessionStats {
   questionsAnswered: number;
   accuracy: number;
@@ -406,6 +427,122 @@ export function calculateStreakWithFreezes(
     freezeUsedToday,
     weekendModeEnabled,
   };
+}
+
+// ─── Proactive Fatigue Detection ────────────────────────────────────────────
+
+/** Minimum questions before early-warning kicks in */
+const EARLY_WARNING_MIN_QUESTIONS = 8;
+
+/** Rolling window size for recent performance trend */
+const ROLLING_WINDOW = 5;
+
+/** RT slope threshold (ms/question) for "warming" level */
+const RT_SLOPE_WARMING = 500;
+
+/** RT slope threshold (ms/question) for "break suggested" */
+const RT_SLOPE_BREAK = 1200;
+
+/** Rolling accuracy threshold for "break suggested" */
+const ROLLING_ACCURACY_BREAK = 0.50;
+
+/** Session minute thresholds for proactive nudges */
+const PROACTIVE_BREAK_MINUTES = 45;
+
+/**
+ * Proactive fatigue check — runs a rolling-window analysis over recent
+ * attempts to detect fatigue *before* the hard shouldStop threshold.
+ *
+ * Uses linear regression on the last ROLLING_WINDOW response times and
+ * a rolling accuracy window. This catches gradual slow-downs and accuracy
+ * erosion that the split-half `detectDiminishingReturns` misses early.
+ *
+ * Philosophy: same as wellnessEngine — frame as strategy, never lecture.
+ */
+export function detectProactiveFatigue(
+  attempts: SessionAttempt[]
+): ProactiveFatigueCheck {
+  const FRESH: ProactiveFatigueCheck = {
+    fatigueLevel: 'fresh',
+    recentAccuracy: NaN,
+    recentRtSlope: 0,
+    nudgeMessage: null,
+    suggestedBreakMinutes: 0,
+  };
+
+  if (attempts.length < EARLY_WARNING_MIN_QUESTIONS) return FRESH;
+
+  // Rolling window stats
+  const recent = attempts.slice(-ROLLING_WINDOW);
+  const recentAccuracy = recent.filter(a => a.wasCorrect).length / recent.length;
+
+  // Linear regression on RT within the rolling window
+  const rts = recent.map(a => a.responseTimeMs);
+  const recentRtSlope = linearSlope(rts);
+
+  // Session duration
+  const sessionMinutes = attempts.length > 1
+    ? (attempts[attempts.length - 1]!.timestamp.getTime() - attempts[0]!.timestamp.getTime()) / 60000
+    : 0;
+
+  // Compare rolling accuracy to session-wide baseline
+  const overallAccuracy = attempts.filter(a => a.wasCorrect).length / attempts.length;
+  const accuracyDelta = overallAccuracy - recentAccuracy; // positive = recent is worse
+
+  // --- Level detection ---
+
+  // break_suggested: strong signals
+  if (
+    (recentRtSlope > RT_SLOPE_BREAK && accuracyDelta > 0.08) ||
+    (recentAccuracy < ROLLING_ACCURACY_BREAK && attempts.length >= 15) ||
+    (sessionMinutes > PROACTIVE_BREAK_MINUTES && recentRtSlope > RT_SLOPE_WARMING && accuracyDelta > 0.05)
+  ) {
+    return {
+      fatigueLevel: 'break_suggested',
+      recentAccuracy,
+      recentRtSlope,
+      nudgeMessage: sessionMinutes > PROACTIVE_BREAK_MINUTES
+        ? `${Math.round(sessionMinutes)} minutes of focused study — a 5-minute break would help lock in what you've covered.`
+        : `Your last ${ROLLING_WINDOW} questions are running ${pct(accuracyDelta)} below your session average. A quick break resets your focus.`,
+      suggestedBreakMinutes: 5,
+    };
+  }
+
+  // warming: mild signals
+  if (
+    recentRtSlope > RT_SLOPE_WARMING ||
+    (accuracyDelta > 0.06 && attempts.length >= 12) ||
+    sessionMinutes > PROACTIVE_BREAK_MINUTES
+  ) {
+    return {
+      fatigueLevel: 'warming',
+      recentAccuracy,
+      recentRtSlope,
+      nudgeMessage: null, // warming is silent — just tracked for UI hints
+      suggestedBreakMinutes: 3,
+    };
+  }
+
+  return { ...FRESH, recentAccuracy, recentRtSlope };
+}
+
+/**
+ * Ordinary least-squares slope for an array of values.
+ * Returns the change per index (e.g., ms per question).
+ */
+function linearSlope(values: number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  for (let i = 0; i < n; i++) {
+    sumX += i;
+    sumY += values[i]!;
+    sumXY += i * values[i]!;
+    sumX2 += i * i;
+  }
+  const denom = n * sumX2 - sumX * sumX;
+  if (denom === 0) return 0;
+  return (n * sumXY - sumX * sumY) / denom;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

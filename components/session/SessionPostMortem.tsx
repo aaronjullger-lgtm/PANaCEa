@@ -144,7 +144,7 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         transition={{ delay: 0.6 }}
         className="text-lg text-[var(--color-text-secondary)] mt-1"
       >
-        Session Accuracy: <span className="font-bold">{accuracy.toFixed(0)}%</span>
+        Session Accuracy: <span className="font-semibold">{accuracy.toFixed(0)}%</span>
       </motion.div>
     </motion.div>
   );
@@ -167,7 +167,7 @@ function ImpactCards({
         transition={{ delay: 0.3 }}
         className="bg-[var(--color-accent)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-[var(--color-accent)]">{stabilized}</div>
+        <div className="text-3xl font-semibold text-[var(--color-accent)]">{stabilized}</div>
         <div className="text-xs text-[var(--color-accent)] mt-1">Cards Stabilized</div>
         <div className="text-lg mt-1">
           <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
@@ -180,7 +180,7 @@ function ImpactCards({
         transition={{ delay: 0.4 }}
         className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-[var(--color-data-provisional)]">
+        <div className="text-3xl font-semibold text-[var(--color-data-provisional)]">
           -{decayPrevented.toFixed(1)}%
         </div>
         <div className="text-xs text-[var(--color-data-provisional)] mt-1">Decay Prevented</div>
@@ -195,7 +195,7 @@ function ImpactCards({
         transition={{ delay: 0.5 }}
         className="bg-[var(--color-data-pass)]/10 rounded-xl p-4 text-center"
       >
-        <div className="text-3xl font-bold text-[var(--color-data-pass)]">+{bufferDays}</div>
+        <div className="text-3xl font-semibold text-[var(--color-data-pass)]">+{bufferDays}</div>
         <div className="text-xs text-[var(--color-data-pass)] mt-1">Days Buffer</div>
         <div className="text-lg mt-1">
           <Calendar className="w-5 h-5 text-[var(--color-data-pass)]" />
@@ -243,7 +243,7 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
               </span>
               <span
                 className={cn(
-                  'font-bold tabular-nums',
+                  'font-semibold tabular-nums',
                   sys.accuracyDelta > 0
                     ? 'text-[var(--color-data-pass)]'
                     : 'text-[var(--color-data-fail)]'
@@ -322,7 +322,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
         <Flame className="w-5 h-5 shrink-0" />
-        <span className="font-bold">{streak}-Day Study Streak!</span>
+        <span className="font-semibold">{streak}-Day Study Streak!</span>
       </div>
       {milestone && (
         <motion.div
@@ -348,7 +348,7 @@ function AchievementBadge({ achievement }: { achievement: string }) {
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
         <Trophy className="w-5 h-5 shrink-0" />
-        <span className="font-bold">{achievement}</span>
+        <span className="font-semibold">{achievement}</span>
       </div>
     </motion.div>
   );
@@ -393,7 +393,7 @@ export function SessionPostMortem({
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-2xl font-bold"
+          className="text-2xl font-semibold"
         >
           {headline}
         </motion.h2>

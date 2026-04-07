@@ -449,21 +449,60 @@ export default defineConfig(({ mode }) => {
               // Default vendor chunk for everything else
               return 'vendor';
             }
-            // Split large components into separate chunks
-            if (id.includes('components/') && id.includes('.tsx')) {
-              const componentName = id.split('/').pop()?.replace('.tsx', '');
-              // Large components that should be split
-              const largeComponents = [
-                'CommandCenterHub',
-                'EnhancedSettingsTab',
-                'MenuView',
-                'PatientEncounterMode',
-                'QuizView',
-                'ToolkitHub',
-                'AdminDashboard',
-              ];
-              if (largeComponents.some(name => componentName?.includes(name))) {
-                return `component-${componentName?.toLowerCase()}`;
+            // ── App code chunk groupings ────────────────────────────────────
+            // Group co-located directories into stable named chunks so
+            // unrelated code changes don't bust the cache for these routes.
+            // Each group is only loaded lazily (see lazyComponents.tsx).
+            if (!id.includes('node_modules')) {
+              // Analytics suite — grouped so recharts is shared and
+              // returning users only need one cache entry for all analytics.
+              if (id.includes('/components/analytics/') || id.includes('/pages/analytics')) {
+                return 'app-analytics';
+              }
+              // Admin pages — accessed together by admin users only.
+              if (id.includes('/pages/admin/') || id.includes('/components/admin/')) {
+                return 'app-admin';
+              }
+              // Clinical reference library + knowledge base — same lazy route family.
+              if (id.includes('/components/library/') || id.includes('/components/knowledge/')) {
+                return 'app-library';
+              }
+              // Individual large component files — named chunks for cache
+              // stability (avoids hash flips when unrelated modules change).
+              if (id.includes('components/') && id.includes('.tsx')) {
+                const componentName = id.split('/').pop()?.replace('.tsx', '');
+                const largeComponents = [
+                  // Navigation & shell (existing)
+                  'CommandCenterHub',
+                  'EnhancedSettingsTab',
+                  'MenuView',
+                  'ToolkitHub',
+                  // Session / quiz (existing)
+                  'QuizView',
+                  'PatientEncounterMode',
+                  // Admin (existing)
+                  'AdminDashboard',
+                  // Modals (new — 2 980 lines)
+                  'SettingsStatsModal',
+                  // Modes (new)
+                  'GrandRoundsMode',
+                  'AntibioticMode',
+                  'ReasoningTutorMode',
+                  // Analytics large views (new — catch-all for remaining files)
+                  'UserFriendlyStatsDisplay',
+                  'AdvancedLearningProfileDashboard',
+                  'IntelligenceHub',
+                  'CompetencyHeatmap',
+                  // Library large views (new)
+                  'SmartConditionView',
+                  'ClinicalReferenceLibrary',
+                  // Drills (new)
+                  'DDxCompareDrill',
+                  'LiveStudySession',
+                ];
+                if (largeComponents.some(name => componentName?.includes(name))) {
+                  return `component-${componentName?.toLowerCase()}`;
+                }
               }
             }
             return undefined;

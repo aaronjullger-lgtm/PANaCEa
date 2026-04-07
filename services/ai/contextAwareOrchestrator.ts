@@ -489,7 +489,7 @@ export class ContextAwareGenerator {
     console.log(`   Purpose: ${need.purpose}`);
     console.log(`   Quality: ${need.qualityRequired.accuracy} accuracy required`);
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Build context-aware prompt
     const prompt = this.buildContextAwarePrompt(need);

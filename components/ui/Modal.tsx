@@ -17,6 +17,7 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
 
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -72,6 +73,9 @@ export const Modal: React.FC<ModalProps> = ({
   const prefersReducedMotion = useReducedMotion();
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Focus trap — keeps Tab / Shift+Tab within the modal and restores focus on close
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+
   // Escape key handler
   useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
@@ -88,13 +92,6 @@ export const Modal: React.FC<ModalProps> = ({
     const original = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = original; };
-  }, [isOpen]);
-
-  // Focus management: focus the modal on open
-  useEffect(() => {
-    if (isOpen && modalRef.current) {
-      modalRef.current.focus();
-    }
   }, [isOpen]);
 
   const handleBackdropClick = useCallback(() => {

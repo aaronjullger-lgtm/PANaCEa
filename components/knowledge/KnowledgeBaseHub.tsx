@@ -81,7 +81,7 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
       onClick={onClick}
       className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left transition-all group ${
         isActive
-          ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20 shadow-sm'
+          ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
           : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-transparent'
       } ${variant === 'mobile' ? 'text-base' : 'text-sm'}`}
     >

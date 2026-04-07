@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { canEditContent, type UserRole } from '../_shared/rbac';
+import { auditLog } from '../_shared/auditLog';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GenerateDraftSchema = z.object({
@@ -39,21 +39,17 @@ export const onRequestPost = adminAuthenticatedEndpoint(GenerateDraftSchema, asy
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true, role: true },
-    });
-
-    if (!user || !canEditContent(user.role as UserRole)) {
-      logger.warn('Insufficient permissions for content generation', {
-        userId: auth.userId,
-        role: user?.role,
+    // withAdminRole() already verified admin access. Use cached DB user ID when available
+    // (set by the DB-path in withAdminRole); fall back to a minimal query for env-allowlist users.
+    let userId = (auth.metadata as any)?.dbUserId as string | undefined;
+    let userRole = (auth.metadata as any)?.dbRole as string | undefined;
+    if (!userId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true, role: true },
       });
-
-      return {
-        data: { error: 'Forbidden: Insufficient permissions' },
-        status: 403,
-      };
+      userId = dbUser?.id ?? auth.userId;
+      userRole = String(dbUser?.role ?? 'admin').toLowerCase();
     }
 
     const { conditionName, system, subcategory } = validated.body;
@@ -69,7 +65,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(GenerateDraftSchema, asy
     });
 
     if (existing) {
-      logger.info('Content already exists', { conditionId, userId: user.id });
+      logger.info('Content already exists', { conditionId, userId });
 
       return {
         data: { error: 'Content with this condition already exists' },
@@ -80,12 +76,13 @@ export const onRequestPost = adminAuthenticatedEndpoint(GenerateDraftSchema, asy
     // Initialize Gemini AI
     const apiKey = env.GEMINI_API_KEY || (env as any).GOOGLE_API_KEY;
     if (!apiKey) {
-      logger.error('AI service not configured', { userId: user.id });
+      logger.error('AI service not configured', { userId });
       throw new Error('AI service not configured');
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     // Generate AI content
     const prompt = `You are a medical education expert. Generate comprehensive medical content for "${conditionName}" in the ${system} system.
@@ -122,7 +119,7 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
     } catch (parseError) {
       logger.error('Failed to parse AI response', {
         error: parseError instanceof Error ? parseError.message : String(parseError),
-        userId: user.id,
+        userId,
       });
       throw new Error('Failed to parse AI-generated content');
     }
@@ -143,8 +140,8 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
         content: aiContent,
         status: 'draft',
         version: 1,
-        createdBy: user.id,
-        updatedBy: user.id,
+        createdBy: userId,
+        updatedBy: userId,
         updatedAt: new Date(),
       },
     });
@@ -158,7 +155,7 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
         content: aiContent,
         changeType: 'create',
         changeDescription: 'AI-generated draft content',
-        changedBy: user.id,
+        changedBy: userId,
       },
     });
 
@@ -173,17 +170,24 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
         changeDescription: 'AI-generated draft content',
         changedFields: ['content'],
         newValues: aiContent,
-        changedBy: user.id,
-        changedByRole: user.role,
+        changedBy: userId,
+        changedByRole: userRole ?? 'admin',
         ipAddress,
         userAgent,
       },
     });
 
     logger.info('Draft content generated successfully', {
-      userId: user.id,
+      userId,
       conditionId,
       contentId: newContent.id,
+    });
+
+    auditLog('admin_generate_draft', {
+      userId: auth.userId,
+      conditionId,
+      contentId: newContent.id,
+      system,
     });
 
     return {

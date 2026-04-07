@@ -1,0 +1,132 @@
+{
+  "version": "2.0.0",
+  "mode": "safe_automatic",
+  "models": {
+    "claude_code_glm": {
+      "role": "coder",
+      "provider": "zhipu",
+      "model": "glm-5.1",
+      "model_fast": "glm-5-turbo",
+      "logical_role": "code_implementation",
+      "runtime_slot": "claude_code_sonnet",
+      "actual_backend": "zhipu_glm",
+      "description": "Primary coding worker — GLM backend running through Claude Code Anthropic-compatible slot for cost savings. Main: glm-5.1, fast lane: glm-5-turbo",
+      "allowed_actions": ["code_write", "refactor", "test_write", "code_implementation"],
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "gemini": {
+      "role": "planner",
+      "provider": "gemini",
+      "model": "gemini-3.1-pro",
+      "logical_role": "planner_architect",
+      "runtime_slot": "gemini_api",
+      "actual_backend": "google_gemini",
+      "description": "Planner, architecture reviewer, risk analyzer",
+      "allowed_actions": ["plan", "architecture_review", "risk_analysis", "critique"],
+      "max_tokens": 4096,
+      "temperature": 0.3
+    },
+    "openai": {
+      "role": "reviewer",
+      "provider": "openai",
+      "model": "gpt-4.1",
+      "logical_role": "reviewer_researcher",
+      "runtime_slot": "openai_api",
+      "actual_backend": "openai_gpt4o",
+      "description": "Code reviewer, research substitute, alternate implementation generator",
+      "allowed_actions": ["code_review", "research", "alternate_implementation", "risk_analysis"],
+      "max_tokens": 4096,
+      "temperature": 0.3
+    },
+    "claude": {
+      "role": "overseer",
+      "provider": "claude",
+      "model": "claude-sonnet-4-6",
+      "_note_model": "claude-sonnet-4-6 used for overseer/synthesis",
+      "logical_role": "overseer_supervisor",
+      "runtime_slot": "anthropic_api",
+      "actual_backend": "anthropic_claude",
+      "description": "Mandatory overseer — synthesis, validation, reinjection, final review. Every pipeline must pass through Claude.",
+      "allowed_actions": ["synthesize", "validate", "approve", "reinject", "emergency_stop", "supervisor_review"],
+      "max_tokens": 4096,
+      "temperature": 0.1
+    },
+    "deepseek": {
+      "role": "secondary_coder",
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "model_reasoning": "deepseek-reasoner",
+      "logical_role": "secondary_coder_researcher",
+      "runtime_slot": "deepseek_api",
+      "actual_backend": "deepseek",
+      "description": "Fast secondary coder and research fallback. Strong reasoning at low cost. Fallback for GLM coding and OpenAI research.",
+      "allowed_actions": ["code_write", "refactor", "code_review", "research", "code_implementation", "alternate_implementation"],
+      "max_tokens": 4096,
+      "temperature": 0.2
+    }
+  },
+  "routing": {
+    "task_type_to_models": {
+      "code_implementation": ["claude_code_glm", "deepseek"],
+      "refactor": ["claude_code_glm", "deepseek"],
+      "test_generation": ["claude_code_glm", "deepseek"],
+      "planning": ["gemini"],
+      "architecture_review": ["gemini"],
+      "risk_analysis": ["gemini"],
+      "code_review": ["openai"],
+      "research": ["openai", "deepseek"],
+      "alternate_implementation": ["openai", "deepseek"],
+      "synthesis": ["claude"],
+      "validation": ["claude"],
+      "supervisor_review": ["claude"],
+      "overseer": ["claude"]
+    },
+    "pipeline_order": ["gemini", "openai", "claude_code_glm", "claude"],
+    "overseer_model": "claude",
+    "overseer_required": true
+  },
+  "safety": {
+    "max_loop_depth": 5,
+    "max_consecutive_auto_turns": 3,
+    "max_messages_per_thread": 50,
+    "stale_message_ttl_minutes": 120,
+    "dedup_window_seconds": 30,
+    "safe_categories": ["planning", "architecture_review", "risk_analysis", "research", "code_review", "alternate_implementation"],
+    "restricted_categories": ["code_write", "code_implementation", "refactor", "git_commit", "git_push", "file_delete"],
+    "blocked_categories": ["git_force_push", "branch_delete_main", "env_modification"],
+    "approval_required_in_safe_mode": ["code_write", "code_implementation", "refactor", "git_commit"],
+    "approval_required_in_aggressive_mode": ["git_commit", "git_push", "file_delete"],
+    "emergency_stop_file": "state/STOP"
+  },
+  "output_contract": {
+    "required_fields": ["summary", "key_findings", "proposed_next_action", "risks", "confidence", "acceptance_check", "handoff_note"],
+    "optional_fields": ["files_to_touch", "code_blocks", "alternate_approaches"]
+  },
+  "queue": {
+    "file": "queue/messages.jsonl",
+    "max_pending": 20,
+    "batch_size": 5
+  },
+  "retry": {
+    "default": {
+      "max_retries": 3,
+      "base_delay": 1.0,
+      "max_delay": 30.0
+    },
+    "per_provider": {
+      "zhipu": { "max_retries": 3, "base_delay": 1.5, "max_delay": 45.0 },
+      "openai": { "max_retries": 3, "base_delay": 1.0, "max_delay": 30.0 },
+      "gemini": { "max_retries": 3, "base_delay": 1.0, "max_delay": 30.0 },
+      "claude": { "max_retries": 2, "base_delay": 1.0, "max_delay": 20.0 },
+      "deepseek": { "max_retries": 3, "base_delay": 1.0, "max_delay": 30.0 }
+    }
+  },
+  "logging": {
+    "events_file": "logs/events.jsonl",
+    "level": "INFO",
+    "include_prompts": true,
+    "include_responses": true,
+    "include_identity": true
+  }
+}

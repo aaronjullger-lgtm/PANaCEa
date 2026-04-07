@@ -71,7 +71,7 @@ export function UserCountCard() {
   if (loading && !data) {
     return (
       <div
-        className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6"
+        className="bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-6"
         aria-busy="true"
       >
         <div className="flex items-center justify-between mb-4">
@@ -88,7 +88,7 @@ export function UserCountCard() {
   if (error && !data?.userCount) {
     return (
       <div
-        className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 ring-1 ring-data-fail/50"
+        className="bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-6 ring-1 ring-data-fail/50"
         role="alert"
       >
         <div className="flex items-center justify-between mb-4">
@@ -116,7 +116,7 @@ export function UserCountCard() {
 
   return (
     <div
-      className={`bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 ${ok ? '' : 'ring-1 ring-data-fail/50'}`}
+      className={`bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-6 ${ok ? '' : 'ring-1 ring-data-fail/50'}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="p-3 bg-[var(--color-accent)]/20 rounded-lg">

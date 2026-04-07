@@ -2,7 +2,9 @@
  * Imperative Toast API
  *
  * Call toast from anywhere—services, API handlers, callbacks, non-React code.
- * Wires into ToastProvider when mounted; safe no-op if called before mount.
+ * Now wires directly into the Zustand store (no registerToast needed).
+ *
+ * Phase 3: Simplified — store is always available, no mount timing issues.
  *
  * @example
  * import { toast } from '@/lib/toast';
@@ -16,6 +18,8 @@
  * // With action
  * toast.error('Sync failed', { action: { label: 'Retry', onClick: retry } });
  */
+
+import { useToastStore } from '@/lib/stores/useToastStore';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -40,26 +44,6 @@ export interface ToastApi {
   add: (message: string, variant: ToastVariant, options?: ToastOptions) => string;
 }
 
-type AddToastFn = (toast: {
-  message: string;
-  variant: ToastVariant;
-  duration?: number;
-  action?: { label: string; onClick: () => void };
-}) => string;
-
-let impl: AddToastFn | null = null;
-
-/**
- * Register the toast implementation (called by ToastProvider on mount).
- * @internal
- */
-export function registerToast(fn: AddToastFn): () => void {
-  impl = fn;
-  return () => {
-    impl = null;
-  };
-}
-
 function normalizeOptions(opts?: ToastOptions | number): {
   duration?: number;
   action?: ToastOptions['action'];
@@ -70,14 +54,8 @@ function normalizeOptions(opts?: ToastOptions | number): {
 }
 
 function add(variant: ToastVariant, message: string, options?: ToastOptions): string {
-  if (impl) {
-    const { duration, action } = normalizeOptions(options) ?? {};
-    return impl({ message, variant, duration, action });
-  }
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.warn(`[toast] ToastProvider not mounted. "${variant}": ${message}`);
-  }
-  return '';
+  const { duration, action } = normalizeOptions(options) ?? {};
+  return useToastStore.getState().addToast({ message, variant, duration, action });
 }
 
 const toast: ToastApi = {
@@ -87,5 +65,13 @@ const toast: ToastApi = {
   info: (message, opts) => add('info', message, normalizeOptions(opts)),
   add: (message, variant, opts) => add(variant, message, opts),
 };
+
+/**
+ * @deprecated No longer needed — store is always available.
+ * Kept for backward compatibility with ToastContext.tsx during migration.
+ */
+export function registerToast(_fn: any): () => void {
+  return () => {};
+}
 
 export { toast };

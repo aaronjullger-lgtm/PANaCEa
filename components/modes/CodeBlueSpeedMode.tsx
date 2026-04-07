@@ -257,7 +257,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleStart}
-                className="w-full bg-data-fail hover:bg-data-fail text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                className="w-full bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
                 <Play className="w-5 h-5" />
                 Start Code Blue Drill
@@ -327,7 +327,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleStart}
-              className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="flex-1 bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)] font-semibold py-3 px-6 rounded-lg transition-colors"
             >
               Try Again
             </motion.button>
@@ -391,7 +391,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleRestart}
-                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  className="flex-1 bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)] font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
                   <RotateCcw className="w-5 h-5" aria-hidden="true" />
                   Try Again
@@ -461,7 +461,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
             <motion.div
               animate={{
                 scale: timeLeft <= 2 ? [1, 1.1, 1] : 1,
-                color: timeLeft <= 2 ? '#ef4444' : undefined,
+                color: timeLeft <= 2 ? 'var(--color-data-fail)' : undefined,
               }}
               transition={{ repeat: timeLeft <= 2 ? Infinity : 0, duration: 0.5 }}
               className={`text-2xl font-bold ${timeLeft <= 2 ? 'text-[var(--color-data-fail)]' : ''}`}
@@ -574,7 +574,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
                     selectedAnswer === null
                       ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                      : 'bg-data-fail hover:bg-data-fail text-white'
+                      : 'bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)]'
                   }`}
                 >
                   Submit Answer
@@ -584,7 +584,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleNext}
-                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                  className="flex-1 bg-data-fail hover:bg-data-fail text-[var(--color-text-inverse)] font-semibold py-3 px-6 rounded-lg transition-colors"
                 >
                   {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'View Results'}
                 </motion.button>

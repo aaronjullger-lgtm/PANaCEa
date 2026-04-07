@@ -27,9 +27,9 @@ interface HighlightToolbarProps {
 }
 
 const COLOR_MAP: Record<HighlightColor, string> = {
-  yellow: '#fde68a',
-  green: '#bbf7d0',
-  blue: '#bfdbfe',
+  yellow: 'color-mix(in srgb, var(--color-data-provisional) 30%, transparent)',
+  green: 'color-mix(in srgb, var(--color-data-pass) 30%, transparent)',
+  blue: 'color-mix(in srgb, var(--color-accent) 30%, transparent)',
 };
 
 export function HighlightToolbar({

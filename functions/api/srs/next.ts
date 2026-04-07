@@ -81,26 +81,38 @@ export const onRequestGet = authenticatedEndpoint(
           return { data: { message: 'No items due' } };
         }
 
-        // Find a variant for this topic
-        const availableVariants = await prisma.questionVariant.findMany({
-          where: {
-            baseQuestionId: topic.conditionId,
-            taskType: topic.taskType,
-            NOT: {
-              usedByUsers: { has: userId },
-            },
-          },
-          take: 1,
+        // Query PreGeneratedQuestion siblings for this condition (unified variant pool).
+        // taskType filtering is best-effort: prefer matching taskType, but fall back to any sibling.
+        const taskTypeFilter = topic.taskType ?? undefined;
+        const allSiblings = await prisma.preGeneratedQuestion.findMany({
+          where: { conditionId: topic.conditionId },
+          take: 20,
+          orderBy: { generatedAt: 'desc' },
         });
+        // Prefer taskType match; fall back to any sibling
+        const taskTypeSiblings = taskTypeFilter
+          ? allSiblings.filter(
+              (q) => (q.questionData as Record<string, unknown>)?.taskType === taskTypeFilter
+            )
+          : [];
+        const availableVariants = taskTypeSiblings.length > 0 ? taskTypeSiblings : allSiblings;
 
         if (availableVariants.length > 0) {
-          const variant = availableVariants[0];
+          const variant = availableVariants[Math.floor(Math.random() * availableVariants.length)]!;
 
           logger.info('SRS next item (variant) retrieved', {
             userId: userId.substring(0, 10),
             topicProgressId: topic.id.substring(0, 10),
             taskType: topic.taskType ?? 'diagnosis',
           });
+
+          // Fire-and-forget: increment timesServed for the served PreGeneratedQuestion.
+          prisma.preGeneratedQuestion
+            .updateMany({
+              where: { id: variant.id },
+              data: { timesServed: { increment: 1 } },
+            })
+            .catch(() => {});
 
           return {
             data: {
@@ -114,86 +126,101 @@ export const onRequestGet = authenticatedEndpoint(
         }
       }
 
-      // Fallback to standard SRSItem query
-      const items = await prisma.sRSItem.findMany({
+      // Fallback: check UserProgress for any condition due for review
+      // (Replaces legacy SRSItem query — SRSItem is deprecated)
+      const dueProgress = await prisma.userProgress.findMany({
         where: {
           userId,
-          dueDate: {
-            lte: now,
-          },
+          nextReviewAt: { lte: now },
         },
-        orderBy: {
-          dueDate: 'asc',
+        orderBy: { nextReviewAt: 'asc' },
+        take: 5,
+        select: {
+          conditionId: true,
+          fsrsCard: true,
         },
-        take: 1,
       });
 
-      if (items.length === 0) {
-        logger.info('No SRS items due', { userId: userId.substring(0, 10) });
-        return {
-          data: { message: 'No items due' },
-        };
-      }
-
-      const item = items[0];
-      if (!item) {
-        logger.info('No SRS items due', { userId: userId.substring(0, 10) });
+      if (dueProgress.length === 0) {
+        logger.info('No items due (UserProgress fallback)', { userId: userId.substring(0, 10) });
         return { data: { message: 'No items due' } };
       }
-      let questionContent: any = null;
-      let isVariant = false;
 
-      // Check for variants if in relearning/learning
-      if (item.fsrsState === 3 || item.fsrsState === 1) {
-        const variants = await prisma.questionVariant.findMany({
-          where: {
-            baseQuestionId: item.questionId,
-            NOT: {
-              usedByUsers: { has: userId },
+      // Try to find a question for the first due condition
+      for (const progress of dueProgress) {
+        const card = progress.fsrsCard as { state?: number } | null;
+        const fsrsState = card?.state ?? 0;
+
+        // Check for variants if in learning/relearning state
+        let questionContent: any = null;
+        let isVariant = false;
+
+        if (fsrsState === 1 || fsrsState === 3) {
+          // Query PreGeneratedQuestion siblings (unified variant pool — same as due-siblings path).
+          const sibling = await prisma.preGeneratedQuestion.findFirst({
+            where: { conditionId: progress.conditionId },
+            orderBy: { generatedAt: 'desc' },
+          });
+          if (sibling) {
+            questionContent = sibling;
+            isVariant = true;
+          }
+        }
+
+        if (!questionContent) {
+          // Find a PreGeneratedQuestion for this condition
+          const preGenQ = await prisma.preGeneratedQuestion.findFirst({
+            where: { conditionId: progress.conditionId },
+          });
+          if (preGenQ) {
+            questionContent = preGenQ;
+          } else {
+            // Try legacy Question table
+            const legacyQ = await prisma.question.findFirst({
+              where: { conditionId: progress.conditionId },
+            });
+            if (legacyQ) questionContent = legacyQ;
+          }
+        }
+
+        if (questionContent) {
+          logger.info('SRS next item retrieved (UserProgress fallback)', {
+            userId: userId.substring(0, 10),
+            conditionId: progress.conditionId.substring(0, 10),
+            isVariant,
+          });
+
+          // Fire-and-forget: increment timesServed when a PreGeneratedQuestion is served.
+          // This enables the flag-rate kill switch in contentHealthService.
+          if (!isVariant && questionContent.id) {
+            prisma.preGeneratedQuestion
+              .updateMany({
+                where: { id: questionContent.id },
+                data: { timesServed: { increment: 1 } },
+              })
+              .catch((err: unknown) =>
+                logger.warn('srs/next timesServed increment failed (non-fatal)', {
+                  error: err instanceof Error ? err.message : String(err),
+                })
+              );
+          }
+
+          return {
+            data: {
+              srsItemId: null,
+              topicProgressId: null,
+              question: questionContent,
+              isVariant,
+              taskType:
+                (questionContent as { taskType?: string }).taskType ??
+                getTaskTypeFromContent(questionContent.question ?? questionContent.stem ?? ''),
             },
-          },
-          take: 1,
-        });
-
-        if (variants.length > 0) {
-          questionContent = variants[0];
-          isVariant = true;
+          };
         }
       }
 
-      if (!questionContent) {
-        questionContent = await prisma.question.findUnique({
-          where: { id: item.questionId },
-        });
-      }
-
-      if (!questionContent) {
-        logger.warn('Question not found for SRS item', {
-          srsItemId: item.id.substring(0, 10),
-          questionId: item.questionId.substring(0, 10),
-        });
-        return {
-          data: { error: 'Question not found' },
-          status: 404,
-        };
-      }
-
-      logger.info('SRS next item retrieved', {
-        userId: userId.substring(0, 10),
-        srsItemId: item.id.substring(0, 10),
-        isVariant,
-      });
-
-      return {
-        data: {
-          srsItemId: item.id,
-          question: questionContent,
-          isVariant,
-          taskType:
-            (questionContent as { taskType?: string }).taskType ??
-            getTaskTypeFromContent(questionContent.question),
-        },
-      };
+      logger.info('No questions found for due conditions', { userId: userId.substring(0, 10) });
+      return { data: { message: 'No items due' } };
     } catch (error) {
       logger.error('SRS next error', {
         error: error instanceof Error ? error.message : String(error),

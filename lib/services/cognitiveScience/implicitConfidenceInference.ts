@@ -399,25 +399,24 @@ export function inferRating(
   let explanation: string;
 
   if (!signals.isCorrect) {
-    // Incorrect answers: Again or Hard
-    if (totalScore < 0.15) {
-      rating = Rating.Again;
-      explanation = 'Incorrect with signs of complete confusion - needs immediate re-study';
-    } else {
-      rating = Rating.Hard;
-      explanation = 'Incorrect but showed partial knowledge - review soon';
-    }
+    // Binary rating system (FSRS-6): all incorrect → Again.
+    // Research: Again is the SOLE failing grade; Hard was a passing grade
+    // with 39× initial stability spread, so incorrect should never get Hard.
+    rating = Rating.Again;
+    explanation = totalScore < 0.15
+      ? 'Incorrect with signs of complete confusion - needs immediate re-study'
+      : 'Incorrect but showed partial knowledge - still needs re-study';
   } else {
-    // Correct answers: map to Hard, Good, or Easy
+    // Binary rating system (FSRS-6): correct → Again or Good only.
+    // Low-confidence correct (struggled) → Again, confident correct → Good.
     if (totalScore < 0.45) {
-      rating = Rating.Hard;
-      explanation = 'Correct but with significant struggle - treat as hard pass';
-    } else if (totalScore < 0.75) {
-      rating = Rating.Good;
-      explanation = 'Confident correct answer - normal good response';
+      rating = Rating.Again;
+      explanation = 'Correct but with significant struggle - treat as weak recall';
     } else {
-      rating = Rating.Easy;
-      explanation = 'Very confident, fast, stable answer - easy recall';
+      rating = Rating.Good;
+      explanation = totalScore < 0.75
+        ? 'Confident correct answer - normal good response'
+        : 'Very confident, fast, stable answer - strong recall';
     }
   }
 
@@ -450,9 +449,9 @@ function calculateStabilityMultiplier(
 ): number {
   const baseMultipliers: Record<Rating, number> = {
     [Rating.Again]: 0.5,
-    [Rating.Hard]: 0.8,
+    [Rating.Hard]: 0.5,  // Hard deprecated → same as Again
     [Rating.Good]: 1.0,
-    [Rating.Easy]: 1.3,
+    [Rating.Easy]: 1.0,  // Easy deprecated → same as Good
   };
 
   let multiplier = baseMultipliers[rating];
@@ -484,18 +483,17 @@ function calculateDifficultyAdjustment(
   // Positive = increase difficulty, Negative = decrease
   let adjustment = 0;
 
+  // Binary rating system: only Again(1) and Good(3) are emitted.
+  // Hard/Easy cases retained as fallback for any legacy callers.
   switch (rating) {
     case Rating.Again:
+    case Rating.Hard:  // Hard deprecated → treat as Again
       adjustment = 0.2; // Increase difficulty
       break;
-    case Rating.Hard:
-      adjustment = signals.isCorrect ? 0.05 : 0.15;
-      break;
     case Rating.Good:
+    case Rating.Easy:  // Easy deprecated → treat as Good
+    default:
       adjustment = 0; // No change
-      break;
-    case Rating.Easy:
-      adjustment = -0.1; // Decrease difficulty
       break;
   }
 

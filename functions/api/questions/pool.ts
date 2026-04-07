@@ -24,6 +24,25 @@ import {
 import type { KVNamespace } from '@cloudflare/workers-types';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
+import { ANSWER_LETTERS, letterToIndex, indexToLetter } from '../../../lib/answerLetterMap';
+
+/**
+ * Compute a lightweight semantic fingerprint from question text for near-duplicate detection.
+ * Uses djb2 on the first 200 normalized characters (lowercase, punctuation stripped).
+ */
+function computeSemanticHash(text: string): string {
+  const normalized = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
+  let hash = 5381;
+  for (let i = 0; i < normalized.length; i++) {
+    hash = ((hash << 5) + hash + normalized.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
 
 // Type definitions for question pool operations
 interface QuestionDataJson {
@@ -370,6 +389,25 @@ export const onRequestGet = authenticatedEndpoint(
         poolAvailable,
       });
 
+      // Fire-and-forget: increment timesServed for each PreGeneratedQuestion served.
+      // Enables the flag-rate kill switch: flagRate > 0.1 AND timesServed >= 20 → auto-reject.
+      const poolQuestionIds = questions
+        .filter((q) => (q as PoolQuestionOutput).source === 'pool')
+        .map((q) => (q as PoolQuestionOutput).id)
+        .filter(Boolean);
+      if (poolQuestionIds.length > 0) {
+        prisma.preGeneratedQuestion
+          .updateMany({
+            where: { id: { in: poolQuestionIds } },
+            data: { timesServed: { increment: 1 } },
+          })
+          .catch((err: unknown) =>
+            logger.warn('pool timesServed increment failed (non-fatal)', {
+              error: err instanceof Error ? err.message : String(err),
+            })
+          );
+      }
+
       return {
         data: {
           questions,
@@ -431,6 +469,8 @@ export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (contex
         },
         generatedAt: new Date(),
         usedAt: null,
+        // Phase 4: populate dedup hash and taxonomy at creation
+        semanticHash: computeSemanticHash(q.question),
       },
     });
 
@@ -488,7 +528,13 @@ async function getFromPreGeneratedPool(
     remaining = cachedQuestions.length;
   } else {
     const where: Record<string, unknown> = {
-      validationStatus: { not: 'rejected' }, // Kill switch: rejected questions are pulled from pool
+      // Phase 2: Require approved status (not just exclude rejected).
+      // When REQUIRE_APPROVED_QUESTIONS env var is set, only approved
+      // questions are served. Otherwise fall back to the legacy kill-switch
+      // to avoid supply shock during rollout.
+      validationStatus: context.env?.REQUIRE_APPROVED_QUESTIONS === 'true'
+        ? 'approved'
+        : { not: 'rejected' },
     };
     if (systems?.length) where.system = { in: systems };
     else if (system) where.system = system;
@@ -558,12 +604,20 @@ async function getFromPreGeneratedPool(
     // Handle both correctAnswer (letter "A") and correctAnswerIndex (number 0) formats
     let correctAnswer = data.correctAnswer;
     if (!correctAnswer && typeof data.correctAnswerIndex === 'number') {
-      const letters = ['A', 'B', 'C', 'D'];
-      correctAnswer = letters[data.correctAnswerIndex] || 'A';
+      const letter = indexToLetter(data.correctAnswerIndex);
+      if (!letter) {
+        console.warn(`[Pool] Skipping question ${q.id} - invalid correctAnswerIndex: ${data.correctAnswerIndex}`);
+        continue;
+      }
+      correctAnswer = letter;
     }
     if (!correctAnswer && typeof data.correctIndex === 'number') {
-      const letters = ['A', 'B', 'C', 'D'];
-      correctAnswer = letters[data.correctIndex] || 'A';
+      const letter = indexToLetter(data.correctIndex);
+      if (!letter) {
+        console.warn(`[Pool] Skipping question ${q.id} - invalid correctIndex: ${data.correctIndex}`);
+        continue;
+      }
+      correctAnswer = letter;
     }
 
     questions.push({
@@ -758,7 +812,19 @@ async function generateAndAddToPool(
     // Query medicalContent for a random condition matching the system
     const conditions = await prisma.medicalContent.findMany({
       where: { system: targetSystem },
-      select: { id: true, condition: true, system: true, subcategory: true, content: true },
+      select: {
+        id: true,
+        condition: true,
+        system: true,
+        subcategory: true,
+        content: true,
+        // PANCE-specific anchor fields — used to improve distractor quality
+        classic_patient: true,
+        classic_triad: true,
+        first_line_rx: true,
+        gold_standard_dx: true,
+        best_initial_test: true,
+      },
       take: 50, // limit to avoid heavy queries
     });
     if (conditions.length === 0) {
@@ -773,13 +839,26 @@ async function generateAndAddToPool(
       system: condition.system,
       subcategory: condition.subcategory,
       content: condition.content as Record<string, unknown> | null,
+      classic_patient: condition.classic_patient ?? null,
+      classic_triad: condition.classic_triad ?? null,
+      first_line_rx: condition.first_line_rx ?? null,
+      gold_standard_dx: condition.gold_standard_dx ?? null,
+      best_initial_test: condition.best_initial_test ?? null,
     };
   } catch (error) {
     logger.error('Failed to fetch random condition', { error: String(error) });
     return null;
   }
 
-  // Transform condition data for generation
+  // Transform condition data for generation — include PANCE anchor fields when available
+  const classicTriadRaw = conditionData.classic_triad;
+  const classicTriadArr: string[] | undefined =
+    Array.isArray(classicTriadRaw)
+      ? (classicTriadRaw as string[])
+      : typeof classicTriadRaw === 'string'
+        ? [classicTriadRaw]
+        : undefined;
+
   const transformedCondition = {
     condition: conditionData.name,
     sections: {
@@ -790,6 +869,14 @@ async function generateAndAddToPool(
       treatment: Array.isArray(conditionData.content?.treatment)
         ? conditionData.content.treatment.join('\n')
         : conditionData.content?.treatment || '',
+    },
+    // Pass PANCE-specific anchors to guide distractor quality
+    panceAnchors: {
+      classicPatient: conditionData.classic_patient ?? undefined,
+      classicTriad: classicTriadArr,
+      firstLineRx: conditionData.first_line_rx ?? undefined,
+      goldStandardDx: conditionData.gold_standard_dx ?? undefined,
+      bestInitialTest: conditionData.best_initial_test ?? undefined,
     },
   };
 
@@ -820,15 +907,15 @@ async function generateAndAddToPool(
 
     // Convert generated question to PreGeneratedQuestion format
     const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const options = generatedQ.options || ['A', 'B', 'C', 'D'];
+    const options = generatedQ.options || ['A', 'B', 'C', 'D', 'E'];
     const correctAnswer = generatedQ.correctAnswer || 'A';
-    const correctAnswerIndex = ['A', 'B', 'C', 'D'].indexOf(correctAnswer.charAt(0));
+    const correctAnswerIndex = letterToIndex(correctAnswer.charAt(0));
     const questionData: QuestionDataJson = {
       vignette: generatedQ.question?.includes('Vignette') ? generatedQ.question : undefined,
       question: generatedQ.question,
       options: options,
       correctAnswer: correctAnswer,
-      correctAnswerIndex: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
+      correctAnswerIndex: correctAnswerIndex ?? 0,
       explanation: generatedQ.explanation?.rationale || '',
       conditionName: conditionData.name,
       system: conditionData.system,
@@ -847,6 +934,10 @@ async function generateAndAddToPool(
         generatedAt: new Date(),
         usedAt: null,
         questionType: category || 'general',
+        // Phase 4: populate dedup hash and task taxonomy at creation
+        taskCategory: category || 'general',
+        questionOrder: (generatedQ as any).questionOrder ?? 'third',
+        semanticHash: computeSemanticHash(questionData.question ?? ''),
       },
     });
 

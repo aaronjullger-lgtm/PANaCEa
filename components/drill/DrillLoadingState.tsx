@@ -37,12 +37,12 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
     >
       <div className="max-w-3xl mx-auto">
         {/* Header skeleton */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse" />
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
             <div>
-              <div className="w-32 h-5 bg-[var(--color-bg-tertiary)] rounded animate-pulse mb-1" />
-              <div className="w-24 h-4 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+              <div className="w-32 h-4 bg-[var(--color-bg-tertiary)] rounded animate-pulse mb-1" />
+              <div className="w-24 h-3 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
             </div>
           </div>
 
@@ -73,7 +73,10 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         )}
 
         {/* Main content skeleton */}
-        <div className="bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-8">
+        <div
+          className="bg-[var(--color-bg-primary)] rounded-xl p-6"
+          style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+        >
           {/* Image skeleton for visual drills */}
           {(variant === 'image' || variant === 'lab') && (
             <div className="mb-6">
@@ -122,7 +125,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
                     repeat: Infinity,
                     repeatType: 'reverse',
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]"
+                  className="flex items-center gap-3 p-3.5 rounded-lg bg-[var(--color-bg-tertiary)]/60"
                 >
                   <div className="w-8 h-8 rounded-full bg-[var(--color-bg-primary)]/50 animate-pulse flex-shrink-0" />
                   <div className="flex-1 space-y-2">
@@ -152,7 +155,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
             transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
             className="text-[var(--color-text-muted)] flex items-center justify-center gap-2"
           >
-            <span className="w-2 h-2 bg-[var(--color-accent)] rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-[var(--color-text-muted)] rounded-full animate-pulse" />
             {message}
           </motion.p>
         </div>
@@ -186,18 +189,18 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
         animate={{ y: 0 }}
         className="max-w-md w-full text-center"
       >
-        <div className="w-20 h-20 rounded-full bg-[var(--color-data-pass)]/10 flex items-center justify-center mx-auto mb-6">
-          {icon || <span className="text-4xl">✓</span>}
+        <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center mx-auto mb-5">
+          {icon || <span className="text-2xl text-[var(--color-text-muted)]">✓</span>}
         </div>
 
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h3>
-        <p className="text-[var(--color-text-muted)] mb-6">{message}</p>
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-1.5">{title}</h3>
+        <p className="text-sm text-[var(--color-text-muted)] mb-5">{message}</p>
 
         {onAction && (
           <button
             type="button"
             onClick={onAction}
-            className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-xl hover:opacity-90 transition-opacity min-h-[44px]"
+            className="px-5 py-2.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium text-sm rounded-lg hover:opacity-90 transition-opacity min-h-[44px]"
           >
             {actionLabel}
           </button>

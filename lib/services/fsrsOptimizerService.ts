@@ -49,7 +49,8 @@ interface ReviewDatum {
 
 // ── Constants ──
 
-const MIN_REVIEWS_FOR_OPTIMIZATION = 100;
+const MIN_REVIEWS_FOR_OPTIMIZATION = 16;
+const MIN_REVIEWS_FOR_FULL_OPTIMIZATION = 100;
 const LEARNING_RATE = 0.01;
 const MAX_ITERATIONS = 50;
 const CONVERGENCE_THRESHOLD = 1e-6;
@@ -64,6 +65,8 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 // w[17-18]: short-term stability — skip (sensitive)
 // w[19-20]: retrievability curve — optimize carefully
 const OPTIMIZABLE_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20];
+// Pretrain: only optimize initial stability per rating (w0–w3) when 16–99 reviews
+const PRETRAIN_INDICES = [0, 1, 2, 3];
 // Parameter bounds to prevent divergence
 const PARAM_BOUNDS: Array<[number, number]> = [
   [0.01, 2.0],   // w[0]: initial S for Again
@@ -85,8 +88,8 @@ const PARAM_BOUNDS: Array<[number, number]> = [
   [1.0, 4.0],    // w[16]: easy bonus (not optimized)
   [0.01, 2.0],   // w[17]: short-term decay (not optimized)
   [0.01, 1.0],   // w[18]: short-term offset (not optimized)
-  [0.01, 20.0],  // w[19]: retrievability factor
-  [0.01, 2.0],   // w[20]: retrievability decay exponent
+  [0.01, 1.0],   // w[19]: retrievability factor — tightened from [0.01, 20] per upstream guidance; values >1 cause extreme curves
+  [0.1, 0.8],    // w[20]: forgetting curve shape (FSRS-6) — bounded per Expertium; typical user <0.2, max 0.8
 ];
 
 // ── In-memory cache ──
@@ -162,7 +165,8 @@ export function optimizeOneParameter(
  */
 export function optimizeParameters(
   reviews: ReviewDatum[],
-  initialParams: FSRSParameters = defaultParameters
+  initialParams: FSRSParameters = defaultParameters,
+  indices: number[] = OPTIMIZABLE_INDICES
 ): { parameters: FSRSParameters; initialLoss: number; finalLoss: number } {
   const initialLoss = computeLogLoss(reviews, initialParams);
   let currentParams = { ...initialParams, w: [...initialParams.w] };
@@ -170,7 +174,7 @@ export function optimizeParameters(
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
     let anyImproved = false;
 
-    for (const idx of OPTIMIZABLE_INDICES) {
+    for (const idx of indices) {
       // Scale learning rate by parameter magnitude for stability
       const paramMagnitude = Math.abs(currentParams.w[idx] ?? 1);
       const scaledLR = LEARNING_RATE * Math.max(0.1, paramMagnitude);
@@ -251,7 +255,11 @@ export async function optimizeForUser(
     return null;
   }
 
-  const { parameters, initialLoss, finalLoss } = optimizeParameters(reviewData);
+  // Use pretrain (w0–w3 only) for 16–99 reviews, full optimization for 100+
+  const indices = reviewData.length < MIN_REVIEWS_FOR_FULL_OPTIMIZATION
+    ? PRETRAIN_INDICES
+    : OPTIMIZABLE_INDICES;
+  const { parameters, initialLoss, finalLoss } = optimizeParameters(reviewData, undefined, indices);
 
   const result: OptimizationResult = {
     parameters,
@@ -297,10 +305,12 @@ export function clearOptimizerCache(): void {
 /** Export constants for testing */
 export const OPTIMIZER_CONSTANTS = {
   MIN_REVIEWS_FOR_OPTIMIZATION,
+  MIN_REVIEWS_FOR_FULL_OPTIMIZATION,
   LEARNING_RATE,
   MAX_ITERATIONS,
   CONVERGENCE_THRESHOLD,
   OPTIMIZABLE_INDICES,
+  PRETRAIN_INDICES,
   PARAM_BOUNDS,
 } as const;
 
@@ -478,7 +488,7 @@ export async function getCircadianOptimizedParameters(
         hourOfDay: new Date(r.reviewedAt).getHours(),
       }));
 
-    if (reviewData.length < MIN_REVIEWS_FOR_OPTIMIZATION) {
+    if (reviewData.length < MIN_REVIEWS_FOR_FULL_OPTIMIZATION) {
       return defaultParameters;
     }
 

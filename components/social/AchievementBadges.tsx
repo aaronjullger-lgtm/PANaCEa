@@ -329,7 +329,7 @@ export function AchievementBadges({
                   bg-gradient-to-br ${tierColors.gradient}
                   flex items-center justify-center
                   text-[8px] font-bold text-white
-                  shadow-sm
+                  shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]
                 `}
                 >
                   {(achievement.tier[0] ?? 'B').toUpperCase()}

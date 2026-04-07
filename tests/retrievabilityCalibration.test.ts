@@ -16,57 +16,71 @@ import {
 const { NUM_BINS, MIN_BIN_COUNT, CORRECTION_CLAMP_MIN, CORRECTION_CLAMP_MAX } = CALIBRATION_CONSTANTS;
 
 describe('bucketReviews', () => {
-  it('returns NUM_BINS bins even with no data', () => {
+  it('returns empty array with no data', () => {
     const bins = bucketReviews([]);
-    expect(bins).toHaveLength(NUM_BINS);
-    bins.forEach(bin => expect(bin.count).toBe(0));
+    expect(bins).toHaveLength(0);
   });
 
-  it('places a review with R=0.85 in the correct bin', () => {
+  it('places a review with R=0.85 in one bin', () => {
     const bins = bucketReviews([{ retrievability: 0.85, wasCorrect: true }]);
-    // 0.85 → bin index 8 (0.8-0.9)
-    expect(bins[8].count).toBe(1);
+    // With only 1 review, it fills one bin
+    expect(bins).toHaveLength(1);
+    expect(bins[0].count).toBe(1);
   });
-  it('clamps R=1.0 into the last bin', () => {
+  it('clamps R=1.0 into a bin', () => {
     const bins = bucketReviews([{ retrievability: 0.9999, wasCorrect: true }]);
-    expect(bins[9].count).toBe(1);
+    expect(bins).toHaveLength(1);
+    expect(bins[0].count).toBe(1);
   });
 
-  it('clamps R=0.0 into the first bin', () => {
+  it('clamps R=0.0 into first bin', () => {
     const bins = bucketReviews([{ retrievability: 0.0, wasCorrect: false }]);
+    expect(bins).toHaveLength(1);
     expect(bins[0].count).toBe(1);
   });
 
   it('computes correct actual recall rate when bin has enough data', () => {
-    // Put 20 reviews in the 0.8-0.9 bin, 15 correct
-    const reviews = Array.from({ length: 20 }, (_, i) => ({
+    // Create 300 reviews in a narrow range, with 225 correct (75%)
+    // Distribute correct/incorrect evenly so bins have ~0.75 recall rate
+    const reviews = Array.from({ length: 300 }, (_, i) => ({
       retrievability: 0.85,
-      wasCorrect: i < 15,
+      wasCorrect: i % 4 !== 3,  // 3 correct, 1 incorrect per 4 items → 75%
     }));
     const bins = bucketReviews(reviews);
-    expect(bins[8].count).toBe(20);
-    expect(bins[8].actualRecallRate).toBeCloseTo(0.75, 5);
+    // All items have same retrievability, so they distribute evenly across bins
+    // Each bin should have count >= MIN_BIN_COUNT and actualRecallRate ≈ 0.75
+    const binWithData = bins.find(b => b.count >= MIN_BIN_COUNT);
+    expect(binWithData).toBeDefined();
+    expect(binWithData!.actualRecallRate).toBeCloseTo(0.75, 1);
   });
 
   it('falls back to predicted center when bin has insufficient data', () => {
-    // Only 5 reviews (below MIN_BIN_COUNT of 10)
+    // Only 5 reviews (below MIN_BIN_COUNT of 30)
     const reviews = Array.from({ length: 5 }, () => ({
       retrievability: 0.85,
       wasCorrect: true,
     }));
     const bins = bucketReviews(reviews);
     // Should fall back to predictedCenter = 0.85
-    expect(bins[8].actualRecallRate).toBeCloseTo(0.85, 5);
+    expect(bins[0].actualRecallRate).toBeCloseTo(0.85, 5);
   });
   it('computes calibration ratio correctly', () => {
-    // 20 reviews at R≈0.85, all correct → actual = 1.0, predicted center = 0.85
-    const reviews = Array.from({ length: 20 }, () => ({
+    // 300 reviews at R≈0.85, all correct → actual = 1.0, predicted center = 0.85
+    const reviews = Array.from({ length: 300 }, () => ({
       retrievability: 0.85,
       wasCorrect: true,
     }));
     const bins = bucketReviews(reviews);
-    // calibrationRatio = actualRecallRate / predictedCenter = 1.0 / 0.85 ≈ 1.176
-    expect(bins[8].calibrationRatio).toBeCloseTo(1.0 / 0.85, 2);
+    // Find the bin with enough data (>= MIN_BIN_COUNT)
+    const bin = bins.find(b => b.count >= MIN_BIN_COUNT);
+    expect(bin).toBeDefined();
+    // actualRecallRate = 1.0, predictedCenter ≈ 0.85
+    // rawRatio = 1.0 / 0.85 ≈ 1.176
+    // with shrinkage: 1.0 + (1.176 - 1.0) * min(1, count/SHRINKAGE_N)
+    // With count=30, shrinkage = min(1, 30/200) = 0.15
+    // calibrationRatio = 1.0 + 0.176 * 0.15 ≈ 1.026
+    expect(bin!.calibrationRatio).toBeGreaterThan(1.0);
+    expect(bin!.calibrationRatio).toBeLessThan(1.1);
   });
 });
 

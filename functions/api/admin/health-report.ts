@@ -1,50 +1,28 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../_shared/auth';
-import { errorHandler } from '../_shared/error-handler';
-import { prisma } from '../_shared/prisma-edge';
+import { z } from 'zod';
+import { adminEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+
+const logger = createEndpointLogger('/api/admin/health-report');
 
 /**
  * GET /api/admin/health-report/latest
  * Get the most recent health report snapshot
  */
-export async function onRequestGet(request: Request): Promise<Response> {
+const HealthReportSchema = z.object({
+  query: z.object({
+    days: z.coerce.number().min(1).max(365).optional().default(7),
+  }).optional().default({}),
+});
+
+export const onRequestOptions = withCors();
+
+export const onRequestGet = adminEndpoint(HealthReportSchema, async (context) => {
+  const { env, validated } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const days = validated?.query?.days ?? 7;
+
   try {
-    await requireAuth(request, 'ADMIN');
-
-    const report = await prisma.contentHealthReport.findFirst({
-      orderBy: { timestamp: 'desc' },
-      take: 1,
-    });
-
-    if (!report) {
-      return new Response(
-        JSON.stringify({ message: 'No health reports available yet' }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    return new Response(JSON.stringify(report), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    return errorHandler(error);
-  }
-}
-
-/**
- * GET /api/admin/health-report/history?days=7
- * Get health report history for the past N days
- */
-export async function onRequestGetHistory(request: Request): Promise<Response> {
-  try {
-    await requireAuth(request, 'ADMIN');
-
-    const url = new URL(request.url);
-    const days = parseInt(url.searchParams.get('days') || '7', 10);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -56,6 +34,13 @@ export async function onRequestGetHistory(request: Request): Promise<Response> {
       take: 50,
     });
 
+    if (!reports.length) {
+      return {
+        status: 404,
+        data: { message: 'No health reports available yet' },
+      };
+    }
+
     // Extract trend data
     const trends = reports.map((r) => ({
       timestamp: r.timestamp,
@@ -64,11 +49,20 @@ export async function onRequestGetHistory(request: Request): Promise<Response> {
       reportData: r.reportData,
     }));
 
-    return new Response(JSON.stringify({ days, reportCount: reports.length, trends }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    logger.info('Health reports fetched', { days, reportCount: reports.length });
+
+    return {
+      data: { days, reportCount: reports.length, trends },
+    };
   } catch (error) {
-    return errorHandler(error);
+    logger.error('Failed to fetch health reports', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return {
+      status: 500,
+      data: { error: 'Failed to fetch health reports' },
+    };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-}
+});

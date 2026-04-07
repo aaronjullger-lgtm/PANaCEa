@@ -55,12 +55,12 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
   }, [rotation, systemPerformance]);
 
   return (
-    <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 shadow-sm ${className}`}>
+    <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Stethoscope className="w-5 h-5 text-purple-500" />
-          <h3 className="font-bold text-[var(--color-text-primary)]">
+          <Stethoscope className="w-5 h-5 text-[var(--color-text-secondary)]" />
+          <h3 className="font-semibold text-[var(--color-text-primary)]">
             {rotation.name} Rotation
           </h3>
         </div>

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
 
 const GenerateQuestionSchema = z.object({
@@ -144,6 +145,14 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         taxonomyCode: body.taxonomyCode,
         subcategory,
         userId: auth.userId,
+      });
+
+      auditLog('admin_generate_question', {
+        userId: auth.userId,
+        taxonomyCode: body.taxonomyCode,
+        subcategory,
+        count: generatedQuestions.length,
+        type: body.type,
       });
 
       return new Response(

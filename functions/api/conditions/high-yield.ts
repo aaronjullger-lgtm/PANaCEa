@@ -122,6 +122,8 @@ export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, valida
         total: results.length,
         source: 'database',
       },
+      // Random responses differ on every call; deterministic queries are safe to cache.
+      headers: { 'Cache-Control': randomize ? 'no-store' : 'public, max-age=3600' },
     };
   } finally {
     await safePrismaDisconnect(prisma);

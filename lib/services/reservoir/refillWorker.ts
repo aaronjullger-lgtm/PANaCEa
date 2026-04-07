@@ -13,7 +13,7 @@
  *
  * Quality gates:
  *   - Skip questions with flagCount >= 3
- *   - Skip questions with validationStatus === 'rejected'
+ *   - Only serve questions matching ALLOWED_VALIDATION_STATUSES (Phase 2 review gate)
  *   - Skip questions with qualityScore < 0.4
  *   - Skip questions the student has already seen too many times
  *
@@ -22,6 +22,10 @@
 
 import { RESERVOIR_POLICY, type RefillResult } from './reservoirPolicy';
 import { bulkInsertReservoirItems, type InsertReservoirItemInput } from './reservoirService';
+import { ALLOWED_VALIDATION_STATUSES } from '../mainSessionQuestionSelector';
+import { boostReservoirItems } from './confusionPairBoost';
+import { NCCPA_2025_BLUEPRINT_PERCENT, normalizeSystemName } from '../../constants/blueprint';
+import { computeAdjacencyPriority, getAdjacencyMultiplier } from '../../constants/clinicalAdjacency';
 
 type PrismaClientLike = {
   userProgress: any;
@@ -43,6 +47,8 @@ interface QualityDecision {
 function shouldEnterReservoir(question: any): QualityDecision {
   if (question.flagCount >= 3) return { allow: false, reason: 'high_flag_count' };
   if (question.validationStatus === 'rejected') return { allow: false, reason: 'rejected' };
+  // Phase 2: Prefer approved questions. Pending questions still allowed through
+  // shouldEnterReservoir but ranked lower by the query ORDER BY qualityScore DESC.
   if (question.qualityScore !== null && question.qualityScore !== undefined && question.qualityScore < 0.4) {
     return { allow: false, reason: 'low_quality' };
   }
@@ -59,6 +65,15 @@ export interface RefillJobPayload {
   isReservoirRefill: boolean;
   /** Learner phase for Bloom's-level question ordering (didactic/clinical/pance_prep) */
   learnerPhase?: 'didactic' | 'clinical' | 'pance_prep';
+  /** When true, boost reservoir priority for questions targeting active confusion pairs */
+  confusionScope?: boolean;
+  /**
+   * Primary system for TARGETED sessions (canonical name, e.g. 'Cardiovascular').
+   * When set, Phase 1 FSRS-due cards are sorted by adjacency-weighted priority score
+   * rather than simple nextReviewAt order.
+   * Derived from scope when scope = 'system:<abbreviation>'.
+   */
+  primarySystem?: string;
 }
 
 /**
@@ -72,6 +87,13 @@ export async function executeRefill(
   payload: RefillJobPayload
 ): Promise<RefillResult> {
   const { userId, scope, deficit } = payload;
+
+  // Resolve primarySystem for TARGETED adjacency scoring.
+  // Accept explicit payload.primarySystem, or infer from scope ('system:CV' → 'Cardiovascular').
+  const rawPrimarySystem =
+    payload.primarySystem ??
+    (scope.startsWith('system:') ? scope.split(':')[1] : undefined);
+  const primarySystem = rawPrimarySystem ? normalizeSystemName(rawPrimarySystem) : undefined;
   const items: InsertReservoirItemInput[] = [];
   const errors: string[] = [];
 
@@ -95,13 +117,16 @@ export async function executeRefill(
   let reviewsQueued = 0;
 
   try {
-    const dueReviews = await prisma.userProgress.findMany({
+    const now = new Date();
+    const dueReviewsRaw = await prisma.userProgress.findMany({
       where: {
         userId,
-        nextReviewAt: { lte: new Date() },
+        nextReviewAt: { lte: now },
       },
+      // Fetch a larger batch so adjacency sorting has sufficient candidates.
+      // Final slice applied after scoring.
       orderBy: { nextReviewAt: 'asc' },
-      take: reviewTarget + 10, // Fetch extra for quality filtering
+      take: (reviewTarget + 10) * 3,
       select: {
         conditionId: true,
         system: true,
@@ -109,6 +134,44 @@ export async function executeRefill(
         nextReviewAt: true,
       },
     });
+
+    // ── Adjacency-weighted sort (TARGETED sessions only) ───────────────────
+    // When primarySystem is set, sort candidates by:
+    //   priorityScore = fsrsOverdueness × adjacencyMultiplier
+    // where adjacencyMultiplier is 2.0 (same system), 1.5 (adjacent), or 1.0 (other).
+    // Falls back to chronological order when no primarySystem is configured.
+    const nowMs = now.getTime();
+    const dueReviews = primarySystem
+      ? (() => {
+          type ReviewRow = typeof dueReviewsRaw[number];
+
+          // Compute scores for all candidates
+          const scored: Array<{ row: ReviewRow; score: number; multiplier: number }> =
+            dueReviewsRaw.map((row) => {
+              const cardSystem = row.system ? normalizeSystemName(row.system) : '';
+              const dueMs = row.nextReviewAt ? row.nextReviewAt.getTime() : nowMs;
+              const score = computeAdjacencyPriority(dueMs, nowMs, cardSystem, primarySystem);
+              const multiplier = getAdjacencyMultiplier(cardSystem, primarySystem);
+              return { row, score, multiplier };
+            });
+
+          // Sort descending by priority score
+          scored.sort((a, b) => b.score - a.score);
+
+          // Fallback rule: if top candidates are all multiplier=1.0 (no adjacency),
+          // re-sort purely by fsrsOverdueness to maintain existing behaviour.
+          const hasPrimaryOrAdjacent = scored.some((s) => s.multiplier > 1.0);
+          const sortedRows = hasPrimaryOrAdjacent
+            ? scored
+            : scored.sort((a, b) => {
+                const aDue = a.row.nextReviewAt?.getTime() ?? nowMs;
+                const bDue = b.row.nextReviewAt?.getTime() ?? nowMs;
+                return aDue - bDue; // most overdue first
+              });
+
+          return sortedRows.slice(0, reviewTarget + 10).map((s) => s.row);
+        })()
+      : dueReviewsRaw.slice(0, reviewTarget + 10);
 
     for (const review of dueReviews) {
       if (reviewsQueued >= reviewTarget) break;
@@ -146,7 +209,7 @@ export async function executeRefill(
     errors.push(`Phase 1 (reviews): ${err.message}`);
   }
 
-  // ── Phase 2: New Cards from Pool ──
+  // ── Phase 2: New Cards from Pool (Blueprint-weighted for main sessions) ──
 
   const newTarget = deficit - reviewsQueued;
   let poolQueued = 0;
@@ -155,67 +218,38 @@ export async function executeRefill(
     // Parse scope for system filter
     const systemFilter = scope.startsWith('system:') ? scope.split(':')[1] : undefined;
 
-    // Fetch from PreGeneratedQuestion pool
-    const poolQuestions = await prisma.preGeneratedQuestion.findMany({
-      where: {
-        ...(systemFilter ? { system: systemFilter } : {}),
-        validationStatus: { not: 'rejected' },
-        flagCount: { lt: 3 },
-        id: { notIn: Array.from(reservoirQuestionIds) },
-      },
-      orderBy: [
-        { timesServed: 'asc' },   // Least served first
-        { qualityScore: 'desc' }, // Highest quality first
-      ],
-      take: newTarget * 2, // Fetch extra for quality filtering
-      select: {
-        id: true,
-        system: true,
-        difficulty: true,
-        questionOrder: true,
-        taskCategory: true,
-        flagCount: true,
-        qualityScore: true,
-        validationStatus: true,
-        timesServed: true,
-      },
-    });
+    // Sprint 3: When scope is global (main session), distribute new cards
+    // proportionally to NCCPA blueprint weights so the reservoir reflects
+    // true PANCE distribution. System-specific scopes still use direct filter.
+    const isGlobalScope = !systemFilter;
 
-    // Also check the Question table
-    const standardQuestions = await prisma.question.findMany({
-      where: {
-        ...(systemFilter ? { system: systemFilter } : {}),
-        id: { notIn: Array.from(reservoirQuestionIds) },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: newTarget,
-      select: {
-        id: true,
-        system: true,
-        difficulty: true,
-      },
-    });
-
-    // Merge and interleave, prioritizing unseen questions
-    const allNewCandidates = [
-      ...poolQuestions.map((q: any) => ({ ...q, source: 'pool' as const })),
-      ...standardQuestions.map((q: any) => ({
-        ...q,
-        source: 'pool' as const,
-        questionOrder: null,
-        taskCategory: null,
-        flagCount: 0,
-        qualityScore: null,
-        validationStatus: 'approved',
-        timesServed: 0,
-      })),
-    ];
+    // Calculate per-system quotas for blueprint-weighted filling
+    let systemQuotas: Record<string, number> | null = null;
+    if (isGlobalScope && newTarget > 0) {
+      const totalWeight = Object.values(NCCPA_2025_BLUEPRINT_PERCENT).reduce((a, b) => a + b, 0);
+      systemQuotas = {};
+      let remaining = newTarget;
+      const systems = Object.entries(NCCPA_2025_BLUEPRINT_PERCENT)
+        .sort(([, a], [, b]) => b - a); // Highest weight first for rounding
+      for (const [sys, weight] of systems) {
+        const quota = Math.max(1, Math.round((weight / totalWeight) * newTarget));
+        systemQuotas[sys] = Math.min(quota, remaining);
+        remaining -= systemQuotas[sys]!;
+        if (remaining <= 0) break;
+      }
+      // Distribute any leftover to highest-weight systems
+      if (remaining > 0) {
+        for (const [sys] of systems) {
+          if (remaining <= 0) break;
+          systemQuotas[sys] = (systemQuotas[sys] || 0) + 1;
+          remaining--;
+        }
+      }
+    }
 
     // Build phase-aware order preference weights.
-    // Higher weight = more likely to be selected first in the sort.
     const phaseOrderWeights: Record<string, number> = {};
     if (payload.learnerPhase) {
-      // Map phase to preferred Bloom's order weights
       const weights = {
         didactic:   { first: 0.30, second: 0.50, third: 0.20 },
         clinical:   { first: 0.15, second: 0.40, third: 0.45 },
@@ -228,44 +262,173 @@ export async function executeRefill(
       }
     }
 
-    // Sort: unseen first, then phase-preferred order, then least-seen, then by quality
-    allNewCandidates.sort((a, b) => {
-      const aSeen = seenMap.get(a.id) || 0;
-      const bSeen = seenMap.get(b.id) || 0;
-      if (aSeen !== bSeen) return aSeen - bSeen;
-      // Boost questions matching the phase's preferred Bloom's level
-      if (payload.learnerPhase && a.questionOrder && b.questionOrder) {
-        const aWeight = phaseOrderWeights[a.questionOrder] || 0;
-        const bWeight = phaseOrderWeights[b.questionOrder] || 0;
-        if (aWeight !== bWeight) return bWeight - aWeight; // Higher weight first
-      }
-      return (b.qualityScore || 0) - (a.qualityScore || 0);
-    });
-
-    for (const q of allNewCandidates) {
-      if (poolQueued >= newTarget) break;
-      if (reservoirQuestionIds.has(q.id)) continue;
-
-      const qualityCheck = shouldEnterReservoir(q);
-      if (!qualityCheck.allow) continue;
-
-      items.push({
-        userId,
-        questionId: q.id,
-        questionSource: 'pool',
-        scope,
-        priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
-        system: q.system,
-        difficulty: q.difficulty,
-        questionOrder: q.questionOrder,
-        taskCategory: q.taskCategory,
-        isReview: false,
+    // Helper: fetch candidates for a single system (or all if no filter)
+    const fetchCandidatesForSystem = async (sysFilter?: string, limit: number = newTarget * 2) => {
+      const poolQuestions = await prisma.preGeneratedQuestion.findMany({
+        where: {
+          ...(sysFilter ? { system: sysFilter } : {}),
+          validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
+          flagCount: { lt: 3 },
+          id: { notIn: Array.from(reservoirQuestionIds) },
+        },
+        orderBy: [
+          { timesServed: 'asc' },
+          { qualityScore: 'desc' },
+        ],
+        take: limit,
+        select: {
+          id: true,
+          system: true,
+          difficulty: true,
+          questionOrder: true,
+          taskCategory: true,
+          flagCount: true,
+          qualityScore: true,
+          validationStatus: true,
+          timesServed: true,
+        },
       });
-      reservoirQuestionIds.add(q.id);
-      poolQueued++;
+
+      const standardQuestions = await prisma.question.findMany({
+        where: {
+          ...(sysFilter ? { system: sysFilter } : {}),
+          id: { notIn: Array.from(reservoirQuestionIds) },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: Math.ceil(limit / 2),
+        select: {
+          id: true,
+          system: true,
+          difficulty: true,
+        },
+      });
+
+      return [
+        ...poolQuestions.map((q: any) => ({ ...q, source: 'pool' as const })),
+        ...standardQuestions.map((q: any) => ({
+          ...q,
+          source: 'pool' as const,
+          questionOrder: null,
+          taskCategory: null,
+          flagCount: 0,
+          qualityScore: null,
+          validationStatus: 'approved',
+          timesServed: 0,
+        })),
+      ];
+    };
+
+    // Sort helper
+    const sortCandidates = (candidates: any[]) => {
+      candidates.sort((a, b) => {
+        const aSeen = seenMap.get(a.id) || 0;
+        const bSeen = seenMap.get(b.id) || 0;
+        if (aSeen !== bSeen) return aSeen - bSeen;
+        if (payload.learnerPhase && a.questionOrder && b.questionOrder) {
+          const aWeight = phaseOrderWeights[a.questionOrder] || 0;
+          const bWeight = phaseOrderWeights[b.questionOrder] || 0;
+          if (aWeight !== bWeight) return bWeight - aWeight;
+        }
+        return (b.qualityScore || 0) - (a.qualityScore || 0);
+      });
+    };
+
+    if (systemQuotas) {
+      // Blueprint-weighted: fetch per system in proportion to NCCPA weights
+      // Import abbreviation mapper
+      const { getSystemAbbreviation } = await import('../../constants/blueprint');
+      for (const [blueprintSystem, quota] of Object.entries(systemQuotas)) {
+        if (quota <= 0 || poolQueued >= newTarget) continue;
+
+        const abbrev = getSystemAbbreviation(blueprintSystem);
+        const candidates = await fetchCandidatesForSystem(abbrev, quota * 3);
+        sortCandidates(candidates);
+
+        let systemQueued = 0;
+        for (const q of candidates) {
+          if (systemQueued >= quota || poolQueued >= newTarget) break;
+          if (reservoirQuestionIds.has(q.id)) continue;
+
+          const qualityCheck = shouldEnterReservoir(q);
+          if (!qualityCheck.allow) continue;
+
+          items.push({
+            userId,
+            questionId: q.id,
+            questionSource: 'pool',
+            scope,
+            priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
+            system: q.system,
+            difficulty: q.difficulty,
+            questionOrder: q.questionOrder,
+            taskCategory: q.taskCategory,
+            isReview: false,
+          });
+          reservoirQuestionIds.add(q.id);
+          poolQueued++;
+          systemQueued++;
+        }
+      }
+    } else {
+      // System-specific scope: original behavior
+      const allNewCandidates = await fetchCandidatesForSystem(systemFilter);
+      sortCandidates(allNewCandidates);
+
+      for (const q of allNewCandidates) {
+        if (poolQueued >= newTarget) break;
+        if (reservoirQuestionIds.has(q.id)) continue;
+
+        const qualityCheck = shouldEnterReservoir(q);
+        if (!qualityCheck.allow) continue;
+
+        items.push({
+          userId,
+          questionId: q.id,
+          questionSource: 'pool',
+          scope,
+          priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
+          system: q.system,
+          difficulty: q.difficulty,
+          questionOrder: q.questionOrder,
+          taskCategory: q.taskCategory,
+          isReview: false,
+        });
+        reservoirQuestionIds.add(q.id);
+        poolQueued++;
+      }
     }
   } catch (err: any) {
     errors.push(`Phase 2 (pool): ${err.message}`);
+  }
+
+  // ── Phase 2.5: Confusion-Pair Priority Boost ──
+
+  let confusionBoostedCount = 0;
+
+  if (payload.confusionScope !== false && items.length > 0) {
+    // Default ON — confusion awareness is always active unless explicitly disabled.
+    // The boostReservoirItems function gracefully returns 0 if the user has no pairs.
+    try {
+      // Build a parallel array that boostReservoirItems can mutate in-place.
+      // It needs { priority, conditionId } — we'll map priorities back after.
+      const boostTargets = items.map(item => ({
+        priority: item.priority,
+        conditionId: (item as any).conditionId ?? item.system ?? null,
+      }));
+
+      const boostResult = await boostReservoirItems(prisma, userId, boostTargets);
+
+      // Apply boosted priorities back to items
+      if (boostResult.boostedCount > 0) {
+        for (let i = 0; i < items.length; i++) {
+          items[i]!.priority = boostTargets[i]!.priority;
+        }
+        confusionBoostedCount = boostResult.boostedCount;
+      }
+    } catch (err: any) {
+      // Non-fatal: confusion boost is an enhancement, not a requirement
+      errors.push(`Phase 2.5 (confusion boost): ${err.message}`);
+    }
   }
 
   // ── Phase 3: Insert into Reservoir ──
@@ -287,6 +450,7 @@ export async function executeRefill(
     generated: 0, // Phase 3 Gemini generation — future enhancement
     totalInserted,
     skipped,
+    confusionBoostedCount,
     errors,
   };
 }
@@ -308,7 +472,7 @@ async function findQuestionForCondition(
   const preGenerated = await prisma.preGeneratedQuestion.findMany({
     where: {
       conditionId,
-      validationStatus: { not: 'rejected' },
+      validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
       flagCount: { lt: 3 },
     },
     select: {

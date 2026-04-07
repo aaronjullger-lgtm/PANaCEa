@@ -174,8 +174,9 @@ export async function calculateConceptGaps(
   }
 
   // 2. QuestionAttempt: incorrect answers grouped by system and task
+  // Readiness concept gaps: only MAIN/DRILL sessions (TARGETED/CRAM/RAPID_RECALL excluded)
   const wrongAttempts = await prisma.questionAttempt.findMany({
-    where: { userId, wasCorrect: false },
+    where: { userId, wasCorrect: false, isMainSession: true },
     select: { questionId: true, system: true, questionType: true, conditionId: true },
     orderBy: { createdAt: 'desc' },
     take: 2000,

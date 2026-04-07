@@ -14,7 +14,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 /**
  * Call Gemini API for text generation
  *
- * @param model - The Gemini model to use (e.g., 'gemini-1.5-flash')
+ * @param model - The Gemini model to use (e.g., 'gemini-2.0-flash')
  * @param prompt - The prompt to send to the model
  * @param temperature - Temperature for response randomness (0.0-1.0)
  * @returns The generated text response

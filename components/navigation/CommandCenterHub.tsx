@@ -126,7 +126,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
+              <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">Live OSCE</h3>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-[var(--color-category-practice)]">
                 Voice patient
               </span>
@@ -206,7 +206,7 @@ const HeroTriple: React.FC<{
               <Brain className="w-6 h-6 text-[var(--color-accent)]" aria-hidden />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Build Session</h3>
               <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
               </p>
@@ -230,7 +230,7 @@ const HeroTriple: React.FC<{
               <MessageSquare className="w-6 h-6 text-[var(--color-category-practice)]" aria-hidden />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Live OSCE</h3>
               <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 Voice patient, SOAP grading
               </p>
@@ -254,7 +254,7 @@ const HeroTriple: React.FC<{
               <BarChart3 className="w-6 h-6 text-[var(--color-category-toolkit)]" aria-hidden />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Progress & Analytics</h3>
               <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'}{' '}
                 {accuracyLabel}
@@ -596,7 +596,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         />
       )}
 
-      <div key="main-content" ref={pullToRefreshRef} className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
+      <div key="main-content" ref={pullToRefreshRef} className="mx-auto pt-6 pb-8" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Refresh indicator */}
         {isRefreshing && (
           <motion.div
@@ -646,62 +646,67 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Header with Status Chips */}
+        {/* ── Header: Greeting + Context ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0)}
-          className="mb-6"
+          className="mb-8"
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--color-text-primary)] tracking-tight truncate max-w-full">
             {greeting}, {user?.firstName || 'Student'}
           </h1>
-
-          {/* Status chips row */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {/* Due Count Chip */}
-            {(propDueCount ?? 0) > 0 && (
-              <button
-                type="button"
-                onClick={onNavigateToSrsReview}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium hover:bg-data-fail/20 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-                title="Open Due Review — variant PANCE questions"
-              >
-                <span className="text-data-fail">{propDueCount}</span>
-                <span className="text-[var(--color-text-secondary)]">due</span>
-              </button>
-            )}
-
-            {/* Flagged Count Chip */}
-            {flaggedQuestions.length > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-provisional/10 border border-data-provisional/30 text-sm font-medium">
-                <span className="text-data-provisional">{flaggedQuestions.length}</span>
-                <span className="text-[var(--color-text-secondary)]">flagged</span>
-              </div>
-            )}
-
-            {/* Growth Areas Chips */}
-            {growthAreas.length > 0 && (
-              <>
-                <span key="focus-label" className="text-[var(--color-text-muted)] text-sm font-medium">Focus on:</span>
-                {growthAreas.slice(0, 3).map((area) => (
-                  <div
-                    key={area}
-                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 text-sm font-medium text-[var(--color-accent)]"
-                  >
-                    {area}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-
-          <p className="text-[var(--color-text-muted)] mt-3">
+          <p className="text-[var(--color-text-muted)] text-base mt-1.5">
             Ready to advance your clinical knowledge?
           </p>
+
+          {/* Status chips — contained row */}
+          {((propDueCount ?? 0) > 0 || flaggedQuestions.length > 0 || growthAreas.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2 mt-4" role="group" aria-label="Session status indicators">
+              {/* Due Count Chip */}
+              {(propDueCount ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={onNavigateToSrsReview}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/15 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  title="Open Due Review — variant PANCE questions"
+                >
+                  <span className="font-semibold">{propDueCount}</span>
+                  <span>due for review</span>
+                </button>
+              )}
+
+              {/* Flagged Count Chip */}
+              {flaggedQuestions.length > 0 && (
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]"
+                  role="status"
+                  aria-label={`${flaggedQuestions.length} flagged questions`}
+                >
+                  <span className="font-semibold">{flaggedQuestions.length}</span>
+                  <span>flagged</span>
+                </div>
+              )}
+
+              {/* Growth Areas Chips */}
+              {growthAreas.length > 0 && (
+                <>
+                  <span className="text-[var(--color-text-muted)] text-xs font-medium uppercase tracking-wider mx-1">Focus</span>
+                  {growthAreas.slice(0, 3).map((area) => (
+                    <span
+                      key={area}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-accent)]/8 border border-[var(--color-accent)]/15 text-[var(--color-accent)]"
+                    >
+                      {area}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </motion.div>
 
-        {/* Getting started — first actions after onboarding when little or no activity */}
+        {/* ── Getting Started (empty state) ── */}
         {userProfile?.hasCompletedOnboarding &&
           performanceData.length < 5 &&
           !hasActiveSession && (
@@ -709,14 +714,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               initial={sectionEnter}
               animate={sectionAnimate}
               transition={sectionTransition(0)}
-              className="mb-6"
+              className="mb-8"
             >
-              <div className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 md:p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">
+              <div className="rounded-2xl border border-[var(--color-accent)]/20 bg-[var(--color-bg-secondary)] p-5 sm:p-6">
+                <div className="flex items-center gap-2.5 mb-2">
                   <Sparkles className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
-                  Getting started
-                </h2>
-                <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                  <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    Getting started
+                  </h2>
+                </div>
+                <p className="text-sm text-[var(--color-text-muted)] mb-5">
                   Start your first practice session or try today&apos;s daily challenge.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -724,7 +731,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     <button
                       type="button"
                       onClick={() => onNavigateToSimulation()}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90 min-h-[44px]"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity min-h-[44px]"
                     >
                       <Play className="w-4 h-4" aria-hidden />
                       Start practice session
@@ -733,7 +740,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   <button
                     type="button"
                     onClick={() => onNavigateToDrillMode('grand_rounds')}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
                   >
                     <Trophy className="w-4 h-4" aria-hidden />
                     Try today&apos;s Grand Rounds
@@ -741,7 +748,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   <button
                     type="button"
                     onClick={onNavigateToToolkit}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] min-h-[44px]"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
                   >
                     <Calculator className="w-4 h-4" aria-hidden />
                     Explore the Toolkit
@@ -751,13 +758,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             </motion.div>
           )}
 
-        {/* Welcome Back Card - shows last completed session (not same as active session resume) */}
+        {/* ── Welcome Back Card ── */}
         {!hasActiveSession && showWelcomeBack && lastSession && (
           <motion.div
             initial={sectionEnter}
             animate={sectionAnimate}
             transition={sectionTransition(0)}
-            className="mb-6"
+            className="mb-8"
           >
             <WelcomeBackCard
               lastSession={lastSession}
@@ -767,54 +774,15 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Daily Challenge Card - Grand Rounds once-daily challenge */}
-        {!hasActiveSession && (
-          <motion.div
-            initial={sectionEnter}
-            animate={sectionAnimate}
-            transition={sectionTransition(0)}
-            className="mb-6"
-          >
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
-                      Daily Challenge
-                    </h2>
-                    {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/15 text-[var(--color-accent)]">
-                        Completed today
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[var(--color-text-secondary)] text-sm">
-                    Try today&apos;s Grand Rounds challenge to expand your clinical knowledge.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigateToDrillMode('grand_rounds')}
-                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
-                >
-                  <Play className="w-4 h-4" aria-hidden />
-                  {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 ? 'View Results' : 'Start Challenge'}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Continue Learning (Zeigarnik) - above the fold when session in progress */}
+        {/* ── Continue Learning (Zeigarnik) — above the fold when session in progress ── */}
         {hasActiveSession && onResumeSession && (
           <motion.div
             initial={sectionEnter}
             animate={sectionAnimate}
             transition={sectionTransition(0)}
-            className="mb-6"
+            className="mb-8"
           >
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm">
+            <div className="rounded-2xl border border-[var(--color-accent)]/20 bg-[var(--color-bg-secondary)] p-5 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
@@ -823,7 +791,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </h2>
                   <p className="text-[var(--color-text-secondary)] text-sm mt-1">
                     {resumeContext?.remaining != null
-                      ? `Resume question ${resumeContext.current} – ${resumeContext.remaining} remaining`
+                      ? `Resume question ${resumeContext.current} — ${resumeContext.remaining} remaining`
                       : 'Pick up where you left off.'}
                   </p>
                   {resumeContext?.total != null && resumeContext.total > 0 && (
@@ -840,7 +808,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <button
                   type="button"
                   onClick={onResumeSession}
-                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
+                  className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 min-h-[44px]"
                 >
                   <Play className="w-4 h-4" aria-hidden />
                   Resume
@@ -850,7 +818,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Quick Wins: PANCE / EOR Countdown + Time-Box Buttons (for students) */}
+        {/* ── Countdown + Quick Start ── */}
         {careerStage === 'student' &&
           (userProfile?.graduationDate ||
             (eorTestDate && currentRotation && isEorRotation(currentRotation))) && (
@@ -858,7 +826,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               initial={sectionEnter}
               animate={sectionAnimate}
               transition={sectionTransition(0)}
-              className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4"
+              className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4"
             >
               {userProfile?.graduationDate && (
                 <div
@@ -906,12 +874,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
 
 
-        {/* Quick Stats - Section 1 (delay 0) */}
+        {/* ── Stats at a Glance ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0)}
-          className="mb-6"
+          className="mb-8"
         >
           {isLoadingStats ? (
             <QuickStatsBarSkeleton />
@@ -939,17 +907,18 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             initial={sectionEnter}
             animate={sectionAnimate}
             transition={sectionTransition(0)}
-            className="mb-6"
+            className="mb-8"
           >
             <CircadianInsightCard performanceRecords={performanceData} className="max-w-xs" />
           </motion.div>
         )}
 
-        {/* Core Adaptive Hero - main session (above the fold) */}
+        {/* ── Core PANCE Simulation ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0.1)}
+          className="mb-8"
         >
           <CoreAdaptiveHero
             onStart={() =>
@@ -972,60 +941,58 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           />
         </motion.div>
 
-        {/* Dynamic Study Path Optimizer - Section 2 (delay 100ms) */}
+        {/* ── Study Path Optimizer ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0.1)}
+          className="mb-8"
         >
-          <div className="mb-6 p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+          <div className="p-5 sm:p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-[var(--color-accent)]/10">
-                  <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/10 mt-0.5">
+                  <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
                     Dynamic Study Path Optimizer
                   </h3>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    AI‑powered study planner that adapts to your progress, fatigue, and exam timeline.
-                    View, accept, or regenerate personalized study plans.
+                  <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                    AI‑powered planner that adapts to your progress, fatigue, and exam timeline.
                   </p>
                 </div>
               </div>
-              <motion.button
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              <button
                 onClick={onNavigateToStudyPathDashboard}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent)] active:bg-[var(--color-accent)]/80 font-medium rounded-lg transition-colors"
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[40px]"
               >
                 Open Dashboard
                 <ChevronRight className="w-4 h-4" />
-              </motion.button>
+              </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Recommended for you - Section 2 */}
+        {/* ── Recommendations ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0.1)}
+          className="mb-8"
         >
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
             Recommended for you
           </h2>
           <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
         </motion.div>
 
-
-
-        {/* Grand Rounds / Daily Question - Section 2 (delay 100ms) */}
+        {/* ── Grand Rounds / Daily Question ── */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
           transition={sectionTransition(0.1)}
+          className="mb-8"
         >
           <GrandRoundsBanner
             onStart={() => onNavigateToDrillMode('grand_rounds')}
@@ -1033,18 +1000,18 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           />
         </motion.div>
 
-        {/* Clinical Student: Current Rotation dropdown (presets systems) + EOR Test Date */}
+        {/* ── Clinical Student: Rotation Setup ── */}
         {isClinicalStudent && (
           <motion.div
             initial={{ y: 4 }}
             animate={{ y: 0 }}
-            className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
+            className="mb-8 p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
           >
-            <h3 className="font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <div className="flex items-center gap-2.5 mb-3">
               <GraduationCap className="w-5 h-5 text-[var(--color-accent)]" />
-              Current Rotation
-            </h3>
-            <p className="text-sm text-[var(--color-text-muted)] mb-3">
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Current Rotation</h3>
+            </div>
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
               Selecting a rotation presets which systems you&apos;re tested on (e.g. Surgery = GI,
               CV, MSK; zero Psych).
             </p>
@@ -1075,7 +1042,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Current Curriculum - Section 3 (delay 200ms) */}
+        {/* ── Current Curriculum ── */}
         {careerStage === 'student' &&
           enabledSystems.size >= 0 &&
           enabledSystems.size <= Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
@@ -1083,7 +1050,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               initial={sectionEnter}
               animate={sectionAnimate}
               transition={sectionTransition(0.2)}
-              className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
+              className="mb-8 p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
             >
               <div className="flex flex-col gap-3 mb-3">
                 <div className="flex items-center gap-3">
@@ -1091,7 +1058,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     <Layers className="w-5 h-5 text-[var(--color-accent)]" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-[var(--color-text-primary)]">
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">
                       Current Curriculum
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -1144,6 +1111,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   )}
                 </div>
               </div>
+              {/* Encouraging nudge when no mastery data exists yet */}
+              {performanceData.length < 10 && (
+                <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                  Mastery percentages will appear as you answer questions in each system.
+                </p>
+              )}
               <CurriculumGrid
                 selectedSystems={enabledSystems}
                 onSystemToggle={handleToggleSystem}
@@ -1155,37 +1128,35 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
 
 
-        {/* PANRE-LA (Only for practicing PAs) */}
+        {/* ── PANRE-LA (Practicing PAs only) ── */}
         {showPANREContent && (
           <motion.div
-            initial={{ y: 20 }}
+            initial={{ y: 12 }}
             animate={{ y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-category-simulation)]/10 to-[var(--color-category-simulation)]/10 border border-[var(--color-category-simulation)]/30 p-5 mb-6"
+            transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.32, 0.72, 0, 1] }}
+            className="mb-8 rounded-2xl border border-[var(--color-category-simulation)]/20 bg-[var(--color-bg-secondary)] p-5 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-[var(--color-category-simulation)]/20">
-                  <GraduationCap className="w-6 h-6 text-[var(--color-category-simulation)]" />
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-xl bg-[var(--color-category-simulation)]/10 mt-0.5">
+                  <GraduationCap className="w-5 h-5 text-[var(--color-category-simulation)]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
                     PANRE-LA Simulator
                   </h3>
-                  <p className="text-sm text-[var(--color-text-muted)]">
+                  <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                     Longitudinal assessment format for recertification
                   </p>
                 </div>
               </div>
-
-              <motion.button
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              <button
                 onClick={() => onNavigateToDrillMode('panre_la')}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-category-simulation)] hover:brightness-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-category-simulation)] text-white hover:opacity-90 transition-opacity min-h-[40px]"
               >
                 Start Practice
                 <ChevronRight className="w-4 h-4" />
-              </motion.button>
+              </button>
             </div>
           </motion.div>
         )}

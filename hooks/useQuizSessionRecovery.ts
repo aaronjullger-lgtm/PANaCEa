@@ -15,6 +15,8 @@ interface QuizSessionState {
   localNote: string;
   answerChangeCount: number;
   firstSelectedAnswer: number | null;
+  /** Running session score for restoring score display after tab crash (Finding 4 fix) */
+  sessionScore: { correct: number; total: number };
   // performance data is managed by parent, not stored here
 }
 

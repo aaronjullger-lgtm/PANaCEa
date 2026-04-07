@@ -151,7 +151,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
 
   if (phase === 'intro') {
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
@@ -230,7 +230,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
 
   if (phase === 'loading') {
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <motion.div
           initial={false}
           animate={{}}
@@ -251,7 +251,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     const progress = ((currentIndex + 1) / totalQuestions) * 100;
 
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
@@ -299,7 +299,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
 
   if (phase === 'submitting') {
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <motion.div
           initial={false}
           animate={{}}
@@ -316,7 +316,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
 
   if (phase === 'results' && results) {
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}

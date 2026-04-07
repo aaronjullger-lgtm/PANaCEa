@@ -389,27 +389,43 @@ export const onRequestPost = authenticatedEndpoint(
       };
     }
 
-    // Cache the result
-    await cacheGeneratedQuestion(
-      prisma,
-      {
+    // FIX (Audit 4/F2+F8): Only cache successfully generated questions.
+    // Previously, fallback placeholder questions (generationFailed: true) were
+    // unconditionally cached. This poisoned the semantic cache — future requests
+    // with similar query text received the placeholder ("Unable to generate
+    // question for: X. Please try again.") instead of a fresh generation attempt.
+    // Now: skip caching entirely when generation failed, and return success: false
+    // so the client can filter out the placeholder before showing it to students.
+    const generationFailed = !!(newQuestion as any)?.metadata?.generationFailed;
+
+    if (!generationFailed) {
+      await cacheGeneratedQuestion(
+        prisma,
+        {
+          queryText,
+          questionType,
+          system,
+          difficulty,
+        },
+        newQuestion
+      );
+    } else {
+      logger.warn('Skipping cache for failed generation — placeholder will not be stored', {
+        userId: auth.userId,
         queryText,
-        questionType,
-        system,
-        difficulty,
-      },
-      newQuestion
-    );
+      });
+    }
 
     logger.info('Question generation completed', {
       userId: auth.userId,
       cached: false,
       questionId: newQuestion.id,
+      generationFailed,
     });
 
     return {
       data: {
-        success: true,
+        success: !generationFailed,
         question: newQuestion,
         cached: false,
       },

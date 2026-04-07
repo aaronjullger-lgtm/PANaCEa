@@ -91,7 +91,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
   const [showOverflowMenu, setShowOverflowMenu] = React.useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close overflow menu on click outside
+  // Close overflow menu on click outside or Escape key
   useEffect(() => {
     if (!showOverflowMenu) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -99,8 +99,20 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
         setShowOverflowMenu(false);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowOverflowMenu(false);
+        // Return focus to the trigger button
+        const trigger = overflowMenuRef.current?.querySelector('button');
+        trigger?.focus();
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showOverflowMenu]);
 
   return (
@@ -124,9 +136,9 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             </span>
           )}
           <div className="flex items-center gap-3">
-            <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
+            <h1 className="text-sm font-medium text-[var(--color-text-muted)] truncate">
               Question {questionNumber}
-            </p>
+            </h1>
             {/* Momentum Badge (compact) */}
             {questionNumber > 3 && <MomentumBadge refreshKey={behavioralRefreshKey} />}
             {/* Streak Badge */}
@@ -158,6 +170,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
           <button
             onClick={onToggleStatsOverlay}
             title="Toggle session stats (S)"
+            aria-label="Toggle session stats"
             aria-pressed={showStatsOverlay}
             className={`hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors border ${
               showStatsOverlay
@@ -203,7 +216,9 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             <button
               onClick={() => setShowOverflowMenu((prev) => !prev)}
               title="More actions"
-              aria-pressed={showOverflowMenu}
+              aria-label="More actions"
+              aria-expanded={showOverflowMenu}
+              aria-haspopup="menu"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showOverflowMenu
                   ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
@@ -213,44 +228,52 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
               <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
             </button>
             {showOverflowMenu && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+              <div
+                role="menu"
+                aria-label="More actions"
+                className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in"
+              >
                 {/* Mobile-only: Session Stats — has dedicated button on desktop */}
                 <button
+                  role="menuitem"
                   onClick={() => {
                     onToggleStatsOverlay();
                     setShowOverflowMenu(false);
                   }}
                   className="md:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <BarChart3 className="w-4 h-4" />
+                  <BarChart3 className="w-4 h-4" aria-hidden="true" />
                   {showStatsOverlay ? 'Hide Session Stats' : 'Session Stats'}
                 </button>
                 {/* Mobile-only: Normal Labs — has dedicated button on desktop */}
                 <button
+                  role="menuitem"
                   onClick={() => {
                     onToggleNormalLabs();
                     setShowOverflowMenu(false);
                   }}
                   className="md:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <Beaker className="w-4 h-4" />
+                  <Beaker className="w-4 h-4" aria-hidden="true" />
                   Normal Labs
                 </button>
                 {/* Divider between mobile-only and always-visible items */}
                 <div className="md:hidden border-t border-[var(--color-border)] my-1" />
                 {/* Report Issue */}
                 <button
+                  role="menuitem"
                   onClick={() => {
                     onShowReportModal();
                     setShowOverflowMenu(false);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <AlertTriangle className="w-4 h-4 text-data-fail" />
+                  <AlertTriangle className="w-4 h-4 text-data-fail" aria-hidden="true" />
                   Report Issue
                 </button>
                 {/* Clear Highlights */}
                 <button
+                  role="menuitem"
                   onClick={() => {
                     const container = document.getElementById('question-container');
                     if (!container) return;
@@ -267,18 +290,19 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <ClearHighlightIcon className="w-4 h-4" />
+                  <ClearHighlightIcon className="w-4 h-4" aria-hidden="true" />
                   Clear Highlights
                 </button>
                 {/* Lab Calculators */}
                 <button
+                  role="menuitem"
                   onClick={() => {
                     onShowLabCalcModal();
                     setShowOverflowMenu(false);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <Calculator className="w-4 h-4 text-[var(--color-text-primary)]" />
+                  <Calculator className="w-4 h-4 text-[var(--color-text-primary)]" aria-hidden="true" />
                   Lab Calculators
                 </button>
                 {/* Font size controls */}

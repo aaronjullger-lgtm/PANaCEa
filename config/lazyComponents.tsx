@@ -185,6 +185,7 @@ export const LectureConverterPage = lazy(() =>
 export const TechniqueCheckPage = lazy(() =>
   import('../pages/TechniqueCheckPage').then((m) => ({ default: m.TechniqueCheckPage }))
 );
+export const CalibrationDashboard = lazy(() => import('../components/dashboard/CalibrationDashboard'));
 export const AnalyticsDashboard = lazy(() => import('../components/analytics/AnalyticsDashboard'));
 export const DatabaseAnalyticsDashboard = lazy(() => import('../components/analytics/DatabaseAnalyticsDashboard'));
 export const LearningProfileDashboard = lazy(() => import('../components/analytics/LearningProfileDashboard'));
@@ -192,3 +193,6 @@ export const AdvancedLearningProfileDashboard = lazy(() => import('../components
 export const UserFriendlyStatsDisplay = lazy(() => import('../components/analytics/UserFriendlyStatsDisplay'));
 export const PracticePage = lazy(() => import('../pages/PracticePage').then((m) => ({ default: m.PracticePage })));
 export const ProgressPage = lazy(() => import('../pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));
+export const ElaborationDrill = lazy(() => import('../components/drill/ElaborationDrill'));
+export const ICDCodingDrill = lazy(() => import('../components/drill/ICDCodingDrill'));
+export const TeachBackDrill = lazy(() => import('../components/drill/TeachBackDrill'));

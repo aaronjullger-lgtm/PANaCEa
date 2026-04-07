@@ -16,8 +16,8 @@ export type FsrsRating = 1 | 2 | 3 | 4;
 
 /**
  * Behavioral signals captured during a PANCE-style MCQ interaction.
- * Maps 1-to-1 with what `BehavioralTrackerProvider` and `useMicroKinetics`
- * produce at submission time in `QuizView`.
+ * Maps 1-to-1 with what `BehavioralTrackerProvider` produces
+ * at submission time in `QuizView`.
  */
 export interface PanceQuestionBehavior {
   isCorrect: boolean;

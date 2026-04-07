@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import {
   Stethoscope,
   Pill,
@@ -94,7 +95,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
   const { getToken } = useAuth();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['topic-progress', conditionId],
+    queryKey: queryKeys.topics.progress(conditionId),
     queryFn: async () => {
       const token = await getToken();
       return fetchTopicProgress(conditionId, token);

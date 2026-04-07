@@ -164,6 +164,11 @@ export const DEFAULT_LBFGS_CONFIG: LBFGSConfig = {
  * Parameter bounds for FSRS v6
  * Based on empirical analysis of large-scale Anki datasets
  */
+// FSRS-7 Migration Note:
+// When FSRS-7 arrives (29 params), extend both min[] and max[] arrays with
+// bounds for w[21]..w[28] (the 8-parameter forgetting curve).
+// The bounds are unknown until the formulas are published.
+// Also update the validation loop at line ~795 to check 29 instead of 21.
 export const PARAMETER_BOUNDS: ParameterBounds = {
   min: [
     0.1, // w[0]: Initial stability (Again) - min 0.1 days

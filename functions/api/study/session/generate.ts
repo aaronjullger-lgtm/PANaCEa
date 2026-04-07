@@ -37,29 +37,14 @@ import {
 import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
+// Shared schema — single source of truth for this endpoint's request contract.
+// To change the /api/study/session/generate contract, edit lib/api/schemas/sessions.ts.
 
+import { SessionGenerateRequestSchema } from '../../../../lib/api/schemas/sessions';
+// Size bounds are enforced by the shared schema; override min/max to match runtime constants.
 const SessionGenerateSchema = z.object({
-  body: z.object({
-    mode: z.enum(['adaptive', 'system', 'subcategory', 'condition', 'review', 'focused']).default('adaptive'),
+  body: SessionGenerateRequestSchema.extend({
     size: z.number().int().min(MIN_SESSION_SIZE).max(MAX_SESSION_SIZE).default(20),
-    blueprintWeights: z.record(z.string(), z.number()).default({}),
-
-    // Scope filters
-    system: z.string().optional(),
-    subcategory: z.string().optional(),
-    conditionId: z.string().optional(),
-
-    // Distribution constraints
-    boostSystems: z.array(z.string()).optional(),
-    suppressSystems: z.array(z.string()).optional(),
-    perSystemCaps: z.record(z.string(), z.number()).optional(),
-
-    // Learner context
-    blueprintStage: z.string().default('general'),
-    blueprintExamTypes: z.array(z.string()).optional(),
-    blueprintLabel: z.string().optional(),
-    urgencyMultiplier: z.number().min(0).max(3).default(1),
-    gatedSystems: z.array(z.string()).optional(),
   }),
 });
 

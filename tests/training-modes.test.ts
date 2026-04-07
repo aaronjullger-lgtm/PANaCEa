@@ -158,9 +158,11 @@ describe('Training Modes Configuration', () => {
       expect(guidelineDrill?.theme).toBe('teal');
     });
 
-    it('should not have Cram Mode in registry (merged into rapid_recall)', () => {
-      const cramMode = MODE_REGISTRY.find((m) => m.id === ('cram_mode' as any));
-      expect(cramMode).toBeUndefined();
+    it('should have Cram Mode in registry with question_practice category', () => {
+      const cramMode = MODE_REGISTRY.find((m) => m.id === 'cram_mode');
+      expect(cramMode).toBeDefined();
+      expect(cramMode?.category).toBe('question_practice');
+      expect(cramMode?.route).toBe('/modes/cram-mode');
     });
 
     it('should have pharmacology modes available (not coming soon)', () => {

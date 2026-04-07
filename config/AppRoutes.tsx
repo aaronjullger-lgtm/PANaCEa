@@ -7,6 +7,7 @@ import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
 import { ROUTES } from './routes';
 import { type View, pageVariants } from './appViews';
 import { NavRail } from '../components/layout/NavRail';
+import { AppLayout } from '../components/layout/AppLayout';
 import { AppBrand } from '../components/layout/AppBrand';
 import { DrillViewRouter } from '../components/layout/DrillViewRouter';
 import {
@@ -56,6 +57,7 @@ import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/
 import { EnhancedErrorMessage } from '../components/shared/EnhancedErrorMessage';
 import { NotFoundPage } from '../components/error/NotFoundPage';
 import { AdminRoute } from '../components/auth/AdminRoute';
+import { AuthenticatedRoute } from '../components/auth/AuthenticatedRoute';
 import { useUser } from '@clerk/clerk-react';
 import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '../components/ui/MasteryHeatmapToggle';
@@ -281,37 +283,176 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route
         path="/practice"
         element={
-          <Suspense fallback={<Loader message="Loading practice modes..." />}>
-            <ErrorBoundary variant="page">
-              <PracticePage
-                onNavigateToDrillMode={handleNavigateToDrillMode}
-                onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
-              />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading practice modes..." />}>
+              <ErrorBoundary variant="page">
+                <PracticePage
+                  onNavigateToDrillMode={handleNavigateToDrillMode}
+                  onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
+                />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
         path="/progress"
         element={
-          <Suspense fallback={<Loader message="Loading analytics..." />}>
-            <ErrorBoundary variant="page">
-              <ProgressPage
-                performanceData={heatmapPerformance}
-                dueCount={dueQuestionsCount}
-              />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading analytics..." />}>
+              <ErrorBoundary variant="page">
+                <ProgressPage
+                  performanceData={heatmapPerformance}
+                  dueCount={dueQuestionsCount}
+                />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
         path="/daily-challenges"
         element={
-          <Suspense fallback={<Loader message="Loading daily challenges..." />}>
-            <ErrorBoundary variant="page">
-              <DailyChallengesHub />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading daily challenges..." />}>
+              <ErrorBoundary variant="page">
+                <DailyChallengesHub />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
+        }
+      />
+      {/* ── Migrated view-state routes (self-contained, no heavy session state) ── */}
+      <Route
+        path="/study/knowledge"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                <ErrorBoundary variant="page">
+                  <KnowledgeBaseHub
+                    onClose={() => navigate(ROUTES.STUDY)}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/study/utilities"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading toolkit…" />}>
+                <ErrorBoundary variant="page">
+                  <ToolkitHub
+                    onClose={() => navigate(ROUTES.STUDY)}
+                    onNavigateToItem={handleNavigateToDrillMode}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/study/path"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading study path…" />}>
+                <ErrorBoundary variant="page">
+                  <StudyPathDashboard />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/gap-analysis"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader />}>
+                <ErrorBoundary variant="page">
+                  <GapAnalysisDashboard
+                    onStudySystem={(systemName: string) => {
+                      handleConfirmSession({
+                        focus: 'topic',
+                        topic: systemName,
+                        count: 50,
+                      });
+                      navigate(ROUTES.STUDY);
+                    }}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/clinical-profile"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader />}>
+                <ErrorBoundary variant="page">
+                  <ClinicalProfileDashboard />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/medical-database"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading medical database search..." />}>
+                <ErrorBoundary variant="page">
+                  <MedicalDatabaseSearch
+                    onClose={() => navigate(ROUTES.STUDY)}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/live-collaboration"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading live study session..." />}>
+                <ErrorBoundary variant="page">
+                  <LiveStudySession
+                    onClose={() => navigate(ROUTES.STUDY)}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/explorer"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout>
+              <Suspense fallback={<Loader message="Loading cross‑system explorer..." />}>
+                <ErrorBoundary variant="page">
+                  <CrossSystemExplorer
+                    onClose={() => navigate(ROUTES.STUDY)}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
         }
       />
       {/* ── Admin routes — client-side guarded by AdminRoute ── */}
@@ -390,41 +531,49 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       <Route
         path="/clinical-eye"
         element={
-          <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
-            <ErrorBoundary variant="page">
-              <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
+              <ErrorBoundary variant="page">
+                <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
         path="/visualizer"
         element={
-          <Suspense fallback={<Loader message="Loading visualizer…" />}>
-            <ErrorBoundary variant="page">
-              <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading visualizer…" />}>
+              <ErrorBoundary variant="page">
+                <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
         path="/lecture-converter"
         element={
-          <Suspense fallback={<Loader message="Loading lecture converter…" />}>
-            <ErrorBoundary variant="page">
-              <LectureConverterPage onClose={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading lecture converter…" />}>
+              <ErrorBoundary variant="page">
+                <LectureConverterPage onClose={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
         path="/technique-check"
         element={
-          <Suspense fallback={<Loader message="Loading technique check…" />}>
-            <ErrorBoundary variant="page">
-              <TechniqueCheckPage onClose={() => navigate(ROUTES.STUDY)} />
-            </ErrorBoundary>
-          </Suspense>
+          <AuthenticatedRoute>
+            <Suspense fallback={<Loader message="Loading technique check…" />}>
+              <ErrorBoundary variant="page">
+                <TechniqueCheckPage onClose={() => navigate(ROUTES.STUDY)} />
+              </ErrorBoundary>
+            </Suspense>
+          </AuthenticatedRoute>
         }
       />
       <Route
@@ -590,24 +739,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                 )}
 
                 {/* Full-screen views that break out of max-w-4xl constraint */}
-                {view === 'reference_library' && (
-                  <div
-                    className="w-full min-w-0 overflow-hidden flex-1"
-                    style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                  >
-                    <Suspense fallback={<Loader message="Loading knowledge base…" />}>
-                      <ErrorBoundary variant="inline">
-                        <KnowledgeBaseHub
-                          onClose={() => {
-                            setView('command_center');
-                            navigate('/study');
-                          }}
-                        />
-                      </ErrorBoundary>
-                    </Suspense>
-                  </div>
-                )}
-
                 {view === 'my_library' && (
                   <div
                     className="w-full min-w-0 overflow-hidden flex-1"
@@ -890,81 +1021,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                             missedQuestions={missedQuestions}
                           />
 
-                          {view === 'toolkit' && (
-                            <motion.div
-                              key="toolkit"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <WithGeminiErrorBoundary
-                                viewName="toolkit"
-                                onRetry={() => setView('toolkit')}
-                              >
-                                <Suspense fallback={<Loader message="Loading toolkit…" />}>
-                                  <ToolkitHub
-                                    onClose={() => {
-                                      navigate(ROUTES.STUDY);
-                                      setView('command_center');
-                                    }}
-                                    onNavigateToItem={handleNavigateToDrillMode}
-                                  />
-                                </Suspense>
-                              </WithGeminiErrorBoundary>
-                            </motion.div>
-                          )}
-
-                          {view === 'gap_analysis' && (
-                            <motion.div
-                              key="gap_analysis"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <WithGeminiErrorBoundary
-                                viewName="gap_analysis"
-                                onRetry={() => setView('gap_analysis')}
-                              >
-                                <Suspense fallback={<Loader />}>
-                                  <GapAnalysisDashboard
-                                    onStudySystem={(systemName: string) => {
-                                      setView('command_center');
-                                      handleConfirmSession({
-                                        focus: 'topic',
-                                        topic: systemName,
-                                        count: 50,
-                                      });
-                                    }}
-                                  />
-                                </Suspense>
-                              </WithGeminiErrorBoundary>
-                            </motion.div>
-                          )}
-
-                          {view === 'clinical_profile' && (
-                            <motion.div
-                              key="clinical_profile"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <WithGeminiErrorBoundary
-                                viewName="clinical_profile"
-                                onRetry={() => setView('clinical_profile')}
-                              >
-                                <Suspense fallback={<Loader />}>
-                                  <ClinicalProfileDashboard />
-                                </Suspense>
-                              </WithGeminiErrorBoundary>
-                            </motion.div>
-                          )}
-
                           {view === 'training_menu' && (
                             <motion.div
                               key="training_menu"
@@ -1089,26 +1145,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                             </motion.div>
                           )}
 
-                          {view === 'study_path_dashboard' && (
-                            <motion.div
-                              key="study_path_dashboard"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <WithGeminiErrorBoundary
-                                viewName="study_path_dashboard"
-                                onRetry={() => setView('study_path_dashboard')}
-                              >
-                                <Suspense fallback={<Loader />}>
-                                  <StudyPathDashboard />
-                                </Suspense>
-                              </WithGeminiErrorBoundary>
-                            </motion.div>
-                          )}
-
                           {view === 'tutor_chat' && (
                             <motion.div
                               key="tutor_chat"
@@ -1163,69 +1199,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               <Suspense fallback={<Loader />}>
                                 <SrsFlashcardView
                                   onExit={() => setView('command_center')}
-                                />
-                              </Suspense>
-                            </motion.div>
-                          )}
-
-                          {view === 'medical_database' && (
-                            <motion.div
-                              key="medical_database"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <Suspense
-                                fallback={
-                                  <Loader message="Loading medical database search..." />
-                                }
-                              >
-                                <MedicalDatabaseSearch
-                                  onClose={() => setView('command_center')}
-                                />
-                              </Suspense>
-                            </motion.div>
-                          )}
-
-                          {view === 'live_collaboration' && (
-                            <motion.div
-                              key="live_collaboration"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <Suspense
-                                fallback={
-                                  <Loader message="Loading live study session..." />
-                                }
-                              >
-                                <LiveStudySession
-                                  onClose={() => setView('command_center')}
-                                />
-                              </Suspense>
-                            </motion.div>
-                          )}
-
-                          {view === 'cross_system_explorer' && (
-                            <motion.div
-                              key="cross_system_explorer"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <Suspense
-                                fallback={
-                                  <Loader message="Loading cross‑system explorer..." />
-                                }
-                              >
-                                <CrossSystemExplorer
-                                  onClose={() => setView('command_center')}
                                 />
                               </Suspense>
                             </motion.div>

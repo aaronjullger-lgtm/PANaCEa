@@ -61,7 +61,11 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
     const serverUrl = (import.meta as any).env.VITE_BACKEND_URL || window.location.origin;
 
     // Get actual userId from authentication context
-    const userId = user?.id || 'YOUR_USER_ID';
+    const userId = user?.id;
+    if (!userId) {
+      // User not signed in — embed code will be non-functional
+      return '<!-- Sign in to generate embed code -->';
+    }
 
     let widgetPath = '';
     if (selectedWidget === 'streak') {

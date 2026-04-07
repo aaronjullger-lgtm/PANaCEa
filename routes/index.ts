@@ -45,37 +45,51 @@ import auditRouter from './audit';
  * NOTE: Routes marked DORMANT are not actively used by the frontend.
  */
 export function registerRoutes(app: Express): void {
-  // Core data routes
+  // ─── Core data routes ─────────────────────────────────────────────────
+  // [PORTED] → functions/api/conditions/index.ts
   app.use('/api/conditions', conditionsRouter);
+  // [NOT PORTED] — 4 endpoints need Edge migration (P0)
   app.use('/api/content', contentRouter);
+  // [PARTIAL] — anatomy, differentials, labs, guidelines ported; others missing
   app.use('/api/reference', referenceRouter);
 
-  // Lab and study material routes
+  // ─── Lab and study material routes ────────────────────────────────────
+  // [NOT PORTED] — 3 endpoints need Edge migration (P1)
   app.use('/api/labs', labsRouter);
+  // [NOT PORTED] — lab-cases endpoints missing (P1)
   app.use('/api/drills', drillsRouter);
+  // [PORTED] → functions/api/drugs/index.ts
   app.use('/api/drugs', drugsRouter);
+  // [PORTED] → functions/api/buzzwords/index.ts
   app.use('/api/buzzwords', buzzwordsRouter);
 
   // [DORMANT] Game routes - MedicalWordle not used in App.tsx
   app.use('/api/games', gamesRouter);
 
-  // New modules
+  // ─── New modules ──────────────────────────────────────────────────────
+  // [NOT PORTED] — 5 analytics endpoints need Edge migration (P0)
   app.use('/api/analytics', analyticsRouter);
+  // [PARTIAL] — POST /api/sync ported; GET missing
   app.use('/api/sync', syncRouter);
-  app.use('/api/questions', questionsRouter); // Includes /generate, /flag, etc.
+  // [PARTIAL] — flag + seeds ported; 8 other endpoints missing (P0)
+  app.use('/api/questions', questionsRouter);
 
   // [DORMANT] Clinical pearls - not called by frontend
   app.use('/api/pearls', pearlsRouter);
+  // [NOT PORTED] — 5 OSCE endpoints need Edge migration (P0)
   app.use('/api/osce', osceRouter);
+  // [PARTIAL] — Gemini proxy only
   app.use('', aiRouter);
 
-  app.use('/api', usersRouter); // Handles /achievements, /performance
+  // [NOT PORTED] — achievements, performance endpoints missing (P1)
+  app.use('/api', usersRouter);
 
   // [DORMANT] Adaptive learning - not called by frontend
   app.use('/api/adaptive', adaptiveRouter);
+  // [PORTED] → functions/api/recommendations/index.ts
   app.use('/api/recommendations', recommendationsRouter);
 
-  // Admin audit routes
+  // [DORMANT] Admin audit routes
   app.use('/api/audit', auditRouter);
 
   console.log('✓ Route modules registered:');

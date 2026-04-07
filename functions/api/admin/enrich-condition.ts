@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { adminEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 
 // All enrichable fields
 const ENRICHABLE_FIELDS = [
@@ -340,6 +341,12 @@ export const onRequestPost = adminEndpoint(EnrichConditionSchema, async (context
       userId: user.id,
       conditionId,
       fieldsUpdated: fieldsUpdated.length,
+    });
+
+    auditLog('admin_enrich_condition', {
+      userId: auth.userId,
+      conditionId,
+      fieldsUpdated,
     });
 
     return {

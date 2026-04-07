@@ -212,6 +212,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Refs for cleanup: diagnosis timing metric id; debrief stream abort
   const diagnosisMetricIdRef = useRef<string | null>(null);
   const debriefAbortRef = useRef<AbortController | null>(null);
+  const chatSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   // Abort debrief stream on unmount so we do not update state after unmount
   useEffect(() => {
@@ -447,7 +448,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   }, [showLiveSession]);
 
   const getSemanticVitalClass = useCallback((value: number, range?: [number, number]) => {
-    if (!range) return 'text-white';
+    if (!range) return 'text-[var(--color-text-inverse)]';
     return value < range[0] || value > range[1] ? 'text-data-fail' : 'text-data-pass';
   }, []);
 
@@ -653,7 +654,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
       setCurrentQuestion('');
 
-      // Persist chat to server (full messages array for Cloudflare API)
+      // Persist chat to server via serialized queue to prevent concurrent overwrites
       if (session.id) {
         const token = await getToken();
         const messages = [
@@ -664,10 +665,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           { role: 'user' as const, content: currentQuestion },
           { role: 'assistant' as const, content: response },
         ];
-        const saved = await saveOSCEChat(session.id, messages, token);
-        if (!saved) {
-          toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
-        }
+        chatSaveQueueRef.current = chatSaveQueueRef.current
+          .then(async () => {
+            const saved = await saveOSCEChat(session.id, messages, token);
+            if (!saved) {
+              toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
+            }
+          })
+          .catch(() => {
+            // Swallow to keep queue alive — toast already shown if saveOSCEChat returned false
+          });
       }
     } catch (error) {
       console.error('Error getting patient response:', error);
@@ -915,17 +922,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       // Track treatment in OSCE metrics
       osceMetrics.logAction('treatment', treatmentPlan);
 
-      // Complete session in backend
-      if (session?.id) {
-        const token = await getToken();
-        const saved = await completeOSCESession(session.id, userDiagnosis, treatmentPlan, token);
-        if (!saved) {
-          toast.error('Session could not be saved. Your results may not be recorded.');
-        }
-      }
+      // NOTE: Session completion moved to handleEndEncounter only —
+      // completing here caused the second call (with telemetry) to be
+      // silently dropped by the backend's idempotency guard.
     } catch (error) {
       console.error('Treatment error:', error);
-      toast.error('Could not evaluate treatment plan or save session. Please try again.');
+      toast.error('Could not evaluate treatment plan. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -1234,11 +1236,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const getRelevanceColor = (relevance: PatientQuestion['relevance']) => {
     switch (relevance) {
       case 'essential':
-        return 'text-[var(--color-data-neutral)] bg-[var(--color-data-neutral)]/10 border-[var(--color-data-neutral)]/20 dark:text-[var(--color-data-neutral)] dark:bg-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40';
+        return 'text-[var(--color-data-neutral)] bg-[var(--color-data-neutral)]/10';
       case 'helpful':
-        return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40';
+        return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30';
       case 'unnecessary':
-        return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20 dark:text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]/40';
+        return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10';
       case 'redundant':
         return 'text-muted-foreground bg-muted border-[var(--color-border)]';
       default:
@@ -1272,10 +1274,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return (
       <div className="min-h-dvh bg-data-neutral-bg text-data-neutral transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1317,7 +1319,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   className="flex items-center justify-center gap-6 mt-4 p-3 rounded-xl bg-data-neutral-bg border border-data-neutral max-w-md mx-auto"
                 >
                   <div className="text-center">
-                    <p className="text-lg font-bold text-white">{osceStats.totalEncounters}</p>
+                    <p className="text-lg font-bold text-[var(--color-text-inverse)]">{osceStats.totalEncounters}</p>
                     <p className="text-[10px] text-data-neutral uppercase tracking-wider">Encounters</p>
                   </div>
                   {osceStats.averageScore !== null && (
@@ -1358,7 +1360,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {conditionStats && conditionStats.total > 0 && (
               <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-inverse)] flex items-center gap-2">
                     <Clock className="w-5 h-5 text-data-neutral" />
                     Spaced Repetition
                   </h3>
@@ -1385,7 +1387,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                             className="flex items-center justify-between p-3 rounded-xl border border-data-neutral bg-data-neutral-bg"
                           >
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-white truncate">{cond.conditionName}</p>
+                              <p className="text-sm font-medium text-[var(--color-text-inverse)] truncate">{cond.conditionName}</p>
                               <div className="flex items-center gap-2 text-xs text-data-neutral mt-0.5">
                                 {cond.system && <span className="capitalize">{cond.system}</span>}
                                 <span>Last: {cond.lastScore}%</span>
@@ -1471,7 +1473,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* How It Works Card */}
             <div className="bg-data-neutral-bg rounded-2xl p-8 border border-data-neutral shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-white">Encounter Flow</h3>
+              <h3 className="text-2xl font-semibold text-[var(--color-text-inverse)]">Encounter Flow</h3>
 
               <div className="space-y-5">
                 {[
@@ -1505,7 +1507,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <step.Icon className="w-5 h-5 text-data-neutral" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-white mb-1">
+                      <h4 className="font-semibold text-[var(--color-text-inverse)] mb-1">
                         <span className="text-data-neutral mr-2">{step.num}.</span>
                         {step.title}
                       </h4>
@@ -1558,7 +1560,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Scenario Settings */}
             <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral shadow-md space-y-5">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[var(--color-text-inverse)] flex items-center gap-2">
                 <Shield className="w-5 h-5 text-data-neutral" />
                 Encounter Settings
               </h3>
@@ -1573,7 +1575,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setAiDifficulty(level)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
                         aiDifficulty === level
-                          ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                          ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-[var(--color-accent)]'
                           : 'bg-data-neutral-bg text-data-neutral border-data-neutral hover:border-[var(--color-accent)]/50'
                       }`}
                     >
@@ -1601,7 +1603,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 >
                   <Globe className={`w-5 h-5 mt-0.5 flex-shrink-0 ${enableCulturalCompetency ? 'text-[var(--color-accent)]' : 'text-data-neutral'}`} />
                   <div>
-                    <span className={`text-sm font-medium block ${enableCulturalCompetency ? 'text-[var(--color-accent)]' : 'text-white'}`}>
+                    <span className={`text-sm font-medium block ${enableCulturalCompetency ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-inverse)]'}`}>
                       Cultural Competency
                     </span>
                     <span className="text-xs text-data-neutral">
@@ -1621,7 +1623,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 >
                   <FlaskConical className={`w-5 h-5 mt-0.5 flex-shrink-0 ${enableResourceLimited ? 'text-[var(--color-accent)]' : 'text-data-neutral'}`} />
                   <div>
-                    <span className={`text-sm font-medium block ${enableResourceLimited ? 'text-[var(--color-accent)]' : 'text-white'}`}>
+                    <span className={`text-sm font-medium block ${enableResourceLimited ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-inverse)]'}`}>
                       Resource-Limited
                     </span>
                     <span className="text-xs text-data-neutral">
@@ -1634,7 +1636,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Quick-Start Presets */}
             <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral space-y-4">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[var(--color-text-inverse)] flex items-center gap-2">
                 <Activity className="w-5 h-5 text-data-neutral" />
                 Quick Start — Focused Practice
               </h3>
@@ -1647,7 +1649,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     className="p-3 rounded-xl border border-data-neutral bg-data-neutral-bg hover:border-[var(--color-accent)]/50
                              transition-all text-left group disabled:opacity-50"
                   >
-                    <span className="text-sm font-medium text-white group-hover:text-[var(--color-accent)] transition-colors block mb-1">
+                    <span className="text-sm font-medium text-[var(--color-text-inverse)] group-hover:text-[var(--color-accent)] transition-colors block mb-1">
                       {preset.label}
                     </span>
                     <span className="text-xs text-data-neutral line-clamp-2">{preset.description}</span>
@@ -1702,7 +1704,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.button
                 onClick={handleStartEncounter}
                 disabled={isLoading}
-                className="px-10 py-4 bg-card text-card-foreground dark:bg-foreground dark:text-background hover:bg-card/90 dark:hover:bg-foreground/90
+                className="px-10 py-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/90
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
                          transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
@@ -1726,14 +1728,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <motion.div
                   initial={{ y: -10 }}
                   animate={{ y: 0 }}
-                  className="max-w-md mx-auto p-4 bg-dusty-rose-50 dark:bg-dusty-rose-950/30 border border-dusty-rose-200 dark:border-dusty-rose-800 rounded-xl"
+                  className="max-w-md mx-auto p-4 bg-[var(--color-data-fail)]/5 border border-[var(--color-data-fail)]/20 rounded-xl"
                 >
-                  <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-300">
+                  <p className="text-sm text-[var(--color-data-fail)]">
                     {loadError}
                   </p>
                   <button
                     onClick={() => setLoadError(null)}
-                    className="mt-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 hover:underline"
+                    className="mt-2 text-xs text-[var(--color-data-fail)]/80 hover:underline"
                   >
                     Dismiss
                   </button>
@@ -1749,10 +1751,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   if (viewState === 'loading_encounter') {
     return (
       <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm border border-data-neutral">
+              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] border border-data-neutral">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1857,7 +1859,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                   <MessageSquare className="w-3 h-3" /> History
                 </div>
-                <p className="text-white font-semibold">Q: {q.questionText}</p>
+                <p className="text-[var(--color-text-inverse)] font-semibold">Q: {q.questionText}</p>
                 <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
                   A: {getTranslatedText(q.response)}
                 </p>
@@ -1868,7 +1870,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                   <Stethoscope className="w-3 h-3" /> Physical Exam
                 </div>
-                <p className="text-white font-semibold">Exam: {f.maneuver}</p>
+                <p className="text-[var(--color-text-inverse)] font-semibold">Exam: {f.maneuver}</p>
                 <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
                   Finding: {f.finding}
                 </p>
@@ -1881,7 +1883,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                     <ClipboardList className="w-3 h-3" /> Diagnostic
                   </div>
-                  <p className="text-white font-semibold">{d.testName}</p>
+                  <p className="text-[var(--color-text-inverse)] font-semibold">{d.testName}</p>
                   {isFidelityModeActive && clinicalFidelity.rawLabValues && trendData && (
                     <div className="flex items-center gap-1 h-6 mt-1">
                       {trendData.map((val, ti) => (
@@ -1905,7 +1907,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   style={{ color: diagnosisFeedback.isCorrect ? 'var(--color-success)' : 'var(--color-error)' }}>
                   <ClipboardList className="w-3 h-3" /> Diagnosis Submitted
                 </div>
-                <p className="text-white font-semibold">{userDiagnosis}</p>
+                <p className="text-[var(--color-text-inverse)] font-semibold">{userDiagnosis}</p>
                 <p className="text-data-neutral text-sm pl-4 border-l-2 border-data-neutral whitespace-pre-wrap">
                   {diagnosisFeedback.isCorrect ? 'Correct!' : `Expected: ${diagnosisFeedback.correctDiagnosis ?? 'N/A'}`}
                 </p>
@@ -1928,7 +1930,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <ChatSkeleton />
             )}
             {session.questions.length === 0 && physicalFindings.length === 0 && diagnosticResults.length === 0 && !isLoading && (
-              <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
+              <p className="text-[var(--color-text-secondary)] text-center py-8 italic">
                 Start the encounter by asking about the patient's history.
               </p>
             )}
@@ -1940,10 +1942,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return (
       <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
         {/* Header */}
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm border border-data-neutral">
+              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] border border-data-neutral">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1968,9 +1970,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
                       ${
                         isCompleted
-                          ? 'bg-data-neutral-bg border-data-neutral text-white'
+                          ? 'bg-data-neutral-bg border-data-neutral text-[var(--color-text-inverse)]'
                           : isCurrent
-                            ? 'bg-data-neutral-bg border-data-neutral text-white'
+                            ? 'bg-data-neutral-bg border-data-neutral text-[var(--color-text-inverse)]'
                             : 'bg-transparent border-data-neutral text-data-neutral'
                       }`}
                     >
@@ -2011,7 +2013,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 className={`p-1.5 rounded-md transition-colors border ${
                   isPaused
                     ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                    : 'border-transparent text-data-neutral hover:text-white'
+                    : 'border-transparent text-data-neutral hover:text-[var(--color-text-inverse)]'
                 }`}
                 title={isPaused ? 'Resume encounter' : 'Pause encounter'}
                 aria-label={isPaused ? 'Resume encounter' : 'Pause encounter'}
@@ -2232,7 +2234,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 onClick={() => setEmrTab(tab)}
                                 className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                                   emrTab === tab
-                                    ? 'border-[var(--color-accent)] text-white'
+                                    ? 'border-[var(--color-accent)] text-[var(--color-text-inverse)]'
                                     : 'border-transparent text-data-neutral hover:text-data-neutral'
                                 }`}
                               >
@@ -2257,7 +2259,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                 <p className="text-xs font-bold text-data-neutral uppercase tracking-widest mb-2">
                                   Chief Complaint
                                 </p>
-                                <p className="text-lg font-semibold text-white whitespace-pre-wrap mb-4">
+                                <p className="text-lg font-semibold text-[var(--color-text-inverse)] whitespace-pre-wrap mb-4">
                                   {currentCase?.chiefComplaint
                                     ? getTranslatedText(currentCase.chiefComplaint)
                                     : '—'}
@@ -2332,22 +2334,22 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               <div className="grid sm:grid-cols-2 gap-3">
                                 <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                                   <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Blood Pressure</span>
-                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}</span>
+                                  <span className="text-2xl font-mono font-bold text-[var(--color-text-inverse)]">{Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}</span>
                                   <span className="text-sm font-mono text-data-neutral ml-1">mmHg</span>
                                 </div>
                                 <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                                   <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Heart Rate</span>
-                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.hr ?? 0)}</span>
+                                  <span className="text-2xl font-mono font-bold text-[var(--color-text-inverse)]">{Math.round(currentVitals.hr ?? 0)}</span>
                                   <span className="text-sm font-mono text-data-neutral ml-1">bpm</span>
                                 </div>
                                 <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                                   <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Respiratory Rate</span>
-                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.rr ?? 0)}</span>
+                                  <span className="text-2xl font-mono font-bold text-[var(--color-text-inverse)]">{Math.round(currentVitals.rr ?? 0)}</span>
                                   <span className="text-sm font-mono text-data-neutral ml-1">/min</span>
                                 </div>
                                 <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                                   <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">O₂ Saturation</span>
-                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.o2 ?? 0)}</span>
+                                  <span className="text-2xl font-mono font-bold text-[var(--color-text-inverse)]">{Math.round(currentVitals.o2 ?? 0)}</span>
                                   <span className="text-sm font-mono text-data-neutral ml-1">%</span>
                                 </div>
                               </div>
@@ -2359,7 +2361,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           <p className="text-xs font-bold text-data-neutral uppercase tracking-widest mb-2">
                             Chief Complaint
                           </p>
-                          <p className="text-lg font-semibold text-white whitespace-pre-wrap">
+                          <p className="text-lg font-semibold text-[var(--color-text-inverse)] whitespace-pre-wrap">
                             {currentCase?.chiefComplaint ? (
                               getTranslatedText(currentCase.chiefComplaint)
                             ) : (
@@ -2398,7 +2400,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               Blood Pressure
                             </span>
                             <div className="flex items-baseline gap-2 mt-1">
-                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
+                              <span className="text-3xl font-mono font-bold text-[var(--color-text-inverse)] tabular-nums">
                                 {Math.round(currentVitals.sbp ?? 0)}/
                                 {Math.round(currentVitals.dbp ?? 0)}
                               </span>
@@ -2422,7 +2424,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               Heart Rate
                             </span>
                             <div className="flex items-baseline gap-2 mt-1">
-                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
+                              <span className="text-3xl font-mono font-bold text-[var(--color-text-inverse)] tabular-nums">
                                 {Math.round(currentVitals.hr ?? 0)}
                               </span>
                               <span className="text-sm font-mono text-data-neutral">bpm</span>
@@ -2445,7 +2447,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               Respiratory Rate
                             </span>
                             <div className="flex items-baseline gap-2 mt-1">
-                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
+                              <span className="text-3xl font-mono font-bold text-[var(--color-text-inverse)] tabular-nums">
                                 {Math.round(currentVitals.rr ?? 0)}
                               </span>
                               <span className="text-sm font-mono text-data-neutral">/min</span>
@@ -2468,7 +2470,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                               O₂ Saturation
                             </span>
                             <div className="flex items-baseline gap-2 mt-1">
-                              <span className="text-3xl font-mono font-bold text-white tabular-nums">
+                              <span className="text-3xl font-mono font-bold text-[var(--color-text-inverse)] tabular-nums">
                                 {Math.round(currentVitals.o2 ?? 0)}
                               </span>
                               <span className="text-sm font-mono text-data-neutral">%</span>
@@ -2512,7 +2514,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       placeholder="e.g., When did the chest pain start?"
                       className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
-                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
+                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                       autoComplete="off"
                     />
                     <button
@@ -2520,7 +2522,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       disabled={!currentQuestion.trim()}
                       aria-label="Send Question"
                       className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                     >
                       <Send className="w-5 h-5" />
                     </button>
@@ -2560,7 +2562,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       placeholder="e.g., Auscultate lungs"
                       className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
-                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
+                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                       autoComplete="off"
                     />
                     <button
@@ -2609,7 +2611,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       placeholder="e.g., CBC, BMP, CXR"
                       className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
-                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
+                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                       autoComplete="off"
                     />
                     <button
@@ -2617,7 +2619,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       disabled={!currentQuestion.trim() || isLoading}
                       aria-label="Order Diagnostic Test"
                       className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm flex items-center justify-center min-w-[3.5rem]"
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center min-w-[3.5rem]"
                     >
                       {isLoading ? (
                         <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -2654,7 +2656,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     aria-label="Enter your primary diagnosis"
                     className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg mb-4
                              text-data-neutral placeholder-data-neutral
-                             focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
+                             focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                     autoComplete="off"
                   />
 
@@ -2721,8 +2723,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     onClick={handleSubmitDiagnosis}
                     disabled={!userDiagnosis.trim() || isLoading}
                     className="w-full bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg
-                             disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
-                             transition-colors shadow-sm flex items-center justify-center gap-2"
+                             disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-[var(--color-text-inverse)]
+                             transition-colors shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
@@ -2754,8 +2756,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setTreatmentPlan(e.target.value)}
                       placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
                       className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg
-                               text-white placeholder-data-neutral 
-                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm min-h-[120px]"
+                               text-[var(--color-text-inverse)] placeholder-data-neutral 
+                               focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] min-h-[120px]"
                     />
                   </div>
 
@@ -2774,8 +2776,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         onClick={handleTreatmentSubmit}
                         disabled={!treatmentPlan.trim() || isLoading}
                         className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg
-                                 disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
-                                 transition-colors shadow-sm flex items-center justify-center gap-2"
+                                 disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-[var(--color-text-inverse)]
+                                 transition-colors shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center gap-2"
                       >
                         {isLoading ? (
                           <>
@@ -2792,8 +2794,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={handleEndEncounter}
                       disabled={isLoading}
                       className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
-                               disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
-                               transition-colors shadow-sm flex items-center justify-center gap-2"
+                               disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-[var(--color-text-inverse)]
+                               transition-colors shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center gap-2"
                     >
                       {isLoading ? (
                         <>
@@ -2822,7 +2824,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (showStreaming && !preceptorFeedback) {
       return (
         <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
-          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Award className="w-8 h-8 text-data-neutral" />
@@ -2844,7 +2846,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           <div className="max-w-5xl mx-auto px-4 py-8">
             <div className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral">
               <p className="text-data-neutral text-sm mb-2">Streaming evaluation (token-by-token):</p>
-              <pre className="text-white font-mono text-sm whitespace-pre-wrap break-words min-h-[120px]">
+              <pre className="text-[var(--color-text-inverse)] font-mono text-sm whitespace-pre-wrap break-words min-h-[120px]">
                 {streamedDebriefText || (
                   <span className="text-data-neutral">Waiting for first tokens...</span>
                 )}
@@ -2859,7 +2861,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       return (
         <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
           {/* Header */}
-          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Award className="w-8 h-8 text-data-neutral" />
@@ -2880,18 +2882,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           </div>
 
           <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-            {/* Overall Score Hero */}
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-8 text-white shadow-xl text-center"
-            >
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
-                <Award className="w-12 h-12" />
-              </div>
-              <h2 className="text-5xl font-bold mb-2">{Math.round(preceptorFeedback.score)}%</h2>
-              <p className="text-xl opacity-90">Overall Performance</p>
-            </motion.div>
+            {/* Overall Score Hero — prefer Gemini rubric score when available */}
+            {(() => {
+              const rubricAvailable = gradeResult && typeof gradeResult.score === 'number';
+              const displayScore = rubricAvailable ? gradeResult.score : preceptorFeedback.score;
+              return (
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-8 text-[var(--color-text-inverse)] shadow-xl text-center"
+              >
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[var(--color-bg-primary)]/20 backdrop-blur-sm mb-4">
+                  <Award className="w-12 h-12" />
+                </div>
+                <h2 className="text-5xl font-bold mb-2">{Math.round(displayScore)}%</h2>
+                <p className="text-xl opacity-90">
+                  {rubricAvailable ? 'AI-Graded Score' : 'Estimated Score (rubric unavailable)'}
+                </p>
+              </motion.div>
+              );
+            })()}
 
             {/* Clinical Reasoning Breakdown */}
             <motion.div
@@ -2900,7 +2910,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.1 }}
               className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
             >
-              <h3 className="text-xl font-semibold mb-4 text-white">Clinical Competencies</h3>
+              <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-inverse)]">Clinical Competencies</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {[
                   {
@@ -2931,7 +2941,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Icon className="w-5 h-5 text-data-neutral" />
-                          <span className="font-semibold text-white">{item.label}</span>
+                          <span className="font-semibold text-[var(--color-text-inverse)]">{item.label}</span>
                         </div>
                         <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
                           {item.score}/10
@@ -2969,12 +2979,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <User className="w-6 h-6 text-data-neutral" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Your Preceptor's Feedback</h3>
+                  <h3 className="text-xl font-semibold text-[var(--color-text-inverse)]">Your Preceptor's Feedback</h3>
                   <p className="text-sm text-data-neutral">Clinical reasoning assessment</p>
                 </div>
               </div>
               <div className="bg-data-neutral-bg rounded-lg p-5 border border-data-neutral">
-                <p className="text-white leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
+                <p className="text-[var(--color-text-inverse)] leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
               </div>
             </motion.div>
 
@@ -3080,7 +3090,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </motion.div>
             )}
 
-            {/* Rubric Checklist (from grade API) – always show section: loading, unavailable, or checklist */}
+            {/* AI-Graded Rubric (from Gemini grade API) – primary score source */}
             <motion.div
               initial={{ y: 20 }}
               animate={{ y: 0 }}
@@ -3088,7 +3098,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
             >
               <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-data-neutral" /> Rubric Checklist
+                <ClipboardList className="w-5 h-5 text-data-neutral" /> AI-Graded Rubric
               </h3>
               {gradeResultLoading ? (
                 <div className="space-y-2" aria-busy="true" aria-label="Grading in progress">
@@ -3223,7 +3233,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       type="button"
                       onClick={handleRetryGrading}
                       disabled={gradeResultLoading}
-                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
+                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 disabled:opacity-50 transition-colors"
                     >
                       {gradeResultLoading ? 'Grading…' : 'Retry grading'}
                     </button>
@@ -3278,21 +3288,42 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </motion.div>
             )}
 
-            {/* Enhanced Score Report (local engine + API data merged) */}
-            {enhancedScoreReport && (
+            {/* Quick Preview — estimated from client-side detected actions (secondary to AI rubric above) */}
+            {enhancedScoreReport && gradeResult && (
               <motion.div
                 initial={{ y: 20 }}
                 animate={{ y: 0 }}
                 transition={{ delay: 0.55 }}
               >
+                <div className="mb-2 px-1">
+                  <p className="text-xs text-data-neutral italic">
+                    Quick Preview — estimated from detected actions. The AI-graded rubric above is the authoritative assessment.
+                  </p>
+                </div>
                 <ScoreReport
                   report={{
                     ...enhancedScoreReport,
-                    // Merge API grading data into local report when available
-                    ...(gradeResult?.communicationScore != null ? { communicationScore: gradeResult.communicationScore } : {}),
-                    ...(gradeResult?.differentialScore != null ? { differentialScore: gradeResult.differentialScore } : {}),
-                    ...(gradeResult?.dangerousActionsDetected ? { dangerousActionsDetected: gradeResult.dangerousActionsDetected } : {}),
-                    ...(gradeResult?.score != null ? { overallScore: gradeResult.score } : {}),
+                    ...(differentialDiagnoses.length > 0 ? { submittedDifferentials: differentialDiagnoses } : {}),
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {/* Fallback: show client-side report as primary when rubric is unavailable */}
+            {enhancedScoreReport && !gradeResult && !gradeResultLoading && (
+              <motion.div
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.55 }}
+              >
+                <div className="mb-2 px-1">
+                  <p className="text-xs text-data-neutral italic">
+                    Estimated score from detected actions (AI rubric unavailable — retry grading above for the official score).
+                  </p>
+                </div>
+                <ScoreReport
+                  report={{
+                    ...enhancedScoreReport,
                     ...(differentialDiagnoses.length > 0 ? { submittedDifferentials: differentialDiagnoses } : {}),
                   }}
                 />
@@ -3328,7 +3359,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ y: 20 }}
               animate={{ y: 0 }}
               transition={{ delay: 0.7 }}
-              className="bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-xl p-6 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40"
+              className="bg-[var(--color-accent)]/10 rounded-xl p-6 border border-[var(--color-accent)]/30"
             >
               <h3 className="text-lg font-semibold mb-3 text-[var(--color-accent)]">
                 Correct Diagnosis
@@ -3337,7 +3368,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 {currentCase.correctDiagnosis}
               </p>
               {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40">
+                <div className="mt-4 pt-4 border-t border-[var(--color-accent)]/30">
                   <p className="text-sm font-semibold text-[var(--color-accent)] mb-2">
                     Teaching Points:
                   </p>
@@ -3364,7 +3395,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 transition={{ delay: 0.8 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
               >
-                <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-inverse)] flex items-center gap-2">
                   <FileText className="w-5 h-5" /> Additional Notes
                 </h3>
                 <div className="prose dark:prose-invert max-w-none text-data-neutral whitespace-pre-wrap text-sm">
@@ -3377,7 +3408,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <div className="flex gap-4 pt-4">
               <motion.button
                 onClick={handleNewCase}
-                className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg py-4 rounded-xl font-semibold text-white
+                className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg py-4 rounded-xl font-semibold text-[var(--color-text-inverse)]
                        transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -3407,7 +3438,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   downloadOSCEReport(md, `OSCE_${currentCase.correctDiagnosis?.replace(/\s+/g, '_') || 'Report'}_${new Date().toISOString().slice(0, 10)}`);
                 }}
                 className="px-6 py-4 bg-data-neutral-bg hover:bg-data-neutral-bg rounded-xl font-semibold
-                       text-white transition-colors border border-data-neutral flex items-center gap-2"
+                       text-[var(--color-text-inverse)] transition-colors border border-data-neutral flex items-center gap-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -3418,7 +3449,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <motion.button
                   onClick={onExit}
                   className="px-8 py-4 bg-data-neutral-bg hover:bg-data-neutral-bg rounded-xl font-semibold
-                         text-white transition-colors border border-data-neutral"
+                         text-[var(--color-text-inverse)] transition-colors border border-data-neutral"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >

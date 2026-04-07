@@ -45,14 +45,15 @@ export const ROUTE_REGISTRY: RouteDefinition[] = [
   { path: '/technique-check', view: null, label: 'Technique Check', isRouterRoute: true, includeIn404Check: true },
   
   // View-state routes (isRouterRoute: false) - these need to be migrated to React Router
-  { path: '/study/knowledge', view: 'reference_library', label: 'Knowledge Base', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
-  { path: '/study/utilities', view: 'toolkit', label: 'Tools', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
-  { path: '/study/path', view: 'study_path_dashboard', label: 'Study Path', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
-  { path: '/gap-analysis', view: 'gap_analysis', label: 'Gap Analysis', isRouterRoute: false, includeIn404Check: true },
-  { path: '/clinical-profile', view: 'clinical_profile', label: 'Clinical Profile', isRouterRoute: false, includeIn404Check: true },
-  { path: '/medical-database', view: 'medical_database', label: 'Medical Database', isRouterRoute: false, includeIn404Check: true },
-  { path: '/live-collaboration', view: 'live_collaboration', label: 'Live Collaboration', isRouterRoute: false, includeIn404Check: true },
-  { path: '/explorer', view: 'cross_system_explorer', label: 'Cross System Explorer', isRouterRoute: false, includeIn404Check: true },
+  // Note: 8 routes migrated to React Router in Sprint 4 — now isRouterRoute: true, view: null
+  { path: '/study/knowledge', view: null, label: 'Knowledge Base', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
+  { path: '/study/utilities', view: null, label: 'Tools', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
+  { path: '/study/path', view: null, label: 'Study Path', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
+  { path: '/gap-analysis', view: null, label: 'Gap Analysis', isRouterRoute: true, includeIn404Check: true },
+  { path: '/clinical-profile', view: null, label: 'Clinical Profile', isRouterRoute: true, includeIn404Check: true },
+  { path: '/medical-database', view: null, label: 'Medical Database', isRouterRoute: true, includeIn404Check: true },
+  { path: '/live-collaboration', view: null, label: 'Live Collaboration', isRouterRoute: true, includeIn404Check: true },
+  { path: '/explorer', view: null, label: 'Cross System Explorer', isRouterRoute: true, includeIn404Check: true },
   { path: '/menu', view: 'menu', label: 'Menu', isRouterRoute: false, includeIn404Check: true },
   
   // Legacy redirects (handled in useAppNavigation)

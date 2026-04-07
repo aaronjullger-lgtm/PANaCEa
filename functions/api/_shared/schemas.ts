@@ -336,6 +336,33 @@ export const AdminContentTransitionSchema = z.object({
 
 export type AdminContentTransitionInput = z.infer<typeof AdminContentTransitionSchema>;
 
+/** Query params for GET /api/admin/audit/logs */
+export const AuditLogQuerySchema = z.object({
+  contentId: z.string().optional(),
+  userId: z.string().optional(),
+  changeType: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+  format: z.enum(['json', 'csv']).optional().default('json'),
+});
+
+export type AuditLogQueryInput = z.infer<typeof AuditLogQuerySchema>;
+
+/** Query params for GET /api/admin/content/list */
+export const ContentListQuerySchema = z.object({
+  system: z.string().optional(),
+  status: z.string().optional(),
+  search: z.string().max(200).optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
+  sortBy: z.string().optional().default('updatedAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
+
+export type ContentListQueryInput = z.infer<typeof ContentListQuerySchema>;
+
 export const AdminMediaUpdateSchema = z.object({
   altText: z.string().max(500).optional(),
   description: z.string().max(1000).optional(),

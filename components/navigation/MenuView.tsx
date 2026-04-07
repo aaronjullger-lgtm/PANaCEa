@@ -51,7 +51,7 @@ import {
   DEFAULT_WIDGET_CONFIG,
   RootCauseAnalysis,
   DailyPrescription,
-} from '@/components/ProgressDashboard';
+} from '@/components/progress-dashboard';
 import type {
   WidgetId,
   WidgetData,
@@ -59,7 +59,7 @@ import type {
   ProgressDayRecord,
   SystemMasterySummary,
   ErrorTagCount,
-} from '@/components/ProgressDashboard';
+} from '@/components/progress-dashboard';
 import { calculateAccuracy, calculateDayStreak, loadWidgetPreferences } from '@/lib/dashboardUtils';
 import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
 import { TO_REVIEW_STUDY_GUIDE } from '@/config/labels';
@@ -555,7 +555,7 @@ const MenuView: React.FC<MenuViewProps> = ({
         <motion.h1
           initial={{ y: -10 }}
           animate={{ y: 0 }}
-          className="text-3xl font-bold text-[var(--color-accent)] mb-3 text-center sr-only"
+          className="text-3xl font-semibold text-[var(--color-accent)] mb-3 text-center sr-only"
         >
           PANaCEa
         </motion.h1>
@@ -576,7 +576,8 @@ const MenuView: React.FC<MenuViewProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
               aria-label="Search conditions or medications"
-              className="w-full px-5 py-3.5 border border-[var(--color-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
+              className="w-full px-5 py-3.5 bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
+              style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
               autoComplete="off"
             />
           </div>
@@ -642,7 +643,8 @@ const MenuView: React.FC<MenuViewProps> = ({
               <motion.section
                 initial={{ y: 10 }}
                 animate={{ y: 0 }}
-                className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
+                className="bg-[var(--color-bg-secondary)] rounded-2xl p-6"
+                style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
               >
                 <h2 className="text-3xl font-light tracking-tight text-[var(--color-text-primary)] mb-2">
                   {getTimeBasedGreeting()}.
@@ -707,7 +709,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 {hasActiveSession && (
                   <motion.button
                     onClick={onBackToQuiz}
-                    className="w-full px-6 py-3 btn-glass font-bold rounded-xl"
+                    className="w-full px-6 py-3 btn-glass font-semibold rounded-xl"
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                   >
@@ -716,7 +718,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 )}
                 <motion.button
                   onClick={() => onNavigateToSimulation?.()}
-                  className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
+                  className="w-full px-6 py-4 btn-glass text-lg font-semibold tracking-tight rounded-xl"
                   whileHover={{ scale: 1.01, y: -2 }}
                   whileTap={{ scale: 0.99 }}
                 >
@@ -736,7 +738,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 transition={{ delay: 0.23 }}
                 className="pt-2"
               >
-                <h2 className="text-lg font-bold tracking-tight text-[var(--color-text-primary)] mb-4">
+                <h2 className="text-lg font-semibold tracking-tight text-[var(--color-text-primary)] mb-4">
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -898,7 +900,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 className="pt-2"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
+                  <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)]">
                     Analytics Dashboard
                   </h2>
                   <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
@@ -953,7 +955,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 animate={{ y: 0 }}
                 transition={{ delay: 0.35 }}
               >
-                <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-2">
+                <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)] mb-2">
                   System Mastery Grid
                 </h2>
                 {(!stats.topicScores || stats.topicScores.length === 0) && (
@@ -977,9 +979,10 @@ const MenuView: React.FC<MenuViewProps> = ({
             <motion.section
               initial={{ y: 10 }}
               animate={{ y: 0 }}
-              className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
+              className="bg-[var(--color-bg-secondary)] rounded-2xl p-6"
+              style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
             >
-              <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-6">
+              <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)] mb-6">
                 Settings & Profile
               </h2>
               <div className="space-y-4">
@@ -1078,7 +1081,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Trophy className="w-8 h-8 text-[var(--color-accent)]" />
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   Grand Rounds
                 </h2>
               </div>

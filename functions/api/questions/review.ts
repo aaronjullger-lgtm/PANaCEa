@@ -2,6 +2,10 @@
  * GET/POST /api/questions/review
  * GET: Fetch questions needing review (SRS due, flagged, missed, weak areas)
  * POST: Record a review and update SRS data
+ *
+ * @deprecated POST path writes SRSItem (SM-2 fields only, no FSRS overlay, no UserProgress sync).
+ * New review submissions should use POST /api/drills/submit-review which writes
+ * ReviewLog + UserProgress + UserTopicProgress atomically.
  */
 
 import { z } from 'zod';

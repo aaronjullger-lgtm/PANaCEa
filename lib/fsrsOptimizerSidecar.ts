@@ -20,6 +20,9 @@ export interface ReviewLogRow {
   questionFkId: string | null;
   reviewedAt: Date;
   grade: number;
+  /** Behaviorally-modulated effective grade (Phase 1 — Behavioral Analysis Audit).
+   *  Preferred over `grade` for optimizer training when available. */
+  effectiveGrade?: number | null;
   state: number;
   responseTimeMs: number | null;
 }
@@ -79,6 +82,7 @@ export interface ReviewLogClient {
         questionFkId: true;
         reviewedAt: true;
         grade: true;
+        effectiveGrade: true;
         state: true;
         responseTimeMs: true;
       };
@@ -100,14 +104,35 @@ const SIDECAR_TIMEOUT_MS = 120_000; // 2 min for PyTorch run
 // ============================================================================
 
 function toOptimizerPayload(rows: ReviewLogRow[]): FSRSOptimizerPayload {
-  return {
-    reviews: rows.map((r) => ({
+  // Track effectiveGrade usage for monitoring (Behavioral Analysis Audit § Step 5)
+  let effectiveGradeCount = 0;
+  let fallbackGradeCount = 0;
+
+  const reviews = rows.map((r) => {
+    // Prefer effectiveGrade (behaviorally-modulated) over raw grade for optimizer training.
+    // Falls back to grade for historical records that predate the behavioral analysis migration.
+    const gradeForOptimizer = r.effectiveGrade ?? r.grade;
+    if (r.effectiveGrade != null) {
+      effectiveGradeCount++;
+    } else {
+      fallbackGradeCount++;
+    }
+    return {
       card_id: r.questionFkId ?? r.id,
       review_time: r.reviewedAt.getTime(),
-      review_rating: deriveDiscreteFSRSGrade(r.grade),
+      review_rating: deriveDiscreteFSRSGrade(gradeForOptimizer),
       review_state: r.state,
       review_duration: r.responseTimeMs ?? 0,
-    })),
+    };
+  });
+
+  // Log grade source distribution (helps monitor migration progress)
+  if (typeof console !== 'undefined' && rows.length > 0) {
+    console.log(`[FSRS Optimizer] Grade sources: ${effectiveGradeCount} effectiveGrade, ${fallbackGradeCount} rawGrade fallback (${Math.round(effectiveGradeCount / rows.length * 100)}% modulated)`);
+  }
+
+  return {
+    reviews,
     timezone: DEFAULT_TIMEZONE,
     next_day_starts_at: DEFAULT_DAY_START,
   };
@@ -151,6 +176,7 @@ export async function triggerFSRSOptimization(
           questionFkId: true,
           reviewedAt: true,
           grade: true,
+          effectiveGrade: true,
           state: true,
           responseTimeMs: true,
         },

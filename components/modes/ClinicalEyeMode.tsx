@@ -104,22 +104,22 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
       <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:var(--color-bg-primary);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:var(--color-bg-primary);stop-opacity:1" />
           </linearGradient>
         </defs>
         <rect width="1024" height="1024" fill="url(#bg)"/>
-        <text x="512" y="450" font-family="Arial" font-size="24" fill="#94a3b8" text-anchor="middle">
+        <text x="512" y="450" font-family="Arial" font-size="24" fill="var(--color-text-muted)" text-anchor="middle">
           Demo: Chest X-Ray - Pneumothorax
         </text>
-        <text x="512" y="490" font-family="Arial" font-size="18" fill="#64748b" text-anchor="middle">
+        <text x="512" y="490" font-family="Arial" font-size="18" fill="var(--color-text-secondary)" text-anchor="middle">
           Click regions to identify findings
         </text>
-        <text x="512" y="530" font-family="Arial" font-size="16" fill="#475569" text-anchor="middle">
+        <text x="512" y="530" font-family="Arial" font-size="16" fill="var(--color-text-secondary)" text-anchor="middle">
           (Production uses real medical images from database)
         </text>
-        <ellipse cx="700" cy="280" rx="80" ry="120" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="5,5"/>
-        <text x="700" y="420" font-family="Arial" font-size="14" fill="#ef4444" text-anchor="middle">
+        <ellipse cx="700" cy="280" rx="80" ry="120" fill="none" stroke="var(--color-data-fail)" stroke-width="3" stroke-dasharray="5,5"/>
+        <text x="700" y="420" font-family="Arial" font-size="14" fill="var(--color-data-fail)" text-anchor="middle">
           Target: Pneumothorax Line
         </text>
       </svg>
@@ -240,7 +240,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
           <div className="flex gap-4 justify-center">
             <button
               onClick={handleStartExercise}
-              className="px-8 py-4 rounded-xl bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity"
+              className="px-8 py-4 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold hover:opacity-90 transition-opacity"
             >
               Start Exercise
             </button>
@@ -302,7 +302,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                 <div className="relative">
                   <img
                     src={diagnostic.image.imageUrl}
-                    alt={diagnostic.image.modality}
+                    alt={`Diagnostic ${diagnostic.image.modality.replace(/_/g, ' ')} image for pathology identification`}
                     className="w-full cursor-crosshair rounded-lg"
                     onClick={handleImageClick}
                     onMouseEnter={handleMouseEnter}
@@ -313,7 +313,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                   {heatmapVisible && diagnostic.image.heatmap && (
                     <img
                       src={diagnostic.image.heatmap.imageUrl}
-                      alt="Heatmap"
+                      alt="AI-generated probability heatmap highlighting pathology regions"
                       className="absolute inset-0 w-full h-full pointer-events-none opacity-40 rounded-lg mix-blend-multiply"
                     />
                   )}
@@ -380,7 +380,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                   <h3 className="font-semibold mb-2">Need Help?</h3>
                   <button
                     onClick={() => setDiagnostic({ ...diagnostic, currentHintLevel: 'subtle' })}
-                    className="w-full px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity text-sm"
+                    className="w-full px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity text-sm"
                   >
                     Get Subtle Hint
                   </button>

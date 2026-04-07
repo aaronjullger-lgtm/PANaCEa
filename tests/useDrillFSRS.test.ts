@@ -28,6 +28,14 @@ vi.mock('@/lib/circadian', () => ({
   getBrowserTimezone: vi.fn(() => 'America/New_York'),
 }));
 
+// Mock syncManager for offline fallback tests
+const mockQueueReview = vi.fn();
+vi.mock('@/lib/services/sync/syncManager', () => ({
+  syncManager: {
+    queueReview: (...args: any[]) => mockQueueReview(...args),
+  },
+}));
+
 // Mock fetch globally
 global.fetch = vi.fn();
 
@@ -1026,6 +1034,162 @@ describe('useDrillFSRS Hook', () => {
       });
 
       expect(result.current.lastFSRSResponse?.isRapidGuess).toBe(true);
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // OFFLINE FALLBACK (Lane 3 reliability)
+  // --------------------------------------------------------------------------
+
+  describe('offline fallback to syncManager', () => {
+    it('should queue review via syncManager when API call fails with network error', async () => {
+      mockQueueReview.mockReturnValue('review-offline-1');
+
+      // Simulate network failure (offline scenario)
+      (global.fetch as any).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      let response: any;
+      await act(async () => {
+        result.current.startQuestion();
+        vi.advanceTimersByTime(200);
+        result.current.recordAnswerChange('option-a');
+
+        response = await result.current.submitAnswer({
+          questionId: 'q-offline-1',
+          selectedAnswer: 'option-a',
+          timeSpentMs: 3000,
+        });
+      });
+
+      // Should return null (API failed) and set error
+      expect(response).toBeNull();
+      expect(result.current.error).toBeDefined();
+
+      // Should have queued the review via syncManager for later sync
+      expect(mockQueueReview).toHaveBeenCalledTimes(1);
+      expect(mockQueueReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          questionId: 'q-offline-1',
+          selectedAnswer: 'option-a',
+          timeSpentMs: 3000,
+          sessionType: 'drill',
+          timezone: 'America/New_York',
+        })
+      );
+    });
+
+    it('should pass all telemetry fields to syncManager when offline', async () => {
+      mockQueueReview.mockReturnValue('review-offline-2');
+      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'ddx' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        vi.advanceTimersByTime(300);
+        result.current.recordAnswerChange('diag-a');
+        vi.advanceTimersByTime(200);
+        result.current.recordAnswerChange('diag-b'); // switch
+        vi.advanceTimersByTime(1000);
+
+        await result.current.submitAnswer({
+          questionId: 'q-offline-2',
+          selectedAnswer: 'diag-b',
+          timeSpentMs: 1500,
+        });
+      });
+
+      expect(mockQueueReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          questionId: 'q-offline-2',
+          selectedAnswer: 'diag-b',
+          timeSpentMs: 1500,
+          sessionType: 'drill',
+          timeToFirstClick: expect.any(Number),
+          answerSwitches: expect.any(Number),
+          totalDwellTime: expect.any(Number),
+          timezone: 'America/New_York',
+        })
+      );
+    });
+
+    it('should handle numeric selectedAnswer when queuing offline', async () => {
+      mockQueueReview.mockReturnValue('review-offline-3');
+      (global.fetch as any).mockRejectedValueOnce(new Error('Failed to fetch'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'pharm' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-offline-3',
+          selectedAnswer: 2, // numeric index
+          timeSpentMs: 1000,
+        });
+      });
+
+      expect(mockQueueReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedAnswer: '2', // Should be stringified
+          sessionType: 'drill',
+        })
+      );
+    });
+
+    it('should NOT queue to syncManager when API succeeds', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          isCorrect: true,
+          quality: 3,
+          parTimeMs: 5000,
+          timeSpentMs: 2000,
+          implicitMetrics: { rating: 3, gradeContinuous: 3.0, confidence: 0.9, latencyRatio: 0.4, answerSwitches: 0 },
+          circadian: { phase: 'NEUTRAL', stabilityModifier: 1.0, localHour: 12 },
+        }),
+      });
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-online',
+          selectedAnswer: 'a',
+          timeSpentMs: 2000,
+        });
+      });
+
+      // Should NOT have queued to syncManager since API succeeded
+      expect(mockQueueReview).not.toHaveBeenCalled();
+      expect(result.current.lastFSRSResponse).not.toBeNull();
+    });
+
+    it('should not crash if syncManager.queueReview also throws', async () => {
+      mockQueueReview.mockImplementation(() => {
+        throw new Error('localStorage full');
+      });
+      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      let response: any;
+      await act(async () => {
+        result.current.startQuestion();
+        response = await result.current.submitAnswer({
+          questionId: 'q-double-fail',
+          selectedAnswer: 'a',
+          timeSpentMs: 1000,
+        });
+      });
+
+      // Should still return null and set the original error
+      expect(response).toBeNull();
+      expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toContain('Failed to submit answer');
     });
   });
 });

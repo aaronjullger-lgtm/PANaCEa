@@ -73,11 +73,12 @@ const DrillShell: React.FC<DrillShellProps> = ({
           initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
           transition={prefersReducedMotion ? { duration: 0 } : undefined}
-          className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
+          className="sticky top-0 z-40 bg-[var(--color-bg-primary)]"
+          style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}
         >
-          <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="max-w-7xl mx-auto px-4 py-2.5">
             {/* Breadcrumb Navigation */}
-            <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-2">
+            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
               {backTo !== undefined ? (
                 <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
               ) : (
@@ -97,7 +98,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                   <span
                     className={
                       index === breadcrumb.length - 1
-                        ? 'text-[var(--color-accent)] font-medium'
+                        ? 'text-[var(--color-text-primary)] font-medium'
                         : ''
                     }
                   >
@@ -120,7 +121,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 )}
-                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-accent)]">
+                <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text-primary)]">
                   {title}
                 </h1>
               </div>

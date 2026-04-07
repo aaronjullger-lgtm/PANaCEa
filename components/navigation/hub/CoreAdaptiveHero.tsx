@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { Brain, Target, CheckCircle, ChevronRight, Play } from 'lucide-react';
+import { Brain, Target, CheckCircle, Play, ChevronRight } from 'lucide-react';
 
 export const CoreAdaptiveHero: React.FC<{
   onStart: () => void;
@@ -31,45 +30,46 @@ export const CoreAdaptiveHero: React.FC<{
 }) => {
   const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
   const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
-  // Core PANCE Simulation: no weak-area copy — strict NCCIPA blueprint only
-  const subtitle = isPracticing
-    ? growthAreas.length > 0
-      ? `Focusing on your growth areas: ${growthAreas.slice(0, 3).join(', ')}.`
-      : 'Maintain your certification knowledge with adaptive questions.'
-    : 'Strict NCCPA blueprint weighting. Exam-representative mix — no adaptive bias.';
+  // Core PANCE Simulation: no weak-area copy — strict NCCPA blueprint only
+  subtitle = isPracticing
+ ? growthAreas.length > 0 ? `Focusing on your growth areas: ${growthAreas.slice(0, 3).join(', ')}.`
+     : 'Maintain your certification knowledge with adaptive questions.'
+     : 'Strict NCCPA blueprint weighting. Exam-representative mix — no adaptive bias.';
+
   return (
-    <GlassCard variant="primary" hoverable className="mb-6">
+    <GlassCard variant="primary" hoverable className="mb-8">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
         <div className="flex-1 flex flex-col justify-between">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-[var(--color-accent)]/20 backdrop-blur-sm">
-              <Brain className="w-7 h-7 text-[var(--color-accent)]" />
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/15 shrink-0">
+              <Brain className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{mainTitle}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{mainTitle}</h3>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/8 text-[var(--color-accent)] border border-[var(--color-accent)]/15">
                   {badgeLabel}
                 </span>
               </div>
-              <p className="text-base text-[var(--color-text-secondary)]">{subtitle}</p>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{subtitle}</p>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
-            <span className="inline-flex items-center gap-1.5 text-sm">
-              <Target className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
-              {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'}{' '}
-              {accuracyLabel ?? 'accuracy'}
+          <div className="mt-4 flex flex-wrap items-center gap-5 text-[var(--color-text-muted)]">
+            <span className="inline-flex items-center gap-1.5 text-xs">
+              <Target className="w-3.5 h-3.5 text-[var(--color-accent)]" aria-hidden />
+              <span className="font-medium tabular-nums">{accuracy !== null ? `${accuracy}%` : '—'}</span>
+              <span className="text-[var(--color-text-secondary)]">{accuracyLabel ?? 'accuracy'}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 text-sm">
-              <CheckCircle className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
-              {questionsToday} today
+            <span className="inline-flex items-center gap-1.5 text-xs">
+              <CheckCircle className="w-3.5 h-3.5 text-[var(--color-accent)]" aria-hidden />
+              <span className="font-medium tabular-nums">{questionsToday}</span>
+              <span className="text-[var(--color-text-secondary)]">today</span>
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-stretch sm:items-end gap-1.5">
           <PrimaryButton
             variant="secondary"
             size="lg"

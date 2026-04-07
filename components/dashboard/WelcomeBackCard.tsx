@@ -41,14 +41,15 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       className={`
         relative overflow-hidden rounded-xl
         bg-[var(--color-bg-secondary)]
-        p-5 shadow-sm
+        p-5
         ${className}
       `}
+      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
     >
       {/* Dismiss button */}
       <button
         onClick={onDismiss}
-        className="absolute top-2 right-2 p-2.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+        className="absolute top-2 right-2 p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         aria-label="Dismiss welcome card"
       >
         <X className="w-4 h-4" aria-hidden="true" />

@@ -100,7 +100,7 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
     <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6">
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-[var(--color-data-provisional)]" />
-        <h3 className="text-lg font-bold text-[var(--color-text-primary)]">High Yield Focus</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">High Yield Focus</h3>
       </div>
       <p className="text-sm text-[var(--color-text-secondary)] mb-6">
         Top priorities based on gap size and question volume
@@ -118,7 +118,7 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-[var(--color-data-provisional)]">
+                  <span className="text-lg font-semibold text-[var(--color-data-provisional)]">
                     #{index + 1}
                   </span>
                   <h4 className="font-semibold text-[var(--color-text-primary)]">{system.name}</h4>
@@ -159,7 +159,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   const data = payload[0].payload;
   return (
     <div className="bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border border-[var(--color-border)] rounded-lg px-4 py-3 shadow-lg">
-      <h4 className="font-bold text-[var(--color-text-primary)] mb-2">{data.name}</h4>
+      <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">{data.name}</h4>
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
           <span className="text-[var(--color-text-secondary)]">Your Accuracy:</span>
@@ -180,7 +180,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         <div className="border-t border-[var(--color-border)] pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
             <span className="text-[var(--color-text-secondary)]">Gap to Close:</span>
-            <span className="font-bold text-[var(--color-data-provisional)] tabular-nums">
+            <span className="font-semibold text-[var(--color-data-provisional)] tabular-nums">
               +{Math.round(data.topPerformerGap)}%
             </span>
           </div>
@@ -297,7 +297,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-data-fail)]/30 p-8 max-w-md">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
               Unable to Load Analysis
             </h3>
             <p className="text-[var(--color-text-secondary)] mb-6">{error}</p>
@@ -370,7 +370,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         >
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Gap Analysis</h1>
+            <h1 className="text-3xl font-semibold text-[var(--color-text-primary)]">Gap Analysis</h1>
           </div>
           <p className="text-[var(--color-text-secondary)]">
             Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total
@@ -390,7 +390,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
               <Trophy className="w-5 h-5 text-[var(--color-data-provisional)]" />
               <span className="text-sm text-[var(--color-text-secondary)]">Overall Percentile</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {data.overallPercentile}%
             </p>
           </motion.div>
@@ -405,7 +405,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
               <Target className="w-5 h-5 text-[var(--color-accent)]" />
               <span className="text-sm text-[var(--color-text-secondary)]">Systems Analyzed</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {data.systems.length}
             </p>
           </motion.div>
@@ -422,7 +422,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                 High Priority Areas
               </span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {
                 data.systems.filter((s) => s.status === 'critical' || s.status === 'weakness')
                   .length
@@ -441,7 +441,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
             className="lg:col-span-2 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6"
           >
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
                 Performance vs. Top 10%
               </h3>
               <p className="text-sm text-[var(--color-text-secondary)]">

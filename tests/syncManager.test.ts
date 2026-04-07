@@ -479,4 +479,72 @@ describe('SyncManager', () => {
       vi.useRealTimers();
     });
   });
+
+  // --------------------------------------------------------------------------
+  // BACKOFF JITTER (Lane 3)
+  // --------------------------------------------------------------------------
+
+  describe('scheduleRetry jitter', () => {
+    it('should produce delays within ±25% of base exponential backoff', async () => {
+      // Add a pending review (fire-and-forget sync will fail harmlessly)
+      syncManager.queueReview({
+        questionId: 'q1',
+        selectedAnswer: 0,
+        timeSpentMs: 1000,
+      });
+
+      // Set up mock to fail, then enable fake timers
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      vi.useFakeTimers();
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+
+      // First failure: consecutiveFailures 0 → 1, base = 30s * 2^1 = 60s
+      try { await syncManager.syncAll(); } catch {}
+      const delay1 = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;
+
+      const base1 = 30000 * Math.pow(2, 1); // 60s
+      expect(delay1).toBeGreaterThanOrEqual(Math.round(base1 * 0.75));
+      expect(delay1).toBeLessThanOrEqual(Math.round(base1 * 1.25));
+
+      // Second failure: consecutiveFailures 1 → 2, base = 30s * 2^2 = 120s
+      vi.clearAllTimers();
+      setTimeoutSpy.mockClear();
+      try { await syncManager.syncAll(); } catch {}
+      const delay2 = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;
+
+      const base2 = 30000 * Math.pow(2, 2); // 120s
+      expect(delay2).toBeGreaterThanOrEqual(Math.round(base2 * 0.75));
+      expect(delay2).toBeLessThanOrEqual(Math.round(base2 * 1.25));
+
+      vi.useRealTimers();
+    });
+
+    it('should cap jittered delay at 375s (300s base * 1.25) for high failure counts', async () => {
+      syncManager.queueReview({ questionId: 'q1', selectedAnswer: 0, timeSpentMs: 1000 });
+
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      vi.useFakeTimers();
+      const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+
+      // Run enough failures to push base delay to cap (30s * 2^4 = 480s → capped at 300s)
+      // Stay under 5 total sync attempts per item (the retry limit)
+      for (let i = 0; i < 4; i++) {
+        // Re-queue a fresh review each time so we never hit the per-item limit
+        if (i > 0) {
+          syncManager.queueReview({ questionId: `q${i + 1}`, selectedAnswer: 0, timeSpentMs: 1000 });
+        }
+        vi.clearAllTimers();
+        setTimeoutSpy.mockClear();
+        try { await syncManager.syncAll(); } catch {}
+      }
+
+      const lastDelay = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;
+
+      // Max base is 300s; jitter can push up to 375s (300s * 1.25)
+      expect(lastDelay).toBeLessThanOrEqual(Math.round(300000 * 1.25));
+      expect(lastDelay).toBeGreaterThan(0);
+
+      vi.useRealTimers();
+    });
+  });
 });

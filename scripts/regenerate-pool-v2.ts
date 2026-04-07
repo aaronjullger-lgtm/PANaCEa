@@ -325,7 +325,7 @@ async function main() {
             question: q.question,
             options: q.options,
             correctAnswerIndex: q.correctAnswerIndex,
-            correctAnswer: ['A', 'B', 'C', 'D'][q.correctAnswerIndex] || 'A',
+            correctAnswer: ['A', 'B', 'C', 'D', 'E'][q.correctAnswerIndex] || 'A',
             explanation: q.explanation,
             conditionName: condition.name,
             system: system,

@@ -426,19 +426,15 @@ export function calculateSiblingBoost(sibling: SemanticSibling, sourceRating: Ra
   // Base boost from similarity
   const baseBoost = sibling.similarityScore;
 
-  // Rating multiplier
+  // Rating multiplier (binary system: Again/Good only; Hard/Easy deprecated)
   let ratingMultiplier: number;
   switch (sourceRating) {
-    case Rating.Easy:
-      ratingMultiplier = 0.15; // +15% max boost
-      break;
     case Rating.Good:
+    case Rating.Easy:  // Easy deprecated → treat as Good
       ratingMultiplier = 0.1; // +10% max boost
       break;
-    case Rating.Hard:
-      ratingMultiplier = 0.03; // +3% small boost (still correct)
-      break;
     case Rating.Again:
+    case Rating.Hard:  // Hard deprecated → treat as Again
       ratingMultiplier = -0.05; // -5% (forgot, slight penalty)
       break;
     default:

@@ -152,7 +152,7 @@ const SystemTreeItem: React.FC<{
     ) : undefined;
 
   return (
-    <div className="mb-2">
+    <div className="mb-0.5">
       <SidebarItem
         as="button"
         label={system.label}
@@ -268,14 +268,14 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   };
 
   return (
-    <div className="w-64 flex-shrink-0 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col h-full">
+    <div className="w-64 flex-shrink-0 bg-[var(--color-bg-primary)] flex flex-col h-full" style={{ boxShadow: '1px 0 0 0 var(--color-border)' }}>
       {/* Header */}
-      <div className="p-4 border-b border-[var(--color-border)]">
-        <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2 font-teko">
-          <BookOpen className="w-5 h-5 text-[var(--color-accent)]" />
+      <div className="px-4 py-3" style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}>
+        <h2 className="text-sm font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-[var(--color-text-muted)]" />
           Reference Library
+          <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{totalConditions}</span>
         </h2>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">{totalConditions} conditions</p>
       </div>
 
       {/* Search consolidated to header for single source of truth - sidebar no longer has duplicate search input */}
@@ -297,31 +297,31 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
       )}
 
       {/* High Yield Toggle */}
-      <div className="p-3 border-b border-[var(--color-border)]">
+      <div className="px-3 py-2.5" style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}>
         <button
           onClick={() => onHighYieldToggle(!highYieldOnly)}
           className={`
-            w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200
+            w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors duration-150
             ${
               highYieldOnly
-                ? 'bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 text-[var(--color-accent)]'
-                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/30'
+                ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50'
             }
           `}
         >
           <span className="flex items-center gap-2 text-sm font-medium">
-            <Star className={`w-4 h-4 ${highYieldOnly ? 'fill-[var(--color-accent)]' : ''}`} />
+            <Star className={`w-3.5 h-3.5 ${highYieldOnly ? 'fill-[var(--color-accent)] text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`} />
             High Yield Only
           </span>
           <div
             className={`
             w-8 h-5 rounded-full transition-colors relative
-            ${highYieldOnly ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'}
+            ${highYieldOnly ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'}
           `}
           >
             <div
               className={`
-              absolute top-0.5 w-4 h-4 rounded-full bg-[var(--color-text-inverse)] shadow-sm transition-transform
+              absolute top-0.5 w-4 h-4 rounded-full bg-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-transform
               ${highYieldOnly ? 'translate-x-3.5' : 'translate-x-0.5'}
             `}
             />
@@ -335,7 +335,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         {recentConditions && recentConditions.length > 0 && onRecentConditionClick && (
           <>
             <div className="flex items-center justify-between px-3 mb-2">
-              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide flex items-center gap-1">
+              <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 Recent
               </span>
@@ -361,7 +361,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
                 </button>
               ))}
             </div>
-            <div className="h-px bg-[var(--color-border)] my-2" />
+            <div className="h-px bg-[var(--color-border)]/50 my-1.5" />
           </>
         )}
 
@@ -369,8 +369,8 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         {bookmarks && bookmarks.length > 0 && onBookmarkClick && (
           <>
             <div className="flex items-center justify-between px-3 mb-2">
-              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide flex items-center gap-1">
-                <Bookmark className="w-3 h-3 fill-data-provisional text-data-provisional" />
+              <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider flex items-center gap-1">
+                <Bookmark className="w-3 h-3 text-[var(--color-text-muted)]" />
                 Bookmarks ({bookmarks.length})
               </span>
               {onBookmarkClearAll && (
@@ -395,7 +395,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
                 </button>
               ))}
             </div>
-            <div className="h-px bg-[var(--color-border)] my-2" />
+            <div className="h-px bg-[var(--color-border)]/50 my-1.5" />
           </>
         )}
 
@@ -410,7 +410,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         />
 
         {/* Divider */}
-        <div className="h-px bg-[var(--color-border)] my-2" />
+        <div className="h-px bg-[var(--color-border)]/50 my-1.5" />
 
         {/* Individual Systems */}
         {renderSystemsState()}
@@ -430,10 +430,10 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
       </div>
 
       {/* Keyboard Hint */}
-      <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
-        <p className="text-xs text-[var(--color-text-muted)] text-center">
+      <div className="px-3 py-2.5" style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}>
+        <p className="text-[11px] text-[var(--color-text-muted)] text-center">
           Press{' '}
-          <kbd className="px-1.5 py-0.5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-[10px]">
+          <kbd className="px-1 py-px bg-[var(--color-bg-tertiary)] rounded text-[10px]">
             /
           </kbd>{' '}
           to search

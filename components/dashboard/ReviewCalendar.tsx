@@ -71,32 +71,32 @@ export function ReviewCalendar({
 
   return (
     <div
-      className={`p-4 rounded-xl border ${className}`}
+      className={`p-4 rounded-xl ${className}`}
       style={{
         backgroundColor: 'var(--color-bg-secondary)',
-        borderColor: 'var(--color-border)',
+        boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
       }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Calendar
-            className="w-4 h-4"
-            style={{ color: 'var(--color-accent)' }}
+            className="w-3.5 h-3.5"
+            style={{ color: 'var(--color-text-muted)' }}
           />
           <h3
-            className="text-sm font-semibold"
+            className="text-[13px] font-semibold"
             style={{ color: 'var(--color-text-primary)' }}
           >
             Review Forecast
           </h3>
         </div>
-        <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+        <div className="flex items-center gap-2.5 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
           {overdue > 0 && (
             <span
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full font-medium"
               style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-data-fail) 15%, var(--color-bg-secondary))',
+                backgroundColor: 'color-mix(in srgb, var(--color-data-fail) 10%, var(--color-bg-secondary))',
                 color: 'var(--color-data-fail)',
               }}
             >
@@ -104,7 +104,7 @@ export function ReviewCalendar({
               {overdue} overdue
             </span>
           )}
-          <span>{totalActive} active cards</span>
+          <span>{totalActive} active</span>
         </div>
       </div>
 
@@ -183,10 +183,10 @@ export function ReviewCalendar({
               className="overflow-hidden"
             >
               <div
-                className="mt-3 p-3 rounded-lg border"
+                className="mt-3 p-3 rounded-lg"
                 style={{
                   backgroundColor: 'var(--color-bg-primary)',
-                  borderColor: 'var(--color-border)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 }}
               >
                 <p

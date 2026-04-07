@@ -2,23 +2,27 @@ import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { CARD_RING_SHADOW } from '@/components/ui/Card';
 
 /**
- * GlassCard - Standardized card component with glassmorphism design
+ * GlassCard - Elevated card component with semantic variant system
  *
- * Design System Standards:
- * - Subtle gradient backgrounds with colored glows
- * - Consistent border radius: 16px (rounded-2xl)
- * - Backdrop blur for depth
- * - Hover effects: border color change, shadow enhancement
+ * Design principles (synthesized from Linear, Vercel, Notion):
+ * - Ring-shadow elevation for neutral variant (consistent with Card primitive)
+ * - Whisper borders with subtle tint for colored variants
+ * - Accent tint only when meaningful (primary CTA, status)
+ * - No backdrop-blur on inner elements (reserved for overlays only)
+ *
+ * NOTE: Sub-components are prefixed "GlassCard*" to avoid collision with
+ * the base Card primitive's compound exports (CardHeader, CardContent, etc.).
  */
 
 export type CardVariant =
-  | 'primary' // Blue glow
-  | 'success' // Green glow
-  | 'warning' // Amber glow
-  | 'info' // Cyan glow
-  | 'neutral'; // Slate/no glow
+  | 'primary' // Accent-tinted glow — primary actions
+  | 'success' // Green glow — positive outcomes
+  | 'warning' // Amber glow — attention
+  | 'info' // Cyan glow — informational
+  | 'neutral'; // Clean surface — ring-shadow, no glow
 
 interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   variant?: CardVariant;
@@ -27,31 +31,36 @@ interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   noPadding?: boolean;
 }
 
-const variantStyles: Record<CardVariant, { bg: string; border: string; glow: string }> = {
+const variantStyles: Record<CardVariant, { bg: string; border: string; glow: string; useShadow: boolean }> = {
   primary: {
-    bg: 'bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-accent)]/5 to-[var(--color-accent)]/10',
-    border: 'border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40',
-    glow: 'bg-[var(--color-accent)]/10',
+    bg: 'bg-gradient-to-br from-[var(--color-accent)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/8',
+    border: 'border border-[var(--color-accent)]/15 hover:border-[var(--color-accent)]/30',
+    glow: 'bg-[var(--color-accent)]/8',
+    useShadow: false,
   },
   success: {
-    bg: 'bg-gradient-to-br from-[var(--color-data-pass)]/10 via-[var(--color-data-pass)]/5 to-[var(--color-data-pass)]/10',
-    border: 'border-[var(--color-data-pass)]/20 hover:border-[var(--color-data-pass)]/40',
-    glow: 'bg-[var(--color-data-pass)]/10',
+    bg: 'bg-gradient-to-br from-[var(--color-data-pass)]/8 via-[var(--color-bg-secondary)] to-[var(--color-data-pass)]/8',
+    border: 'border border-[var(--color-data-pass)]/15 hover:border-[var(--color-data-pass)]/30',
+    glow: 'bg-[var(--color-data-pass)]/8',
+    useShadow: false,
   },
   warning: {
-    bg: 'bg-gradient-to-br from-[var(--color-data-provisional)]/10 via-[var(--color-data-provisional)]/5 to-[var(--color-data-provisional)]/10',
-    border: 'border-[var(--color-data-provisional)]/20 hover:border-[var(--color-data-provisional)]/40',
-    glow: 'bg-[var(--color-data-provisional)]/10',
+    bg: 'bg-gradient-to-br from-[var(--color-data-provisional)]/8 via-[var(--color-bg-secondary)] to-[var(--color-data-provisional)]/8',
+    border: 'border border-[var(--color-data-provisional)]/15 hover:border-[var(--color-data-provisional)]/30',
+    glow: 'bg-[var(--color-data-provisional)]/8',
+    useShadow: false,
   },
   info: {
-    bg: 'bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-accent)]/5 to-[var(--color-accent)]/10',
-    border: 'border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40',
-    glow: 'bg-[var(--color-accent)]/10',
+    bg: 'bg-gradient-to-br from-[var(--color-accent)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/8',
+    border: 'border border-[var(--color-accent)]/15 hover:border-[var(--color-accent)]/30',
+    glow: 'bg-[var(--color-accent)]/8',
+    useShadow: false,
   },
   neutral: {
     bg: 'bg-[var(--color-bg-secondary)]',
-    border: 'border-0',
-    glow: 'bg-[var(--color-border)]/50',
+    border: '', // ring-shadow replaces border for neutral
+    glow: '',
+    useShadow: true,
   },
 };
 
@@ -65,32 +74,32 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const styles = variantStyles[variant];
-  // Use CSS-var-aware shadow tokens instead of hardcoded dark: prefixes
-  const baseLift = 'shadow-sm';
+
   const hoverStyles = hoverable
-    ? `${baseLift} hover:shadow-md transition-all duration-300`
-    : baseLift;
-  const paddingStyles = noPadding ? '' : 'p-6';
+    ? 'transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40'
+    : '';
+  const paddingStyles = noPadding ? '' : 'p-5 sm:p-6';
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? false : { y: 20 }}
+      // Fixed: removed initial opacity:0 which caused invisible-card stall in StrictMode
+      initial={prefersReducedMotion ? false : { y: 12 }}
       animate={{ y: 0 }}
-      transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.32, 0.72, 0, 1] }}
       className={`
         relative overflow-hidden rounded-xl
         ${styles.bg}
-        backdrop-blur-sm
         ${styles.border}
         ${paddingStyles}
         ${hoverStyles}
         ${className}
       `}
+      style={styles.useShadow ? { boxShadow: CARD_RING_SHADOW } : undefined}
       {...props}
     >
-      {/* Subtle background glow - only for non-neutral variants */}
+      {/* Subtle background glow — only for colored variants */}
       {variant !== 'neutral' && (
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none">
+        <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none" aria-hidden="true">
           <div className={`w-full h-full ${styles.glow}`} />
         </div>
       )}
@@ -102,9 +111,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 };
 
 /**
- * CardHeader - Standardized card header with icon, title, and badges
+ * GlassCardHeader - Card header with icon, title, and optional badge
+ *
+ * Prefixed to avoid collision with the base Card's CardHeader export.
  */
-interface CardHeaderProps {
+interface GlassCardHeaderProps {
   icon: LucideIcon;
   iconColor?: string;
   title: string;
@@ -115,39 +126,39 @@ interface CardHeaderProps {
   };
 }
 
-export const CardHeader: React.FC<CardHeaderProps> = ({
+export const GlassCardHeader: React.FC<GlassCardHeaderProps> = ({
   icon: Icon,
-  iconColor = 'text-[var(--color-accent)]',
+  iconColor = 'text-[var(--color-text-secondary)]',
   title,
   subtitle,
   badge,
 }) => {
   return (
-    <div className="flex items-start gap-4 mb-4">
-      <div
-        className={`p-3 rounded-xl bg-[var(--color-bg-tertiary)] backdrop-blur-sm border border-[var(--color-border)]`}
-      >
-        <Icon className={`w-7 h-7 ${iconColor}`} />
+    <div className="flex items-start gap-3 mb-4">
+      <div className="p-2.5 rounded-lg bg-[var(--color-bg-tertiary)]">
+        <Icon className={`w-5 h-5 ${iconColor}`} />
       </div>
       <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
+        <div className="flex items-center gap-2 mb-0.5">
+          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
           {badge && (
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20'}`}
+              className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${badge.color || 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'}`}
             >
               {badge.text}
             </span>
           )}
         </div>
-        {subtitle && <p className="text-sm text-[var(--color-text-secondary)]">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>}
       </div>
     </div>
   );
 };
 
 /**
- * CardStats - Horizontal stat badges for card footers
+ * GlassCardStats - Horizontal stat badges for card footers
+ *
+ * Prefixed to avoid collision with future Card compound exports.
  */
 interface StatBadge {
   icon: LucideIcon;
@@ -156,20 +167,20 @@ interface StatBadge {
   color?: string;
 }
 
-interface CardStatsProps {
+interface GlassCardStatsProps {
   stats: StatBadge[];
 }
 
-export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
+export const GlassCardStats: React.FC<GlassCardStatsProps> = ({ stats }) => {
   return (
-    <div className="flex flex-wrap items-center gap-3 mt-4">
+    <div className="flex flex-wrap items-center gap-2 mt-4">
       {stats.map((stat) => (
         <div
           key={`${stat.label}-${stat.value}`}
-          className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20'}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm ${stat.color || 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'}`}
         >
-          <stat.icon className="w-4 h-4" />
-          <span className="text-sm font-medium">
+          <stat.icon className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+          <span className="font-medium">
             {stat.value} {stat.label}
           </span>
         </div>
@@ -177,3 +188,8 @@ export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
     </div>
   );
 };
+
+/** @deprecated Use GlassCardHeader instead — kept for backwards compatibility */
+export const CardHeader = GlassCardHeader;
+/** @deprecated Use GlassCardStats instead — kept for backwards compatibility */
+export const CardStats = GlassCardStats;

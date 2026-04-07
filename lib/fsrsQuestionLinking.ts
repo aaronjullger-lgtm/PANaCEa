@@ -67,9 +67,10 @@ export async function recordQuestionWithFSRS(
     // Get current progress
     const progress = await prisma.userProgress.findUnique({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId,
           conditionId,
+          progressContext: 'READINESS',
         },
       },
     });
@@ -115,9 +116,10 @@ export async function recordQuestionWithFSRS(
     // Update database
     await prisma.userProgress.update({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId,
           conditionId,
+          progressContext: 'READINESS',
         },
       },
       data: {
@@ -155,9 +157,10 @@ export async function getQuestionHistoryForCondition(
   try {
     const progress = await prisma.userProgress.findUnique({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId,
           conditionId,
+          progressContext: 'READINESS',
         },
       },
       select: {
@@ -193,9 +196,10 @@ export async function getDetailedReviewHistory(
   try {
     const progress = await prisma.userProgress.findUnique({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId,
           conditionId,
+          progressContext: 'READINESS',
         },
       },
       select: {
@@ -236,9 +240,10 @@ export async function getQuestionUsageStats(
   try {
     const progress = await prisma.userProgress.findUnique({
       where: {
-        userId_conditionId: {
+        userId_conditionId_progressContext: {
           userId,
           conditionId,
+          progressContext: 'READINESS',
         },
       },
       select: {

@@ -17,26 +17,26 @@ const LEVEL_CONFIG: Record<WellnessLevel, {
 }> = {
   thriving: {
     icon: <Sun className="w-4 h-4" />,
-    bgClass: 'bg-green-500/10',
-    textClass: 'text-green-600',
+    bgClass: 'bg-[var(--color-data-pass)]/10',
+    textClass: 'text-[var(--color-data-pass)]',
     label: 'Thriving',
   },
   steady: {
     icon: <Heart className="w-4 h-4" />,
-    bgClass: 'bg-blue-500/10',
-    textClass: 'text-blue-600',
+    bgClass: 'bg-[var(--color-accent)]/10',
+    textClass: 'text-[var(--color-accent)]',
     label: 'Steady',
   },
   tired: {
     icon: <Coffee className="w-4 h-4" />,
-    bgClass: 'bg-amber-500/10',
-    textClass: 'text-amber-600',
+    bgClass: 'bg-[var(--color-data-provisional)]/10',
+    textClass: 'text-[var(--color-data-provisional)]',
     label: 'Take a break',
   },
   burnout_risk: {
     icon: <AlertTriangle className="w-4 h-4" />,
-    bgClass: 'bg-red-500/10',
-    textClass: 'text-red-600',
+    bgClass: 'bg-[var(--color-data-fail)]/10',
+    textClass: 'text-[var(--color-data-fail)]',
     label: 'Rest recommended',
   },
 };

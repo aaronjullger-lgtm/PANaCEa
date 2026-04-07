@@ -58,8 +58,8 @@ import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/const
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/ProgressDashboard';
-import type { WidgetId } from '@/components/ProgressDashboard';
+import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/progress-dashboard';
+import type { WidgetId } from '@/components/progress-dashboard';
 import { exportUserAnalytics, exportArchive } from '@/lib/analyticsExport';
 import { toast } from '@/lib/toast';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
@@ -276,7 +276,7 @@ const AccessibilitySettings: React.FC = () => {
 
       {/* Sub-settings when enabled */}
       {isCommuterMode && (
-        <div className="space-y-2 pl-2 border-l-2 border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40">
+        <div className="space-y-2 pl-2 border-l-2 border-[var(--color-data-neutral)]/20">
           {/* Auto-read questions */}
           <label className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors cursor-pointer">
             <div className="flex items-center gap-2">
@@ -336,8 +336,8 @@ const AccessibilitySettings: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-3 p-3 bg-[var(--color-data-neutral)]/10 dark:bg-[var(--color-data-neutral)]/20 border border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40 rounded-lg">
-        <p className="text-xs text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]">
+      <div className="mt-3 p-3 bg-[var(--color-data-neutral)]/10 border border-[var(--color-data-neutral)]/20 rounded-lg">
+        <p className="text-xs text-[var(--color-data-neutral)]">
           Voice mode works with Main Session and Patient Encounter modes. Say "A", "B", "C", or "D"
           to select answers.
         </p>
@@ -1024,7 +1024,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={false}
         animate={{}}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
+        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-[40] p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
@@ -2097,7 +2097,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           title={fullName}
                           className={`min-w-0 p-2.5 rounded-lg text-sm font-medium transition-all text-left ${
                             enabledSystems.has(system)
-                              ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/30 text-[var(--color-category-practice)] dark:text-[var(--color-btn-primary-text)] border-2 border-[var(--color-category-practice)] dark:border-[var(--color-accent)]'
+                              ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] border-2 border-[var(--color-category-practice)]'
                               : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
                           }`}
                         >
@@ -2113,8 +2113,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
 
                   {enabledSystems.size === 0 && (
-                    <div className="mt-3 p-3 bg-data-provisional dark:bg-data-provisional/30 border border-data-provisional dark:border-data-provisional rounded-lg">
-                      <p className="text-xs text-data-provisional dark:text-data-provisional">
+                    <div className="mt-3 p-3 bg-data-provisional/30 border border-data-provisional rounded-lg">
+                      <p className="text-xs text-data-provisional">
                         <strong>Warning:</strong> No systems enabled. Please enable at least one
                         system to generate questions.
                       </p>
@@ -2175,7 +2175,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         })}
                       </div>
                       {enabledSystems.size > 0 && activeUnitSystems.size === 0 && (
-                        <p className="text-xs text-data-provisional dark:text-data-provisional mt-2">
+                        <p className="text-xs text-data-provisional mt-2">
                           Tip: Mark at least one system as Active to use 80/20 mix. Otherwise all
                           enabled systems are treated equally.
                         </p>
@@ -2199,13 +2199,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllMiniModes}
-                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllMiniModes}
-                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral"
                     >
                       Disable All
                     </button>
@@ -2299,7 +2299,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] border border-[var(--color-category-practice)]'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2324,7 +2324,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] border border-[var(--color-category-practice)]'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2349,7 +2349,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] border border-[var(--color-category-practice)]'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2374,7 +2374,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] border border-[var(--color-category-practice)]'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2631,7 +2631,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Program Director Dashboard */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded">
+                        <div className="p-1.5 bg-[var(--color-accent)]/10 rounded">
                           <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
                         </div>
                         <div className="flex-1">
@@ -2666,8 +2666,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Curriculum Mapping */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-data-pass dark:bg-data-pass/30 rounded">
-                          <Target className="w-4 h-4 text-data-pass dark:text-data-pass" />
+                        <div className="p-1.5 bg-data-pass/30 rounded">
+                          <Target className="w-4 h-4 text-data-pass" />
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -2681,8 +2681,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-3 p-3 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/20 dark:border-[var(--color-accent)]/40 rounded-lg">
-                    <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)] flex items-center gap-1.5">
+                  <div className="mt-3 p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-lg">
+                    <p className="text-xs text-[var(--color-accent)] flex items-center gap-1.5">
                       <Building2 className="w-4 h-4" /> <strong>For Institutions:</strong> Contact
                       us to enable these features for your PA program.
                     </p>
@@ -2773,7 +2773,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-data-fail text-white'
                               : confirmClear === 'performance'
                                 ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                                : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
+                                : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
                           }`}
                           aria-label={
                             confirmClear === 'performance' && clearConfirmText === 'DELETE'
@@ -2806,7 +2806,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'missed'
                               ? 'bg-data-fail text-white'
-                              : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
+                              : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
                         }`}
                         aria-label={
                           confirmClear === 'missed'
@@ -2836,7 +2836,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'flagged'
                               ? 'bg-data-fail text-white'
-                              : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
+                              : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
                         }`}
                         aria-label={
                           confirmClear === 'flagged'

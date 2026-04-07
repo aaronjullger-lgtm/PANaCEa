@@ -47,3 +47,10 @@ export {
   executeRefill,
   type RefillJobPayload,
 } from './refillWorker';
+
+export {
+  analyzeBlueprintGaps,
+  analyzeAndTriggerGeneration,
+  type BlueprintGapResult,
+  type GapAnalysisReport,
+} from './blueprintGapAnalyzer';

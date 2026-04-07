@@ -130,7 +130,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[100]"
+              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[35]"
             />
 
             {/* Sheet */}
@@ -204,7 +204,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[35] flex items-center justify-center p-4"
           >
             {/* Modal */}
             <motion.div

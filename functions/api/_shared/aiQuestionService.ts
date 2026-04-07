@@ -98,15 +98,18 @@ export async function validateNewQuestion(submission: {
   explanation: string;
   system: string;
   conditionId?: string;
-}): Promise<{
+}, prismaClient?: any): Promise<{
   isDuplicate: boolean;
   duplicateOf?: { id: string; question: string };
   coversGap: boolean;
   estimatedDifficulty: number;
   estimatedHealthScore: number;
 }> {
+  // Use injected client if provided (Edge-safe), otherwise fall back to module singleton
+  const db = prismaClient ?? prisma;
+
   // Check for duplicates using text similarity
-  const existingQuestions = await prisma.question.findMany({
+  const existingQuestions = await db.question.findMany({
     where: {
       system: submission.system,
       status: 'published',
@@ -126,7 +129,7 @@ export async function validateNewQuestion(submission: {
   const duplicateOf = isDuplicate ? existingQuestions[0] : undefined;
 
   // Check blueprint coverage
-  const blueprintTarget = await prisma.examBlueprintSystem.findUnique({
+  const blueprintTarget = await db.examBlueprintSystem.findUnique({
     where: {
       examType_system: {
         examType: 'PANCE',
@@ -135,7 +138,7 @@ export async function validateNewQuestion(submission: {
     },
   });
 
-  const currentCount = await prisma.question.count({
+  const currentCount = await db.question.count({
     where: {
       system: submission.system,
       lifecycleStatus: 'ACTIVE',
@@ -143,7 +146,7 @@ export async function validateNewQuestion(submission: {
     },
   });
 
-  const totalQuestions = await prisma.question.count({
+  const totalQuestions = await db.question.count({
     where: { lifecycleStatus: 'ACTIVE', qaStatus: 'APPROVED' },
   });
 

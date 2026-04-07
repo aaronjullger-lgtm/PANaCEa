@@ -1,11 +1,11 @@
 /**
- * Gemini / Google AI helpers for embeddings (text-embedding-005) and vision (gemini-1.5-pro).
+ * Gemini / Google AI helpers for embeddings (text-embedding-005) and vision (gemini-2.5-flash).
  * Used by RAG chunking, hybrid search, semantic scripts, and image quality assessment.
  */
 
 const EMBED_MODEL = 'text-embedding-005';
 const EMBED_DIMS = 768;
-const VISION_MODEL = 'gemini-1.5-pro';
+const VISION_MODEL = 'gemini-2.5-flash';
 
 /**
  * Generate a 768-d embedding for the given text using Google AI embedContent API.

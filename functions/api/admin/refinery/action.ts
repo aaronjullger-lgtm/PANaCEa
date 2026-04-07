@@ -22,6 +22,7 @@ import {
   type EdgePrismaClient,
 } from '../../_shared/prisma-edge';
 import { promoteToLive, discardStagingQuestion } from '../../_shared/staging-questions';
+import { auditLog } from '../../_shared/auditLog';
 
 const RAW_VAULT_BUCKET = 'raw-source-vault';
 const PUBLIC_ASSETS_BUCKET = 'public-assets';
@@ -260,6 +261,12 @@ export const onRequestPost = refineryEndpoint(
       console.error('Refinery action error:', error);
       return { status: 500, error: 'Failed to apply action' };
     } finally {
+      auditLog('admin_refinery_action', {
+        userId,
+        type,
+        id,
+        action,
+      });
       await safePrismaDisconnect(prisma);
     }
   }

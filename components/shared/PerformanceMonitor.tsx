@@ -79,10 +79,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-xl border ${
         status === 'good'
-          ? 'border-data-pass bg-data-pass dark:border-data-pass dark:bg-data-pass/20'
+          ? 'border-[var(--color-data-pass)]/20 bg-[var(--color-data-pass)]/10'
           : status === 'warning'
-            ? 'border-[var(--color-data-provisional)]/20 bg-[var(--color-data-provisional)]/10 dark:border-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20'
-            : 'border-data-fail bg-data-fail dark:border-data-fail dark:bg-data-fail/20'
+            ? 'border-[var(--color-data-provisional)]/20 bg-[var(--color-data-provisional)]/10'
+            : 'border-[var(--color-data-fail)]/20 bg-[var(--color-data-fail)]/10'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -93,10 +93,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         <span
           className={`text-sm font-semibold ${
             status === 'good'
-              ? 'text-data-pass dark:text-data-pass'
+              ? 'text-data-pass'
               : status === 'warning'
-                ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
-                : 'text-data-fail dark:text-data-fail'
+                ? 'text-[var(--color-data-provisional)]'
+                : 'text-data-fail'
           }`}
         >
           {value}
@@ -333,9 +333,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="flex items-start gap-3 p-3 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)] rounded-lg"
+                        className="flex items-start gap-3 p-3 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20 rounded-lg"
                       >
-                        <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] mt-0.5 flex-shrink-0" />
+                        <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)] mt-0.5 flex-shrink-0" />
                         <span className="text-sm">{rec}</span>
                       </motion.div>
                     ))}

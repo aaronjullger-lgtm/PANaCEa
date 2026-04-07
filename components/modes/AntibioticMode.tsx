@@ -544,12 +544,12 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       return (
         <div className="space-y-6">
           {/* Organism Card */}
-          <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+          <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md">
             <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">
               Target Organism
             </h3>
-            <div className="bg-data-neutral dark:bg-data-neutral rounded-lg p-4 border border-data-neutral dark:border-data-neutral">
-              <h4 className="text-xl font-bold text-data-neutral dark:text-data-neutral mb-2">
+            <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+              <h4 className="text-xl font-bold text-data-neutral mb-2">
                 {currentDrill.organism.name}
               </h4>
               <div className="flex items-center gap-2 text-sm">
@@ -558,7 +558,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 </span>
               </div>
               {currentDrill.organism.description && (
-                <p className="text-data-neutral dark:text-data-neutral text-sm mt-3">
+                <p className="text-data-neutral text-sm mt-3">
                   {currentDrill.organism.description}
                 </p>
               )}
@@ -566,11 +566,11 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           </div>
 
           {/* Drug Selection */}
-          <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+          <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md">
             <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
               Select Appropriate Antibiotics
             </h3>
-            <p className="text-data-neutral dark:text-data-neutral text-sm mb-4">
+            <p className="text-data-neutral text-sm mb-4">
               Choose one or more antibiotics that provide coverage for this organism.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -579,16 +579,16 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   key={drug.id}
                   onClick={() => toggleDrugSelection(drug.id)}
                   disabled={isSubmitted}
-                  className={`p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
+                  className={`p-4 rounded-lg border-2 transition-all text-left shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] ${
                     selectedDrugs.includes(drug.id)
                       ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                      : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
+                      : 'border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
                   } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
-                  <div className="font-semibold text-data-neutral dark:text-data-neutral text-sm">
+                  <div className="font-semibold text-data-neutral text-sm">
                     {drug.name}
                   </div>
-                  <div className="text-xs text-data-neutral dark:text-data-neutral mt-1">
+                  <div className="text-xs text-data-neutral mt-1">
                     {toTitleCase(drug.class)}
                   </div>
                 </button>
@@ -616,10 +616,10 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       <div className="space-y-6">
         {/* Drug/Scenario Card */}
         {currentDrill.drug && (
-          <div className="bg-data-neutral/50 backdrop-blur rounded-xl p-6 border border-[var(--color-accent)]/30">
+          <div className="bg-data-neutral/50 rounded-xl p-6 border border-[var(--color-accent)]/30">
             <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">Drug Focus</h3>
             <div className="bg-data-neutral/50 rounded-lg p-4">
-              <h4 className="text-xl font-bold text-white mb-2">{currentDrill.drug.name}</h4>
+              <h4 className="text-xl font-bold text-[var(--color-text-inverse)] mb-2">{currentDrill.drug.name}</h4>
               <span className="px-3 py-1 bg-[var(--color-accent)]/20 rounded-full text-[var(--color-accent)] text-sm border border-[var(--color-accent)]/40">
                 {toTitleCase(currentDrill.drug.class)}
               </span>
@@ -628,11 +628,11 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         )}
 
         {/* Question */}
-        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+        <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md">
           <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
             Question
           </h3>
-          <p className="text-data-neutral dark:text-data-neutral mb-6 leading-relaxed font-medium">
+          <p className="text-data-neutral mb-6 leading-relaxed font-medium">
             {question}
           </p>
 
@@ -643,10 +643,10 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 key={index}
                 onClick={() => setSelectedAnswer(index)}
                 disabled={isSubmitted}
-                className={`w-full p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
+                className={`w-full p-4 rounded-lg border-2 transition-all text-left shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] ${
                   selectedAnswer === index
                     ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                    : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
+                    : 'border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
                 } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-start gap-3">
@@ -654,12 +654,12 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       selectedAnswer === index
                         ? 'border-[var(--color-accent)] bg-[var(--color-accent)]'
-                        : 'border-data-neutral dark:border-data-neutral'
+                        : 'border-data-neutral'
                     }`}
                   >
-                    {selectedAnswer === index && <div className="w-2 h-2 bg-white rounded-full" />}
+                    {selectedAnswer === index && <div className="w-2 h-2 bg-[var(--color-bg-primary)] rounded-full" />}
                   </div>
-                  <span className="text-data-neutral dark:text-data-neutral">{choice}</span>
+                  <span className="text-data-neutral">{choice}</span>
                 </div>
               </button>
             ))}
@@ -680,17 +680,17 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Landing Page
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral transition-colors duration-300">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <Pill className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
-                <p className="text-sm text-data-neutral dark:text-data-neutral">
+                <p className="text-sm text-data-neutral">
                   Antibiotic Selection & Knowledge
                 </p>
               </div>
@@ -698,7 +698,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -715,17 +715,17 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-data-neutral dark:text-data-neutral">
+              <h2 className="text-4xl font-bold text-data-neutral">
                 Master Antibiotic Selection
               </h2>
-              <p className="text-xl text-data-neutral dark:text-data-neutral">
+              <p className="text-xl text-data-neutral">
                 Sharpen your antimicrobial stewardship skills with rotating drill types
               </p>
             </div>
 
             {/* Drill Types Card */}
-            <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-data-neutral dark:text-data-neutral mb-6">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-data-neutral shadow-lg space-y-6">
+              <h3 className="text-2xl font-semibold text-data-neutral mb-6">
                 Drill Types
               </h3>
 
@@ -754,15 +754,15 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 ].map((drill, i) => (
                   <div
                     key={i}
-                    className="bg-data-neutral dark:bg-data-neutral rounded-xl p-4 border border-data-neutral dark:border-data-neutral"
+                    className="bg-data-neutral rounded-xl p-4 border border-data-neutral"
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <drill.Icon className="w-6 h-6 text-[var(--color-accent)]" />
-                      <h4 className="font-semibold text-data-neutral dark:text-data-neutral">
+                      <h4 className="font-semibold text-data-neutral">
                         {drill.title}
                       </h4>
                     </div>
-                    <p className="text-sm text-data-neutral dark:text-data-neutral">{drill.desc}</p>
+                    <p className="text-sm text-data-neutral">{drill.desc}</p>
                   </div>
                 ))}
               </div>
@@ -772,7 +772,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   <CheckCircle className="w-4 h-4" />
                   Key Features
                 </p>
-                <ul className="text-sm text-data-neutral dark:text-data-neutral space-y-2">
+                <ul className="text-sm text-data-neutral space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Rotating drill types keep practice fresh</span>
@@ -830,10 +830,10 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Loading State
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral flex items-center justify-center">
         <div role="status" aria-label="Loading drill" className="text-center space-y-4">
           <div aria-hidden="true" className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
-          <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading drill...</p>
+          <p className="text-lg font-medium text-data-neutral">Loading drill...</p>
         </div>
       </div>
     );
@@ -842,17 +842,17 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Error State
   if (viewState === 'error') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <Pill className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
-                <p className="text-sm text-data-neutral dark:text-data-neutral">
+                <p className="text-sm text-data-neutral">
                   Antibiotic Selection & Knowledge
                 </p>
               </div>
@@ -860,7 +860,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -874,27 +874,27 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           <motion.div
             initial={{ y: 20 }}
             animate={{ y: 0 }}
-            className="bg-data-fail dark:bg-data-fail/30 rounded-2xl p-8 border border-data-fail dark:border-data-fail text-center"
+            className="bg-data-fail/30 rounded-2xl p-8 border border-data-fail text-center"
           >
-            <AlertCircle className="w-16 h-16 text-data-fail dark:text-data-fail mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-data-fail dark:text-data-fail mb-2">
+            <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-data-fail mb-2">
               Error Loading Drill
             </h2>
-            <p className="text-data-neutral dark:text-data-neutral mb-6">
+            <p className="text-data-neutral mb-6">
               {error || 'An unexpected error occurred. Please try again.'}
             </p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleStart}
-                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors"
               >
                 Try Again
               </button>
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="px-6 py-3 bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral 
-                           text-data-neutral dark:text-data-neutral rounded-lg font-semibold transition-colors"
+                  className="px-6 py-3 bg-data-neutral hover:bg-data-neutral 
+                           text-data-neutral rounded-lg font-semibold transition-colors"
                 >
                   Exit
                 </button>
@@ -910,25 +910,25 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   if (!currentDrill) return null;
 
   return (
-    <div className="min-h-screen bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
+    <div className="min-h-screen bg-data-neutral text-data-neutral">
       {/* Header */}
-      <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
               <Pill className="w-6 h-6 text-[var(--color-accent)]" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Bug-Drug Mastery</h1>
-              <p className="text-sm text-data-neutral dark:text-data-neutral">
+              <p className="text-sm text-data-neutral">
                 Antibiotic Selection & Knowledge
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-data-neutral dark:text-data-neutral">Score</p>
-              <p className="text-xl font-bold text-data-neutral dark:text-data-neutral">
+              <p className="text-sm text-data-neutral">Score</p>
+              <p className="text-xl font-bold text-data-neutral">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
                   <span className="text-sm ml-2 text-[var(--color-accent)]">
@@ -939,7 +939,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             </div>
             <button
               onClick={handleReset}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Reset score"
             >
               <RotateCcw className="w-5 h-5" aria-hidden="true" />
@@ -947,7 +947,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -965,7 +965,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           animate={{ y: 0 }}
           className="mb-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold border border-[var(--color-accent)]/30 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold border border-[var(--color-accent)]/30 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <Shuffle className="w-4 h-4" />
             {getDrillTypeLabel()}
           </div>
@@ -986,8 +986,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit()}
-                className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
-                         disabled:cursor-not-allowed py-4 rounded-lg font-semibold text-lg text-white
+                className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral 
+                         disabled:cursor-not-allowed py-4 rounded-lg font-semibold text-lg text-[var(--color-text-inverse)]
                          transition-colors flex items-center justify-center gap-2 shadow-md"
               >
                 Submit Answer
@@ -1014,23 +1014,23 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 exit={{ opacity: 0 }}
                 className={`rounded-xl p-6 border shadow-md ${
                   isCorrect
-                    ? 'bg-data-pass border-data-pass dark:bg-data-pass/30 dark:border-data-pass'
-                    : 'bg-data-fail border-data-fail dark:bg-data-fail/30 dark:border-data-fail'
+                    ? 'bg-data-pass/30 border-data-pass'
+                    : 'bg-data-fail/30 border-data-fail'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   {isCorrect ? (
-                    <CheckCircle className="w-6 h-6 text-data-pass dark:text-data-pass flex-shrink-0 mt-1" />
+                    <CheckCircle className="w-6 h-6 text-data-pass flex-shrink-0 mt-1" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-data-fail dark:text-data-fail flex-shrink-0 mt-1" />
+                    <XCircle className="w-6 h-6 text-data-fail flex-shrink-0 mt-1" />
                   )}
                   <div className="flex-1">
                     <p
-                      className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-[var(--color-data-pass)] dark:text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]'}`}
+                      className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {isCorrect ? 'Correct!' : 'Incorrect'}
                     </p>
-                    <p className="text-data-neutral dark:text-data-neutral leading-relaxed">
+                    <p className="text-data-neutral leading-relaxed">
                       {currentDrill.explanation}
                     </p>
 
@@ -1039,7 +1039,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                         <p className="font-semibold text-[var(--color-accent)]">
                           Clinical Pearls:
                         </p>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-data-neutral dark:text-data-neutral">
+                        <ul className="list-disc list-inside space-y-1 text-sm text-data-neutral">
                           {currentDrill.pearls.map((pearl, idx) => (
                             <li key={idx}>{pearl}</li>
                           ))}

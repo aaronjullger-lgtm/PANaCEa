@@ -57,7 +57,7 @@ function getO2Status(o2: number): 'normal' | 'warning' | 'critical' {
 }
 
 const STATUS_COLORS = {
-  normal: 'text-white',
+  normal: 'text-[var(--color-text-inverse)]',
   warning: 'text-amber-400',
   critical: 'text-red-400',
 } as const;
@@ -135,9 +135,9 @@ export const VitalsStrip: React.FC<VitalsStripProps> = React.memo(({
   return (
     <div className="flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden">
       {vitals.map((vital) => {
-        const sparkColor = vital.status === 'critical' ? '#f87171'
-          : vital.status === 'warning' ? '#fbbf24'
-          : '#94a3b8';
+        const sparkColor = vital.status === 'critical' ? 'var(--color-data-fail)'
+          : vital.status === 'warning' ? 'var(--color-data-provisional)'
+          : 'var(--color-text-muted)';
 
         return (
           <div

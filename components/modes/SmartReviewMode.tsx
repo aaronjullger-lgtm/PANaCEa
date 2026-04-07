@@ -12,6 +12,7 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { createApiClient, createDrillsClient, ApiError } from '@/lib/sdk';
 import { SkeletonLoader, SkeletonText } from '@/components/loading';
 import SessionContext from '@/contexts/SessionContext';
 import type { SubmitReviewResponse } from '@/services/analytics';
@@ -103,27 +104,24 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
     if (correct) hapticSuccess();
     else hapticError();
 
-    // Submit to backend for FSRS update
+    // Submit to backend for FSRS update (via SDK for retry + error classification)
     try {
-      const token = await getToken();
-      const response = await fetch('/api/drills/submit-review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          userId: 'current-user-id', // Will be replaced by server with actual userId from auth
-          questionId: currentItem.questionId,
-          selectedAnswer,
-          timeSpentMs,
-        }),
+      const api = createApiClient(getToken, {
+        retryablePosts: ['/api/drills/submit-review'],
+      });
+      const drills = createDrillsClient(api);
+
+      const submitted = await drills.submitReview({
+        questionId: currentItem.questionId,
+        selectedAnswer,
+        timeSpentMs,
+        sessionType: 'drill',
       });
 
-      const result = (await response.json()) as { implicitMetrics?: unknown };
+      const result = (submitted?.data ?? submitted) as { implicitMetrics?: unknown };
 
       // Record JOL calibration observation for metacognitive tracking
-      if (recordCalibrationObservation && result.implicitMetrics) {
+      if (recordCalibrationObservation && result?.implicitMetrics) {
         recordCalibrationObservation(
           currentItem.questionId,
           result as SubmitReviewResponse,
@@ -131,7 +129,16 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         );
       }
     } catch (error) {
-      console.warn('Failed to submit review:', error);
+      const isApiErr = error instanceof ApiError;
+      console.warn('Failed to submit review:', isApiErr ? error.userMessage : error);
+      if (isApiErr && error.isAuthError) {
+        toast.error('Session expired — please sign in again.');
+      } else if (isApiErr && !error.isRetryable) {
+        toast.error(error.userMessage);
+      }
+      // For retryable errors (network/timeout/server) the SDK already retried;
+      // the answer's correctness is already reflected in the UI, so we silently
+      // continue rather than alarming the user during review flow.
     }
 
     // Show feedback toast
@@ -178,11 +185,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const getBadgeConfig = (reason: string) => {
     switch (reason) {
       case 'OVERDUE':
-        return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-data-fail text-white' };
+        return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-data-fail text-[var(--color-text-inverse)]' };
       case 'WEAK_SPOT':
-        return { Icon: AlertTriangle, label: 'Focus Area', color: 'bg-[var(--color-data-provisional)] text-white' };
+        return { Icon: AlertTriangle, label: 'Focus Area', color: 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]' };
       case 'NEW':
-        return { Icon: Sparkles, label: 'New Concept', color: 'bg-[var(--color-category-practice)] text-white' };
+        return { Icon: Sparkles, label: 'New Concept', color: 'bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]' };
       default:
         return {
           Icon: FileText,
@@ -197,7 +204,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
     return (
       <div className="fixed inset-0 bg-[var(--color-bg-primary)] overflow-y-auto z-50">
         {/* Header Skeleton */}
-        <div className="sticky top-0 bg-[var(--color-bg-secondary)]/95 backdrop-blur border-b border-[var(--color-border)]">
+        <div className="sticky top-0 bg-[var(--color-bg-secondary)]/95 border-b border-[var(--color-border)]">
           <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <SkeletonLoader width="24px" height="24px" className="rounded" />
@@ -251,30 +258,30 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
           >
-            <CheckCircle className="w-24 h-24 text-white mx-auto mb-6" />
+            <CheckCircle className="w-24 h-24 text-[var(--color-text-inverse)] mx-auto mb-6" />
           </motion.div>
 
-          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+          <h1 className="text-4xl font-bold text-[var(--color-text-inverse)] mb-4 flex items-center justify-center gap-3">
             <Brain className="w-10 h-10" /> Brain Upgraded!
           </h1>
-          <p className="text-white/80 mb-8">You've completed all your reviews for today.</p>
+          <p className="text-[var(--color-text-inverse)]/80 mb-8">You've completed all your reviews for today.</p>
 
-          <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-6">
+          <div className="bg-[var(--color-bg-primary)]/10 rounded-2xl p-6 mb-6">
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <div className="text-3xl font-bold text-white">{stats.reviewed}</div>
-                <div className="text-white/60 text-sm">Items Reviewed</div>
+                <div className="text-3xl font-bold text-[var(--color-text-inverse)]">{stats.reviewed}</div>
+                <div className="text-[var(--color-text-inverse)]/60 text-sm">Items Reviewed</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-white">{accuracy}%</div>
-                <div className="text-white/60 text-sm">Accuracy</div>
+                <div className="text-3xl font-bold text-[var(--color-text-inverse)]">{accuracy}%</div>
+                <div className="text-[var(--color-text-inverse)]/60 text-sm">Accuracy</div>
               </div>
             </div>
           </div>
 
           <button
             onClick={onExit}
-            className="px-8 py-3 bg-white text-[var(--color-accent)] rounded-xl font-semibold hover:bg-white/90 transition-colors"
+            className="px-8 py-3 bg-[var(--color-bg-primary)] text-[var(--color-accent)] rounded-xl font-semibold hover:bg-[var(--color-bg-primary)]/90 transition-colors"
           >
             Back to Dashboard
           </button>
@@ -292,7 +299,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   return (
     <div className="fixed inset-0 bg-[var(--color-bg-primary)] overflow-y-auto z-50">
       {/* Header */}
-      <div className="sticky top-0 bg-[var(--color-bg-secondary)]/95 backdrop-blur border-b border-[var(--color-border)] z-10">
+      <div className="sticky top-0 bg-[var(--color-bg-secondary)]/95 border-b border-[var(--color-border)] z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Brain className="w-6 h-6 text-[var(--color-accent)]" />
@@ -362,7 +369,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                         }`}
                       >
                         {selectedAnswer === choice.value && (
-                          <div className="w-2 h-2 bg-white rounded-full" />
+                          <div className="w-2 h-2 bg-[var(--color-bg-primary)] rounded-full" />
                         )}
                       </div>
                       <span className="text-[var(--color-text-primary)]">{choice.text}</span>
@@ -379,15 +386,15 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                 animate={{ y: 0 }}
                 className={`border-2 rounded-2xl p-6 ${
                   isCorrect
-                    ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'
-                    : 'bg-data-fail dark:bg-data-fail/20 border-data-fail'
+                    ? 'bg-data-pass/20 border-data-pass'
+                    : 'bg-data-fail/20 border-data-fail'
                 }`}
               >
                 <div className="flex items-start gap-3 mb-4">
                   {isCorrect ? (
-                    <CheckCircle className="w-6 h-6 text-data-pass dark:text-data-pass" />
+                    <CheckCircle className="w-6 h-6 text-data-pass" />
                   ) : (
-                    <AlertCircle className="w-6 h-6 text-data-fail dark:text-data-fail" />
+                    <AlertCircle className="w-6 h-6 text-data-fail" />
                   )}
                   <div>
                     <div className="font-semibold text-lg mb-2">
@@ -407,14 +414,14 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                 <button
                   onClick={handleSubmit}
                   disabled={!selectedAnswer}
-                  className="px-8 py-3 bg-[var(--color-accent)] text-white rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-8 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Submit Answer
                 </button>
               ) : (
                 <button
                   onClick={handleNext}
-                  className="px-8 py-3 bg-[var(--color-accent)] text-white rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] transition-colors"
+                  className="px-8 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] transition-colors"
                 >
                   Next Question
                 </button>

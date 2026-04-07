@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { TASK_TYPES, TaskType } from './taskTypes';
+import { GEMINI_VARIANT_MODEL } from './constants/models';
 
 const variantSchema = {
   type: SchemaType.OBJECT,
@@ -16,6 +17,14 @@ const variantSchema = {
   required: ['question', 'options', 'correctAnswer', 'explanation', 'variantType'] as string[],
 } as const;
 
+/** A condition the student frequently confuses with the real answer */
+export interface ConfusionPairHint {
+  /** Display name of the condition they confuse this with */
+  mistakenFor: string;
+  /** How many times this confusion has occurred */
+  count: number;
+}
+
 export interface VariantRequest {
   originalQuestion: string;
   originalOptions: string[];
@@ -28,6 +37,8 @@ export interface VariantRequest {
     | 'remediation'
     | 'decomposition';
   userIncorrectAnswer?: string; // The incorrect option selected by the user
+  /** Student-specific confusion pairs for this concept — used to craft targeted distractors */
+  confusionPairs?: ConfusionPairHint[];
 }
 
 /**
@@ -40,7 +51,7 @@ export async function generateVariant(request: VariantRequest, apiKey?: string) 
   if (!key) return null;
   const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
+    model: GEMINI_VARIANT_MODEL,
     generationConfig: {
       responseMimeType: 'application/json',
       responseSchema: variantSchema,
@@ -58,6 +69,16 @@ export async function generateVariant(request: VariantRequest, apiKey?: string) 
 
   if (request.userIncorrectAnswer) {
     prompt += `\nThe user incorrectly answered: "${request.userIncorrectAnswer}".`;
+  }
+
+  if (request.confusionPairs && request.confusionPairs.length > 0) {
+    const pairsText = request.confusionPairs
+      .map((p) => `"${p.mistakenFor}" (confused ${p.count} time${p.count === 1 ? '' : 's'})`)
+      .join(', ');
+    prompt += `\nKnown student confusion patterns for this concept: ${pairsText}.`;
+    if (request.targetType === 'different_distractors') {
+      prompt += ` For the incorrect answer choices, include distractors based on these confusion patterns to specifically address the student's documented misconceptions.`;
+    }
   }
 
   prompt += `\n\nRules for "${request.targetType}":

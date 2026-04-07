@@ -234,7 +234,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
         <p className="text-[var(--color-text-muted)] mb-4">{error}</p>
         <button
           onClick={loadCase}
-          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90"
         >
           Try again
         </button>
@@ -395,7 +395,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
           <button
             onClick={handleSubmit}
             disabled={!sessionId}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+            className="px-6 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 disabled:opacity-50"
           >
             Submit & score
           </button>

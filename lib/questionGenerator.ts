@@ -77,9 +77,24 @@ export async function generateSingleQuestion(
     .filter(Boolean)
     .join('\n');
 
+  const anchors = condition.panceAnchors;
+  const panceBlock =
+    anchors && Object.values(anchors).some(Boolean)
+      ? `
+    HIGH-YIELD PANCE ANCHORS (curated ground truth — anchor question and distractor accuracy):
+    ${anchors.classicPatient ? `Classic Patient: ${anchors.classicPatient}` : ''}
+    ${anchors.classicTriad?.length ? `Classic Triad: ${anchors.classicTriad.join(', ')}` : ''}
+    ${anchors.firstLineRx ? `First-Line Rx: ${anchors.firstLineRx}` : ''}
+    ${anchors.goldStandardDx ? `Gold Standard Dx: ${anchors.goldStandardDx}` : ''}
+    ${anchors.bestInitialTest ? `Best Initial Test: ${anchors.bestInitialTest}` : ''}
+    Use these to engineer plausible distractors (e.g. correct for similar but not identical scenarios).
+    `
+      : '';
+
   const prompt = `
     CONTEXT - Use these clinical findings to build the vignette. Do NOT include condition name or diagnosis in the vignette.
     ${findingsContext}
+    ${panceBlock}
 
     CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals).
 

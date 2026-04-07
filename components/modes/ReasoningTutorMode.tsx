@@ -181,7 +181,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               }
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] transition-colors ${
                 enableGoogleSearch
-                  ? 'border-data-pass/50 bg-data-pass/10 text-data-pass dark:text-data-pass'
+                  ? 'border-data-pass/50 bg-data-pass/10 text-data-pass'
                   : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text-primary)]'
               }`}
             >

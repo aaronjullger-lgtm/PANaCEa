@@ -414,7 +414,10 @@ export async function computeFSRSUpdate(
   const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
 
   const fsrsSchedule = {
-    intervalDays: updatedCard.scheduled_days,
+    // Round for display/API consumers; raw float preserved in updatedCard.scheduled_days.
+    // FSRS-7 migration: when fractional intervals land, this rounding ensures
+    // downstream code (UI, notifications) still sees clean integers.
+    intervalDays: Math.max(1, Math.round(updatedCard.scheduled_days)),
     nextDueDate: clampedNextDue.toISOString(),
     stability: updatedCard.stability,
     difficulty: updatedCard.difficulty,

@@ -5,7 +5,7 @@ import { useShortcut } from '@/contexts/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
-import { useSwipeGestures } from '@/hooks/useSwipeGestures';
+// useSwipeGestures removed — not used in this file
 import { enhancedHaptics } from '@/lib/enhancedHaptics';
 import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
 import { debounce } from '@/lib/utils/debounce';
@@ -39,7 +39,7 @@ import { updatePerformancePrediction, resetPrediction } from '@/services/analyti
 import { recordQuestion, getSessionSummary, resetSessionDistribution } from '@/services/domain';
 
 // AI services
-import { generateAlternateRationale } from '@/services/ai';
+// generateAlternateRationale removed — moved to AnswerFeedback component
 
 // Components
 import { FlagQuestionModal } from '@/components/modals/FlagQuestionModal';
@@ -54,7 +54,7 @@ import { useUnifiedKinetics } from '@/hooks/useUnifiedKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 // ErrorTagger moved to AnswerFeedback component
-import { Loader, ClinicalSkeleton, DrillLoadingState } from '@/components/loading';
+import { DrillLoadingState } from '@/components/loading';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
@@ -72,9 +72,7 @@ import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFo
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
 
-// Icons
-import { CloseIcon } from '@/components/icons/CloseIcon';
-// FlagIcon, ClearHighlightIcon, lucide icons moved to QuizToolbar/AnswerFeedback
+// FlagIcon, ClearHighlightIcon, CloseIcon, lucide icons moved to QuizToolbar/AnswerFeedback
 // ROUTES moved to QuizToolbar
 
 // Types
@@ -84,6 +82,8 @@ import type { SRSScheduleResult } from '@/lib/services/srsService';
 import QuizToolbar from '@/components/session/QuizToolbar';
 import AnswerFeedback from '@/components/session/AnswerFeedback';
 import { SessionPacer } from '@/components/session/SessionPacer';
+import { BreakTimer } from '@/components/session/BreakTimer';
+import { FatigueBreakPrompt } from '@/components/session/FatigueBreakPrompt';
 import { useSessionWellness } from '@/hooks/useSessionWellness';
 
 // Lib utils
@@ -108,13 +108,14 @@ import {
   optimisticUpdateSystemStats,
   createOptimisticPerformanceRecord,
 } from '@/lib/utils/optimisticUI';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+// getApiEndpoint, API_ENDPOINTS removed — no longer used directly in QuizView
 
 // Hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
+import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -244,8 +245,8 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6 space-y-4"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
       >
         {/* Text before the table */}
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
@@ -278,8 +279,8 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] rounded-xl p-6"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
       >
         {normalizedText}
       </div>
@@ -295,8 +296,8 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
-      style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6"
+      style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
       <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
@@ -375,6 +376,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   const microKinetics = useUnifiedKinetics();
   const fatigueTracking = useFatigueTracking(isExamSimulator);
   const sessionWellness = useSessionWellness();
+
+  // Causal Reasoning Chain — mechanistic "Why This Happens" (tier1 Item 4)
+  const causalChainHook = useCausalChain();
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -824,6 +828,9 @@ const QuizView: React.FC<QuizViewProps> = ({
       answerChangeCountRef.current = 0; // Reset answer change tracking
       firstSelectedAnswerRef.current = null; // Reset first selected answer
 
+      // Reset causal chain state for next question
+      causalChainHook.reset();
+
       // Reset implicit metrics, behavioral tracker, and micro-kinetics for new question
       implicitMetrics.reset();
       implicitMetrics.startQuestion();
@@ -1040,24 +1047,37 @@ const QuizView: React.FC<QuizViewProps> = ({
           answerSwitches: 0,
         });
 
-    syncManager.queueAnswer({
-      questionId,
-      selectedAnswer: selectedAnswerIndex,
-      isCorrect,
-      timeSpentMs: timeToAnswer,
-      system: currentQuestion.system ?? undefined,
-      conditionId: currentQuestion.conditionId ?? undefined,
-      isMainSession: sessionSettings.mode !== 'rapid_recall' && sessionSettings.mode !== 'cram_mode',
-      rating: fsrsRating,
-      telemetryJson: (telemetryWithPosition ?? undefined) as Record<string, unknown> | undefined,
-      answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
-      durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
-    });
-    // Finding 12 fix: Removed redundant implicitMetrics.submitAnswer() POST to
-    // /api/user/behavior-metrics. The same behavioral data is already carried in
-    // queueAnswer's telemetryJson and queueReview's telemetry fields. The third
-    // HTTP request per question was purely duplicative, wasting bandwidth and
-    // creating confusion about the source of truth for behavioral metrics.
+    // Sprint 2: queueAnswer removed — drillReviewService is now the single canonical
+    // writer for all session types (main, drill, cram, rapid_recall). It handles:
+    // QuestionAttempt, UserQuestionSeen, Question stats, Rolling360, FSRS scheduling,
+    // ReviewLog, Card, ConfusionPair, and sibling propagation.
+    // The old queueAnswer → /api/questions/attempt path remains functional for
+    // backward compat with any offline items still in localStorage (24h TTL drain).
+
+    // Persist the answer IMMEDIATELY (before any async operations) so the user
+    // can't lose data by navigating away or the tab closing mid-submit.
+    if (user?.id && currentQuestion.id) {
+      try {
+        syncManager.queueReview({
+          questionId: currentQuestion.id,
+          selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
+          timeSpentMs: timeToAnswer,
+          timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
+          answerSwitches: answerChangeCountRef.current,
+          totalDwellTime: timeToAnswer,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          sessionType:
+            sessionSettings.mode === 'rapid_recall'
+              ? 'rapid_recall'
+              : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
+                ? 'cram'
+                : 'main',
+          telemetry: telemetryWithPosition,
+        });
+      } catch (err) {
+        logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);
+      }
+    }
 
     // Note: Removed showOptimisticFeedback() call - user feedback on correctness
     // is already shown via the answer button color change and rationale panel
@@ -1138,6 +1158,20 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
       // Store for CalibrationFeedbackBadge in AnswerFeedback
       setLastImplicitConfidence(inferredConfidenceValue);
+
+      // Trigger causal chain generation (tier1 Item 4) — fires async in background
+      if (!isExamSimulator && currentQuestion.condition) {
+        causalChainHook.generate({
+          questionId: questionId,
+          questionText: currentQuestion.question || '',
+          correctAnswer: currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '',
+          condition: currentQuestion.condition,
+          studentAnswer: !isCorrect
+            ? currentQuestion.options[selectedAnswerIndex] ?? undefined
+            : undefined,
+          system: currentQuestion.system ?? undefined,
+        });
+      }
 
       if (typeof updatePerformancePrediction === 'function') {
         updatePerformancePrediction({
@@ -1246,8 +1280,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeSpentMs: timeToAnswer,
     });
 
-    // Attempt is recorded via SyncManager.queueAnswer above (syncs to /api/questions/attempt when online or when back online).
-
     // Track answer in session analytics (local state for session summary)
     recordSessionAnswer(
       currentQuestion.id || `temp-${questionNumber}`,
@@ -1262,37 +1294,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       isCorrect,
       topic: currentQuestion.topic,
     });
-
-    // Queue review for offline sync (batch submission)
-    // Single-write fix: main sessions now use attempt.ts as the sole FSRS writer.
-    // Only non-main sessions (rapid_recall, cram) still need queueReview for FSRS,
-    // since they don't go through the drillReviewService path.
-    const isNonMainSession =
-      sessionSettings.mode === 'rapid_recall' ||
-      sessionSettings.mode === 'cram_mode' ||
-      sessionSettings.mode === 'cram';
-    if (isNonMainSession && user?.id && currentQuestion.id) {
-      try {
-        syncManager.queueReview({
-          questionId: currentQuestion.id,
-          // Pass the option text (not numeric index) so drillReviewService can
-          // compare it against correctAnswer text for isCorrect determination.
-          selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
-          timeSpentMs: timeToAnswer,
-          timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
-          answerSwitches: answerChangeCountRef.current,
-          totalDwellTime: timeToAnswer,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          sessionType:
-            sessionSettings.mode === 'rapid_recall'
-              ? 'rapid_recall'
-              : 'cram',
-          telemetry: telemetryWithPosition,
-        });
-      } catch (err) {
-        logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);
-      }
-    }
 
     // Track questions answered and check for wellness triggers
     questionsAnsweredInSession.current += 1;
@@ -1378,8 +1379,8 @@ const QuizView: React.FC<QuizViewProps> = ({
         return;
       }
 
-      // Map letter keys to indices (A=0, B=1, C=2, D=3)
-      const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
+      // Map letter keys to indices (A=0, B=1, C=2, D=3, E=4)
+      const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4 };
 
       // Shift + A/B/C/D to toggle elimination
       if (!isAnswered && event.shiftKey) {
@@ -1571,7 +1572,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
         return (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
-            <h2 className="text-2xl font-bold mb-2">{errorTitle}</h2>
+            <h2 className="text-2xl font-semibold mb-2">{errorTitle}</h2>
             <p className="text-[var(--color-text-secondary)] max-w-md">
               {errorMessage}
             </p>
@@ -1611,7 +1612,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     // Finite modes (review, reviewFlagged) - show session complete
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
-        <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+        <h2 className="text-2xl font-semibold mb-2">Session Complete</h2>
         <p className="text-[var(--color-text-secondary)]">
           You've reached the end of this set of questions.
         </p>
@@ -1630,8 +1631,41 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   // Note: Swipe gestures are available via swipeContainerRef
   // Apply to main quiz container if needed (currently disabled to avoid conflicts with text selection)
 
+  // Focus the question container when a new question loads
+  useEffect(() => {
+    if (currentQuestion) {
+      // Small delay to let AnimatePresence finish its transition
+      const timer = setTimeout(() => {
+        const questionEl = document.getElementById('question-container');
+        questionEl?.focus();
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [currentQuestion?.id, questionNumber]);
+
+  // Announce correctness result to screen readers when answer is submitted
+  useEffect(() => {
+    if (isAnswered && selectedAnswerIndex !== null) {
+      const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+      const correctOption = ['A', 'B', 'C', 'D', 'E'][currentQuestion.correctAnswerIndex] ?? '';
+      const message = isCorrect
+        ? 'Correct!'
+        : `Incorrect. The correct answer is ${correctOption}: ${currentQuestion.options[currentQuestion.correctAnswerIndex]}.`;
+      announceToScreenReader(message, 'assertive');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnswered]);
+
   return (
     <div className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}>
+      {/* Skip link — keyboard users can jump past toolbar to question content */}
+      <a
+        href="#question-container"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-[var(--color-bg-secondary)] focus:text-[var(--color-accent)] focus:rounded-md"
+      >
+        Skip to question
+      </a>
+      <header role="banner" aria-label="Quiz session toolbar">
       <QuizToolbar
         questionNumber={questionNumber}
         isFullSitDownTest={isFullSitDownTest}
@@ -1664,6 +1698,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         }}
         currentQuestion={currentQuestion}
       />
+      </header>
+      <main id="main-content" role="main" aria-label="Quiz question and answers">
       <SplitPaneDrillLayout
           vignette={useSplitPane ? currentQuestion.vignette : null}
           className="mb-6"
@@ -1714,11 +1750,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </AnimatePresence>
 
             {/* ANSWER OPTIONS */}
-            <div className="space-y-3 mt-6">
+            <div
+              className="space-y-3 mt-6"
+              role="radiogroup"
+              aria-label={`Answer options for question ${questionNumber}`}
+            >
               {(currentQuestion.options || []).map((option, index) => {
                 const isCorrect = index === currentQuestion.correctAnswerIndex;
                 const isSelected = index === selectedAnswerIndex;
-                const optionLabel = ['A', 'B', 'C', 'D'][index] ?? 'A';
+                const optionLabel = ['A', 'B', 'C', 'D', 'E'][index] ?? 'A';
 
                 return (
                   <OptionHoverTracker
@@ -1750,7 +1790,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
           {!isAnswered && selectedAnswerIndex !== null && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
               <button
                 type="button"
                 onClick={handleSubmitAnswer}
@@ -1761,6 +1801,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   <>
                     <svg
                       className="animate-spin h-5 w-5"
+                      aria-hidden="true"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -1779,7 +1820,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Submitting...
+                    <span role="status">Submitting...</span>
                   </>
                 ) : (
                   'Submit Answer'
@@ -1814,11 +1855,28 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               setShowNotes={setShowNotes}
               onNoteChange={handleNoteChange}
               implicitConfidence={lastImplicitConfidence}
+              causalChain={causalChainHook.chain}
+              causalChainDisplayLevel={
+                lastImplicitConfidence !== undefined
+                  ? expertiseToDisplayLevel(lastImplicitConfidence)
+                  : 'collapsed'
+              }
             />
           )}
 
+          {/* Proactive fatigue break prompt — inline between feedback and Next button */}
           {isAnswered && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-t border-[var(--color-border)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-4">
+            <FatigueBreakPrompt
+              fatigue={sessionWellness.fatigue}
+              dismissed={sessionWellness.breakDismissed}
+              onTakeBreak={(minutes) => sessionWellness.startBreak(minutes)}
+              onDismiss={sessionWellness.dismissBreak}
+              hardStopVisible={sessionWellness.check.shouldStop && !sessionWellness.dismissed}
+            />
+          )}
+
+          {isAnswered && !sessionWellness.onBreak && (
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-4">
               <button
                 ref={nextButtonRef}
                 onClick={() => {
@@ -1829,13 +1887,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}
-                className="px-8 py-3 btn-primary-cta font-bold rounded-lg min-h-[44px]"
+                className="px-8 py-3 btn-primary-cta font-semibold rounded-lg min-h-[44px]"
               >
                 Next Question
               </button>
             </div>
           )}
       </SplitPaneDrillLayout>
+      </main>
 
       {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
 
@@ -1852,6 +1911,16 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         dismissed={sessionWellness.dismissed}
         onDismiss={sessionWellness.dismiss}
         onEndSession={() => setShowSessionEndSummary(true)}
+      />
+
+      {/* Break Timer — full-screen timed break overlay */}
+      <BreakTimer
+        isActive={sessionWellness.onBreak}
+        secondsLeft={sessionWellness.breakSecondsLeft}
+        totalSeconds={sessionWellness.fatigue.suggestedBreakMinutes * 60 || 300}
+        onReturn={sessionWellness.endBreak}
+        questionsAnswered={sessionWellness.check.stats.questionsAnswered}
+        accuracy={sessionWellness.check.stats.accuracy}
       />
 
       {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}

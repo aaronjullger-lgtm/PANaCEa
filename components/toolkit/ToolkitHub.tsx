@@ -451,7 +451,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             animate={{}}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-overlay)] backdrop-blur-md"
+            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-overlay)] backdrop-blur-sm"
             aria-hidden="true"
           />
         )}

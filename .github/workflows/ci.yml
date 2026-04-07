@@ -46,6 +46,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check bundle size budget
+        run: npm run build:check-size
+
       - name: Run FSRS Algorithm Tests (critical gate)
         run: npx vitest run tests/fsrs.test.ts tests/fsrs-optimizer-bridge.test.ts tests/retrievability.test.ts tests/fsrs-eor-scheduler.test.ts
 
@@ -116,5 +119,12 @@ jobs:
           npx wrangler pages dev dist --port 8788 --compatibility-date=2024-01-01 &
           sleep 15
           BASE_URL=http://localhost:8788 npx playwright test e2e/api-health.spec.ts --project=chromium
+        env:
+          CI: true
+
+      - name: Run axe-core accessibility regression
+        run: |
+          # Dev server should still be running from previous step
+          BASE_URL=http://localhost:8788 npx playwright test e2e/a11y-regression.spec.ts --project=chromium
         env:
           CI: true

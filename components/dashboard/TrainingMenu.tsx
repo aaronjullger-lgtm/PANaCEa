@@ -326,12 +326,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             key={option.value}
             onClick={() => !option.disabled && setFocus(option.value)}
             disabled={option.disabled}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 flex items-center gap-1.5 ${
               focus === option.value
                 ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-md'
                 : option.disabled
                   ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
+                  : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
@@ -497,7 +497,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         {/* Daily Recommended badge */}
         {isDailyRecommended && !isDisabled && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-[var(--color-border)]">
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] px-2 py-1 rounded-full text-xs font-semibold z-10 shadow-lg border border-[var(--color-border)]">
             <TrendingUp className="w-3 h-3" />
             Daily Pick
           </div>
@@ -506,7 +506,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* Permanent affordance: Go icon (touch has no hover) */}
         {!isDisabled && (
           <span
-            className="absolute bottom-3 right-3 z-10 w-9 h-9 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)] shadow-sm pointer-events-none"
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)] pointer-events-none"
             aria-hidden
           >
             <ChevronRight className="w-5 h-5" />
@@ -515,7 +515,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         <div className="flex flex-col gap-3 relative z-[1]">
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 ${isDisabled ? 'opacity-50' : ''}`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--color-bg-tertiary)] ${isDisabled ? 'opacity-50' : ''}`}
           >
             <IconComponent
               className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`}
@@ -559,7 +559,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     return (
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">
+          <h2 className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)]">
             {title}
           </h2>
           <p className="text-sm text-[var(--color-text-muted)] hidden sm:block">{description}</p>
@@ -588,8 +588,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="flex gap-6 h-full">
       {/* Sticky Category Sidebar - Desktop only */}
       <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-0 h-fit">
-        <div className="bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-2xl p-4 shadow-sm space-y-2">
-          <h3 className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
+        <div className="bg-[var(--color-bg-secondary)]/50 rounded-2xl p-4 space-y-2" style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
             Categories
           </h3>
           {CATEGORY_SECTIONS.map((section) => (

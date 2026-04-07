@@ -73,7 +73,7 @@ export function ConfusionPairCard({
         style={{ backgroundColor: 'var(--color-bg-secondary)' }}
       >
         <h3
-          className="text-sm font-semibold mb-3"
+          className="text-base font-semibold mb-3"
           style={{ color: 'var(--color-text-primary)' }}
         >
           Confusion Pairs

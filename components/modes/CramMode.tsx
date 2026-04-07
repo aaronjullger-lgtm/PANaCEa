@@ -331,7 +331,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
       <motion.div
         initial={false}
         animate={{}}
-        className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-[var(--color-bg-primary)] dark:via-[var(--color-bg-secondary)] dark:to-[var(--color-bg-primary)] p-4"
+        className="min-h-screen bg-[var(--color-bg-primary)] p-4"
       >
         <div className="max-w-2xl mx-auto py-12">
           <motion.div
@@ -345,15 +345,15 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             </h2>
 
             <div className="grid grid-cols-2 gap-4 my-8">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6">
-                <Target className="w-8 h-8 mx-auto mb-2 text-data-pass dark:text-data-pass" aria-hidden="true" />
-                <div className="text-3xl font-bold text-data-pass dark:text-data-pass tabular-nums">
+              <div className="bg-[var(--color-data-pass)]/5 rounded-xl p-6">
+                <Target className="w-8 h-8 mx-auto mb-2 text-data-pass" aria-hidden="true" />
+                <div className="text-3xl font-bold text-data-pass tabular-nums">
                   {accuracy.toFixed(0)}%
                 </div>
-                <div className="text-sm text-data-pass dark:text-data-pass">Accuracy</div>
+                <div className="text-sm text-data-pass">Accuracy</div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
+              <div className="bg-[var(--color-accent)]/5 rounded-xl p-6">
                 <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)]" aria-hidden="true" />
                 <div className="text-3xl font-bold text-[var(--color-category-practice)]">
                   {formatTime(elapsedTime)}
@@ -367,7 +367,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <span className="font-semibold text-[var(--color-text-secondary)]">
                   Questions Correct:
                 </span>{' '}
-                <span className="text-data-pass dark:text-data-pass font-bold">
+                <span className="text-data-pass font-bold">
                   {correctCount} / {questions.length}
                 </span>
               </div>
@@ -384,7 +384,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleRestart}
-                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-data-provisional)]/100 hover:bg-[var(--color-data-provisional)] text-white rounded-xl font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-data-provisional)]/100 hover:bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)] rounded-xl font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
                 <RotateCcw className="w-5 h-5" aria-hidden="true" />
                 Try Again
@@ -407,14 +407,14 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-[var(--color-bg-primary)] dark:via-[var(--color-bg-secondary)] dark:to-[var(--color-bg-primary)]">
+    <div className="min-h-screen bg-[var(--color-bg-primary)]">
       {/* Header */}
       <div className="bg-[var(--color-bg-secondary)] shadow-lg border-b border-[var(--color-border)] p-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-2 rounded-lg">
-                <Zap className="w-6 h-6 text-white" />
+                <Zap className="w-6 h-6 text-[var(--color-text-inverse)]" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-[var(--color-text-primary)]">Cram Session</h1>
@@ -426,7 +426,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-2xl font-bold text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]">
+                <div className="text-2xl font-bold text-[var(--color-data-provisional)]">
                   {formatTime(elapsedTime)}
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">
@@ -461,7 +461,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
           >
             {/* System Badge */}
             <div className="flex items-center justify-between mb-6">
-              <span className="px-3 py-1 bg-[var(--color-data-provisional)]/20 dark:bg-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] rounded-full text-sm font-semibold">
+              <span className="px-3 py-1 bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] rounded-full text-sm font-semibold">
                 {currentQuestion.system}
               </span>
               <span className="text-sm font-semibold text-[var(--color-text-muted)]">
@@ -495,11 +495,11 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
                 if (!showResult) {
                   buttonClass +=
-                    'border-[var(--color-text-muted)] hover:border-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10 dark:hover:bg-[var(--color-data-provisional)]/20';
+                    'border-[var(--color-text-muted)] hover:border-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10';
                 } else if (isCorrect) {
-                  buttonClass += 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10 dark:bg-[var(--color-data-pass)]/20';
+                  buttonClass += 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10';
                 } else if (isSelected && !isCorrect) {
-                  buttonClass += 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/20';
+                  buttonClass += 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10';
                 } else {
                   buttonClass += 'border-[var(--color-border)] opacity-50';
                 }
@@ -534,7 +534,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-6 space-y-4"
                 >
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-[var(--color-category-practice)]">
+                  <div className="p-6 bg-[var(--color-accent)]/5 rounded-xl border border-[var(--color-category-practice)]">
                     <h4 className="font-bold text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                       <BookOpen className="w-5 h-5" />
                       Explanation
@@ -544,8 +544,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                     </p>
                   </div>
 
-                  <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-data-provisional dark:border-data-provisional">
-                    <h4 className="font-bold text-data-provisional dark:text-data-provisional mb-2 flex items-center gap-2">
+                  <div className="p-4 bg-[var(--color-data-provisional)]/5 rounded-xl border border-data-provisional">
+                    <h4 className="font-bold text-data-provisional mb-2 flex items-center gap-2">
                       <Target className="w-5 h-5" />
                       High-Yield Pearl
                     </h4>
@@ -563,7 +563,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 initial={{ y: 10 }}
                 animate={{ y: 0 }}
                 onClick={handleNext}
-                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
+                className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-[var(--color-text-inverse)] rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
               >
                 {currentIndex < questions.length - 1 ? (
                   <>

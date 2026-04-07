@@ -10,6 +10,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { createApiClient, createUserClient } from '@/lib/sdk';
 
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const STORAGE_KEY = 'panceai_fsrs_last_check';
@@ -47,33 +48,18 @@ export function useFSRSOptimizationCheck(): void {
       const lastCheck = getLastCheckTime();
       if (now - lastCheck < CHECK_INTERVAL_MS) return;
 
-      let token: string | null = null;
-      try {
-        token = await getToken();
-      } catch {
-        return;
-      }
-      if (!token) return;
-
       // Avoid duplicate triggers in strict mode / rapid remounts
       if (hasTriggered.current) return;
       hasTriggered.current = true;
       setLastCheckTime();
 
       try {
-        const res = await fetch('/api/user/fsrs-params', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
+        const api = createApiClient(getToken);
+        const user = createUserClient(api);
 
-        const data = (await res.json()) as {
-          data?: { canOptimize?: boolean; params?: { lastOptimizedAt?: string } };
-          canOptimize?: boolean;
-          params?: { lastOptimizedAt?: string };
-        };
-        const payload = data?.data ?? data;
-        const canOptimize = payload?.canOptimize === true;
-        const lastOptimizedAt = payload?.params?.lastOptimizedAt;
+        const data = await user.getFSRSParams() as any;
+        const canOptimize = data?.canOptimize === true;
+        const lastOptimizedAt = data?.params?.lastOptimizedAt;
 
         if (!canOptimize) return;
 
@@ -84,14 +70,7 @@ export function useFSRSOptimizationCheck(): void {
         if (hoursSinceOptimization < 24) return;
 
         // Fire-and-forget: trigger optimization in background
-        fetch('/api/user/fsrs-params', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
-        }).catch(() => {
+        api.post('/api/user/fsrs-params', {}).catch(() => {
           // Silently ignore - optimizer will run on next sign-in or via cron
         });
       } catch {

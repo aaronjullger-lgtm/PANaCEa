@@ -1,161 +1,133 @@
 /**
  * GET /api/mapping-enrichment/suggestions
  * Retrieves pending suggestions with filters.
+ *
+ * Migrated to adminAuthenticatedEndpoint: adds rate limiting (60/min),
+ * admin role check, CORS, structured logging, error handling.
  */
 
-import { getCorsHeaders, getCorsConfig } from '../_shared/cors';
-import { authenticateRequest } from '../_shared/auth';
+import { z } from 'zod';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-export const onRequestOptions = async (context: any) => {
-  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(context?.request, corsConfig) ?? {},
-  });
-};
+const SuggestionsQuerySchema = z.object({
+  query: z
+    .object({
+      status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'IGNORED']).optional(),
+      confidenceMin: z.coerce.number().min(0).max(1).optional(),
+      confidenceMax: z.coerce.number().min(0).max(1).optional(),
+      taxonomyCode: z.string().optional(),
+      systemCode: z.string().optional(),
+      page: z.coerce.number().int().min(1).optional().default(1),
+      limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+      sortBy: z.enum(['confidence', 'createdAt', 'taxonomyCode', 'suggestedSystemCode']).optional().default('confidence'),
+      sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+    })
+    .optional()
+    .default({}),
+});
 
-export const onRequestGet = async (context: any) => {
-  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  const cors = getCorsHeaders(context?.request, corsConfig) ?? {};
-  const jsonHeaders = { ...cors, 'Content-Type': 'application/json' };
+export const onRequestOptions = withCors();
 
-  // Require authentication — admin endpoint
-  const auth = await authenticateRequest(context.request, context.env ?? {});
-  if (!auth) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: jsonHeaders }
-    );
-  }
+export const onRequestGet = adminAuthenticatedEndpoint(
+  SuggestionsQuerySchema,
+  async (context) => {
+    const { env } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  let prisma = null;
-  try {
-    // Validate environment
-    const env = context?.env ?? {};
-    if (!env.DATABASE_URL) {
-      return new Response(
-        JSON.stringify({ error: 'DATABASE_URL environment variable is not set' }),
-        { status: 500, headers: jsonHeaders }
-      );
-    }
+    try {
+      const url = new URL(context.request.url);
+      const sp = url.searchParams;
 
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const url = new URL(context.request.url);
-    const searchParams = url.searchParams;
+      const status = sp.get('status') as 'PENDING' | 'APPROVED' | 'REJECTED' | 'IGNORED' | undefined;
+      const confidenceMin = sp.has('confidenceMin') ? parseFloat(sp.get('confidenceMin')!) : undefined;
+      const confidenceMax = sp.has('confidenceMax') ? parseFloat(sp.get('confidenceMax')!) : undefined;
+      const taxonomyCode = sp.get('taxonomyCode') || undefined;
+      const systemCode = sp.get('systemCode') || undefined;
+      const page = sp.has('page') ? parseInt(sp.get('page')!, 10) : 1;
+      const limit = Math.min(sp.has('limit') ? parseInt(sp.get('limit')!, 10) : 50, 100);
+      const sortBy = (sp.get('sortBy') as string) || 'confidence';
+      const sortOrder = (sp.get('sortOrder') as 'asc' | 'desc') || 'desc';
 
-    // Parse filter parameters
-    const status = searchParams.get('status') as 'PENDING' | 'APPROVED' | 'REJECTED' | 'IGNORED' | undefined;
-    const confidenceMin = searchParams.has('confidenceMin') ? parseFloat(searchParams.get('confidenceMin')!) : undefined;
-    const confidenceMax = searchParams.has('confidenceMax') ? parseFloat(searchParams.get('confidenceMax')!) : undefined;
-    const taxonomyCode = searchParams.get('taxonomyCode') || undefined;
-    const systemCode = searchParams.get('systemCode') || undefined;
-    const page = searchParams.has('page') ? parseInt(searchParams.get('page')!, 10) : 1;
-    const limit = searchParams.has('limit') ? parseInt(searchParams.get('limit')!, 10) : 50;
-    const sortBy = searchParams.get('sortBy') as 'confidence' | 'createdAt' | 'taxonomyCode' | 'suggestedSystemCode' || 'confidence';
-    const sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
+      // Build where clause
+      const where: any = {};
+      if (status) where.status = status;
+      if (confidenceMin !== undefined || confidenceMax !== undefined) {
+        where.confidence = {};
+        if (confidenceMin !== undefined) where.confidence.gte = confidenceMin;
+        if (confidenceMax !== undefined) where.confidence.lte = confidenceMax;
+      }
+      if (taxonomyCode) where.taxonomyCode = { contains: taxonomyCode, mode: 'insensitive' };
+      if (systemCode) where.suggestedSystemCode = systemCode;
 
-    // Validate pagination
-    if (page < 1) {
-      return new Response(
-        JSON.stringify({ error: 'Page must be greater than 0' }),
-        { status: 400, headers: jsonHeaders }
-      );
-    }
-    if (limit < 1 || limit > 100) {
-      return new Response(
-        JSON.stringify({ error: 'Limit must be between 1 and 100' }),
-        { status: 400, headers: jsonHeaders }
-      );
-    }
+      // Build orderBy clause
+      const orderBy: any = {};
+      if (sortBy === 'taxonomyCode') orderBy.taxonomyCode = sortOrder;
+      else if (sortBy === 'suggestedSystemCode') orderBy.suggestedSystemCode = sortOrder;
+      else if (sortBy === 'createdAt') orderBy.createdAt = sortOrder;
+      else orderBy.confidence = sortOrder;
 
-    // Build where clause
-    const where: any = {};
-    if (status) where.status = status;
-    if (confidenceMin !== undefined || confidenceMax !== undefined) {
-      where.confidence = {};
-      if (confidenceMin !== undefined) where.confidence.gte = confidenceMin;
-      if (confidenceMax !== undefined) where.confidence.lte = confidenceMax;
-    }
-    if (taxonomyCode) where.taxonomyCode = { contains: taxonomyCode, mode: 'insensitive' };
-    if (systemCode) where.suggestedSystemCode = systemCode;
-
-    // Build orderBy clause
-    const orderBy: any = {};
-    if (sortBy === 'taxonomyCode') orderBy.taxonomyCode = sortOrder;
-    else if (sortBy === 'suggestedSystemCode') orderBy.suggestedSystemCode = sortOrder;
-    else if (sortBy === 'createdAt') orderBy.createdAt = sortOrder;
-    else orderBy.confidence = sortOrder; // default
-
-    // Fetch suggestions with pagination
-    const [suggestions, total] = await Promise.all([
-      prisma.mappingSuggestion.findMany({
-        where,
-        orderBy,
-        skip: (page - 1) * limit,
-        take: limit,
-        include: {
-          taxonomy: {
-            select: {
-              description: true,
-              isActive: true,
+      const [suggestions, total] = await Promise.all([
+        prisma.mappingSuggestion.findMany({
+          where,
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            taxonomy: {
+              select: {
+                description: true,
+                isActive: true,
+              },
+            },
+            reviewedByUser: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
             },
           },
-          reviewedByUser: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
+        }),
+        prisma.mappingSuggestion.count({ where }),
+      ]);
+
+      // Transform suggestions (strip PII — no email in reviewer data)
+      const transformed = suggestions.map((s: any) => ({
+        id: s.id,
+        taxonomyCode: s.taxonomyCode,
+        taxonomyName: s.taxonomyName,
+        taxonomyDescription: s.taxonomy?.description || null,
+        taxonomyIsActive: s.taxonomy?.isActive || false,
+        suggestedSystemCode: s.suggestedSystemCode,
+        confidence: s.confidence,
+        reason: s.reason,
+        alternativeSystems: s.alternativeSystems,
+        status: s.status,
+        reviewedBy: s.reviewedBy,
+        reviewedAt: s.reviewedAt,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        reviewedByUser: s.reviewedByUser,
+      }));
+
+      return {
+        data: {
+          suggestions: transformed,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
           },
         },
-      }),
-      prisma.mappingSuggestion.count({ where }),
-    ]);
-
-    // Transform suggestions to include taxonomy description
-    const transformed = suggestions.map((suggestion) => ({
-      id: suggestion.id,
-      taxonomyCode: suggestion.taxonomyCode,
-      taxonomyName: suggestion.taxonomyName,
-      taxonomyDescription: suggestion.taxonomy?.description || null,
-      taxonomyIsActive: suggestion.taxonomy?.isActive || false,
-      suggestedSystemCode: suggestion.suggestedSystemCode,
-      confidence: suggestion.confidence,
-      reason: suggestion.reason,
-      alternativeSystems: suggestion.alternativeSystems as Array<{
-        systemCode: string;
-        confidence: number;
-        reason: string;
-      }>,
-      status: suggestion.status,
-      reviewedBy: suggestion.reviewedBy,
-      reviewedAt: suggestion.reviewedAt,
-      createdAt: suggestion.createdAt,
-      updatedAt: suggestion.updatedAt,
-      reviewedByUser: suggestion.reviewedByUser,
-    }));
-
-    return new Response(
-      JSON.stringify({
-        suggestions: transformed,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-      }),
-      { status: 200, headers: jsonHeaders }
-    );
-  } catch (error) {
-    console.error('[MappingEnrichmentSuggestions]', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: jsonHeaders }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-};
+      };
+    } catch (error) {
+      console.error('[MappingEnrichmentSuggestions]', error);
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { source: 'query' }
+);

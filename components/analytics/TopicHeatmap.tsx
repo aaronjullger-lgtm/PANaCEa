@@ -66,7 +66,7 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
             whileHover={hasData ? { scale: 1.03, y: -1 } : {}}
             whileTap={hasData ? { scale: 0.98 } : {}}
             className={`
-              p-2 rounded-lg text-center transition-all duration-200 backdrop-blur-xl shadow-sm border
+              p-2 rounded-lg text-center transition-all duration-200  shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] border
               aspect-[3/2] flex flex-col items-center justify-center
               ${style.bg} ${style.border} ${style.text}
               ${hasData ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-60'}

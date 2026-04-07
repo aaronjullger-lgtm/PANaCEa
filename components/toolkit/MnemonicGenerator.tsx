@@ -219,7 +219,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
     return (
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/70 text-white font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 hover:from-[var(--color-accent)]/90 hover:to-[var(--color-accent)]/70 text-white font-medium rounded-lg shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-all hover:shadow-md"
       >
         <Sparkles className="w-4 h-4" />
         <span>Generate Mnemonic</span>

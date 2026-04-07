@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
+import { buildSystemPrompt } from '../_shared/socraticZpd';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -22,6 +23,16 @@ const BodySchema = z.object({
     userWrongAnswer: z.string().min(1),
     options: z.array(z.string()).optional(),
     history: z.array(z.object({ role: z.enum(['user', 'tutor']), text: z.string() })).optional(),
+    /** Tier 3: FSRS learner state for ZPD calibration */
+    fsrsState: z.object({
+      retrievability: z.number().min(0).max(1),
+      difficulty: z.number().min(1).max(10),
+      stability: z.number().min(0),
+      reviewCount: z.number().int().min(0),
+      lapseCount: z.number().int().min(0),
+    }).optional(),
+    /** Tier 3: Current turn number for progressive hint escalation */
+    turnNumber: z.number().int().min(0).optional(),
   }),
 });
 
@@ -30,14 +41,8 @@ interface Env {
   RATE_LIMIT_KV?: KVNamespace;
 }
 
-const SOCRATIC_SYSTEM = `You are a PANCE Tutor. The student got this question wrong. Your job is to help them realize WHY their answer was wrong through guiding questions.
-
-RULES:
-1. Do NOT give them the answer. Do NOT explain the correct answer yet.
-2. Ask ONE short, specific guiding question (1-2 sentences max).
-3. If they have responded, acknowledge their response and ask a follow-up that nudges them toward the right reasoning.
-4. Reference key details from the vignette. Use a supportive, Socratic tone.
-5. Output ONLY the guiding question text, no preamble, no "Here's a question:", no markdown.`;
+// Legacy prompt kept for reference; now dynamically generated via buildSystemPrompt()
+// with ZPD calibration when FSRS state is provided (Tier 3)
 
 export const onRequestOptions = withCors();
 
@@ -64,7 +69,10 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   );
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { vignette, question, correctAnswer, userWrongAnswer, options, history } = validated.body;
+  const { vignette, question, correctAnswer, userWrongAnswer, options, history, fsrsState, turnNumber } = validated.body;
+
+  // Build ZPD-calibrated system prompt (Tier 3) or fall back to simple prompt
+  const systemPrompt = buildSystemPrompt(fsrsState, turnNumber ?? (history?.length ?? 0), question.slice(0, 100));
 
   const historyBlock =
     history && history.length > 0
@@ -86,16 +94,16 @@ ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: SOCRATIC_SYSTEM }] },
+      systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         temperature: 0.5,
-        maxOutputTokens: 256,
+        // Hint level 4 (full explanation) needs more tokens than levels 1-3
+        maxOutputTokens: (turnNumber ?? 0) >= 3 ? 512 : 256,
       },
     }),
   });
 
   if (!res.ok) {
-    const text = await res.text();
     return {
       status: res.status === 429 ? 429 : 502,
       error: res.status === 429 ? 'Rate limit exceeded' : 'Socratic remediation failed',

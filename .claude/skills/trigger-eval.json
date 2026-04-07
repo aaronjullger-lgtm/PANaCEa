@@ -1,0 +1,82 @@
+[
+  {
+    "query": "Why isn't my stability changing after I get questions right? The FSRS is supposed to update but it's frozen.",
+    "should_trigger": true
+  },
+  {
+    "query": "The session just freezes when I submit an answer. Questions load fine but nothing happens after I click submit.",
+    "should_trigger": true
+  },
+  {
+    "query": "My dashboard is showing NaN for the accuracy metric and the chart is completely blank. How do I fix this?",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you explain how spaced repetition scheduling works? I want to understand the algorithm better.",
+    "should_trigger": true
+  },
+  {
+    "query": "The page is completely blank after I log in. No questions, no content, just white screen.",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm adding a new drill called 'DDx-Rush' and I need to wire it so it updates FSRS like the other drills do.",
+    "should_trigger": true
+  },
+  {
+    "query": "My Gemini API is returning garbage results for question generation. The fallback isn't working either.",
+    "should_trigger": true
+  },
+  {
+    "query": "The knowledge base search is broken—I search for 'chest pain' and get no results, even though content exists.",
+    "should_trigger": true
+  },
+  {
+    "query": "Getting a 500 error on the submit-review endpoint. What's causing this and how do I debug it?",
+    "should_trigger": true
+  },
+  {
+    "query": "I want to create a presentation about PANaCEa's architecture for a talk I'm giving.",
+    "should_trigger": false
+  },
+  {
+    "query": "Help me understand how JavaScript closures work in the context of React hooks.",
+    "should_trigger": false
+  },
+  {
+    "query": "The reservoir is constantly depleting and I'm getting 'no questions available' errors.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to optimize query performance on the UserProgress table—it's scanning the whole thing.",
+    "should_trigger": true
+  },
+  {
+    "query": "My OSCE simulation is grading answers incorrectly. Can you check the scoring logic?",
+    "should_trigger": true
+  },
+  {
+    "query": "What's a good restaurant in San Francisco? I'm looking for something near the hospital.",
+    "should_trigger": false
+  },
+  {
+    "query": "The auth check is failing on the /api/drills/submit-review endpoint, even though the user is logged in.",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm seeing a 50MB bundle size—way too big. Help me find what's bloating it.",
+    "should_trigger": true
+  },
+  {
+    "query": "My test file is 2000 lines and I have no idea how to write good assertions. What patterns should I use?",
+    "should_trigger": true
+  },
+  {
+    "query": "We have so much duplicated utility code scattered across the codebase. Where should I start consolidating?",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm building a machine learning model to predict student performance. Should I use PyTorch or TensorFlow?",
+    "should_trigger": false
+  }
+]

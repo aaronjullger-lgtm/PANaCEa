@@ -311,9 +311,9 @@ export function AuscultationMode({
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-12 bg-data-neutral dark:bg-data-neutral rounded-xl" />
-        <div className="h-64 bg-data-neutral dark:bg-data-neutral rounded-xl" />
-        <div className="h-32 bg-data-neutral dark:bg-data-neutral rounded-xl" />
+        <div className="h-12 bg-data-neutral rounded-xl" />
+        <div className="h-64 bg-data-neutral rounded-xl" />
+        <div className="h-32 bg-data-neutral rounded-xl" />
       </div>
     );
   }
@@ -337,7 +337,7 @@ export function AuscultationMode({
         {mode === 'quiz' && !quizState && (
           <button
             onClick={startQuiz}
-            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/80 flex items-center gap-2"
+            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/80 flex items-center gap-2"
           >
             <Play className="h-4 w-4" />
             Start Quiz
@@ -346,15 +346,15 @@ export function AuscultationMode({
       </div>
 
       {/* Tab Selector */}
-      <div className="flex gap-2 p-1 bg-data-neutral dark:bg-data-neutral rounded-xl">
+      <div className="flex gap-2 p-1 bg-data-neutral rounded-xl">
         <button
           onClick={() => setActiveTab('heart')}
           className={`
             flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors
             ${
               activeTab === 'heart'
-                ? 'bg-[var(--color-bg-primary)] text-data-fail dark:text-data-fail shadow-sm'
-                : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-white'
+                ? 'bg-[var(--color-bg-primary)] text-data-fail shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
+                : 'text-data-neutral hover:text-[var(--color-text-primary)]'
             }
           `}
         >
@@ -367,8 +367,8 @@ export function AuscultationMode({
             flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors
             ${
               activeTab === 'lung'
-                ? 'bg-[var(--color-bg-primary)] text-[var(--color-category-practice)] shadow-sm'
-                : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-white'
+                ? 'bg-[var(--color-bg-primary)] text-[var(--color-category-practice)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
+                : 'text-data-neutral hover:text-[var(--color-text-primary)]'
             }
           `}
         >
@@ -385,7 +385,7 @@ export function AuscultationMode({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral"
+              className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral"
               aria-label="Filter by category"
             >
               <option value="all">All Categories</option>
@@ -402,7 +402,7 @@ export function AuscultationMode({
           <select
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral"
+            className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral"
             aria-label="Filter by difficulty level"
           >
             <option value="all">All Levels</option>
@@ -418,7 +418,7 @@ export function AuscultationMode({
         <div className="lg:col-span-1">
           {quizState ? (
             // Quiz Mode
-            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-data-neutral">
                   Question {quizState.currentIndex + 1} of {quizSounds.length}
@@ -448,11 +448,11 @@ export function AuscultationMode({
                         ${
                           showAnswer
                             ? isCorrect
-                              ? 'border-data-pass bg-data-pass dark:bg-data-pass/20'
+                              ? 'border-data-pass bg-data-pass/20'
                               : isSelected
-                                ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
-                                : 'border-data-neutral dark:border-data-neutral'
-                            : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/50'
+                                ? 'border-data-fail bg-data-fail/20'
+                                : 'border-data-neutral'
+                            : 'border-data-neutral hover:border-[var(--color-accent)]/50'
                         }
                       `}
                     >
@@ -476,7 +476,7 @@ export function AuscultationMode({
               {showAnswer && (
                 <button
                   onClick={nextQuestion}
-                  className="mt-4 w-full py-3 bg-[var(--color-accent)] text-white rounded-xl hover:bg-[var(--color-accent)]/80 flex items-center justify-center gap-2"
+                  className="mt-4 w-full py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl hover:bg-[var(--color-accent)]/80 flex items-center justify-center gap-2"
                 >
                   {quizState.currentIndex + 1 < quizSounds.length ? (
                     <>
@@ -492,7 +492,7 @@ export function AuscultationMode({
             </div>
           ) : (
             // Learn Mode - Sound List
-            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-4 max-h-[500px] overflow-y-auto">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral p-4 max-h-[500px] overflow-y-auto">
               <h3 className="font-medium text-[var(--color-text-primary)] mb-4">
                 {activeTab === 'heart' ? 'Heart' : 'Lung'} Sounds ({filteredSounds.length})
               </h3>
@@ -510,7 +510,7 @@ export function AuscultationMode({
                       ${
                         selectedSound?.id === sound.id
                           ? 'bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)]'
-                          : 'bg-data-neutral dark:bg-data-neutral/50 border-2 border-transparent hover:border-data-neutral'
+                          : 'bg-data-neutral/50 border-2 border-transparent hover:border-data-neutral'
                       }
                     `}
                   >
@@ -550,18 +550,18 @@ export function AuscultationMode({
           {selectedSound ? (
             <>
               {/* Audio Player */}
-              <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+              <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {selectedSound.name}
                   </h3>
-                  <span className="px-3 py-1 bg-data-neutral dark:bg-data-neutral rounded-full text-sm">
+                  <span className="px-3 py-1 bg-data-neutral rounded-full text-sm">
                     {selectedSound.location}
                   </span>
                 </div>
 
                 {/* Animated waveform visualization */}
-                <div className="h-24 bg-data-neutral dark:bg-data-neutral rounded-xl mb-4 flex items-center justify-center">
+                <div className="h-24 bg-data-neutral rounded-xl mb-4 flex items-center justify-center">
                   <div className="flex items-end gap-1">
                     {Array.from({ length: 40 }).map((_, i) => (
                       <motion.div
@@ -590,7 +590,7 @@ export function AuscultationMode({
                     max={duration || 100}
                     value={currentTime}
                     onChange={(e) => seek(Number.parseFloat(e.target.value))}
-                    className="w-full h-2 bg-data-neutral dark:bg-data-neutral rounded-full appearance-none cursor-pointer"
+                    className="w-full h-2 bg-data-neutral rounded-full appearance-none cursor-pointer"
                     aria-label="Playback position"
                   />
                   <div className="flex justify-between text-xs text-data-neutral mt-1">
@@ -624,7 +624,7 @@ export function AuscultationMode({
                   <button
                     type="button"
                     onClick={togglePlay}
-                    className="p-4 rounded-full bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/80"
+                    className="p-4 rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/80"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
@@ -660,8 +660,8 @@ export function AuscultationMode({
                         px-2 py-1 text-xs rounded
                         ${
                           playbackRate === rate
-                            ? 'bg-[var(--color-accent)] text-white'
-                            : 'bg-data-neutral dark:bg-data-neutral text-data-neutral'
+                            ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                            : 'bg-data-neutral text-data-neutral'
                         }
                       `}
                     >
@@ -676,18 +676,18 @@ export function AuscultationMode({
 
               {/* Sound Info (Learn Mode) */}
               {mode === 'learn' && (
-                <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+                <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral p-6">
                   <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
                     Description
                   </h4>
-                  <p className="text-data-neutral dark:text-data-neutral mb-4">
+                  <p className="text-data-neutral mb-4">
                     {selectedSound.description}
                   </p>
 
                   <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
                     Clinical Significance
                   </h4>
-                  <p className="text-data-neutral dark:text-data-neutral mb-4">
+                  <p className="text-data-neutral mb-4">
                     {selectedSound.clinicalSignificance}
                   </p>
 
@@ -700,7 +700,7 @@ export function AuscultationMode({
                         {selectedSound.associatedConditions.map((condition, i) => (
                           <span
                             key={i}
-                            className="px-3 py-1 bg-data-neutral dark:bg-data-neutral rounded-full text-sm text-data-neutral dark:text-data-neutral"
+                            className="px-3 py-1 bg-data-neutral rounded-full text-sm text-data-neutral"
                           >
                             {condition}
                           </span>
@@ -713,9 +713,9 @@ export function AuscultationMode({
             </>
           ) : (
             // Empty state
-            <div className="bg-data-neutral dark:bg-data-neutral/50 rounded-2xl border-2 border-dashed border-data-neutral dark:border-data-neutral p-12 text-center">
-              <Stethoscope className="h-12 w-12 mx-auto text-data-neutral dark:text-data-neutral mb-4" />
-              <p className="text-data-neutral dark:text-data-neutral">
+            <div className="bg-data-neutral/50 rounded-2xl border-2 border-dashed border-data-neutral p-12 text-center">
+              <Stethoscope className="h-12 w-12 mx-auto text-data-neutral mb-4" />
+              <p className="text-data-neutral">
                 Select a sound from the list to begin
               </p>
             </div>

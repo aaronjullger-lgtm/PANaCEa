@@ -54,7 +54,7 @@ export default function TodoistCallback() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] shadow-sm p-8 max-w-md w-full mx-4">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-8 max-w-md w-full mx-4">
         <div className="text-center">
           {status === 'loading' && (
             <>

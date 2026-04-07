@@ -712,7 +712,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-[var(--color-bg-secondary)] text-[var(--color-accent)] shadow-sm border border-[var(--color-border)]'
+                  ? 'bg-[var(--color-bg-secondary)] text-[var(--color-accent)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
               }`}
             >

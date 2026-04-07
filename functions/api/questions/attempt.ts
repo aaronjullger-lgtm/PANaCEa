@@ -3,9 +3,12 @@
  * Record a question attempt for a user.
  * Updates UserQuestionSeen and QuestionAttempt tables.
  *
- * Single-writer note: For main-session flow, this is the primary writer for QuestionAttempt.
- * When isMainSession is true we also update Rolling 360 here. Submit-review (drillReviewService)
- * reuses an existing attempt if one exists within 5 minutes and skips Rolling 360 to avoid double count.
+ * Single-writer note (Sprint 2): This endpoint records QuestionAttempt + UserQuestionSeen + stats ONLY.
+ * All FSRS writes (ReviewLog, UserProgress, Card, UserTopicProgress, sibling propagation) and Rolling 360
+ * updates go through drillReviewService via the queueReview → POST /api/drills/submit-review path.
+ *
+ * This endpoint still accepts isMainSession and rating for backward compat with stale offline answers
+ * draining from localStorage (24h TTL), but does NOT use them for FSRS or Rolling 360.
  */
 
 import { z } from 'zod';
@@ -13,43 +16,13 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
-import { getRolling360Service } from '../../../lib/services/rolling360Service';
-import { computeFSRSUpdate } from '../../../lib/services/fsrsScheduleService';
-import { Rating } from '../../../lib/fsrs';
-import { buildCircadianContext } from '../../../lib/circadian';
-import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
-import { propagateRecallToSiblings } from '../../../lib/services/semanticSiblingService';
 
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
-// DEFAULT_PAR_TIME_MS removed — was only used by the FSRS block now in drillReviewService
+import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 
-// normalizeDeprecatedRating removed — FSRS scheduling moved to drillReviewService (Improvement 5)
-
-// normalizeTelemetryMetrics removed — FSRS scheduling moved to drillReviewService (Improvement 5)
-
-const AttemptSchema = z.object({
-  body: z.object({
-    questionId: z.string().min(1),
-    isCorrect: z.boolean().optional(),
-    wasCorrect: z.boolean().optional(),
-    system: z.string().optional(),
-    conditionId: z.string().optional(),
-    medicalContentId: z.string().optional(),
-    questionType: z.string().optional(),
-    mode: z.string().optional().default('session'),
-    timeSpent: z.number().optional(),
-    timeSpentMs: z.number().optional(),
-    answerChangedCount: z.number().optional(),
-    isRankedAttempt: z.boolean().optional().default(false),
-    selectedAnswer: z
-      .union([z.number().int().min(0).max(3), z.enum(['A', 'B', 'C', 'D'])])
-      .optional(),
-    telemetryJson: z.record(z.string(), z.unknown()).optional(),
-    durationMs: z.number().optional(),
-    isMainSession: z.boolean().optional().default(false),
-    rating: z.number().int().min(1).max(4).optional(),
-  }),
-});
+// Shared schema — single source of truth for this endpoint's request contract.
+// To change the /api/questions/attempt contract, edit lib/api/schemas/questions.ts.
+import { QuestionAttemptRequestSchema } from '../../../lib/api/schemas/questions';
+const AttemptSchema = z.object({ body: QuestionAttemptRequestSchema });
 
 export const onRequestOptions = withCors();
 
@@ -86,8 +59,6 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       telemetryJson,
       durationMs,
       isMainSession = false,
-      // rating field still accepted by schema for backward compat but no longer used here;
-      // FSRS scheduling is handled by drillReviewService (Improvement 5)
     } = validated.body;
 
     // Support both isCorrect and wasCorrect field names
@@ -99,7 +70,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       selectedAnswerRaw === undefined
         ? null
         : typeof selectedAnswerRaw === 'number'
-          ? (LETTERS[selectedAnswerRaw] ?? null)
+          ? (ANSWER_LETTERS[selectedAnswerRaw] ?? null)
           : selectedAnswerRaw;
 
     type AttemptResult = { wasCorrect: boolean; system: string | null };
@@ -193,15 +164,21 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       }
 
       // 4. Calculate aggregate stats
-      const allAttempts = await tx.questionAttempt.findMany({
-        where: { userId },
-        select: { wasCorrect: true, system: true },
-      });
+      // FIX (Audit 8/F2): Replaced O(N) findMany + JS aggregation with a single
+      // SQL COUNT query. The old approach loaded every attempt the user ever made
+      // into memory on each submission — O(total_attempts) per answer, guaranteed
+      // to timeout at scale. This is now O(1) regardless of history length.
+      type AggRow = { total: bigint; correct: bigint };
+      const [agg] = await tx.$queryRaw<AggRow[]>`
+        SELECT
+          COUNT(*)                                                AS total,
+          SUM(CASE WHEN "wasCorrect" = true THEN 1 ELSE 0 END)  AS correct
+        FROM "QuestionAttempt"
+        WHERE "userId" = ${userId}
+      `;
 
-      const totalQuestionsAnswered = allAttempts.length;
-      const correctAnswers = allAttempts.filter(
-        (a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect
-      ).length;
+      const totalQuestionsAnswered = Number(agg?.total ?? 0);
+      const correctAnswers = Number(agg?.correct ?? 0);
       const overallAccuracy =
         totalQuestionsAnswered > 0
           ? Math.round((correctAnswers / totalQuestionsAnswered) * 100)
@@ -209,20 +186,23 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
       let systemStats = null;
       if (system) {
-        const systemAttempts = allAttempts.filter(
-          (a: { wasCorrect: boolean; system: string | null }) => a.system === system
-        );
-        const systemCorrect = systemAttempts.filter(
-          (a: { wasCorrect: boolean; system: string | null }) => a.wasCorrect
-        ).length;
+        type SysRow = { total: bigint; correct: bigint };
+        const [sysAgg] = await tx.$queryRaw<SysRow[]>`
+          SELECT
+            COUNT(*)                                                AS total,
+            SUM(CASE WHEN "wasCorrect" = true THEN 1 ELSE 0 END)  AS correct
+          FROM "QuestionAttempt"
+          WHERE "userId" = ${userId}
+            AND "system"  = ${system}
+        `;
+        const sysTotalAttempts = Number(sysAgg?.total ?? 0);
+        const sysCorrect = Number(sysAgg?.correct ?? 0);
         systemStats = {
           system,
-          totalAttempts: systemAttempts.length,
-          correctAnswers: systemCorrect,
+          totalAttempts: sysTotalAttempts,
+          correctAnswers: sysCorrect,
           accuracy:
-            systemAttempts.length > 0
-              ? Math.round((systemCorrect / systemAttempts.length) * 100)
-              : 0,
+            sysTotalAttempts > 0 ? Math.round((sysCorrect / sysTotalAttempts) * 100) : 0,
         };
       }
 
@@ -248,185 +228,9 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       }
     }
 
-    // FSRS v6: Schedule via shared helper (same pipeline as drillReviewService)
-    // When conditionId is present and we have a correctness result, derive a binary rating
-    // and run the full confidence pipeline through computeFSRSUpdate.
-    let nextReviewDate: Date | null = null;
-
-    if (isMainSession && conditionId && typeof correctness === 'boolean') {
-      try {
-        const rating = correctness ? Rating.Good : Rating.Again;
-        const gradeContinuous = correctness ? 3.0 : 1.0;
-        const implicitConfidence = correctness ? 0.7 : 0.3;
-        const effectiveDurationMs = timeSpentMillis ?? 30000;
-
-        const circadianContext = buildCircadianContext({});
-
-        const fsrsResult = await computeFSRSUpdate(prisma, {
-          userId,
-          questionId,
-          conditionId,
-          system,
-          rating,
-          gradeContinuous,
-          implicitConfidence,
-          isCorrect: correctness,
-          effectiveDurationMs,
-          circadianContext,
-          telemetry: telemetryJson as Record<string, unknown> | undefined,
-        }, logger);
-
-        // ── Transactional core writes: ReviewLog + UserProgress + UserTopicProgress ──
-        await prisma.$transaction(async (tx: any) => {
-          await tx.reviewLog.create({
-            data: {
-              userId,
-              conditionId,
-              medicalContentId: medicalContentId ?? undefined,
-              questionId,
-              questionType: questionType ?? 'pre_generated',
-              grade: rating,
-              grade_continuous: gradeContinuous,
-              state: fsrsResult.previousCard.state,
-              stability: fsrsResult.previousCard.stability,
-              difficulty: fsrsResult.previousCard.difficulty,
-              retrievability: fsrsResult.retrievability,
-              implicit_confidence: implicitConfidence,
-              scheduledAt: new Date(
-                fsrsResult.previousCard.last_review.getTime()
-                + fsrsResult.previousCard.scheduled_days * 86400000
-              ),
-              reviewedAt: new Date(),
-              responseTimeMs: effectiveDurationMs,
-              review_type: 'real',
-              elapsedDays: fsrsResult.previousCard.elapsed_days,
-              wasCorrect: correctness,
-              sessionType: isMainSession ? 'MAIN' : 'DRILL',
-              attemptId: result.attemptId,
-              system: system ?? undefined,
-              telemetry: {
-                ...(telemetryJson ?? {}),
-                server_computed: {
-                  source: 'attempt_endpoint',
-                  implicit_confidence: implicitConfidence,
-                  grade_continuous: gradeContinuous,
-                  par_time_ms: 30000,
-                  is_rapid_guess: false,
-                },
-                confidence_pipeline_v3: fsrsResult.confidenceTelemetry,
-              },
-            },
-          });
-
-          await updateUserProgressWithHistory(tx, {
-            userId,
-            conditionId,
-            fsrsCard: fsrsResult.updatedCard,
-            rating,
-            accuracy: correctness ? 1.0 : 0.0,
-          });
-
-          const taskType = questionType === 'diagnosis' ? 'diagnosis' : (questionType ?? 'diagnosis');
-          await tx.userTopicProgress.upsert({
-            where: {
-              userId_conditionId_taskType: { userId, conditionId, taskType },
-            },
-            create: {
-              userId,
-              conditionId,
-              taskType,
-              stability: fsrsResult.updatedCard.stability,
-              difficulty: fsrsResult.updatedCard.difficulty,
-              state: fsrsResult.updatedCard.state,
-              reps: fsrsResult.updatedCard.reps,
-              lapses: fsrsResult.updatedCard.lapses,
-              lastReviewDate: new Date(),
-              nextReviewDate: fsrsResult.clampedNextDue,
-            },
-            update: {
-              stability: fsrsResult.updatedCard.stability,
-              difficulty: fsrsResult.updatedCard.difficulty,
-              state: fsrsResult.updatedCard.state,
-              reps: fsrsResult.updatedCard.reps,
-              lapses: fsrsResult.updatedCard.lapses,
-              lastReviewDate: new Date(),
-              nextReviewDate: fsrsResult.clampedNextDue,
-            },
-          });
-        }, { timeout: 10000 });
-
-        // Card dual-write (non-blocking)
-        try {
-          await prisma.card.upsert({
-            where: { userId_questionId: { userId, questionId } },
-            create: {
-              id: `${userId}_${questionId}`,
-              userId,
-              questionId,
-              due: fsrsResult.clampedNextDue,
-              stability: fsrsResult.updatedCard.stability,
-              difficulty: fsrsResult.updatedCard.difficulty,
-              elapsed_days: fsrsResult.updatedCard.elapsed_days,
-              scheduled_days: fsrsResult.updatedCard.scheduled_days,
-              reps: fsrsResult.updatedCard.reps,
-              lapses: fsrsResult.updatedCard.lapses,
-              state: fsrsResult.updatedCard.state,
-              last_review: new Date(),
-            },
-            update: {
-              due: fsrsResult.clampedNextDue,
-              stability: fsrsResult.updatedCard.stability,
-              difficulty: fsrsResult.updatedCard.difficulty,
-              elapsed_days: fsrsResult.updatedCard.elapsed_days,
-              scheduled_days: fsrsResult.updatedCard.scheduled_days,
-              reps: fsrsResult.updatedCard.reps,
-              lapses: fsrsResult.updatedCard.lapses,
-              state: fsrsResult.updatedCard.state,
-              last_review: new Date(),
-              updatedAt: new Date(),
-            },
-          });
-        } catch (cardErr) {
-          logger.warn('Card dual-write failed (non-fatal)', {
-            error: cardErr instanceof Error ? cardErr.message : String(cardErr),
-          });
-        }
-
-        // Sibling propagation (non-blocking)
-        try {
-          await propagateRecallToSiblings(conditionId, rating);
-        } catch (sibErr) {
-          logger.warn('Sibling propagation failed (non-fatal)', {
-            error: sibErr instanceof Error ? sibErr.message : String(sibErr),
-          });
-        }
-
-        nextReviewDate = fsrsResult.clampedNextDue;
-      } catch (fsrsErr) {
-        logger.warn('FSRS scheduling via shared helper failed (non-fatal)', {
-          error: fsrsErr instanceof Error ? fsrsErr.message : String(fsrsErr),
-        });
-      }
-    }
-
-    // Rolling 360: update circular buffer and stats for main-session attempts
-    if (isMainSession && typeof correctness === 'boolean') {
-      try {
-        const systemFor360 = system ?? (await getQuestionSystem(prisma, questionId));
-        await getRolling360Service(prisma).updateRolling360OnSubmit({
-          attemptId: result.attemptId,
-          userId,
-          isCorrect: correctness,
-          system: systemFor360,
-          answeredAt: new Date(),
-        });
-      } catch (r360Err) {
-        logger.warn('Rolling 360 update failed (non-fatal)', {
-          error: r360Err instanceof Error ? r360Err.message : String(r360Err),
-        });
-      }
-    }
-
+    // FSRS v6 + Rolling 360: Handled by drillReviewService via queueReview → /api/drills/submit-review.
+    // This endpoint is stats-only — it does NOT write ReviewLog, UserProgress, Card, UserTopicProgress,
+    // or Rolling 360. Those are the exclusive domain of drillReviewService to prevent dual-write races.
 
     logger.info('Attempt recorded', { userId: auth.userId, questionId, correctness });
 
@@ -436,7 +240,6 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         attemptId: result.attemptId,
         stats: result.stats,
         systemStats: detailedSystemStats || result.systemStats,
-        ...(nextReviewDate && { nextReviewDate: nextReviewDate.toISOString() }),
       },
     };
   } catch (error) {
@@ -449,22 +252,6 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     await safePrismaDisconnect(prisma);
   }
 });
-
-async function getQuestionSystem(
-  prisma: ReturnType<typeof createEdgePrismaClient>,
-  questionId: string
-): Promise<string> {
-  const question = await prisma.question.findUnique({
-    where: { id: questionId },
-    select: { system: true },
-  });
-  if (question?.system) return question.system;
-  const preGenerated = await prisma.preGeneratedQuestion.findUnique({
-    where: { id: questionId },
-    select: { system: true },
-  });
-  return preGenerated?.system ?? 'Unknown';
-}
 
 async function getUserSystemStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,

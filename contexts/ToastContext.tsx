@@ -1,65 +1,28 @@
 /**
- * ToastContext - Global Toast Notification System
+ * ToastContext — Rendering Shell
  *
- * Provides a centralized, accessible notification system to replace
- * native browser alert() calls throughout the application.
+ * Phase 3: State moved to Zustand (lib/stores/useToastStore.ts).
+ * This file now only provides:
+ *   1. ToastProvider — renders the ToastContainer (no state management)
+ *   2. useToast — re-exported from the Zustand store for backward compatibility
  *
- * Features:
- * - Multiple toast variants (success, error, warning, info)
- * - Auto-dismiss with configurable duration
- * - Stack management for multiple toasts
- * - Framer Motion animations
- * - Accessible (ARIA live regions)
+ * All state management, timers, and convenience methods live in the store.
+ * The imperative toast API (lib/toast.ts) wires directly into the store.
  */
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  ReactNode,
-} from 'react';
-import { registerToast } from '@/lib/toast';
+import React, { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { useToastStore, type Toast, type ToastVariant } from '@/lib/stores/useToastStore';
 
-export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
+// Re-export types and hook for backward compatibility
+export type { Toast, ToastVariant };
+export { useToastStore as useToast } from '@/lib/stores/useToastStore';
 
-export interface Toast {
-  id: string;
-  message: string;
-  variant: ToastVariant;
-  duration?: number;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-}
+// Also re-export the full context type shape for consumers that typed against it
+export type ToastContextType = ReturnType<typeof useToastStore>;
 
-interface ToastContextType {
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => string;
-  removeToast: (id: string) => void;
-  clearAllToasts: () => void;
-  // Convenience methods
-  success: (message: string, duration?: number) => string;
-  error: (message: string, duration?: number) => string;
-  warning: (message: string, duration?: number) => string;
-  info: (message: string, duration?: number) => string;
-  // Legacy method for backward compatibility
-  showToast: (options: {
-    type?: 'success' | 'error' | 'warning' | 'info';
-    message: string;
-    duration?: number;
-  }) => string;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-const DEFAULT_DURATION = 4000;
-const MAX_TOASTS = 5;
+// ─── Visual constants ──────────────────────────────────────────────────────
 
 const TOAST_ICONS: Record<ToastVariant, React.ComponentType<{ className?: string }>> = {
   success: CheckCircle,
@@ -69,153 +32,36 @@ const TOAST_ICONS: Record<ToastVariant, React.ComponentType<{ className?: string
 };
 
 const TOAST_STYLES: Record<ToastVariant, string> = {
-  success:
-    'bg-[var(--color-data-pass)]/10 dark:bg-emerald-900/30 border-[var(--color-data-pass)]/20 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-200',
-  error:
-    'bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/30 border-[var(--color-data-fail)]/20 dark:border-red-700/50 text-[var(--color-data-fail)] dark:text-red-200',
-  warning:
-    'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700/50 text-amber-800 dark:text-amber-200',
-  info: 'bg-[var(--color-bg-secondary)] dark:bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30 text-[var(--color-text-primary)]',
+  success: 'bg-[var(--color-data-pass)]/8 text-[var(--color-text-primary)]',
+  error:   'bg-[var(--color-data-fail)]/8 text-[var(--color-text-primary)]',
+  warning: 'bg-[var(--color-data-provisional)]/8 text-[var(--color-text-primary)]',
+  info:    'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]',
 };
 
 const ICON_STYLES: Record<ToastVariant, string> = {
-  success: 'text-emerald-500 dark:text-emerald-400',
-  error: 'text-red-500 dark:text-red-400',
-  warning: 'text-amber-500 dark:text-amber-400',
-  info: 'text-[var(--color-accent)]',
+  success: 'text-[var(--color-data-pass)]',
+  error:   'text-[var(--color-data-fail)]',
+  warning: 'text-[var(--color-data-provisional)]',
+  info:    'text-[var(--color-accent)]',
 };
 
+// ─── Provider (rendering only) ─────────────────────────────────────────────
+
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  // Map of toast id → pending auto-dismiss timer. Lets us cancel the timer
-  // when a toast is manually dismissed so there's no orphaned timeout
-  // (and no attempt to call removeToast after the toast is already gone).
-  const timerMapRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  const removeToast = useCallback((id: string) => {
-    // Cancel the auto-dismiss timer if it hasn't fired yet.
-    const pending = timerMapRef.current.get(id);
-    if (pending !== undefined) {
-      clearTimeout(pending);
-      timerMapRef.current.delete(id);
-    }
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
-
-  const addToast = useCallback(
-    (toast: Omit<Toast, 'id'>) => {
-      const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      const newToast: Toast = { ...toast, id };
-
-      setToasts((prev) => {
-        // When MAX_TOASTS is exceeded, evict the oldest toasts and cancel
-        // their pending timers so we don't get ghost dismissals later.
-        const updated = [...prev, newToast];
-        if (updated.length > MAX_TOASTS) {
-          const evicted = updated.slice(0, updated.length - MAX_TOASTS);
-          evicted.forEach((t) => {
-            const evictTimer = timerMapRef.current.get(t.id);
-            if (evictTimer !== undefined) {
-              clearTimeout(evictTimer);
-              timerMapRef.current.delete(t.id);
-            }
-          });
-          return updated.slice(-MAX_TOASTS);
-        }
-        return updated;
-      });
-
-      // Auto-dismiss
-      const duration = toast.duration ?? DEFAULT_DURATION;
-      if (duration > 0) {
-        const timer = setTimeout(() => {
-          timerMapRef.current.delete(id);
-          setToasts((prev) => prev.filter((t) => t.id !== id));
-        }, duration);
-        timerMapRef.current.set(id, timer);
-      }
-
-      return id;
-    },
-    []
-  );
-
-  const clearAllToasts = useCallback(() => {
-    setToasts([]);
-  }, []);
-
-  // Convenience methods
-  const success = useCallback(
-    (message: string, duration?: number) => {
-      return addToast({ message, variant: 'success', duration });
-    },
-    [addToast]
-  );
-
-  const error = useCallback(
-    (message: string, duration?: number) => {
-      return addToast({ message, variant: 'error', duration });
-    },
-    [addToast]
-  );
-
-  const warning = useCallback(
-    (message: string, duration?: number) => {
-      return addToast({ message, variant: 'warning', duration });
-    },
-    [addToast]
-  );
-
-  const info = useCallback(
-    (message: string, duration?: number) => {
-      return addToast({ message, variant: 'info', duration });
-    },
-    [addToast]
-  );
-
-  // Legacy showToast method for backward compatibility
-  const showToast = useCallback(
-    (options: {
-      type?: 'success' | 'error' | 'warning' | 'info';
-      message: string;
-      duration?: number;
-    }) => {
-      const variant = options.type || 'info';
-      return addToast({ message: options.message, variant, duration: options.duration });
-    },
-    [addToast]
-  );
-
-  const value: ToastContextType = {
-    toasts,
-    addToast,
-    removeToast,
-    clearAllToasts,
-    success,
-    error,
-    warning,
-    info,
-    showToast,
-  };
-
-  // Wire imperative toast API (callable from anywhere)
-  useEffect(() => {
-    const unregister = registerToast((t) =>
-      addToast({ message: t.message, variant: t.variant, duration: t.duration, action: t.action })
-    );
-    return unregister;
-  }, [addToast]);
+  // Read toasts + removeToast from the Zustand store
+  const toasts = useToastStore((s) => s.toasts);
+  const removeToast = useToastStore((s) => s.removeToast);
 
   return (
-    <ToastContext.Provider value={value}>
+    <>
       {children}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-    </ToastContext.Provider>
+    </>
   );
 }
 
-// Toast Container Component
+// ─── Toast Container ───────────────────────────────────────────────────────
+
 function ToastContainer({
   toasts,
   removeToast,
@@ -238,7 +84,8 @@ function ToastContainer({
   );
 }
 
-// Individual Toast Item
+// ─── Individual Toast ──────────────────────────────────────────────────────
+
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   const Icon = TOAST_ICONS[toast.variant];
 
@@ -250,9 +97,10 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       exit={{ opacity: 0, x: 100, scale: 0.9 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={`
-        pointer-events-auto rounded-xl border p-4 shadow-lg backdrop-blur-sm
+        pointer-events-auto rounded-xl p-4
         ${TOAST_STYLES[toast.variant]}
       `}
+      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 4px 12px rgba(0,0,0,0.08)' }}
       role="alert"
       aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
     >
@@ -283,14 +131,3 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     </motion.div>
   );
 }
-
-// Hook for using toast
-export function useToast(): ToastContextType {
-  const context = useContext(ToastContext);
-  if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
-}
-
-export type { ToastContextType };

@@ -4,6 +4,16 @@
  * Displays predicted PANCE score with visual gauge and insights.
  */
 
+// ─── PANCE Score Thresholds ─────────────────────────────────────────────────
+/** PANCE scale boundaries */
+const PANCE_SCORE_MIN = 200;
+const PANCE_SCORE_MAX = 800;
+const PANCE_SCORE_RANGE = PANCE_SCORE_MAX - PANCE_SCORE_MIN;
+/** Official NCCPA passing threshold */
+const PANCE_PASSING_SCORE = 450;
+/** Score at which prediction is considered "strong pass" */
+const PANCE_STRONG_PASS_SCORE = 500;
+
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -83,8 +93,8 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
 
   if (!prediction) {
     return (
-      <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl text-center">
-        <p className="text-sm text-data-neutral dark:text-data-neutral">
+      <div className="p-4 bg-data-neutral/50 rounded-xl text-center">
+        <p className="text-sm text-data-neutral">
           Answer at least 10 questions to see score prediction
         </p>
       </div>
@@ -92,33 +102,33 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
   }
 
   // Calculate gauge rotation (200-800 scale → 0-180 degrees)
-  const gaugeRotation = ((prediction.predictedScore - 200) / 600) * 180;
-  const passingRotation = ((450 - 200) / 600) * 180; // 450 is passing threshold
+  const gaugeRotation = ((prediction.predictedScore - PANCE_SCORE_MIN) / PANCE_SCORE_RANGE) * 180;
+  const passingRotation = ((PANCE_PASSING_SCORE - PANCE_SCORE_MIN) / PANCE_SCORE_RANGE) * 180;
 
   // Color based on score
   const scoreColor =
-    prediction.predictedScore >= 500
-      ? 'text-[var(--color-data-pass)] dark:text-[var(--color-data-pass)]/90'
-      : prediction.predictedScore >= 450
-        ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]/90'
-        : 'text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]/90';
+    prediction.predictedScore >= PANCE_STRONG_PASS_SCORE
+      ? 'text-[var(--color-data-pass)]'
+      : prediction.predictedScore >= PANCE_PASSING_SCORE
+        ? 'text-[var(--color-data-provisional)]'
+        : 'text-[var(--color-data-fail)]';
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-data-neutral dark:border-data-neutral">
+      <div className="px-4 py-3 border-b border-data-neutral">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-[var(--color-accent)]" />
-            <span className="font-medium text-data-neutral dark:text-data-neutral">Score Prediction</span>
+            <span className="font-medium text-data-neutral">Score Prediction</span>
           </div>
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
               prediction.confidence === 'high'
-                ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20 dark:text-[var(--color-data-pass)]/90'
+                ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]/90'
                 : prediction.confidence === 'medium'
-                  ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 dark:text-[var(--color-data-provisional)]/90'
-                  : 'bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral'
+                  ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]/90'
+                  : 'bg-data-neutral text-data-neutral '
             }`}
           >
             {prediction.confidence} confidence
@@ -137,7 +147,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="8"
-              className="text-data-neutral dark:text-data-neutral"
+              className="text-data-neutral"
             />
             {/* Passing threshold marker */}
             <line
@@ -158,9 +168,9 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               strokeWidth="8"
               strokeDasharray={`${(gaugeRotation / 180) * 141.37} 141.37`}
               className={
-                prediction.predictedScore >= 500
+                prediction.predictedScore >= PANCE_STRONG_PASS_SCORE
                   ? 'text-[var(--color-data-pass)]'
-                  : prediction.predictedScore >= 450
+                  : prediction.predictedScore >= PANCE_PASSING_SCORE
                     ? 'text-[var(--color-data-provisional)]'
                     : 'text-[var(--color-data-fail)]'
               }
@@ -176,7 +186,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
             >
               {prediction.predictedScore}
             </motion.span>
-            <span className="text-xs text-data-neutral">/ 800</span>
+            <span className="text-xs text-data-neutral">/ {PANCE_SCORE_MAX}</span>
           </div>
         </div>
 
@@ -185,10 +195,10 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
               prediction.passLikelihood >= 70
-                ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20 dark:text-[var(--color-data-pass)]/90'
+                ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]/90'
                 : prediction.passLikelihood >= 50
-                  ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 dark:text-[var(--color-data-provisional)]/90'
-                  : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] dark:bg-[var(--color-data-fail)]/20 dark:text-[var(--color-data-fail)]/90'
+                  ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]/90'
+                  : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]/90'
             }`}
           >
             {prediction.passLikelihood >= 70 ? (
@@ -210,7 +220,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               </div>
               <ul className="space-y-0.5">
                 {prediction.strengths?.map((s, i) => (
-                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
+                  <li key={i} className="text-xs text-data-neutral pl-4">
                     • {s}
                   </li>
                 ))}
@@ -226,7 +236,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               </div>
               <ul className="space-y-0.5">
                 {prediction.riskFactors?.map((r, i) => (
-                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
+                  <li key={i} className="text-xs text-data-neutral pl-4">
                     • {r}
                   </li>
                 ))}
@@ -235,14 +245,14 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           )}
 
           {prediction.recommendations && prediction.recommendations.length > 0 && (
-            <div className="space-y-1 pt-2 border-t border-data-neutral dark:border-data-neutral">
+            <div className="space-y-1 pt-2 border-t border-data-neutral">
               <div className="flex items-center gap-1 text-xs font-medium text-[var(--color-accent)]">
                 <Lightbulb className="w-3.5 h-3.5" />
                 Recommendations
               </div>
               <ul className="space-y-0.5">
                 {prediction.recommendations?.map((r, i) => (
-                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
+                  <li key={i} className="text-xs text-data-neutral pl-4">
                     • {r}
                   </li>
                 ))}

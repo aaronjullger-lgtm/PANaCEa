@@ -207,7 +207,7 @@ async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
  * Used when pdf-parse fails or is unavailable
  */
 async function extractTextFromPDFWithAI(pdfBuffer: Buffer): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const base64Pdf = pdfBuffer.toString('base64');
   const pdfPart = {
@@ -229,7 +229,7 @@ async function extractTextFromPDFWithAI(pdfBuffer: Buffer): Promise<string> {
  */
 async function extractTextFromPPTX(pptxBuffer: Buffer): Promise<string> {
   // Similar approach for PPTX files
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const base64Pptx = pptxBuffer.toString('base64');
   const pptxPart = {
@@ -256,7 +256,7 @@ async function analyzeEducationalContent(text: string): Promise<{
   systemCodes: string[];
   qualityScore: number;
 }> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `You are a medical education expert. Analyze this educational content and provide:
 

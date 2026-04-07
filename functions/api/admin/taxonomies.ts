@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { auditLog } from '../_shared/auditLog';
 
 const TaxonomySchema = z.object({
   code: z.string().min(2).max(10),
@@ -144,6 +145,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
       });
 
       logger.info('Taxonomy created', { code: taxonomy.code, userId: auth.userId });
+      auditLog('admin_taxonomy_create', { userId: auth.userId, code: taxonomy.code });
       return {
         data: taxonomy,
         status: 201,
@@ -208,6 +210,7 @@ export const onRequestPut = adminAuthenticatedEndpoint(
       });
 
       logger.info('Taxonomy updated', { code: updated.code, userId: auth.userId });
+      auditLog('admin_taxonomy_update', { userId: auth.userId, code: updated.code });
       return {
         data: updated,
         status: 200,
@@ -272,6 +275,7 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
           where: { code: params.code },
         });
         logger.info('Taxonomy hard deleted', { code: params.code, userId: auth.userId });
+        auditLog('admin_taxonomy_delete', { userId: auth.userId, code: params.code, mode: 'hard' });
       } else {
         // Soft delete
         await prisma.medicalTaxonomy.update({
@@ -279,6 +283,7 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
           data: { isActive: false },
         });
         logger.info('Taxonomy soft deleted', { code: params.code, userId: auth.userId });
+        auditLog('admin_taxonomy_delete', { userId: auth.userId, code: params.code, mode: 'soft' });
       }
 
       return {

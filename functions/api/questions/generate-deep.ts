@@ -10,7 +10,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const GENERATE_MODEL = 'gemini-1.5-pro';
+const GENERATE_MODEL = 'gemini-2.5-flash';
 
 const GenerateDeepSchema = z.object({
   body: z.object({
@@ -142,7 +142,29 @@ Output valid JSON only, no markdown:
     try {
       const parsed = JSON.parse(text) as { questions?: typeof questions };
       if (Array.isArray(parsed.questions)) {
-        questions = parsed.questions.slice(0, count);
+        // Filter out malformed items before serving — a question with missing required
+        // fields is worse than no question (undefined behaviour for downstream consumers).
+        const REQUIRED_DEEP_FIELDS = ['question', 'options', 'correctAnswerIndex'] as const;
+        const valid = parsed.questions.filter((q) => {
+          const hasAllRequired = REQUIRED_DEEP_FIELDS.every(
+            (f) => f in q && q[f as keyof typeof q] !== null && q[f as keyof typeof q] !== undefined
+          );
+          const hasEnoughOptions = Array.isArray(q.options) && q.options.length >= 4;
+          const hasValidIndex =
+            typeof q.correctAnswerIndex === 'number' &&
+            q.correctAnswerIndex >= 0 &&
+            q.correctAnswerIndex < (q.options?.length ?? 0);
+          if (!hasAllRequired || !hasEnoughOptions || !hasValidIndex) {
+            logger.warn('generate-deep: filtered malformed question', {
+              missingFields: REQUIRED_DEEP_FIELDS.filter(
+                (f) => !(f in q) || q[f as keyof typeof q] === null || q[f as keyof typeof q] === undefined
+              ),
+              optionCount: Array.isArray(q.options) ? q.options.length : 0,
+            });
+          }
+          return hasAllRequired && hasEnoughOptions && hasValidIndex;
+        });
+        questions = valid.slice(0, count);
       }
     } catch {
       logger.warn('generate-deep JSON parse failed', { text: text.slice(0, 200) });

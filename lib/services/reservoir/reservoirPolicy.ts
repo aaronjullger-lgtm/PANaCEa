@@ -82,6 +82,8 @@ export interface RefillResult {
   generated: number;
   totalInserted: number;
   skipped: number;
+  /** Number of items that received a confusion-pair priority boost */
+  confusionBoostedCount?: number;
   errors: string[];
 }
 

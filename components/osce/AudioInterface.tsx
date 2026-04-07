@@ -15,7 +15,8 @@ import { Mic, MicOff, VolumeX, Loader2, AlertCircle } from 'lucide-react';
 
 const SAMPLE_RATE = 16000;
 const CHANNELS = 1;
-const CHUNK_MS = 100;
+// CHUNK_MS retained for documentation purposes; actual chunk size is set by AudioWorklet buffer
+const _CHUNK_MS = 100; // eslint-disable-line @typescript-eslint/no-unused-vars
 const BARGE_IN_THRESHOLD = 0.02; // RMS threshold for "user is speaking"
 
 export interface AudioInterfaceProps {
@@ -42,10 +43,16 @@ export function AudioInterface({
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const transcriptRef = useRef<string[]>([]);
+  /** Holds the active AudioWorkletNode or ScriptProcessorNode for cleanup */
+  const captureNodeRef = useRef<AudioWorkletNode | ScriptProcessorNode | null>(null);
   /** Guard against setState on unmounted component */
   const mountedRef = useRef(true);
 
   const disconnect = useCallback(() => {
+    if (captureNodeRef.current) {
+      captureNodeRef.current.disconnect();
+      captureNodeRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -104,7 +111,19 @@ export function AudioInterface({
 
       ws.onopen = () => {
         setStatus('connected');
-        startCapture(audioContext, stream, ws);
+        // startCapture is async (AudioWorklet requires addModule); use an IIFE
+        // to handle errors without making onopen itself async.
+        (async () => {
+          try {
+            const captureNode = await startCapture(audioContext, stream, ws);
+            captureNodeRef.current = captureNode;
+          } catch (err) {
+            if (mountedRef.current) {
+              setStatus('error');
+              setErrorMessage(err instanceof Error ? err.message : 'Failed to start audio capture');
+            }
+          }
+        })();
       };
 
       ws.onmessage = (event) => {
@@ -261,17 +280,116 @@ function uint8ToBase64(bytes: Uint8Array): string {
 }
 
 /**
- * Capture audio via ScriptProcessorNode (fallback when AudioWorklet not available).
- * Streams PCM chunks to WebSocket as base64 JSON.
+ * AudioWorkletProcessor source — loaded via Blob URL so no separate file is needed.
  *
- * TODO: Migrate to AudioWorkletProcessor for off-main-thread processing.
+ * Runs in the dedicated AudioWorklet thread (off main thread).
+ * Converts Float32 PCM → Int16 and posts the buffer back to the main thread
+ * using transferable ArrayBuffer (zero-copy).
+ *
+ * Buffer size is 128 frames per Web Audio spec quantum; we accumulate into a
+ * larger buffer (SAMPLE_RATE * CHUNK_MS / 1000 samples) before posting to
+ * match the ~100 ms chunk cadence the backend expects.
  */
-function startCapture(audioContext: AudioContext, stream: MediaStream, ws: WebSocket): void {
+const WORKLET_CHUNK_FRAMES = Math.floor((SAMPLE_RATE * 100) / 1000); // 1600 frames @ 16 kHz
+
+const PCM_CAPTURE_WORKLET_CODE = `
+class PCMCaptureProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this._buffer = new Float32Array(${WORKLET_CHUNK_FRAMES});
+    this._filled = 0;
+    this._bargeInThreshold = ${BARGE_IN_THRESHOLD};
+  }
+
+  process(inputs) {
+    const channel = inputs[0]?.[0];
+    if (!channel || channel.length === 0) return true;
+
+    let srcOffset = 0;
+    while (srcOffset < channel.length) {
+      const toCopy = Math.min(channel.length - srcOffset, ${WORKLET_CHUNK_FRAMES} - this._filled);
+      this._buffer.set(channel.subarray(srcOffset, srcOffset + toCopy), this._filled);
+      this._filled += toCopy;
+      srcOffset += toCopy;
+
+      if (this._filled >= ${WORKLET_CHUNK_FRAMES}) {
+        // Convert Float32 → Int16
+        const pcm = new Int16Array(this._filled);
+        let sumSq = 0;
+        for (let i = 0; i < this._filled; i++) {
+          const s = Math.max(-1, Math.min(1, this._buffer[i]));
+          pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+          sumSq += s * s;
+        }
+        const rms = Math.sqrt(sumSq / this._filled);
+        // Transfer the buffer (zero-copy) with RMS for barge-in detection
+        this.port.postMessage(
+          { type: 'pcm', buffer: pcm.buffer, rms },
+          [pcm.buffer]
+        );
+        this._filled = 0;
+      }
+    }
+    return true; // keep processor alive
+  }
+}
+registerProcessor('pcm-capture-processor', PCMCaptureProcessor);
+`;
+
+/**
+ * Capture audio via AudioWorkletProcessor (off-main-thread).
+ * Falls back to the deprecated ScriptProcessorNode if AudioWorklet is
+ * unavailable (e.g. non-secure contexts, older browsers).
+ *
+ * Returns the created processing node so callers can disconnect it on cleanup.
+ */
+async function startCapture(
+  audioContext: AudioContext,
+  stream: MediaStream,
+  ws: WebSocket
+): Promise<AudioWorkletNode | ScriptProcessorNode> {
   const source = audioContext.createMediaStreamSource(stream);
 
-  // ScriptProcessorNode runs on main thread (deprecated but broadly supported).
-  // AudioWorklet is preferred for production — see TODO above.
+  // Attempt AudioWorklet first
+  if (typeof AudioWorkletNode !== 'undefined' && audioContext.audioWorklet) {
+    try {
+      const blob = new Blob([PCM_CAPTURE_WORKLET_CODE], { type: 'application/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+      try {
+        await audioContext.audioWorklet.addModule(blobUrl);
+      } finally {
+        // Always revoke; the module is registered in the AudioContext after addModule resolves
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      const workletNode = new AudioWorkletNode(audioContext, 'pcm-capture-processor');
+      workletNode.port.onmessage = (e: MessageEvent<{ type: string; buffer: ArrayBuffer; rms?: number }>) => {
+        if (ws.readyState !== WebSocket.OPEN) return;
+        const { buffer } = e.data;
+        const base64 = uint8ToBase64(new Uint8Array(buffer));
+        ws.send(JSON.stringify({ type: 'audio', data: base64 }));
+      };
+
+      const silentGain = audioContext.createGain();
+      silentGain.gain.value = 0;
+      silentGain.connect(audioContext.destination);
+
+      source.connect(workletNode);
+      workletNode.connect(silentGain);
+
+      return workletNode;
+    } catch (workletErr) {
+      console.warn(
+        '[AudioInterface] AudioWorklet unavailable, falling back to ScriptProcessorNode:',
+        workletErr instanceof Error ? workletErr.message : String(workletErr)
+      );
+      // fall through to ScriptProcessorNode fallback
+    }
+  }
+
+  // Fallback: ScriptProcessorNode (runs on main thread, deprecated but broadly supported)
   const bufferSize = 4096;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const processor = audioContext.createScriptProcessor(bufferSize, CHANNELS, CHANNELS);
 
   processor.onaudioprocess = (e) => {
@@ -295,4 +413,6 @@ function startCapture(audioContext: AudioContext, stream: MediaStream, ws: WebSo
 
   source.connect(processor);
   processor.connect(silentGain);
+
+  return processor;
 }

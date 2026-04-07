@@ -476,7 +476,7 @@ router.post(
       const shuffled = [...filtered].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, requestedCount);
 
-      const letters = ['A', 'B', 'C', 'D'];
+      const letters = ['A', 'B', 'C', 'D', 'E'];
       const questions = selected.map((r) => {
         const data = (r.questionData as Record<string, unknown>) || {};
         const optsRaw = data.options ?? data.answers ?? data.choices;
@@ -549,7 +549,7 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
     });
 
     const poolRemaining = await prisma.preGeneratedQuestion.count({ where });
-    const letters = ['A', 'B', 'C', 'D'];
+    const letters = ['A', 'B', 'C', 'D', 'E'];
 
     const poolQuestions = preGenRecords.slice(0, count).map((r) => {
       const data = (r.questionData as Record<string, unknown>) || {};

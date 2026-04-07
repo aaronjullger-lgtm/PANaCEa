@@ -20,16 +20,6 @@ export const ROUTES = {
   PROGRESS: '/progress',
   STUDY_KNOWLEDGE: '/study/knowledge',
   STUDY_UTILITIES: '/study/utilities',
-  /**
-   * @deprecated Use STUDY_KNOWLEDGE ('/study/knowledge') — legacy path redirects automatically.
-   * TODO: Remove once all callsites are migrated (Sprint 3).
-   */
-  STUDY_REFERENCE: '/study/knowledge',
-  /**
-   * @deprecated Use STUDY_UTILITIES ('/study/utilities') — legacy path redirects automatically.
-   * TODO: Remove once all callsites are migrated (Sprint 3).
-   */
-  STUDY_TOOLKIT: '/study/utilities',
   STUDY_PATH: '/study/path',
   DAILY_CHALLENGES: '/daily-challenges',
   MENU: '/menu',
@@ -39,8 +29,3 @@ export const ROUTES = {
 
 // Type for route values
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
-
-// Helper function to check if a path matches a route
-export const matchesRoute = (currentPath: string, route: AppRoute): boolean => {
-  return currentPath === route || currentPath.startsWith(route + '/');
-};

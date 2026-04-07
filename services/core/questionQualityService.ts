@@ -356,18 +356,9 @@ export async function validateQuestionQuality(
   // Generate semantic hash for duplicate detection
   const semanticHash = generateSemanticHash(question);
 
-  // If AI assessment is requested and enabled, enhance the assessment
-  // This would integrate with geminiService in production
-  if (useAI && typeof window === 'undefined') {
-    // Server-side only - would call Gemini API here
-    // const prompt = buildQualityAssessmentPrompt(question, conditionName);
-    // const aiResponse = await callGeminiAPI(prompt);
-    // const aiAssessment = parseQualityAssessmentResponse(aiResponse);
-    // if (aiAssessment) {
-    //   // Blend AI and rule-based scores
-    //   assessment = blendAssessments(assessment, aiAssessment);
-    // }
-  }
+  // TODO(future): when useAI is true, blend rule-based assessment with a Gemini call.
+  // For now, only the rule-based assessment is returned regardless of useAI flag.
+  void useAI; // suppress unused-variable warning until AI blending is implemented
 
   const validationStatus = determineValidationStatus(assessment);
 

@@ -65,15 +65,15 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-              Performance Report
+              Quick Preview
             </h2>
-            <p className="text-data-neutral dark:text-data-neutral mt-1">Patient Encounter Assessment</p>
+            <p className="text-data-neutral mt-1">Estimated from detected actions</p>
           </div>
           <div className="text-center">
             <div className={`text-5xl font-bold ${getGradeColor(report.overallScore)}`}>
               {report.overallScore}%
             </div>
-            <div className="text-sm text-data-neutral dark:text-data-neutral mt-1">Overall Score</div>
+            <div className="text-sm text-data-neutral mt-1">Overall Score</div>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {report.acgmeMilestoneLevel && (
           <div className="mt-4 flex items-center gap-2">
             <Award className="w-5 h-5 text-data-provisional" />
-            <span className="text-data-neutral dark:text-data-neutral">
+            <span className="text-data-neutral">
               ACGME Milestone Level: <strong>{report.acgmeMilestoneLevel}</strong> -{' '}
               {getMilestoneLabel(report.acgmeMilestoneLevel)}
             </span>
@@ -199,15 +199,15 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {/* Strengths & Improvements */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {report.strengths.length > 0 && (
-            <div className="bg-data-pass dark:bg-data-pass/20 rounded-xl p-4">
-              <h4 className="font-semibold text-data-pass dark:text-data-pass flex items-center gap-2 mb-3">
+            <div className="bg-data-pass/20 rounded-xl p-4">
+              <h4 className="font-semibold text-data-pass flex items-center gap-2 mb-3">
                 <CheckCircle className="w-4 h-4" /> Strengths
               </h4>
               <ul className="space-y-2">
                 {report.strengths.map((s, i) => (
                   <li
                     key={i}
-                    className="text-sm text-data-pass dark:text-data-pass flex items-start gap-2"
+                    className="text-sm text-data-pass flex items-start gap-2"
                   >
                     <span className="mt-1">•</span> {s}
                   </li>
@@ -217,15 +217,15 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
           )}
 
           {report.areasForImprovement.length > 0 && (
-            <div className="bg-data-provisional dark:bg-data-provisional/20 rounded-xl p-4">
-              <h4 className="font-semibold text-data-provisional dark:text-data-provisional flex items-center gap-2 mb-3">
+            <div className="bg-data-provisional/20 rounded-xl p-4">
+              <h4 className="font-semibold text-data-provisional flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-4 h-4" /> Areas for Improvement
               </h4>
               <ul className="space-y-2">
                 {report.areasForImprovement.map((a, i) => (
                   <li
                     key={i}
-                    className="text-sm text-data-provisional dark:text-data-provisional flex items-start gap-2"
+                    className="text-sm text-data-provisional flex items-start gap-2"
                   >
                     <span className="mt-1">•</span> {a}
                   </li>
@@ -237,7 +237,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-data-neutral dark:border-data-neutral flex justify-end gap-3">
+      <div className="p-4 border-t border-data-neutral flex justify-end gap-3">
         {onRetry && (
           <button
             onClick={onRetry}
@@ -249,7 +249,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {onClose && (
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition"
           >
             Done
           </button>
@@ -268,16 +268,16 @@ const CollapsibleSection: React.FC<{
   badge?: string;
   children: React.ReactNode;
 }> = ({ title, icon, isExpanded, onToggle, badge, children }) => (
-  <div className="border border-data-neutral dark:border-data-neutral rounded-xl overflow-hidden">
+  <div className="border border-data-neutral rounded-xl overflow-hidden">
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between p-4 hover:bg-data-neutral dark:hover:bg-data-neutral/50 transition"
+      className="w-full flex items-center justify-between p-4 hover:bg-data-neutral transition"
     >
       <div className="flex items-center gap-3">
         <span className="text-data-neutral">{icon}</span>
-        <span className="font-medium text-data-neutral dark:text-data-neutral">{title}</span>
+        <span className="font-medium text-data-neutral">{title}</span>
         {badge && (
-          <span className="px-2 py-0.5 text-xs bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral rounded-full">
+          <span className="px-2 py-0.5 text-xs bg-data-neutral text-data-neutral rounded-full">
             {badge}
           </span>
         )}
@@ -293,7 +293,7 @@ const CollapsibleSection: React.FC<{
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="border-t border-data-neutral dark:border-data-neutral p-4"
+        className="border-t border-data-neutral p-4"
       >
         {children}
       </motion.div>
@@ -320,8 +320,8 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
     <div className="space-y-3">
       {categories.map(({ key, label, score }) => (
         <div key={key} className="flex items-center gap-3">
-          <span className="w-36 text-sm text-data-neutral dark:text-data-neutral">{label}</span>
-          <div className="flex-1 h-3 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+          <span className="w-36 text-sm text-data-neutral">{label}</span>
+          <div className="flex-1 h-3 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${score}%` }}
@@ -337,7 +337,7 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
               }`}
             />
           </div>
-          <span className="w-12 text-right text-sm font-medium text-data-neutral dark:text-data-neutral">
+          <span className="w-12 text-right text-sm font-medium text-data-neutral">
             {Math.round(score)}%
           </span>
         </div>
@@ -383,7 +383,7 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
       {/* Summary bar */}
       <div className="flex items-center justify-between p-3 bg-data-neutral-bg rounded-lg border border-data-neutral">
         <div className="text-sm text-data-neutral">
-          Completed <span className="font-bold text-white">{completed}/{actions.length}</span> critical actions
+          Completed <span className="font-bold text-[var(--color-text-inverse)]">{completed}/{actions.length}</span> critical actions
         </div>
         {safetyMissed.length > 0 && (
           <div className="flex items-center gap-1 text-xs text-data-fail font-medium">
@@ -410,7 +410,7 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
               <div
                 key={action.id}
                 className={`flex items-center gap-3 p-2.5 rounded-lg ${
-                  action.triggered ? 'bg-data-pass/10 dark:bg-data-pass/20' : 'bg-data-fail/10 dark:bg-data-fail/20'
+                  action.triggered ? 'bg-data-pass/20' : 'bg-data-fail/20'
                 }`}
               >
                 {action.triggered ? (
@@ -446,7 +446,7 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
 
 // Timeline View
 const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (
-  <div className="relative space-y-2 pl-4 border-l-2 border-data-neutral dark:border-data-neutral">
+  <div className="relative space-y-2 pl-4 border-l-2 border-data-neutral">
     {entries.map((entry, i) => (
       <div key={i} className="relative pl-4">
         <div
@@ -465,7 +465,7 @@ const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (
         <div className="text-xs text-data-neutral mb-0.5">
           {new Date(entry.timestamp).toLocaleTimeString()} • {entry.phase}
         </div>
-        <div className="text-sm text-data-neutral dark:text-data-neutral">{entry.action}</div>
+        <div className="text-sm text-data-neutral">{entry.action}</div>
         {entry.feedback && (
           <div className="text-xs text-data-neutral mt-1 italic">{entry.feedback}</div>
         )}
@@ -482,9 +482,9 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
         key={i}
         className={`p-3 rounded-lg border ${
           gap.severity === 'significant'
-            ? 'bg-data-fail dark:bg-data-fail/20 border-data-fail dark:border-data-fail'
+            ? 'bg-data-fail/20 border-data-fail'
             : gap.severity === 'moderate'
-              ? 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
+              ? 'bg-data-provisional/20 border-data-provisional'
               : 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[var(--color-category-practice)]'
         }`}
       >
@@ -498,7 +498,7 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
                   : 'text-[var(--color-category-practice)]'
             }`}
           />
-          <span className="font-medium text-sm text-data-neutral dark:text-data-neutral">
+          <span className="font-medium text-sm text-data-neutral">
             {gap.category.charAt(0).toUpperCase() + gap.category.slice(1)}
           </span>
           <span
@@ -513,7 +513,7 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
             {gap.severity}
           </span>
         </div>
-        <p className="text-sm text-data-neutral dark:text-data-neutral">{gap.recommendation}</p>
+        <p className="text-sm text-data-neutral">{gap.recommendation}</p>
       </div>
     ))}
   </div>

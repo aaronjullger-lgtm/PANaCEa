@@ -381,9 +381,11 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
               <div className="text-sm font-medium text-[var(--color-text-primary)]">
                 Next Review in{' '}
                 <span className="text-data-pass">
-                  {nextReview.intervalDays === 0
+                  {Math.round(nextReview.intervalDays) <= 0
                     ? 'Today'
-                    : `${nextReview.intervalDays} day${nextReview.intervalDays !== 1 ? 's' : ''}`}
+                    : Math.round(nextReview.intervalDays) === 1
+                      ? 'Tomorrow'
+                      : `${Math.round(nextReview.intervalDays)} days`}
                 </span>
               </div>
               <div className="text-xs text-[var(--color-text-muted)] mt-1">

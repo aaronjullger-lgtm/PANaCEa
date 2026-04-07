@@ -59,7 +59,7 @@ export default function CustomStudyMode({ onBack }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-data-neutral dark:bg-data-neutral">
+    <div className="min-h-screen bg-data-neutral">
       {phase === 'builder' && (
         <CustomSessionBuilder onStartSession={handleStartSession} onCancel={onBack} />
       )}

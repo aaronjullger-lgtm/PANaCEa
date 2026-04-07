@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { isAdmin, type UserRole } from '../_shared/rbac';
+import { auditLog } from '../_shared/auditLog';
 
 const CuratedPassageGetSchema = z.object({
   conditionId: z.string().optional(),
@@ -41,24 +41,8 @@ export const onRequestGet = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { role: true, id: true },
-      });
-
-      const role = String(user?.role).toLowerCase() as UserRole | undefined;
-
-      if (!user || !role || !isAdmin(role)) {
-        logger.warn('Non-admin attempted to access curated passages admin GET', {
-          userId: auth.userId,
-          role: user?.role,
-        });
-
-        return {
-          data: { error: 'Admin access required' },
-          status: 403,
-        };
-      }
+      // withAdminRole() in adminAuthenticatedEndpoint already verified admin access.
+      const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
 
       const { conditionId, system } = validated;
       const limit = Math.min(Math.max(Number.parseInt(validated.limit || '50', 10), 1), 200);
@@ -83,7 +67,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
       });
 
       logger.info('Admin listed curated passages', {
-        userId: user.id,
+        userId: adminUserId,
         count: passages.length,
       });
 
@@ -110,24 +94,8 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { role: true, id: true },
-      });
-
-      const role = String(user?.role).toLowerCase() as UserRole | undefined;
-
-      if (!user || !role || !isAdmin(role)) {
-        logger.warn('Non-admin attempted to modify curated passages', {
-          userId: auth.userId,
-          role: user?.role,
-        });
-
-        return {
-          data: { error: 'Admin access required' },
-          status: 403,
-        };
-      }
+      // withAdminRole() in adminAuthenticatedEndpoint already verified admin access.
+      const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
 
       const { action, id, title, body, source, sourceUrl, license, systemCodes, conditionIds } =
         validated.body;
@@ -160,9 +128,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         });
 
         logger.info('Curated passage created', {
-          userId: user.id,
+          userId: adminUserId,
           passageId: created.id,
         });
+        auditLog('admin_curated_passage_upsert', { userId: adminUserId, action: 'create', passageId: created.id });
 
         return { data: { success: true, passage: created } };
       }
@@ -190,9 +159,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         });
 
         logger.info('Curated passage updated', {
-          userId: user.id,
+          userId: adminUserId,
           passageId: updated.id,
         });
+        auditLog('admin_curated_passage_upsert', { userId: adminUserId, action: 'update', passageId: updated.id });
 
         return { data: { success: true, passage: updated } };
       }
@@ -208,9 +178,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
       await prisma.curatedPassage.delete({ where: { id } });
 
       logger.info('Curated passage deleted', {
-        userId: user.id,
+        userId: adminUserId,
         passageId: id,
       });
+      auditLog('admin_curated_passage_delete', { userId: adminUserId, passageId: id });
 
       return { data: { success: true, deleted: true } };
     } catch (error) {

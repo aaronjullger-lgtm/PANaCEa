@@ -95,8 +95,14 @@ async function buildUserAnalytics(
   const weekStart = new Date(now);
   weekStart.setDate(weekStart.getDate() - 7);
 
+  // Readiness analytics: include only MAIN and DRILL sessions.
+  // TARGETED, CRAM, and RAPID_RECALL must not inflate readiness metrics.
   const attempts = await prisma.questionAttempt.findMany({
-    where: { userId, createdAt: { gte: rangeStart } },
+    where: {
+      userId,
+      createdAt: { gte: rangeStart },
+      isMainSession: true, // Filters to MAIN/DRILL (FSRS-eligible sessions)
+    },
     orderBy: { createdAt: 'desc' },
   });
 

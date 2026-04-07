@@ -113,7 +113,7 @@ interface GradingResult {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      modelName: 'gemini-1.5-pro',
+      modelName: 'gemini-2.5-flash',
       prompt,
       temperature: 0.2,
     }),

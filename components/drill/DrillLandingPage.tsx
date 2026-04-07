@@ -92,7 +92,7 @@ export function DrillLandingPage({
     border: 'border-[var(--color-border)]',
     text: 'text-[var(--color-accent)]',
     button: 'bg-[var(--color-accent)] hover:opacity-90',
-    tag: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    tag: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]',
   };
 
   return (
@@ -123,7 +123,7 @@ export function DrillLandingPage({
               <Icon className="w-12 h-12" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{title}</h1>
+              <h1 className="text-3xl font-semibold text-[var(--color-text-primary)] mb-2">{title}</h1>
               <p className="text-lg text-[var(--color-text-secondary)]">{description}</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export function DrillLandingPage({
             onClick={onStart}
             disabled={isLoading}
             aria-label={isLoading ? 'Starting drill...' : `Start ${title} drill`}
-            className={`w-full ${colors.button} text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
+            className={`w-full ${colors.button} text-white font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
           >
             {isLoading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />
@@ -182,7 +182,7 @@ export function DrillLandingPage({
           >
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className={`w-5 h-5 ${colors.text}`} />
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Learning Objectives
               </h2>
             </div>
@@ -192,7 +192,7 @@ export function DrillLandingPage({
                   <div
                     className={`w-5 h-5 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0 mt-0.5`}
                   >
-                    <span className={`text-xs font-bold ${colors.text}`}>{index + 1}</span>
+                    <span className={`text-xs font-semibold ${colors.text}`}>{index + 1}</span>
                   </div>
                   <span className="text-[var(--color-text-secondary)]">{objective}</span>
                 </li>
@@ -215,7 +215,7 @@ export function DrillLandingPage({
                   <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Attempts</span>
                 </div>
-                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {stats.totalAttempts}
                 </div>
               </motion.div>
@@ -232,7 +232,7 @@ export function DrillLandingPage({
                   <BarChart3 className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Avg Score</span>
                 </div>
-                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {stats.averageScore.toFixed(0)}%
                 </div>
               </motion.div>
@@ -249,7 +249,7 @@ export function DrillLandingPage({
                   <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Best Score</span>
                 </div>
-                <div className={`text-2xl font-bold ${colors.text}`}>
+                <div className={`text-2xl font-semibold ${colors.text}`}>
                   {stats.bestScore.toFixed(0)}%
                 </div>
               </motion.div>
@@ -266,7 +266,7 @@ export function DrillLandingPage({
                   <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Time Spent</span>
                 </div>
-                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {stats.timeSpent}m
                 </div>
               </motion.div>
@@ -284,12 +284,12 @@ export function DrillLandingPage({
           >
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className={`w-5 h-5 ${colors.text}`} />
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">How it Works</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">How it Works</h2>
             </div>
             <ul className="space-y-3" role="list" aria-label="Instructions">
               {instructions.map((instruction, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <span className={`${colors.text} font-bold text-lg mt-0.5`}>{index + 1}.</span>
+                  <span className={`${colors.text} font-semibold text-lg mt-0.5`}>{index + 1}.</span>
                   <span className="text-[var(--color-text-secondary)] flex-1">{instruction}</span>
                 </li>
               ))}

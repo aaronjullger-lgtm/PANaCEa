@@ -36,38 +36,38 @@ const levelConfig: Record<
   peaked: {
     icon: Flame,
     color: 'text-[var(--color-data-provisional)]',
-    bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
+    bgColor: 'bg-[var(--color-data-provisional)]/10',
     borderColor:
-      'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
+      'border-[var(--color-data-provisional)]/30',
     label: 'On Fire',
   },
   rising: {
     icon: TrendingUp,
     color: 'text-[var(--color-data-pass)]',
-    bgColor: 'bg-[var(--color-data-pass)]/10 dark:bg-[var(--color-data-pass)]/30',
-    borderColor: 'border-[var(--color-data-pass)]/30 dark:border-[var(--color-data-pass)]/80',
+    bgColor: 'bg-[var(--color-data-pass)]/10',
+    borderColor: 'border-[var(--color-data-pass)]/30',
     label: 'Rising',
   },
   steady: {
     icon: Equal,
     color: 'text-data-neutral',
-    bgColor: 'bg-data-neutral dark:bg-data-neutral',
-    borderColor: 'border-data-neutral dark:border-data-neutral',
+    bgColor: 'bg-data-neutral',
+    borderColor: 'border-data-neutral',
     label: 'Steady',
   },
   cooling: {
     icon: TrendingDown,
     color: 'text-[var(--color-data-provisional)]',
-    bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
+    bgColor: 'bg-[var(--color-data-provisional)]/10',
     borderColor:
-      'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
+      'border-[var(--color-data-provisional)]/30',
     label: 'Cooling',
   },
   cold: {
     icon: Snowflake,
     color: 'text-[var(--color-accent)]',
-    bgColor: 'bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/30',
-    borderColor: 'border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80',
+    bgColor: 'bg-[var(--color-accent)]/10',
+    borderColor: 'border-[var(--color-accent)]/30',
     label: 'Cold',
   },
 };
@@ -124,7 +124,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
-            <span className="text-xs text-data-neutral dark:text-data-neutral">{momentum.score}%</span>
+            <span className="text-xs text-data-neutral">{momentum.score}%</span>
           </div>
 
           {/* Progress bar */}
@@ -148,7 +148,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
           </div>
 
           {/* Stats row */}
-          <div className="mt-2 flex items-center gap-3 text-xs text-data-neutral dark:text-data-neutral">
+          <div className="mt-2 flex items-center gap-3 text-xs text-data-neutral">
             {momentum.streak > 0 && (
               <span className="flex items-center gap-1">
                 <Zap className="w-3 h-3 text-[var(--color-data-provisional)]" />
@@ -179,9 +179,9 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={noMotion ? undefined : { opacity: 0, height: 0 }}
             transition={noMotion ? { duration: 0 } : undefined}
-            className="px-3 py-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80 rounded-lg"
+            className="px-3 py-2 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg"
           >
-            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90 flex items-start gap-2">
+            <p className="text-xs text-[var(--color-accent)] flex items-start gap-2">
               <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
               {momentum.recommendation}
             </p>
@@ -197,15 +197,15 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             animate={{ y: 0 }}
             exit={noMotion ? undefined : { opacity: 0, y: -10 }}
             transition={noMotion ? { duration: 0 } : undefined}
-            className="px-3 py-2 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80 rounded-lg"
+            className="px-3 py-2 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg"
           >
             <div className="flex items-start gap-2">
-              <Coffee className="w-4 h-4 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]/90 mt-0.5 shrink-0" />
+              <Coffee className="w-4 h-4 text-[var(--color-data-provisional)] mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-medium text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]/90">
+                <p className="text-xs font-medium text-[var(--color-data-provisional)]">
                   Time for a break?
                 </p>
-                <p className="text-xs text-[var(--color-data-provisional)]/80 dark:text-[var(--color-data-provisional)]/80 mt-0.5">
+                <p className="text-xs text-[var(--color-data-provisional)]/80 mt-0.5">
                   {fatigue.signals.join(' • ')}
                 </p>
               </div>

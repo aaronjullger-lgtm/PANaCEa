@@ -143,7 +143,7 @@ export function Sparkline({
             width={chartWidth}
             y={padding + chartHeight - ((referenceRange[1] - min) / range) * chartHeight}
             height={((referenceRange[1] - referenceRange[0]) / range) * chartHeight}
-            fill="#22c55e"
+            fill="var(--color-data-pass)"
             fillOpacity={0.08}
             rx={2}
           />
@@ -211,7 +211,7 @@ export function SparklineBar({
   data,
   width = 100,
   height = 30,
-  color = '#3b82f6',
+  color = 'var(--color-accent)',
   min: minProp,
   max: maxProp,
   className = '',

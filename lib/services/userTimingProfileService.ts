@@ -437,3 +437,90 @@ export async function getUserBehavioralBaseline(
     return null; // Safe fallback — use absolute thresholds
   }
 }
+
+// ─── Combined Fetch ────────────────────────────────────────────────────────────
+
+export interface UserBehavioralContext {
+  speedFactor: number;
+  behavioralBaseline: UserBehavioralBaseline | null;
+}
+
+/**
+ * Fetch BOTH the speed factor and behavioral baseline in a single DB query.
+ *
+ * `drillReviewService` previously called `getUserSpeedFactor` + `getUserBehavioralBaseline`
+ * separately, generating two identical `userStatistics.findUnique` queries on every
+ * `submitReview`. This function collapses them to one read, with independent stale checks
+ * and lazy recompute for whichever half is expired.
+ */
+export async function getUserBehavioralContext(
+  prisma: PrismaClient,
+  userId: string
+): Promise<UserBehavioralContext> {
+  const STALE_MS = 24 * 60 * 60 * 1000;
+
+  try {
+    // ── Single DB read for the whole timing profile ──────────────────────────
+    const stats = await (prisma as any).userStatistics.findUnique({
+      where: { userId },
+      select: { timingProfile: true },
+    });
+
+    type CachedProfile = UserTimingProfile & { behavioralBaseline?: UserBehavioralBaseline };
+    const cached = stats?.timingProfile as CachedProfile | null;
+
+    // ── Speed factor ─────────────────────────────────────────────────────────
+    let speedFactor = 1.0;
+    let needSpeedRecompute = true;
+    if (cached?.computedAt) {
+      const age = Date.now() - new Date(cached.computedAt).getTime();
+      if (age < STALE_MS) {
+        speedFactor = cached.speedFactor;
+        needSpeedRecompute = false;
+      }
+    }
+
+    // ── Behavioral baseline ───────────────────────────────────────────────────
+    let behavioralBaseline: UserBehavioralBaseline | null = null;
+    let needBaselineRecompute = true;
+    if (cached?.behavioralBaseline?.computedAt) {
+      const age = Date.now() - new Date(cached.behavioralBaseline.computedAt).getTime();
+      if (age < STALE_MS) {
+        behavioralBaseline = cached.behavioralBaseline;
+        needBaselineRecompute = false;
+      }
+    }
+
+    // ── Lazy recompute only what's stale ─────────────────────────────────────
+    if (needSpeedRecompute || needBaselineRecompute) {
+      const [freshProfile, freshBaseline] = await Promise.all([
+        needSpeedRecompute ? computeUserTimingProfile(prisma, userId) : null,
+        needBaselineRecompute ? computeBehavioralBaseline(prisma, userId) : null,
+      ]);
+
+      if (freshProfile) speedFactor = freshProfile.speedFactor;
+      if (freshBaseline) behavioralBaseline = freshBaseline;
+
+      // Persist merged update (non-blocking)
+      const merged: CachedProfile = {
+        ...(freshProfile ?? cached ?? ({} as CachedProfile)),
+        behavioralBaseline: freshBaseline ?? cached?.behavioralBaseline,
+      };
+      (prisma as any).userStatistics.upsert({
+        where: { userId },
+        update: { timingProfile: merged as any },
+        create: {
+          userId,
+          totalQuestions: 0,
+          correctAnswers: 0,
+          systemStats: {},
+          timingProfile: merged as any,
+        },
+      }).catch(() => { /* non-fatal */ });
+    }
+
+    return { speedFactor, behavioralBaseline };
+  } catch {
+    return { speedFactor: 1.0, behavioralBaseline: null };
+  }
+}

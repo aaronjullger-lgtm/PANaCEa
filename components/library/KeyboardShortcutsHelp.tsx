@@ -32,7 +32,7 @@ const SHORTCUTS: Shortcut[] = [
 ];
 
 const Key: React.FC<{ children: string }> = ({ children }) => (
-  <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-xs font-mono text-[var(--color-text-primary)] shadow-sm">
+  <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded bg-[var(--color-bg-secondary)] text-xs font-mono text-[var(--color-text-primary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
     {children}
   </kbd>
 );

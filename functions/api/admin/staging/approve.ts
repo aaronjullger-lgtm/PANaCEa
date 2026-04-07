@@ -9,6 +9,7 @@ import { adminEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { promoteToLive } from '../../_shared/staging-questions';
+import { auditLog } from '../../_shared/auditLog';
 
 const ApproveBodySchema = z.object({
   body: z.object({
@@ -62,6 +63,11 @@ export const onRequestPost = adminEndpoint(ApproveBodySchema, async (context) =>
     });
 
     log.info('Staging approved and removed', { stagingId });
+    auditLog('admin_staging_approve', {
+      userId: context.auth.userId,
+      stagingId,
+      system: staging.system,
+    });
     return { data: { success: true, message: 'Approved and moved to live pool' } };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

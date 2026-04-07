@@ -6,6 +6,7 @@ import { Calendar, Clock, Target, TrendingUp, Zap, AlertTriangle, ChevronRight, 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { RecommendationResponse, StudyPlan } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
+import { CARD_RING_SHADOW } from '@/components/ui/Card';
 import ProgressProjectionChart from './ProgressProjectionChart';
 import PlanAlternativesModal from './PlanAlternativesModal';
 import FatigueAlertBanner from './FatigueAlertBanner';
@@ -146,7 +147,7 @@ const StudyPathDashboard = () => {
         ? error.message
         : 'Unable to load your study plan. Please try again.';
     return (
-      <div className="rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
+      <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
         <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[var(--color-warning)]" />
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
           Study plan unavailable
@@ -171,7 +172,7 @@ const StudyPathDashboard = () => {
 
   if (!plan) {
     return (
-      <div className="rounded-lg bg-[var(--color-bg-secondary)] p-6 text-center">
+      <div className="rounded-xl bg-[var(--color-bg-secondary)] p-6 text-center">
         <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
           No study plan generated
@@ -218,7 +219,7 @@ const StudyPathDashboard = () => {
               <Target className="w-6 h-6 text-[var(--color-text-inverse)]" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[var(--color-text-primary)] truncate max-w-full">
                 Dynamic Study Path Optimizer
               </h1>
               <p className="text-sm md:text-base text-[var(--color-text-secondary)]">
@@ -233,14 +234,14 @@ const StudyPathDashboard = () => {
 
         {/* Plan Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5 shadow-sm border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-[var(--color-accent)]/10">
                 <Clock className="w-5 h-5 text-[var(--color-accent)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)]">Total Study Time</p>
-                <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {Math.round(totalMinutes / 60)} hours
                 </p>
               </div>
@@ -250,14 +251,14 @@ const StudyPathDashboard = () => {
             </p>
           </div>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5 shadow-sm border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-[var(--color-success)]/10">
                 <TrendingUp className="w-5 h-5 text-[var(--color-success)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)]">Projected Retention Increase</p>
-                <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   +{(projectedRetentionIncrease * 100).toFixed(1)}%
                 </p>
               </div>
@@ -267,14 +268,14 @@ const StudyPathDashboard = () => {
             </p>
           </div>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5 shadow-sm border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-[var(--color-warning)]/10">
                 <Zap className="w-5 h-5 text-[var(--color-warning)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)]">Confidence</p>
-                <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {(confidence * 100).toFixed(0)}%
                 </p>
               </div>
@@ -284,14 +285,14 @@ const StudyPathDashboard = () => {
             </p>
           </div>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5 shadow-sm border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-[var(--color-info)]/10">
                 <Calendar className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)]">Blueprint Coverage</p>
-                <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
                   {(Object.values(blueprintCoverage) as number[]).reduce((sum, val) => sum + val, 0).toFixed(1)}%
                 </p>
               </div>
@@ -303,7 +304,7 @@ const StudyPathDashboard = () => {
         </div>
 
         {/* Progress Projection Chart */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl p-6 shadow-sm border border-[var(--color-border)]">
+        <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
           <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-6">
             Progress Projection
           </h2>
@@ -311,7 +312,7 @@ const StudyPathDashboard = () => {
         </div>
 
         {/* Sessions List */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl p-6 shadow-sm border border-[var(--color-border)]">
+        <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Study Sessions</h2>
             <span className="text-sm text-[var(--color-text-secondary)]">
@@ -326,7 +327,7 @@ const StudyPathDashboard = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-bold">
+                    <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold">
                       <span className="text-xs">Day</span>
                       <span>{idx + 1}</span>
                     </div>
@@ -379,7 +380,7 @@ const StudyPathDashboard = () => {
 
         {/* Rationale */}
         {rationale && (
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-6 shadow-sm border border-[var(--color-border)]">
+          <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
               Plan Rationale
             </h3>

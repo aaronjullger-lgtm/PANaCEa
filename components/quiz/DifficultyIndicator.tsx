@@ -266,23 +266,30 @@ export function useQuestionDifficulty(questionText: string, topicAccuracy?: numb
   };
 }
 
+// ─── Par Time Constants (milliseconds) ──────────────────────────────────────
+const PAR_TIME_BASE_MS = 60_000;
+const PAR_TIME_LONG_VIGNETTE_MS = 30_000;
+const PAR_TIME_MEDIUM_VIGNETTE_MS = 15_000;
+const PAR_TIME_TABLE_MS = 20_000;
+const PAR_TIME_LAB_VALUES_MS = 15_000;
+const PAR_TIME_MULTI_STEP_MS = 10_000;
+
 // Calculate par time based on difficulty factors
 function calculateParTime(factors: DifficultyFactors): number {
-  // Base time: 60 seconds
-  let parTime = 60000;
+  let parTime = PAR_TIME_BASE_MS;
 
   // Add time for word count
-  if (factors.vignetteComplexity === 'long') parTime += 30000;
-  else if (factors.vignetteComplexity === 'medium') parTime += 15000;
+  if (factors.vignetteComplexity === 'long') parTime += PAR_TIME_LONG_VIGNETTE_MS;
+  else if (factors.vignetteComplexity === 'medium') parTime += PAR_TIME_MEDIUM_VIGNETTE_MS;
 
   // Add time for tables
-  if (factors.hasTable) parTime += 20000;
+  if (factors.hasTable) parTime += PAR_TIME_TABLE_MS;
 
   // Add time for lab interpretation
-  if (factors.hasLabValues) parTime += 15000;
+  if (factors.hasLabValues) parTime += PAR_TIME_LAB_VALUES_MS;
 
   // Add time for multi-step reasoning
-  if (factors.hasMultipleSteps) parTime += 10000;
+  if (factors.hasMultipleSteps) parTime += PAR_TIME_MULTI_STEP_MS;
 
   return parTime;
 }

@@ -93,7 +93,7 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (error) {
     return (
-      <div className="rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
+      <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
         <p className="text-[var(--color-text-primary)] font-medium mb-2">Progress projection unavailable</p>
         <p className="text-sm text-[var(--color-text-secondary)]">
           Unable to load progress data. Please try again later.
@@ -107,7 +107,7 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (projections.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 bg-[var(--color-bg-secondary)] rounded-lg">
+      <div className="flex flex-col items-center justify-center h-64 bg-[var(--color-bg-secondary)] rounded-xl">
         <p className="text-[var(--color-text-muted)] mb-2">No projection data available</p>
         <p className="text-sm text-[var(--color-text-secondary)]">
           Complete a study session to see progress projections.

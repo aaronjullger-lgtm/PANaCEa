@@ -64,7 +64,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
   if (!isSignedIn) return null;
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 shadow-sm">
+    <div className="rounded-xl bg-[var(--color-bg-primary)] p-4 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />
         <div>
@@ -123,7 +123,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
               {pair.correctConditionId && pair.selectedConditionId && (
                 <button
                   onClick={() => handleCompare(pair)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-text-inverse)] shadow-sm transition-all duration-200 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                  className="inline-flex items-center gap-1 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-all duration-200 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   disabled={prefetchingId === pair.id}
                 >
                   {prefetchingId === pair.id ? (

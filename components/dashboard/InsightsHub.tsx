@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, TrendingUp, TrendingDown, Target,
   Flame, Brain, ChevronRight, Loader2, RefreshCw,
@@ -50,10 +51,10 @@ interface InsightsResponse {
 // ─── Severity Styles ─────────────────────────────────────────────────────────
 
 const severityStyles: Record<InsightSeverity, { bg: string; border: string; icon: string }> = {
-  critical: { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800', icon: 'text-red-600' },
-  warning:  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', icon: 'text-amber-600' },
-  positive: { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', icon: 'text-emerald-600' },
-  info:     { bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-800', icon: 'text-blue-600' },
+  critical: { bg: 'bg-[var(--color-data-fail)]/8',        border: 'border-[var(--color-data-fail)]/20',        icon: 'text-[var(--color-data-fail)]' },
+  warning:  { bg: 'bg-[var(--color-data-provisional)]/8', border: 'border-[var(--color-data-provisional)]/20', icon: 'text-[var(--color-data-provisional)]' },
+  positive: { bg: 'bg-[var(--color-data-pass)]/8',        border: 'border-[var(--color-data-pass)]/20',        icon: 'text-[var(--color-data-pass)]' },
+  info:     { bg: 'bg-[var(--color-accent)]/8',            border: 'border-[var(--color-accent)]/20',            icon: 'text-[var(--color-accent)]' },
 };
 
 function SeverityIcon({ severity }: { severity: InsightSeverity }) {
@@ -74,12 +75,12 @@ function InsightCard({ insight, onAction }: { insight: StudentInsight; onAction?
       <div className="flex items-start gap-3">
         <SeverityIcon severity={insight.severity} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">{insight.title}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{insight.narrative}</p>
+          <h3 className="font-semibold text-sm text-[var(--color-text-primary)]">{insight.title}</h3>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">{insight.narrative}</p>
           {insight.actionLabel && insight.actionData && onAction && (
             <button
               onClick={() => onAction(insight.actionData!)}
-              className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800"
+              className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] hover:opacity-80"
             >
               {insight.actionLabel}
               <ChevronRight className="w-4 h-4" />
@@ -96,10 +97,10 @@ function ReadinessGauge({ readiness }: { readiness: ExamReadiness }) {
   const passPct = Math.round((passingThreshold / 800) * 100);
 
   const trendColors: Record<string, string> = {
-    ahead: 'text-emerald-600',
-    on_track: 'text-blue-600',
-    at_risk: 'text-red-600',
-    insufficient_data: 'text-gray-500',
+    ahead: 'text-[var(--color-data-pass)]',
+    on_track: 'text-[var(--color-accent)]',
+    at_risk: 'text-[var(--color-data-fail)]',
+    insufficient_data: 'text-[var(--color-text-muted)]',
   };
 
   const trendLabels: Record<string, string> = {
@@ -110,35 +111,35 @@ function ReadinessGauge({ readiness }: { readiness: ExamReadiness }) {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900">
+    <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">Exam Readiness</h3>
+        <h3 className="font-semibold text-sm text-[var(--color-text-primary)]">Exam Readiness</h3>
         <span className={`text-sm font-medium ${trendColors[trend]}`}>{trendLabels[trend]}</span>
       </div>
       {/* Progress bar */}
-      <div className="relative h-4 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+      <div className="relative h-4 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <div
           className={`absolute h-full rounded-full transition-all ${
-            trend === 'at_risk' ? 'bg-red-500' : trend === 'ahead' ? 'bg-emerald-500' : 'bg-blue-500'
+            trend === 'at_risk' ? 'bg-[var(--color-data-fail)]' : trend === 'ahead' ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-accent)]'
           }`}
           style={{ width: `${pct}%` }}
         />
         {/* Passing threshold marker */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-gray-900 dark:bg-gray-100"
+          className="absolute top-0 bottom-0 w-0.5 bg-[var(--color-text-primary)]"
           style={{ left: `${passPct}%` }}
           title={`Passing: ${passingThreshold}`}
         />
       </div>
 
-      <div className="flex justify-between mt-2 text-xs text-gray-500">
+      <div className="flex justify-between mt-2 text-xs text-[var(--color-text-muted)]">
         <span>Current: {currentScore}</span>
         <span>Pass: {passingThreshold}</span>
         <span>Projected: {projectedScore}</span>
       </div>
 
       {daysToExam != null && (
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-[var(--color-text-muted)] mt-2">
           {daysToExam} days to exam · {Math.round(confidence * 100)}% confidence
         </p>
       )}
@@ -148,6 +149,7 @@ function ReadinessGauge({ readiness }: { readiness: ExamReadiness }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function InsightsHub() {
+  const navigate = useNavigate();
   const [data, setData] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,24 +171,37 @@ export default function InsightsHub() {
   useEffect(() => { fetchInsights(); }, [fetchInsights]);
 
   const handleAction = useCallback((actionData: Record<string, unknown>) => {
-    // Dispatch navigation or modal based on actionData
-    console.log('Insight action:', actionData);
-    // TODO: integrate with app navigation
-  }, []);
+    // Route-based actions: navigate to the specified route
+    if (typeof actionData.route === 'string') {
+      navigate(actionData.route);
+      return;
+    }
+    // System-specific drill: navigate to drill with system filter
+    if (typeof actionData.system === 'string') {
+      navigate(`/study/main-session?system=${encodeURIComponent(actionData.system)}`);
+      return;
+    }
+    // Condition-specific drill: navigate to targeted session
+    if (typeof actionData.conditionId === 'string') {
+      navigate(`/study/targeted-session?conditions=${encodeURIComponent(actionData.conditionId)}`);
+      return;
+    }
+    console.warn('[InsightsHub] Unhandled action data:', actionData);
+  }, [navigate]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="text-center p-6 text-gray-500">
+      <div className="text-center p-6 text-[var(--color-text-muted)]">
         <p>{error ?? 'No insights available'}</p>
-        <button onClick={fetchInsights} className="mt-2 text-indigo-600 text-sm">Retry</button>
+        <button onClick={fetchInsights} className="mt-2 text-[var(--color-accent)] text-sm">Retry</button>
       </div>
     );
   }
@@ -198,9 +213,9 @@ export default function InsightsHub() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Study Insights</h2>
-        <button onClick={fetchInsights} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-          <RefreshCw className="w-4 h-4 text-gray-500" />
+        <h2 className="text-base font-semibold text-[var(--color-text-primary)]">Study Insights</h2>
+        <button onClick={fetchInsights} className="p-1.5 rounded hover:bg-[var(--color-bg-tertiary)]" aria-label="Refresh">
+          <RefreshCw className="w-4 h-4 text-[var(--color-text-muted)]" />
         </button>
       </div>
 
@@ -235,7 +250,7 @@ export default function InsightsHub() {
       )}
 
       {data.insights.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-4">
+        <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
           Complete more questions to unlock personalized insights.
         </p>
       )}

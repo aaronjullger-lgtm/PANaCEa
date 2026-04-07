@@ -269,7 +269,7 @@ export function MediaApprovalDashboard() {
       {/* Stats */}
       {stats && (
         <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Pending</p>
@@ -281,7 +281,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Approved</p>
@@ -291,7 +291,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Rejected</p>
@@ -301,7 +301,7 @@ export function MediaApprovalDashboard() {
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-sm">
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Approval Rate</p>
@@ -351,7 +351,7 @@ export function MediaApprovalDashboard() {
             {pendingMedia.map((media) => (
               <div
                 key={media.id}
-                className="bg-[var(--color-bg-primary)] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="bg-[var(--color-bg-primary)] rounded-lg overflow-hidden shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow"
               >
                 {/* Image Preview */}
                 <div

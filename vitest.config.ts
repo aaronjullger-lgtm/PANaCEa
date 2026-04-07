@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
+      '@sentry/cloudflare': path.resolve(__dirname, './vitest-mocks/sentry-stub.ts'),
     },
   },
   test: {
@@ -33,7 +34,7 @@ export default defineConfig({
       'tests/components/Goals/**',
       'tests/components/offline/**',
       'tests/useDrillFSRS.test.ts',
-      'tests/implicit-metrics.test.ts',
+      // tests/implicit-metrics.test.ts — re-enabled: no React dependency, pure function tests
       'lib/implicit-metrics.test.ts',
       'functions/api/_shared/auth.test.ts',
       'functions/api/osce/complete.test.ts',

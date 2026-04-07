@@ -15,7 +15,6 @@ import { z } from 'zod';
 import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { isAdmin, type UserRole } from '../_shared/rbac';
 
 const PlatformStatsSchema = z.object({
   query: z
@@ -35,25 +34,8 @@ export const onRequestGet = adminAuthenticatedEndpoint(PlatformStatsSchema, asyn
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { role: true, id: true },
-    });
-
-    const role = String(user?.role).toLowerCase() as UserRole | undefined;
-
-    if (!user || !role || !isAdmin(role)) {
-      logger.warn('Non-admin attempted to access platform stats', {
-        userId: auth.userId,
-        role: user?.role,
-      });
-
-      return {
-        data: { error: 'Admin access required' },
-        status: 403,
-      };
-    }
+    // withAdminRole() already verified admin access and attached dbRole/dbUserId to metadata.
+    const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
 
     // Parse query parameters
     const startParam = validated.query?.start;
@@ -128,7 +110,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(PlatformStatsSchema, asyn
         : null;
 
     logger.info('Platform statistics retrieved', {
-      userId: user.id,
+      userId: adminUserId,
       daysReturned: stats.length,
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],

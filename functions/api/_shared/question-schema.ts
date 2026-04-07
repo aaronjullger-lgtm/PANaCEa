@@ -1,6 +1,9 @@
 /**
  * JSON Schema for Gemini 2.5 structured output mode.
  * Used with responseSchema parameter in generationConfig.
+ *
+ * Supports 4 OR 5 options (A–D or A–E) to align with PANCE blueprint.
+ * When 5 options are generated, explanation.incorrect.E is required.
  */
 
 export const QUESTION_RESPONSE_SCHEMA = {
@@ -20,7 +23,7 @@ export const QUESTION_RESPONSE_SCHEMA = {
       items: {
         type: 'string'
       },
-      description: 'Exactly 4 multiple choice options (A, B, C, D)'
+      description: '4 or 5 multiple choice options (A–D or A–E). PANCE uses 4 options; use 5 when additional plausible distractors improve discrimination.'
     },
     correctAnswer: {
       type: 'string',
@@ -51,10 +54,14 @@ export const QUESTION_RESPONSE_SCHEMA = {
             D: {
               type: 'string',
               description: 'Why option D is incorrect; identify the type of patient or scenario where it would be correct'
+            },
+            E: {
+              type: 'string',
+              description: 'Why option E is incorrect (only when 5 options are present); identify the type of patient or scenario where it would be correct'
             }
           },
           required: ['A', 'B', 'C', 'D'],
-          description: 'Explanations for each incorrect option'
+          description: 'Explanations for each incorrect option. A–D are required; E is required when 5 options are present.'
         }
       },
       required: ['rationale', 'incorrect'],
@@ -115,6 +122,8 @@ export interface GeneratedQuestionStrict {
       B: string;
       C: string;
       D: string;
+      /** Present when question has 5 options */
+      E?: string;
     };
   };
   difficulty: number;

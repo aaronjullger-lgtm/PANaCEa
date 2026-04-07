@@ -4,6 +4,10 @@
  *
  * WASM Sync Conflict: Review logs are merged (append-only) via atomic DB append,
  * never overwritten, so multi-device (e.g. phone offline + laptop) does not lose data.
+ *
+ * progressContext partitions FSRS state:
+ *   READINESS — MAIN/DRILL sessions (longitudinal PANCE readiness signal)
+ *   TARGETED  — Focused study sessions (local weakness tracking, does not pollute readiness)
  */
 
 import { Prisma } from '@prisma/client';
@@ -13,6 +17,8 @@ import { createReviewSnapshot } from '../fsrs';
 export interface UpdateUserProgressInput {
   userId: string;
   conditionId: string;
+  /** Partitions FSRS state: 'READINESS' (default) or 'TARGETED'. */
+  progressContext?: 'READINESS' | 'TARGETED';
   fsrsCard: FSRSCard;
   rating: Rating;
   accuracy: number; // 0-1 float
@@ -24,12 +30,17 @@ export interface UpdateUserProgressInput {
  * Update or create UserProgress with review history snapshot.
  * Uses atomic append for reviewHistory so concurrent updates (multi-device) merge
  * instead of last-write-wins overwriting.
+ *
+ * progressContext determines which partition of FSRS state to write:
+ *   - 'READINESS' (default): MAIN/DRILL sessions — the longitudinal readiness signal
+ *   - 'TARGETED': Focused study sessions — isolated weakness tracking
  */
 export async function updateUserProgressWithHistory(
   prisma: any,
   input: UpdateUserProgressInput
 ): Promise<void> {
   const { userId, conditionId, fsrsCard, rating, accuracy, nextReviewAt } = input;
+  const progressContext = input.progressContext ?? 'READINESS';
 
   const snapshot: ReviewSnapshot = createReviewSnapshot(fsrsCard, rating);
   const snapshotJson = JSON.stringify(snapshot);
@@ -71,10 +82,14 @@ export async function updateUserProgressWithHistory(
               ELSE 0
             END,
             "fsrsCard" = (${fsrsCardJson})::jsonb,
+            "fsrsStability" = ${fsrsCard.stability},
+            "fsrsDifficulty" = ${fsrsCard.difficulty},
+            "fsrsState" = ${fsrsCard.state},
+            "fsrsReps" = ${fsrsCard.reps},
             "lastReviewAt" = ${now},
             "nextReviewAt" = ${nextReviewDate},
             "updatedAt" = ${now}
-          WHERE "userId" = ${userId} AND "conditionId" = ${conditionId}
+          WHERE "userId" = ${userId} AND "conditionId" = ${conditionId} AND "progressContext" = ${progressContext}::"ProgressContext"
         `
       );
       const updated = typeof result === 'number' ? result : Number(result);
@@ -86,7 +101,7 @@ export async function updateUserProgressWithHistory(
 
   // 2. No row updated: create or fallback read-modify-write
   const existing = await prisma.userProgress.findUnique({
-    where: { userId_conditionId: { userId, conditionId } },
+    where: { userId_conditionId_progressContext: { userId, conditionId, progressContext } },
   });
 
   let reviewHistory: any[] =
@@ -102,7 +117,7 @@ export async function updateUserProgressWithHistory(
 
   try {
     await prisma.userProgress.upsert({
-      where: { userId_conditionId: { userId, conditionId } },
+      where: { userId_conditionId_progressContext: { userId, conditionId, progressContext } },
       update: {
         fsrsCard: {
           stability: fsrsCard.stability,
@@ -114,6 +129,12 @@ export async function updateUserProgressWithHistory(
           lapses: fsrsCard.lapses,
           last_review: fsrsCard.last_review.toISOString(),
         },
+        // Dual-write scalar FSRS fields so readers using these columns
+        // stay in sync with the authoritative fsrsCard JSON.
+        fsrsStability: fsrsCard.stability,
+        fsrsDifficulty: fsrsCard.difficulty,
+        fsrsState: fsrsCard.state,
+        fsrsReps: fsrsCard.reps,
         reviewHistory,
         totalAttempts,
         correctCount,
@@ -126,6 +147,7 @@ export async function updateUserProgressWithHistory(
         id: crypto.randomUUID(),
         userId,
         conditionId,
+        progressContext,
         fsrsCard: {
           stability: fsrsCard.stability,
           difficulty: fsrsCard.difficulty,
@@ -136,6 +158,11 @@ export async function updateUserProgressWithHistory(
           lapses: fsrsCard.lapses,
           last_review: fsrsCard.last_review.toISOString(),
         },
+        // Dual-write scalar FSRS fields for readers that query these directly.
+        fsrsStability: fsrsCard.stability,
+        fsrsDifficulty: fsrsCard.difficulty,
+        fsrsState: fsrsCard.state,
+        fsrsReps: fsrsCard.reps,
         reviewHistory,
         totalAttempts,
         correctCount,
@@ -152,7 +179,7 @@ export async function updateUserProgressWithHistory(
       // Log the error but don't throw - this allows the review to continue
       // even if UserProgress can't be created due to missing user/condition
       console.warn(
-        `Failed to create/update UserProgress for user ${userId}, condition ${conditionId}:`,
+        `Failed to create/update UserProgress for user ${userId}, condition ${conditionId} (${progressContext}):`,
         error.message
       );
       return;
@@ -160,143 +187,4 @@ export async function updateUserProgressWithHistory(
     // Re-throw other errors
     throw error;
   }
-}
-
-/**
- * Fetch review history for a user's condition
- * Returns snapshots for visualization
- *
- * @param prisma - Prisma client instance
- * @param userId - User ID
- * @param conditionId - Condition ID
- * @param days - Number of days to fetch (default 30)
- * @returns Array of review snapshots within the date range
- */
-export async function getUserReviewHistory(
-  prisma: any,
-  userId: string,
-  conditionId: string,
-  days: number = 30
-): Promise<ReviewSnapshot[]> {
-  const progress = await prisma.userProgress.findUnique({
-    where: {
-      userId_conditionId: {
-        userId,
-        conditionId,
-      },
-    },
-    select: {
-      reviewHistory: true,
-    },
-  });
-
-  if (!progress || !Array.isArray(progress.reviewHistory)) {
-    return [];
-  }
-
-  // Filter by date range
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-
-  return (progress.reviewHistory as ReviewSnapshot[])
-    .filter((snapshot) => {
-      const snapshotDate = new Date(snapshot.date);
-      return snapshotDate >= cutoffDate;
-    })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-}
-
-/**
- * Get aggregated review history across all conditions for a user
- * Useful for dashboard visualization of overall stability growth
- *
- * @param prisma - Prisma client instance
- * @param userId - User ID
- * @param days - Number of days to fetch (default 30)
- * @returns Array of all review snapshots within the date range, sorted by date
- */
-export async function getAllUserReviewHistory(
-  prisma: any,
-  userId: string,
-  days: number = 30
-): Promise<Array<ReviewSnapshot & { conditionId: string }>> {
-  const allProgress = await prisma.userProgress.findMany({
-    where: { userId },
-    select: {
-      conditionId: true,
-      reviewHistory: true,
-    },
-  });
-
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-
-  const allSnapshots: Array<ReviewSnapshot & { conditionId: string }> = [];
-
-  for (const progress of allProgress) {
-    if (!Array.isArray(progress.reviewHistory)) continue;
-
-    const snapshots = (progress.reviewHistory as ReviewSnapshot[])
-      .filter((snapshot) => {
-        const snapshotDate = new Date(snapshot.date);
-        return snapshotDate >= cutoffDate;
-      })
-      .map((snapshot) => ({
-        ...snapshot,
-        conditionId: progress.conditionId,
-      }));
-
-    allSnapshots.push(...snapshots);
-  }
-
-  // Sort by date
-  return allSnapshots.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-}
-
-/**
- * Get aggregated mastery stats for a condition family
- */
-export async function getConditionFamilyMastery(
-  prisma: any,
-  canonicalName: string,
-  userId: string
-) {
-  // Get all conditions in family
-  const family = await prisma.medicalContent.findMany({
-    where: { canonicalName },
-    select: { id: true, condition: true },
-  });
-
-  if (family.length === 0) {
-    return null;
-  }
-
-  // Get UserProgress for all family members
-  const progressRecords = await prisma.userProgress.findMany({
-    where: {
-      userId,
-      conditionId: { in: family.map((c: any) => c.id) },
-    },
-  });
-
-  // Calculate aggregate mastery
-  const totalStability = progressRecords.reduce(
-    (sum: number, p: any) => sum + (p.fsrsCard?.stability || 0),
-    0
-  );
-  const avgStability = progressRecords.length > 0 ? totalStability / progressRecords.length : 0;
-
-  // Determine overall mastery level
-  let overallMastery = 'low'; // < 0.8
-  if (avgStability > 10) overallMastery = 'high';
-  else if (avgStability > 3) overallMastery = 'medium';
-
-  return {
-    canonicalName,
-    familyMemberCount: family.length,
-    progressRecordCount: progressRecords.length,
-    avgStability,
-    overallMastery, // 'high' | 'medium' | 'low'
-    coveragePercentage: Math.round((progressRecords.length / family.length) * 100),
-  };
 }

@@ -24,6 +24,8 @@ const SessionGetSchema = z.object({
     .transform((v) => v === 'true' || v === '1'),
   eorMode: z.string().optional().transform((v) => v === 'true' || v === '1'),
   eorDeadline: z.string().optional(),
+  /** Sprint 3: session lane — 'main' (blueprint-enforced) | 'eor' (rotation-specific) */
+  sessionLane: z.enum(['main', 'eor', 'drill']).optional(),
 });
 
 const SessionPostSchema = z.object({
@@ -35,6 +37,8 @@ const SessionPostSchema = z.object({
   simulationStrict: z.boolean().optional(),
   eorMode: z.boolean().optional(),
   eorDeadline: z.string().optional(),
+  /** Sprint 3: session lane — 'main' (blueprint-enforced) | 'eor' (rotation-specific) */
+  sessionLane: z.enum(['main', 'eor', 'drill']).optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -114,6 +118,14 @@ export const onRequestGet = authenticatedEndpoint(
         eorDeadline = user.rotationExamDate.toISOString();
       }
 
+      // Sprint 3: Derive sessionLane from request params.
+      // EOR mode → 'eor' lane (rotation-specific, separate from main stats).
+      // simulationStrict or no system filter → 'main' lane (blueprint-enforced).
+      // Explicit system filter without EOR → legacy behavior (drill lane).
+      const sessionLane: 'main' | 'eor' | 'drill' | undefined =
+        validated?.sessionLane ??
+        (eorMode ? 'eor' : (system && !simulationStrict ? undefined : 'main'));
+
       sessionService = new SessionService(env.DATABASE_URL, env);
       const learnerPhase = inferLearnerPhase(user);
       const result = await sessionService.getSessionQuestions({
@@ -125,6 +137,7 @@ export const onRequestGet = authenticatedEndpoint(
         eorMode,
         eorDeadline,
         learnerPhase,
+        sessionLane,
       });
 
       logger.info('Session questions fetched (GET)', {
@@ -237,14 +250,24 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     const eorDeadline =
       validated.eorDeadline ??
       (validated.eorMode && user?.rotationExamDate ? user.rotationExamDate.toISOString() : undefined);
+
+    // Sprint 3: Derive sessionLane for POST handler
+    const postEorMode = validated.eorMode === true;
+    const postSystem = validated.system;
+    const postSimStrict = validated.simulationStrict === true;
+    const postSessionLane: 'main' | 'eor' | 'drill' | undefined =
+      validated.sessionLane ??
+      (postEorMode ? 'eor' : (postSystem && !postSimStrict ? undefined : 'main'));
+
     const result = await sessionService.getSessionQuestions({
       ...validated,
       userId: user.id,
       count: Math.min(validated.count || 10, 50),
-      simulationStrict: validated.simulationStrict === true,
-      eorMode: validated.eorMode === true,
+      simulationStrict: postSimStrict,
+      eorMode: postEorMode,
       eorDeadline,
       learnerPhase: learnerPhasePost,
+      sessionLane: postSessionLane,
     });
 
     logger.info('Session questions fetched (POST)', {

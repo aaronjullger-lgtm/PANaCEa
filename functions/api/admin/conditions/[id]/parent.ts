@@ -15,6 +15,7 @@ import {
   type ValidatedContext,
 } from '../../../_shared/middleware';
 import { logger } from '../../../_shared/secureLogger';
+import { auditLog } from '../../../_shared/auditLog';
 import { isAdmin, type UserRole } from '../../../_shared/rbac';
 
 // ============================================================================
@@ -112,6 +113,13 @@ export const onRequestPatch = adminEndpoint(
         parentId,
         relationshipType,
         adminUserId: auth.userId,
+      });
+
+      auditLog('admin_condition_parent_update', {
+        userId: auth.userId,
+        conditionId,
+        parentId,
+        relationshipType,
       });
 
       return {

@@ -5,7 +5,7 @@
  * @see docs/IMMEDIATE_CONTENT_ACTION_PLAN.md
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Beaker, Droplet, Flame } from 'lucide-react';
 import {
   AnionGapCalculator,
@@ -13,6 +13,7 @@ import {
   ParklandCalculator,
 } from '@/components/toolkit/calculators/lab';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
 
 export interface QuizLabCalcModalProps {
   onClose: () => void;
@@ -28,6 +29,10 @@ const TABS: { id: CalcTab; label: string; icon: React.ElementType }[] = [
 
 export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) => {
   const [selectedTab, setSelectedTab] = useState<CalcTab | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility: trap focus within modal
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40,7 +45,7 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
   const handleBack = () => setSelectedTab(null);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm">
+    <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm">
       <motion.div
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}

@@ -17,7 +17,7 @@ export async function getSocraticHint(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        modelName: 'gemini-1.5-flash',
+        modelName: 'gemini-2.0-flash',
         prompt: `You are a wise medical attending using the Socratic method to guide PA students.
 
 Question: ${questionText}

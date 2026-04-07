@@ -67,7 +67,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 10 }}
         transition={{ duration: 0.2 }}
-        className="fixed z-[60] bg-[var(--color-bg-tertiary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden"
+        className="fixed z-[20] bg-[var(--color-bg-tertiary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden"
         style={{
           left: position ? `${position.x}px` : '50%',
           top: position ? `${position.y}px` : '50%',
@@ -182,7 +182,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
        
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[59]"
+        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[10]"
         onClick={onClose}
       />
     </AnimatePresence>

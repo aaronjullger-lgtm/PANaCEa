@@ -543,20 +543,11 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       // 3-way merge: local, cloud, and deletion tracking
       const { toKeep } = mergeSRSItems(payload.srsItems, cloudItems, payload.localDeletions);
 
-      // Delete all SRS items for these question IDs
-      await withRetry(
-        () =>
-          prisma!.sRSItem.deleteMany({
-            where: {
-              userId: internalUserId,
-              questionId: { in: questionIds },
-            },
-          }),
-        'srsItems deleteMany',
-        log
-      );
-
-      // Insert merged items
+      // FIX (Audit 8/F4): Wrap delete+insert in a $transaction to prevent data loss.
+      // Previously, deleteMany and createMany were separate operations — if createMany
+      // failed after deleteMany succeeded (Accelerate timeout, connection drop, Edge CPU
+      // limit), the user's entire SRS deck for these question IDs was permanently deleted.
+      // Now both ops are atomic: either both succeed or both roll back.
       const now = new Date();
       const itemsToInsert = toKeep.map((item) => ({
         id: crypto.randomUUID(),
@@ -578,17 +569,27 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       }));
 
       const batches = chunk(itemsToInsert, BATCH_SIZE);
-      for (const batch of batches) {
-        await withRetry(
-          () =>
-            prisma!.sRSItem.createMany({
-              data: batch,
-              skipDuplicates: true,
-            }),
-          'srsItems createMany',
-          log
-        );
-      }
+      await withRetry(
+        () =>
+          prisma!.$transaction(async (tx) => {
+            // Delete existing SRS items for these question IDs
+            await tx.sRSItem.deleteMany({
+              where: {
+                userId: internalUserId,
+                questionId: { in: questionIds },
+              },
+            });
+            // Re-insert merged items in batches within the same transaction
+            for (const batch of batches) {
+              await tx.sRSItem.createMany({
+                data: batch,
+                skipDuplicates: true,
+              });
+            }
+          }),
+        'srsItems delete+insert (atomic)',
+        log
+      );
 
       log.info('SRSItems merged', {
         cloudItems: cloudItems.length,

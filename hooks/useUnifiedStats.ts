@@ -10,6 +10,7 @@ import { useCallback, useMemo } from 'react';
 import { useRolling360Stats } from './useRolling360Stats';
 import { useDatabaseStats } from './useDatabaseStats';
 import { useSRSItems } from './useSRSItems';
+import { useRecentSessions } from './useRecentSessions';
 import type { UnifiedStats } from '@/types/unified-stats';
 import { computeUnifiedStats } from '@/lib/dashboard/derivedMetrics';
 
@@ -71,8 +72,13 @@ export function useUnifiedStats(
     refetch: refetchSRSItems,
   } = useSRSItems();
 
+  const {
+    sessions: recentSessions,
+    isLoading: sessionsLoading,
+  } = useRecentSessions();
+
   // Determine overall loading state
-  const isLoading = rolling360Loading || databaseLoading || srsItemsLoading;
+  const isLoading = rolling360Loading || databaseLoading || srsItemsLoading || sessionsLoading;
 
   // Combine errors
   const error = rolling360Error?.message || rolling360Error?.toString() || databaseError || srsItemsError || null;
@@ -94,6 +100,7 @@ export function useUnifiedStats(
       rolling360: rolling360Stats,
       database: databaseStats,
       dueCount,
+      recentSessions,
     };
 
     const unified = computeUnifiedStats(rawSources);
@@ -104,7 +111,7 @@ export function useUnifiedStats(
     }
 
     return unified;
-  }, [rolling360Stats, databaseStats, dueCount, isLoading, error, includeRaw]);
+  }, [rolling360Stats, databaseStats, dueCount, recentSessions, isLoading, error, includeRaw]);
 
   // Combined refetch function
   const refetch = useCallback(async () => {

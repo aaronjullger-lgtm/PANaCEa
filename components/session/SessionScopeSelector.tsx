@@ -321,8 +321,8 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
 
           {/* Blueprint context */}
           {contextMessage && (
-            <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-[var(--color-accent)]/10">
-              <Info className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" />
+            <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)]">
+              <Info className="w-4 h-4 text-[var(--color-text-muted)] mt-0.5 shrink-0" />
               <p className="text-sm text-[var(--color-text-secondary)]">{contextMessage}</p>
             </div>
           )}
@@ -346,21 +346,21 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
                   icon={<Layers className="w-5 h-5" />}
                   title="Focus on System"
                   description="Study one body system (e.g., Cardiovascular)"
-                  accent="text-blue-500"
+                  accent="text-[var(--color-accent)]"
                   onClick={() => handleModeSelect('system')}
                 />
                 <ModeCard
                   icon={<FolderOpen className="w-5 h-5" />}
                   title="Focus on Subcategory"
                   description="Drill into a specific topic area"
-                  accent="text-purple-500"
+                  accent="text-[var(--color-text-secondary)]"
                   onClick={() => handleModeSelect('subcategory')}
                 />
                 <ModeCard
                   icon={<Target className="w-5 h-5" />}
                   title="Focus on Condition"
                   description="Target a single condition (e.g., CHF)"
-                  accent="text-emerald-500"
+                  accent="text-[var(--color-data-pass)]"
                   onClick={() => handleModeSelect('condition')}
                 />
               </motion.div>

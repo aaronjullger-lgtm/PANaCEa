@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Lightbulb, ArrowRight, X, AlertTriangle, Target } from 'lucide-react';
 import type { MetacognitionPrompt } from '@/lib/metacognition';
 import { Button } from '@/components/ui/button';
+import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
 
 interface MetacognitionPromptModalProps {
   prompt: MetacognitionPrompt;
@@ -27,6 +28,10 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<string[]>([]);
   const [currentResponse, setCurrentResponse] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility: trap focus within modal
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,6 +104,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
         initial={false}
         animate={{}}
         exit={{ opacity: 0 }}
+        ref={modalRef}
         className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
         onClick={handleSkipAll}
       >

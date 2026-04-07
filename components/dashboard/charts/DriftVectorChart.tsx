@@ -288,7 +288,7 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
     <div className={cn('rounded-xl border p-4', urgencyColors.bg, urgencyColors.border, className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral">
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
           Score Trajectory
         </h3>
         <span className={cn('text-xs font-medium px-2 py-1 rounded', urgencyColors.text)}>

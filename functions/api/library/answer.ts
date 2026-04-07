@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import type { CloudflareEnv } from '../_shared/types';
 
 const EMBED_MODEL = 'text-embedding-005';
@@ -87,6 +88,19 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   }
 
   try {
+    // Semantic cache: check if we already answered a similar question
+    try {
+      const cacheHit = await findSimilarCachedQuestion(prisma, {
+        queryText: query,
+        questionType: 'library_answer',
+      });
+      if (cacheHit) {
+        return { data: cacheHit.question, headers: { 'Cache-Control': 'private, max-age=300' } };
+      }
+    } catch {
+      // Cache lookup failure should not block generation
+    }
+
     const embedding = await getQueryEmbedding(query, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
 
@@ -177,8 +191,19 @@ One-sentence answer:`;
     const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text;
     const answer = typeof rawText === 'string' ? rawText.trim() : null;
 
+    // Cache the answer for future similar queries
+    const cachePayload = { answer, results, count: results.length };
+    try {
+      await cacheGeneratedQuestion(prisma, {
+        queryText: query,
+        questionType: 'library_answer',
+      }, cachePayload);
+    } catch {
+      // Cache write failure should not block the response
+    }
+
     return {
-      data: { answer, results, count: results.length },
+      data: cachePayload,
       headers: { 'Cache-Control': 'private, max-age=60' },
     };
   } catch (error) {

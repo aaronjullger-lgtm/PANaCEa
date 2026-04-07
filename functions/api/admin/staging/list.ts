@@ -2,19 +2,15 @@
  * GET /api/admin/staging/list
  * List Staging Lake: fetch StagingQuestion items (default: status = 'pending').
  * Query: ?status=pending|graded|rejected|all&limit=50
+ *
+ * Security: adminEndpoint() middleware with rate limiting, auth, Zod validation, and logging.
+ * Audit: Logs access via auditLog('admin_staging_list').
  */
 
 import { z } from 'zod';
-import {
-  withMiddleware,
-  withCors,
-  withAuth,
-  withAdminRole,
-  withErrorHandling,
-  withEnvCheck,
-} from '../../_shared/middleware';
+import { adminEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { createEndpointLogger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
 
 const QuerySchema = z.object({
   status: z
@@ -24,27 +20,14 @@ const QuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 });
 
-export const onRequestOptions = withCors();
-
-export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withAdminRole(),
-  async (context: any) => {
-    const { env, request, auth } = context;
-    const log = createEndpointLogger('/api/admin/staging/list', auth?.userId);
+export const onRequestGet = adminEndpoint(
+  QuerySchema,
+  async (context) => {
+    const { env, auth, validated } = context;
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const url = new URL(request.url);
-    const parsed = QuerySchema.safeParse({
-      status: url.searchParams.get('status') ?? 'pending',
-      limit: url.searchParams.get('limit') ?? 50,
-    });
-    const status = parsed.success ? parsed.data.status : 'pending';
-    const limit = parsed.success ? parsed.data.limit : 50;
 
     try {
+      const { status, limit } = validated;
       const where = status === 'all' ? {} : { status };
 
       const items = await prisma.stagingQuestion.findMany({
@@ -65,13 +48,23 @@ export const onRequestGet = withMiddleware(
         },
       });
 
-      log.info('Staging list', { status, count: items.length });
+      auditLog('admin_staging_list', {
+        userId: auth.userId,
+        status,
+        count: items.length,
+      });
+
       return { data: { items, count: items.length } };
-    } catch (e) {
-      log.error('Staging list error', e);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      auditLog('admin_staging_list', {
+        userId: auth.userId,
+        error: message,
+      });
       return { status: 500, error: 'Failed to list staging questions' };
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query' }
 );

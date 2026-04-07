@@ -138,7 +138,7 @@ async function analyzeExistingImage(
   qualityScore: number;
   reason: string;
 }> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const base64Image = imageBuffer.toString('base64');
   const imagePart = {

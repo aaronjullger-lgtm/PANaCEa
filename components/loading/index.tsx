@@ -41,7 +41,7 @@ export const Loader: React.FC<LoaderProps> = ({
 
   const bgClass = forceDark
     ? 'bg-black'
-    : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-md';
+    : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-sm';
 
   const dotClass = forceDark
     ? 'bg-white'
@@ -211,7 +211,7 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
         ${
           isCompact
             ? 'p-4 rounded-lg'
-            : 'rounded-xl border border-[var(--color-border)] p-6 shadow-sm'
+            : 'rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
         }
         bg-[var(--color-card-bg)]
         ${className}
@@ -403,29 +403,71 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
 };
 
 /**
- * CommandCenterSkeleton - Dashboard-shaped skeleton for Command Center lazy load
+ * CommandCenterSkeleton - Dashboard-shaped skeleton for Command Center lazy load.
+ *
+ * Layout mirrors the real CommandCenterHub above-the-fold content:
+ *   1. Greeting heading + subtitle
+ *   2. Status chip row
+ *   3. Quick stats bar (2-col mobile, 4-col desktop)
+ *   4. Hero action card
+ * This prevents a visible layout "jump" when the lazy component replaces
+ * the skeleton after Suspense resolves.
  */
 export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
   message = 'Loading dashboard...',
 }) => (
-  <div className="p-6 space-y-4">
-    <div className="h-12 bg-[var(--color-bg-tertiary)] rounded-xl animate-pulse" />
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="pt-6 space-y-6" role="status" aria-label={message}>
+    {/* Greeting skeleton */}
+    <div>
+      <div className="h-8 w-56 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
+      <div className="flex gap-2 mt-3">
+        <div className="h-7 w-16 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
+        <div className="h-7 w-20 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
+      </div>
+      <div className="h-4 w-64 bg-[var(--color-bg-tertiary)] rounded mt-3 animate-pulse" />
+    </div>
+
+    {/* Quick stats bar skeleton (matches 2-col mobile / 4-col desktop grid) */}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-40 bg-[var(--color-bg-tertiary)] rounded-xl animate-pulse" />
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+        >
+          <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+            <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+          </div>
+        </div>
       ))}
     </div>
-    <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
+
+    {/* Hero card skeleton */}
+    <div className="h-40 bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
+
+    <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">{message}</p>
   </div>
 );
 
 /**
- * QuickStatsBarSkeleton - Skeleton for stats bar component
+ * QuickStatsBarSkeleton - Skeleton for stats bar component.
+ * Uses the same grid-cols-2 / md:grid-cols-4 as the real QuickStatsBar
+ * so there's no layout shift when the real component mounts.
  */
 export const QuickStatsBarSkeleton: React.FC = () => (
-  <div className="flex gap-3">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" role="status" aria-label="Loading stats">
     {Array.from({ length: 4 }).map((_, i) => (
-      <div key={i} className="flex-1 h-20 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
+      <div
+        key={i}
+        className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+      >
+        <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
+        <div className="flex-1 space-y-1.5">
+          <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+          <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+        </div>
+      </div>
     ))}
   </div>
 );

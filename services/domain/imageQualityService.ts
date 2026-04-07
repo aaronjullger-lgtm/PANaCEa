@@ -123,7 +123,7 @@ async function analyzeImageWithAI(
   imageBuffer: Buffer,
   category: string
 ): Promise<QualityAssessment['aiAnalysis']> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const base64Image = imageBuffer.toString('base64');
   const imagePart = {

@@ -15,6 +15,7 @@ import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel'
 import DrillShell from '@/components/drill/DrillShell';
 import { ROUTES } from '@/config/routes';
 import { Image, X, RotateCcw } from 'lucide-react';
+import DrillSummaryCard from '@/components/drill/DrillSummaryCard';
 
 interface ImagingDrillSessionProps {
   onExit?: () => void;
@@ -192,39 +193,14 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
         onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
       >
-        <div className="flex-1 flex items-center justify-center p-6">
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
-          >
-            <Image className="w-16 h-16 text-data-neutral mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-            <p className="text-[var(--color-text-secondary)] mb-6">Great work on radiology!</p>
-            <div className="flex justify-center gap-8 mb-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-data-pass">{score}</div>
-                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleReset}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
-                aria-label="Start a new radiology session"
-              >
-                <RotateCcw className="w-4 h-4" /> Start New Session
-              </button>
-              <button
-                onClick={handleExit}
-                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-                aria-label="Exit to drill menu"
-              >
-                Exit to Menu
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <DrillSummaryCard
+          drillName="Radiology Review"
+          icon={Image}
+          accentColor="var(--color-text-muted)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleReset}
+          onExit={handleExit}
+        />
       </DrillShell>
     );
   }

@@ -12,6 +12,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FlaskConical, Pill, Lightbulb, Target } from 'lucide-react';
 import { RetrievabilityBadge, YieldBadge } from '@/components/ui/badges';
+import { ProvenanceBadge } from '@/components/ui/ProvenanceBadge';
 import { MarkdownRenderer } from '@/components/ui/content-renderers/MarkdownRenderer';
 import { parseTextField, parseListField } from '@/lib/utils/normalization';
 import type { MedicalContentDisplay } from '@/types/medical-content';
@@ -118,35 +119,46 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.015, y: -2 }}
-      whileTap={{ scale: 0.985 }}
+      whileTap={{ scale: 0.99 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`
-        w-full text-left rounded-xl overflow-hidden
-        bg-[var(--color-bg-secondary)]/40 backdrop-blur-sm
-        border border-l-[3px] transition-all duration-200
-        border-l-[var(--color-accent)]
-        ${
-          isSelected
-            ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30 shadow-lg shadow-[var(--color-accent)]/10'
-            : 'border-[var(--color-border)]/50 hover:border-[var(--color-border)] hover:shadow-lg hover:shadow-black/10'
-        }
+        group w-full text-left rounded-xl overflow-hidden
+        bg-[var(--color-bg-primary)] transition-colors duration-150
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
+        ${isSelected ? '' : 'hover:bg-[var(--color-bg-tertiary)]/30'}
         ${className}
       `}
+      style={{
+        boxShadow: isSelected
+          ? '0 0 0 2px var(--color-accent), 0 2px 8px -2px rgba(0,0,0,0.08)'
+          : '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+      }}
     >
-      {/* Unified Vertical Layout */}
-      <div className="flex flex-col h-full min-h-[200px]">
-        {/* HEADER: Condition Name + Yield Badge (+ optional badge) */}
-        <div className="flex items-start justify-between gap-3 p-4 pb-2">
-          <h3 className="font-bold text-base text-[var(--color-text-primary)] leading-snug line-clamp-2 flex-1">
+      {/* Vertical Layout */}
+      <div className="flex flex-col h-full">
+        {/* HEADER: Condition Name + Badges */}
+        <div className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2">
+          <h3 className="font-semibold text-sm text-[var(--color-text-primary)] leading-snug line-clamp-2 flex-1">
             {condition.condition || 'Untitled'}
           </h3>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {badge && (
-              <span className="px-2 py-0.5 rounded-md bg-[var(--color-accent)]/15 text-[var(--color-accent)] text-xs font-medium">
+              <span className="px-1.5 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
                 {badge}
               </span>
             )}
+            {(condition as any).evidenceGrade || (condition as any).lastClinicalReviewAt ? (
+              <ProvenanceBadge
+                provenance={{
+                  evidenceGrade: (condition as any).evidenceGrade,
+                  guidelineSource: (condition as any).guidelineSource,
+                  guidelineYear: (condition as any).guidelineYear,
+                  lastClinicalReviewAt: (condition as any).lastClinicalReviewAt,
+                  reviewedBy: (condition as any).reviewedBy,
+                }}
+                size="sm"
+              />
+            ) : null}
             {retrievability !== null && retrievability !== undefined && (
               <RetrievabilityBadge retrievability={retrievability} size="sm" showIcon={true} />
             )}
@@ -154,21 +166,21 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
           </div>
         </div>
 
-        {/* KEY CLINICAL FEATURES - Always same section header */}
+        {/* KEY CLINICAL FEATURES */}
         <div className="px-4 pb-3 flex-1">
           <div className="flex items-center gap-1.5 mb-2">
-            <Lightbulb className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
-              Key Clinical Features
+            <Lightbulb className="w-3 h-3 text-[var(--color-text-muted)]" />
+            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+              Key Features
             </span>
           </div>
 
           {hasFeatures ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {keyFeatures.map((feature, idx) => (
                 <div
                   key={idx}
-                  className="px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]/30 text-xs leading-relaxed"
+                  className="px-2.5 py-1.5 rounded-md bg-[var(--color-bg-tertiary)]/50 text-xs leading-relaxed"
                 >
                   <MarkdownRenderer
                     content={feature}
@@ -178,8 +190,8 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
               ))}
             </div>
           ) : (
-            <div className="px-3 py-4 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-dashed border-[var(--color-border)]/30 text-center">
-              <p className="text-xs text-[var(--color-text-muted)] italic">
+            <div className="px-2.5 py-3 rounded-md bg-[var(--color-bg-tertiary)]/30 text-center">
+              <p className="text-[11px] text-[var(--color-text-muted)]">
                 Click to view full details
               </p>
             </div>
@@ -188,22 +200,25 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
 
         {/* DIAGNOSTIC BADGES - Always shown if data exists */}
         {hasQuickInfo && (
-          <div className="flex flex-wrap gap-1.5 px-4 pb-4 pt-2 border-t border-[var(--color-border)]/20 mt-auto">
+          <div
+            className="flex flex-wrap gap-1.5 px-4 pb-3.5 pt-2 mt-auto"
+            style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}
+          >
             {goldStandard && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-provisional/10 border border-data-provisional/20 text-data-provisional text-[11px] font-medium">
-                <Target className="w-3 h-3 flex-shrink-0" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
+                <Target className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
                 <span className="truncate max-w-[140px]">{goldStandard}</span>
               </span>
             )}
             {firstLineRx && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-pass/10 border border-data-pass/20 text-data-pass text-[11px] font-medium">
-                <Pill className="w-3 h-3 flex-shrink-0" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
+                <Pill className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
                 <span className="truncate max-w-[140px]">{firstLineRx}</span>
               </span>
             )}
             {bestInitialTest && !goldStandard && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-neutral/10 border border-data-neutral/20 text-data-neutral text-[11px] font-medium">
-                <FlaskConical className="w-3 h-3 flex-shrink-0" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
+                <FlaskConical className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
                 <span className="truncate max-w-[140px]">{bestInitialTest}</span>
               </span>
             )}

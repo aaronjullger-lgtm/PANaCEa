@@ -429,7 +429,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
@@ -446,7 +446,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
@@ -462,7 +462,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] transition-colors">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -498,7 +498,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
           {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
               <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                 <Brain className="w-4 h-4" />
                 <span className="font-medium">Confidence vs. Accuracy</span>
@@ -564,7 +564,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {userStats.stats.speedByType &&
             (userStats.stats.speedByType.recall.count > 0 ||
               userStats.stats.speedByType.clinicalReasoning.count > 0) && (
-              <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+              <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">Speed by question type</span>

@@ -5,16 +5,19 @@
  * Returns raw performance gap analysis, retention‑aware scheduling,
  * and blueprint‑balanced priorities for the authenticated user.
  *
- * Authentication required (Clerk).
+ * Auth: Requires admin role (adminAuthenticatedEndpoint).
+ * Disabled in production unless explicitly enabled via ENABLE_DEBUG_ENDPOINTS env var.
+ *
+ * Sprint: Admin Safety Sprint — April 2026
  */
 
 import { z } from 'zod';
 import {
-  createEdgePrismaClient,
-  safePrismaDisconnect,
-} from '../_shared/prisma-edge';
-import { authenticatedEndpoint } from '../_shared/middleware';
+  adminAuthenticatedEndpoint,
+  withCors,
+} from '../_shared/middleware';
 import { getCorsConfig, getCorsHeaders } from '../_shared/cors';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
 import { scheduleReviews } from '@/services/optimizer/retentionAwareScheduler';
 import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalancedSelector';
@@ -31,9 +34,20 @@ export const onRequestOptions = async (context: any) => {
   });
 };
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   z.object({}), // No query/body parameters required
-  async ({ userId, env, request }) => {
+  async (context) => {
+    const { auth, env, request } = context;
+    const userId = auth.userId;
+
+    // Production guard: disable unless explicitly enabled
+    if (env.ENVIRONMENT === 'production' && env.ENABLE_DEBUG_ENDPOINTS !== 'true') {
+      return new Response(
+        JSON.stringify({ error: 'Debug endpoints are disabled in production' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const corsConfig = getCorsConfig(env);
     const corsHeaders = getCorsHeaders(request, corsConfig) ?? {};
     const jsonHeaders = {

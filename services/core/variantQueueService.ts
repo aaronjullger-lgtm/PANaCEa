@@ -3,7 +3,16 @@ import { generateVariant } from '@/lib/questionVariantGenerator';
 import { TASK_TYPES } from '@/lib/taskTypes';
 
 export class VariantQueueService {
-  constructor(private prisma: PrismaClient) {}
+  /**
+   * @param prisma - Prisma client instance
+   * @param apiKey - Gemini API key. Pass from Edge (context.env.GEMINI_API_KEY) or
+   *                 Node (process.env.GEMINI_API_KEY). If omitted, generation falls
+   *                 back to process.env (Node-only; will silently no-op on Edge).
+   */
+  constructor(
+    private prisma: PrismaClient,
+    private apiKey?: string,
+  ) {}
 
   /**
    * Called when a user answers incorrectly.
@@ -66,10 +75,9 @@ export class VariantQueueService {
       });
 
       if (confusion) {
-        // If user consistently confuses this, try to trick them with distractors or fix the specific confusion
+        // If user consistently confuses this condition with another, craft distractors
+        // that specifically target the documented confusion pair.
         targetType = 'different_distractors';
-        // Note: We could use 'remediation' if we knew the exact current wrong answer,
-        // but checking historic confusion is safer for general queuing.
       } else if (weakness && weakness.consecutiveWrong >= 3) {
         // If very weak, break it down
         targetType = 'decomposition';
@@ -87,13 +95,31 @@ export class VariantQueueService {
       options = originalQuestion.options as string[];
     }
 
-    const newVariantData = await generateVariant({
-      originalQuestion: originalQuestion.question,
-      originalOptions: options,
-      originalAnswer: originalQuestion.correctAnswer,
-      originalExplanation: originalQuestion.explanation,
-      targetType: targetType,
-    });
+    // When generating distractor-targeted variants, fetch all confusion pairs for
+    // this condition so the generator can craft distractors around known misconceptions.
+    let confusionPairs: Array<{ mistakenFor: string; count: number }> = [];
+    if (targetType === 'different_distractors' && originalQuestion.conditionId) {
+      const pairs = await this.prisma.confusionPair.findMany({
+        where: { userId, realConditionId: originalQuestion.conditionId },
+        orderBy: { count: 'desc' },
+        take: 5,
+      });
+      confusionPairs = pairs
+        .filter((p) => p.mistakenFor)
+        .map((p) => ({ mistakenFor: p.mistakenFor, count: p.count }));
+    }
+
+    const newVariantData = await generateVariant(
+      {
+        originalQuestion: originalQuestion.question,
+        originalOptions: options,
+        originalAnswer: originalQuestion.correctAnswer,
+        originalExplanation: originalQuestion.explanation,
+        targetType,
+        confusionPairs: confusionPairs.length > 0 ? confusionPairs : undefined,
+      },
+      this.apiKey,
+    );
 
     if (!newVariantData) return null;
 

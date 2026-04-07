@@ -344,7 +344,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
       <motion.div
         initial={{ y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] ${className}`}
+        className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] ${className}`}
       >
         <div className="flex items-center gap-4">
           <CircularProgress value={accuracy} size={80} strokeWidth={8} label={totalQuestions === 0 ? '—' : undefined} />

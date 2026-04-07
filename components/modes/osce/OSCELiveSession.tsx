@@ -267,7 +267,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         <button
           type="button"
           onClick={connect}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90"
         >
           <Phone className="w-5 h-5" />
           Connect

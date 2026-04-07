@@ -53,7 +53,8 @@ export interface BehavioralTrackerApi {
   getElapsedMs: () => number;
 }
 
-const LETTERS = ['A', 'B', 'C', 'D'] as const;
+import { ANSWER_LETTERS, indexToLetter } from '../../lib/answerLetterMap';
+const LETTERS = ANSWER_LETTERS;
 
 const defaultApi: BehavioralTrackerApi = {
   start: () => {},
@@ -94,7 +95,7 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
     startIsoRef.current = new Date().toISOString();
     firstInteractionMsRef.current = null;
     answerChangeCountRef.current = 0;
-    hoverMsRef.current = { A: 0, B: 0, C: 0, D: 0 };
+    hoverMsRef.current = { A: 0, B: 0, C: 0, D: 0, E: 0 };
     hoverEnterTimeRef.current = {};
     questionTypeRef.current = questionType;
     optionInteractionsRef.current = [];

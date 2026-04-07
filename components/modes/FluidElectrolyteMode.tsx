@@ -214,17 +214,17 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Landing Page - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral transition-colors duration-300">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Hydro-Mode</h1>
-                <p className="text-sm text-data-neutral dark:text-data-neutral">
+                <p className="text-sm text-data-neutral">
                   Fluid & Electrolyte Management
                 </p>
               </div>
@@ -232,7 +232,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -249,17 +249,17 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-data-neutral dark:text-data-neutral">
+              <h2 className="text-4xl font-bold text-data-neutral">
                 Master Fluid & Electrolyte Calculations
               </h2>
-              <p className="text-xl text-data-neutral dark:text-data-neutral">
+              <p className="text-xl text-data-neutral">
                 Practice real-world clinical calculations with instant feedback
               </p>
             </div>
 
             {/* Features Card */}
-            <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-data-neutral dark:text-data-neutral mb-6">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-data-neutral shadow-lg space-y-6">
+              <h3 className="text-2xl font-semibold text-data-neutral mb-6">
                 What You'll Practice
               </h3>
 
@@ -284,25 +284,25 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="bg-data-neutral dark:bg-data-neutral rounded-xl p-4 border border-data-neutral dark:border-data-neutral"
+                    className="bg-data-neutral rounded-xl p-4 border border-data-neutral"
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <item.Icon className="w-6 h-6 text-[var(--color-accent)]" />
-                      <h4 className="font-semibold text-data-neutral dark:text-data-neutral">
+                      <h4 className="font-semibold text-data-neutral">
                         {item.title}
                       </h4>
                     </div>
-                    <p className="text-sm text-data-neutral dark:text-data-neutral">{item.desc}</p>
+                    <p className="text-sm text-data-neutral">{item.desc}</p>
                   </div>
                 ))}
               </div>
 
               <div className="bg-[var(--color-accent)]/5 rounded-xl p-6 border border-[var(--color-accent)]/30">
-                <p className="text-sm text-data-neutral dark:text-data-neutral font-semibold mb-3 flex items-center gap-2">
+                <p className="text-sm text-data-neutral font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-[var(--color-accent)]" />
                   Key Features
                 </p>
-                <ul className="text-sm text-data-neutral dark:text-data-neutral space-y-2">
+                <ul className="text-sm text-data-neutral space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Clinical vignettes with realistic lab values</span>
@@ -360,10 +360,10 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Loading State
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral flex items-center justify-center">
         <div role="status" aria-label="Loading case" className="text-center space-y-4">
           <div aria-hidden="true" className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
-          <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading case...</p>
+          <p className="text-lg font-medium text-data-neutral">Loading case...</p>
         </div>
       </div>
     );
@@ -372,17 +372,17 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Error State
   if (viewState === 'error') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                 <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Hydro-Mode</h1>
-                <p className="text-sm text-data-neutral dark:text-data-neutral">
+                <p className="text-sm text-data-neutral">
                   Fluid & Electrolyte Management
                 </p>
               </div>
@@ -390,7 +390,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -404,27 +404,27 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <motion.div
             initial={{ y: 20 }}
             animate={{ y: 0 }}
-            className="bg-data-fail dark:bg-data-fail/30 rounded-2xl p-8 border border-data-fail dark:border-data-fail text-center"
+            className="bg-data-fail/30 rounded-2xl p-8 border border-data-fail text-center"
           >
-            <AlertCircle className="w-16 h-16 text-data-fail dark:text-data-fail mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-data-fail dark:text-data-fail mb-2">
+            <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-data-fail mb-2">
               Error Loading Case
             </h2>
-            <p className="text-data-neutral dark:text-data-neutral mb-6">
+            <p className="text-data-neutral mb-6">
               {error || 'An unexpected error occurred. Please try again.'}
             </p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleStart}
-                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors"
               >
                 Try Again
               </button>
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="px-6 py-3 bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral 
-                           text-data-neutral dark:text-data-neutral rounded-lg font-semibold transition-colors"
+                  className="px-6 py-3 bg-data-neutral hover:bg-data-neutral 
+                           text-data-neutral rounded-lg font-semibold transition-colors"
                 >
                   Exit
                 </button>
@@ -440,25 +440,25 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   if (!currentCase) return null;
 
   return (
-    <div className="min-h-screen bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
+    <div className="min-h-screen bg-data-neutral text-data-neutral">
       {/* Header */}
-      <div className="border-b border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-data-neutral bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-data-neutral flex items-center justify-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
               <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Hydro-Mode</h1>
-              <p className="text-sm text-data-neutral dark:text-data-neutral">
+              <p className="text-sm text-data-neutral">
                 Fluid & Electrolyte Management
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-data-neutral dark:text-data-neutral">Score</p>
-              <p className="text-xl font-bold text-data-neutral dark:text-data-neutral tabular-nums">
+              <p className="text-sm text-data-neutral">Score</p>
+              <p className="text-xl font-bold text-data-neutral tabular-nums">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
                   <span className="text-sm ml-2 text-[var(--color-accent)]">
@@ -469,7 +469,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
             <button
               onClick={handleReset}
-              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               aria-label="Reset score"
             >
               <RotateCcw className="w-5 h-5" aria-hidden="true" />
@@ -477,7 +477,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+                className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 aria-label="Exit"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -497,66 +497,66 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             className="space-y-4"
           >
             {/* Clinical Vignette */}
-            <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+            <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md">
               <h2 className="text-xl font-semibold mb-3 text-[var(--color-accent)]">
                 {currentCase.title}
               </h2>
-              <p className="text-data-neutral dark:text-data-neutral leading-relaxed">
+              <p className="text-data-neutral leading-relaxed">
                 {currentCase.vignette}
               </p>
             </div>
 
             {/* Labs */}
-            <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+            <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md">
               <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
                 Laboratory Results
               </h3>
 
               {currentCase.labs.bmp && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-data-neutral dark:text-data-neutral mb-2">
+                  <h4 className="text-sm font-semibold text-data-neutral mb-2">
                     Basic Metabolic Panel
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">Sodium:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">Sodium:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.sodium} mEq/L
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">Potassium:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">Potassium:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.potassium} mEq/L
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">Chloride:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">Chloride:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.chloride} mEq/L
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">HCO₃:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">HCO₃:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.bicarbonate} mEq/L
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">BUN:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">BUN:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.bun} mg/dL
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">Creatinine:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">Creatinine:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.creatinine} mg/dL
                       </span>
                     </div>
-                    <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                      <span className="text-data-neutral dark:text-data-neutral">Glucose:</span>
-                      <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                      <span className="text-data-neutral">Glucose:</span>
+                      <span className="font-mono text-data-neutral">
                         {currentCase.labs.bmp.glucose} mg/dL
                       </span>
                     </div>
@@ -566,22 +566,22 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
               {(currentCase.labs.urineNa || currentCase.labs.urineCr) && (
                 <div>
-                  <h4 className="text-sm font-semibold text-data-neutral dark:text-data-neutral mb-2">
+                  <h4 className="text-sm font-semibold text-data-neutral mb-2">
                     Urine Studies
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {currentCase.labs.urineNa && (
-                      <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                        <span className="text-data-neutral dark:text-data-neutral">Urine Na:</span>
-                        <span className="font-mono text-data-neutral dark:text-data-neutral">
+                      <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                        <span className="text-data-neutral">Urine Na:</span>
+                        <span className="font-mono text-data-neutral">
                           {currentCase.labs.urineNa} mEq/L
                         </span>
                       </div>
                     )}
                     {currentCase.labs.urineCr && (
-                      <div className="flex justify-between p-2 bg-data-neutral dark:bg-data-neutral rounded border border-data-neutral dark:border-data-neutral">
-                        <span className="text-data-neutral dark:text-data-neutral">Urine Cr:</span>
-                        <span className="font-mono text-data-neutral dark:text-data-neutral">
+                      <div className="flex justify-between p-2 bg-data-neutral rounded border border-data-neutral">
+                        <span className="text-data-neutral">Urine Cr:</span>
+                        <span className="font-mono text-data-neutral">
                           {currentCase.labs.urineCr} mg/dL
                         </span>
                       </div>
@@ -596,16 +596,16 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">
                 Question
               </h3>
-              <p className="text-data-neutral dark:text-data-neutral mb-4 font-medium">
+              <p className="text-data-neutral mb-4 font-medium">
                 {currentCase.question}
               </p>
 
               {currentCase.calculationHint && (
-                <div className="bg-[var(--color-bg-primary)] rounded-lg p-3 mb-4 border border-data-neutral dark:border-data-neutral">
-                  <p className="text-xs font-semibold text-data-neutral dark:text-data-neutral mb-1">
+                <div className="bg-[var(--color-bg-primary)] rounded-lg p-3 mb-4 border border-data-neutral">
+                  <p className="text-xs font-semibold text-data-neutral mb-1">
                     Formula Hint:
                   </p>
-                  <p className="text-sm text-data-neutral dark:text-data-neutral font-mono">
+                  <p className="text-sm text-data-neutral font-mono">
                     {currentCase.calculationHint}
                   </p>
                 </div>
@@ -624,12 +624,12 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   aria-label="Enter your answer"
                   disabled={isSubmitted}
                   autoComplete="off"
-                  className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral rounded-lg 
-                           text-data-neutral dark:text-data-neutral placeholder-data-neutral dark:placeholder-data-neutral 
-                           focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent
-                           disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg shadow-sm"
+                  className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-data-neutral rounded-lg 
+                           text-data-neutral placeholder-data-neutral 
+                           focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
+                           disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                 />
-                <div className="flex items-center px-3 bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral rounded-lg text-data-neutral dark:text-data-neutral shadow-sm">
+                <div className="flex items-center px-3 bg-[var(--color-bg-primary)] border border-data-neutral rounded-lg text-data-neutral shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
                   {currentCase.unit}
                 </div>
               </div>
@@ -639,8 +639,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   <button
                     onClick={handleSubmit}
                     disabled={!userAnswer}
-                    className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
-                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                    className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral 
+                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-[var(--color-text-inverse)]
                              transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     Submit Answer
@@ -668,15 +668,15 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   exit={{ opacity: 0 }}
                   className={`rounded-xl p-6 border shadow-md ${
                     isCorrect
-                      ? 'bg-data-pass border-data-pass dark:bg-data-pass/30 dark:border-data-pass'
-                      : 'bg-data-fail border-data-fail dark:bg-data-fail/30 dark:border-data-fail'
+                      ? 'bg-data-pass/30 border-data-pass'
+                      : 'bg-data-fail/30 border-data-fail'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {isCorrect ? (
-                      <CheckCircle className="w-6 h-6 text-data-pass dark:text-data-pass flex-shrink-0 mt-1" />
+                      <CheckCircle className="w-6 h-6 text-data-pass flex-shrink-0 mt-1" />
                     ) : (
-                      <XCircle className="w-6 h-6 text-data-fail dark:text-data-fail flex-shrink-0 mt-1" />
+                      <XCircle className="w-6 h-6 text-data-fail flex-shrink-0 mt-1" />
                     )}
                     <div className="flex-1">
                       <p
@@ -684,7 +684,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                       >
                         {feedback}
                       </p>
-                      <p className="text-data-neutral dark:text-data-neutral text-sm leading-relaxed">
+                      <p className="text-data-neutral text-sm leading-relaxed">
                         {currentCase.explanation}
                       </p>
                     </div>
@@ -698,7 +698,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <motion.div
             initial={{ x: 20 }}
             animate={{ x: 0 }}
-            className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md"
+            className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral shadow-md"
           >
             <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">
               Urine Chemistry Reference
@@ -707,24 +707,24 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               {URINE_CHEMISTRY_REFERENCE.reference.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-data-neutral dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral"
+                  className="p-4 bg-data-neutral rounded-lg border border-data-neutral"
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-semibold text-data-neutral dark:text-data-neutral">
+                    <h4 className="font-semibold text-data-neutral">
                       {item.parameter}
                     </h4>
                     <span className="text-[var(--color-accent)] font-mono text-sm">
                       {item.unit}
                     </span>
                   </div>
-                  <p className="text-data-neutral dark:text-data-neutral text-sm mb-1">
+                  <p className="text-data-neutral text-sm mb-1">
                     Normal:{' '}
-                    <span className="font-mono text-data-neutral dark:text-data-neutral">
+                    <span className="font-mono text-data-neutral">
                       {item.normalRange}
                     </span>
                   </p>
                   {item.interpretation && (
-                    <p className="text-data-neutral dark:text-data-neutral text-xs italic">
+                    <p className="text-data-neutral text-xs italic">
                       {item.interpretation}
                     </p>
                   )}
@@ -739,22 +739,22 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               </h4>
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="font-semibold text-data-neutral dark:text-data-neutral mb-1">FENa:</p>
-                  <p className="font-mono text-xs text-data-neutral dark:text-data-neutral">
+                  <p className="font-semibold text-data-neutral mb-1">FENa:</p>
+                  <p className="font-mono text-xs text-data-neutral">
                     [(UNa × SCr) / (SNa × UCr)] × 100
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-data-neutral dark:text-data-neutral mb-1">Anion Gap:</p>
-                  <p className="font-mono text-xs text-data-neutral dark:text-data-neutral">
+                  <p className="font-semibold text-data-neutral mb-1">Anion Gap:</p>
+                  <p className="font-mono text-xs text-data-neutral">
                     Na - (Cl + HCO₃)
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-data-neutral dark:text-data-neutral mb-1">
+                  <p className="font-semibold text-data-neutral mb-1">
                     Free Water Deficit:
                   </p>
-                  <p className="font-mono text-xs text-data-neutral dark:text-data-neutral">
+                  <p className="font-mono text-xs text-data-neutral">
                     TBW × [(Na/140) - 1]
                   </p>
                 </div>

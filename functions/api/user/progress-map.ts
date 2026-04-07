@@ -76,8 +76,12 @@ export const onRequestGet = authenticatedEndpoint(ProgressMapSchema, async (cont
     }> = {};
 
     for (const record of progressRecords) {
+      // Prefer fsrsCard.stability (authoritative JSON written by drillReviewService)
+      // over scalar fsrsStability (which may be stale for rows written before dual-write).
+      const cardStability = (record.fsrsCard as { stability?: number } | null)?.stability;
+      const stability = cardStability ?? record.fsrsStability;
       progressMap[record.conditionId] = {
-        stability: record.fsrsStability,
+        stability,
         lastReviewAt: record.lastReviewAt ? record.lastReviewAt.toISOString() : null,
         fsrsCard: record.fsrsCard,
         fsrsParams: record.fsrsParams,

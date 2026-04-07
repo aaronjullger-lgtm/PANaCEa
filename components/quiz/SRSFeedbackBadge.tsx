@@ -18,11 +18,14 @@ interface SRSFeedbackBadgeProps {
 
 export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
   const getIntervalText = (interval: number): string => {
-    if (interval === 1) return 'tomorrow';
-    if (interval < 7) return `in ${interval} days`;
-    if (interval < 30) return `in ${Math.round(interval / 7)} weeks`;
-    if (interval < 365) return `in ${Math.round(interval / 30)} months`;
-    return `in ${Math.round(interval / 365)} years`;
+    // Round fractional intervals for display (FSRS-7 will produce fractional days)
+    const rounded = Math.round(interval);
+    if (rounded <= 0) return 'today';
+    if (rounded === 1) return 'tomorrow';
+    if (rounded < 7) return `in ${rounded} days`;
+    if (rounded < 30) return `in ${Math.round(rounded / 7)} weeks`;
+    if (rounded < 365) return `in ${Math.round(rounded / 30)} months`;
+    return `in ${Math.round(rounded / 365)} years`;
   };
 
   const getQualityLabel = (

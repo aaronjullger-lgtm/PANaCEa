@@ -1,5 +1,6 @@
 /**
  * Unit tests for Grand Rounds grading: correctAnswer (String) to 0-based index.
+ * Updated: invalid inputs now return null instead of silently falling back to 0.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -26,9 +27,9 @@ describe('correctAnswerToIndex', () => {
     it('trims and uppercases', () => {
       expect(correctAnswerToIndex('  c  ', optionsLength)).toBe(2);
     });
-    it('clamps out-of-range letter to 0', () => {
-      expect(correctAnswerToIndex('E', optionsLength)).toBe(0);
-      expect(correctAnswerToIndex('Z', optionsLength)).toBe(0);
+    it('returns null for out-of-range letter (not silent fallback to 0)', () => {
+      expect(correctAnswerToIndex('E', optionsLength)).toBeNull();
+      expect(correctAnswerToIndex('Z', optionsLength)).toBeNull();
     });
   });
 
@@ -45,21 +46,21 @@ describe('correctAnswerToIndex', () => {
     it('maps "3" to 3', () => {
       expect(correctAnswerToIndex('3', optionsLength)).toBe(3);
     });
-    it('returns 0 for out-of-range numeric', () => {
-      expect(correctAnswerToIndex('4', optionsLength)).toBe(0);
-      expect(correctAnswerToIndex('10', optionsLength)).toBe(0);
+    it('returns null for out-of-range numeric (not silent fallback to 0)', () => {
+      expect(correctAnswerToIndex('4', optionsLength)).toBeNull();
+      expect(correctAnswerToIndex('10', optionsLength)).toBeNull();
     });
   });
 
   describe('edge cases', () => {
-    it('handles optionsLength 5', () => {
+    it('handles optionsLength 5 — E maps to 4', () => {
       expect(correctAnswerToIndex('E', 5)).toBe(4);
       expect(correctAnswerToIndex('4', 5)).toBe(4);
     });
-    it('handles empty or invalid string', () => {
-      expect(correctAnswerToIndex('', optionsLength)).toBe(0);
-      expect(correctAnswerToIndex('x', optionsLength)).toBe(0);
-      expect(correctAnswerToIndex('abc', optionsLength)).toBe(0);
+    it('returns null for empty or invalid string (not silent fallback to 0)', () => {
+      expect(correctAnswerToIndex('', optionsLength)).toBeNull();
+      expect(correctAnswerToIndex('x', optionsLength)).toBeNull();
+      expect(correctAnswerToIndex('abc', optionsLength)).toBeNull();
     });
   });
 });

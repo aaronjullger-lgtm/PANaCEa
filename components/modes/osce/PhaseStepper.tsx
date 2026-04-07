@@ -89,7 +89,7 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = React.memo(({
                 relative flex items-center gap-1.5 rounded-lg transition-all duration-200
                 ${compact ? 'px-2 py-1.5' : 'px-3 py-2'}
                 ${isCurrent
-                  ? 'bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/40 text-[var(--color-accent)] shadow-sm shadow-[var(--color-accent)]/10'
+                  ? 'bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/40 text-[var(--color-accent)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] shadow-[var(--color-accent)]/10'
                   : isCompleted
                     ? 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]'
                     : 'border border-transparent text-[var(--color-text-muted)] opacity-50 cursor-default'

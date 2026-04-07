@@ -146,6 +146,7 @@ export const onRequestGet = authenticatedEndpoint(
           conditionId,
           conditionName: medicalContent.condition,
           pearls,
+          headers: { 'Cache-Control': 'public, max-age=3600' },
         };
       }
 
@@ -204,6 +205,7 @@ export const onRequestGet = authenticatedEndpoint(
           system,
           pearls: selectedPearls,
           totalAvailable: allPearls.length,
+          headers: { 'Cache-Control': 'no-store' },
         };
       }
 

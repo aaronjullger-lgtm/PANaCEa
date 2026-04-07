@@ -147,7 +147,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
         <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
               Drill Performance Dashboard
             </h2>
           </div>
@@ -168,7 +168,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Target className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Active Drills</span>
               </div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
                 {summary.totalDrills}
               </div>
             </div>
@@ -178,7 +178,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Activity className="w-5 h-5 text-[var(--color-data-pass)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Total Sessions</span>
               </div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
                 {summary.totalSessions}
               </div>
             </div>
@@ -188,7 +188,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Avg Accuracy</span>
               </div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
                 {summary.averageAccuracy}%
               </div>
             </div>
@@ -198,7 +198,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Clock className="w-5 h-5 text-[var(--color-data-provisional)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Time Invested</span>
               </div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
                 {formatTime(summary.totalTime)}
               </div>
             </div>
@@ -263,7 +263,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-[var(--color-data-fail)]">
+                      <div className="text-3xl font-semibold text-[var(--color-data-fail)]">
                         {simulationStats.codeBlue.survivalRate}%
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -294,8 +294,8 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     onClick={() => onStartDrill?.('fluid_electrolyte')}
                   >
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/10">
-                        <Droplets className="w-5 h-5 text-[var(--color-accent)]" />
+                      <div className="p-2.5 rounded-lg bg-[var(--color-bg-tertiary)]">
+                        <Droplets className="w-5 h-5 text-[var(--color-text-secondary)]" />
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
@@ -307,7 +307,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-[var(--color-accent)]">
+                      <div className="text-3xl font-semibold text-[var(--color-accent)]">
                         {simulationStats.fluids.casesSolved}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -343,7 +343,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       </div>
                     </div>
                     <div className="mb-2">
-                      <div className="text-3xl font-bold text-[var(--color-data-pass)]">
+                      <div className="text-3xl font-semibold text-[var(--color-data-pass)]">
                         {simulationStats.antibiotics.coverageMastery}%
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -393,8 +393,8 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                       aria-expanded={isExpanded}
                       className="w-full p-5 flex items-center gap-4 hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     >
-                      <div className="p-3 rounded-lg bg-[var(--color-accent)]/10">
-                        <Icon className="w-6 h-6 text-[var(--color-accent)]" />
+                      <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
+                        <Icon className="w-6 h-6 text-[var(--color-text-secondary)]" />
                       </div>
 
                       <div className="flex-1 text-left">
@@ -415,7 +415,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
 
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                          <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                             {progress.masteryLevel}
                           </div>
                           <div className="text-xs text-[var(--color-text-muted)]">mastery</div>

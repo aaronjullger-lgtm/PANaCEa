@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Trophy, Play } from 'lucide-react';
@@ -35,20 +34,20 @@ export const GrandRoundsBanner: React.FC<{
   };
 
   return (
-    <GlassCard variant="warning" hoverable className="mb-6">
+    <GlassCard variant="warning" hoverable className="mb-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start gap-4 flex-1">
-          <div className="p-3 rounded-xl bg-[var(--color-category-specialty)]/20 backdrop-blur-sm">
-            <Trophy className="w-6 h-6 text-[var(--color-category-specialty)]" />
+          <div className="p-2.5 rounded-xl bg-[var(--color-category-specialty)]/15 shrink-0">
+            <Trophy className="w-5 h-5 text-[var(--color-category-specialty)]" aria-hidden="true" />
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] border border-[var(--color-data-provisional)]/30">
-                Daily Challenge • {dateStr}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-data-provisional)]/8 text-[var(--color-data-provisional)] border border-[var(--color-data-provisional)]/15">
+                Daily Challenge &middot; {dateStr}
               </span>
             </div>
-            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{subtitle}</p>
           </div>
         </div>
 

@@ -153,7 +153,7 @@ export const geminiProxySchema = z.object({
   modelName: z
     .string()
     .regex(/^gemini-[\w.-]+$/, 'Invalid model name')
-    .default('gemini-1.5-flash'),
+    .default('gemini-2.0-flash'),
   temperature: z.number().min(0).max(2).default(0.8),
 });
 

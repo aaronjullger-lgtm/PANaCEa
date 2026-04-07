@@ -7,17 +7,30 @@ import { logger } from '@/lib/logger';
 /**
  * Normalize question options to a string array format.
  * Handles multiple formats:
- * - Array format: ["Option A", "Option B", "Option C", "Option D"]
- * - Object format: { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }
+ * - String array: ["Option A", "Option B", "Option C", "Option D"]
+ * - Object array: [{ value: "Option A", text?: "..." }, ...] (Anki / structured imports)
+ * - Key-value object: { A: "Option A", B: "Option B", C: "Option C", D: "Option D" }
  * - String format: Parses JSON if possible
  *
  * @param options - The options in any supported format
  * @returns Array of option strings, sorted by key if object format
  */
 export function normalizeOptionsToArray(options: unknown): string[] {
-  // Already an array
+  // Array: may contain plain strings OR objects with value/text/label (Anki, structured imports)
   if (Array.isArray(options)) {
-    return options.filter((opt): opt is string => typeof opt === 'string');
+    return options
+      .map((opt): string => {
+        if (typeof opt === 'string') return opt;
+        if (typeof opt === 'object' && opt !== null) {
+          // Priority: value → text → label (matches resolution order in due-siblings and ensureDueVariant)
+          const o = opt as { value?: unknown; text?: unknown; label?: unknown };
+          const extracted = o.value ?? o.text ?? o.label;
+          if (typeof extracted === 'string') return extracted;
+          if (extracted != null) return String(extracted);
+        }
+        return String(opt);
+      })
+      .filter((s) => s.trim().length > 0);
   }
 
   // Object format { A: "text", B: "text", ... }

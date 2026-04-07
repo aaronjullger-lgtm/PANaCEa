@@ -252,10 +252,10 @@ function createNewSRSItem(userId: string, questionId: string): SRSItem {
  * Note: Hard (2) and Easy (4) are deprecated; UI only sends Again (1) or Good (3).
  */
 function mapQualityToRating(quality: number): Rating {
-  if (quality <= 1) return Rating.Again;
-  if (quality === 2) return Rating.Hard;
-  if (quality === 3 || quality === 4) return Rating.Good;
-  return Rating.Easy;
+  // Binary rating system (FSRS-6): Again(1) / Good(3) only.
+  // Hard(2) and Easy(4/5) are deprecated — collapse into Again/Good.
+  if (quality <= 2) return Rating.Again;
+  return Rating.Good;
 }
 
 // ============================================================================

@@ -17,7 +17,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { pdfBoundsToPercent } from '../../../lib/utils/pdfCoordinates';
 
 const RESOURCE_BUCKET = 'educational-resources';
-const STUDY_CHAT_MODEL = 'gemini-1.5-pro';
+const STUDY_CHAT_MODEL = 'gemini-2.0-flash';
 const CACHE_TTL_SECONDS = 3600; // 60 minutes
 const CACHE_MIN_REMAINING_MINUTES = 10;
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';

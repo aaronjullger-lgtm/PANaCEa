@@ -830,7 +830,7 @@ async function seedGeneratedQuestion(
   (async () => {
     try {
       // Transform Question to match PoolPostSchema
-      const correctAnswerLetter = ['A', 'B', 'C', 'D'][question.correctAnswerIndex] || 'A';
+      const correctAnswerLetter = ['A', 'B', 'C', 'D', 'E'][question.correctAnswerIndex] || 'A';
       const payload = {
         question: {
           id: question.id || crypto.randomUUID(),

@@ -70,15 +70,15 @@ function formatTime(date: Date | string): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 450) return 'text-data-pass dark:text-data-pass';
-  if (score >= 400) return 'text-data-provisional dark:text-data-provisional';
-  return 'text-data-fail dark:text-data-fail';
+  if (score >= 450) return 'text-data-pass';
+  if (score >= 400) return 'text-data-provisional';
+  return 'text-data-fail';
 }
 
 function getScoreBgColor(score: number): string {
-  if (score >= 450) return 'bg-data-pass dark:bg-data-pass/30';
-  if (score >= 400) return 'bg-data-provisional dark:bg-data-provisional/30';
-  return 'bg-data-fail dark:bg-data-fail/30';
+  if (score >= 450) return 'bg-data-pass/30';
+  if (score >= 400) return 'bg-data-provisional/30';
+  return 'bg-data-fail/30';
 }
 
 // Suppress unused variable warnings for helper functions used conditionally
@@ -240,18 +240,18 @@ export function ExamHistoryList({
                   </span>
                   {attempt.status === 'completed' &&
                     (attempt.passStatus === 'passed' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-pass dark:bg-data-pass/50 text-data-pass dark:text-data-pass">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-pass/50 text-data-pass">
                         <CheckCircle className="h-3 w-3" />
                         Passed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-fail dark:bg-data-fail/50 text-data-fail dark:text-data-fail">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-fail/50 text-data-fail">
                         <XCircle className="h-3 w-3" />
                         Failed
                       </span>
                     ))}
                   {attempt.status === 'in_progress' && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-provisional dark:bg-data-provisional/50 text-data-provisional dark:text-data-provisional">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-provisional/50 text-data-provisional">
                       In Progress
                     </span>
                   )}
@@ -310,7 +310,7 @@ export function ExamHistoryList({
             {attempt.status === 'completed' &&
               attempt.systemScores &&
               Object.keys(attempt.systemScores).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-data-neutral dark:border-data-neutral">
+                <div className="mt-3 pt-3 border-t border-data-neutral">
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {Object.entries(attempt.systemScores)
                       .sort((a, b) => b[1] - a[1])
@@ -322,10 +322,10 @@ export function ExamHistoryList({
                           flex-shrink-0 px-2 py-1 rounded text-xs font-medium
                           ${
                             score >= 75
-                              ? 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
+                              ? 'bg-data-pass/30 text-data-pass'
                               : score >= 60
-                                ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
-                                : 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
+                                ? 'bg-data-provisional/30 text-data-provisional'
+                                : 'bg-data-fail/30 text-data-fail'
                           }
                         `}
                         >

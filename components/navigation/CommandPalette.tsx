@@ -18,6 +18,7 @@ import { NAV_RAIL_ITEMS } from '@/config/navigation';
 import { getRecentModeIds, recordRecentMode, MAX_RECENT_MODES } from '@/lib/recentModes';
 import { safeFetchJson } from '@/lib/utils/safeFetch';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
 
 const MAX_RECENT = MAX_RECENT_MODES;
 
@@ -80,6 +81,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [searchError, setSearchError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const paletteContainerRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility: trap focus within command palette when open
+  useFocusTrap(paletteContainerRef as React.RefObject<HTMLElement>, isOpen, false /* autoFocus handled by inputRef */);
 
   // Debounce search query
   const debouncedQuery = useDebounce(query, 300);
@@ -295,7 +300,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4">
+      <div ref={paletteContainerRef} className="fixed inset-0 z-[40] flex items-start justify-center pt-[10vh] px-4">
         {/* Backdrop */}
         <motion.div
           initial={false}

@@ -26,8 +26,8 @@ export async function getQuestionClient(
     }
 
     // Build request body based on session settings
+    // userId is derived server-side from auth token (IDOR fix)
     const body: Record<string, unknown> = {
-      userId: 'current', // The API will extract userId from the token
       limit: 1,
     };
 

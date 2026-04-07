@@ -1,13 +1,18 @@
 /**
  * Question Performance Analytics API
  * GET /api/questions/performance
- * Returns question-level performance metrics for content quality analysis
+ * Returns question-level performance metrics for content quality analysis.
+ *
+ * NOTE (Phase 3 — Behavioral Analysis Audit): The `performanceScore` returned here
+ * is a STUDENT PERFORMANCE metric (accuracy, flags, attempts), NOT a pedagogical
+ * quality score. For question quality assessment, see lib/services/questionQualityService.ts.
  */
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { calculatePerformanceScore } from '../../../lib/services/questionQualityService';
 
 const PerformanceSchema = z.object({
   query: z.object({
@@ -96,7 +101,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
         accuracy: Number(stat.accuracy),
         avgTimeMs: stat.avgTimeMs ? Math.round(Number(stat.avgTimeMs)) : null,
         flagCount,
-        qualityScore: calculateQualityScore(
+        performanceScore: calculatePerformanceScore(
           Number(stat.accuracy),
           flagCount,
           Number(stat.totalAttempts)
@@ -104,10 +109,12 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
       };
     });
 
-    // Sort by quality score if requested
-    if (sortBy === 'quality') {
+    // Sort by performance score if requested
+    if (sortBy === 'quality' || sortBy === 'performance') {
       performanceData.sort((a, b) =>
-        order === 'asc' ? a.qualityScore - b.qualityScore : b.qualityScore - a.qualityScore
+        order === 'asc'
+          ? a.performanceScore - b.performanceScore
+          : b.performanceScore - a.performanceScore
       );
     }
 
@@ -123,7 +130,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
           : 0,
       lowAccuracyCount: performanceData.filter((q) => q.accuracy < 50).length,
       highFlagCount: performanceData.filter((q) => q.flagCount >= 3).length,
-      needsReviewCount: performanceData.filter((q) => q.qualityScore < 50).length,
+      needsReviewCount: performanceData.filter((q) => q.performanceScore < 50).length,
     };
 
     logger.info('Question performance fetched', {
@@ -143,14 +150,6 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
   }
 });
 
-/**
- * Calculate a quality score (0-100) for a question
- */
-function calculateQualityScore(accuracy: number, flagCount: number, totalAttempts: number): number {
-  let score = accuracy;
-  const flagPenalty = Math.min(flagCount * 10, 30);
-  score -= flagPenalty;
-  const confidenceBoost = Math.min(totalAttempts / 5, 10);
-  score += confidenceBoost;
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
+// calculateQualityScore() was removed in Phase 3 (Behavioral Analysis Audit).
+// Student performance scoring is now in lib/services/questionQualityService.ts
+// as calculatePerformanceScore(), properly separated from pedagogical quality.

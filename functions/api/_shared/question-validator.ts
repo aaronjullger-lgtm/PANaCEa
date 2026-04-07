@@ -184,10 +184,12 @@ export function validateGeneratedQuestion(
     );
   }
 
-  // Rule 5: All 4 explanation.incorrect entries must be non-empty strings
-  const incorrectKeys = ['A', 'B', 'C', 'D'] as const;
+  // Rule 5: All explanation.incorrect entries must be non-empty strings.
+  // For 4-option questions validate A–D; for 5-option questions validate A–E.
+  const optionCount = question.options.length;
+  const incorrectKeys = (['A', 'B', 'C', 'D', 'E'] as const).slice(0, optionCount);
   for (const key of incorrectKeys) {
-    const explanation = question.explanation.incorrect[key];
+    const explanation = (question.explanation.incorrect as Record<string, string>)[key];
     if (!explanation || typeof explanation !== 'string' || explanation.trim().length === 0) {
       errors.push(
         `explanation.incorrect.${key} is missing or empty`
@@ -269,4 +271,25 @@ export function validateGeneratedQuestion(
     valid: errors.length === 0,
     errors
   };
+}
+
+/**
+ * Throwing variant of validateGeneratedQuestion.
+ *
+ * Use this in code paths where an invalid question must never proceed
+ * (e.g. writing directly to a canonical Question table without staging).
+ * Callers that prefer graceful degradation should use validateGeneratedQuestion
+ * and check the returned `valid` flag themselves.
+ *
+ * @throws Error listing all validation failures if the question is invalid.
+ */
+export function assertValidQuestion(
+  question: Parameters<typeof validateGeneratedQuestion>[0]
+): void {
+  const result = validateGeneratedQuestion(question);
+  if (!result.valid) {
+    throw new Error(
+      `Question validation failed:\n${result.errors.map((e) => `  • ${e}`).join('\n')}`
+    );
+  }
 }

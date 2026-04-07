@@ -14,6 +14,12 @@ import { isValidRoute, getViewForPath } from '../lib/constants/routes';
 import type { View } from '../config/appViews';
 
 function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): View | 'redirect' | null {
+  // Canonical root redirect: "/" → "/study" so authenticated users always get a consistent URL
+  if (path === '/') {
+    navigate('/study', { replace: true });
+    return 'redirect';
+  }
+
   // Handle legacy redirects
   if (path.startsWith('/study/reference')) {
     navigate('/study/knowledge', { replace: true });

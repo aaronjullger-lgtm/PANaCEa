@@ -42,11 +42,11 @@ function getPriorityStripeColor(priority: StudyAction['priority']): string {
     case 'critical':
       return 'bg-[var(--color-data-fail)]'; // Red
     case 'high':
-      return 'bg-amber-500'; // Amber
+      return 'bg-[var(--color-data-provisional)]';
     case 'medium':
-      return 'bg-blue-500'; // Blue
+      return 'bg-[var(--color-accent)]';
     case 'low':
-      return 'bg-green-500'; // Green
+      return 'bg-[var(--color-data-pass)]';
     default:
       return 'bg-[var(--color-accent)]';
   }
@@ -86,34 +86,24 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: animDuration }}
-      whileHover={prefersReducedMotion ? {} : { translateY: -2 }}
-      whileTap={prefersReducedMotion ? {} : { translateY: 0 }}
       onClick={handleClick}
-      className="w-full text-left transition-shadow hover:shadow-md rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+      className="group w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
     >
       <div
-        className={`
-          relative flex items-center gap-4 rounded-xl
-          bg-[var(--color-bg-secondary)]
-          px-5 py-4 shadow-sm
-          border border-transparent hover:border-[var(--color-accent)]/20
-          transition-colors
-        `}
+        className="relative flex items-center gap-3.5 rounded-xl bg-[var(--color-bg-secondary)] px-4 py-3.5 transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40"
+        style={{
+          boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+        }}
       >
         {/* Left accent stripe */}
-        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${getPriorityStripeColor(action.priority)}`} />
+        <div className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-full ${getPriorityStripeColor(action.priority)}`} />
 
         {/* Icon container */}
-        <div
-          className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center"
-          style={{
-            backgroundColor: `${action.accentColor}15`,
-          }}
-        >
-          <div style={{ color: action.accentColor }} className="flex items-center justify-center w-6 h-6">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--color-bg-tertiary)] flex items-center justify-center">
+          <div className="flex items-center justify-center w-5 h-5 text-[var(--color-text-secondary)]">
             {action.icon}
           </div>
         </div>
@@ -121,43 +111,40 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Title + Count */}
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-bold text-base text-[var(--color-text-primary)] truncate">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="font-semibold text-sm text-[var(--color-text-primary)] truncate">
               {action.title}
             </h3>
             {action.count !== undefined && (
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: animDuration, delay: animDuration * 0.5 }}
-                className="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold tabular-nums"
+              <span
+                className="flex-shrink-0 px-2 py-px rounded-full text-[11px] font-medium tabular-nums"
                 style={{
-                  backgroundColor: `${action.accentColor}25`,
+                  backgroundColor: `${action.accentColor}12`,
                   color: action.accentColor,
                 }}
               >
                 {action.count}
-              </motion.div>
+              </span>
             )}
           </div>
 
           {/* Subtitle */}
-          <p className="text-sm text-[var(--color-text-secondary)] mb-2 truncate">
+          <p className="text-xs text-[var(--color-text-muted)] truncate">
             {action.subtitle}
           </p>
 
           {/* System breakdown (if provided) */}
           {action.systemBreakdown && Object.keys(action.systemBreakdown).length > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {Object.entries(action.systemBreakdown)
                 .sort(([, a], [, b]) => b - a)
                 .map(([system, count], idx) => {
                   const entries = Object.entries(action.systemBreakdown!).sort(([, a], [, b]) => b - a);
                   const isLast = idx === entries.length - 1;
                   return (
-                    <span key={system} className="text-xs text-[var(--color-text-muted)] font-medium">
+                    <span key={system} className="text-[11px] text-[var(--color-text-muted)] font-medium">
                       {count} {system}
-                      {!isLast && <span className="text-[var(--color-text-muted)]/60"> ·</span>}
+                      {!isLast && <span className="opacity-40"> ·</span>}
                     </span>
                   );
                 })}
@@ -165,18 +152,10 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
           )}
         </div>
 
-        {/* Right chevron with animation */}
-        <motion.div
-          className="flex-shrink-0 text-[var(--color-text-muted)]"
-          animate={{ x: prefersReducedMotion ? 0 : [0, 4, 0] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
-          <ChevronRight className="w-5 h-5" aria-hidden="true" />
-        </motion.div>
+        {/* Right chevron — static, animates only on group hover */}
+        <div className="flex-shrink-0 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+        </div>
       </div>
     </motion.button>
   );
@@ -201,7 +180,7 @@ export const StudyActionList: React.FC<StudyActionListProps> = ({ actions, class
   }, [actions]);
 
   return (
-    <div className={`flex flex-col gap-[3px] ${className}`}>
+    <div className={`flex flex-col gap-2 ${className}`}>
       {sortedActions.map((action) => (
         <StudyActionCard key={action.id} action={action} />
       ))}

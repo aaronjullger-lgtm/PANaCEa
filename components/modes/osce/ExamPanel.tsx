@@ -123,7 +123,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
     return (
       <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-data-neutral dark:border-data-neutral flex items-center justify-between">
+        <div className="p-4 border-b border-data-neutral flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-[var(--color-category-practice)]" />
             <h3 className="font-semibold text-[var(--color-text-primary)]">Physical Examination</h3>
@@ -131,7 +131,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
           <div className="flex items-center gap-2">
             <button
               onClick={() => setBodyView((v) => (v === 'anterior' ? 'posterior' : 'anterior'))}
-              className="flex items-center gap-1 px-2 py-1 text-sm bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition"
+              className="flex items-center gap-1 px-2 py-1 text-sm bg-data-neutral text-data-neutral rounded-lg hover:bg-data-neutral transition"
             >
               <RotateCcw className="w-4 h-4" />
               {bodyView === 'anterior' ? 'Posterior' : 'Anterior'}
@@ -139,7 +139,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1 text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral"
+                className="p-1 text-data-neutral hover:text-data-neutral"
               >
                 ×
               </button>
@@ -149,7 +149,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
 
         <div className="flex">
           {/* Body Map */}
-          <div className="p-4 border-r border-data-neutral dark:border-data-neutral">
+          <div className="p-4 border-r border-data-neutral">
             <BodyMap
               onRegionClick={handleRegionClick}
               highlightedRegions={suggestedRegions}
@@ -185,7 +185,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
             {selectedRegion ? (
               <>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-data-neutral dark:text-data-neutral capitalize">
+                  <h4 className="font-medium text-data-neutral capitalize">
                     {selectedRegion.replace(/_/g, ' ')}
                   </h4>
                   <button
@@ -209,9 +209,9 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                         className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition ${
                           isCompleted
                             ? finding?.isAbnormal
-                              ? 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]'
-                              : 'bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass'
-                            : 'bg-data-neutral dark:bg-data-neutral/50 hover:bg-data-neutral dark:hover:bg-data-neutral border border-data-neutral dark:border-data-neutral'
+                              ? 'bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20'
+                              : 'bg-data-pass/20 border border-data-pass'
+                            : 'bg-data-neutral/50 hover:bg-data-neutral border border-data-neutral'
                         }`}
                       >
                         <span
@@ -230,9 +230,9 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                             className={`text-sm font-medium ${
                               isCompleted
                                 ? finding?.isAbnormal
-                                  ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
-                                  : 'text-data-pass dark:text-data-pass'
-                                : 'text-data-neutral dark:text-data-neutral'
+                                  ? 'text-[var(--color-data-provisional)]'
+                                  : 'text-data-pass'
+                                : 'text-data-neutral'
                             }`}
                           >
                             {maneuver.name}
@@ -241,8 +241,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                             <div
                               className={`text-xs mt-0.5 truncate ${
                                 finding.isAbnormal
-                                  ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
-                                  : 'text-data-pass dark:text-data-pass'
+                                  ? 'text-[var(--color-data-provisional)]'
+                                  : 'text-data-pass'
                               }`}
                             >
                               {finding.finding}
@@ -265,8 +265,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-center">
-                <Stethoscope className="w-12 h-12 text-data-neutral dark:text-data-neutral mb-3" />
-                <p className="text-data-neutral dark:text-data-neutral text-sm">
+                <Stethoscope className="w-12 h-12 text-data-neutral mb-3" />
+                <p className="text-data-neutral text-sm">
                   Select a body region to examine
                 </p>
               </div>
@@ -282,7 +282,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               animate={{ y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg ${
-                recentFinding.isAbnormal ? 'bg-[var(--color-data-provisional)]/100 text-white' : 'bg-data-pass text-white'
+                recentFinding.isAbnormal ? 'bg-[var(--color-data-provisional)]/100 text-[var(--color-text-inverse)]' : 'bg-data-pass text-[var(--color-text-inverse)]'
               }`}
             >
               <div className="flex items-start gap-2">
@@ -304,7 +304,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         {isPerformingExam && (
           <div className="absolute inset-0 bg-[var(--color-overlay)] flex items-center justify-center">
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 shadow-xl">
-              <div className="animate-pulse flex items-center gap-2 text-data-neutral dark:text-data-neutral">
+              <div className="animate-pulse flex items-center gap-2 text-data-neutral">
                 <Stethoscope className="w-5 h-5 animate-bounce" />
                 <span>Performing exam...</span>
               </div>
@@ -313,9 +313,9 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         )}
 
         {/* Exam Summary Footer */}
-        <div className="p-3 border-t border-data-neutral dark:border-data-neutral bg-data-neutral dark:bg-data-neutral/50">
+        <div className="p-3 border-t border-data-neutral bg-data-neutral/50">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-data-neutral dark:text-data-neutral">
+            <span className="text-data-neutral">
               {completedExams.length} exams performed
             </span>
             <div className="flex items-center gap-3">

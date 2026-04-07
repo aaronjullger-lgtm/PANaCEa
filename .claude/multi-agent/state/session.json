@@ -1,0 +1,94 @@
+{
+  "session_id": null,
+  "active_thread_id": "e5c68f99",
+  "mode": "safe_automatic",
+  "loop_depth": 0,
+  "consecutive_auto_turns": 4,
+  "total_messages_dispatched": 8,
+  "total_messages_consumed": 0,
+  "last_activity": "2026-04-06T20:37:29.437776+00:00",
+  "active_task": "b899b271-a37",
+  "history": [
+    {
+      "msg_id": "a3a5360e-325",
+      "model": "gemini",
+      "actual_backend": "google_gemini",
+      "task_type": "planning",
+      "tokens": 120,
+      "contract_score": 0.29,
+      "success": true,
+      "timestamp": "2026-04-06T20:34:10.932578+00:00"
+    },
+    {
+      "msg_id": "6c1a8fcc-ee5",
+      "model": "openai",
+      "actual_backend": "openai_gpt4o",
+      "task_type": "code_review",
+      "tokens": 95,
+      "contract_score": 0.57,
+      "success": true,
+      "timestamp": "2026-04-06T20:34:16.653723+00:00"
+    },
+    {
+      "msg_id": "a06da86a-e13",
+      "model": "gemini",
+      "actual_backend": "google_gemini",
+      "task_type": "planning",
+      "tokens": 120,
+      "contract_score": 0.29,
+      "success": true,
+      "timestamp": "2026-04-06T20:34:46.479381+00:00"
+    },
+    {
+      "msg_id": "957fef54-685",
+      "model": "openai",
+      "actual_backend": "openai_gpt4o",
+      "task_type": "code_review",
+      "tokens": 95,
+      "contract_score": 0.57,
+      "success": true,
+      "timestamp": "2026-04-06T20:34:54.923706+00:00"
+    },
+    {
+      "msg_id": "7c08ad83-653",
+      "model": "gemini",
+      "actual_backend": "google_gemini",
+      "task_type": "planning",
+      "tokens": 80,
+      "contract_score": 0.29,
+      "success": true,
+      "timestamp": "2026-04-06T20:37:28.124824+00:00"
+    },
+    {
+      "msg_id": "8611c421-197",
+      "model": "openai",
+      "actual_backend": "openai_gpt4o",
+      "task_type": "code_review",
+      "tokens": 60,
+      "contract_score": 0.43,
+      "success": true,
+      "timestamp": "2026-04-06T20:37:28.407077+00:00"
+    },
+    {
+      "msg_id": "a9bc9306-d56",
+      "model": "claude_code_glm",
+      "actual_backend": "zhipu_glm",
+      "task_type": "code_implementation",
+      "tokens": 100,
+      "contract_score": 0.29,
+      "success": true,
+      "timestamp": "2026-04-06T20:37:28.953887+00:00"
+    },
+    {
+      "msg_id": "b899b271-a37",
+      "model": "claude",
+      "actual_backend": "anthropic_claude",
+      "task_type": "overseer",
+      "tokens": 90,
+      "contract_score": 0.57,
+      "success": true,
+      "timestamp": "2026-04-06T20:37:29.395191+00:00"
+    }
+  ],
+  "emergency_stopped": false
+}

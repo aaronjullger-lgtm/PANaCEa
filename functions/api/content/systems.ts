@@ -13,7 +13,8 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCached, setCached } from '../_shared/kv-cache';
 
 const ContentSystemsSchema = z.object({});
-const SYSTEMS_CACHE_KEY = 'content:systems';
+// v2: now filters by status='published', old cache entries are stale
+const SYSTEMS_CACHE_KEY = 'content:systems:v2';
 const CACHE_TTL = 3600; // 1h
 
 export const onRequestOptions = withCors();
@@ -41,18 +42,18 @@ export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (c
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const allSystems = await prisma.medicalContent.findMany({
-      select: { system: true },
+    // groupBy is far more efficient than findMany + JS counting.
+    // Only published content is surfaced to learners.
+    const systemGroups = await prisma.medicalContent.groupBy({
+      by: ['system'],
+      where: { status: 'published', system: { not: null } },
+      _count: { system: true },
+      orderBy: { _count: { system: 'desc' } },
     });
 
-    const systemCounts = new Map<string, number>();
-    for (const { system } of allSystems) {
-      if (system) systemCounts.set(system, (systemCounts.get(system) || 0) + 1);
-    }
-
-    const systems = Array.from(systemCounts.entries())
-      .map(([system, count]) => ({ id: system, label: system, count }))
-      .sort((a, b) => b.count - a.count);
+    const systems = systemGroups
+      .filter((g) => g.system)
+      .map((g) => ({ id: g.system!, label: g.system!, count: g._count.system }));
 
     await setCached(env as { CACHE?: KVNamespace }, SYSTEMS_CACHE_KEY, systems, CACHE_TTL);
     logger.info('Systems fetched', { count: systems.length });

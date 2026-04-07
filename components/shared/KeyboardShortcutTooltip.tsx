@@ -360,7 +360,7 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
               y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
             }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="fixed z-[9999] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none max-w-[280px]"
+            className="fixed z-[20] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none max-w-[280px]"
             role="tooltip"
             aria-hidden={!isVisible}
           >

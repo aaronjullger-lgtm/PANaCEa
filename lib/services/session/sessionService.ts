@@ -5,6 +5,7 @@ import { logger } from '../../logger';
 
 const LOG_SCOPE = 'SessionService';
 import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
+import { resolveCorrectAnswerIndex } from '../../answerLetterMap';
 import { withTimeout } from '../../timeout';
 import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
@@ -51,6 +52,14 @@ export interface SessionQuestionRequest {
   eorDeadline?: string;
   /** Learner phase for question order distribution (didactic/clinical/pance_prep) */
   learnerPhase?: LearnerPhase;
+  /**
+   * Session lane determines blueprint enforcement behavior:
+   *   - 'main': ALWAYS blueprint-distributed (system param ignored). Pure PANCE-readiness.
+   *   - 'eor': Allows rotation/system filtering for EOR prep. Separate from main stats.
+   *   - 'drill': Per-drill routing (unchanged legacy behavior).
+   * When omitted, defaults to legacy behavior (respects system param).
+   */
+  sessionLane?: 'main' | 'eor' | 'drill';
 }
 
 /** Structured rationale format (shared with src/types and ExplanationPanel). */
@@ -127,13 +136,22 @@ export class SessionService {
       eorMode = false,
       eorDeadline,
       learnerPhase,
+      sessionLane,
     } = params;
 
-    // Core PANCE Simulation: ignore single-system/weakness — strict blueprint only
-    const effectiveSystem = simulationStrict ? undefined : system;
-    const effectiveConditionId = simulationStrict ? undefined : conditionId;
-    const effectiveMode = simulationStrict ? 'standard' : mode;
-    const panceLevelOnly = simulationStrict;
+    // ── Blueprint enforcement for main sessions (Sprint 3) ──
+    // When sessionLane is 'main', the session MUST be blueprint-distributed.
+    // System/condition params are ignored so main sessions are a pure
+    // representation of PANCE-readiness, never biased by current study focus.
+    const isMainLane = sessionLane === 'main';
+    const isEorLane = sessionLane === 'eor';
+
+    // Core PANCE Simulation OR main lane: ignore single-system/weakness
+    const forceBlueprint = simulationStrict || isMainLane;
+    const effectiveSystem = forceBlueprint ? undefined : system;
+    const effectiveConditionId = forceBlueprint ? undefined : conditionId;
+    const effectiveMode = forceBlueprint ? 'standard' : mode;
+    const panceLevelOnly = simulationStrict; // Only simulation restricts difficulty
 
     // Fetch seen records and pool count in parallel
     let seenRecords: Array<{ questionId: string; questionType: string }> = [];
@@ -152,10 +170,27 @@ export class SessionService {
       logger.error(`[${LOG_SCOPE}] Failed to fetch seen records or pool count`, { error });
       // Continue with defaults (empty seen records, zero pool count)
     }
-    
+
     const seenIds = new Set([...seenRecords.map((r) => r.questionId), ...excludeQuestionIds]);
 
-    // If specific system or condition requested, use optimized simple fetch
+    // EOR lane: always uses simple session with rotation-specific filtering
+    if (isEorLane) {
+      return this.fetchSimpleSession({
+        userId,
+        count,
+        system,        // EOR keeps the original system param (rotation-specific)
+        conditionId,   // EOR keeps condition filtering
+        mode,
+        panceLevelOnly: false,
+        seenIds,
+        poolCount,
+        eorMode: true,
+        eorDeadline,
+        learnerPhase,
+      });
+    }
+
+    // If specific system or condition requested (and NOT main lane), use simple fetch
     if (effectiveSystem || effectiveConditionId) {
       return this.fetchSimpleSession({
         userId,
@@ -170,7 +205,7 @@ export class SessionService {
       });
     }
 
-    // Multi-system session with blueprint distribution - use parallel execution
+    // Main lane / simulation / multi-system: blueprint-distributed session
     return this.fetchMultiSystemSession({
       userId,
       count,
@@ -559,15 +594,20 @@ export class SessionService {
       const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
 
       // Handle both correctAnswerIndex (number) and correctAnswer (letter) formats
+      // Uses canonical converter — never silently falls back to 0
       let correctAnswerIndex: number;
       if (typeof data.correctAnswerIndex === 'number') {
         correctAnswerIndex = data.correctAnswerIndex;
       } else if (typeof data.correctAnswer === 'string') {
-        // Convert letter ("A", "B", "C", "D") to index (0, 1, 2, 3)
-        const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-        correctAnswerIndex = letterToIndex[data.correctAnswer.toUpperCase()] ?? 0;
+        const resolved = resolveCorrectAnswerIndex(data.correctAnswer as string, options);
+        if (resolved === null) {
+          // Skip this question — corrupt correctAnswer would silently mark the wrong option
+          continue;
+        }
+        correctAnswerIndex = resolved;
       } else {
-        correctAnswerIndex = 0;
+        // No correctAnswer at all — skip rather than silently defaulting to 0
+        continue;
       }
 
       // Preserve structured rationale when present; fallback to string
@@ -885,13 +925,17 @@ export class SessionService {
     try {
       const up = await this.prisma.userProgress.findFirst({
         where: { userId, conditionId },
-        select: { stability: true, fsrsCard: true },
+        select: { fsrsStability: true, fsrsCard: true },
       });
       if (!up) return '';
+      // Prefer fsrsCard.stability (authoritative JSON) with fsrsStability scalar fallback
+      const cardStability = (up.fsrsCard as { stability?: number })?.stability;
       const stability =
-        typeof up.stability === 'number'
-          ? up.stability
-          : (up.fsrsCard as { stability?: number })?.stability;
+        typeof cardStability === 'number'
+          ? cardStability
+          : typeof up.fsrsStability === 'number'
+            ? up.fsrsStability
+            : undefined;
       if (typeof stability !== 'number') return '';
       if (stability < 2) return 'Use classic presentation, straightforward case (low mastery).';
       if (stability > 10) return 'Use atypical presentation, multiple comorbidities, or rare side effect (high mastery).';
