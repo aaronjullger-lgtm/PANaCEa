@@ -102,6 +102,9 @@ playwright/*.json
 *private_key*
 *secret_key*
 
+# Allow token-tracking service (not a secret)
+!functions/api/_shared/tokenTracking.ts
+
 # Environment files with various extensions
 .env.*
 .envrc
