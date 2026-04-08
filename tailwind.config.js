@@ -1,3 +1,5 @@
+import tailwindcssAnimate from 'tailwindcss-animate';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -134,6 +136,10 @@ export default {
     'text-indigo-600', 'text-indigo-400',
     'border-purple-200', 'border-purple-500', 'border-indigo-200',
     'ring-purple-500', 'ring-indigo-500',
+    // Clinical semantic OKLCH color utilities
+    'bg-clinical-semantic-normal', 'bg-clinical-semantic-warning', 'bg-clinical-semantic-critical', 'bg-clinical-semantic-info',
+    'text-clinical-semantic-normal', 'text-clinical-semantic-warning', 'text-clinical-semantic-critical', 'text-clinical-semantic-info',
+    'border-clinical-semantic-normal', 'border-clinical-semantic-warning', 'border-clinical-semantic-critical', 'border-clinical-semantic-info',
   ],
   darkMode: 'class',
   theme: {
@@ -143,19 +149,108 @@ export default {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-in-right': {
+          '0%': { opacity: '0', transform: 'translateX(16px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 20px -2px var(--glow-color, rgba(59, 130, 246, 0.15))' },
+          '50%': { boxShadow: '0 0 28px -2px var(--glow-color, rgba(59, 130, 246, 0.25))' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
+        'gradient-shift': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       },
       animation: {
         shimmer: 'shimmer 1.5s infinite',
+        'fade-in': 'fade-in 0.3s ease-out forwards',
+        'fade-in-up': 'fade-in-up 0.4s ease-out forwards',
+        'slide-in-right': 'slide-in-right 0.3s ease-out forwards',
+        'scale-in': 'scale-in 0.2s ease-out forwards',
+        'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'gradient-shift': 'gradient-shift 8s ease infinite',
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
         brand: '0 10px 40px -10px rgba(15, 23, 42, 0.5)',
         'brand-lg': '0 20px 50px -15px rgba(15, 23, 42, 0.55)',
         'glow-accent': '0 0 20px -2px rgba(14, 165, 233, 0.35)',
+        // --- Cinematic shadow system (Linear/Stripe/Vercel inspired) ---
+        'cinematic': '0 0 0 1px rgba(59, 130, 246, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.1)',
+        'cinematic-hover': '0 0 0 1px rgba(59, 130, 246, 0.12), 0 16px 40px -8px rgba(0, 0, 0, 0.15)',
+        'cinematic-dark': '0 0 0 1px rgba(59, 130, 246, 0.1), 0 8px 24px -4px rgba(0, 0, 0, 0.4)',
+        'cinematic-dark-hover': '0 0 0 1px rgba(59, 130, 246, 0.18), 0 16px 40px -8px rgba(0, 0, 0, 0.5)',
+        'glass': '0 4px 16px -2px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+        'glass-dark': '0 4px 16px -2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        'elevated': '0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px -4px rgba(0, 0, 0, 0.08)',
+        'elevated-dark': '0 1px 3px rgba(0, 0, 0, 0.2), 0 6px 16px -4px rgba(0, 0, 0, 0.3)',
+        'inner-ring': 'inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.05)',
+        'stat-card': '0 0 0 1px rgba(0, 0, 0, 0.03), 0 2px 8px -2px rgba(0, 0, 0, 0.05)',
+        'stat-card-hover': '0 0 0 1px rgba(59, 130, 246, 0.08), 0 8px 20px -4px rgba(0, 0, 0, 0.08)',
+        'nav-rail': '1px 0 0 0 var(--color-border), 4px 0 12px -2px rgba(0, 0, 0, 0.03)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
         poppins: ['Poppins', 'sans-serif'],
         teko: ['Teko', 'sans-serif'],
+      },
+      // --- Premium typography scale (Linear/Vercel inspired) ---
+      fontSize: {
+        'display': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.03em', fontWeight: '700' }],
+        'h1': ['2rem', { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'h2': ['1.5rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'h3': ['1.125rem', { lineHeight: '1.4', letterSpacing: '0', fontWeight: '600' }],
+        'body-lg': ['1rem', { lineHeight: '1.6', letterSpacing: '0' }],
+        'body': ['0.875rem', { lineHeight: '1.6', letterSpacing: '0' }],
+        'caption': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.03em' }],
+        'overline': ['0.6875rem', { lineHeight: '1.5', letterSpacing: '0.08em', fontWeight: '600' }],
+      },
+      letterSpacing: {
+        'display': '-0.03em',
+        'heading': '-0.02em',
+        'snug': '-0.01em',
+        'label': '0.05em',
+        'overline': '0.08em',
+      },
+      // --- Premium transition system ---
+      transitionTimingFunction: {
+        'premium': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce-subtle': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      },
+      transitionDuration: {
+        '150': '150ms',
+        '200': '200ms',
+        '250': '250ms',
+        '350': '350ms',
+      },
+      backdropBlur: {
+        'xs': '2px',
+        'premium': '20px',
       },
       colors: {
         // ============================================
@@ -316,16 +411,73 @@ export default {
           success: '#0a766c', // Alias for pass
         },
 
-        // Semantic Design System
+        // ============================================
+        // CLINICAL SEMANTIC COLORS (OKLCH)
+        // Medical traffic-light conventions for clinical UI.
+        // These supplement (not replace) the existing data-pass/fail/provisional tokens.
+        // - clinical-semantic-normal  → green  (correct, mastered, safe)
+        // - clinical-semantic-warning → amber  (borderline, needs review)
+        // - clinical-semantic-critical→ red    (incorrect, failed, urgent)
+        // - clinical-semantic-info    → blue   (neutral clinical data)
+        // ============================================
+        'clinical-semantic': {
+          normal:   'oklch(0.72 0.19 142)',
+          warning:  'oklch(0.80 0.16 84)',
+          critical: 'oklch(0.63 0.26 29)',
+          info:     'oklch(0.65 0.15 250)',
+        },
+
+        // Semantic Design System (shadcn/ui compatible)
         background: 'var(--background)',
         foreground: 'var(--foreground)',
-        card: 'var(--card)',
-        'card-foreground': 'var(--card-foreground)',
-        primary: 'var(--primary)',
-        'primary-foreground': 'var(--primary-foreground)',
-        muted: 'var(--muted)',
-        'muted-foreground': 'var(--muted-foreground)',
+        card: {
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
+        },
+        secondary: {
+          DEFAULT: 'var(--secondary)',
+          foreground: 'var(--secondary-foreground)',
+        },
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
+        },
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)',
+        },
+        popover: {
+          DEFAULT: 'var(--popover)',
+          foreground: 'var(--popover-foreground)',
+        },
         border: 'var(--border)',
+        input: 'var(--input)',
+        ring: 'var(--ring)',
+        chart: {
+          1: 'var(--chart-1)',
+          2: 'var(--chart-2)',
+          3: 'var(--chart-3)',
+          4: 'var(--chart-4)',
+          5: 'var(--chart-5)',
+        },
+        sidebar: {
+          DEFAULT: 'var(--sidebar-background)',
+          foreground: 'var(--sidebar-foreground)',
+          primary: 'var(--sidebar-primary)',
+          'primary-foreground': 'var(--sidebar-primary-foreground)',
+          accent: 'var(--sidebar-accent)',
+          'accent-foreground': 'var(--sidebar-accent-foreground)',
+          border: 'var(--sidebar-border)',
+          ring: 'var(--sidebar-ring)',
+        },
         // Legacy theme-aware colors (for backward compatibility)
         'bg-primary': 'var(--color-bg-primary)',
         'bg-secondary': 'var(--color-bg-secondary)',
@@ -333,13 +485,13 @@ export default {
         'text-primary': 'var(--color-text-primary)',
         'text-secondary': 'var(--color-text-secondary)',
         'text-muted': 'var(--color-text-muted)',
-        accent: 'var(--color-accent)',
         'accent-hover': 'var(--color-accent-hover)',
         'gold-dark': 'var(--color-gold-dark)',
       },
     },
   },
   plugins: [
+    tailwindcssAnimate,
     function ({ addUtilities }) {
       addUtilities({
         '.exam-mode': {

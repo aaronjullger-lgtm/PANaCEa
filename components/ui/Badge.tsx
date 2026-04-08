@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export type BadgeVariant = 'default' | 'highYield' | 'category' | 'mechanism' | 'muted';
 
@@ -45,15 +46,15 @@ export const Badge: React.FC<BadgeProps> = ({
   truncate = false,
   maxWidth,
 }) => {
-  const base =
-    'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border';
-  const variantClass = VARIANT_CLASSES[variant];
-  const truncateClass = truncate ? 'truncate' : '';
-  const widthClass = maxWidth ?? '';
-
   return (
     <span
-      className={`${base} ${variantClass} ${truncateClass} ${widthClass} ${className}`.trim()}
+      className={cn(
+        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border',
+        VARIANT_CLASSES[variant],
+        truncate && 'truncate',
+        maxWidth,
+        className,
+      )}
     >
       {children}
     </span>

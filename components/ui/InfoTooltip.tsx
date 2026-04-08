@@ -11,6 +11,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface InfoTooltipProps {
   /** Tooltip text content */
@@ -37,7 +38,7 @@ export function InfoTooltip({ text, size = 14, className = '' }: InfoTooltipProp
   }, [isVisible]);
 
   return (
-    <span className={`relative inline-flex items-center ${className}`}>
+    <span className={cn('relative inline-flex items-center', className)}>
       <button
         ref={triggerRef}
         type="button"

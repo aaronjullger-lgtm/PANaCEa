@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener, type UserBaseline } from '../implicit-metrics';
+import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener, type UserBaseline, type CardBaseline } from '../implicit-metrics';
 import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
 import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
@@ -219,6 +219,90 @@ export interface DrillReviewLogger {
 /** Server-authoritative Minimum Valid Response Time. Client cannot lower below this. */
 const SERVER_MVRT_THRESHOLD_MS = 2000;
 
+// ─── Per-Card RT Baseline (CRPL z-score enrichment — tier1augment.md) ──────
+
+/**
+ * Fetch per-card RT baseline from the user's past QuestionAttempts for a specific question.
+ * Returns null if insufficient history (<3 reviews) or if query fails.
+ *
+ * The baseline enables per-card z-score normalization in deriveContinuousRating,
+ * which is more precise than per-user z-scores because it captures the specific
+ * question's inherent difficulty.
+ *
+ * Also pulls FSRS stability from UserProgress for maturity-aware dampening:
+ * high-stability (well-learned) cards tolerate slower RT without penalty.
+ *
+ * Research: tier1augment.md — "z-score approach more robust than absolute thresholds;
+ * conservative about penalizing slow responses on high-stability cards."
+ */
+async function getCardRtBaseline(
+  prisma: PrismaClient,
+  userId: string,
+  questionId: string,
+  conditionId?: string | null
+): Promise<CardBaseline | undefined> {
+  try {
+    // Fetch past RT values for this question+user (max 50 most recent)
+    const pastAttempts = await (prisma as any).questionAttempt.findMany({
+      where: {
+        userId,
+        questionId,
+        isMainSession: true,
+        durationMs: { gt: 500 },
+        telemetryJson: { not: null },
+      },
+      select: {
+        telemetryJson: true,
+        durationMs: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    if (!pastAttempts || pastAttempts.length < 3) return undefined;
+
+    // Extract RT values: prefer time_to_first_interaction_ms, fallback to durationMs
+    const rtValues: number[] = [];
+    for (const attempt of pastAttempts) {
+      const t = attempt.telemetryJson as Record<string, unknown> | null;
+      const firstClick = t?.time_to_first_interaction_ms as number | undefined;
+      const rt = firstClick ?? attempt.durationMs;
+      if (typeof rt === 'number' && rt > 500) {
+        rtValues.push(rt);
+      }
+    }
+
+    if (rtValues.length < 3) return undefined;
+
+    // Compute mean and stddev
+    const sum = rtValues.reduce((a, b) => a + b, 0);
+    const mean = sum / rtValues.length;
+    const variance = rtValues.reduce((a, b) => a + (b - mean) ** 2, 0) / rtValues.length;
+    const stdDev = Math.sqrt(variance);
+
+    if (stdDev <= 0) return undefined;
+
+    // Fetch FSRS stability for maturity-aware dampening
+    let fsrsStability: number | undefined;
+    if (conditionId) {
+      const progress = await (prisma as any).userProgress.findFirst({
+        where: { userId, conditionId },
+        select: { fsrsStability: true },
+      });
+      fsrsStability = (progress?.fsrsStability as number | null) ?? undefined;
+    }
+
+    return {
+      meanRtMs: Math.round(mean),
+      stdDevRtMs: Math.round(stdDev),
+      reviewCount: rtValues.length,
+      fsrsStability,
+    };
+  } catch {
+    return undefined; // Non-fatal — caller falls back to user-level baseline
+  }
+}
+
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
@@ -305,6 +389,10 @@ export async function submitDrillReview(
         exGaussian: behavioralBaseline.rtBaseline.exGaussian,
       }
     : undefined;
+
+  // Fetch per-card RT baseline for CRPL z-score enrichment (tier1augment.md)
+  // Runs concurrently with par time calculation — non-blocking, non-fatal
+  const cardBaselinePromise = getCardRtBaseline(prisma, userId, questionId, question.conditionId);
 
   const parTimeMs = calculateParTime({
     ...qData,
@@ -398,7 +486,9 @@ export async function submitDrillReview(
       consecutiveCorrectStreak: (telemetry?.consecutive_correct as number | undefined) ?? undefined,
     };
 
-    const continuousResult = deriveContinuousRating(behaviorMetrics, undefined, userBaseline);
+    // Await per-card baseline (non-fatal — undefined on failure)
+    const cardRtBaseline = await cardBaselinePromise;
+    const continuousResult = deriveContinuousRating(behaviorMetrics, undefined, userBaseline, cardRtBaseline);
     rating = continuousResult.discreteRating;
     gradeContinuous = continuousResult.grade;
     implicitConfidence = continuousResult.confidence;

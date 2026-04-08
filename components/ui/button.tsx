@@ -1,7 +1,11 @@
 /**
- * Semantic Button System
+ * Semantic Button System — CVA + forwardRef + cn()
  *
- * Uses CSS custom properties for consistent theming:
+ * Uses Class Variance Authority for type-safe variant definitions,
+ * cn() for safe Tailwind class composition, and React.forwardRef
+ * for composition with Radix primitives (Tooltip triggers, Dialog triggers, etc.).
+ *
+ * Theming via CSS custom properties:
  * - Primary: --color-accent text-white (high contrast)
  * - Secondary: --color-bg-secondary text-primary (muted)
  * - Danger: --color-data-fail (error state)
@@ -9,106 +13,117 @@
  */
 
 import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'warning' | 'accent' | 'success';
-type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon';
+/* ---------- CVA variant definitions ---------- */
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+const buttonVariants = cva(
+  // Base classes applied to every button
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+  {
+    variants: {
+      variant: {
+        primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 active:opacity-80',
+        secondary:
+          'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
+        danger:
+          'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/30 border border-[var(--color-data-fail)]/40',
+        ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+        outline:
+          'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
+        warning:
+          'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
+        accent:
+          'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
+        success: 'bg-[var(--color-data-pass)] text-white hover:opacity-90 active:opacity-80',
+      },
+      size: {
+        xs: 'px-2.5 py-1 text-xs min-h-[32px]',
+        sm: 'px-3 py-1.5 text-sm min-h-[36px]',
+        md: 'px-4 py-2 text-base min-h-[44px]',
+        lg: 'px-6 py-3 text-lg min-h-[44px]',
+        xl: 'px-8 py-4 text-xl min-h-[52px]',
+        icon: 'p-2 min-h-[44px] min-w-[44px]',
+      },
+    },
+    defaultVariants: {
+      variant: 'primary',
+      size: 'md',
+    },
+  },
+);
+
+/* ---------- Types ---------- */
+
+type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
+type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>;
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   loading?: boolean;
   icon?: React.ReactNode;
   iconRight?: React.ReactNode;
-  children: React.ReactNode;
 }
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 active:opacity-80',
-  secondary: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
-  danger: 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/30 border border-[var(--color-data-fail)]/40',
-  ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-  outline: 'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
-  warning: 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
-  accent: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
-  success: 'bg-[var(--color-data-pass)] text-white hover:opacity-90 active:opacity-80',
-};
+/* ---------- Button component ---------- */
 
-const sizeClasses: Record<ButtonSize, string> = {
-  xs: 'px-2.5 py-1 text-xs min-h-[32px]',
-  sm: 'px-3 py-1.5 text-sm min-h-[36px]',
-  md: 'px-4 py-2 text-base min-h-[44px]',
-  lg: 'px-6 py-3 text-lg min-h-[44px]',
-  xl: 'px-8 py-4 text-xl min-h-[52px]',
-  icon: 'p-2 min-h-[44px] min-w-[44px]',
-};
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant, size, loading = false, icon, iconRight, disabled, children, className, ...props }, ref) => {
+    const isComponent = (v: unknown): v is React.ComponentType =>
+      typeof v === 'function' || (v != null && typeof v === 'object' && '$$typeof' in (v as object));
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  loading = false,
-  icon,
-  iconRight,
-  disabled,
-  children,
-  className = '',
-  ...props
-}: ButtonProps) {
-  const isComponent = (v: unknown): v is React.ComponentType =>
-    typeof v === 'function' || (v != null && typeof v === 'object' && '$$typeof' in (v as object));
+    const renderedIcon = React.isValidElement(icon)
+      ? icon
+      : isComponent(icon)
+        ? React.createElement(icon)
+        : icon;
 
-  const renderedIcon = React.isValidElement(icon)
-    ? icon
-    : isComponent(icon)
-      ? React.createElement(icon)
-      : icon;
+    const renderedIconRight = React.isValidElement(iconRight)
+      ? iconRight
+      : isComponent(iconRight)
+        ? React.createElement(iconRight)
+        : iconRight;
 
-  const renderedIconRight = React.isValidElement(iconRight)
-    ? iconRight
-    : isComponent(iconRight)
-      ? React.createElement(iconRight)
-      : iconRight;
+    return (
+      <button
+        ref={ref}
+        disabled={disabled || loading}
+        className={cn(buttonVariants({ variant, size }), className)}
+        {...props}
+      >
+        {loading ? (
+          <span className="flex items-center gap-2" role="status" aria-live="polite">
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            {children}
+          </span>
+        ) : (
+          <>
+            {renderedIcon && <span aria-hidden="true">{renderedIcon}</span>}
+            {children}
+            {renderedIconRight && <span aria-hidden="true">{renderedIconRight}</span>}
+          </>
+        )}
+      </button>
+    );
+  },
+);
 
-  return (
-    <button
-      disabled={disabled || loading}
-      className={`
-        rounded-lg font-medium transition-colors
-        disabled:opacity-50 disabled:cursor-not-allowed
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${className}
-      `}
-      {...props}
-    >
-      {loading ? (
-        <span className="flex items-center gap-2" role="status" aria-live="polite">
-          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-          {children}
-        </span>
-      ) : (
-        <span className="flex items-center gap-2">
-          {renderedIcon && <span aria-hidden="true">{renderedIcon}</span>}
-          {children}
-          {renderedIconRight && <span aria-hidden="true">{renderedIconRight}</span>}
-        </span>
-      )}
-    </button>
-  );
-}
+Button.displayName = 'Button';
 
-// Convenience exports for backward compatibility
-export const PrimaryButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="primary" {...props} />;
-export const SecondaryButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="secondary" {...props} />;
-export const DangerButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="danger" {...props} />;
-export const OutlineButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="outline" {...props} />;
-export const WarningButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="warning" {...props} />;
-export const SuccessButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="success" {...props} />;
+/* ---------- Convenience exports (backward compatible) ---------- */
 
-// Extended prop interface for SemanticButton / StartSessionButton used in Rolling360 dashboard.
-// Supports alternative prop names (isLoading, leftIcon, rightIcon, buttonId, fullWidth)
-// that match the design-system API expected by those components.
+const PrimaryButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="primary" {...props} />;
+const SecondaryButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="secondary" {...props} />;
+const DangerButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="danger" {...props} />;
+const OutlineButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="outline" {...props} />;
+const WarningButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="warning" {...props} />;
+const SuccessButton = (props: Omit<ButtonProps, 'variant'>) => <Button variant="success" {...props} />;
+
+/* ---------- SemanticButton (extended props for Rolling360 dashboard) ---------- */
+
 interface SemanticButtonProps extends Omit<ButtonProps, 'loading' | 'icon' | 'iconRight'> {
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -119,18 +134,13 @@ interface SemanticButtonProps extends Omit<ButtonProps, 'loading' | 'icon' | 'ic
   fullWidth?: boolean;
 }
 
-/**
- * SemanticButton — extended button with alternative prop names used across the
- * Rolling360 dashboard. Supports `isLoading`, `leftIcon`, `rightIcon`,
- * `buttonId`, `fullWidth`, and all standard ButtonProps.
- */
-export const SemanticButton = ({
+const SemanticButton = ({
   isLoading,
   leftIcon,
   rightIcon,
   buttonId,
   fullWidth,
-  className = '',
+  className,
   ...rest
 }: SemanticButtonProps) => (
   <Button
@@ -138,7 +148,7 @@ export const SemanticButton = ({
     loading={isLoading}
     icon={leftIcon}
     iconRight={rightIcon}
-    className={`${fullWidth ? 'w-full' : ''} ${className}`.trim()}
+    className={cn(fullWidth && 'w-full', className)}
     {...rest}
   />
 );
@@ -149,15 +159,26 @@ const makeVariantButton =
   ({ variant: _variant, ...rest }: SemanticButtonProps) =>
     <SemanticButton variant={fixedVariant} {...rest} />;
 
-/**
- * StartSessionButton — primary CTA for "Start / Continue Session" in Rolling360 dashboard.
- */
-export const StartSessionButton = makeVariantButton('primary');
+const StartSessionButton = makeVariantButton('primary');
+const ActionButton = makeVariantButton('secondary');
+const GhostButton = makeVariantButton('ghost');
 
-/** ActionButton — secondary-style button. */
-export const ActionButton = makeVariantButton('secondary');
+/* ---------- Exports ---------- */
 
-/** GhostButton — ghost-style button. */
-export const GhostButton = makeVariantButton('ghost');
+export {
+  Button,
+  buttonVariants,
+  PrimaryButton,
+  SecondaryButton,
+  DangerButton,
+  OutlineButton,
+  WarningButton,
+  SuccessButton,
+  SemanticButton,
+  StartSessionButton,
+  ActionButton,
+  GhostButton,
+  makeVariantButton,
+};
 
 export type { ButtonVariant, ButtonSize, ButtonProps, SemanticButtonProps };

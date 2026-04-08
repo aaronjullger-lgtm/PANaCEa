@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Card — Unified card primitive for PANaCEa
  *
@@ -8,99 +6,101 @@ import React from 'react';
  * language across all surfaces.
  *
  * Compound components: Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
+ * All components use cn() for safe class merging and React.forwardRef for Radix composition.
  */
+
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 /* ---------- Ring-shadow value (single source of truth) ---------- */
 const RING_SHADOW = '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)';
 
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
-  /** Pass-through click handler for interactive cards */
-  onClick?: () => void;
-}
+/* ---------- Card ---------- */
 
-export const Card: React.FC<CardProps> = ({ children, className = '', onClick }) => {
-  return (
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { onClick?: () => void }
+>(({ className, onClick, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('bg-[var(--color-bg-secondary)] rounded-xl', className)}
+    style={{ boxShadow: RING_SHADOW }}
+    onClick={onClick}
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    {...props}
+  />
+));
+Card.displayName = 'Card';
+
+/* ---------- CardHeader ---------- */
+
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      className={`bg-[var(--color-bg-secondary)] rounded-xl ${className}`}
-      style={{ boxShadow: RING_SHADOW }}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-    >
-      {children}
-    </div>
-  );
-};
-
-interface CardHeaderProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '' }) => {
-  return (
-    <div
-      className={`px-5 py-3.5 ${className}`}
+      ref={ref}
+      className={cn('px-5 py-3.5', className)}
       style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}
-    >
-      {children}
-    </div>
-  );
-};
+      {...props}
+    />
+  ),
+);
+CardHeader.displayName = 'CardHeader';
 
-interface CardTitleProps {
-  children: React.ReactNode;
-  className?: string;
-  as?: 'h2' | 'h3' | 'h4';
-}
+/* ---------- CardTitle ---------- */
 
-export const CardTitle: React.FC<CardTitleProps> = ({ children, className = '', as: Tag = 'h3' }) => {
-  return (
-    <Tag className={`text-base font-semibold text-[var(--color-text-primary)] ${className}`}>
-      {children}
-    </Tag>
-  );
-};
+const CardTitle = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement> & { as?: 'h2' | 'h3' | 'h4' }
+>(({ className, as: Tag = 'h3', ...props }, ref) => (
+  <Tag
+    ref={ref}
+    className={cn('text-base font-semibold text-[var(--color-text-primary)]', className)}
+    {...props}
+  />
+));
+CardTitle.displayName = 'CardTitle';
 
-interface CardDescriptionProps {
-  children: React.ReactNode;
-  className?: string;
-}
+/* ---------- CardDescription ---------- */
 
-export const CardDescription: React.FC<CardDescriptionProps> = ({ children, className = '' }) => {
-  return (
-    <p className={`text-sm text-[var(--color-text-muted)] mt-0.5 ${className}`}>
-      {children}
-    </p>
-  );
-};
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn('text-sm text-[var(--color-text-muted)] mt-0.5', className)}
+    {...props}
+  />
+));
+CardDescription.displayName = 'CardDescription';
 
-interface CardContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
+/* ---------- CardContent ---------- */
 
-export const CardContent: React.FC<CardContentProps> = ({ children, className = '' }) => {
-  return <div className={`px-5 py-4 ${className}`}>{children}</div>;
-};
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('px-5 py-4', className)} {...props} />
+  ),
+);
+CardContent.displayName = 'CardContent';
 
-interface CardFooterProps {
-  children: React.ReactNode;
-  className?: string;
-}
+/* ---------- CardFooter ---------- */
 
-export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '' }) => {
-  return (
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      className={`px-5 py-3 ${className}`}
+      ref={ref}
+      className={cn('px-5 py-3', className)}
       style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}
-    >
-      {children}
-    </div>
-  );
-};
+      {...props}
+    />
+  ),
+);
+CardFooter.displayName = 'CardFooter';
+
+/* ---------- Exports ---------- */
 
 /** Re-export the ring-shadow value for components that need it inline */
-export const CARD_RING_SHADOW = RING_SHADOW;
+const CARD_RING_SHADOW = RING_SHADOW;
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CARD_RING_SHADOW };

@@ -132,10 +132,5 @@ export const gradients = {
   subtle: 'bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]',
 };
 
-/**
- * Utility to combine Tailwind classes safely
- * Removes duplicates and handles conflicts
- */
-export function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+// cn() utility has been consolidated to @/lib/utils (uses clsx + tailwind-merge).
+// Import from there instead: import { cn } from '@/lib/utils';

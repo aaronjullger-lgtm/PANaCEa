@@ -21,7 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   Stethoscope,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import DecayCurve from './charts/DecayCurve';
 import StabilityPyramid from './charts/StabilityPyramid';
@@ -58,6 +58,9 @@ import { useRecentSessions } from '@/hooks/useRecentSessions';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
+
+// Lazy-loaded heavy chart — @nivo/calendar (~15-20 KB)
+const StudyHeatmap = React.lazy(() => import('@/components/charts/StudyHeatmap'));
 import { getDashboardConfig, type DashboardConfig, type WidgetId } from '@/lib/services/dashboardPersonalization';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
@@ -144,27 +147,30 @@ const QuickStat: React.FC<QuickStatProps> = ({
   <motion.div
     initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
-    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, delay, ease: 'easeOut' }}
-    className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-5 transition-colors duration-200 hover:bg-[var(--color-bg-tertiary)]/40"
-    style={{
-      boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
-    }}
+    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
+    className="card-stat group"
+    style={{ '--stat-accent': accentColor } as React.CSSProperties}
   >
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3.5">
-        <div className="p-2.5 rounded-lg bg-[var(--color-bg-tertiary)]">
+        <div
+          className="p-2.5 rounded-xl transition-colors duration-200"
+          style={{
+            background: `color-mix(in srgb, ${accentColor} 10%, var(--color-bg-tertiary) 90%)`,
+          }}
+        >
           {icon}
         </div>
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-1">{label}</p>
-          <p className="text-2xl sm:text-3xl font-semibold text-[var(--color-text-primary)] tracking-tight tabular-nums leading-none">
+          <p className="text-overline uppercase text-[var(--color-text-muted)] mb-1">{label}</p>
+          <p className="text-2xl sm:text-3xl font-semibold text-[var(--color-text-primary)] tracking-heading tabular-nums leading-none">
             {value}
           </p>
         </div>
       </div>
       {trend && (
         <div
-          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-xs ${
             trend.isPositive
               ? 'bg-[var(--color-data-pass)]/12 text-[var(--color-data-pass)]'
               : 'bg-[var(--color-data-fail)]/12 text-[var(--color-data-fail)]'
@@ -191,16 +197,23 @@ interface SectionHeaderProps {
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon, action }) => (
-  <div className="flex items-center justify-between mb-4 pt-2">
-    <div className="flex items-center gap-2.5">
+  <div className="flex items-center justify-between mb-4 pt-3">
+    <div className="flex items-center gap-3">
       {icon && (
-        <span className="text-[var(--color-text-muted)]">
-          {icon}
-        </span>
+        <div
+          className="p-2 rounded-xl"
+          style={{
+            background: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-tertiary) 92%)',
+          }}
+        >
+          <span className="text-[var(--color-accent)]">
+            {icon}
+          </span>
+        </div>
       )}
       <div>
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] tracking-tight">{title}</h2>
-        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+        <h2 className="text-h3 text-[var(--color-text-primary)]">{title}</h2>
+        {subtitle && <p className="text-caption text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
       </div>
     </div>
     {action}
@@ -505,22 +518,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   }, [data.dueCount, currentStreak]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] py-5 px-4 md:py-6 md:px-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* ===== HEADER SECTION - Enhanced with gradient text ===== */}
+    <div className="min-h-screen py-5 px-4 md:py-6 md:px-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* ===== HEADER SECTION - Cinematic greeting with premium typography ===== */}
         <motion.div
           initial={prefersReducedMotion ? false : { y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
-          className="pt-3 pb-1"
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="pt-4 pb-2"
         >
-          <h1 className="text-2xl sm:text-3xl font-light text-[var(--color-text-primary)] tracking-tight truncate max-w-full">
+          <h1 className="text-h1 text-[var(--color-text-primary)] truncate max-w-full" style={{ letterSpacing: '-0.025em' }}>
             {getGreeting()},{' '}
-            <span className="font-semibold">
+            <span className="font-bold">
               {user?.firstName || 'Student'}
             </span>
           </h1>
-          <p className="text-[var(--color-text-muted)] text-sm mt-1">
+          <p className="text-[var(--color-text-muted)] text-body-lg mt-1.5">
             {dashboardConfig.greetingSuffix}
           </p>
         </motion.div>
@@ -529,8 +542,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         <div
           role="tablist"
           aria-label="Dashboard views"
-          className="inline-flex gap-0.5 p-0.5 rounded-lg"
-          style={{ backgroundColor: 'var(--color-bg-tertiary)' }}
+          className="inline-flex gap-1 p-1 rounded-xl"
+          style={{ backgroundColor: 'var(--color-bg-tertiary)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)' }}
         >
           {DASHBOARD_VIEWS.map((v) => {
             const Icon = v.icon;
@@ -544,12 +557,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 aria-controls={`tabpanel-${v.id}`}
                 id={`tab-${v.id}`}
                 onClick={() => setView(v.id)}
-                className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-md text-[13px] font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 ${
+                className={`relative flex items-center justify-center gap-1.5 py-2 px-5 rounded-lg text-[13px] font-medium transition-all duration-200 ease-premium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 ${
                   isActive
-                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
-                style={isActive ? { boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.04)' } : undefined}
+                style={isActive ? { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 2px 6px -1px rgba(0,0,0,0.06)' } : undefined}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">{v.label}</span>
@@ -611,6 +624,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 />
               )}
 
+              {/* Study Activity Heatmap — GitHub-style year view (lazy-loaded) */}
+              {/* TODO: Wire to real daily activity data from /api/analytics/daily-activity */}
+              <div className="card-cinematic p-5">
+                <h3 className="text-caption font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-3">Study Activity</h3>
+                <React.Suspense fallback={<div className="h-[180px] animate-pulse bg-[var(--color-bg-tertiary)] rounded-lg" />}>
+                  <StudyHeatmap
+                    data={[]}
+                    height={180}
+                  />
+                </React.Suspense>
+              </div>
+
               {/* Today's Plan — allocator-driven MAIN vs TARGETED split */}
               <TodayPlanCard
                 data={todayPlan}
@@ -663,7 +688,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <ConfusionGraph maxPairs={20} />
 
               {/* Rotation Focus + Wellness — stage-aware layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {dashboardConfig.showRotationContext && (
                   <RotationFocusCard
                     rotationName={userProfile?.currentRotation ?? undefined}
@@ -679,7 +704,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               </div>
 
               {/* Exam Readiness + Retention Forecast */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {(dashboardConfig.showPanceCountdown || dashboardConfig.showEorCountdown) && (
                   <ExamReadinessCard />
                 )}
@@ -698,28 +723,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 subtitle="Quick drills to sharpen your skills"
                 icon={<Zap className="w-4 h-4" />}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
                   onClick={() => handleNavigation('/modes/rapid-recall')}
-                  className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-5 w-full text-left overflow-hidden transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-                  style={{
-                    boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
-                  }}
+                  className="card-cinematic group relative p-5 w-full text-left overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                 >
-                  <div className="flex items-center gap-3 mb-2.5">
-                    <div className="p-2 rounded-lg bg-[var(--color-bg-tertiary)]">
-                      <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" aria-hidden="true" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="p-2.5 rounded-xl transition-colors duration-200"
+                      style={{
+                        background: 'color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-tertiary) 90%)',
+                      }}
+                    >
+                      <Clock className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
                     </div>
-                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    <h3 className="text-body font-semibold text-[var(--color-text-primary)]">
                       Rapid Recall
                     </h3>
                   </div>
-                  <p className="text-xs text-[var(--color-text-muted)] mb-3 leading-relaxed">
+                  <p className="text-caption text-[var(--color-text-muted)] mb-3.5 leading-relaxed">
                     Quick-fire questions to test your speed
                   </p>
-                  <div className="flex items-center text-[var(--color-accent)] text-xs font-medium group-hover:gap-1.5 transition-all">
+                  <div className="flex items-center text-[var(--color-accent)] text-caption font-semibold group-hover:gap-1.5 transition-all duration-200 ease-premium">
                     Start Drill
-                    <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                    <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform duration-200 ease-premium" aria-hidden="true" />
                   </div>
                 </button>
                 <DailyTriad />
@@ -740,7 +767,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               className="space-y-6"
             >
               {/* System Performance + Calibration — stage-aware */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
                 {showDataWidget('system_performance') && (
                   <SystemPerformanceWidget maxSystems={5} />
                 )}
@@ -767,20 +794,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 icon={<TrendingUp className="w-4 h-4" />}
                 action={<InfoTooltip text={TOOLTIP_STABILITY} />}
               />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {showDataWidget('decay_curve') && (
-                  <div
-                    className="bg-[var(--color-bg-secondary)] rounded-xl p-5"
-                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
-                  >
+                  <div className="card-cinematic p-5">
                     <DecayCurve data={data.decayCurveData} />
                   </div>
                 )}
                 {showDataWidget('stability_pyramid') && (
-                  <div
-                    className="bg-[var(--color-bg-secondary)] rounded-xl p-5"
-                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
-                  >
+                  <div className="card-cinematic p-5">
                     <StabilityPyramid data={data.stabilityBuckets} />
                   </div>
                 )}
@@ -802,14 +823,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               )}
 
               {/* Link to full analytics */}
-              <div className="flex justify-center pt-4 pb-2">
+              <div className="flex justify-center pt-6 pb-3">
                 <button
                   type="button"
                   onClick={() => handleNavigation('/progress')}
-                  className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+                  className="group flex items-center gap-2 px-5 py-2.5 rounded-xl text-caption font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-all duration-200 ease-premium hover:bg-[var(--color-accent)]/5"
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
                   View full analytics
+                  <ArrowRight className="w-3 h-3 opacity-0 -ml-1 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200 ease-premium" />
                 </button>
               </div>
             </motion.div>

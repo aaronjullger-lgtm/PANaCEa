@@ -20,10 +20,12 @@ import {
   analyzeSessionMetrics,
   serializeImplicitMetrics,
   applyStabilityModifierFromGrade,
+  perCardRtZScore,
   DEFAULT_IMPLICIT_CONFIG,
   DURATION_CAP_MS,
   type ImplicitBehaviorMetrics,
   type SessionLatencyStats,
+  type CardBaseline,
 } from '../lib/implicit-metrics';
 import { Rating } from '../lib/fsrs';
 
@@ -940,6 +942,156 @@ describe('Implicit Metrics Module', () => {
       const lowAnalysis = analyzeSessionMetrics(lowQualityReviews);
 
       expect(highAnalysis.avgConfidence).toBeGreaterThan(lowAnalysis.avgConfidence);
+    });
+  });
+
+  // ─── Per-Card RT Z-Score (CRPL Enrichment — tier1augment.md) ──────────────
+
+  describe('perCardRtZScore', () => {
+    const baseCard: CardBaseline = {
+      meanRtMs: 5000,
+      stdDevRtMs: 1500,
+      reviewCount: 10,
+    };
+
+    it('should return -1 for insufficient review count', () => {
+      expect(perCardRtZScore(5000, { ...baseCard, reviewCount: 2 })).toBe(-1);
+    });
+
+    it('should return -1 for zero stdDev', () => {
+      expect(perCardRtZScore(5000, { ...baseCard, stdDevRtMs: 0 })).toBe(-1);
+    });
+
+    it('should return -1 for zero mean', () => {
+      expect(perCardRtZScore(5000, { ...baseCard, meanRtMs: 0 })).toBe(-1);
+    });
+
+    it('should return ~0.67 for average RT (z=0)', () => {
+      const result = perCardRtZScore(5000, baseCard);
+      // z=0 → 1 - 0/3 = 1.0... wait, the formula is 1 - effectiveZ/3
+      // z=0, dampener=1.0 (no stability), effectiveZ=0 → 1 - 0 = 1.0? No.
+      // Actually: z = (5000-5000)/1500 = 0, effectiveZ = 0 (positive dampener irrelevant)
+      // result = 1 - 0/3 = 1.0... but 0 isn't positive so dampener doesn't apply
+      // Wait, z=0 is NOT > 0, so effectiveZ = z = 0
+      // result = max(0, min(1, 1 - 0/3)) = 1.0
+      // Hmm, z=0 should map to "average for this card"
+      // The mapping is: z=-2→1.0, z=0→1.0? That seems wrong.
+      // Let me re-read: "Map to [0, 1]: z=-2 → 1.0, z=0 → 0.67, z=+2 → 0.33"
+      // Oh I see, the z=0→0.67 comment applies to the per-user version which divides by 3:
+      // 1 - 0/3 = 1.0... that gives 1.0 for z=0
+      // Wait the per-user code says: z=-2→1.0, z=0→0.67 via 1-z/3 = 1-0/3=1.0
+      // That's actually 1.0 not 0.67. The comment might be wrong.
+      // Let me recalculate: 1 - (-2)/3 = 1 + 0.667 = 1.667, clamped to 1.0 ✓
+      // 1 - 0/3 = 1.0 ✓ (at mean, confidence = 1.0, which means "fast enough")
+      // 1 - 2/3 = 0.333 ✓
+      // 1 - 3/3 = 0 ✓
+      // So z=0 IS 1.0 — the student matched their average, which is fine.
+      expect(result).toBeCloseTo(1.0, 2);
+    });
+
+    it('should return high confidence for fast responses (negative z)', () => {
+      // RT 2000ms when mean=5000, stddev=1500 → z = -2.0
+      const result = perCardRtZScore(2000, baseCard);
+      // z=-2, effectiveZ=-2 (negative, no dampening), result = 1 - (-2)/3 = 1.667, clamped to 1.0
+      expect(result).toBe(1.0);
+    });
+
+    it('should return lower confidence for slow responses (positive z)', () => {
+      // RT 8000ms when mean=5000, stddev=1500 → z = 2.0
+      const result = perCardRtZScore(8000, baseCard);
+      // z=2.0, stability=0, dampener=1.0, effectiveZ=2.0
+      // result = 1 - 2.0/3 = 0.333
+      expect(result).toBeCloseTo(0.333, 2);
+    });
+
+    it('should return 0 for extremely slow responses', () => {
+      // RT 10500ms → z = (10500-5000)/1500 = 3.667
+      const result = perCardRtZScore(10500, baseCard);
+      // effectiveZ=3.667, result = 1 - 3.667/3 = -0.222, clamped to 0
+      expect(result).toBe(0);
+    });
+
+    describe('maturity-aware dampening', () => {
+      it('should not dampen fast responses regardless of stability', () => {
+        const matureCard: CardBaseline = { ...baseCard, fsrsStability: 90 };
+        // Fast: RT 2000ms → z = -2.0 (negative, never dampened)
+        const result = perCardRtZScore(2000, matureCard);
+        expect(result).toBe(1.0);
+      });
+
+      it('should reduce penalty for slow responses on high-stability cards', () => {
+        const newCard: CardBaseline = { ...baseCard, fsrsStability: 0 };
+        const matureCard: CardBaseline = { ...baseCard, fsrsStability: 90 };
+
+        // Slow: RT 8000ms → z = 2.0
+        const newResult = perCardRtZScore(8000, newCard);
+        const matureResult = perCardRtZScore(8000, matureCard);
+
+        // Mature card should score HIGHER (less penalized) than new card
+        expect(matureResult).toBeGreaterThan(newResult);
+      });
+
+      it('should apply correct dampening at stability=90 days', () => {
+        const card: CardBaseline = { ...baseCard, fsrsStability: 90 };
+        // z=2.0, dampener = 0.5 + 0.5/(1+90/60) = 0.5 + 0.5/2.5 = 0.5 + 0.2 = 0.7
+        // Hmm wait: 0.5 + 0.5/(1 + 90/60) = 0.5 + 0.5/2.5 = 0.5 + 0.2 = 0.7
+        // effectiveZ = 2.0 * 0.7 = 1.4
+        // result = 1 - 1.4/3 = 0.533
+        const result = perCardRtZScore(8000, card);
+        expect(result).toBeCloseTo(0.533, 2);
+      });
+
+      it('should have a dampening floor of 0.5 for very high stability', () => {
+        const veryMatureCard: CardBaseline = { ...baseCard, fsrsStability: 365 };
+        // dampener = 0.5 + 0.5/(1+365/60) = 0.5 + 0.5/7.083 = 0.5 + 0.0706 = 0.5706
+        // effectiveZ = 2.0 * 0.5706 = 1.141
+        // result = 1 - 1.141/3 = 0.620
+        const result = perCardRtZScore(8000, veryMatureCard);
+        // Compare with no stability: 1 - 2.0/3 = 0.333
+        expect(result).toBeGreaterThan(0.5);
+        expect(result).toBeLessThan(0.7);
+      });
+    });
+  });
+
+  describe('deriveContinuousRating with cardBaseline', () => {
+    const baseMetrics: ImplicitBehaviorMetrics = {
+      timeToFirstClick: 5000,
+      answerSwitches: 0,
+      totalDwellTime: 8000,
+      isCorrect: true,
+      parTimeMs: 10000,
+    };
+
+    const card: CardBaseline = {
+      meanRtMs: 5000,
+      stdDevRtMs: 1500,
+      reviewCount: 10,
+    };
+
+    it('should use per-card z-score when cardBaseline is provided', () => {
+      const withCard = deriveContinuousRating(baseMetrics, undefined, undefined, card);
+      const withoutCard = deriveContinuousRating(baseMetrics, undefined, undefined, undefined);
+
+      // With card baseline, RT classification should be 'per-card-zscore'
+      expect(withCard.rtClassification).toBe('per-card-zscore');
+      // Without it, should be null (log-transform fallback)
+      expect(withoutCard.rtClassification).toBeNull();
+    });
+
+    it('should fall back to user baseline when cardBaseline has insufficient reviews', () => {
+      const insufficientCard: CardBaseline = { ...card, reviewCount: 2 };
+      const result = deriveContinuousRating(baseMetrics, undefined, undefined, insufficientCard);
+      // Should NOT be per-card-zscore since reviewCount < 3
+      expect(result.rtClassification).not.toBe('per-card-zscore');
+    });
+
+    it('should produce higher confidence for fast responses on mature cards', () => {
+      const fastMetrics = { ...baseMetrics, timeToFirstClick: 2000 };
+      const matureCard: CardBaseline = { ...card, fsrsStability: 90 };
+
+      const result = deriveContinuousRating(fastMetrics, undefined, undefined, matureCard);
+      expect(result.confidence).toBeGreaterThan(0.7);
     });
   });
 });

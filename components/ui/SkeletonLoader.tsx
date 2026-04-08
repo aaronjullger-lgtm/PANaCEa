@@ -6,6 +6,7 @@
  * some older components import from @/components/ui/SkeletonLoader.
  */
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/loading';
 
 interface SkeletonLoaderProps {
@@ -22,19 +23,23 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   variant: _variant,
 }) => (
   <Skeleton
-    className={`${height ? `h-[${height}]` : ''} ${width ? `w-[${width}]` : 'w-full'} ${className}`.trim()}
+    className={cn(
+      height ? `h-[${height}]` : '',
+      width ? `w-[${width}]` : 'w-full',
+      className,
+    )}
   />
 );
 
-export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <Skeleton className={`h-32 w-full rounded-xl ${className}`.trim()} />
+export const SkeletonCard: React.FC<{ className?: string }> = ({ className }) => (
+  <Skeleton className={cn('h-32 w-full rounded-xl', className)} />
 );
 
 export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
   lines = 3,
-  className = '',
+  className,
 }) => (
-  <div className={`space-y-2 ${className}`}>
+  <div className={cn('space-y-2', className)}>
     {Array.from({ length: lines }).map((_, i) => (
       <Skeleton key={i} className="h-4 w-full last:w-3/4 rounded" />
     ))}

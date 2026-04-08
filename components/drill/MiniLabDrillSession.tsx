@@ -127,10 +127,10 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
         <span className="text-data-neutral font-medium">{value.name}</span>
       </div>
       <div className="flex items-center gap-4">
-        <span className={`${getValueColor()} tabular-nums`}>
+        <span className={`${getValueColor()} font-mono tabular-nums`}>
           {value.value} {value.unit}
         </span>
-        <span className="text-data-neutral text-sm tabular-nums min-w-[80px] text-right">
+        <span className="text-data-neutral text-sm font-mono tabular-nums min-w-[80px] text-right">
           ({value.referenceRange})
         </span>
       </div>
@@ -519,7 +519,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             </p>
             <div className="flex justify-center gap-8 mb-8">
               <div className="text-center">
-                <div className="text-4xl font-bold text-data-pass">{score}</div>
+                <div className="text-4xl font-bold font-mono tabular-nums text-data-pass">{score}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
               </div>
             </div>

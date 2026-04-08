@@ -85,7 +85,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
                 : 'text-[var(--color-data-provisional)]'
             }`}
           >
-            <span className="tabular-nums">{Math.round(accuracy * 100)}%</span>
+            <span className="font-mono tabular-nums">{Math.round(accuracy * 100)}%</span>
           </span>
         </div>
       </div>

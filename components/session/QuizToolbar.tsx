@@ -157,7 +157,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             {!isCommuterMode && timeRemainingMs !== null && timeRemainingMs > 0 && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
                 <Clock className="w-3.5 h-3.5 text-[var(--color-text-primary)]" />
-                <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                <span className="text-xs font-semibold font-mono tabular-nums text-[var(--color-text-primary)]">
                   {Math.ceil(timeRemainingMs / 60000)} min
                 </span>
               </div>
@@ -189,7 +189,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             aria-pressed={isFlagged}
             className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
               isFlagged
-                ? 'bg-data-provisional/10 text-data-provisional border-data-provisional'
+                ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
             }`}
           >
@@ -268,7 +268,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
-                  <AlertTriangle className="w-4 h-4 text-data-fail" aria-hidden="true" />
+                  <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)]" aria-hidden="true" />
                   Report Issue
                 </button>
                 {/* Clear Highlights */}
@@ -336,7 +336,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
               onClick={onEndSession}
               title="End Session"
               aria-label="End Session"
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
@@ -357,7 +357,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
         </div>
       )}
       {replenishmentError && (
-        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-data-provisional/50 bg-data-provisional/10 px-3 py-2 text-sm text-[var(--color-text-secondary)]">
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-data-provisional)]/50 bg-[var(--color-data-provisional)]/10 px-3 py-2 text-sm text-[var(--color-text-secondary)]">
           <span>{replenishmentError}</span>
           <button
             type="button"

@@ -271,15 +271,15 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                 Due: {new Date(nextReview.nextDueDate).toLocaleDateString()}
               </div>
               {/* Stability and Difficulty indicators (for FSRS insight) */}
-              <div className="flex items-center gap-4 mt-2 text-xs">
+              <div className="flex items-center gap-4 mt-2 text-xs" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
                 <div className="flex items-center gap-1">
-                  <span className="text-[var(--color-text-muted)]">Stability:</span>
+                  <span className="text-[var(--color-text-muted)]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>Stability:</span>
                   <span className="font-medium text-[var(--color-text-primary)]">
                     {nextReview.stability.toFixed(1)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[var(--color-text-muted)]">Difficulty:</span>
+                  <span className="text-[var(--color-text-muted)]" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>Difficulty:</span>
                   <span className="font-medium text-[var(--color-text-primary)]">
                     {nextReview.difficulty.toFixed(1)}
                   </span>

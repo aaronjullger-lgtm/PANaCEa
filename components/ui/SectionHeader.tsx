@@ -1,6 +1,7 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SectionHeaderProps {
@@ -46,7 +47,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
-      className={`mt-8 mb-4 flex items-center justify-between ${className}`}
+      className={cn('mt-8 mb-4 flex items-center justify-between', className)}
     >
       <div className="flex items-center gap-3">
         {Icon && (

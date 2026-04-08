@@ -38,6 +38,9 @@ import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
 
+// Lazy-loaded command palette (~cmdk + dialog, deferred until ⌘K)
+const LazyCommandPalette = React.lazy(() => import('@/components/command/CommandPalette'));
+
 /** Session focus options for simulation / training menu — defined in AppRoutes, re-exported here for handler type safety */
 
 // Aliases for backward compatibility in this file
@@ -1038,6 +1041,11 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* ⌘K Command Palette (lazy-loaded) */}
+        <React.Suspense fallback={null}>
+          <LazyCommandPalette />
+        </React.Suspense>
 
         {/* Loading Progress Bar */}
         <LoadingProgress isLoading={isLoading} />

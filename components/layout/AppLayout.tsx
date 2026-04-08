@@ -60,20 +60,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         Skip to main content
       </a>
 
-      {/* Header */}
+      {/* Header — Glass morphism with premium depth */}
       {showHeader && (
         <header
-          className="sticky top-0 z-50 shrink-0"
+          className="header-glass sticky top-0 z-50 shrink-0"
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 50,
             height: 'var(--header-height, 4rem)',
-            backgroundColor: 'var(--color-bg-primary)',
-            boxShadow: '0 1px 0 0 var(--color-border)',
           }}
         >
-          <div className="h-full w-full px-4 sm:px-6 flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="h-full w-full flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <AppBrand
               size="sm"
               asLink
@@ -85,7 +83,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
                   to={ROUTES.ADMIN}
-                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
+                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
                   aria-label="Admin Dashboard"
                 >
                   <Shield className="w-5 h-5" />
@@ -95,7 +93,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <motion.button
                   ref={settingsButtonRef}
                   onClick={onSettingsClick}
-                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
+                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
                   aria-label="Settings and Stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -108,7 +106,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="p-2 rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors duration-150"
+                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
                   aria-label="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />
@@ -123,17 +121,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* NavRail */}
       {showNavRail && <NavRail />}
 
-      {/* Main Content */}
+      {/* Main Content — smooth margin transition for rail collapse */}
       <main
         id="main-content"
-        className="main-content-area min-h-screen min-w-0 max-w-full overflow-visible transition-all duration-300"
+        className="main-content-area min-h-screen min-w-0 max-w-full overflow-visible transition-[margin] duration-300 ease-premium"
         style={{
           marginLeft: showNavRail ? 'var(--nav-rail-width, 56px)' : '0',
           paddingTop: showHeader ? 'var(--header-height, 4rem)' : '0',
         }}
       >
         <div
-          className="mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8"
+          className="mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 py-6"
           style={{ maxWidth: 'var(--content-max-width, 72rem)' }}
         >
           {children}

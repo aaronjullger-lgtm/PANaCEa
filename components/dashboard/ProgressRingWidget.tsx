@@ -112,7 +112,7 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
 
           {/* Percentage text */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-sm font-bold text-[var(--color-text-primary)]">
+            <span className="text-sm font-bold font-mono tabular-nums text-[var(--color-text-primary)]">
               {Math.round(percent)}%
             </span>
           </div>
@@ -155,7 +155,7 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                <div className="text-4xl font-bold font-mono tabular-nums text-[var(--color-text-primary)]">
                   {Math.round(percent)}%
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">Complete</div>
@@ -201,7 +201,7 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-sm font-bold ${
+                          className={`text-sm font-bold font-mono tabular-nums ${
                             sys.percent >= 80
                               ? 'text-[var(--color-data-pass)]'
                               : sys.percent >= 50
@@ -211,6 +211,7 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                         >
                           {Math.round(sys.percent)}%
                         </span>
+
                         {onSystemClick && (
                           <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" />
                         )}

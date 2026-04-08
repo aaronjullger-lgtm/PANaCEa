@@ -33,7 +33,7 @@ import {
   HeartPulse,
   Droplets,
   Bug,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import {
   getAllDrillStats,
   getDrillPerformanceSummary,
@@ -168,7 +168,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Target className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Active Drills</span>
               </div>
-              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold font-mono tabular-nums text-[var(--color-text-primary)]">
                 {summary.totalDrills}
               </div>
             </div>
@@ -178,7 +178,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Activity className="w-5 h-5 text-[var(--color-data-pass)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Total Sessions</span>
               </div>
-              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold font-mono tabular-nums text-[var(--color-text-primary)]">
                 {summary.totalSessions}
               </div>
             </div>
@@ -188,7 +188,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Avg Accuracy</span>
               </div>
-              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold font-mono tabular-nums text-[var(--color-text-primary)]">
                 {summary.averageAccuracy}%
               </div>
             </div>
@@ -198,7 +198,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 <Clock className="w-5 h-5 text-[var(--color-data-provisional)]" />
                 <span className="text-sm text-[var(--color-text-muted)]">Time Invested</span>
               </div>
-              <div className="text-3xl font-semibold text-[var(--color-text-primary)]">
+              <div className="text-3xl font-semibold font-mono tabular-nums text-[var(--color-text-primary)]">
                 {formatTime(summary.totalTime)}
               </div>
             </div>

@@ -127,6 +127,77 @@ export interface UserBaseline {
 }
 
 /**
+ * Per-card behavioral baseline for CRPL z-score normalization.
+ * When provided, RT is z-scored against the card's own history rather than
+ * the user's global distribution. This captures question-specific difficulty:
+ * a 10-second response on a complex vignette is very different from 10 seconds
+ * on a simple recall card.
+ *
+ * Research basis (tier1augment.md):
+ * - Per-card z-scores more robust than absolute thresholds (Anki community finding)
+ * - Maturity-aware weighting: Benjamin, Bjork & Schwartz (1998) found faster
+ *   retrieval predicts better retention for episodic (newly-learned) memory
+ *   but NOT for semantic (well-established) memory. High-stability cards
+ *   should tolerate slower responses without penalty.
+ * - Bjork desirable difficulty: slow-but-correct on mature cards may indicate
+ *   beneficial effortful retrieval, not weak memory.
+ */
+export interface CardBaseline {
+  /** Mean response time for this card across all past reviews (ms) */
+  meanRtMs: number;
+  /** Standard deviation of response times for this card (ms) */
+  stdDevRtMs: number;
+  /** Number of past reviews contributing to this baseline */
+  reviewCount: number;
+  /** FSRS stability value for this card (days). Used for maturity-aware weighting.
+   *  Higher stability = more mature card = less RT penalty for slow responses. */
+  fsrsStability?: number;
+}
+
+/**
+ * Compute per-card RT z-score with maturity-aware dampening.
+ *
+ * Returns a confidence signal in [0, 1] where:
+ * - 1.0 = very fast for this card (strong automatic retrieval)
+ * - 0.67 = average for this card
+ * - 0.0 = extremely slow for this card
+ *
+ * The maturity dampener reduces the penalty for slow responses on high-stability
+ * cards. At stability=90 days (well-learned), slow responses are 50% less
+ * penalized because semantic retrieval is naturally slower (Benjamin et al., 1998).
+ *
+ * @param currentRtMs - Current response time in milliseconds
+ * @param card - Per-card RT baseline with optional FSRS stability
+ * @returns Normalized confidence signal in [0, 1]
+ */
+export function perCardRtZScore(currentRtMs: number, card: CardBaseline): number {
+  // Guard: need at least 3 reviews and non-zero stddev for meaningful z-scores
+  if (card.reviewCount < 3 || card.stdDevRtMs <= 0 || card.meanRtMs <= 0) {
+    return -1; // Signal: insufficient data, caller should fall back
+  }
+
+  const z = (currentRtMs - card.meanRtMs) / card.stdDevRtMs;
+
+  // Maturity dampener: reduce z-score penalty for high-stability cards.
+  // Sigmoid centered at stability=30 days, half-max at 60 days.
+  // At stability=0 (new): dampener=1.0 (full z-score impact)
+  // At stability=30: dampener=0.80
+  // At stability=90: dampener=0.55
+  // At stability=365: dampener=0.50 (floor)
+  const stability = card.fsrsStability ?? 0;
+  const maturityDampener = stability > 0
+    ? 0.5 + 0.5 / (1 + stability / 60)
+    : 1.0;
+
+  // Apply dampener only to POSITIVE z-scores (slow responses).
+  // Fast responses (negative z) are never dampened — speed always signals strength.
+  const effectiveZ = z > 0 ? z * maturityDampener : z;
+
+  // Map to [0, 1]: z=-2 → 1.0, z=0 → 0.67, z=+2 → 0.33, z=+3 → 0.0
+  return Math.max(0, Math.min(1, 1 - effectiveZ / 3));
+}
+
+/**
  * Configuration for implicit rating derivation
  */
 export interface ImplicitRatingConfig {
@@ -353,7 +424,8 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
 export function deriveContinuousRating(
   metrics: ImplicitBehaviorMetrics,
   config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG,
-  baseline?: UserBaseline
+  baseline?: UserBaseline,
+  cardBaseline?: CardBaseline
 ): ContinuousRatingResult {
   // ── NaN/Infinity guard ──
   // If telemetry values are NaN or negative, NaN propagates through all penalty/bonus
@@ -470,30 +542,52 @@ export function deriveContinuousRating(
     confidence = cp.incorrectConfidence;
   } else {
     // Signal 1: Response time (fast correct = strong automatic retrieval)
-    // Priority: ex-Gaussian > z-score > log-transform
+    // Priority: per-card z-score > ex-Gaussian > per-user z-score > log-transform
+    //
+    // Per-card z-score (tier1augment.md CRPL enrichment): normalizes against
+    // the card's own RT history with maturity-aware dampening. This is the
+    // most precise signal because it captures question-specific difficulty
+    // and respects the episodic/semantic memory distinction (Benjamin et al., 1998).
     let sRT: number;
     let rtSignalQuality = 1.0; // Reduced for attentional lapses
 
-    if (baseline?.exGaussian && baseline.exGaussian.n >= 30) {
-      // Best path: ex-Gaussian classification (Ratcliff, 1978; Luce, 1986)
-      // Decomposes RT into cognitive processing (mu+sigma) and attentional lapses (tau).
-      // Lapses are flagged with reduced signal quality — prevents random slowness
-      // from being misinterpreted as weak memory.
-      const egResult = exGaussianRTSignal(safeTimeToFirstClick, baseline.exGaussian);
-      sRT = egResult.signal;
-      rtSignalQuality = egResult.quality;
-      _rtClassification = egResult.classification;
-      _rtSignalQuality = rtSignalQuality;
-    } else if (baseline && baseline.rtStdDevMs > 0) {
-      // Fallback: z-score against student's own RT distribution
-      const zScore = (safeTimeToFirstClick - baseline.rtMedianMs) / baseline.rtStdDevMs;
-      // Map z-score to [0, 1]: z=-2 → 1.0 (very fast for them), z=0 → 0.67, z=+2 → 0.33, z=+3 → 0.0
-      sRT = Math.max(0, Math.min(1, 1 - zScore / 3));
+    if (cardBaseline && cardBaseline.reviewCount >= 3 && cardBaseline.stdDevRtMs > 0) {
+      // Best path: per-card z-score with maturity-aware dampening
+      const cardSignal = perCardRtZScore(safeTimeToFirstClick, cardBaseline);
+      if (cardSignal >= 0) {
+        sRT = cardSignal;
+        _rtClassification = 'per-card-zscore';
+      } else {
+        // perCardRtZScore returned -1 (insufficient data) — fall through
+        sRT = -1;
+      }
     } else {
-      // Final fallback: log-transform of latency ratio (absolute threshold)
-      // Range: 0.0 (very slow) → 1.0 (instant recall)
-      const rtRatio = latencyRatio; // already computed above: effectiveLatency / parTime
-      sRT = Math.max(0, Math.min(1, 1 - Math.log(Math.max(rtRatio, 0.1)) / Math.log(3)));
+      sRT = -1; // Sentinel: no per-card data
+    }
+
+    // Fallback chain when per-card z-score is unavailable or insufficient
+    if (sRT < 0) {
+      if (baseline?.exGaussian && baseline.exGaussian.n >= 30) {
+        // Tier 2: ex-Gaussian classification (Ratcliff, 1978; Luce, 1986)
+        // Decomposes RT into cognitive processing (mu+sigma) and attentional lapses (tau).
+        // Lapses are flagged with reduced signal quality — prevents random slowness
+        // from being misinterpreted as weak memory.
+        const egResult = exGaussianRTSignal(safeTimeToFirstClick, baseline.exGaussian);
+        sRT = egResult.signal;
+        rtSignalQuality = egResult.quality;
+        _rtClassification = egResult.classification;
+        _rtSignalQuality = rtSignalQuality;
+      } else if (baseline && baseline.rtStdDevMs > 0) {
+        // Tier 3: z-score against student's own global RT distribution
+        const zScore = (safeTimeToFirstClick - baseline.rtMedianMs) / baseline.rtStdDevMs;
+        // Map z-score to [0, 1]: z=-2 → 1.0 (very fast for them), z=0 → 0.67, z=+2 → 0.33, z=+3 → 0.0
+        sRT = Math.max(0, Math.min(1, 1 - zScore / 3));
+      } else {
+        // Tier 4: log-transform of latency ratio (absolute threshold)
+        // Range: 0.0 (very slow) → 1.0 (instant recall)
+        const rtRatio = latencyRatio; // already computed above: effectiveLatency / parTime
+        sRT = Math.max(0, Math.min(1, 1 - Math.log(Math.max(rtRatio, 0.1)) / Math.log(3)));
+      }
     }
 
     // Signal 2: Answer stability (no switches = confident)

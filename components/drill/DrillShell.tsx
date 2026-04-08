@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home } from '@/components/ui/icons';
 import { BackLink } from '@/components/navigation/BackLink';
 import { DrillErrorBoundary } from '@/components/error/DrillErrorBoundary';
 import { ROUTES } from '@/config/routes';
@@ -67,18 +67,17 @@ const DrillShell: React.FC<DrillShellProps> = ({
   const hubTarget = backTo ?? ROUTES.PRACTICE;
   return (
     <div className={`min-h-screen bg-[var(--color-bg-primary)] flex flex-col ${className}`}>
-      {/* Header with Breadcrumb */}
+      {/* Header with Breadcrumb — glass morphism */}
       {!hideBreadcrumb && (
         <motion.header
-          initial={prefersReducedMotion ? false : { y: -20 }}
-          animate={{ y: 0 }}
-          transition={prefersReducedMotion ? { duration: 0 } : undefined}
-          className="sticky top-0 z-40 bg-[var(--color-bg-primary)]"
-          style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}
+          initial={prefersReducedMotion ? false : { y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="header-glass sticky top-0 z-40"
         >
-          <div className="max-w-7xl mx-auto px-4 py-2.5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
             {/* Breadcrumb Navigation */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-1.5">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-caption text-[var(--color-text-muted)] mb-2">
               {backTo !== undefined ? (
                 <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
               ) : (
@@ -86,7 +85,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                   variant="ghost"
                   size="xs"
                   onClick={onBackToHub}
-                  icon={<Home className="w-4 h-4" />}
+                  icon={<Home className="w-3.5 h-3.5" />}
                   aria-label="Back to hub"
                 >
                   Hub
@@ -94,12 +93,12 @@ const DrillShell: React.FC<DrillShellProps> = ({
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  <span className="text-[var(--color-border)]" aria-hidden="true">/</span>
+                  <span className="text-[var(--color-border)] mx-0.5" aria-hidden="true">/</span>
                   <span
                     className={
                       index === breadcrumb.length - 1
-                        ? 'text-[var(--color-text-primary)] font-medium'
-                        : ''
+                        ? 'text-[var(--color-text-primary)] font-semibold'
+                        : 'transition-colors duration-150 hover:text-[var(--color-text-secondary)]'
                     }
                     {...(index === breadcrumb.length - 1 ? { 'aria-current': 'page' as const } : {})}
                   >
@@ -118,17 +117,18 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     size="icon"
                     onClick={onBack}
                     aria-label="Go back"
+                    className="rounded-xl hover:bg-[var(--color-bg-tertiary)] transition-all duration-200 ease-premium"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 )}
-                <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text-primary)]">
+                <h1 className="text-h2 text-[var(--color-text-primary)]">
                   {title}
                 </h1>
               </div>
 
               {/* Header Content (Scores, Streaks, etc.) */}
-              {headerContent && <div className="flex items-center gap-4">{headerContent}</div>}
+              {headerContent && <div className="flex items-center gap-3">{headerContent}</div>}
             </div>
           </div>
         </motion.header>
@@ -137,7 +137,13 @@ const DrillShell: React.FC<DrillShellProps> = ({
       {/* Main Content Area — aria-live announces question transitions to screen readers */}
       <main className="flex-1 relative scroll-mt-16" aria-live="polite" aria-atomic="false">
         <DrillErrorBoundary drillName={title}>
-          {children}
+          <motion.div
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {children}
+          </motion.div>
         </DrillErrorBoundary>
       </main>
 

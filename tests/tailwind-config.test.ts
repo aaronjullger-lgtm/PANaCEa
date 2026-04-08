@@ -13,10 +13,12 @@ describe('tailwind config tokens', () => {
 
   it('registers exam-mode and eor-accent utility classes', () => {
     const addUtilities = vi.fn();
-    const firstPlugin = (tailwindConfig as { plugins: Array<(api: unknown) => void> }).plugins[0];
+    // Find the custom plugin function (may not be index 0 if other plugins like tailwindcss-animate are prepended)
+    const plugins = (tailwindConfig as { plugins: Array<unknown> }).plugins;
+    const customPlugin = plugins.find((p): p is (api: unknown) => void => typeof p === 'function');
 
-    expect(typeof firstPlugin).toBe('function');
-    firstPlugin({ addUtilities });
+    expect(customPlugin).toBeDefined();
+    customPlugin!({ addUtilities });
 
     expect(addUtilities).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -112,12 +112,15 @@ function BottomTabBar({
         left: 0,
         right: 0,
         zIndex: 40,
-        backgroundColor: 'var(--color-bg-primary)',
-        boxShadow: '0 -1px 0 0 var(--color-border)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
       aria-label="Main navigation"
     >
+      {/* Glass backdrop for mobile bottom bar */}
+      <div
+        className="absolute inset-0 header-glass"
+        style={{ borderBottom: 'none', borderTop: '1px solid var(--color-border)', boxShadow: '0 -2px 8px rgba(0,0,0,0.04)' }}
+      />
       <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
         {tabs.map((item) => {
           const Icon = item.icon;
@@ -315,12 +318,23 @@ export const NavRail: React.FC<NavRailProps> = ({
               <>
                 <motion.div
                   layoutId="active-nav-pill"
-                  className="absolute inset-0 rounded-lg bg-[var(--color-bg-tertiary)]/60 z-0"
+                  className="absolute inset-0 rounded-xl z-0"
+                  style={{
+                    background: 'var(--color-bg-tertiary)',
+                    opacity: 0.7,
+                    boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
+                  }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
                 />
-                <span
-                  className={`absolute top-1/2 z-0 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)] ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1.5'}`}
+                <motion.span
+                  layoutId="active-nav-accent"
+                  className={`absolute top-1/2 z-0 h-5 w-[3px] -translate-y-1/2 rounded-full ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1'}`}
+                  style={{
+                    background: 'linear-gradient(180deg, var(--color-accent) 0%, rgba(59, 130, 246, 0.6) 100%)',
+                    boxShadow: '0 0 8px var(--color-accent)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
                 />
               </>
@@ -356,7 +370,7 @@ export const NavRail: React.FC<NavRailProps> = ({
       initial={false}
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className={`${className}`}
+      className={`nav-rail-premium scrollbar-premium ${className}`}
       style={{
         position: 'fixed',
         left: 0,
@@ -365,8 +379,6 @@ export const NavRail: React.FC<NavRailProps> = ({
         flexDirection: 'column',
         top: 'var(--header-height, 4rem)',
         height: 'calc(100vh - var(--header-height, 4rem))',
-        backgroundColor: 'var(--color-bg-primary)',
-        borderRight: '1px solid var(--color-border)',
         overflowY: 'auto',
         overflowX: 'hidden',
       }}

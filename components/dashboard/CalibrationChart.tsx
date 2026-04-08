@@ -138,7 +138,7 @@ export default function CalibrationChart() {
 
               return (
                 <div key={idx} className="flex items-center gap-3">
-                  <span className="text-xs w-16 text-right font-mono" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                  <span className="text-xs w-16 text-right" style={{ color: 'var(--color-text-muted)', fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>{label}</span>
                   <div className="flex-1 relative h-6">
                     {/* Predicted (background) */}
                     <div
@@ -149,13 +149,14 @@ export default function CalibrationChart() {
                     <div
                       className="absolute inset-y-0 left-0 rounded"
                       style={{
+                        width: `${Math.round(actual * 100)}%`,
+                        opacity: 0.8,
                         backgroundColor: isOverconfident
                           ? 'var(--color-data-provisional)'
                           : isUnderconfident
                           ? 'var(--color-accent)'
                           : 'var(--color-data-pass)',
                       }}
-                      style={{ width: `${Math.round(actual * 100)}%`, opacity: 0.8 }}
                     />
                     {/* Count label */}
                     <span className="absolute right-2 top-0.5 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
@@ -183,21 +184,21 @@ export default function CalibrationChart() {
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4" style={{ borderTopWidth: '1px', borderTopStyle: 'solid', borderTopColor: 'var(--color-border)' }}>
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Brier Score</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)', fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
                 {data.brierScore.toFixed(3)}
-                <span className="text-xs ml-1" style={{ color: 'var(--color-text-muted)' }}>(0 = perfect)</span>
+                <span className="text-xs ml-1" style={{ color: 'var(--color-text-muted)', fontFamily: "'Inter', system-ui, sans-serif" }}>(0 = perfect)</span>
               </p>
             </div>
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Cal. Slope</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)', fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
                 {data.calibrationSlope.toFixed(2)}
-                <span className="text-xs ml-1" style={{ color: 'var(--color-text-muted)' }}>(1.0 = ideal)</span>
+                <span className="text-xs ml-1" style={{ color: 'var(--color-text-muted)', fontFamily: "'Inter', system-ui, sans-serif" }}>(1.0 = ideal)</span>
               </p>
             </div>
             <div>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Review Pairs</p>
-              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{data.n}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)', fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>{data.n}</p>
             </div>
           </div>
         </>

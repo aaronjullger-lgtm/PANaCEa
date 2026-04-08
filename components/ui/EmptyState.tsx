@@ -9,6 +9,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Inbox,
   Search,
@@ -117,47 +118,45 @@ export function EmptyState({
 
   const content = (
     <div
-      className={`flex flex-col items-center justify-center text-center ${compact ? 'py-6 px-4' : 'py-12 px-6'} ${className}`}
+      className={cn(
+        'flex flex-col items-center justify-center text-center',
+        compact ? 'py-6 px-4' : 'py-12 px-6',
+        className,
+      )}
     >
       {/* Icon */}
-      <div className={`${compact ? 'mb-3' : 'mb-4'}`}>
+      <div className={cn(compact ? 'mb-3' : 'mb-4')}>
         <div
-          className={`
-          ${compact ? 'w-12 h-12' : 'w-16 h-16'} 
-          rounded-full 
-          bg-[var(--color-bg-tertiary)] 
-          flex items-center justify-center
-        `}
+          className={cn(
+            'rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center',
+            compact ? 'w-12 h-12' : 'w-16 h-16',
+          )}
         >
           <IconComponent
-            className={`
-              ${compact ? 'w-6 h-6' : 'w-8 h-8'} 
-              text-[var(--color-text-tertiary)]
-            `}
+            className={cn(
+              'text-[var(--color-text-tertiary)]',
+              compact ? 'w-6 h-6' : 'w-8 h-8',
+            )}
           />
         </div>
       </div>
 
       {/* Text */}
       <h3
-        className={`
-        ${compact ? 'text-base' : 'text-lg'} 
-        font-semibold 
-        text-[var(--color-text-primary)] 
-        mb-1
-      `}
+        className={cn(
+          'font-semibold text-[var(--color-text-primary)] mb-1',
+          compact ? 'text-base' : 'text-lg',
+        )}
       >
         {displayTitle}
       </h3>
 
       {displayDescription && (
         <p
-          className={`
-          ${compact ? 'text-sm' : 'text-base'} 
-          text-[var(--color-text-secondary)] 
-          max-w-sm 
-          ${compact ? 'mb-3' : 'mb-4'}
-        `}
+          className={cn(
+            'text-[var(--color-text-secondary)] max-w-sm',
+            compact ? 'text-sm mb-3' : 'text-base mb-4',
+          )}
         >
           {displayDescription}
         </p>
@@ -166,7 +165,7 @@ export function EmptyState({
       {/* Actions */}
       {(action || secondaryAction) && (
         <div
-          className={`flex flex-col sm:flex-row items-center gap-3 ${compact ? 'mt-2' : 'mt-4'}`}
+          className={cn('flex flex-col sm:flex-row items-center gap-3', compact ? 'mt-2' : 'mt-4')}
         >
           {action && (
             <Button

@@ -16,7 +16,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '@/components/ui/icons';
 import { useReducedMotion, useAccessibleAnimation } from '@/hooks/useReducedMotion';
 
 /**

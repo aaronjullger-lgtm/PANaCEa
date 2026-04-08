@@ -6,6 +6,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---- Geist Mono — self-hosted for PWA offline support ---- */
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 /* Safe area for notched phones (iPhone X+) — bottom tab bar */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -129,6 +154,246 @@ a,
 }
 .dark .hover-lift:hover {
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.4);
+}
+
+/* =====================================================
+   CINEMATIC DESIGN SYSTEM UTILITIES
+   Premium card, glass, and interaction patterns
+   Inspired by Linear, Stripe, Vercel, Framer
+===================================================== */
+
+/* Cinematic card - blue-tinted ring shadow + elevation */
+.card-cinematic {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.04),
+    0 2px 8px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-cinematic:hover {
+  border-color: rgba(59, 130, 246, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 12px 32px -8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+.dark .card-cinematic {
+  border-color: rgba(71, 85, 105, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.06),
+    0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+.dark .card-cinematic:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.15),
+    0 12px 32px -8px rgba(0, 0, 0, 0.4);
+}
+
+/* Glass card - frosted glass with subtle grain */
+.card-glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 16px -2px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.dark .card-glass {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 16px -2px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Stat card - subtle elevation for KPI displays */
+.card-stat {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 1px 4px -1px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+.card-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--stat-accent, var(--color-accent)), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.card-stat:hover {
+  border-color: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.06), 0 6px 16px -4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+.card-stat:hover::before {
+  opacity: 0.6;
+}
+.dark .card-stat {
+  border-color: rgba(71, 85, 105, 0.4);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 1px 4px -1px rgba(0, 0, 0, 0.2);
+}
+.dark .card-stat:hover {
+  border-color: rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1), 0 6px 16px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* Premium header bar - glass with depth */
+.header-glass {
+  background: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.dark .header-glass {
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Premium nav rail styling */
+.nav-rail-premium {
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 1px 0 8px -2px rgba(0, 0, 0, 0.03);
+}
+.dark .nav-rail-premium {
+  background: rgba(15, 23, 42, 0.95);
+  border-right: 1px solid rgba(71, 85, 105, 0.4);
+  box-shadow: 1px 0 12px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Nav item hover with glow */
+.nav-item-glow {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-item-glow::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 10px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+.nav-item-glow:hover::after {
+  background: rgba(59, 130, 246, 0.04);
+}
+.dark .nav-item-glow:hover::after {
+  background: rgba(59, 130, 246, 0.08);
+}
+.nav-item-glow[data-active='true']::after {
+  background: rgba(59, 130, 246, 0.08);
+}
+.dark .nav-item-glow[data-active='true']::after {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+/* Quick start card - interactive with subtle gradient border */
+.card-quick-start {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.card-quick-start:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  background: var(--color-bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.08);
+}
+.dark .card-quick-start:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.12);
+}
+
+/* Button cinematic - premium CTA button */
+.btn-cinematic {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-cinematic:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+}
+.btn-cinematic:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Stagger animation delays for children */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+
+/* Premium scrollbar for content areas */
+.scrollbar-premium::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-premium::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-premium::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+}
+.scrollbar-premium::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+.dark .scrollbar-premium::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark .scrollbar-premium::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Section divider with fade */
+.divider-fade {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+  border: none;
+  margin: 2rem 0;
 }
 
 /* Glassmorphism footer - frosted glass, docked to bottom */
@@ -397,6 +662,13 @@ a,
   --color-gold-dark: #7a6f52;
   --color-gold-dark-hover: #6a5f42;
 
+  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) — LIGHT MODE ===== */
+  /* Medical traffic-light conventions. Supplements data-pass/fail/provisional. */
+  --clinical-normal: oklch(0.72 0.19 142);    /* green — correct, mastered, safe */
+  --clinical-warning: oklch(0.80 0.16 84);    /* amber — borderline, needs review */
+  --clinical-critical: oklch(0.63 0.26 29);   /* red — incorrect, failed, urgent */
+  --clinical-info: oklch(0.65 0.15 250);      /* blue — neutral clinical data */
+
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
   /* Main backgrounds */
@@ -417,6 +689,32 @@ a,
 
   /* Border */
   --border: #e2e8f0;
+
+  /* ===== shadcn/ui SEMANTIC TOKENS (mapped to PANaCEa palette) ===== */
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --input: #e2e8f0;
+  --ring: #3B82F6;
+  --radius: 0.5rem;
+  --chart-1: #3B82F6;
+  --chart-2: #0a766c;
+  --chart-3: #f59e0b;
+  --chart-4: #9a8f72;
+  --chart-5: #ef4444;
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #3B82F6;
 
   /* Legacy theme-aware variables - LIGHT MODE */
   --color-bg-primary: #f8fafc; /* Canvas */
@@ -608,6 +906,12 @@ a,
   --color-gold-dark: #c4b78a;
   --color-gold-dark-hover: #b4a77a;
 
+  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) — DARK MODE ===== */
+  --clinical-normal: oklch(0.65 0.17 142);    /* slightly muted green for dark bg */
+  --clinical-warning: oklch(0.73 0.14 84);    /* slightly muted amber */
+  --clinical-critical: oklch(0.58 0.23 29);   /* slightly muted red */
+  --clinical-info: oklch(0.60 0.13 250);      /* slightly muted blue */
+
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
   /* Main backgrounds - same slate family, elevation ladder */
@@ -628,6 +932,31 @@ a,
 
   /* Border */
   --border: #475569;
+
+  /* ===== shadcn/ui SEMANTIC TOKENS (dark mode) ===== */
+  --secondary: #334155;
+  --secondary-foreground: #f1f5f9;
+  --accent: #334155;
+  --accent-foreground: #f1f5f9;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --input: #334155;
+  --ring: #3B82F6;
+  --chart-1: #60A5FA;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #c4b78a;
+  --chart-5: #f87171;
+  --sidebar-background: #0f172a;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #475569;
+  --sidebar-ring: #3B82F6;
 
   /* Legacy theme-aware variables (elevation 0-3) */
   --color-bg-primary: #0f172a;
