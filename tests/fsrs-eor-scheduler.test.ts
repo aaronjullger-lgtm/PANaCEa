@@ -198,9 +198,11 @@ describe('applyEorClampIfNeeded', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('simulateRetentionWorkload', () => {
+  // Use 30-day simulation (default 365 causes O(N²·cards) FSRS schedule calls → timeout)
   const baseParams = {
     fsrsParams: defaultParameters,
     dailyNewCards: 20,
+    simulationDays: 30,
   };
 
   it('returns results for multiple retention levels', () => {
@@ -234,7 +236,7 @@ describe('simulateRetentionWorkload', () => {
     const high = simulateRetentionWorkload({ ...baseParams, dailyNewCards: 40 });
     // At same retention level, more new cards → more reviews
     expect(high[0]!.projectedDailyReviews).toBeGreaterThan(low[0]!.projectedDailyReviews);
-  }, 15000);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,28 +244,31 @@ describe('simulateRetentionWorkload', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('calculateRecommendedRetention', () => {
+  // Use 30-day simulation to avoid timeout (default 365 is too slow for CI)
+  const simDays = 30;
+
   it('returns a valid retention between 0.7 and 0.95', () => {
-    const result = calculateRecommendedRetention(30, 20, defaultParameters);
+    const result = calculateRecommendedRetention(30, 20, defaultParameters, simDays);
     expect(result.recommendedRetention).toBeGreaterThanOrEqual(0.7);
     expect(result.recommendedRetention).toBeLessThanOrEqual(0.95);
   });
 
   it('returns an explanation string', () => {
-    const result = calculateRecommendedRetention(30, 20, defaultParameters);
+    const result = calculateRecommendedRetention(30, 20, defaultParameters, simDays);
     expect(typeof result.explanation).toBe('string');
     expect(result.explanation.length).toBeGreaterThan(10);
   });
 
-  it('falls back to 0.8 when even lowest retention exceeds time budget', { timeout: 15000 }, () => {
+  it('falls back to 0.8 when even lowest retention exceeds time budget', () => {
     // 1 minute/day is far too little for any retention level
-    const result = calculateRecommendedRetention(1, 50, defaultParameters);
+    const result = calculateRecommendedRetention(1, 50, defaultParameters, simDays);
     expect(result.recommendedRetention).toBe(0.8);
     expect(result.explanation).toContain('Consider reducing');
   });
 
   it('recommends higher retention when more time is available', () => {
-    const low = calculateRecommendedRetention(10, 10, defaultParameters);
-    const high = calculateRecommendedRetention(60, 10, defaultParameters);
+    const low = calculateRecommendedRetention(10, 10, defaultParameters, simDays);
+    const high = calculateRecommendedRetention(60, 10, defaultParameters, simDays);
     expect(high.recommendedRetention).toBeGreaterThanOrEqual(low.recommendedRetention);
   });
 });
@@ -277,6 +282,7 @@ describe('generateWorkloadChart', () => {
     const data = generateWorkloadChart({
       fsrsParams: defaultParameters,
       dailyNewCards: 20,
+      simulationDays: 30,
     });
     expect(data.length).toBeGreaterThan(0);
     for (const d of data) {

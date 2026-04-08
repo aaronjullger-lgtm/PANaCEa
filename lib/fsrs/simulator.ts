@@ -198,7 +198,8 @@ function simulateRating(targetRetention: number): Rating {
 export function calculateRecommendedRetention(
   dailyTimeAvailableMinutes: number,
   dailyNewCards: number,
-  fsrsParams: FSRSParameters
+  fsrsParams: FSRSParameters,
+  simulationDays?: number
 ): {
   recommendedRetention: number;
   explanation: string;
@@ -206,6 +207,7 @@ export function calculateRecommendedRetention(
   const simulations = simulateRetentionWorkload({
     fsrsParams,
     dailyNewCards,
+    ...(simulationDays != null ? { simulationDays } : {}),
   });
 
   // Find highest retention that fits within time budget
