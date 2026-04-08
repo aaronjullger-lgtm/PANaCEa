@@ -82,7 +82,7 @@ function AccessDenied() {
       </div>
       <button
         onClick={() => navigate(ROUTES.STUDY)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Dashboard

@@ -138,16 +138,16 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
         <div className="bg-[var(--color-accent)] p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Brain className="w-8 h-8 text-white" />
+              <Brain className="w-8 h-8 text-[var(--color-text-inverse)]" />
               <div>
-                <h2 className="text-xl font-bold text-white">Session Reflection</h2>
-                <p className="text-white/80 text-sm">
+                <h2 className="text-xl font-bold text-[var(--color-text-inverse)]">Session Reflection</h2>
+                <p className="text-[var(--color-text-inverse)]/80 text-sm">
                   Take a moment to reflect on your performance
                 </p>
               </div>
             </div>
-            <div className="bg-white/20 rounded-full px-4 py-2">
-              <span className="text-white font-semibold">{score}%</span>
+            <div className="bg-[var(--color-bg-primary)]/20 rounded-full px-4 py-2">
+              <span className="text-[var(--color-text-inverse)] font-semibold">{score}%</span>
             </div>
           </div>
 
@@ -157,7 +157,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
               <div
                 key={idx}
                 className={`h-2 flex-1 rounded-full transition-colors ${
-                  idx <= currentStep ? 'bg-white' : 'bg-white/30'
+                  idx <= currentStep ? 'bg-[var(--color-bg-primary)]' : 'bg-[var(--color-bg-primary)]/30'
                 }`}
               />
             ))}
@@ -304,7 +304,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                         onClick={() => handleTopicToggle(topic)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                           topicsToReview.includes(topic)
-                            ? 'bg-[var(--color-accent)] text-white'
+                            ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                             : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/80'
                         }`}
                       >
@@ -336,7 +336,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             disabled={!canProceed()}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
               canProceed()
-                ? 'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white'
+                ? 'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
             }`}
           >

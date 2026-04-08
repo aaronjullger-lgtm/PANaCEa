@@ -70,7 +70,7 @@ export const CircadianHeatmap: React.FC<Props> = ({
       <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">Your Best Study Hours</h3>
       {peak && (
         <p className="text-xs text-[var(--color-text-muted)] mb-4">
-          Peak accuracy at <span className="font-medium text-emerald-500">{formatHour(peak.hour)}</span>
+          Peak accuracy at <span className="font-medium text-[var(--color-data-pass)]">{formatHour(peak.hour)}</span>
           {' '}({Math.round(peak.accuracy * 100)}% on {peak.count} questions)
         </p>
       )}

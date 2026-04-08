@@ -242,7 +242,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
         {/* Start session */}
         <button
           onClick={() => onStartSession(systemCode)}
-          className="w-full mt-5 px-4 py-3 bg-[var(--color-accent)] text-white font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
+          className="w-full mt-5 px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
         >
           Start Session on {systemLabel}
         </button>

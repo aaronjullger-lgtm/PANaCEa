@@ -143,7 +143,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
         {/* Header */}
         <div className="bg-[var(--color-accent)] rounded-xl p-6 text-[var(--color-text-inverse)]">
           <h2 className="text-2xl font-bold mb-2">Visual Diagnostic Challenge</h2>
-          <p className="text-white/90">Watch carefully and identify the clinical finding</p>
+          <p className="text-[var(--color-text-inverse)]/90">Watch carefully and identify the clinical finding</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -169,7 +169,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
                     onClick={togglePlay}
                     className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] hover:opacity-90 transition-opacity group"
                   >
-                    <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-20 h-20 bg-[var(--color-bg-primary)]/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Play className="w-10 h-10 text-[var(--color-accent)] ml-1" />
                     </div>
                   </motion.button>

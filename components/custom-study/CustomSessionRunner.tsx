@@ -301,7 +301,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             >
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
               >
                 Next
                 <ChevronRight className="w-5 h-5" />
@@ -360,7 +360,7 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
           </button>
           <button
             onClick={onContinue}
-            className="flex-1 px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)]"
+            className="flex-1 px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)]"
           >
             Continue
           </button>

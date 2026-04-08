@@ -122,7 +122,7 @@ export function AchievementNotification({
                 <div
                   className={`w-24 h-24 rounded-full bg-gradient-to-br ${getRarityColor(badge.rarity)} flex items-center justify-center`}
                 >
-                  <Award className="w-12 h-12 text-white" />
+                  <Award className="w-12 h-12 text-[var(--color-text-inverse)]" />
                 </div>
               </motion.div>
 
@@ -135,7 +135,7 @@ export function AchievementNotification({
                   Achievement Unlocked!
                 </h2>
                 <div
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 bg-gradient-to-r ${getRarityColor(badge.rarity)} text-white`}
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 bg-gradient-to-r ${getRarityColor(badge.rarity)} text-[var(--color-text-inverse)]`}
                 >
                   {badge.rarity}
                 </div>

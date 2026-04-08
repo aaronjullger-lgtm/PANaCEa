@@ -257,7 +257,7 @@ export function MediaApprovalDashboard() {
             </button>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors"
             >
               <Upload className="w-4 h-4" />
               Upload Media
@@ -324,7 +324,7 @@ export function MediaApprovalDashboard() {
               onClick={() => setFilter(category)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === category
-                  ? 'bg-[var(--color-accent)] text-white'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                   : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -365,7 +365,7 @@ export function MediaApprovalDashboard() {
                   />
                   <div className="absolute top-2 right-2">
                     <span
-                      className={`${getQualityBadgeColor(media.qualityScore)} text-white text-xs font-bold px-2 py-1 rounded`}
+                      className={`${getQualityBadgeColor(media.qualityScore)} text-[var(--color-text-inverse)] text-xs font-bold px-2 py-1 rounded`}
                     >
                       {media.qualityScore || 'N/A'}
                     </span>
@@ -399,7 +399,7 @@ export function MediaApprovalDashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApprove(media.id)}
-                      className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <Check className="w-4 h-4" />
                       Approve
@@ -409,7 +409,7 @@ export function MediaApprovalDashboard() {
                         setSelectedMedia(media);
                         setShowRejectionModal(true);
                       }}
-                      className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                     >
                       <ThumbsDown className="w-4 h-4" />
                       Reject
@@ -535,14 +535,14 @@ export function MediaApprovalDashboard() {
               <div className="flex gap-3">
                 <button
                   onClick={() => handleApprove(selectedMedia.id)}
-                  className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   Approve for Use
                 </button>
                 <button
                   onClick={() => setShowRejectionModal(true)}
-                  className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                   <ThumbsDown className="w-5 h-5" />
                   Reject
@@ -582,7 +582,7 @@ export function MediaApprovalDashboard() {
               <button
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
                 disabled={!rejectionReason.trim() || actionLoading}
-                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 {actionLoading ? 'Processing...' : 'Confirm Rejection'}
               </button>
@@ -830,7 +830,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors"
           >
             {uploading ? 'Uploading...' : 'Upload'}
           </button>

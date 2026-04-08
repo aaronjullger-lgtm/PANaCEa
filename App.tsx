@@ -1024,17 +1024,17 @@ const App: React.FC = () => {
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
         {/* Guest mode banner */}
         {showGuestModeBanner && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+          <div className="bg-[var(--color-data-provisional)]/10 border-b border-[var(--color-data-provisional)]/30">
             <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="text-sm text-amber-800 dark:text-amber-300">
+                <User className="w-4 h-4 text-[var(--color-data-provisional)]" />
+                <span className="text-sm text-[var(--color-text-secondary)]">
                   You're in <strong>Guest Mode</strong>. Some features are limited.
                 </span>
               </div>
               <button
                 onClick={() => window.location.reload()}
-                className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline"
+                className="text-xs text-[var(--color-data-provisional)] hover:text-[var(--color-text-primary)] underline"
               >
                 Try signing in again
               </button>

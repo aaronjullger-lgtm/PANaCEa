@@ -38,10 +38,10 @@ export const FirstInstinctCard: React.FC<Props> = ({ insight }) => {
   let accentColor: string;
   if (isSwitchBeneficial) {
     advice = `Switching helps you — ${beneficialSwitches} answers improved vs ${harmfulSwitches} hurt. Your second instinct is reliable.`;
-    accentColor = 'text-emerald-500';
+    accentColor = 'text-[var(--color-data-pass)]';
   } else if (isSwitchHarmful) {
     advice = `Your first instinct is stronger — ${harmfulSwitches} switches hurt you vs only ${beneficialSwitches} that helped. Trust your gut more.`;
-    accentColor = 'text-amber-500';
+    accentColor = 'text-[var(--color-data-provisional)]';
   } else {
     advice = `Answer changes are roughly neutral (${beneficialSwitches} helped, ${harmfulSwitches} hurt). Switch only when you spot a clear error.`;
     accentColor = 'text-[var(--color-text-secondary)]';
@@ -58,11 +58,11 @@ export const FirstInstinctCard: React.FC<Props> = ({ insight }) => {
       {totalSwitches > 0 && (
         <div className="flex items-center gap-1 mb-4 h-3 rounded-full overflow-hidden bg-[var(--color-bg-tertiary)]">
           <div
-            className="h-full bg-emerald-500 rounded-l-full transition-all"
+            className="h-full bg-[var(--color-data-pass)] rounded-l-full transition-all"
             style={{ width: `${(beneficialSwitches / totalSwitches) * 100}%` }}
           />
           <div
-            className="h-full bg-amber-500 rounded-r-full transition-all"
+            className="h-full bg-[var(--color-data-provisional)] rounded-r-full transition-all"
             style={{ width: `${(harmfulSwitches / totalSwitches) * 100}%` }}
           />
         </div>
@@ -70,8 +70,8 @@ export const FirstInstinctCard: React.FC<Props> = ({ insight }) => {
 
       {totalSwitches > 0 && (
         <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-3">
-          <span className="text-emerald-500">{beneficialSwitches} improved</span>
-          <span className="text-amber-500">{harmfulSwitches} hurt</span>
+          <span className="text-[var(--color-data-pass)]">{beneficialSwitches} improved</span>
+          <span className="text-[var(--color-data-provisional)]">{harmfulSwitches} hurt</span>
         </div>
       )}
 

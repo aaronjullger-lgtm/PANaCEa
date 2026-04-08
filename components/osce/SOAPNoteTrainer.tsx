@@ -99,7 +99,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
           <FileText className="w-8 h-8" />
           <div>
             <h2 className="text-2xl font-bold">SOAP Note Trainer</h2>
-            <p className="text-white/90">Practice clinical documentation skills</p>
+            <p className="text-[var(--color-text-inverse)]/90">Practice clinical documentation skills</p>
           </div>
         </div>
       </div>

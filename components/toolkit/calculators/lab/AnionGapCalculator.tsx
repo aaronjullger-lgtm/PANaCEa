@@ -219,7 +219,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                   key={idx}
                   className="flex items-start gap-3 p-3 bg-[var(--color-bg-secondary)]/50 rounded-lg border border-[var(--color-border)]"
                 >
-                  <div className="w-8 h-8 flex items-center justify-center bg-[var(--color-accent)] text-white font-bold rounded-lg flex-shrink-0">
+                  <div className="w-8 h-8 flex items-center justify-center bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-bold rounded-lg flex-shrink-0">
                     {item.letter}
                   </div>
                   <div className="min-w-0">

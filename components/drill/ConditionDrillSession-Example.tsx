@@ -216,7 +216,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                 initial={{ y: 10 }}
                 animate={{ y: 0 }}
                 onClick={handleNext}
-                className="w-full mt-6 bg-[var(--color-accent)] text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                className="w-full mt-6 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
                 {currentQuestionIndex + 1 >= config.questionCount
                   ? 'Complete Drill'
@@ -276,7 +276,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                 setSelectedAnswer(null);
                 setShowResult(false);
               }}
-              className="w-full bg-[var(--color-accent)] text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity"
+              className="w-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity"
             >
               Start New Drill
             </button>

@@ -225,7 +225,7 @@ const QuestionCurationPanel = () => {
             onClick={() => setFilter('all')}
             className={`px-3 py-1 text-sm rounded-full transition-colors ${
               filter === 'all'
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
@@ -237,7 +237,7 @@ const QuestionCurationPanel = () => {
               onClick={() => setFilter(system!)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
                 filter === system
-                  ? 'bg-[var(--color-accent)] text-white'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
             >
@@ -333,7 +333,7 @@ const QuestionCurationPanel = () => {
                               }
                               className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
                                 index === correctIndex
-                                  ? 'bg-[var(--color-data-pass)] text-white'
+                                  ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
                                   : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)]'
                               } ${q.isEditing ? 'cursor-pointer' : ''}`}
                               disabled={!q.isEditing}
@@ -396,7 +396,7 @@ const QuestionCurationPanel = () => {
                           </button>
                           <button
                             onClick={() => handleSave(q)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Save className="w-4 h-4" />
                             Save
@@ -419,7 +419,7 @@ const QuestionCurationPanel = () => {
                               e.stopPropagation();
                               handleAction(q.id, 'delete');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-[var(--color-data-fail)] hover:text-white hover:bg-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-[var(--color-data-fail)] hover:text-[var(--color-text-inverse)] hover:bg-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
                             Delete
@@ -429,7 +429,7 @@ const QuestionCurationPanel = () => {
                               e.stopPropagation();
                               handleAction(q.id, 'approve');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 rounded-lg transition-colors flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Check className="w-4 h-4" />
                             Approve

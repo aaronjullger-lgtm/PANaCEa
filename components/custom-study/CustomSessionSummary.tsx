@@ -43,7 +43,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
   // Get grade icon based on accuracy
   const getGradeIcon = (accuracy: number) => {
     const Icon = accuracy >= 90 ? Star : accuracy >= 80 ? Target : accuracy >= 70 ? ThumbsUp : accuracy >= 60 ? BookOpen : Zap;
-    return <Icon className="w-16 h-16 mx-auto text-white" aria-hidden="true" />;
+    return <Icon className="w-16 h-16 mx-auto text-[var(--color-text-inverse)]" aria-hidden="true" />;
   };
 
   return (
@@ -54,7 +54,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
         className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 p-6 text-center text-white">
+        <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 p-6 text-center text-[var(--color-text-inverse)]">
           <div className="mb-2">{getGradeIcon(summary.firstAttemptAccuracy)}</div>
           <h1 className="text-2xl font-bold mb-1">Session Complete!</h1>
           <p className="text-[var(--color-category-practice)]">Great work on your custom study session</p>
@@ -225,7 +225,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
             </button>
             <button
               onClick={onStartNew}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-category-practice)] text-white rounded-xl hover:bg-[var(--color-category-practice)] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-xl hover:bg-[var(--color-category-practice)] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               <RotateCcw className="w-5 h-5" aria-hidden="true" />
               New Session

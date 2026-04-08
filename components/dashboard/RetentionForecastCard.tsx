@@ -67,7 +67,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length || label == null) return null;
   return (
-    <div className="bg-[var(--color-bg-secondary)] rounded-xl px-3 py-2 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl px-3.5 py-2.5" style={{ boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 4px 12px -4px rgba(0, 0, 0, 0.1)' }}>
       <p className="text-[var(--color-text-primary)] font-semibold text-sm mb-1">Day {label}</p>
       <p className="text-[var(--color-text-muted)] text-xs tabular-nums">
         Without review: {Math.round(payload[0]?.value ?? 0)}%
@@ -94,17 +94,20 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
         initial={prefersReducedMotion ? false : { y: 8 }}
         animate={{ y: 0 }}
         transition={prefersReducedMotion ? { duration: 0 } : undefined}
-        className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
+        className={`card-cinematic group p-6 transition-all duration-300 ${className}`}
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
-            <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" aria-hidden="true" />
+        <div className="flex items-center gap-3.5 mb-4">
+          <div
+            className="p-2.5 rounded-xl"
+            style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-tertiary) 88%)' }}
+          >
+            <Brain className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            <h2 className="text-h3 text-[var(--color-text-primary)]">
               All Caught Up
             </h2>
-            <p className="text-sm text-[var(--color-text-secondary)]">
+            <p className="text-caption text-[var(--color-text-secondary)]">
               No cards due right now — great work!
             </p>
           </div>
@@ -124,18 +127,24 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
       initial={prefersReducedMotion ? false : { x: -20 }}
       animate={{ x: 0 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
-      className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
+      className={`card-cinematic group p-6 transition-all duration-300 ${className}`}
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-2.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)] rounded-xl shadow-lg shadow-[var(--color-accent)]/20">
+      <div className="flex items-center gap-3.5 mb-4">
+        <div
+          className="p-2.5 rounded-xl"
+          style={{
+            background: 'linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 80%, #818cf8))',
+            boxShadow: '0 4px 12px -2px rgba(59, 130, 246, 0.3)',
+          }}
+        >
           <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          <h2 className="text-h3 text-[var(--color-text-primary)]">
             Retention Forecast
           </h2>
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            Save the memory — doing reviews now bumps the curve back to 100%
+          <p className="text-caption text-[var(--color-text-secondary)]">
+            Save the memory — reviews now reset the curve to 100%
           </p>
         </div>
       </div>
@@ -214,17 +223,17 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
         </ChartContainer>
       </div>
 
-      <p className="text-xs text-[var(--color-text-muted)] mb-4">
-        <strong className="tabular-nums">{dueCount}</strong> review{dueCount !== 1 ? 's' : ''} due — doing them now resets
+      <p className="text-caption text-[var(--color-text-muted)] mb-5">
+        <strong className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}>{dueCount}</strong> review{dueCount !== 1 ? 's' : ''} due — doing them now resets
         retention to 100% for those memories.
       </p>
 
       <button
         onClick={onStartReview}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+        className="btn-cinematic w-full flex items-center justify-center gap-2.5 py-3.5 px-5 font-semibold text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
       >
         Save the memory — Start Review
-        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200 ease-premium" aria-hidden="true" />
       </button>
     </motion.div>
   );

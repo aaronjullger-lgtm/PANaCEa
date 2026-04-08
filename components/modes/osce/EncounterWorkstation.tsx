@@ -78,12 +78,12 @@ export interface EncounterWorkstationProps {
 const AVStateBadge = React.memo(({ avState }: { avState: AVState }) => {
   const severityClass = useMemo(() => {
     if (avState.id.includes('critical') || avState.id.includes('severe')) {
-      return 'bg-red-500 animate-pulse';
+      return 'bg-[var(--color-data-fail)] animate-pulse';
     }
     if (avState.id.includes('distress') || avState.id.includes('worsening')) {
-      return 'bg-amber-500 animate-pulse';
+      return 'bg-[var(--color-data-provisional)] animate-pulse';
     }
-    return 'bg-emerald-500';
+    return 'bg-[var(--color-data-pass)]';
   }, [avState.id]);
 
   return (

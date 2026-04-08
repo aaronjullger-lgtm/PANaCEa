@@ -121,7 +121,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             <button
               type="button"
               onClick={generate}
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90"
+              className="flex items-center justify-center gap-2 w-full py-4 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90"
             >
               <ImageIcon className="w-5 h-5" />
               Generate anatomy image
@@ -134,7 +134,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </div>
           )}
           {error && (
-            <p className="py-4 text-data-fail" role="alert">
+            <p className="py-4 text-[var(--color-data-fail)]" role="alert">
               {error}
             </p>
           )}

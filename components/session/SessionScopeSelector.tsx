@@ -527,7 +527,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
                 {/* Start button */}
                 <button
                   onClick={handleStart}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[var(--color-accent)] text-white font-semibold text-lg hover:opacity-90 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold text-lg hover:opacity-90 transition-opacity"
                 >
                   <Play className="w-5 h-5" />
                   Start Session

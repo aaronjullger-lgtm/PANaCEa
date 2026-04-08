@@ -184,7 +184,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
               transition={{ duration: 2, repeat: Infinity }}
               className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-full mb-4"
             >
-              <Heart className="w-8 h-8 text-white" />
+              <Heart className="w-8 h-8 text-[var(--color-text-inverse)]" />
             </motion.div>
             <h2
               id="wellness-modal-title"
@@ -234,7 +234,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
                 className={`w-32 h-32 rounded-full bg-gradient-to-br ${getBreathingColor()} 
                   flex items-center justify-center shadow-lg`}
               >
-                <span className="text-4xl font-bold text-white">
+                <span className="text-4xl font-bold text-[var(--color-text-inverse)]">
                   {breathingPhase !== 'idle' ? countdown : '•'}
                 </span>
               </motion.div>
@@ -250,7 +250,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
               {!isBreathing ? (
                 <button
                   onClick={handleStartBreathing}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white 
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-[var(--color-text-inverse)] 
                     py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200
                     hover:scale-105"
                 >

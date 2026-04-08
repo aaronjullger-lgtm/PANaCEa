@@ -747,7 +747,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             className="w-full p-4 flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-[var(--color-text-inverse)] font-bold ring-2 ring-white/30 dark:ring-white/20">
                 {user?.firstName?.charAt(0) ||
                   user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() ||
                   'S'}

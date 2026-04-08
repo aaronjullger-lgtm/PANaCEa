@@ -190,16 +190,16 @@ const DetailSection: React.FC<{
                 return (
                   <div
                     key={field.key}
-                    className="bg-data-provisional/20 border border-data-provisional/30 rounded-xl p-4"
+                    className="bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 rounded-xl p-4"
                   >
-                    <h4 className="text-sm font-semibold text-data-provisional mb-2">{field.label}</h4>
+                    <h4 className="text-sm font-semibold text-[var(--color-data-provisional)] mb-2">{field.label}</h4>
                     <ul className="space-y-1">
                       {triad.map((item, idx) => (
                         <li
                           key={idx}
                           className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                         >
-                          <span className="text-data-provisional">•</span>
+                          <span className="text-[var(--color-data-provisional)]">&bull;</span>
                           <span>{item}</span>
                         </li>
                       ))}

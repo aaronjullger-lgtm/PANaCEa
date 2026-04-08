@@ -66,22 +66,22 @@ interface QuestionReviewQueueProps {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function qualityColor(score: number | null): string {
-  if (score === null) return 'text-zinc-400';
-  if (score >= 0.9) return 'text-emerald-400';
-  if (score >= 0.7) return 'text-amber-400';
-  return 'text-red-400';
+  if (score === null) return 'text-[var(--color-text-muted)]';
+  if (score >= 0.9) return 'text-[var(--color-data-pass)]';
+  if (score >= 0.7) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
 }
 
 function statusBadge(status: string): { bg: string; text: string; label: string } {
   switch (status) {
     case 'approved':
-      return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Approved' };
+      return { bg: 'bg-[var(--color-data-pass)]/15', text: 'text-[var(--color-data-pass)]', label: 'Approved' };
     case 'rejected':
-      return { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Rejected' };
+      return { bg: 'bg-[var(--color-data-fail)]/15', text: 'text-[var(--color-data-fail)]', label: 'Rejected' };
     case 'needs_revision':
-      return { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Needs Revision' };
+      return { bg: 'bg-[var(--color-data-provisional)]/15', text: 'text-[var(--color-data-provisional)]', label: 'Needs Revision' };
     default:
-      return { bg: 'bg-zinc-500/15', text: 'text-zinc-400', label: 'Pending' };
+      return { bg: 'bg-[var(--color-bg-tertiary)]/15', text: 'text-[var(--color-text-muted)]', label: 'Pending' };
   }
 }
 
@@ -223,7 +223,7 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
           <button
             onClick={handleAutoApprove}
             disabled={actionLoading === 'batch'}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/25 text-sm font-medium transition-colors disabled:opacity-50"
           >
             <Zap className="w-4 h-4" />
             Auto-Approve High Quality
@@ -243,10 +243,10 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
-            { label: 'Pending', value: stats.pending, color: 'text-zinc-400' },
-            { label: 'Approved', value: stats.approved, color: 'text-emerald-400' },
-            { label: 'Needs Revision', value: stats.needs_revision, color: 'text-amber-400' },
-            { label: 'Rejected', value: stats.rejected, color: 'text-red-400' },
+            { label: 'Pending', value: stats.pending, color: 'text-[var(--color-text-muted)]' },
+            { label: 'Approved', value: stats.approved, color: 'text-[var(--color-data-pass)]' },
+            { label: 'Needs Revision', value: stats.needs_revision, color: 'text-[var(--color-data-provisional)]' },
+            { label: 'Rejected', value: stats.rejected, color: 'text-[var(--color-data-fail)]' },
           ] as const).map(({ label, value, color }) => (
             <div
               key={label}
@@ -301,7 +301,7 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
         <div className="text-center py-12 text-[var(--color-text-muted)]">Loading...</div>
       ) : questions.length === 0 ? (
         <div className="text-center py-12">
-          <ShieldCheck className="w-12 h-12 mx-auto text-emerald-400/50 mb-3" />
+          <ShieldCheck className="w-12 h-12 mx-auto text-[var(--color-data-pass)]/50 mb-3" />
           <p className="text-[var(--color-text-muted)]">
             No questions matching this filter. Queue is clear!
           </p>
@@ -344,7 +344,7 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
                       {badge.label}
                     </span>
                     {q.flagCount > 0 && (
-                      <span className="flex items-center gap-1 text-xs text-red-400">
+                      <span className="flex items-center gap-1 text-xs text-[var(--color-data-fail)]">
                         <AlertTriangle className="w-3 h-3" /> {q.flagCount}
                       </span>
                     )}
@@ -390,7 +390,7 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
                               className={`text-sm px-3 py-1.5 rounded-lg ${
                                 String(qData.correctAnswer) === String(i) ||
                                 String(qData.correctAnswer) === opt
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                  ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] border border-[var(--color-data-pass)]/20'
                                   : 'bg-[var(--color-bg-secondary)]/40 text-[var(--color-text-secondary)]'
                               }`}
                             >
@@ -435,21 +435,21 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
                       <button
                         onClick={() => handleReview(q.id, 'approved')}
                         disabled={actionLoading === q.id}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 text-sm font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/25 text-sm font-medium transition-colors disabled:opacity-50"
                       >
                         <Check className="w-4 h-4" /> Approve
                       </button>
                       <button
                         onClick={() => handleReview(q.id, 'needs_revision')}
                         disabled={actionLoading === q.id}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 text-sm font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/25 text-sm font-medium transition-colors disabled:opacity-50"
                       >
                         <AlertTriangle className="w-4 h-4" /> Needs Revision
                       </button>
                       <button
                         onClick={() => handleReview(q.id, 'rejected')}
                         disabled={actionLoading === q.id}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 text-sm font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/25 text-sm font-medium transition-colors disabled:opacity-50"
                       >
                         <X className="w-4 h-4" /> Reject
                       </button>

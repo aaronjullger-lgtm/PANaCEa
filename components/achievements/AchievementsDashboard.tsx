@@ -196,7 +196,7 @@ export function AchievementsDashboard({
                     onClick={() => setFilterStatus(status)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       filterStatus === status
-                        ? 'bg-[var(--color-accent)] text-white'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                         : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
@@ -216,7 +216,7 @@ export function AchievementsDashboard({
                       onClick={() => setFilterRarity(rarity)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         filterRarity === rarity
-                          ? 'bg-[var(--color-accent)] text-white'
+                          ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                           : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                       }`}
                     >

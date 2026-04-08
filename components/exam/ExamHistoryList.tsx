@@ -296,7 +296,7 @@ export function ExamHistoryList({
                     e.stopPropagation();
                     onResumeAttempt(attempt.id);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] rounded-lg text-sm font-medium transition-colors"
                 >
                   <RefreshCcw className="h-4 w-4" />
                   Resume

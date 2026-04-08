@@ -410,27 +410,27 @@ const SAMPLE_DATA: SystemMetrics[] = [
 // ============================================================================
 
 const getAccuracyColor = (accuracy: number): string => {
-  if (accuracy >= 80) return 'bg-data-pass';
+  if (accuracy >= 80) return 'bg-[var(--color-data-pass)]';
   if (accuracy >= 70) return 'bg-[var(--color-accent)]';
-  if (accuracy >= 60) return 'bg-data-provisional';
-  return 'bg-data-fail';
+  if (accuracy >= 60) return 'bg-[var(--color-data-provisional)]';
+  return 'bg-[var(--color-data-fail)]';
 };
 
 const getAccuracyColorText = (accuracy: number): string => {
-  if (accuracy >= 80) return 'text-data-pass';
+  if (accuracy >= 80) return 'text-[var(--color-data-pass)]';
   if (accuracy >= 70) return 'text-[var(--color-accent)]';
-  if (accuracy >= 60) return 'text-data-provisional';
-  return 'text-data-fail';
+  if (accuracy >= 60) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
 };
 
 const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
   switch (level) {
     case 'expert':
-      return 'bg-data-pass/10 text-data-pass';
+      return 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]';
     case 'proficient':
       return 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]';
     case 'developing':
-      return 'bg-data-provisional/10 text-data-provisional';
+      return 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]';
     case 'novice':
       return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]';
   }
@@ -439,11 +439,11 @@ const getMasteryColor = (level: ConditionMetrics['masteryLevel']): string => {
 const getSrsStatusIcon = (status: ConditionMetrics['srsStatus']) => {
   switch (status) {
     case 'mastered':
-      return <CheckCircle className="w-4 h-4 text-data-pass" />;
+      return <CheckCircle className="w-4 h-4 text-[var(--color-data-pass)]" />;
     case 'learning':
       return <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />;
     case 'due':
-      return <AlertTriangle className="w-4 h-4 text-data-provisional" />;
+      return <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)]" />;
   }
 };
 
@@ -563,9 +563,9 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
             <span
               className={`text-xs font-medium flex items-center gap-0.5 ${
                 trend === 'up'
-                  ? 'text-data-pass'
+                  ? 'text-[var(--color-data-pass)]'
                   : trend === 'down'
-                    ? 'text-data-fail'
+                    ? 'text-[var(--color-data-fail)]'
                     : 'text-[var(--color-text-muted)]'
               }`}
             >

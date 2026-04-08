@@ -60,8 +60,8 @@ export const FatigueBreakPrompt: React.FC<FatigueBreakPromptProps> = ({
           <div className="mx-auto max-w-2xl mt-4 mb-2 p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
             <div className="flex items-start gap-3">
               {/* Icon */}
-              <div className="p-2 rounded-lg bg-amber-500/10 shrink-0 mt-0.5">
-                <Zap className="w-4 h-4 text-amber-500" />
+              <div className="p-2 rounded-lg bg-[var(--color-data-provisional)]/10 shrink-0 mt-0.5">
+                <Zap className="w-4 h-4 text-[var(--color-data-provisional)]" />
               </div>
 
               {/* Content */}

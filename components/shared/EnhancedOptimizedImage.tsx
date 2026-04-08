@@ -249,7 +249,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
                 <p className="text-sm">Failed to load image</p>
                 <button
                   type="button"
-                  className="mt-2 px-3 py-1 text-xs bg-[var(--color-action-primary)] text-white rounded hover:bg-[var(--color-action-primary)]/90 transition-colors"
+                  className="mt-2 px-3 py-1 text-xs bg-[var(--color-action-primary)] text-[var(--color-text-inverse)] rounded hover:bg-[var(--color-action-primary)]/90 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     setHasError(false);
@@ -332,7 +332,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
                 </svg>
               </button>
 
-              <div className="absolute bottom-4 left-4 right-4 text-white text-sm text-center opacity-75">
+              <div className="absolute bottom-4 left-4 right-4 text-[var(--color-text-inverse)] text-sm text-center opacity-75">
                 <p>Click anywhere or press ESC to close</p>
                 {format && estimatedSize && (
                   <p className="text-xs mt-1">

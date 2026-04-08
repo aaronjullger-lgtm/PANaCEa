@@ -26,7 +26,7 @@ const ClinicalProfileDashboard: React.FC = () => {
         <span>{error || 'Unable to load profile'}</span>
         <button
           onClick={refetch}
-          className="px-3 py-1.5 text-sm font-medium bg-[var(--color-data-fail)] text-white rounded-lg shadow hover:bg-[var(--color-data-fail)]"
+          className="px-3 py-1.5 text-sm font-medium bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] rounded-lg shadow hover:bg-[var(--color-data-fail)]"
         >
           Retry
         </button>

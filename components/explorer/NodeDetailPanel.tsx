@@ -191,7 +191,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
+            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
           >
             Retry
           </button>

@@ -12,11 +12,11 @@ import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from '@/components/drill/DrillShell';
+import DrillSummaryCard from '@/components/drill/DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 import {
   X,
   ArrowRight,
-  RotateCcw,
   FlaskConical,
   Heart,
   Droplets,
@@ -337,13 +337,13 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 onClick={() => handleCategorySelect(card.id)}
                 className={`relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
               >
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-[var(--color-bg-primary)]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative z-10">
-                  <div className="mb-3 p-2.5 bg-white/20 rounded-xl w-fit">{card.icon}</div>
-                  <h3 className="text-lg font-bold text-white mb-1">{card.title}</h3>
-                  <p className="text-white/80 text-sm">{card.description}</p>
+                  <div className="mb-3 p-2.5 bg-[var(--color-bg-primary)]/20 rounded-xl w-fit">{card.icon}</div>
+                  <h3 className="text-lg font-bold text-[var(--color-text-inverse)] mb-1">{card.title}</h3>
+                  <p className="text-[var(--color-text-inverse)]/80 text-sm">{card.description}</p>
                 </div>
-                <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-[var(--color-text-inverse)]/60 group-hover:text-[var(--color-text-inverse)] group-hover:translate-x-1 transition-all" />
               </motion.button>
             ))}
           </div>
@@ -504,42 +504,14 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
       >
-        <div className="flex-1 flex items-center justify-center p-6">
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
-          >
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-              Session Complete
-            </h2>
-            <p className="text-[var(--color-text-secondary)] mb-6">
-              Great work on your lab interpretation training!
-            </p>
-            <div className="flex justify-center gap-8 mb-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold font-mono tabular-nums text-data-pass">{score}</div>
-                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleReset}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:brightness-110 text-white rounded-lg font-medium transition-colors"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Start New Session
-              </button>
-              <button
-                onClick={handleExit}
-                className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-              >
-                Exit to Menu
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <DrillSummaryCard
+          drillName="Lab Interpretation"
+          icon={FlaskConical}
+          accentColor="var(--color-data-pass)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleReset}
+          onExit={handleExit}
+        />
       </DrillShell>
     );
   }

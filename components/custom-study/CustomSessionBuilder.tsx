@@ -255,7 +255,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
             disabled={!validation.valid}
             className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${
               validation.valid
-                ? 'bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white'
+                ? 'bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]'
                 : 'bg-data-neutral text-data-neutral cursor-not-allowed'
             }`}
           >
@@ -265,7 +265,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
         ) : (
           <button
             onClick={goNext}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] transition-colors"
           >
             Next
             <ChevronRight className="w-5 h-5" />
@@ -457,7 +457,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
                 onClick={() => onChange({ ...config, questionsPerIncrement: num })}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   config.questionsPerIncrement === num
-                    ? 'bg-[var(--color-category-practice)] text-white'
+                    ? 'bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]'
                     : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
@@ -473,7 +473,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             Difficulty
           </label>
           <div className="flex gap-2">
-            <div className="px-4 py-2 rounded-lg font-medium bg-[var(--color-category-practice)] text-white">
+            <div className="px-4 py-2 rounded-lg font-medium bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]">
               PANCE-Level
             </div>
             <span className="text-sm text-data-neutral dark:text-data-neutral self-center ml-2">
@@ -501,7 +501,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             }`}
           >
             <div
-              className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+              className={`absolute top-1 w-4 h-4 rounded-full bg-[var(--color-bg-primary)] transition-transform ${
                 config.retryMissedQuestions ? 'translate-x-7' : 'translate-x-1'
               }`}
             />

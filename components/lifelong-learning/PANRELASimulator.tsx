@@ -132,7 +132,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           </h2>
           <button
             onClick={onExit}
-            className="px-6 py-3 bg-[var(--color-category-practice)] text-white rounded-lg font-semibold hover:bg-[var(--color-category-practice)]"
+            className="px-6 py-3 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:bg-[var(--color-category-practice)]"
           >
             Exit
           </button>
@@ -210,7 +210,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full 
               flex items-center justify-center mx-auto mb-4"
             >
-              <Award className="w-10 h-10 text-white" />
+              <Award className="w-10 h-10 text-[var(--color-text-inverse)]" />
             </div>
             <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               PANRE-LA Simulator
@@ -303,7 +303,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
           <button
             onClick={() => setShowIntro(false)}
-            className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl 
+            className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-[var(--color-text-inverse)] rounded-xl 
               font-bold text-lg hover:shadow-[0_18px_42px_var(--color-shadow-soft)] transition-all hover:scale-105"
           >
             Begin Assessment
@@ -316,11 +316,11 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header with Timer */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 text-white">
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 text-[var(--color-text-inverse)]">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold mb-1">PANRE-LA - Q{quarterlyProgress.quarter}</h2>
-            <p className="text-white/90">
+            <p className="text-[var(--color-text-inverse)]/90">
               Question {currentQuestion + 1} of {sampleQuestions.length}
             </p>
           </div>
@@ -329,7 +329,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               <Clock className="w-8 h-8 inline-block mr-2" />
               {formatTime(timeRemaining)}
             </div>
-            <div className="text-white/80 text-sm">Time Remaining</div>
+            <div className="text-[var(--color-text-inverse)]/80 text-sm">Time Remaining</div>
           </div>
         </div>
       </div>
@@ -391,7 +391,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                         <div className="w-3 h-3 bg-current rounded-full" />
                       )}
                       {showFeedback && index === currentQuestionData.correctAnswerIndex && (
-                        <CheckCircle className="w-4 h-4 text-white" />
+                        <CheckCircle className="w-4 h-4 text-[var(--color-text-inverse)]" />
                       )}
                     </div>
                     <span className="text-[var(--color-text-primary)]">{option}</span>
@@ -405,7 +405,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 <button
                   onClick={handleSubmit}
                   disabled={selectedAnswer === null}
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-[var(--color-text-inverse)] 
                     rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105
                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
@@ -414,7 +414,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+                  className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-[var(--color-text-inverse)] 
                     rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
                 >
                   {currentQuestion < sampleQuestions.length - 1

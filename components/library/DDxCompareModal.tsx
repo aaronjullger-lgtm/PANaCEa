@@ -354,7 +354,7 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
           <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
             <button
               onClick={() => onStartDDxQuiz([left.id!, right.id!])}
-              className="w-full py-2 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
+              className="w-full py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90 transition-opacity"
             >
               Start DDx Quiz: {left.condition} vs {right.condition}
             </button>

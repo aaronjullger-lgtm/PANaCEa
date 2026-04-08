@@ -17,6 +17,7 @@ import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from '@/components/drill/DrillShell';
+import DrillSummaryCard from '@/components/drill/DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -249,7 +250,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           </div>
           <button
             onClick={handleSubmitScore}
-            className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             aria-label="Submit calculated score"
           >
             Submit Score
@@ -320,7 +321,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     }`}
                   >
                     {selectedCriteria.has(criterion.id) && (
-                      <CheckCircle className="w-4 h-4 text-white" />
+                      <CheckCircle className="w-4 h-4 text-[var(--color-text-inverse)]" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -381,7 +382,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             onClick={handleNextVignette}
             className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors ${
               isCorrect
-                ? 'bg-data-pass hover:brightness-110 text-white'
+                ? 'bg-data-pass hover:brightness-110 text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
             aria-label={currentVignetteIndex < totalVignettes - 1 ? 'Proceed to next clinical vignette' : 'View session summary'}
@@ -516,11 +517,6 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // SUMMARY VIEW
   // =========================================================================
   if (status === 'summary' && sessionResult) {
-    const percentage =
-      sessionResult.totalAttempts > 0
-        ? Math.round((sessionResult.totalCorrect / sessionResult.totalAttempts) * 100)
-        : 0;
-
     return (
       <DrillShell
         title="Guideline Mode — Complete"
@@ -528,37 +524,16 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
       >
-        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className="text-center"
-          >
-            <Award className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" aria-hidden="true" />
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{sessionResult.guidelineName}</h2>
-            <p className="text-4xl font-bold text-[var(--color-accent)] mb-2 tabular-nums">
-              {sessionResult.totalCorrect}/{sessionResult.totalAttempts}
-            </p>
-            <p className="text-[var(--color-text-secondary)] mb-6"><span className="tabular-nums">{percentage}%</span> Accuracy</p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={handleReset}
-                className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-                aria-label="Retry the same guideline"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={backToSelection}
-                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-                aria-label="Choose a different guideline"
-              >
-                Choose Another Guideline
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <DrillSummaryCard
+          drillName={sessionResult.guidelineName}
+          icon={Award}
+          accentColor="var(--color-accent)"
+          stats={{ correct: sessionResult.totalCorrect, total: sessionResult.totalAttempts, streak }}
+          onNewSession={handleReset}
+          onExit={backToSelection}
+          newSessionLabel="Try Again"
+          exitLabel="Choose Another Guideline"
+        />
       </DrillShell>
     );
   }

@@ -58,14 +58,14 @@ function getO2Status(o2: number): 'normal' | 'warning' | 'critical' {
 
 const STATUS_COLORS = {
   normal: 'text-[var(--color-text-inverse)]',
-  warning: 'text-amber-400',
-  critical: 'text-red-400',
+  warning: 'text-[var(--color-data-provisional)]',
+  critical: 'text-[var(--color-data-fail)]',
 } as const;
 
 const STATUS_BG = {
   normal: '',
-  warning: 'bg-amber-500/10',
-  critical: 'bg-red-500/10',
+  warning: 'bg-[var(--color-data-provisional)]/10',
+  critical: 'bg-[var(--color-data-fail)]/10',
 } as const;
 
 /** Tiny inline sparkline rendered with SVG path — no dependencies */

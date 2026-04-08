@@ -113,32 +113,38 @@ const ModeCard: React.FC<{
 
   return (
     <motion.button
-      whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
+      whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.01 }}
       whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
-      className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group ${
+      className={`card-cinematic w-full text-left p-5 group ${
         mode.isComingSoon
-          ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-tertiary)] border-dashed'
-          : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg'
+          ? 'opacity-50 cursor-not-allowed !bg-[var(--color-bg-tertiary)] border-dashed'
+          : ''
       }`}
     >
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)] group-hover:bg-[var(--color-accent)]/10 transition-colors flex-shrink-0">
-          <Icon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent)] transition-colors" />
+      <div className="flex items-start gap-3.5">
+        <div
+          className="p-2.5 rounded-xl transition-colors duration-200 flex-shrink-0"
+          style={{
+            background: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-tertiary) 92%)',
+          }}
+        >
+          <Icon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent)] transition-colors duration-200" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className="font-semibold text-[var(--color-text-primary)]">{mode.label}</h4>
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <h4 className="text-body font-semibold text-[var(--color-text-primary)]">{mode.label}</h4>
             {mode.isComingSoon && (
-              <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] px-2 py-0.5 rounded-full">
+              <span className="text-overline uppercase text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] px-2.5 py-0.5 rounded-full">
                 Soon
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2">{mode.description}</p>
+          <p className="text-caption text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">{mode.description}</p>
           {mode.estimatedMinutes && (
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
+            <div className="flex items-center gap-1.5 mt-2.5 text-caption text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
               <span className="tabular-nums">~{mode.estimatedMinutes} min</span>
             </div>
@@ -160,17 +166,22 @@ const CategorySection: React.FC<{
   if (modes.length === 0) return null;
 
   return (
-    <section className="mb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)]">
-          <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
+    <section className="mb-10">
+      <div className="flex items-center gap-3 mb-5">
+        <div
+          className="p-2.5 rounded-xl"
+          style={{
+            background: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-tertiary) 92%)',
+          }}
+        >
+          <Icon className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
         <div>
-          <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{info.label}</h3>
-          <p className="text-sm text-[var(--color-text-muted)]">{info.description}</p>
+          <h3 className="text-h2 text-[var(--color-text-primary)]">{info.label}</h3>
+          <p className="text-caption text-[var(--color-text-muted)] mt-0.5">{info.description}</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {modes.map((mode) => (
           <ModeCard key={mode.id} mode={mode} onSelect={() => onSelectMode(mode)} />
         ))}
@@ -280,31 +291,34 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   const systemsWithData = Object.entries(rolling360Stats?.systemStats ?? {}).filter(([, s]) => s.total >= 2);
 
   return (
-    <div className="mx-auto px-4 py-6" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="mx-auto px-4 sm:px-6 py-8" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <BackLink to={ROUTES.STUDY} className="mb-2" />
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Practice & Training</h1>
-          <p className="text-[var(--color-text-muted)]">Choose a training mode to sharpen your clinical skills</p>
+          <BackLink to={ROUTES.STUDY} className="mb-3" />
+          <h1 className="text-h1 text-[var(--color-text-primary)] mb-2" style={{ letterSpacing: '-0.025em' }}>Practice & Training</h1>
+          <p className="text-body-lg text-[var(--color-text-muted)]">Choose a training mode to sharpen your clinical skills</p>
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="mb-6 space-y-3">
+      {/* Search & Filters — cinematic glass input */}
+      <div className="mb-8 space-y-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--color-text-muted)]" />
           <input
             type="text"
             placeholder="Search modes (e.g., 'ECG', 'pharmacology')"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="w-full pl-11 pr-11 py-3.5 bg-[var(--color-bg-primary)] rounded-xl text-body text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-shadow duration-200"
+            style={{
+              boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 2px 8px -2px rgba(0, 0, 0, 0.06)',
+            }}
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-[var(--color-bg-tertiary)] rounded-xl transition-all duration-200 ease-premium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
               aria-label="Clear search"
             >
               <X className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -317,14 +331,15 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             <button
               key={filter}
               onClick={() => setTimeFilter(filter)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-h-[36px] ${
+              className={`px-5 py-2 rounded-xl text-caption font-semibold transition-all duration-200 ease-premium min-h-[36px] ${
                 timeFilter === filter
                   ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
+              style={timeFilter === filter ? { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.2), 0 2px 8px -2px rgba(59, 130, 246, 0.25)' } : { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04)' }}
             >
               {filter === 'all' && 'All Modes'}
-              {filter === 'quick' && 'Quick (≤10 min)'}
+              {filter === 'quick' && 'Quick (\u226410 min)'}
               {filter === 'medium' && 'Medium (15-30 min)'}
               {filter === 'long' && 'Long (45+ min)'}
             </button>
@@ -334,12 +349,12 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 
       {/* Start here — recommended modes when not searching */}
       {!searchQuery && recommendedModes.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+        <section className="mb-10">
+          <h2 className="text-h2 text-[var(--color-text-primary)] mb-4 flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
             Start here
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recommendedModes.map((mode) => (
               <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
             ))}

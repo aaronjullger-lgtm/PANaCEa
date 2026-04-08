@@ -786,7 +786,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
           className="max-w-md w-full p-8 rounded-3xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-            <Trophy className="w-10 h-10 text-white" />
+            <Trophy className="w-10 h-10 text-[var(--color-text-inverse)]" />
           </div>
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete!
@@ -803,7 +803,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
           <div className="space-y-3">
             <button
               onClick={handleReset}
-              className="w-full py-3 px-6 rounded-xl bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 px-6 rounded-xl bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-5 h-5" />
               Try Again
@@ -922,7 +922,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                       </p>
                       <button
                         onClick={handleNext}
-                        className="w-full py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-xl font-semibold transition-colors"
+                        className="w-full py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-xl font-semibold transition-colors"
                       >
                         {currentCardIndex < shuffledCards.length - 1 ? 'Next' : 'See Results'}
                       </button>

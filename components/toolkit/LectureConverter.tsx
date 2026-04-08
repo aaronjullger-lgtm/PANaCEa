@@ -184,7 +184,7 @@ export function LectureConverter({
           <button
             onClick={generate}
             disabled={!canGenerate || status === 'generating'}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 disabled:opacity-60 disabled:cursor-not-allowed text-[var(--color-text-inverse)] rounded-lg transition-all"
           >
             {status === 'generating' ? (
               <>

@@ -464,11 +464,11 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             onClick={() => handleDrugClassSelect('all')}
-            className="w-full p-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:shadow-lg transition-all group"
+            className="w-full p-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-700 text-[var(--color-text-inverse)] hover:shadow-lg transition-all group"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-white/20">
+                <div className="p-3 rounded-lg bg-[var(--color-bg-primary)]/20">
                   <Pill className="w-8 h-8" />
                 </div>
                 <div className="text-left">

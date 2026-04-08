@@ -178,7 +178,7 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
                 <a
                   href={selectedInfographic.imageUrl}
                   download={`${selectedInfographic.title}.png`}
-                  className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity flex items-center gap-2 text-sm"
+                  className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity flex items-center gap-2 text-sm"
                 >
                   <Download className="w-4 h-4" />
                   Download

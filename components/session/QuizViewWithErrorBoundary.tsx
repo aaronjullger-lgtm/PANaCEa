@@ -42,7 +42,7 @@ const QuizViewErrorFallback: React.FC<{
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <button
             onClick={resetErrorBoundary}
-            className="flex-1 min-h-[44px] px-4 py-2.5 bg-[var(--color-accent)] text-white font-medium rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
+            className="flex-1 min-h-[44px] px-4 py-2.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
           >
             Retry Session
           </button>

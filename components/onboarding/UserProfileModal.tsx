@@ -222,8 +222,8 @@ export function UserProfileModal({
                 {!showRotationSelector && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 text-center">
                     <div className="flex justify-center mb-4">
-                      <div className="p-3 bg-data-pass/20 rounded-full">
-                        <CheckCircle className="w-8 h-8 text-data-pass" />
+                      <div className="p-3 bg-[var(--color-data-pass)]/20 rounded-full">
+                        <CheckCircle className="w-8 h-8 text-[var(--color-data-pass)]" />
                       </div>
                     </div>
                     <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
@@ -261,7 +261,7 @@ export function UserProfileModal({
                   ${
                     step === 1 && !canProceedStep1
                       ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed opacity-50'
-                      : 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
+                      : 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent-hover)]'
                   }
                 `}
               >

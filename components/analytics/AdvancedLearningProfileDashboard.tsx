@@ -241,7 +241,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <AlertTriangle className="w-12 h-12 text-data-provisional" />
+        <AlertTriangle className="w-12 h-12 text-[var(--color-data-provisional)]" />
         <p className="text-[var(--color-text-muted)]">{error}</p>
         <PrimaryButton size="sm" onClick={loadProfile}>
           Try Again
@@ -409,7 +409,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 sublabel="consecutive correct"
               />
               <StatCard
-                icon={<Calendar className="w-5 h-5 text-data-pass" />}
+                icon={<Calendar className="w-5 h-5 text-[var(--color-data-pass)]" />}
                 label="Study Streak"
                 value={`${profile.currentStreak} days`}
                 sublabel={profile.currentStreak > 7 ? 'On fire!' : 'Keep it going!'}
@@ -443,9 +443,9 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                     <div
                       className={`flex items-center gap-1 text-lg font-semibold ${
                         learningVelocity.trend === 'accelerating'
-                          ? 'text-data-pass'
+                          ? 'text-[var(--color-data-pass)]'
                           : learningVelocity.trend === 'decelerating'
-                            ? 'text-data-fail'
+                            ? 'text-[var(--color-data-fail)]'
                             : 'text-[var(--color-text-muted)]'
                       }`}
                     >
@@ -717,8 +717,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
           >
             {/* Strengths */}
             {profile.strongestSystems.length > 0 && (
-              <div className="bg-data-pass/10 rounded-xl p-6 border border-data-pass/30">
-                <h3 className="text-lg font-semibold text-data-pass mb-4 flex items-center gap-2">
+              <div className="bg-[var(--color-data-pass)]/10 rounded-xl p-6 border border-[var(--color-data-pass)]/30">
+                <h3 className="text-lg font-semibold text-[var(--color-data-pass)] mb-4 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
                   Your Strongest Systems
                 </h3>
@@ -726,13 +726,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.strongestSystems.map((system, i) => (
                     <div
                       key={system}
-                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-data-pass/30"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-[var(--color-data-pass)]/30"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xl">
                           {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '✓'}
                         </span>
-                        <span className="font-medium text-data-pass">{system}</span>
+                        <span className="font-medium text-[var(--color-data-pass)]">{system}</span>
                       </div>
                     </div>
                   ))}
@@ -742,8 +742,8 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
 
             {/* Weaknesses */}
             {profile.weakestSystems.length > 0 && (
-              <div className="bg-data-provisional/10 rounded-xl p-6 border border-data-provisional/30">
-                <h3 className="text-lg font-semibold text-data-provisional mb-4 flex items-center gap-2">
+              <div className="bg-[var(--color-data-provisional)]/10 rounded-xl p-6 border border-[var(--color-data-provisional)]/30">
+                <h3 className="text-lg font-semibold text-[var(--color-data-provisional)] mb-4 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5" />
                   Systems Needing Focus
                 </h3>
@@ -751,11 +751,11 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   {profile.weakestSystems.map((system) => (
                     <div
                       key={system}
-                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-data-provisional/30 group hover:border-data-provisional transition-colors cursor-pointer"
+                      className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-[var(--color-data-provisional)]/30 group hover:border-[var(--color-data-provisional)] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-data-provisional">{system}</span>
-                        <ChevronRight className="w-4 h-4 text-data-provisional group-hover:translate-x-1 transition-transform" />
+                        <span className="font-medium text-[var(--color-data-provisional)]">{system}</span>
+                        <ChevronRight className="w-4 h-4 text-[var(--color-data-provisional)] group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   ))}
@@ -786,10 +786,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       <p
                         className={`text-lg font-bold mt-1 ${
                           stat.accuracy >= 80
-                            ? 'text-data-pass'
+                            ? 'text-[var(--color-data-pass)]'
                             : stat.accuracy >= 60
-                              ? 'text-data-provisional'
-                              : 'text-data-fail'
+                              ? 'text-[var(--color-data-provisional)]'
+                              : 'text-[var(--color-data-fail)]'
                         }`}
                       >
                         {Math.round(stat.accuracy)}%
@@ -913,8 +913,8 @@ const StatCard: React.FC<{
       <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
       {trend && (
         <span className="ml-auto">
-          {trend === 'improving' && <TrendingUp className="w-4 h-4 text-data-pass" />}
-          {trend === 'declining' && <TrendingDown className="w-4 h-4 text-data-fail" />}
+          {trend === 'improving' && <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />}
+          {trend === 'declining' && <TrendingDown className="w-4 h-4 text-[var(--color-data-fail)]" />}
         </span>
       )}
     </div>
@@ -934,13 +934,13 @@ const CognitiveGauge: React.FC<{
 }> = ({ label, value, icon, lowLabel, highLabel, isPositive = false, description }) => {
   const getColor = () => {
     if (isPositive) {
-      if (value >= 70) return 'text-data-pass bg-data-pass';
-      if (value >= 40) return 'text-data-provisional bg-data-provisional';
-      return 'text-data-fail bg-data-fail';
+      if (value >= 70) return 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]';
+      if (value >= 40) return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]';
+      return 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]';
     } else {
-      if (value <= 30) return 'text-data-pass bg-data-pass';
-      if (value <= 60) return 'text-data-provisional bg-data-provisional';
-      return 'text-data-fail bg-data-fail';
+      if (value <= 30) return 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]';
+      if (value <= 60) return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]';
+      return 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]';
     }
   };
 
@@ -979,7 +979,7 @@ const PatternInsight: React.FC<{
   quality: 'excellent' | 'good' | 'needs-work' | 'info';
 }> = ({ label, value, description, quality }) => {
   const qualityStyles = {
-    excellent: 'bg-data-pass/10 text-data-pass border-data-pass/30',
+    excellent: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30',
     good: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)]',
     'needs-work':
       'bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 border-muted-amber-200 dark:border-muted-amber-800',
@@ -1029,10 +1029,10 @@ const RecentSessionsList: React.FC<{
               <p
                 className={`text-lg font-bold ${
                   session.accuracy >= 80
-                    ? 'text-data-pass'
+                    ? 'text-[var(--color-data-pass)]'
                     : session.accuracy >= 60
-                      ? 'text-data-provisional'
-                      : 'text-data-fail'
+                      ? 'text-[var(--color-data-provisional)]'
+                      : 'text-[var(--color-data-fail)]'
                 }`}
               >
                 {Math.round(session.accuracy)}%

@@ -20,8 +20,8 @@ interface CalibrationProgressProps {
  * Phase 3 Milestone 4: Epistemic Uncertainty UI
  *
  * DESIGN TOKENS: This component uses semantic tokens from lib/design-tokens.ts
- * - bg-data-pass (teal) for calibrated/success states
- * - bg-data-provisional (amber) for early/warning states
+ * - bg-[var(--color-data-pass)] (teal) for calibrated/success states
+ * - bg-[var(--color-data-provisional)] (amber) for early/warning states
  * - bg-deep-plum-500 for progress (indigo replacement)
  * - bg-steel-blue-500 for developing state (blue replacement)
  */
@@ -82,19 +82,19 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className={`absolute inset-y-0 left-0 rounded-full ${
               isCalibrated
-                ? 'bg-data-pass'
+                ? 'bg-[var(--color-data-pass)]'
                 : progress > 66
                   ? 'bg-[var(--color-accent)]'
                   : progress > 33
                     ? 'bg-[var(--color-accent)]/70'
-                    : 'bg-data-provisional'
+                    : 'bg-[var(--color-data-provisional)]'
             }`}
           />
         </div>
         <span className="text-xs text-[var(--color-text-muted)]">
           {current}/{target}
         </span>
-        {isCalibrated && <Sparkles className="w-3 h-3 text-data-pass" />}
+        {isCalibrated && <Sparkles className="w-3 h-3 text-[var(--color-data-pass)]" />}
       </div>
     );
   }
@@ -108,7 +108,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       }}
       className={`p-4 rounded-xl border-2 transition-colors ${
         isCalibrated
-          ? 'bg-data-pass/10 border-data-pass/30'
+          ? 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/30'
           : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-accent)]/15/10'
       }`}
       role={!isCalibrated ? 'button' : undefined}
@@ -124,16 +124,16 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
         <div
           className={`p-2 rounded-lg ${
             isCalibrated
-              ? 'bg-data-pass/10'
+              ? 'bg-[var(--color-data-pass)]/10'
               : state === 'not_started'
                 ? 'bg-[var(--color-bg-tertiary)]'
                 : 'bg-[var(--color-accent)]/10'
           }`}
         >
           {isCalibrated ? (
-            <Sparkles className="w-5 h-5 text-data-pass" />
+            <Sparkles className="w-5 h-5 text-[var(--color-data-pass)]" />
           ) : state === 'early' ? (
-            <AlertTriangle className="w-5 h-5 text-data-provisional" />
+            <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
           ) : (
             <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           )}
@@ -143,7 +143,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           <div className="flex items-center justify-between mb-1">
             <h4
               className={`font-semibold flex items-center gap-1.5 ${
-                isCalibrated ? 'text-data-pass' : 'text-[var(--color-text-primary)]'
+                isCalibrated ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-text-primary)]'
               }`}
             >
               {currentState.title}
@@ -167,12 +167,12 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
               transition={{ duration: 0.8, ease: 'easeOut' }}
               className={`absolute inset-y-0 left-0 rounded-full ${
                 isCalibrated
-                  ? 'bg-data-pass'
+                  ? 'bg-[var(--color-data-pass)]'
                   : progress > 66
                     ? 'bg-[var(--color-accent)]'
                     : progress > 33
                       ? 'bg-[var(--color-accent)]/70'
-                      : 'bg-data-provisional'
+                      : 'bg-[var(--color-data-provisional)]'
               }`}
             />
             {/* Milestone markers */}
@@ -194,7 +194,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           {showDetails && (
             <p
               className={`text-sm ${
-                isCalibrated ? 'text-data-pass' : 'text-[var(--color-text-muted)]'
+                isCalibrated ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-text-muted)]'
               }`}
             >
               {currentState.description}
@@ -213,7 +213,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             <span className={current >= 40 ? 'text-[var(--color-accent)]' : ''}>
               40: Good predictions
             </span>
-            <span className={current >= 60 ? 'text-data-pass' : ''}>60: Optimized</span>
+            <span className={current >= 60 ? 'text-[var(--color-data-pass)]' : ''}>60: Optimized</span>
           </div>
         </div>
       )}

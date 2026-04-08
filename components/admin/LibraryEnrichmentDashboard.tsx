@@ -267,14 +267,14 @@ export const LibraryEnrichmentDashboard: React.FC = () => {
       <div className="flex flex-wrap gap-4 items-center bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <button
           onClick={() => window.open('/api/admin/library-enrichment-logs?limit=500', '_blank')}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
         >
           <FileText className="w-4 h-4" />
           Export Logs (JSON)
         </button>
         <button
           onClick={() => window.open('/data/library-enrichment-priority.json', '_blank')}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
         >
           <Target className="w-4 h-4" />
           View Priority List

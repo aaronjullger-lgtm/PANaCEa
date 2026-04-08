@@ -39,13 +39,13 @@ export const ConfidenceCalibrationCard: React.FC<Props> = ({ buckets }) => {
   let calibrationColor: string;
   if (overconfidentBuckets > underconfidentBuckets + 1) {
     calibrationLabel = 'Slightly overconfident — your accuracy doesn\'t quite match your confidence. Focus on high-confidence misses.';
-    calibrationColor = 'text-amber-500';
+    calibrationColor = 'text-[var(--color-data-provisional)]';
   } else if (underconfidentBuckets > overconfidentBuckets + 1) {
     calibrationLabel = 'Underconfident — you know more than you think. Trust your preparation.';
-    calibrationColor = 'text-blue-500';
+    calibrationColor = 'text-[var(--color-accent)]';
   } else {
     calibrationLabel = 'Well calibrated — your confidence closely matches your actual accuracy.';
-    calibrationColor = 'text-emerald-500';
+    calibrationColor = 'text-[var(--color-data-pass)]';
   }
 
   // Chart dimensions

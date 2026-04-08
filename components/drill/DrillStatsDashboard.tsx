@@ -547,7 +547,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                                 onStartDrill?.(drillType as DrillType);
                                 onClose?.();
                               }}
-                              className="w-full px-4 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-all"
+                              className="w-full px-4 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-all"
                             >
                               Practice Now
                             </button>

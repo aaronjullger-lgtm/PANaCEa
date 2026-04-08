@@ -100,7 +100,7 @@ export default function ACLSRefCards() {
   if (error) {
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
-        <Heart size={24} style={{ color: '#ef4444', marginBottom: 8 }} />
+        <Heart size={24} style={{ color: 'var(--color-data-fail)', marginBottom: 8 }} />
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>{error}</p>
         <button onClick={() => window.location.reload()} style={{
           marginTop: 8, padding: '6px 16px', borderRadius: 8, fontSize: 13,
@@ -134,7 +134,7 @@ export default function ACLSRefCards() {
       {Array.from(grouped.entries()).map(([algoName, steps]) => (
         <div key={algoName} style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <Heart size={18} style={{ color: '#ef4444' }} />
+            <Heart size={18} style={{ color: 'var(--color-data-fail)' }} />
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{algoName}</h3>
             <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 9999, background: 'var(--color-bg-secondary)', color: 'var(--color-text-secondary)' }}>
               {steps.length} step{steps.length !== 1 ? 's' : ''}
@@ -151,25 +151,25 @@ export default function ACLSRefCards() {
                   <button onClick={() => setExpandedId(isExpanded ? null : step.id)}
                     style={{ width: '100%', padding: '12px 14px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#ef4444', width: 28, textAlign: 'center' }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-data-fail)', width: 28, textAlign: 'center' }}>
                         {step.algorithmStep}
                       </span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{step.rhythm}</div>
                         <div style={{ fontSize: 13, color: 'var(--color-accent)', marginTop: 2, fontFamily: FONT_BODY }}>{step.correctIntervention}</div>
                       </div>
-                      {step.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>HY</span>}
+                      {step.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: 'var(--color-data-provisional)', color: 'var(--color-text-secondary)' }}>HY</span>}
                     </div>
                     {/* Drug + Energy at a glance */}
                     {(step.drugDose || step.energyDose) && (
                       <div style={{ display: 'flex', gap: 12, marginTop: 6, paddingLeft: 38 }}>
                         {step.drugDose && (
-                          <span style={{ fontSize: 12, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 12, color: 'var(--color-accent)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Pill size={12} /> {step.drugDose}
                           </span>
                         )}
                         {step.energyDose && (
-                          <span style={{ fontSize: 12, color: '#ea580c', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 12, color: 'var(--color-data-provisional)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Zap size={12} /> {step.energyDose}
                           </span>
                         )}
@@ -183,13 +183,13 @@ export default function ACLSRefCards() {
                         <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: '0 0 10px' }}>{step.rhythmDescription}</p>
                       )}
                       {step.cprGuidance && (
-                        <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', fontSize: 13, color: '#991b1b' }}>
+                        <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: 'color-mix(in srgb, var(--color-data-fail) 10%, transparent)', fontSize: 13, color: 'var(--color-data-fail)' }}>
                           <strong>CPR:</strong> {step.cprGuidance}
                         </div>
                       )}
                       {step.criticalActions && step.criticalActions.length > 0 && (
                         <div style={{ marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#dc2626', marginBottom: 4 }}>Critical Actions</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-data-fail)', marginBottom: 4 }}>Critical Actions</div>
                           <ul style={{ margin: 0, paddingLeft: 16 }}>
                             {step.criticalActions.map((a, i) => <li key={i} style={{ fontSize: 13, lineHeight: 1.5 }}>{a}</li>)}
                           </ul>
@@ -206,10 +206,10 @@ export default function ACLSRefCards() {
                         </div>
                       )}
                       {step.clinicalPearls && step.clinicalPearls.length > 0 && (
-                        <div style={{ padding: '8px 12px', borderRadius: 8, background: '#fef9c3' }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#854d0e', marginBottom: 4 }}>Pearls</div>
+                        <div style={{ padding: '8px 12px', borderRadius: 8, background: 'color-mix(in srgb, var(--color-data-provisional) 15%, transparent)' }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Pearls</div>
                           <ul style={{ margin: 0, paddingLeft: 16 }}>
-                            {step.clinicalPearls.map((p, i) => <li key={i} style={{ fontSize: 12, color: '#854d0e', lineHeight: 1.5 }}>{p}</li>)}
+                            {step.clinicalPearls.map((p, i) => <li key={i} style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{p}</li>)}
                           </ul>
                         </div>
                       )}

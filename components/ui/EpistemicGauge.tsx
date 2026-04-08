@@ -476,7 +476,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
           {onStartCalibration && (
             <button
               onClick={onStartCalibration}
-              className="w-full px-4 py-2.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-medium rounded-xl transition-colors"
+              className="w-full px-4 py-2.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] font-medium rounded-xl transition-colors"
             >
               Continue Calibration
             </button>

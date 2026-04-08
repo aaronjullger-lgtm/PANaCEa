@@ -23,13 +23,13 @@ export const FlashFeedback: React.FC<FlashFeedbackProps> = ({
       transition={{ duration: 0.3 }}
       className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md p-6 rounded-2xl shadow-2xl z-50
         ${isCorrect ? 'bg-[var(--color-data-pass)] border-[var(--color-data-pass)]/70' : 'bg-[var(--color-data-fail)] border-[var(--color-data-fail)]/70'}
-        border-2 text-white`}
+        border-2 text-[var(--color-text-inverse)]`}
     >
       <div className="flex items-center gap-4 mb-4">
         {isCorrect ? (
-          <CheckCircle className="w-8 h-8 text-data-pass" />
+          <CheckCircle className="w-8 h-8 text-[var(--color-data-pass)]" />
         ) : (
-          <XCircle className="w-8 h-8 text-data-fail" />
+          <XCircle className="w-8 h-8 text-[var(--color-data-fail)]" />
         )}
         <h2 className="text-2xl font-bold">
           {isCorrect ? 'Correct!' : 'Incorrect'}

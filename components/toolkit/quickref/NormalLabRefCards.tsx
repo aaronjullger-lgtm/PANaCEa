@@ -98,7 +98,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
   if (error) {
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
-        <Icon size={24} style={{ color: '#ef4444', marginBottom: 8 }} />
+        <Icon size={24} style={{ color: 'var(--color-data-fail)', marginBottom: 8 }} />
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>{error}</p>
         <button onClick={() => window.location.reload()} style={{
           marginTop: 8, padding: '6px 16px', borderRadius: 8, fontSize: 13,
@@ -166,7 +166,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
                   )}
                 </div>
                 {item.isHighYield && (
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>HY</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: 'var(--color-data-provisional)', color: 'var(--color-text-secondary)' }}>HY</span>
                 )}
               </div>
 
@@ -186,7 +186,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
                   borderRadius: 6, marginBottom: 6,
                   background: '#fef2f2', border: '1px solid #fecaca',
                 }}>
-                  <AlertTriangle size={12} style={{ color: '#dc2626', flexShrink: 0 }} />
+                  <AlertTriangle size={12} style={{ color: 'var(--color-data-fail)', flexShrink: 0 }} />
                   <span style={{ fontSize: 11, fontWeight: 600, color: '#991b1b' }}>
                     Critical: {item.criticalLow != null ? `< ${item.criticalLow}` : ''}
                     {item.criticalLow != null && item.criticalHigh != null ? ' or ' : ''}

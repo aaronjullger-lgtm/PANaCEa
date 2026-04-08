@@ -484,7 +484,7 @@ export const SpacingExample: React.FC = () => {
           <Stack spacing="md">
             <h3 className="text-lg font-semibold">HStack (Horizontal)</h3>
             <HStack spacing="sm">
-              <button className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded">Button 1</button>
+              <button className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded">Button 1</button>
               <button className="px-4 py-2 bg-[var(--color-bg-secondary)] rounded">Button 2</button>
               <button className="px-4 py-2 bg-[var(--color-bg-secondary)] rounded">Button 3</button>
             </HStack>
@@ -532,7 +532,7 @@ export const SpacingExample: React.FC = () => {
                 />
               </div>
               <ButtonGroup>
-                <button className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded">Submit</button>
+                <button className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded">Submit</button>
                 <button className="px-4 py-2 border rounded">Cancel</button>
               </ButtonGroup>
             </FormGroup>

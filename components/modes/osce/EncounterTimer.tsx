@@ -52,10 +52,10 @@ export const EncounterTimer: React.FC<EncounterTimerProps> = ({
 
   // Color based on time
   const getColor = () => {
-    if (elapsed < COMFORTABLE_MINUTES * 60) return 'text-green-600';
-    if (elapsed < targetSeconds) return 'text-yellow-600';
-    if (elapsed < OVERTIME_WARNING_MINUTES * 60) return 'text-orange-600';
-    return 'text-red-600';
+    if (elapsed < COMFORTABLE_MINUTES * 60) return 'text-[var(--color-data-pass)]';
+    if (elapsed < targetSeconds) return 'text-[var(--color-data-provisional)]';
+    if (elapsed < OVERTIME_WARNING_MINUTES * 60) return 'text-[var(--color-data-provisional)]';
+    return 'text-[var(--color-data-fail)]';
   };
 
   const getProgressColor = () => {
@@ -139,13 +139,13 @@ export const EncounterTimer: React.FC<EncounterTimerProps> = ({
         <motion.div
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ repeat: Infinity, duration: 1.5 }}
-          className="text-xs font-semibold text-orange-600"
+          className="text-xs font-semibold text-[var(--color-data-provisional)]"
         >
           Approaching target
         </motion.div>
       )}
       {isOver && (
-        <div className="text-xs font-semibold text-red-600">
+        <div className="text-xs font-semibold text-[var(--color-data-fail)]">
           +{Math.floor((elapsed - targetSeconds) / 60)}:{String((elapsed - targetSeconds) % 60).padStart(2, '0')}
         </div>
       )}

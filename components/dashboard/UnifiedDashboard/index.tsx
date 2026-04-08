@@ -169,7 +169,7 @@ const UnifiedDashboard = () => {
                 onClick={() => setView(v.id)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   view === v.id
-                    ? 'bg-[var(--color-accent)] text-white'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                 }`}
               >

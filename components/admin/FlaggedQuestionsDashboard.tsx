@@ -261,7 +261,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         <button
           onClick={fetchFlags}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -519,7 +519,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                   <button
                                     onClick={() => resolveFlag(flag.id)}
                                     disabled={resolving === flag.id || !resolutionNote.trim()}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                                   >
                                     {resolving === flag.id ? (
                                       <RefreshCw className="w-4 h-4 animate-spin" />

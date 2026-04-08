@@ -221,7 +221,7 @@ const BranchPointDisplay: React.FC<BranchPointDisplayProps> = ({
         aria-expanded={isExpanded}
         aria-label={`Differential diagnosis: ${branchPoint.differentialDiagnosis}`}
       >
-        <GitBranch size={14} className="text-amber-500 shrink-0" />
+        <GitBranch size={14} className="text-[var(--color-data-provisional)] shrink-0" />
         <span
           style={{
             fontSize: 12 + fontSizeAdjustment,
@@ -264,10 +264,10 @@ const BranchPointDisplay: React.FC<BranchPointDisplayProps> = ({
             </p>
 
             {/* Alternative path links */}
-            <div className="mt-2 pl-4 border-l-2 border-amber-400/40 space-y-2">
+            <div className="mt-2 pl-4 border-l-2 border-[var(--color-data-provisional)]/40 space-y-2">
               {branchPoint.alternativePath.map((link, i) => (
                 <div key={`branch-${i}`} className="flex items-start gap-2">
-                  <Zap size={10} className="text-amber-500 mt-1 shrink-0" />
+                  <Zap size={10} className="text-[var(--color-data-provisional)] mt-1 shrink-0" />
                   <div>
                     <span
                       style={{

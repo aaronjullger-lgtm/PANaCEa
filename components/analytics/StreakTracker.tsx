@@ -139,7 +139,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
                     transition-colors duration-200
                     ${
                       hasStudied
-                        ? 'bg-[var(--color-accent)] text-white'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                         : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                     }
                     ${isCurrentDay ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}

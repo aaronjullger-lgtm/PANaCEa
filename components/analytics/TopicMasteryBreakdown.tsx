@@ -52,9 +52,9 @@ const TASK_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }
 };
 
 const DEFAULT_MASTERY_COLORS = {
-  bg: 'bg-data-neutral dark:bg-data-neutral',
-  text: 'text-data-neutral',
-  bar: 'bg-data-neutral dark:bg-data-neutral',
+  bg: 'bg-[var(--color-data-neutral)] dark:bg-[var(--color-data-neutral)]',
+  text: 'text-[var(--color-data-neutral)]',
+  bar: 'bg-[var(--color-data-neutral)] dark:bg-[var(--color-data-neutral)]',
 } as const;
 
 const MASTERY_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
@@ -65,14 +65,14 @@ const MASTERY_COLORS: Record<string, { bg: string; text: string; bar: string }> 
     bar: 'bg-[var(--color-data-fail)]',
   },
   medium: {
-    bg: 'bg-data-provisional dark:bg-data-provisional/20',
-    text: 'text-data-provisional dark:text-data-provisional',
-    bar: 'bg-data-provisional',
+    bg: 'bg-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20',
+    text: 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]',
+    bar: 'bg-[var(--color-data-provisional)]',
   },
   high: {
-    bg: 'bg-data-pass dark:bg-data-pass/20',
-    text: 'text-data-pass dark:text-data-pass',
-    bar: 'bg-data-pass',
+    bg: 'bg-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20',
+    text: 'text-[var(--color-data-pass)] dark:text-[var(--color-data-pass)]',
+    bar: 'bg-[var(--color-data-pass)]',
   },
 };
 
@@ -105,7 +105,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-48 text-data-neutral">
+      <div className="flex items-center justify-center h-48 text-[var(--color-data-neutral)]">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
         Loading topic progress...
       </div>
@@ -138,7 +138,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             {data.conditionName || conditionName}
           </h3>
-          <p className="text-sm text-data-neutral dark:text-data-neutral">
+          <p className="text-sm text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]">
             Topic-level mastery breakdown
           </p>
         </div>
@@ -159,12 +159,12 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
 
       {/* Attention Banner */}
       {(weakTopics.length > 0 || untestedTopics.length > 0) && (
-        <div className="rounded-lg border border-data-provisional dark:border-data-provisional bg-data-provisional dark:bg-data-provisional/20 p-3">
+        <div className="rounded-lg border border-[var(--color-data-provisional)] dark:border-[var(--color-data-provisional)] bg-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 p-3">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-data-provisional dark:text-data-provisional mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] mt-0.5 flex-shrink-0" />
             <div className="text-sm">
               {weakTopics.length > 0 && (
-                <p className="text-data-provisional dark:text-data-provisional">
+                <p className="text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]">
                   <strong>
                     {weakTopics.length} topic{weakTopics.length > 1 ? 's' : ''}
                   </strong>{' '}
@@ -172,7 +172,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
                 </p>
               )}
               {untestedTopics.length > 0 && (
-                <p className="text-data-provisional dark:text-data-provisional mt-1">
+                <p className="text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] mt-1">
                   {untestedTopics.length} topic{untestedTopics.length > 1 ? 's' : ''} not yet tested
                 </p>
               )}
@@ -208,7 +208,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
               </div>
 
               {/* Progress Bar */}
-              <div className="h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+              <div className="h-2 bg-[var(--color-data-neutral)] dark:bg-[var(--color-data-neutral)] rounded-full overflow-hidden">
                 <div
                   className={`h-full ${colors.bar} transition-all duration-300`}
                   style={{ width: `${stabilityPercent}%` }}
@@ -216,7 +216,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
               </div>
 
               {/* Stats Row */}
-              <div className="flex items-center gap-4 mt-2 text-xs text-data-neutral dark:text-data-neutral">
+              <div className="flex items-center gap-4 mt-2 text-xs text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]">
                 <span>{topic.reps} reviews</span>
                 {topic.lapses > 0 && <span>{topic.lapses} lapses</span>}
                 {topic.variantsUsed !== undefined && topic.variantsUsed > 0 && (

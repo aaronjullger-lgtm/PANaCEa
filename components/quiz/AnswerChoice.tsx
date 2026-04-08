@@ -73,36 +73,36 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     // Capitalize the first letter of the answer text
     const displayText = capitalizeFirst(text);
 
-    // Base button classes
+    // Base button classes — cinematic answer card with premium easing
     let buttonClasses =
-      'w-full text-left p-4 min-h-[44px] rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium relative group';
+      'w-full text-left p-4 min-h-[48px] rounded-xl transition-all duration-200 disabled:cursor-not-allowed active:scale-[0.98] font-medium relative group';
     let animationClass = '';
 
     // Eliminated state styling
     if (isEliminated && !isAnswered) {
       buttonClasses +=
-        ' opacity-50 grayscale bg-[var(--color-card-bg)]';
+        ' opacity-40 grayscale bg-[var(--color-card-bg)]';
     } else if (isAnswered) {
-      // After answering states
+      // After answering states — bold feedback with depth
       if (isCorrect) {
         buttonClasses +=
-          ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-semibold shadow-md';
+          ' !bg-[var(--color-data-pass)] !text-[var(--color-text-inverse)] !border-transparent font-semibold';
       } else if (isSelected) {
         buttonClasses +=
-          ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-semibold shadow-md';
+          ' !bg-[var(--color-data-fail)] !text-[var(--color-text-inverse)] !border-transparent font-semibold';
         animationClass = 'animate-shake';
       } else {
         buttonClasses +=
-          ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] opacity-60';
+          ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] opacity-50';
       }
     } else if (isSelected && !isAnswered) {
-      // Selected but not yet submitted - show highlighted state
+      // Selected but not yet submitted — elevated blue ring
       buttonClasses +=
-        ' bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)] shadow-md text-[var(--color-text-primary)] font-semibold';
+        ' bg-[var(--color-accent)]/8 text-[var(--color-text-primary)] font-semibold';
     } else {
-      // Default hoverable state
+      // Default hoverable state — subtle lift with cinematic shadow
       buttonClasses +=
-        ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:-translate-y-px';
+        ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:-translate-y-0.5';
     }
 
     return (
@@ -116,9 +116,12 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         className={`${buttonClasses} ${animationClass}`}
         style={{
           fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`,
-          ...(!isAnswered || (!isCorrect && !isSelected)
-            ? { boxShadow: isSelected ? undefined : '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }
-            : {}),
+          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          ...(!isAnswered && isSelected
+            ? { boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px -2px rgba(59, 130, 246, 0.2), 0 4px 12px -4px rgba(0, 0, 0, 0.08)' }
+            : isAnswered && (isCorrect || isSelected)
+              ? { boxShadow: isCorrect ? '0 0 16px -4px rgba(34, 197, 94, 0.3)' : '0 0 16px -4px rgba(239, 68, 68, 0.3)' }
+              : { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)' }),
         }}
         aria-label={`Option ${String.fromCharCode(65 + index)}: ${displayText}${isEliminated ? ' (eliminated)' : ''}${isAnswered && isCorrect ? ' (correct answer)' : ''}${isAnswered && isSelected && !isCorrect ? ' (your incorrect answer)' : ''}`}
       >
@@ -128,7 +131,13 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
           } ${isAnswered && !isCorrect ? 'line-through' : ''}`}
         >
           <span className="flex-1 pr-8 flex items-center">
-            <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 mr-2 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-border)] border-b-2 text-xs font-mono font-bold shadow-sm">
+            <kbd
+              className="inline-flex items-center justify-center min-w-[26px] h-[26px] px-1.5 mr-3 rounded-lg text-xs font-mono font-bold"
+              style={{
+                background: 'var(--color-bg-tertiary)',
+                boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 1px 2px rgba(0,0,0,0.04)',
+              }}
+            >
               {String.fromCharCode(65 + index)}
             </kbd>
             <span>{displayText}</span>

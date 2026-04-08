@@ -99,10 +99,10 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-[var(--color-text-inverse)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+              <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg backdrop-blur-sm">
                 <Bookmark className="w-6 h-6" />
               </div>
               <div>
@@ -115,7 +115,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--color-bg-primary)]/20 rounded-lg transition-colors"
               aria-label="Close"
             >
               <X className="w-6 h-6" />
@@ -146,7 +146,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                 onClick={() => setSelectedTag(null)}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTag === null
-                    ? 'bg-data-provisional text-white'
+                    ? 'bg-data-provisional text-[var(--color-text-inverse)]'
                     : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
@@ -158,7 +158,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${
                     selectedTag === tag
-                      ? 'bg-data-provisional text-white'
+                      ? 'bg-data-provisional text-[var(--color-text-inverse)]'
                       : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                   }`}
                 >
@@ -263,7 +263,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => onViewQuestion(question)}
-                          className="px-3 py-1.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white text-sm rounded-lg transition-colors"
+                          className="px-3 py-1.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] text-sm rounded-lg transition-colors"
                         >
                           Review
                         </button>

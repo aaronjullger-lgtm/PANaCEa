@@ -486,16 +486,16 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 rounded-lg bg-data-neutral/40 group-hover:bg-data-neutral/60 transition-colors">
-                    <Icon className="w-7 h-7 text-data-neutral group-hover:text-white transition-colors" />
+                    <Icon className="w-7 h-7 text-data-neutral group-hover:text-[var(--color-text-inverse)] transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-[var(--color-text-inverse)] mb-2 flex items-center gap-2">
                       <Layers className="w-5 h-5 text-[var(--color-accent)]" />
                       {system.name}
                     </h3>
                     <p className="text-sm text-data-neutral leading-relaxed">{system.description}</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-data-neutral group-hover:translate-x-1 group-hover:text-white transition-all" />
+                  <ArrowRight className="w-5 h-5 text-data-neutral group-hover:translate-x-1 group-hover:text-[var(--color-text-inverse)] transition-all" />
                 </div>
               </motion.button>
             );

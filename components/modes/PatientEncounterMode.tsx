@@ -1889,7 +1889,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       {trendData.map((val, ti) => (
                         <div
                           key={ti}
-                          className="w-1.5 bg-blue-400 rounded-full opacity-70"
+                          className="w-1.5 bg-[var(--color-accent)] rounded-full opacity-70"
                           style={{ height: `${Math.max(4, Math.min(24, (val / Math.max(...trendData)) * 24))}px` }}
                         />
                       ))}
@@ -1920,9 +1920,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {TYPING_STATUS_MESSAGES[typingStatusIndex]}
                 </div>
                 <div className="flex gap-1 items-center h-4">
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             )}
@@ -2012,7 +2012,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 onClick={togglePause}
                 className={`p-1.5 rounded-md transition-colors border ${
                   isPaused
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                    ? 'bg-[var(--color-data-provisional)]/20 border-[var(--color-data-provisional)]/40 text-[var(--color-data-provisional)]'
                     : 'border-transparent text-data-neutral hover:text-[var(--color-text-inverse)]'
                 }`}
                 title={isPaused ? 'Resume encounter' : 'Pause encounter'}
@@ -3155,17 +3155,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                   {/* Dangerous actions alert */}
                   {gradeResult.dangerousActionsDetected && gradeResult.dangerousActionsDetected.length > 0 && (
-                    <div className="mb-4 p-3 bg-red-900/20 rounded-lg border border-red-500/40">
-                      <p className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
+                    <div className="mb-4 p-3 bg-[var(--color-data-fail)]/20 rounded-lg border border-[var(--color-data-fail)]/40">
+                      <p className="text-sm font-semibold text-[var(--color-data-fail)] mb-2 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4" />
                         Dangerous Actions Detected ({gradeResult.dangerousActionsDetected.length})
                       </p>
                       <ul className="space-y-1">
                         {gradeResult.dangerousActionsDetected.map((action, idx) => (
-                          <li key={idx} className="text-sm text-red-300 flex items-center gap-2">
-                            <Shield className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                          <li key={idx} className="text-sm text-[var(--color-data-fail)] flex items-center gap-2">
+                            <Shield className="w-3.5 h-3.5 text-[var(--color-data-fail)] flex-shrink-0" />
                             {action.description}
-                            <span className="text-xs text-red-400/70 ml-auto">-{action.penalty} pts</span>
+                            <span className="text-xs text-[var(--color-data-fail)]/70 ml-auto">-{action.penalty} pts</span>
                           </li>
                         ))}
                       </ul>

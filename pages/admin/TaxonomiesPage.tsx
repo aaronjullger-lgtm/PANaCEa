@@ -191,7 +191,7 @@ export function TaxonomiesPage() {
         <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
-          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90"
         >
           Return Home
         </button>
@@ -217,7 +217,7 @@ export function TaxonomiesPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg flex items-center gap-2 hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg flex items-center gap-2 hover:opacity-90"
         >
           <Plus className="w-4 h-4" /> Add Taxonomy
         </button>
@@ -389,7 +389,7 @@ export function TaxonomiesPage() {
               <button
                 onClick={editingTaxonomy ? saveEdit : handleCreate}
                 disabled={submitting}
-                className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingTaxonomy ? 'Save Changes' : 'Create'}

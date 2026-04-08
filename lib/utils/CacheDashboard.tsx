@@ -49,7 +49,7 @@ export const CacheDashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Cache Dashboard</h3>
         <button
           onClick={handleClearAll}
-          className="px-3 py-1 text-sm bg-data-fail/10 text-data-fail rounded-lg hover:bg-data-fail/20 transition-colors"
+          className="px-3 py-1 text-sm bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)]/20 transition-colors"
         >
           Clear All Caches
         </button>
@@ -123,7 +123,7 @@ export const CacheDashboard: React.FC = () => {
           <div className="flex justify-end">
             <button
               onClick={() => handleClearCache(selectedCache)}
-              className="px-3 py-1 text-sm bg-data-fail/10 text-data-fail rounded-lg hover:bg-data-fail/20 transition-colors"
+              className="px-3 py-1 text-sm bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)]/20 transition-colors"
             >
               Clear {selectedCache} Cache
             </button>

@@ -134,7 +134,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
             : report.score >= 50
               ? 'bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]'
               : 'bg-data-fail hover:bg-data-fail'
-        } text-white transition-colors`}
+        } text-[var(--color-text-inverse)] transition-colors`}
         aria-label="Performance Monitor"
       >
         <Activity className="w-6 h-6" />

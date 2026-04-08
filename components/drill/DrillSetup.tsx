@@ -203,7 +203,7 @@ export function DrillSetup({
                   onClick={() => setSelectedSystem(undefined)}
                   className={`px-4 py-3 rounded-lg text-left transition-all ${
                     selectedSystem === undefined
-                      ? 'bg-[var(--color-accent)] text-white font-medium'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium'
                       : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
                   }`}
                 >
@@ -221,7 +221,7 @@ export function DrillSetup({
                       onClick={() => setSelectedSystem(system)}
                       className={`px-4 py-3 rounded-lg text-left transition-all ${
                         selectedSystem === system
-                          ? 'bg-[var(--color-accent)] text-white font-medium'
+                          ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium'
                           : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
                       }`}
                     >
@@ -310,7 +310,7 @@ export function DrillSetup({
             whileTap={{ scale: 0.98 }}
             onClick={handleStart}
             disabled={isStarting || filteredConditions.length === 0}
-            className="w-full bg-[var(--color-accent)] text-white font-semibold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isStarting ? (
               <>

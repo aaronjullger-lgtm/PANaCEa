@@ -180,7 +180,7 @@ export function QuestionGeneratorPage() {
         <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
-          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90"
         >
           Return Home
         </button>
@@ -314,7 +314,7 @@ export function QuestionGeneratorPage() {
               <button
                 onClick={handleGenerate}
                 disabled={generating || !selectedTaxonomy}
-                className="w-full px-4 py-3 bg-[var(--color-accent)] text-white rounded-lg flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
+                className="w-full px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
               >
                 {generating ? (
                   <>
@@ -359,7 +359,7 @@ export function QuestionGeneratorPage() {
               <button
                 onClick={handleGenerate}
                 disabled={generating || !selectedTaxonomy}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" /> Generate Your First Question
               </button>
@@ -410,7 +410,7 @@ export function QuestionGeneratorPage() {
                     </div>
                     <button
                       onClick={() => handleSaveQuestion(q)}
-                      className="px-4 py-2 bg-[var(--color-data-pass)] text-white rounded-lg flex items-center gap-2 hover:bg-[var(--color-data-pass)]"
+                      className="px-4 py-2 bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] rounded-lg flex items-center gap-2 hover:bg-[var(--color-data-pass)]"
                     >
                       <Save className="w-4 h-4" /> Save as Draft
                     </button>

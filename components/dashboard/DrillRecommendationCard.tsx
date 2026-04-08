@@ -19,9 +19,9 @@ import type { DrillRecommendation } from '@/hooks/useDrillRecommendations';
 // ── Impact badge colors ──────────────────────────────────────────────────
 
 const IMPACT_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  high: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'High Impact' },
-  medium: { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Medium Impact' },
-  low: { bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Low Impact' },
+  high: { bg: 'bg-[var(--color-data-fail)]/15', text: 'text-[var(--color-data-fail)]', label: 'High Impact' },
+  medium: { bg: 'bg-[var(--color-data-provisional)]/15', text: 'text-[var(--color-data-provisional)]', label: 'Medium Impact' },
+  low: { bg: 'bg-[var(--color-accent)]/15', text: 'text-[var(--color-accent)]', label: 'Low Impact' },
 };
 
 // ── Drill-type to route map ──────────────────────────────────────────────

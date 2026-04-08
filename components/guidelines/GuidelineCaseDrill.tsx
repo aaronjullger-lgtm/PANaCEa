@@ -215,7 +215,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         onClick={() => handleScoreClick(i)}
                         className={`w-12 h-12 rounded-lg font-bold text-lg transition-all ${
                           userScoreInput === i
-                            ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]/50'
+                            ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] ring-2 ring-[var(--color-accent)]/50'
                             : 'bg-data-neutral text-data-neutral hover:bg-data-neutral'
                         }`}
                       >
@@ -228,7 +228,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   <button
                     onClick={handleSubmit}
                     disabled={userScoreInput === null}
-                    className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral disabled:text-data-neutral text-white font-medium rounded-lg transition-colors"
+                    className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral disabled:text-data-neutral text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
                   >
                     Submit Score
                   </button>

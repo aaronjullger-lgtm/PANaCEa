@@ -252,7 +252,7 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
             />
             <button
               onClick={() => setIsZoomed(false)}
-              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              className="absolute top-4 right-4 p-2 bg-[var(--color-bg-primary)]/10 hover:bg-[var(--color-bg-primary)]/20 rounded-full text-[var(--color-text-inverse)] transition-colors"
               aria-label="Close zoomed view"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

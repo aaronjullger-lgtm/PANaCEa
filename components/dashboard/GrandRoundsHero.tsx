@@ -219,7 +219,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all
                   ${
                     userStatus === 'completed'
-                      ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-white shadow-lg shadow-[var(--color-data-pass)]/30'
+                      ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] shadow-lg shadow-[var(--color-data-pass)]/30'
                       : 'bg-[var(--color-bg-secondary)]/50 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-text-primary)] text-[var(--color-text-primary)] shadow-lg transition-all'
                   }
                 `}

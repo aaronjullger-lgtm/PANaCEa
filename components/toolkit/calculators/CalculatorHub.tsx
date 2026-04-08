@@ -276,7 +276,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ initialCalculatorI
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 flex items-center justify-center bg-[var(--color-bg-primary)] rounded-lg group-hover:bg-[var(--color-accent)] transition-colors">
-                        <Icon className="w-6 h-6 text-[var(--color-text-muted)] group-hover:text-white transition-colors" />
+                        <Icon className="w-6 h-6 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-inverse)] transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors mb-1">

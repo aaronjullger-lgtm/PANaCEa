@@ -103,7 +103,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors flex items-center gap-2 font-medium"
+          className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition-colors flex items-center gap-2 font-medium"
         >
           <Plus className="w-5 h-5" />
           New Goal
@@ -191,7 +191,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <p className="text-data-fail mb-4">{error}</p>
           <button
             onClick={fetchGoals}
-            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
           >
             Retry
           </button>
@@ -204,7 +204,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
           >
             Create Goal
           </button>

@@ -54,20 +54,20 @@ function formatReviewDate(date: string | Date | null | undefined): string | null
 const TIER_CONFIG = {
   strong: {
     Icon: ShieldCheck,
-    bgClass: 'bg-emerald-500/15 border-emerald-500/25',
-    textClass: 'text-emerald-400',
+    bgClass: 'bg-[var(--color-data-pass)]/15 border-[var(--color-data-pass)]/25',
+    textClass: 'text-[var(--color-data-pass)]',
     label: 'Strong evidence',
   },
   moderate: {
     Icon: ShieldAlert,
-    bgClass: 'bg-amber-500/15 border-amber-500/25',
-    textClass: 'text-amber-400',
+    bgClass: 'bg-[var(--color-data-provisional)]/15 border-[var(--color-data-provisional)]/25',
+    textClass: 'text-[var(--color-data-provisional)]',
     label: 'Moderate evidence',
   },
   unknown: {
     Icon: ShieldQuestion,
-    bgClass: 'bg-zinc-500/15 border-zinc-500/25',
-    textClass: 'text-zinc-400',
+    bgClass: 'bg-[var(--color-bg-tertiary)]/15 border-[var(--color-border)]/25',
+    textClass: 'text-[var(--color-text-muted)]',
     label: 'No provenance',
   },
 } as const;

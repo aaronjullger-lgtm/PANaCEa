@@ -88,8 +88,8 @@ function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
         const barWidth = Math.max(5, (bin.count / maxCount) * 100);
         const isCalibrated = Math.abs(bin.calibrationRatio - 1.0) < 0.15;
         const barColor = isCalibrated
-          ? 'bg-emerald-500'
-          : bin.calibrationRatio > 1 ? 'bg-blue-500' : 'bg-amber-500';
+          ? 'bg-[var(--color-data-pass)]'
+          : bin.calibrationRatio > 1 ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-data-provisional)]';
 
         return (
           <div key={i} className="flex items-center gap-2 text-xs">
@@ -111,13 +111,13 @@ function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
       })}
       <div className="flex gap-3 text-xs text-muted-foreground mt-2">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded bg-emerald-500" /> Calibrated
+          <span className="w-2 h-2 rounded bg-[var(--color-data-pass)]" /> Calibrated
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded bg-blue-500" /> Under-predicted
+          <span className="w-2 h-2 rounded bg-[var(--color-accent)]" /> Under-predicted
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded bg-amber-500" /> Over-predicted
+          <span className="w-2 h-2 rounded bg-[var(--color-data-provisional)]" /> Over-predicted
         </span>
       </div>
     </div>
@@ -130,7 +130,7 @@ function DriftIndicator({ drift }: { drift: DriftData }) {
     : Minus;
 
   const statusColor = drift.isDrifting
-    ? drift.direction === 'improving' ? 'text-emerald-400' : 'text-red-400'
+    ? drift.direction === 'improving' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
     : 'text-muted-foreground';
 
   const label = drift.isDrifting
@@ -155,10 +155,10 @@ function DriftIndicator({ drift }: { drift: DriftData }) {
 
 function CircadianPhases({ phases }: { phases: CircadianPhaseData[] }) {
   const phaseIcons: Record<string, React.ReactNode> = {
-    morning: <Sun className="w-4 h-4 text-yellow-400" />,
-    afternoon: <Cloud className="w-4 h-4 text-orange-400" />,
-    evening: <Moon className="w-4 h-4 text-indigo-400" />,
-    night: <Star className="w-4 h-4 text-slate-400" />,
+    morning: <Sun className="w-4 h-4 text-[var(--color-data-provisional)]" />,
+    afternoon: <Cloud className="w-4 h-4 text-[var(--color-data-provisional)]" />,
+    evening: <Moon className="w-4 h-4 text-[var(--color-accent)]" />,
+    night: <Star className="w-4 h-4 text-[var(--color-text-muted)]" />,
   };
 
   const bestPhase = phases.reduce((best, p) =>
@@ -175,7 +175,7 @@ function CircadianPhases({ phases }: { phases: CircadianPhaseData[] }) {
           <div className="flex-1 h-3 bg-muted rounded overflow-hidden">
             <div
               className={`h-full rounded transition-all ${
-                p.phase === bestPhase?.phase ? 'bg-emerald-500' : 'bg-indigo-500'
+                p.phase === bestPhase?.phase ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-accent)]'
               }`}
               style={{ width: `${p.recallRate * 100}%` }}
             />
@@ -188,7 +188,7 @@ function CircadianPhases({ phases }: { phases: CircadianPhaseData[] }) {
       {bestPhase && (
         <p className="text-xs text-muted-foreground mt-1">
           Best performance:{' '}
-          <span className="text-emerald-400 capitalize">{bestPhase.phase}</span>
+          <span className="text-[var(--color-data-pass)] capitalize">{bestPhase.phase}</span>
           {bestPhase.phase === 'morning' && ' — consistent with cortisol-driven encoding peaks'}
           {bestPhase.phase === 'evening' && ' — you may benefit from pre-sleep consolidation'}
         </p>
@@ -205,8 +205,8 @@ function SystemBreakdown({ systems }: { systems: SystemCalibration[] }) {
       {systems.map(s => {
         const deviation = Math.abs(s.factor - 1.0);
         const color = deviation < 0.1
-          ? 'text-emerald-400'
-          : deviation < 0.2 ? 'text-yellow-400' : 'text-red-400';
+          ? 'text-[var(--color-data-pass)]'
+          : deviation < 0.2 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]';
         return (
           <div key={s.system} className="flex justify-between text-sm">
             <span className="text-foreground">{s.system}</span>
@@ -257,7 +257,7 @@ export default function CalibrationInsightsDashboard() {
 
   if (error) {
     return (
-      <div className="p-4 text-sm text-red-400">
+      <div className="p-4 text-sm text-[var(--color-data-fail)]">
         Unable to load calibration insights: {error}
       </div>
     );

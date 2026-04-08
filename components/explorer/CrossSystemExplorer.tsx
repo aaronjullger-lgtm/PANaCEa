@@ -139,7 +139,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
             onClick={() => setShowPerformanceOverlay(prev => !prev)}
             className={`px-3 py-1.5 rounded-md border transition-colors ${
               showPerformanceOverlay
-                ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-[var(--color-accent)]'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]'
             }`}
             aria-label={showPerformanceOverlay ? 'Hide performance overlay' : 'Show performance overlay'}
@@ -173,7 +173,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
           <button
             onClick={handleFindPath}
             disabled={pathFinding || !startNodeId || !endNodeId}
-            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-md hover:bg-[var(--color-accent)]-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-md hover:bg-[var(--color-accent)]-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pathFinding ? 'Finding...' : 'Find Path'}
           </button>

@@ -290,7 +290,7 @@ export function LiveInterface({
             <button
               type="button"
               onClick={() => void connect()}
-              className="mt-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90"
+              className="mt-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90"
             >
               Connect to patient
             </button>
@@ -323,7 +323,7 @@ export function LiveInterface({
           type="button"
           onClick={sendText}
           disabled={status !== 'setup_sent' && status !== 'ready'}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white font-medium disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium disabled:opacity-50"
         >
           <Send className="w-4 h-4" /> Send
         </button>

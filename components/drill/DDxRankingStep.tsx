@@ -222,7 +222,7 @@ export function DDxRankingStep({
                   flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
                   ${
                     isSubmitted && item.id === correctAnswerId
-                      ? 'bg-[var(--color-data-pass)] text-white'
+                      ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
                       : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
                   }
                 `}
@@ -325,10 +325,10 @@ export function DDxRankingStep({
               flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg
               ${
                 result.score >= 80
-                  ? 'bg-[var(--color-data-pass)] text-white'
+                  ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
                   : result.score >= 60
-                    ? 'bg-[var(--color-data-provisional)] text-white'
-                    : 'bg-[var(--color-data-fail)] text-white'
+                    ? 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]'
+                    : 'bg-[var(--color-data-fail)] text-[var(--color-text-inverse)]'
               }
             `}
             >
@@ -381,7 +381,7 @@ export function DDxRankingStep({
           <button
             onClick={handleSubmit}
             disabled={disabled}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
           >
             Submit Ranking
           </button>

@@ -163,7 +163,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
                 </p>
                 <button
                   onClick={() => setImageRevealed(true)}
-                  className="mt-4 px-4 py-2 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg transition-colors"
+                  className="mt-4 px-4 py-2 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
                 >
                   Reveal Image
                 </button>
@@ -199,7 +199,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
             >
               <button
                 onClick={nextCase}
-                className="px-8 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                className="px-8 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] font-semibold rounded-xl transition-colors flex items-center gap-2"
               >
                 Next Case
                 <Shuffle className="w-5 h-5" />

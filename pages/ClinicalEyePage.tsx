@@ -170,7 +170,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
             <button
               onClick={analyze}
               disabled={loading || !imageBase64 || !prompt.trim()}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               {loading ? (
                 <>
@@ -182,7 +182,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               )}
             </button>
             {error && (
-              <p className="mt-3 text-sm text-data-fail" role="alert">
+              <p className="mt-3 text-sm text-[var(--color-data-fail)]" role="alert">
                 {error}
               </p>
             )}

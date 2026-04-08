@@ -145,7 +145,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                 </div>
                 <button
                   onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${isCorrect ? 'bg-[var(--color-data-pass)] hover:opacity-90 text-[var(--color-text-inverse)]' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
                   aria-label="Proceed to next dermatology case"
                 >
                   Next Case <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -210,7 +210,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
                     <Eye className="w-16 h-16 text-[var(--color-text-muted)]" aria-hidden="true" />
                     <button
                       onClick={() => setImageRevealed(true)}
-                      className="px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-colors"
+                      className="px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors"
                       aria-label="Reveal dermatology image"
                     >
                       Reveal Image

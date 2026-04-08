@@ -138,7 +138,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           {onApply && (
             <button
               onClick={onApply}
-              className="px-3 py-1.5 bg-[var(--color-accent)] text-white text-sm rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
+              className="px-3 py-1.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
             >
               Apply
             </button>

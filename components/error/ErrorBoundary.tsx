@@ -379,14 +379,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
         <div className="max-w-lg w-full bg-[var(--color-bg-secondary)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
-          <div className="bg-[var(--color-data-fail)] p-6 text-white">
+          <div className="bg-[var(--color-data-fail)] p-6 text-[var(--color-text-inverse)]">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
+              <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg">
                 <AlertTriangle className="w-8 h-8" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">{title}</h1>
-                <p className="text-white/80 text-sm">{message}</p>
+                <p className="text-[var(--color-text-inverse)]/80 text-sm">{message}</p>
               </div>
             </div>
           </div>
@@ -404,7 +404,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={this.handleReset} className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg transition-colors font-medium">
+              <button onClick={this.handleReset} className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] rounded-lg transition-colors font-medium">
                 <RefreshCw className="w-4 h-4" /> Try Again
               </button>
               <button onClick={this.handleGoHome} className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-primary)] rounded-lg transition-colors font-medium">
@@ -471,7 +471,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {canRetry && (
-            <button onClick={this.handleRetry} disabled={isRetrying} className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50">
+            <button onClick={this.handleRetry} disabled={isRetrying} className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50">
               <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Retrying...' : primaryAction}
             </button>
@@ -507,7 +507,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <p className="text-[var(--color-text-secondary)] mb-6 max-w-md">{message}</p>
 
         <div className="flex gap-3">
-          <button onClick={this.handleReset} className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors">
+          <button onClick={this.handleReset} className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors">
             <RefreshCw className="w-4 h-4" /> Try Again
           </button>
           <button onClick={this.handleGoHome} className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors">

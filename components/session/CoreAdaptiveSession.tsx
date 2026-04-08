@@ -283,18 +283,18 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   // ── Distribution health helpers ──
   const distributionBadge = useMemo(() => {
     if (distribution.isBalanced) {
-      return { text: 'Balanced', color: 'text-emerald-600 bg-emerald-50' };
+      return { text: 'Balanced', color: 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]' };
     }
     if (distribution.skewScore > 0.5) {
-      return { text: `Rebalancing (${distribution.overRepresented.length} over)`, color: 'text-red-600 bg-red-50' };
+      return { text: `Rebalancing (${distribution.overRepresented.length} over)`, color: 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]' };
     }
-    return { text: 'Slight skew', color: 'text-amber-600 bg-amber-50' };
+    return { text: 'Slight skew', color: 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]' };
   }, [distribution]);
 
   const urgencyBadge = useMemo(() => {
-    if (blueprint.urgencyMultiplier >= 2.0) return { text: 'Cram mode', color: 'text-red-700 bg-red-100' };
-    if (blueprint.urgencyMultiplier >= 1.4) return { text: 'High priority', color: 'text-orange-600 bg-orange-50' };
-    if (blueprint.urgencyMultiplier >= 1.0) return { text: 'On track', color: 'text-blue-600 bg-blue-50' };
+    if (blueprint.urgencyMultiplier >= 2.0) return { text: 'Cram mode', color: 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]' };
+    if (blueprint.urgencyMultiplier >= 1.4) return { text: 'High priority', color: 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]' };
+    if (blueprint.urgencyMultiplier >= 1.0) return { text: 'On track', color: 'text-[var(--color-accent)] bg-[var(--color-accent)]' };
     return null; // No badge for relaxed / no exam
   }, [blueprint.urgencyMultiplier]);
 
@@ -330,8 +330,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-stone-300 border-t-stone-700" />
-        <p className="text-stone-500 text-sm">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[var(--color-border)] border-t-[var(--color-text-primary)]" />
+        <p className="text-[var(--color-text-muted)] text-sm">
           Resolving your study plan...
         </p>
       </div>
@@ -341,11 +341,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md text-center">
-          <h3 className="text-red-800 font-semibold mb-2">
+        <div className="bg-[var(--color-data-fail)] border border-[var(--color-data-fail)] rounded-xl p-6 max-w-md text-center">
+          <h3 className="text-[var(--color-data-fail)] font-semibold mb-2">
             Session Error
           </h3>
-          <p className="text-red-600 text-sm mb-4">{error}</p>
+          <p className="text-[var(--color-data-fail)] text-sm mb-4">{error}</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => {
@@ -354,13 +354,13 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
                 // Re-trigger initialization by toggling a retry key
                 setRetryCount(c => c + 1);
               }}
-              className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               Retry
             </button>
             <button
               onClick={onExit}
-              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="px-4 py-2 bg-[var(--color-data-fail)] text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               Back to Menu
             </button>
@@ -373,18 +373,18 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (questions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 max-w-md text-center">
-          <h3 className="text-amber-800 font-semibold mb-2">
+        <div className="bg-[var(--color-data-provisional)] border border-[var(--color-data-provisional)] rounded-xl p-6 max-w-md text-center">
+          <h3 className="text-[var(--color-data-provisional)] font-semibold mb-2">
             No Questions Available
           </h3>
-          <p className="text-amber-600 text-sm mb-4">
+          <p className="text-[var(--color-data-provisional)] text-sm mb-4">
             {blueprint.gatedSystems.length > 0
               ? `Your current study plan covers ${Object.keys(blueprint.weights).length} systems. More content will unlock as you progress in your program.`
               : 'All questions have been reviewed recently. Check back later or try a different study mode.'}
           </p>
           <button
             onClick={onExit}
-            className="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            className="px-4 py-2 bg-[var(--color-data-provisional)] text-[var(--color-data-provisional)] rounded-lg hover:bg-[var(--color-data-provisional)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Back to Menu
           </button>
@@ -401,32 +401,32 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
-        <div className="bg-white border border-stone-200 rounded-xl p-6 max-w-lg w-full shadow-sm">
-          <h3 className="text-stone-800 font-semibold text-lg mb-1">Session Complete</h3>
-          <p className="text-stone-500 text-sm mb-4">
+        <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl p-6 max-w-lg w-full shadow-sm">
+          <h3 className="text-[var(--color-text-primary)] font-semibold text-lg mb-1">Session Complete</h3>
+          <p className="text-[var(--color-text-muted)] text-sm mb-4">
             {sessionSummary.blueprintLabel ?? blueprint.label}
           </p>
 
           {/* Score */}
           <div className="flex items-center gap-4 mb-4">
-            <div className="text-3xl font-bold text-stone-800">
+            <div className="text-3xl font-bold text-[var(--color-text-primary)]">
               {sessionSummary.correctAnswers ?? 0}/{sessionSummary.totalQuestions ?? questions.length}
             </div>
-            <div className="text-sm text-stone-500">correct</div>
+            <div className="text-sm text-[var(--color-text-muted)]">correct</div>
           </div>
 
           {/* System breakdown */}
           {Object.keys(breakdown).length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">By System</h4>
+              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">By System</h4>
               <div className="space-y-1">
                 {Object.entries(breakdown)
                   .sort((a: any, b: any) => b[1].count - a[1].count)
                   .slice(0, 8)
                   .map(([sys, data]: [string, any]) => (
                     <div key={sys} className="flex items-center justify-between text-sm">
-                      <span className="text-stone-600">{sys}</span>
-                      <span className={`font-medium ${data.accuracy >= 0.7 ? 'text-emerald-600' : data.accuracy >= 0.5 ? 'text-amber-600' : 'text-red-600'}`}>
+                      <span className="text-[var(--color-text-secondary)]">{sys}</span>
+                      <span className={`font-medium ${data.accuracy >= 0.7 ? 'text-[var(--color-data-pass)]' : data.accuracy >= 0.5 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}>
                         {Math.round(data.accuracy * 100)}% ({data.count}q)
                       </span>
                     </div>
@@ -438,7 +438,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* Rolling health */}
           {health && (
             <div className="mb-4 flex items-center gap-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${health.isBalanced ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${health.isBalanced ? 'text-[var(--color-data-pass)] bg-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]'}`}>
                 {health.isBalanced ? 'Balanced distribution' : `${health.overRepresented?.length ?? 0} systems over-represented`}
               </span>
             </div>
@@ -447,10 +447,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           {/* Recommendations */}
           {recs.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">Next Steps</h4>
+              <h4 className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Next Steps</h4>
               <div className="space-y-1">
                 {recs.map((rec: string, i: number) => (
-                  <p key={i} className="text-sm text-stone-600">{rec}</p>
+                  <p key={i} className="text-sm text-[var(--color-text-secondary)]">{rec}</p>
                 ))}
               </div>
             </div>
@@ -458,7 +458,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
           <button
             onClick={onExit}
-            className="w-full px-4 py-2.5 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors duration-200 text-sm font-medium mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            className="w-full px-4 py-2.5 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             Done
           </button>
@@ -472,18 +472,18 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Blueprint context bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-stone-50 border-b border-stone-200">
+      <div className="flex items-center justify-between px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-stone-500 uppercase tracking-wider">
+          <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
             {blueprint.label}
           </span>
           {blueprint.daysToExam !== null && blueprint.daysToExam > 0 && (
-            <span className="text-xs text-stone-400">
+            <span className="text-xs text-[var(--color-text-muted)]">
               {blueprint.daysToExam}d to exam
             </span>
           )}
           {blueprint.daysToExam !== null && blueprint.daysToExam <= 0 && (
-            <span className="text-xs text-red-500 font-medium">
+            <span className="text-xs text-[var(--color-data-fail)] font-medium">
               Exam day{blueprint.daysToExam < 0 ? ` was ${Math.abs(blueprint.daysToExam)}d ago` : '!'}
             </span>
           )}
@@ -498,7 +498,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             {distributionBadge.text}
           </span>
           {distribution.skewScore > 0 && (
-            <span className="text-xs text-stone-400" title="Distribution skew score">
+            <span className="text-xs text-[var(--color-text-muted)]" title="Distribution skew score">
               {Math.round(distribution.skewScore * 100)}% skew
             </span>
           )}
@@ -507,11 +507,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
       {/* Rotation transition notice */}
       {rotationNotice && (
-        <div className="flex items-center justify-between px-4 py-2 bg-blue-50 border-b border-blue-200">
-          <p className="text-xs text-blue-700">{rotationNotice}</p>
+        <div className="flex items-center justify-between px-4 py-2 bg-[var(--color-accent)] border-b border-[var(--color-accent)]">
+          <p className="text-xs text-[var(--color-accent)]">{rotationNotice}</p>
           <button
             onClick={() => setRotationNotice(null)}
-            className="text-xs text-blue-500 hover:text-blue-700 ml-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
+            className="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent)] ml-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
           >
             Dismiss
           </button>
@@ -522,7 +522,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       <div className="flex-1">
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-[40vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-stone-300 border-t-stone-700" />
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--color-border)] border-t-[var(--color-text-primary)]" />
           </div>
         }>
           <QuizView

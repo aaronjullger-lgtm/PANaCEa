@@ -326,7 +326,7 @@ export const MobileGestureHandler: React.FC<MobileGestureHandlerProps> = ({
           >
             <div className="bg-[var(--color-action-primary)] rounded-full p-3">
               <svg
-                className="w-6 h-6 text-white"
+                className="w-6 h-6 text-[var(--color-text-inverse)]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -352,7 +352,7 @@ export const MobileGestureHandler: React.FC<MobileGestureHandlerProps> = ({
           >
             <div className="bg-[var(--color-action-primary)] rounded-full p-4">
               <svg
-                className="w-8 h-8 text-white"
+                className="w-8 h-8 text-[var(--color-text-inverse)]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

@@ -104,6 +104,7 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
                 ? 'text-[var(--color-data-provisional)]'
                 : 'text-[var(--color-data-fail)]'
           }`}
+          style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}
         >
           {safeAccuracy.toFixed(0)}%
         </span>

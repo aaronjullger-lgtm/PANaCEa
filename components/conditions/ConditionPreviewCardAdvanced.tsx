@@ -155,7 +155,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
-                className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/60 dark:bg-data-neutral/60 border border-data-neutral dark:border-data-neutral"
+                className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[var(--color-bg-primary)]/60 dark:bg-data-neutral/60 border border-data-neutral dark:border-data-neutral"
               >
                 <span className="text-xs font-medium text-data-neutral dark:text-data-neutral line-clamp-1">
                   {snippet}

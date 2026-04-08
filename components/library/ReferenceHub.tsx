@@ -365,11 +365,11 @@ export default function ReferenceHub() {
         style={{
           display: 'flex', alignItems: 'center', gap: 14, width: '100%',
           padding: '16px 20px', borderRadius: 14, marginBottom: 20,
-          border: '2px solid #f59e0b40', background: 'linear-gradient(135deg, #fef3c710, #fef3c730)',
+          border: '2px solid var(--color-data-provisional)', background: 'linear-gradient(135deg, transparent, color-mix(in srgb, var(--color-data-provisional) 15%, transparent))',
           cursor: 'pointer', textAlign: 'left',
         }}
       >
-        <Star size={24} fill="#f59e0b" style={{ color: '#f59e0b' }} />
+        <Star size={24} fill="var(--color-data-provisional)" style={{ color: 'var(--color-data-provisional)' }} />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)' }}>
             High-Yield Board

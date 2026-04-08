@@ -82,7 +82,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
             </span>
           </span>
           {daysUntilEOR <= 14 && (
-            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[var(--color-data-fail)] text-white">
+            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[var(--color-data-fail)] text-[var(--color-text-inverse)]">
               Crunch time
             </span>
           )}

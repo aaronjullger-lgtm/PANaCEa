@@ -287,7 +287,7 @@ export function ClinicalMotionFlashcards({
             onClick={() => setViewMode(mode)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               viewMode === mode
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)]/50'
             }`}
           >
@@ -345,7 +345,7 @@ export function ClinicalMotionFlashcards({
         <button
           onClick={startGeneration}
           disabled={isGenerating}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 disabled:opacity-60 disabled:cursor-not-allowed text-[var(--color-text-inverse)] rounded-lg transition-all"
         >
           {isGenerating ? (
             <>

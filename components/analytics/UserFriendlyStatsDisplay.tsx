@@ -657,7 +657,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
   if (error) {
     return (
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 text-center">
-        <AlertCircle className="w-12 h-12 mx-auto text-data-fail mb-3" aria-hidden />
+        <AlertCircle className="w-12 h-12 mx-auto text-[var(--color-data-fail)] mb-3" aria-hidden />
         <p className="font-medium text-[var(--color-accent)]">Failed to load analytics</p>
         <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button

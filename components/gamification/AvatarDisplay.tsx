@@ -40,10 +40,10 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
     return (
       <div className={`relative ${className}`}>
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-secondary)] flex items-center justify-center">
-          <User className="w-5 h-5 text-white" />
+          <User className="w-5 h-5 text-[var(--color-text-inverse)]" />
         </div>
         {avatarXP > 0 && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[var(--color-accent)] text-white text-xs font-bold flex items-center justify-center border-2 border-[var(--color-bg-primary)]">
+          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-xs font-bold flex items-center justify-center border-2 border-[var(--color-bg-primary)]">
             {currentLevel}
           </div>
         )}
@@ -66,7 +66,7 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
       <div className="flex items-center gap-4 mb-4">
         {/* Avatar Circle */}
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-secondary)] flex items-center justify-center border-4 border-[var(--color-bg-primary)]">
-          <User className="w-10 h-10 text-white" />
+          <User className="w-10 h-10 text-[var(--color-text-inverse)]" />
         </div>
 
         {/* Info */}

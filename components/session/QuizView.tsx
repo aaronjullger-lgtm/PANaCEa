@@ -1708,10 +1708,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-                initial={{ y: 8 }}
+                initial={{ y: 10, opacity: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
                 {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
                 <div className="flex items-center gap-2 mb-2">
@@ -1728,7 +1728,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   />
                 )}
                 {currentQuestion.imageUrl && (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  <div
+                    className="mb-5 rounded-xl overflow-hidden bg-[var(--color-bg-secondary)]"
+                    style={{
+                      boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 4px 16px -4px rgba(0, 0, 0, 0.08)',
+                    }}
+                  >
                     <img
                       src={currentQuestion.imageUrl}
                       alt="Clinical image for question"
@@ -1788,14 +1793,24 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </div>
           </div>
 
-          {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
+          {/* SUBMIT BUTTON - Sticky on mobile with glass effect */}
           {!isAnswered && selectedAnswerIndex !== null && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="sticky bottom-0 z-10 mt-6 -mx-4 px-4 py-4 text-center space-y-2 md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4"
+              style={{
+                background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',
+                backdropFilter: 'blur(12px) saturate(1.2)',
+                WebkitBackdropFilter: 'blur(12px) saturate(1.2)',
+              }}
+            >
               <button
                 type="button"
                 onClick={handleSubmitAnswer}
                 disabled={isSubmitting}
-                className="btn-primary-cta px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto min-h-[44px]"
+                className="btn-cinematic px-10 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto min-h-[48px] text-body font-semibold"
               >
                 {isSubmitting ? (
                   <>
@@ -1826,14 +1841,16 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   'Submit Answer'
                 )}
               </button>
-              <p className="mt-2 text-sm text-[var(--color-text-muted)] hidden md:block">
+              <p className="mt-2 text-caption text-[var(--color-text-muted)] hidden md:block">
                 Press{' '}
-                <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-xs font-mono">
+                <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] rounded-lg text-caption font-mono"
+                  style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px rgba(0,0,0,0.04)' }}
+                >
                   Enter
                 </kbd>{' '}
                 to submit
               </p>
-            </div>
+            </motion.div>
           )}
 
           {/* FEEDBACK / RATIONALE */}
@@ -1876,7 +1893,17 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           )}
 
           {isAnswered && !sessionWellness.onBreak && (
-            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-4">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="sticky bottom-0 z-10 mt-4 -mx-4 px-4 py-4 text-center md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-5"
+              style={{
+                background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',
+                backdropFilter: 'blur(12px) saturate(1.2)',
+                WebkitBackdropFilter: 'blur(12px) saturate(1.2)',
+              }}
+            >
               <button
                 ref={nextButtonRef}
                 onClick={() => {
@@ -1887,11 +1914,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}
-                className="px-8 py-3 btn-primary-cta font-semibold rounded-lg min-h-[44px]"
+                className="btn-cinematic px-10 py-3.5 font-semibold min-h-[48px] text-body"
               >
                 Next Question
               </button>
-            </div>
+            </motion.div>
           )}
       </SplitPaneDrillLayout>
       </main>

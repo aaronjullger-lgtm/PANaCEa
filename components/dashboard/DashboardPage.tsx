@@ -377,7 +377,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </p>
           <button
             onClick={() => mutate()}
-            className="px-5 py-2 bg-[var(--color-accent)] hover:opacity-90 text-white text-sm font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            className="px-5 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] text-sm font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
           >
             {isOffline ? 'Retry Connection' : 'Retry'}
           </button>

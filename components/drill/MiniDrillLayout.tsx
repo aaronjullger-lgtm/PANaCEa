@@ -459,11 +459,11 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
         <div className="mb-2 sm:mb-3 p-2 sm:p-2.5 bg-foreground/20 rounded-lg sm:rounded-xl w-fit">
           {icon}
         </div>
-        <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">{title}</h3>
-        <p className="text-white/80 text-xs sm:text-sm line-clamp-2">{description}</p>
+        <h3 className="text-base sm:text-lg font-bold text-[var(--color-text-inverse)] mb-0.5 sm:mb-1">{title}</h3>
+        <p className="text-[var(--color-text-inverse)]/80 text-xs sm:text-sm line-clamp-2">{description}</p>
       </div>
 
-      <ArrowRight className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 sm:w-5 sm:h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+      <ArrowRight className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-text-inverse)]/60 group-hover:text-[var(--color-text-inverse)] group-hover:translate-x-1 transition-all" />
     </motion.button>
   );
 };

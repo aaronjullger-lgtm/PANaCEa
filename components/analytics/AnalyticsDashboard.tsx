@@ -359,10 +359,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   // Error state
   if (statsError) {
     return (
-      <div className="p-6 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
+      <div className="p-6 rounded-xl bg-[var(--color-data-provisional)]/10 border-2 border-[var(--color-data-provisional)]/30">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-5 h-5 text-data-provisional" />
-          <h3 className="font-bold text-data-provisional">Error Loading Analytics</h3>
+          <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)]" />
+          <h3 className="font-bold text-[var(--color-data-provisional)]">Error Loading Analytics</h3>
         </div>
         <p className="text-sm text-[var(--color-text-muted)]">
           {statsError}. Please try refreshing the page.
@@ -478,9 +478,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <div
                         className={`text-4xl font-bold ${
                           status === 'above_target'
-                            ? 'text-data-provisional'
+                            ? 'text-[var(--color-data-provisional)]'
                             : status === 'below_target'
-                              ? 'text-data-pass'
+                              ? 'text-[var(--color-data-pass)]'
                               : 'text-[var(--color-accent)]'
                         }`}
                       >
@@ -514,14 +514,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: CheckCircle,
                     label: getQuadrantLabel('mastered').short,
                     count: calibrationData.calibration.mastered,
-                    className: 'bg-data-pass/10 text-data-pass',
+                    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
                   },
                   {
                     key: 'dangerous_misconception' as const,
                     icon: AlertTriangle,
                     label: getQuadrantLabel('dangerous_misconception').short,
                     count: calibrationData.calibration.dangerousMisconception,
-                    className: 'bg-data-fail/10 text-data-fail',
+                    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
                   },
                   {
                     key: 'lucky_guess' as const,
@@ -529,7 +529,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     label: getQuadrantLabel('lucky_guess').short,
                     count: calibrationData.calibration.luckyGuess,
                     className:
-                      'bg-data-provisional/10 text-data-provisional',
+                      'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
                   },
                   {
                     key: 'unconfident_wrong' as const,
@@ -552,7 +552,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 ))}
               </div>
               {calibrationData.calibration.dangerousMisconception > 0 && (
-                <p className="mt-3 text-xs text-data-fail">
+                <p className="mt-3 text-xs text-[var(--color-data-fail)]">
                   High confidence + wrong = dangerous misconception — prioritize reviewing those
                   topics.
                 </p>
@@ -651,24 +651,24 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             if (focusAreasWithData.length === 0) return null;
 
             return (
-              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-[var(--color-bg-secondary)]">
+              <div className="p-6 rounded-xl border-2 border-[var(--color-data-provisional)]/30 bg-[var(--color-bg-secondary)]">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-data-provisional/10">
-                    <AlertCircle className="w-5 h-5 text-data-provisional" />
+                  <div className="p-2 rounded-lg bg-[var(--color-data-provisional)]/10">
+                    <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)]" />
                   </div>
-                  <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
+                  <h3 className="font-bold text-[var(--color-data-provisional)]">Focus Areas - Highest Impact</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {focusAreasWithData.slice(0, 3).map((area) => (
                     <div
                       key={area.system}
-                      className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
+                      className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-data-provisional)]/30"
                     >
                       <div className="text-sm font-semibold text-[var(--color-accent)] mb-1">
                         {area.system}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-data-provisional">
+                        <span className="text-2xl font-bold text-[var(--color-data-provisional)]">
                           {formatPercentForDisplay(area.accuracy)}
                         </span>
                         <span className="text-xs text-[var(--color-text-muted)]">{area.attempts} Q's</span>
@@ -834,7 +834,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               )}
             </div>
             {stabilityError ? (
-              <p className="text-sm text-data-provisional">
+              <p className="text-sm text-[var(--color-data-provisional)]">
                 Error loading stability data: {stabilityError}
               </p>
             ) : stabilityLoading ? (

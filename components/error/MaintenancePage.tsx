@@ -31,7 +31,7 @@ export function MaintenancePage({
           {onRetry && (
             <button
               onClick={onRetry}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-lg font-medium transition-opacity"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-opacity"
             >
               <RefreshCw className="w-4 h-4" />
               Try Again

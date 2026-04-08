@@ -160,7 +160,7 @@ export function BlueprintProgressBar({
             aria-hidden="true"
           />
           <div
-            className="pointer-events-none absolute left-0 top-6 w-48 rounded bg-black/80 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto"
+            className="pointer-events-none absolute left-0 top-6 w-48 rounded bg-black/80 px-3 py-2 text-xs text-[var(--color-text-inverse)] opacity-0 transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
           >
             Shows how your study distribution aligns with the official NCCPA PANCE blueprint.

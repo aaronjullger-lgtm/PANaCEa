@@ -66,7 +66,7 @@ const ErrorState: React.FC<{ title: string; message: string; onRetry?: () => voi
     {onRetry && (
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white rounded-lg text-sm font-medium transition-colors"
+        className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg text-sm font-medium transition-colors"
       >
         Try Again
       </button>
@@ -248,7 +248,7 @@ const DrugClassSidebar: React.FC<{
                 onClick={() => onDrugClassSelect('all')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                   activeDrugClass === 'all'
-                    ? 'bg-[var(--color-accent)] text-white font-medium'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)] hover:text-[var(--color-text-primary)]'
                 }`}
               >
@@ -261,7 +261,7 @@ const DrugClassSidebar: React.FC<{
                   onClick={() => onDrugClassSelect(cls.id)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                     activeDrugClass === cls.id
-                      ? 'bg-[var(--color-accent)] text-white font-medium'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium'
                       : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)] hover:text-[var(--color-text-primary)]'
                   }`}
                 >

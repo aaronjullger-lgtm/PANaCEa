@@ -69,17 +69,16 @@ export function ConfusionPairCard({
   if (pairs.length === 0) {
     return (
       <div
-        className={`rounded-lg p-5 ${className}`}
-        style={{ backgroundColor: 'var(--color-bg-secondary)' }}
+        className={`card-cinematic p-5 ${className}`}
       >
         <h3
-          className="text-base font-semibold mb-3"
+          className="text-body font-semibold mb-3"
           style={{ color: 'var(--color-text-primary)' }}
         >
           Confusion Pairs
         </h3>
         <p
-          className="text-xs text-center py-4"
+          className="text-caption text-center py-4"
           style={{ color: 'var(--color-text-muted)' }}
         >
           No confusion patterns detected yet. Keep studying — they'll appear as you answer more questions.
@@ -90,19 +89,23 @@ export function ConfusionPairCard({
 
   return (
     <div
-      className={`rounded-lg p-5 ${className}`}
-      style={{ backgroundColor: 'var(--color-bg-secondary)' }}
+      className={`card-cinematic p-5 ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Repeat2
-            className="w-4 h-4"
-            style={{ color: 'var(--color-data-provisional, #f59e0b)' }}
-            aria-hidden="true"
-          />
+        <div className="flex items-center gap-2.5">
+          <div
+            className="p-1.5 rounded-lg"
+            style={{ background: 'color-mix(in srgb, var(--color-data-provisional) 12%, var(--color-bg-tertiary) 88%)' }}
+          >
+            <Repeat2
+              className="w-4 h-4"
+              style={{ color: 'var(--color-data-provisional, #f59e0b)' }}
+              aria-hidden="true"
+            />
+          </div>
           <h3
-            className="text-sm font-semibold"
+            className="text-body font-semibold"
             style={{ color: 'var(--color-text-primary)' }}
           >
             Confusion Pairs
@@ -127,10 +130,10 @@ export function ConfusionPairCard({
           <motion.div
             key={pair.id}
             variants={itemVariants}
-            className="flex items-center gap-3 p-3 rounded-lg border transition-colors hover:border-[var(--color-accent)]/30"
+            className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 ease-premium hover:-translate-y-0.5"
             style={{
               backgroundColor: 'var(--color-bg-primary)',
-              borderColor: 'var(--color-border)',
+              boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)',
             }}
           >
             {/* Frequency indicator */}

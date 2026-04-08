@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 'lucide-react';
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
 import MiniDrillLayout, {
   QuestionCard,
@@ -11,6 +11,7 @@ import MiniDrillLayout, {
 import { QuestionSkeleton } from '../loading';
 import MetacognitionPromptModal from './MetacognitionPromptModal';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface ConditionDrillSessionProps {
@@ -282,7 +283,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-data-provisional)] flex items-center justify-center">
-                      <Lightbulb className="w-5 h-5 text-white" />
+                      <Lightbulb className="w-5 h-5 text-[var(--color-text-inverse)]" />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">
@@ -300,7 +301,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
                           </p>
                           <button
                             onClick={retryAfterHint}
-                            className="px-5 py-2.5 bg-[var(--color-data-provisional)] hover:opacity-90 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
+                            className="px-5 py-2.5 bg-[var(--color-data-provisional)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
                           >
                             Try Again
                           </button>
@@ -357,58 +358,15 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
         onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
       >
-        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
-          <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="text-center"
-          >
-            <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[var(--color-accent)]/20 to-[var(--color-accent)]/5 mb-4">
-                <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-[var(--color-accent)]" />
-              </div>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
-              Session Complete!
-            </h2>
-            <p className="text-sm sm:text-base text-[var(--color-text-muted)] mb-8">
-              Great effort! You've completed this drill session.
-            </p>
-
-            {/* Stats Summary */}
-            <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 max-w-md">
-              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
-                <div className="text-xs text-[var(--color-text-muted)] mb-1">Score</div>
-                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{score}</div>
-              </div>
-              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
-                <div className="text-xs text-[var(--color-text-muted)] mb-1">Streak</div>
-                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{streak}</div>
-              </div>
-              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
-                <div className="text-xs text-[var(--color-text-muted)] mb-1">Attempts</div>
-                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{totalAttempts}</div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={reset}
-                className="px-6 py-2 sm:py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
-              >
-                Try Again
-              </button>
-              <button
-                onClick={handleExit}
-                className="px-6 py-2 sm:py-3 rounded-lg border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
-              >
-                Exit
-              </button>
-            </div>
-          </motion.div>
-        </div>
+        <DrillSummaryCard
+          drillName={drillTitle}
+          icon={Stethoscope}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={reset}
+          onExit={handleExit}
+          newSessionLabel="Try Again"
+        />
       </DrillShell>
     );
   }

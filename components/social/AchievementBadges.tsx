@@ -328,7 +328,7 @@ export function AchievementBadges({
                   absolute -top-1 -right-1 w-4 h-4 rounded-full
                   bg-gradient-to-br ${tierColors.gradient}
                   flex items-center justify-center
-                  text-[8px] font-bold text-white
+                  text-[8px] font-bold text-[var(--color-text-inverse)]
                   shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]
                 `}
                 >
@@ -387,7 +387,7 @@ export function AchievementBadges({
                   onClick={() => setSelectedAchievement(null)}
                   className="absolute top-3 right-3 p-1.5 rounded-full bg-[var(--color-overlay)] hover:opacity-90"
                 >
-                  <X className="h-4 w-4 text-white" />
+                  <X className="h-4 w-4 text-[var(--color-text-inverse)]" />
                 </button>
 
                 {(() => {
@@ -397,11 +397,11 @@ export function AchievementBadges({
                   return (
                     <div
                       className={`
-                      p-4 rounded-full bg-white/20 backdrop-blur-sm
+                      p-4 rounded-full bg-[var(--color-bg-primary)]/20 backdrop-blur-sm
                       ${selectedAchievement.unlockedAt ? '' : 'grayscale opacity-50'}
                     `}
                     >
-                      <IconComponent className="h-12 w-12 text-white" />
+                      <IconComponent className="h-12 w-12 text-[var(--color-text-inverse)]" />
                     </div>
                   );
                 })()}

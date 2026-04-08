@@ -490,11 +490,11 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             showCorrect
-                              ? 'bg-data-pass text-white'
+                              ? 'bg-data-pass text-[var(--color-text-inverse)]'
                               : showIncorrect
-                                ? 'bg-data-fail text-white'
+                                ? 'bg-data-fail text-[var(--color-text-inverse)]'
                                 : isSelected
-                                  ? 'bg-[var(--color-accent)] text-white'
+                                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                                   : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                           }`}
                         >

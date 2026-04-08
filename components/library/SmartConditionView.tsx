@@ -1163,10 +1163,10 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                 const ageDays = ageMs / (1000 * 60 * 60 * 24);
                 const color =
                   ageDays <= 30
-                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                    ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/20'
                     : ageDays <= 90
-                      ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-                      : 'bg-red-500/10 text-red-600 border-red-500/20';
+                      ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/20'
+                      : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/20';
                 const label =
                   ageDays <= 1
                     ? 'Updated today'

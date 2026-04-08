@@ -217,7 +217,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           animate={{ scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md text-center"
         >
-          <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
+          <AlertCircle className="w-16 h-16 text-[var(--color-data-fail)] mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Access Denied
           </h2>
@@ -226,7 +226,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             {!isSignedIn && ' Please sign in with an admin account.'}
           </p>
           {accessError && (
-            <p className="text-sm text-data-fail mb-4 px-4 py-2 bg-data-fail/10 rounded-lg">
+            <p className="text-sm text-[var(--color-data-fail)] mb-4 px-4 py-2 bg-[var(--color-data-fail)]/10 rounded-lg">
               {accessError}
             </p>
           )}
@@ -266,7 +266,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
                   {activePanel === 'flags' ? (
                     <>
-                      <Flag className="w-7 h-7 text-data-fail" />
+                      <Flag className="w-7 h-7 text-[var(--color-data-fail)]" />
                       Flagged Questions
                     </>
                   ) : activePanel === 'performance' ? (
@@ -276,22 +276,22 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     </>
                   ) : activePanel === 'curation' ? (
                     <>
-                      <Sparkles className="w-7 h-7 text-data-provisional" />
+                      <Sparkles className="w-7 h-7 text-[var(--color-data-provisional)]" />
                       Question Curation
                     </>
                   ) : activePanel === 'questionQuality' ? (
                     <>
-                      <BarChart3 className="w-7 h-7 text-data-provisional" />
+                      <BarChart3 className="w-7 h-7 text-[var(--color-data-provisional)]" />
                       Question Analytics
                     </>
                   ) : activePanel === 'mappingEnrichment' ? (
                     <>
-                      <Map className="w-7 h-7 text-data-provisional" />
+                      <Map className="w-7 h-7 text-[var(--color-data-provisional)]" />
                       System Mapping Enrichment
                     </>
                   ) : activePanel === 'libraryEnrichment' ? (
                     <>
-                      <BookOpen className="w-7 h-7 text-data-provisional" />
+                      <BookOpen className="w-7 h-7 text-[var(--color-data-provisional)]" />
                       Library Enrichment
                     </>
                   ) : (
@@ -380,7 +380,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 <motion.div
                   initial={{ y: -8 }}
                   animate={{ y: 0 }}
-                  className="mb-4 flex items-center justify-between gap-3 p-4 rounded-xl bg-data-fail/10 border border-data-fail/30 text-data-fail"
+                  className="mb-4 flex items-center justify-between gap-3 p-4 rounded-xl bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 text-[var(--color-data-fail)]"
                 >
                   <span className="text-sm">{statsError}</span>
                   <button
@@ -391,7 +391,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     }}
                     disabled={statsLoading}
                     aria-label="Retry loading stats"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-data-fail/20 hover:bg-data-fail/30 text-data-fail text-sm font-medium disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-data-fail)]/20 hover:bg-[var(--color-data-fail)]/30 text-[var(--color-data-fail)] text-sm font-medium disabled:opacity-50"
                   >
                     {statsLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
@@ -415,7 +415,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="p-3 bg-[var(--color-accent)]/20 rounded-lg">
                       <Users className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-data-pass" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-data-pass)]" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.totalUsers}
@@ -426,10 +426,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Active Users */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-data-pass/20 rounded-lg">
-                      <ActivityIcon className="w-6 h-6 text-data-pass" />
+                    <div className="p-3 bg-[var(--color-data-pass)]/20 rounded-lg">
+                      <ActivityIcon className="w-6 h-6 text-[var(--color-data-pass)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-data-pass" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-data-pass)]" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.activeUsers}
@@ -443,7 +443,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     <div className="p-3 bg-[var(--color-accent)]/20 rounded-lg">
                       <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-data-pass" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-data-pass)]" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.totalQuestions.toLocaleString()}
@@ -454,10 +454,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Average Accuracy */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-data-provisional/20 rounded-lg">
-                      <TrendingUp className="w-6 h-6 text-data-provisional" />
+                    <div className="p-3 bg-[var(--color-data-provisional)]/20 rounded-lg">
+                      <TrendingUp className="w-6 h-6 text-[var(--color-data-provisional)]" />
                     </div>
-                    <TrendingUp className="w-5 h-5 text-data-pass" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-data-pass)]" />
                   </div>
                   <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
                     {stats.avgAccuracy}%
@@ -468,14 +468,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 {/* Pending Flags */}
                 <button
                   onClick={() => setActivePanel('flags')}
-                  className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)] hover:border-data-fail/50 transition-colors text-left"
+                  className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)] hover:border-[var(--color-data-fail)]/50 transition-colors text-left"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-data-fail/20 rounded-lg">
-                      <Flag className="w-6 h-6 text-data-fail" />
+                    <div className="p-3 bg-[var(--color-data-fail)]/20 rounded-lg">
+                      <Flag className="w-6 h-6 text-[var(--color-data-fail)]" />
                     </div>
                     {stats.pendingFlags > 0 && (
-                      <span className="px-2 py-1 text-xs font-medium bg-data-fail text-[var(--color-text-inverse)] rounded-full">
+                      <span className="px-2 py-1 text-xs font-medium bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] rounded-full">
                         Action Needed
                       </span>
                     )}
@@ -513,9 +513,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                   <button
                     type="button"
                     onClick={() => navigate(ROUTES.ADMIN_REFINERY)}
-                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg hover:bg-[var(--color-data-provisional)]/20 transition-colors text-left"
                   >
-                    <BookOpen className="w-5 h-5 text-data-provisional" />
+                    <BookOpen className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Content Refinery
@@ -569,9 +569,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('curation')}
-                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg hover:bg-[var(--color-data-provisional)]/20 transition-colors text-left"
                   >
-                    <Sparkles className="w-5 h-5 text-data-provisional" />
+                    <Sparkles className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Question Curation
@@ -584,9 +584,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('questionQuality')}
-                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg hover:bg-[var(--color-data-provisional)]/20 transition-colors text-left"
                   >
-                    <BarChart3 className="w-5 h-5 text-data-provisional" />
+                    <BarChart3 className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Question Analytics
@@ -599,9 +599,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('mappingEnrichment')}
-                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg hover:bg-[var(--color-data-provisional)]/20 transition-colors text-left"
                   >
-                    <Map className="w-5 h-5 text-data-provisional" />
+                    <Map className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         System Mapping Enrichment
@@ -614,9 +614,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('libraryEnrichment')}
-                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg hover:bg-[var(--color-data-provisional)]/20 transition-colors text-left"
                   >
-                    <BookOpen className="w-5 h-5 text-data-provisional" />
+                    <BookOpen className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Library Enrichment
@@ -629,9 +629,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
                   <button
                     onClick={() => setActivePanel('flags')}
-                    className="flex items-center gap-3 p-4 bg-data-fail/10 border border-data-fail/30 rounded-lg hover:bg-data-fail/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg hover:bg-[var(--color-data-fail)]/20 transition-colors text-left"
                   >
-                    <Flag className="w-5 h-5 text-data-fail" />
+                    <Flag className="w-5 h-5 text-[var(--color-data-fail)]" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Flagged Questions

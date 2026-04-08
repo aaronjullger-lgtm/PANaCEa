@@ -10,12 +10,13 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Hash, CheckCircle, XCircle, ArrowRight, RotateCcw, Stethoscope } from 'lucide-react';
+import { Hash, CheckCircle, XCircle, ArrowRight, Stethoscope } from 'lucide-react';
 import { useICDDrill } from '@/hooks/game/use-icd-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface ICDCodingDrillProps {
@@ -114,7 +115,6 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
 
   // Summary
   if (status === 'summary') {
-    const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
     return (
       <DrillShell
         title="ICD-10 Coding Drill"
@@ -122,31 +122,15 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
         breadcrumbs={breadcrumbs}
         onExit={onExit}
       >
-        <div className="max-w-md mx-auto py-12 text-center space-y-6">
-          <div
-            className="text-6xl font-bold"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            {accuracy}%
-          </div>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
-            {score} of {totalAttempts} correct
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={reset}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-              style={{
-                backgroundColor: 'var(--color-bg-secondary)',
-                color: 'var(--color-text-primary)',
-                border: '1px solid var(--color-border)',
-              }}
-            >
-              <RotateCcw className="w-4 h-4" />
-              New Session
-            </button>
-          </div>
-        </div>
+        <DrillSummaryCard
+          drillName="ICD-10 Coding"
+          icon={Hash}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={reset}
+          onExit={onExit ?? (() => {})}
+          newSessionLabel="New Session"
+        />
       </DrillShell>
     );
   }

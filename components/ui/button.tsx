@@ -6,7 +6,7 @@
  * for composition with Radix primitives (Tooltip triggers, Dialog triggers, etc.).
  *
  * Theming via CSS custom properties:
- * - Primary: --color-accent text-white (high contrast)
+ * - Primary: --color-accent text-[var(--color-text-inverse)] (high contrast)
  * - Secondary: --color-bg-secondary text-primary (muted)
  * - Danger: --color-data-fail (error state)
  * - Warning: --color-data-provisional (warning state)
@@ -25,7 +25,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 active:opacity-80',
+        primary: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 active:opacity-80',
         secondary:
           'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
         danger:
@@ -37,7 +37,7 @@ const buttonVariants = cva(
           'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
         accent:
           'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
-        success: 'bg-[var(--color-data-pass)] text-white hover:opacity-90 active:opacity-80',
+        success: 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] hover:opacity-90 active:opacity-80',
       },
       size: {
         xs: 'px-2.5 py-1 text-xs min-h-[32px]',

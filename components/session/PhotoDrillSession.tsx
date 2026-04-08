@@ -376,7 +376,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 <button
                   type="button"
                   onClick={retryLoadCases}
-                  className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
+                  className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90 transition-opacity"
                 >
                   Retry
                 </button>

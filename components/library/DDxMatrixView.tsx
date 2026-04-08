@@ -253,7 +253,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                   key={id}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 flex-shrink-0"
                 >
-                  <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-white text-xs flex items-center justify-center font-bold">
+                  <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-xs flex items-center justify-center font-bold">
                     {index + 1}
                   </span>
                   <span className="text-sm font-medium text-[var(--color-text-primary)] max-w-32 truncate">
@@ -380,7 +380,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                         className="px-4 py-2 text-left text-xs font-semibold text-[var(--color-text-primary)] min-w-48"
                                       >
                                         <div className="flex items-center gap-2">
-                                          <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-white text-xs flex items-center justify-center font-bold">
+                                          <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-xs flex items-center justify-center font-bold">
                                             {i + 1}
                                           </span>
                                           {cond.name}
@@ -468,7 +468,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
           <div className="px-4 sm:px-6 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
             <button
               onClick={() => onStartQuiz(selectedIds)}
-              className="w-full py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
+              className="w-full py-2.5 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90 transition-opacity"
             >
               Start DDx Quiz: {comparisonData.conditions.map((c) => c.name).join(' vs ')}
             </button>

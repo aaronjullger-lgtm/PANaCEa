@@ -41,43 +41,47 @@ export const Loader: React.FC<LoaderProps> = ({
 
   const bgClass = forceDark
     ? 'bg-black'
-    : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-sm';
+    : 'bg-[var(--color-bg-primary)]/80';
 
   const dotClass = forceDark
-    ? 'bg-white'
+    ? 'bg-[var(--color-bg-primary)]'
     : 'bg-[var(--color-accent)]';
 
   const textClass = forceDark
-    ? 'text-white'
+    ? 'text-[var(--color-text-inverse)]'
     : 'text-[var(--color-text-primary)]';
 
   return (
     <motion.div
-      initial={false}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       className={`fixed inset-0 ${bgClass} flex flex-col items-center justify-center z-50`}
+      style={{ backdropFilter: 'blur(16px) saturate(1.2)', WebkitBackdropFilter: 'blur(16px) saturate(1.2)' }}
     >
       {/* Spinner variant (default) */}
       {variant === 'spinner' && (
         <>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2.5">
             <motion.div
-              className={`w-3 h-3 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
+              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.7, repeat: Infinity, delay: 0, ease: [0.16, 1, 0.3, 1] }}
             />
             <motion.div
-              className={`w-3 h-3 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
+              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
+              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.7, repeat: Infinity, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             />
             <motion.div
-              className={`w-3 h-3 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
+              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
+              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.7, repeat: Infinity, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             />
           </div>
           <p
-            className={`mt-4 ${textClass} font-semibold`}
+            className={`mt-5 ${textClass} text-body font-semibold tracking-tight`}
             role="status"
             aria-live="polite"
           >
@@ -89,20 +93,21 @@ export const Loader: React.FC<LoaderProps> = ({
       {/* Progress variant */}
       {variant === 'progress' && (
         <>
-          <div className="w-48 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+          <div className="w-56 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-[var(--color-accent)]"
+              className="h-full rounded-full"
+              style={{ background: 'linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #818cf8))' }}
               initial={{ width: 0 }}
               animate={{ width: '100%' }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                ease: 'easeInOut',
+                ease: [0.16, 1, 0.3, 1],
               }}
             />
           </div>
           <p
-            className={`mt-4 ${textClass} font-semibold`}
+            className={`mt-5 ${textClass} text-body font-semibold tracking-tight`}
             role="status"
             aria-live="polite"
           >
@@ -126,7 +131,7 @@ export interface SkeletonProps {
 /**
  * CANONICAL Skeleton - Generic content placeholder with pulse animation
  *
- * Uses Tailwind's animate-pulse and semantic color tokens (bg-slate-800 to bg-slate-700).
+ * Uses Tailwind's animate-pulse and semantic color tokens (bg-[var(--color-bg-tertiary)] to bg-[var(--color-bg-tertiary)]).
  * Follows ui-design-system.mdc skeleton rules.
  */
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -168,13 +173,13 @@ export interface ClinicalSkeletonProps {
 }
 
 const pulseAnimation = {
-  initial: { opacity: 0.4 },
-  animate: { opacity: 1 },
+  initial: { opacity: 0.3 },
+  animate: { opacity: 0.8 },
   transition: {
     repeat: Infinity,
     repeatType: 'reverse' as const,
-    duration: 1.2,
-    ease: 'easeInOut' as const,
+    duration: 1.4,
+    ease: [0.16, 1, 0.3, 1] as number[],
   },
 };
 
@@ -211,7 +216,7 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
         ${
           isCompact
             ? 'p-4 rounded-lg'
-            : 'rounded-xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
+            : 'rounded-xl p-6'
         }
         bg-[var(--color-card-bg)]
         ${className}
@@ -323,7 +328,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         )}
 
         {/* Question skeleton */}
-        <div className="mb-8 p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)]">
+        <div className="card-cinematic mb-8 p-6">
           <SkeletonLine width="w-3/4" height="h-6" />
           <SkeletonLine width="w-full" height="h-4" className="mt-4" />
           <SkeletonLine width="w-5/6" height="h-4" className="mt-2" />
@@ -334,7 +339,8 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
           {Array.from({ length: optionCount }).map((_, i) => (
             <div
               key={i}
-              className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-bg)] flex items-center gap-3"
+              className="p-4 rounded-xl bg-[var(--color-card-bg)] flex items-center gap-3"
+              style={{ boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)' }}
             >
               <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse flex-shrink-0" />
               <SkeletonLine width="w-3/4" height="h-4" />
@@ -428,11 +434,11 @@ export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
     </div>
 
     {/* Quick stats bar skeleton (matches 2-col mobile / 4-col desktop grid) */}
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+          className="card-stat flex items-center gap-3 p-3.5"
         >
           <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
           <div className="flex-1 space-y-1.5">
@@ -444,7 +450,7 @@ export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
     </div>
 
     {/* Hero card skeleton */}
-    <div className="h-40 bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
+    <div className="card-cinematic h-40 animate-pulse" />
 
     <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">{message}</p>
   </div>
@@ -456,11 +462,11 @@ export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
  * so there's no layout shift when the real component mounts.
  */
 export const QuickStatsBarSkeleton: React.FC = () => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" role="status" aria-label="Loading stats">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" role="status" aria-label="Loading stats">
     {Array.from({ length: 4 }).map((_, i) => (
       <div
         key={i}
-        className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+        className="card-stat flex items-center gap-3 p-3.5"
       >
         <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
         <div className="flex-1 space-y-1.5">

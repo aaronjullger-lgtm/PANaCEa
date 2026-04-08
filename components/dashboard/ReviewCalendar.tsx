@@ -71,21 +71,22 @@ export function ReviewCalendar({
 
   return (
     <div
-      className={`p-4 rounded-xl ${className}`}
-      style={{
-        backgroundColor: 'var(--color-bg-secondary)',
-        boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
-      }}
+      className={`card-cinematic p-5 ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Calendar
-            className="w-3.5 h-3.5"
-            style={{ color: 'var(--color-text-muted)' }}
-          />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="p-1.5 rounded-lg"
+            style={{ background: 'color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-tertiary) 90%)' }}
+          >
+            <Calendar
+              className="w-3.5 h-3.5"
+              style={{ color: 'var(--color-accent)' }}
+            />
+          </div>
           <h3
-            className="text-[13px] font-semibold"
+            className="text-body font-semibold"
             style={{ color: 'var(--color-text-primary)' }}
           >
             Review Forecast

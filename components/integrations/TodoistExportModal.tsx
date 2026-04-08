@@ -272,7 +272,7 @@ export default function TodoistExportModal({
                 ) : (
                   <button
                     onClick={handleOAuthConnect}
-                    className="flex items-center text-sm bg-[var(--color-category-practice)] text-white px-3 py-1 rounded hover:bg-[var(--color-category-practice)]"
+                    className="flex items-center text-sm bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] px-3 py-1 rounded hover:bg-[var(--color-category-practice)]"
                   >
                     <ExternalLink className="w-4 h-4 mr-1" />
                     Connect
@@ -366,7 +366,7 @@ export default function TodoistExportModal({
               generatedTasks.length === 0 ||
               (options.exportMethod === 'oauth' && !isConnected)
             }
-            className="flex items-center px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

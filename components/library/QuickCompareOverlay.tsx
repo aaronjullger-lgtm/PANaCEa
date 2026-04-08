@@ -40,7 +40,7 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
       exit={{ opacity: 0, y: 10 }}
       className="absolute bottom-full mb-2 w-full max-w-sm p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-10"
     >
-      <h3 className="text-lg font-bold text-white mb-4">Quick Compare</h3>
+      <h3 className="text-lg font-bold text-[var(--color-text-inverse)] mb-4">Quick Compare</h3>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <h4 className="font-semibold text-[var(--color-text-muted)]">{hoveredCondition.condition}</h4>
@@ -49,7 +49,7 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
               <p className="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
                 {field.icon} {field.label}
               </p>
-              <p className="text-sm font-medium text-white">{field.hovered || 'N/A'}</p>
+              <p className="text-sm font-medium text-[var(--color-text-inverse)]">{field.hovered || 'N/A'}</p>
             </div>
           ))}
         </div>
@@ -60,7 +60,7 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
               <p className="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
                 {field.icon} {field.label}
               </p>
-              <p className="text-sm font-medium text-white">{field.selected || 'N/A'}</p>
+              <p className="text-sm font-medium text-[var(--color-text-inverse)]">{field.selected || 'N/A'}</p>
             </div>
           ))}
         </div>

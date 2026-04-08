@@ -107,7 +107,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       {/* Header */}
       <div className="bg-[var(--color-accent)] rounded-xl p-6 text-[var(--color-text-inverse)]">
         <h2 className="text-2xl font-bold mb-2">Differential Diagnosis Challenge</h2>
-        <p className="text-white/90">Rank diagnoses from most likely to least likely</p>
+        <p className="text-[var(--color-text-inverse)]/90">Rank diagnoses from most likely to least likely</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -228,7 +228,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                             <span
                               className={`text-xs font-semibold px-2 py-1 rounded ${
                                 result.isCorrectPosition
-                                  ? 'bg-data-pass text-white'
+                                  ? 'bg-data-pass text-[var(--color-text-inverse)]'
                                   : 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]'
                               }`}
                             >

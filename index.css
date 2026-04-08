@@ -459,12 +459,19 @@ a,
 
   /* Data/KPI numbers - tabular figures for aligned columns and fast scanning (Pillar V) */
   .data-nums {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Tailwind's tabular-nums utility — extend with mono font for numeric data */
+  .tabular-nums {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
 
   /* Type scale for dashboard stats (Metric / Label / Context) */
   .kpi-metric {
     @apply text-2xl md:text-3xl font-bold tabular-nums;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
   .kpi-label {
     @apply text-[10px] md:text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)];

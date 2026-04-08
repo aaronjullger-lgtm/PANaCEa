@@ -120,18 +120,18 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           className="w-full max-w-lg bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Header with gradient */}
-          <div className={`p-5 bg-gradient-to-r ${getTriggerColor()} text-white`}>
+          <div className={`p-5 bg-gradient-to-r ${getTriggerColor()} text-[var(--color-text-inverse)]`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl">{getTriggerIcon()}</div>
+                <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-xl">{getTriggerIcon()}</div>
                 <div>
                   <h2 className="text-lg font-bold">{getTriggerTitle()}</h2>
-                  <p className="text-sm text-white/80">{conditionName}</p>
+                  <p className="text-sm text-[var(--color-text-inverse)]/80">{conditionName}</p>
                 </div>
               </div>
               <button
                 onClick={handleSkipAll}
-                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0"
+                className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-[var(--color-bg-primary)]/20 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0"
                 aria-label="Skip reflection"
               >
                 <X className="w-5 h-5" />

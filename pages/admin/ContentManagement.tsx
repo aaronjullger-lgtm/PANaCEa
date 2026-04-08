@@ -120,15 +120,15 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
   const getStatusColor = (status: ContentStatus) => {
     switch (status) {
       case 'published':
-        return 'bg-data-pass/20 text-data-pass border-data-pass/30';
+        return 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30';
       case 'approved':
         return 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30';
       case 'pending_review':
-        return 'bg-data-provisional/20 text-data-provisional border-data-provisional/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
       case 'draft':
         return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border-[var(--color-border)]';
       case 'archived':
-        return 'bg-data-fail/20 text-data-fail border-data-fail/30';
+        return 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30';
       default:
         return 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border-[var(--color-border)]';
     }

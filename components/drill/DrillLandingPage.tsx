@@ -161,7 +161,7 @@ export function DrillLandingPage({
             onClick={onStart}
             disabled={isLoading}
             aria-label={isLoading ? 'Starting drill...' : `Start ${title} drill`}
-            className={`w-full ${colors.button} text-white font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
+            className={`w-full ${colors.button} text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
           >
             {isLoading ? (
               <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />

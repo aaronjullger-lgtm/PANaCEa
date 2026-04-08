@@ -228,7 +228,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
               <div className="text-xs text-[var(--color-text-secondary)]">This Week</div>
             </div>
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 text-center">
-              <RefreshCw className="w-5 h-5 text-data-neutral mx-auto mb-2" />
+              <RefreshCw className="w-5 h-5 text-[var(--color-data-neutral)] mx-auto mb-2" />
               <div className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {totalMissed}
               </div>
@@ -304,7 +304,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
                   {filteredQuestions.length} questions selected
                 </div>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-data-pass" />
+              <CheckCircle2 className="w-8 h-8 text-[var(--color-data-pass)]" />
             </div>
           </div>
 

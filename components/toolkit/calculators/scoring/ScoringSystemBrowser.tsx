@@ -132,7 +132,7 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
   }
   if (error) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#ef4444' }}>
+      <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-data-fail)' }}>
         Failed to load scoring systems: {error}
       </div>
     );
@@ -249,7 +249,7 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
                   )}
                 </div>
                 {system.isHighYield && (
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 9999, background: 'var(--color-data-provisional)', color: 'var(--color-text-secondary)', flexShrink: 0 }}>
                     HY
                   </span>
                 )}

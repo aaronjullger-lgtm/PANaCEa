@@ -578,7 +578,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       {/* Loading overlay */}
       {(loading || isLoading) && (
         <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] rounded-lg">
-          <div className="text-white bg-[var(--color-bg-secondary)] px-4 py-2 rounded-lg">Loading graph…</div>
+          <div className="text-[var(--color-text-inverse)] bg-[var(--color-bg-secondary)] px-4 py-2 rounded-lg">Loading graph…</div>
         </div>
       )}
 

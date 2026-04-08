@@ -169,7 +169,7 @@ export function QuestionQualityDashboard() {
         </h1>
         <button
           onClick={fetchStats}
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
         >
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>

@@ -88,7 +88,7 @@ export default function HighYieldSummary({ onBack }: HighYieldSummaryProps) {
         }}>
           <ArrowLeft size={18} />
         </button>
-        <Star size={24} style={{ color: '#f59e0b' }} fill="#f59e0b" />
+        <Star size={24} style={{ color: 'var(--color-data-provisional)' }} fill="var(--color-data-provisional)" />
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>
           High-Yield Board
         </h2>

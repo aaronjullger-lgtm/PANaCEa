@@ -48,9 +48,9 @@ function TrendIcon({
 }) {
   switch (trend) {
     case 'improving':
-      return <TrendingUp className="w-4 h-4 text-data-pass" />;
+      return <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />;
     case 'declining':
-      return <TrendingDown className="w-4 h-4 text-data-fail" />;
+      return <TrendingDown className="w-4 h-4 text-[var(--color-data-fail)]" />;
     default:
       return <Minus className="w-4 h-4 text-[var(--color-text-muted)]" />;
   }
@@ -62,9 +62,9 @@ function getTrendColor(
 ): string {
   switch (trend) {
     case 'improving':
-      return 'text-data-pass';
+      return 'text-[var(--color-data-pass)]';
     case 'declining':
-      return 'text-data-fail';
+      return 'text-[var(--color-data-fail)]';
     default:
       return 'text-[var(--color-text-muted)]';
   }
@@ -123,10 +123,10 @@ function SystemRow({
     ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
   const accuracyColor =
     stats.accuracy >= 80
-      ? 'text-data-pass'
+      ? 'text-[var(--color-data-pass)]'
       : stats.accuracy >= 60
         ? 'text-muted-amber'
-        : 'text-data-fail';
+        : 'text-[var(--color-data-fail)]';
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0">
@@ -188,8 +188,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
   if (error && !stats) {
     return (
-      <div className="p-6 rounded-xl bg-data-fail/10 border border-data-fail/30">
-        <div className="flex items-center gap-2 text-data-fail">
+      <div className="p-6 rounded-xl bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30">
+        <div className="flex items-center gap-2 text-[var(--color-data-fail)]">
           <AlertCircle className="w-5 h-5" />
           <span className="font-medium">Unable to load analytics</span>
         </div>
@@ -406,7 +406,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Focus Areas */}
           {stats.weakAreas.length > 0 && (
-            <div className="p-4 rounded-xl border border-muted-amber/30 bg-data-provisional/10 dark:bg-data-provisional/5 dark:border-muted-amber/20">
+            <div className="p-4 rounded-xl border border-muted-amber/30 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/5 dark:border-muted-amber/20">
               <div className="flex items-center gap-2 text-muted-amber text-sm mb-3">
                 <AlertCircle className="w-4 h-4" />
                 Focus Areas (Need Improvement)
@@ -420,7 +420,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                       ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-data-fail font-bold">{area.accuracy}%</span>
+                      <span className="text-[var(--color-data-fail)] font-bold">{area.accuracy}%</span>
                       <span className="text-xs text-[var(--color-text-muted)]">
                         ({area.attempts} attempts)
                       </span>
@@ -433,8 +433,8 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
 
           {/* Strong Areas */}
           {stats.strongAreas.length > 0 && (
-            <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
-              <div className="flex items-center gap-2 text-data-pass text-sm mb-3">
+            <div className="p-4 rounded-xl bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
+              <div className="flex items-center gap-2 text-[var(--color-data-pass)] text-sm mb-3">
                 <Award className="w-4 h-4" />
                 Strong Areas
               </div>
@@ -447,7 +447,7 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
                       ] || area.system}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-data-pass font-bold">{area.accuracy}%</span>
+                      <span className="text-[var(--color-data-pass)] font-bold">{area.accuracy}%</span>
                       <span className="text-xs text-[var(--color-text-muted)]">
                         ({area.attempts} attempts)
                       </span>

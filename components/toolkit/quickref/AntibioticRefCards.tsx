@@ -88,7 +88,7 @@ export default function AntibioticRefCards() {
   if (error) {
     return (
       <div style={{ padding: 60, textAlign: 'center' }}>
-        <AlertTriangle size={24} style={{ color: '#ef4444', marginBottom: 8 }} />
+        <AlertTriangle size={24} style={{ color: 'var(--color-data-fail)', marginBottom: 8 }} />
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>{error}</p>
         <button onClick={() => window.location.reload()} style={{
           marginTop: 8, padding: '6px 16px', borderRadius: 8, fontSize: 13,
@@ -121,12 +121,12 @@ export default function AntibioticRefCards() {
         <button onClick={() => setHighYieldOnly(!highYieldOnly)}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10,
-            border: highYieldOnly ? '2px solid #eab308' : '1px solid var(--color-border)',
-            background: highYieldOnly ? '#fef9c3' : 'var(--color-bg-secondary)',
-            color: highYieldOnly ? '#854d0e' : 'var(--color-text-secondary)',
+            border: highYieldOnly ? '2px solid var(--color-data-provisional)' : '1px solid var(--color-border)',
+            background: highYieldOnly ? 'color-mix(in srgb, var(--color-data-provisional) 15%, transparent)' : 'var(--color-bg-secondary)',
+            color: highYieldOnly ? 'var(--color-text-secondary)' : 'var(--color-text-secondary)',
             cursor: 'pointer', fontSize: 13, fontWeight: 600,
           }}>
-          <Star size={14} fill={highYieldOnly ? '#eab308' : 'none'} /> High Yield
+          <Star size={14} fill={highYieldOnly ? 'var(--color-data-provisional)' : 'none'} /> High Yield
         </button>
       </div>
 
@@ -138,11 +138,11 @@ export default function AntibioticRefCards() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {filtered.map((org) => {
           const isExpanded = expandedId === org.id;
-          const gramColor = org.gramStain?.toLowerCase().includes('positive') ? '#8b5cf6' : '#ef4444';
+          const gramColor = org.gramStain?.toLowerCase().includes('positive') ? 'var(--color-accent)' : 'var(--color-data-fail)';
 
           return (
             <motion.div key={org.id} layout
-              style={{ borderRadius: 14, border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-primary, #fff)' }}>
+              style={{ borderRadius: 14, border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-primary, var(--color-bg-primary))' }}>
               {/* Card Header — always visible */}
               <button onClick={() => setExpandedId(isExpanded ? null : org.id)}
                 style={{ width: '100%', padding: '14px 16px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -150,7 +150,7 @@ export default function AntibioticRefCards() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{org.organism}</span>
-                    {org.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>HY</span>}
+                    {org.isHighYield && <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 9999, background: 'var(--color-data-provisional)', color: 'var(--color-text-secondary)' }}>HY</span>}
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 9999, background: `${gramColor}18`, color: gramColor, fontWeight: 600 }}>
@@ -161,7 +161,7 @@ export default function AntibioticRefCards() {
                   </div>
                   {/* First-line antibiotics preview */}
                   {org.firstLineAntibiotics && org.firstLineAntibiotics.length > 0 && (
-                    <div style={{ marginTop: 6, fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
+                    <div style={{ marginTop: 6, fontSize: 12, color: 'var(--color-data-pass)', fontWeight: 600 }}>
                       <Shield size={12} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} />
                       {org.firstLineAntibiotics.slice(0, 3).join(', ')}
                       {org.firstLineAntibiotics.length > 3 && ` +${org.firstLineAntibiotics.length - 3} more`}
@@ -170,12 +170,12 @@ export default function AntibioticRefCards() {
                   {/* Board yield fact preview */}
                   {!isExpanded && org.boardYieldFacts && org.boardYieldFacts.length > 0 && (
                     <div style={{
-                      marginTop: 6, fontSize: 11, color: '#92400e',
+                      marginTop: 6, fontSize: 11, color: 'var(--color-text-secondary)',
                       padding: '3px 8px', borderRadius: 6,
-                      background: '#fef3c7', display: 'inline-block',
+                      background: 'color-mix(in srgb, var(--color-data-provisional) 15%, transparent)', display: 'inline-block',
                       maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                      <Star size={10} style={{ display: 'inline', verticalAlign: -1, marginRight: 4 }} fill="#f59e0b" />
+                      <Star size={10} style={{ display: 'inline', verticalAlign: -1, marginRight: 4 }} fill="var(--color-data-provisional)" />
                       {org.boardYieldFacts[0]}
                     </div>
                   )}
@@ -193,10 +193,10 @@ export default function AntibioticRefCards() {
                   )}
                   {org.firstLineAntibiotics && org.firstLineAntibiotics.length > 0 && (
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#16a34a', marginBottom: 4 }}>First-Line Antibiotics</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-data-pass)', marginBottom: 4 }}>First-Line Antibiotics</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {org.firstLineAntibiotics.map((abx, i) => (
-                          <span key={i} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 9999, background: '#dcfce7', color: '#166534', fontWeight: 600 }}>{abx}</span>
+                          <span key={i} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 9999, background: 'color-mix(in srgb, var(--color-data-pass) 15%, transparent)', color: 'var(--color-data-pass)', fontWeight: 600 }}>{abx}</span>
                         ))}
                       </div>
                     </div>
@@ -223,7 +223,7 @@ export default function AntibioticRefCards() {
                   )}
                   {org.resistanceMechanisms && org.resistanceMechanisms.length > 0 && (
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#dc2626', marginBottom: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-data-fail)', marginBottom: 4 }}>
                         <AlertTriangle size={12} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} />Resistance
                       </div>
                       <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -239,24 +239,24 @@ export default function AntibioticRefCards() {
                     </div>
                   )}
                   {org.boardYieldFacts && org.boardYieldFacts.length > 0 && (
-                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: '#fef3c7', border: '1px solid #fde68a' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginBottom: 4 }}>
-                        <Star size={12} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} fill="#f59e0b" />
+                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'color-mix(in srgb, var(--color-data-provisional) 15%, transparent)', border: '1px solid var(--color-data-provisional)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+                        <Star size={12} style={{ display: 'inline', verticalAlign: -2, marginRight: 4 }} fill="var(--color-data-provisional)" />
                         Board Yield Facts
                       </div>
                       <ul style={{ margin: 0, paddingLeft: 16 }}>
                         {org.boardYieldFacts.map((f, i) => (
-                          <li key={i} style={{ fontSize: 12, color: '#92400e', lineHeight: 1.5, marginBottom: 2 }}>{f}</li>
+                          <li key={i} style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: 2 }}>{f}</li>
                         ))}
                       </ul>
                     </div>
                   )}
                   {org.clinicalPearls && org.clinicalPearls.length > 0 && (
-                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: '#fef9c3' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#854d0e', marginBottom: 4 }}>Clinical Pearls</div>
+                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: 'color-mix(in srgb, var(--color-data-provisional) 15%, transparent)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Clinical Pearls</div>
                       <ul style={{ margin: 0, paddingLeft: 16 }}>
                         {org.clinicalPearls.map((p, i) => (
-                          <li key={i} style={{ fontSize: 12, color: '#854d0e', lineHeight: 1.5, marginBottom: 2 }}>{p}</li>
+                          <li key={i} style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: 2 }}>{p}</li>
                         ))}
                       </ul>
                     </div>

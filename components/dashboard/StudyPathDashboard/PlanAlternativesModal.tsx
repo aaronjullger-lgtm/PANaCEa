@@ -258,7 +258,7 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
                   <div className="flex justify-end">
                     <button
                       onClick={() => handleSelectAlternative(plan.id)}
-                      className="px-5 py-2.5 bg-[var(--color-accent)] text-white rounded-xl font-semibold hover:opacity-90 flex items-center gap-2"
+                      className="px-5 py-2.5 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:opacity-90 flex items-center gap-2"
                     >
                       <Check className="w-5 h-5" />
                       Select This Plan

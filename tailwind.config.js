@@ -214,7 +214,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
         poppins: ['Poppins', 'sans-serif'],
         teko: ['Teko', 'sans-serif'],
       },

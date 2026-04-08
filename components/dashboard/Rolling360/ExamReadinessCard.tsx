@@ -263,14 +263,14 @@ function ProvisionalState({
       {/* Accuracy */}
       <div className="flex items-center justify-center gap-8 py-2">
         <div className="text-center">
-          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          <span className="text-2xl font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
             {stats.accuracyPercent != null && isFinite(stats.accuracyPercent) ? stats.accuracyPercent.toFixed(1) : '0'}%
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
         </div>
         <div className="w-px h-10 bg-[var(--color-border)]" />
         <div className="text-center">
-          <span className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          <span className="text-2xl font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
             {stats.totalInWindow}
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Questions</p>
@@ -285,7 +285,8 @@ function ProvisionalState({
         </div>
         <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-amber-500 to-orange-400"
+            className="h-full"
+            style={{ background: 'linear-gradient(to right, var(--color-data-provisional), var(--color-accent))' }}
             initial={{ width: 0 }}
             animate={{ width: `${(stats.totalInWindow / 180) * 100}%` }}
             transition={{ duration: 0.8 }}
@@ -378,7 +379,7 @@ function ConfidentState({
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4 py-2">
         <div className="text-center">
-          <span className="text-xl font-semibold text-[var(--color-text-primary)]">
+          <span className="text-xl font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
             {stats.accuracyPercent != null && isFinite(stats.accuracyPercent) ? stats.accuracyPercent.toFixed(1) : '0'}%
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
@@ -386,13 +387,14 @@ function ConfidentState({
         <div className="text-center">
           <span
             className={`text-xl font-semibold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
+            style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}
           >
             {passLikelihood.toFixed(0)}%
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Pass Chance</p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-semibold text-[var(--color-text-primary)]">
+          <span className="text-xl font-semibold text-[var(--color-text-primary)]" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontVariantNumeric: 'tabular-nums' }}>
             {stats.totalInWindow}
           </span>
           <p className="text-xs text-[var(--color-text-muted)]">Questions</p>

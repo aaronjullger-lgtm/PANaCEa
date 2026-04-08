@@ -194,7 +194,7 @@ export default function DrillHub(): JSX.Element {
           className="w-full text-center mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Zap className="w-12 h-12 text-data-provisional" />
+            <Zap className="w-12 h-12 text-[var(--color-data-provisional)]" />
             <h1 className="text-5xl font-bold text-[var(--color-text-primary)]">Drill & Kill</h1>
           </div>
           <p className="text-xl text-[var(--color-text-secondary)]">
@@ -215,7 +215,7 @@ export default function DrillHub(): JSX.Element {
           >
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
               <div className="flex items-center gap-3 mb-2">
-                <Trophy className="w-6 h-6 text-data-provisional" />
+                <Trophy className="w-6 h-6 text-[var(--color-data-provisional)]" />
                 <span className="text-[var(--color-text-muted)] text-sm">Total Sessions</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
@@ -225,7 +225,7 @@ export default function DrillHub(): JSX.Element {
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
               <div className="flex items-center gap-3 mb-2">
-                <Target className="w-6 h-6 text-data-pass" />
+                <Target className="w-6 h-6 text-[var(--color-data-pass)]" />
                 <span className="text-[var(--color-text-muted)] text-sm">Overall Accuracy</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
@@ -245,7 +245,7 @@ export default function DrillHub(): JSX.Element {
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
               <div className="flex items-center gap-3 mb-2">
-                <Award className="w-6 h-6 text-data-provisional" />
+                <Award className="w-6 h-6 text-[var(--color-data-provisional)]" />
                 <span className="text-[var(--color-text-muted)] text-sm">Best Streak</span>
               </div>
               <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">

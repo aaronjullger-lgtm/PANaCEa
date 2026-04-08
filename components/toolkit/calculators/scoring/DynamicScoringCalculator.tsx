@@ -319,7 +319,7 @@ export default function DynamicScoringCalculator({
   const riskColors: Record<RiskLevel, { bg: string; border: string; text: string }> = {
     low: { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
     moderate: { bg: '#fef9c3', border: '#eab308', text: '#854d0e' },
-    high: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
+    high: { bg: '#fee2e2', border: 'var(--color-data-fail)', text: '#991b1b' },
   };
 
   // ---- Loading / Error states ----
@@ -335,7 +335,7 @@ export default function DynamicScoringCalculator({
   if (error || !data) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <AlertCircle size={32} style={{ color: '#ef4444', marginBottom: 12 }} />
+        <AlertCircle size={32} style={{ color: 'var(--color-data-fail)', marginBottom: 12 }} />
         <p style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{error || 'Scoring system not found'}</p>
         {onBack && (
           <button onClick={onBack} style={{ marginTop: 12, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
@@ -362,7 +362,7 @@ export default function DynamicScoringCalculator({
             {data.displayName || data.name}
           </h2>
           {data.isHighYield && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: '#fbbf24', color: '#78350f' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: 'var(--color-data-provisional)', color: 'var(--color-text-secondary)' }}>
               HIGH YIELD
             </span>
           )}
@@ -673,13 +673,13 @@ export default function DynamicScoringCalculator({
               <CollapsibleSection title="Clinical Application" icon={Shield}>
                 {data.whenToUse && (
                   <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#16a34a', marginBottom: 4 }}>When to Use:</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-data-pass)', marginBottom: 4 }}>When to Use:</div>
                     <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--color-text-primary)' }}>{data.whenToUse}</p>
                   </div>
                 )}
                 {data.whenNotToUse && data.whenNotToUse.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', marginBottom: 4 }}>When NOT to Use:</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-data-fail)', marginBottom: 4 }}>When NOT to Use:</div>
                     <ul style={{ margin: 0, paddingLeft: 20 }}>
                       {data.whenNotToUse.map((item, i) => (
                         <li key={i} style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--color-text-primary)', marginBottom: 4 }}>

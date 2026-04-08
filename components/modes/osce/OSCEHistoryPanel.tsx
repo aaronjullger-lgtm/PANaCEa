@@ -78,15 +78,15 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 80) return 'text-[var(--color-data-pass)]';
+    if (score >= 60) return 'text-[var(--color-data-provisional)]';
+    return 'text-[var(--color-data-fail)]';
   };
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'bg-green-900/30';
-    if (score >= 60) return 'bg-yellow-900/30';
-    return 'bg-red-900/30';
+    if (score >= 80) return 'bg-[var(--color-data-pass)]/30';
+    if (score >= 60) return 'bg-[var(--color-data-provisional)]/30';
+    return 'bg-[var(--color-data-fail)]/30';
   };
 
   if (loading) {
@@ -112,8 +112,8 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
 
   if (error) {
     return (
-      <div className="w-full max-w-2xl bg-data-neutral-bg border border-red-500/30 rounded-lg p-6">
-        <p className="text-red-400">{error}</p>
+      <div className="w-full max-w-2xl bg-data-neutral-bg border border-[var(--color-data-fail)]/30 rounded-lg p-6">
+        <p className="text-[var(--color-data-fail)]">{error}</p>
       </div>
     );
   }
@@ -170,7 +170,7 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
           className="bg-data-neutral/5 border border-data-neutral/30 rounded p-4"
         >
           <p className="text-data-neutral/60 text-sm mb-1">Pass Rate</p>
-          <p className="text-2xl font-bold text-green-400">
+          <p className="text-2xl font-bold text-[var(--color-data-pass)]">
             {Math.round(stats.passRate)}%
           </p>
         </motion.div>
@@ -210,8 +210,8 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
               <MessageSquare className="w-3 h-3" /> Avg Communication
             </p>
             <p className={`text-2xl font-bold ${
-              stats.averageCommunicationScore >= 80 ? 'text-green-400' :
-              stats.averageCommunicationScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+              stats.averageCommunicationScore >= 80 ? 'text-[var(--color-data-pass)]' :
+              stats.averageCommunicationScore >= 60 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'
             }`}>
               {stats.averageCommunicationScore.toFixed(1)}
             </p>
@@ -229,8 +229,8 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
               <Stethoscope className="w-3 h-3" /> Avg Differentials
             </p>
             <p className={`text-2xl font-bold ${
-              stats.averageDifferentialScore >= 80 ? 'text-green-400' :
-              stats.averageDifferentialScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+              stats.averageDifferentialScore >= 80 ? 'text-[var(--color-data-pass)]' :
+              stats.averageDifferentialScore >= 60 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'
             }`}>
               {stats.averageDifferentialScore.toFixed(1)}
             </p>
@@ -242,12 +242,12 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="bg-red-900/10 border border-red-500/30 rounded p-4"
+            className="bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded p-4"
           >
-            <p className="text-red-400/80 text-sm mb-1 flex items-center gap-1">
+            <p className="text-[var(--color-data-fail)]/80 text-sm mb-1 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" /> Safety Alerts
             </p>
-            <p className="text-2xl font-bold text-red-400">
+            <p className="text-2xl font-bold text-[var(--color-data-fail)]">
               {stats.totalDangerousActions}
             </p>
           </motion.div>
@@ -287,7 +287,7 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
                           {formatDate(session.date)}
                         </p>
                         {isPassed && (
-                          <Award className="w-4 h-4 text-green-400" />
+                          <Award className="w-4 h-4 text-[var(--color-data-pass)]" />
                         )}
                       </div>
                       <p className="text-xs text-data-neutral/50">

@@ -291,7 +291,7 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full font-medium transition-all ${
               selectedCategory === null
-                ? 'bg-[var(--color-accent)] text-white shadow-md'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-md'
                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
             }`}
           >
@@ -306,7 +306,7 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
                 onClick={() => setSelectedCategory(category)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${
                   selectedCategory === category
-                    ? 'bg-[var(--color-accent)] text-white shadow-md'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-md'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]'
                 }`}
               >
@@ -361,18 +361,18 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
                       <div key={category} className="space-y-4">
                         {/* Category Header */}
                         <div
-                          className={`flex items-center gap-4 p-6 rounded-xl bg-gradient-to-r ${info.gradient} text-white shadow-lg`}
+                          className={`flex items-center gap-4 p-6 rounded-xl bg-gradient-to-r ${info.gradient} text-[var(--color-text-inverse)] shadow-lg`}
                         >
-                          <div className="p-4 bg-white/20 rounded-lg backdrop-blur-sm">
+                          <div className="p-4 bg-[var(--color-bg-primary)]/20 rounded-lg backdrop-blur-sm">
                             <Icon className="w-8 h-8" />
                           </div>
                           <div className="flex-1">
                             <h2 className="text-2xl font-bold">{info.title}</h2>
-                            <p className="text-white/90">{info.description}</p>
+                            <p className="text-[var(--color-text-inverse)]/90">{info.description}</p>
                           </div>
                           <button
                             onClick={() => setSelectedCategory(category)}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition-all flex items-center gap-2"
+                            className="px-4 py-2 bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30 rounded-lg backdrop-blur-sm transition-all flex items-center gap-2"
                           >
                             <span>View All</span>
                             <ChevronRight className="w-4 h-4" />

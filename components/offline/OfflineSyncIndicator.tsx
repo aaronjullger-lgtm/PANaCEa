@@ -183,7 +183,7 @@ export function OfflineSyncIndicator() {
             type="button"
             onClick={handleManualSync}
             disabled={syncing}
-            className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-[var(--color-bg-primary)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Retry sync"
           >
             <RefreshCw className="w-3.5 h-3.5" />

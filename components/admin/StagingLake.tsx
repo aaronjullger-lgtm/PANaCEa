@@ -209,7 +209,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                           type="button"
                           onClick={() => handleSaveEdit(item.id)}
                           disabled={actionLoading === item.id}
-                          className="flex items-center gap-1 rounded-lg bg-data-pass px-3 py-1.5 text-sm text-white hover:bg-data-pass disabled:opacity-50"
+                          className="flex items-center gap-1 rounded-lg bg-data-pass px-3 py-1.5 text-sm text-[var(--color-text-inverse)] hover:bg-data-pass disabled:opacity-50"
                         >
                           <Check size={14} />
                           Save

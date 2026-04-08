@@ -145,7 +145,7 @@ export function NotificationSettings({
           aria-label="Toggle push notifications"
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            className={`inline-block h-4 w-4 transform rounded-full bg-[var(--color-bg-primary)] transition-transform ${
               isSubscribed ? 'translate-x-6' : 'translate-x-1'
             }`}
           />

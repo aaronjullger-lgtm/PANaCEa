@@ -321,7 +321,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
         <button
           onClick={detectGaps}
           disabled={detectingGaps}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-white rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors disabled:opacity-50"
         >
           {detectingGaps ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -333,7 +333,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
         <button
           onClick={generateSuggestions}
           disabled={generatingSuggestions}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-white rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors disabled:opacity-50"
         >
           {generatingSuggestions ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -477,7 +477,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
         <div className="flex items-center gap-4 mb-4">
           <button
             onClick={() => setShowPreviewModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
           >
             <Eye className="w-4 h-4" />
             Preview Changes

@@ -146,7 +146,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
               <button
                 onClick={onDeleteConfirm}
                 aria-label="Confirm delete goal"
-                className="px-2 py-1 text-xs font-medium bg-data-fail text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="px-2 py-1 text-xs font-medium bg-data-fail text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-opacity"
               >
                 Delete
               </button>

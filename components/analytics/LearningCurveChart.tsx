@@ -126,7 +126,7 @@ export const LearningCurveChart: React.FC = () => {
               type="button"
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 selectedRange.days === range.days
-                  ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-[var(--color-accent)]'
                   : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
               onClick={() => handleRangeChange(range)}

@@ -156,27 +156,27 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
     switch (tone) {
       case 'amber':
         return {
-          border: 'border-data-provisional',
-          bg: 'bg-data-provisional/10',
-          badge: 'bg-data-provisional/15 text-data-provisional',
-          icon: 'bg-data-provisional text-[var(--color-text-inverse)]',
-          check: 'bg-data-provisional',
+          border: 'border-[var(--color-data-provisional)]',
+          bg: 'bg-[var(--color-data-provisional)]/10',
+          badge: 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]',
+          icon: 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]',
+          check: 'bg-[var(--color-data-provisional)]',
         };
       case 'emerald':
         return {
-          border: 'border-data-pass',
-          bg: 'bg-data-pass/10',
-          badge: 'bg-data-pass/15 text-data-pass',
-          icon: 'bg-data-pass text-[var(--color-text-inverse)]',
-          check: 'bg-data-pass',
+          border: 'border-[var(--color-data-pass)]',
+          bg: 'bg-[var(--color-data-pass)]/10',
+          badge: 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)]',
+          icon: 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]',
+          check: 'bg-[var(--color-data-pass)]',
         };
       case 'purple':
         return {
-          border: 'border-data-fail',
-          bg: 'bg-data-fail/10',
-          badge: 'bg-data-fail/15 text-data-fail',
-          icon: 'bg-data-fail text-[var(--color-text-inverse)]',
-          check: 'bg-data-fail',
+          border: 'border-[var(--color-data-fail)]',
+          bg: 'bg-[var(--color-data-fail)]/10',
+          badge: 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)]',
+          icon: 'bg-[var(--color-data-fail)] text-[var(--color-text-inverse)]',
+          check: 'bg-[var(--color-data-fail)]',
         };
       default:
         return {
@@ -224,7 +224,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         >
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-data-pass" />
+              <Target className="w-4 h-4 text-[var(--color-data-pass)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
@@ -244,7 +244,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-data-provisional" />
+              <TrendingUp className="w-4 h-4 text-[var(--color-data-provisional)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
@@ -254,7 +254,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
-              <Flag className="w-4 h-4 text-data-fail" />
+              <Flag className="w-4 h-4 text-[var(--color-data-fail)]" />
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">

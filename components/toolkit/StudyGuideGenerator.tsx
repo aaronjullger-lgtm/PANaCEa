@@ -371,7 +371,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         {/* Header */}
         <div className="bg-[var(--color-accent)] p-6 text-[var(--color-text-inverse)] dark:text-[var(--color-bg-primary)] rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+            <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg backdrop-blur-sm">
               <FileText className="w-6 h-6" />
             </div>
             <div>

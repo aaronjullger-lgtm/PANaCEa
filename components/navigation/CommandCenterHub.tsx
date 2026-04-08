@@ -731,7 +731,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     <button
                       type="button"
                       onClick={() => onNavigateToSimulation()}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity min-h-[44px]"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity min-h-[44px]"
                     >
                       <Play className="w-4 h-4" aria-hidden />
                       Start practice session
@@ -808,7 +808,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <button
                   type="button"
                   onClick={onResumeSession}
-                  className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 min-h-[44px]"
+                  className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 min-h-[44px]"
                 >
                   <Play className="w-4 h-4" aria-hidden />
                   Resume
@@ -1152,7 +1152,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </div>
               <button
                 onClick={() => onNavigateToDrillMode('panre_la')}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-category-simulation)] text-white hover:opacity-90 transition-opacity min-h-[40px]"
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-category-simulation)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity min-h-[40px]"
               >
                 Start Practice
                 <ChevronRight className="w-4 h-4" />

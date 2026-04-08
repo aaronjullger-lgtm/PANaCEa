@@ -232,9 +232,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
   const getQualityBadgeColor = (score?: number) => {
     if (!score) return 'bg-[var(--color-bg-tertiary)]';
-    if (score >= 80) return 'bg-data-pass';
-    if (score >= 60) return 'bg-data-provisional';
-    return 'bg-data-fail';
+    if (score >= 80) return 'bg-[var(--color-data-pass)]';
+    if (score >= 60) return 'bg-[var(--color-data-provisional)]';
+    return 'bg-[var(--color-data-fail)]';
   };
 
   const getMediaTypeIcon = (mediaType: string) => {
@@ -315,14 +315,14 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <>
               <button
                 onClick={handleBatchApprove}
-                className="px-4 py-2 bg-data-pass hover:bg-data-pass/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 Approve {selectedItems.size}
               </button>
               <button
                 onClick={handleBatchReject}
-                className="px-4 py-2 bg-data-fail hover:bg-data-fail/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/90 text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 <ThumbsDown className="w-4 h-4" />
                 Reject {selectedItems.size}
@@ -363,9 +363,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-muted)] mb-1">Pending</p>
-                <p className="text-3xl font-bold text-data-provisional">{stats.pending}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-provisional)]">{stats.pending}</p>
               </div>
-              <AlertCircle className="w-8 h-8 text-data-provisional" />
+              <AlertCircle className="w-8 h-8 text-[var(--color-data-provisional)]" />
             </div>
           </motion.div>
 
@@ -377,9 +377,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-muted)] mb-1">Approved</p>
-                <p className="text-3xl font-bold text-data-pass">{stats.approved}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-pass)]">{stats.approved}</p>
               </div>
-              <Check className="w-8 h-8 text-data-pass" />
+              <Check className="w-8 h-8 text-[var(--color-data-pass)]" />
             </div>
           </motion.div>
 
@@ -391,9 +391,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-muted)] mb-1">Rejected</p>
-                <p className="text-3xl font-bold text-data-fail">{stats.rejected}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-fail)]">{stats.rejected}</p>
               </div>
-              <ThumbsDown className="w-8 h-8 text-data-fail" />
+              <ThumbsDown className="w-8 h-8 text-[var(--color-data-fail)]" />
             </div>
           </motion.div>
 
@@ -441,7 +441,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       <div className="max-w-7xl mx-auto">
         {filteredMedia.length === 0 ? (
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-12 text-center">
-            <Check className="w-16 h-16 text-data-pass mx-auto mb-4" />
+            <Check className="w-16 h-16 text-[var(--color-data-pass)] mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               All caught up!
             </h3>

@@ -192,7 +192,7 @@ export function AudioInterface({
         <button
           type="button"
           onClick={connect}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90"
         >
           <Mic className="w-5 h-5" />
           Connect Voice

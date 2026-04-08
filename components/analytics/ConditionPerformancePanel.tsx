@@ -23,15 +23,15 @@ interface ConditionPerformancePanelProps {
 }
 
 const getAccuracyColor = (accuracy: number) => {
-  if (accuracy >= 80) return 'text-data-pass';
-  if (accuracy >= 60) return 'text-data-provisional';
-  return 'text-data-fail';
+  if (accuracy >= 80) return 'text-[var(--color-data-pass)]';
+  if (accuracy >= 60) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
 };
 
 const getAccuracyBg = (accuracy: number) => {
-  if (accuracy >= 80) return 'bg-data-pass/10';
-  if (accuracy >= 60) return 'bg-data-provisional/10';
-  return 'bg-data-fail/10';
+  if (accuracy >= 80) return 'bg-[var(--color-data-pass)]/10';
+  if (accuracy >= 60) return 'bg-[var(--color-data-provisional)]/10';
+  return 'bg-[var(--color-data-fail)]/10';
 };
 
 // Format condition ID into display name
@@ -69,11 +69,11 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
     <div className="space-y-6">
       {/* Weak Conditions Alert */}
       {weakConditions.length > 0 && (
-        <div className="bg-data-fail/10 border border-data-fail/30 rounded-xl p-4">
+        <div className="bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-data-fail flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-data-fail">Focus Areas Identified</h4>
+              <h4 className="font-medium text-[var(--color-data-fail)]">Focus Areas Identified</h4>
               <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                 These conditions need extra attention (accuracy below 60%):
               </p>
@@ -82,7 +82,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
                   <button
                     key={c.conditionId}
                     onClick={() => onSelectCondition?.(c.conditionId)}
-                    className="px-3 py-1.5 text-xs font-medium bg-data-fail/20 text-data-fail rounded-lg hover:bg-data-fail/30 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)]/30 transition-colors flex items-center gap-1"
                   >
                     {formatConditionName(c.conditionId)}
                     <span className="opacity-75">({c.accuracy}%)</span>
@@ -98,9 +98,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Lowest Accuracy */}
         <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-          <div className="px-4 py-3 bg-data-fail/10 border-b border-[var(--color-border)]">
+          <div className="px-4 py-3 bg-[var(--color-data-fail)]/10 border-b border-[var(--color-border)]">
             <h4 className="font-medium text-[var(--color-text-primary)] flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-data-fail" />
+              <TrendingDown className="w-4 h-4 text-[var(--color-data-fail)]" />
               Needs Improvement
             </h4>
           </div>
@@ -137,9 +137,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
 
         {/* Highest Accuracy */}
         <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-          <div className="px-4 py-3 bg-data-pass/10 border-b border-[var(--color-border)]">
+          <div className="px-4 py-3 bg-[var(--color-data-pass)]/10 border-b border-[var(--color-border)]">
             <h4 className="font-medium text-[var(--color-text-primary)] flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-data-pass" />
+              <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />
               Strong Performance
             </h4>
           </div>

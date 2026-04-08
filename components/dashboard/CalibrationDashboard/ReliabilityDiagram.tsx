@@ -68,7 +68,7 @@ function CalibrationTooltip({ active, payload }: any) {
         <div>Samples: <span style={{ fontFamily: "'JetBrains Mono', monospace", fontVariantNumeric: 'tabular-nums' }}>
           {bin.count}
         </span></div>
-        <div style={{ color: bin.calibrationError > 0.1 ? '#ef4444' : 'var(--color-data-pass)', fontWeight: 600 }}>
+        <div style={{ color: bin.calibrationError > 0.1 ? 'var(--color-data-fail)' : 'var(--color-data-pass)', fontWeight: 600 }}>
           Error: {(bin.calibrationError * 100).toFixed(1)}%
         </div>
       </div>

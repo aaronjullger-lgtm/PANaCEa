@@ -340,7 +340,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         <p className="text-[var(--color-text-primary)] font-medium">Could not load drill content. Please check your connection and try again.</p>
         <button
           onClick={onExit}
-          className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+          className="px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity"
         >
           Go back
         </button>

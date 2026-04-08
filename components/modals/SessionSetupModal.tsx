@@ -187,7 +187,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                     }`}
                   >
                     <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--color-bg-primary)] shadow transition-transform duration-200 ${
                         interleaveMode === 'interleaved' ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />

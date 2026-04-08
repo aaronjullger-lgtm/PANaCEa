@@ -227,7 +227,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all ${
               viewMode === 'grid'
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
             }`}
             title="Grid view"
@@ -238,7 +238,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all ${
               viewMode === 'list'
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
             }`}
             title="List view"
@@ -274,7 +274,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({ performanceData, cu
                   onClick={() => setFilterMode(filter)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     filterMode === filter
-                      ? 'bg-[var(--color-accent)] text-white'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                       : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                   }`}
                 >

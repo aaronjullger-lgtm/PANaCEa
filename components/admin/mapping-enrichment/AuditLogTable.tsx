@@ -198,7 +198,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
           <div className="flex gap-2">
             <button
               onClick={handleApplyFilters}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors"
             >
               <Search className="w-4 h-4" />
               Apply Filters

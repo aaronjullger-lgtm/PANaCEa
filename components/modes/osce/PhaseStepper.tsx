@@ -102,7 +102,7 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = React.memo(({
               {/* Phase icon or check */}
               <span className="flex-shrink-0">
                 {isCompleted && !isCurrent ? (
-                  <Check className="w-4 h-4 text-emerald-400" />
+                  <Check className="w-4 h-4 text-[var(--color-data-pass)]" />
                 ) : (
                   phase.icon
                 )}
@@ -116,8 +116,8 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = React.memo(({
               {/* Warning dot for missed critical actions */}
               {hasWarning && (
                 <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
-                  <AlertTriangle className="relative w-3 h-3 text-red-400" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-data-fail)] opacity-40" />
+                  <AlertTriangle className="relative w-3 h-3 text-[var(--color-data-fail)]" />
                 </span>
               )}
             </button>

@@ -225,7 +225,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{error}</p>
                   <button
                     onClick={fetchPreview}
-                    className="mt-3 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
+                    className="mt-3 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
                   >
                     Retry
                   </button>
@@ -359,7 +359,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                 <button
                   onClick={handleApprovePreview}
                   disabled={!previewResult || loading}
-                  className="px-5 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-5 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Proceed to Approval
                 </button>

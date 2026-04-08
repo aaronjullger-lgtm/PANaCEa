@@ -209,7 +209,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           <div className="flex gap-3">
             <button
               onClick={handleStartAssessment}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors font-medium"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors font-medium"
             >
               Start Assessment
               <ChevronRight className="w-5 h-5" />
@@ -328,8 +328,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
             className="flex justify-center mb-6"
           >
-            <div className="p-4 bg-data-pass/20 rounded-full">
-              <ClipboardCheck className="w-12 h-12 text-data-pass" />
+            <div className="p-4 bg-[var(--color-data-pass)]/20 rounded-full">
+              <ClipboardCheck className="w-12 h-12 text-[var(--color-data-pass)]" />
             </div>
           </motion.div>
           <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-2">

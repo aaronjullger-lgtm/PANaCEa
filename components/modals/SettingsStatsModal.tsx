@@ -251,7 +251,7 @@ const AccessibilitySettings: React.FC = () => {
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               isCommuterMode
-                ? 'bg-[var(--color-data-neutral)] text-white'
+                ? 'bg-[var(--color-data-neutral)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
             }`}
           >
@@ -2742,7 +2742,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             performanceData.length === 0
                               ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                               : confirmArchive
-                                ? 'bg-data-fail text-white hover:opacity-90'
+                                ? 'bg-data-fail text-[var(--color-text-inverse)] hover:opacity-90'
                                 : 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90'
                           }`}
                           aria-label={
@@ -2770,7 +2770,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           disabled={confirmClear === 'performance' && clearConfirmText !== 'DELETE'}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             confirmClear === 'performance' && clearConfirmText === 'DELETE'
-                              ? 'bg-data-fail text-white'
+                              ? 'bg-data-fail text-[var(--color-text-inverse)]'
                               : confirmClear === 'performance'
                                 ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                                 : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
@@ -2805,7 +2805,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           missedQuestionsCount === 0
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'missed'
-                              ? 'bg-data-fail text-white'
+                              ? 'bg-data-fail text-[var(--color-text-inverse)]'
                               : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
                         }`}
                         aria-label={
@@ -2835,7 +2835,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           flaggedQuestionsCount === 0
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'flagged'
-                              ? 'bg-data-fail text-white'
+                              ? 'bg-data-fail text-[var(--color-text-inverse)]'
                               : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
                         }`}
                         aria-label={

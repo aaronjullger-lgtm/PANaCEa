@@ -87,7 +87,7 @@ export function OnboardingYourPlan({
         <div className="space-y-3 mb-6">
           <button
             onClick={onStartSession}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-white rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors"
           >
             <Play className="w-5 h-5" />
             Start first session

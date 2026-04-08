@@ -40,7 +40,7 @@ export function SafeChart({
         {onStartSession && (
           <button
             onClick={onStartSession}
-            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:bg-[var(--color-accent)]/80 transition"
+            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-medium hover:bg-[var(--color-accent)]/80 transition"
           >
             Start First Session
           </button>
