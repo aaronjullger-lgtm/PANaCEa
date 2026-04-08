@@ -16,7 +16,7 @@ const COLLAPSED_WRAPPER_CLASS =
   'w-10 h-10 shrink-0 justify-center items-center px-0 min-w-0 min-h-0';
 
 const ACTIVE_CLASS =
-  'text-[var(--color-text-primary)] font-semibold';
+  'text-[var(--color-text-primary)] font-semibold bg-[var(--color-accent)]/5';
 
 const INACTIVE_CLASS =
   'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]';

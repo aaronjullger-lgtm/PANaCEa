@@ -86,6 +86,61 @@
     "overseer_model": "claude",
     "overseer_required": true
   },
+  "model_variants": {
+    "_doc": "Maps task_type → provider → model string. Lets each provider use its strongest variant per task. If a task_type is not listed, the provider's default 'model' is used.",
+    "code_implementation": {
+      "zhipu": "glm-5.1",
+      "deepseek": "deepseek-chat",
+      "openai": "gpt-4.1"
+    },
+    "refactor": {
+      "zhipu": "glm-5.1",
+      "deepseek": "deepseek-chat"
+    },
+    "test_generation": {
+      "zhipu": "glm-5-turbo",
+      "deepseek": "deepseek-chat"
+    },
+    "planning": {
+      "gemini": "gemini-3.1-pro"
+    },
+    "architecture_review": {
+      "gemini": "gemini-3.1-pro",
+      "deepseek": "deepseek-reasoner"
+    },
+    "risk_analysis": {
+      "gemini": "gemini-3.1-pro",
+      "deepseek": "deepseek-reasoner"
+    },
+    "code_review": {
+      "openai": "gpt-4.1",
+      "deepseek": "deepseek-reasoner"
+    },
+    "research": {
+      "openai": "gpt-4.1-mini",
+      "deepseek": "deepseek-chat"
+    },
+    "alternate_implementation": {
+      "openai": "gpt-4.1",
+      "deepseek": "deepseek-chat"
+    },
+    "critique": {
+      "gemini": "gemini-2.5-flash",
+      "openai": "gpt-4.1-mini"
+    },
+    "synthesis": {
+      "claude": "claude-sonnet-4-6"
+    },
+    "validation": {
+      "claude": "claude-sonnet-4-6"
+    },
+    "supervisor_review": {
+      "claude": "claude-sonnet-4-6"
+    },
+    "overseer": {
+      "claude": "claude-sonnet-4-6"
+    }
+  },
   "safety": {
     "max_loop_depth": 5,
     "max_consecutive_auto_turns": 3,

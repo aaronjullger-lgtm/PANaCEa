@@ -352,42 +352,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     );
   }
 
-  if (error || !data) {
-    const isOffline = !navigator.onLine;
-
-    return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
-        <motion.div
-          initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
-          className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 max-w-sm"
-          style={{ boxShadow: '0 0 0 1px var(--color-border), 0 4px 12px -4px rgba(0,0,0,0.08)' }}
-        >
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/10 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
-          </div>
-          <p className="text-[var(--color-text-primary)] font-semibold text-base mb-1">
-            {isOffline ? 'No Connection' : 'Dashboard Unavailable'}
-          </p>
-          <p className="text-[var(--color-text-muted)] text-sm mb-5">
-            {isOffline
-              ? 'Check your connection and try again.'
-              : 'Unable to load your study data. Please try again.'}
-          </p>
-          <button
-            onClick={() => mutate()}
-            className="px-5 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] text-sm font-medium rounded-lg transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-          >
-            {isOffline ? 'Retry Connection' : 'Retry'}
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+  // Graceful degradation: show dashboard with fallback data instead of blocking error screen
+  const hasRetentionError = !!error || !data;
+  const safeData: RetentionData = data ?? {
+    dueCount: 0,
+    totalCards: 0,
+    decayCurveData: [],
+    stabilityBuckets: [],
+    lastTuned: '',
+    tuningReason: '',
+    adjustment: 'tighten',
+  };
 
   // Prefer DB's unique questions seen (cross-device authoritative); fallback to retention endpoint count
-  const totalCardsLearned = dbStats?.overall.questionsSeenCount ?? data.totalCards ?? 0;
+  const totalCardsLearned = dbStats?.overall.questionsSeenCount ?? safeData.totalCards ?? 0;
 
   // Derive system-level accuracy for blueprint progress & rotation card.
   // Prefer DB-sourced accuracy (server-side, cross-device); fallback to localStorage.
@@ -464,7 +442,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   // Build prioritized study actions from retention data
   const studyActions = useMemo<StudyAction[]>(() => {
     const actions: StudyAction[] = [];
-    const dueCount = data.dueCount || 0;
+    const dueCount = safeData.dueCount || 0;
 
     if (dueCount > 0) {
       actions.push({
@@ -515,11 +493,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     });
 
     return actions;
-  }, [data.dueCount, currentStreak]);
+  }, [safeData.dueCount, currentStreak]);
 
   return (
     <div className="min-h-screen py-5 px-4 md:py-6 md:px-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* ===== API STATUS BANNER — non-blocking degraded notice ===== */}
+        {hasRetentionError && (
+          <motion.div
+            initial={{ y: -8, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/8"
+          >
+            <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)] shrink-0" />
+            <p className="text-sm text-[var(--color-text-secondary)] flex-1">
+              {!navigator.onLine
+                ? 'You\'re offline. Showing cached data.'
+                : 'Some analytics are temporarily unavailable. Core features still work.'}
+            </p>
+            <button
+              onClick={() => mutate()}
+              className="text-xs font-semibold text-[var(--color-accent)] hover:underline shrink-0"
+            >
+              Retry
+            </button>
+          </motion.div>
+        )}
+
         {/* ===== HEADER SECTION - Cinematic greeting with premium typography ===== */}
         <motion.div
           initial={prefersReducedMotion ? false : { y: -10, opacity: 0 }}
@@ -593,22 +593,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     label="Day Streak"
                     value={currentStreak}
                     trend={currentStreak > 0 ? { value: currentStreak, isPositive: true } : undefined}
-                    accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
+                    accentColor="var(--color-data-provisional)"
                     delay={0}
                   />
                 )}
                 <QuickStat
                   icon={<Brain className="w-5 h-5 text-[var(--color-accent)]" />}
                   label="Due Reviews"
-                  value={data.dueCount || 0}
-                  accentColor="bg-[var(--color-accent)]"
+                  value={safeData.dueCount || 0}
+                  accentColor="var(--color-accent)"
                   delay={0.05}
                 />
                 <QuickStat
                   icon={<Target className="w-5 h-5 text-[var(--color-data-pass)]" />}
                   label="Cards Learned"
                   value={totalCardsLearned}
-                  accentColor="bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]"
+                  accentColor="var(--color-data-pass)"
                   delay={0.1}
                 />
               </div>
@@ -708,10 +708,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 {(dashboardConfig.showPanceCountdown || dashboardConfig.showEorCountdown) && (
                   <ExamReadinessCard />
                 )}
-                {showPilotWidget('retention_forecast') && (
+                {showPilotWidget('retention_forecast') && !hasRetentionError && (
                   <RetentionForecastCard
-                    dueCount={data.dueCount}
-                    decayCurveData={data.decayCurveData}
+                    dueCount={safeData.dueCount}
+                    decayCurveData={safeData.decayCurveData}
                     onStartReview={() => handleNavigation('/study/main-session')}
                   />
                 )}
@@ -794,18 +794,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 icon={<TrendingUp className="w-4 h-4" />}
                 action={<InfoTooltip text={TOOLTIP_STABILITY} />}
               />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {showDataWidget('decay_curve') && (
-                  <div className="card-cinematic p-5">
-                    <DecayCurve data={data.decayCurveData} />
-                  </div>
-                )}
-                {showDataWidget('stability_pyramid') && (
-                  <div className="card-cinematic p-5">
-                    <StabilityPyramid data={data.stabilityBuckets} />
-                  </div>
-                )}
-              </div>
+              {!hasRetentionError && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {showDataWidget('decay_curve') && (
+                    <div className="card-cinematic p-5">
+                      <DecayCurve data={safeData.decayCurveData} />
+                    </div>
+                  )}
+                  {showDataWidget('stability_pyramid') && (
+                    <div className="card-cinematic p-5">
+                      <StabilityPyramid data={safeData.stabilityBuckets} />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Metacognitive Mirror — behavioral self-awareness */}
               <MetacognitiveMirror days={30} />
@@ -814,11 +816,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <DrillRecommendationCard days={60} />
 
               {/* Algorithm Status — only for advanced stages */}
-              {showDataWidget('algorithm_status') && (
+              {showDataWidget('algorithm_status') && !hasRetentionError && safeData.lastTuned && (
                 <AlgorithmStatusWidget
-                  lastTuned={new Date(data.lastTuned)}
-                  reason={data.tuningReason}
-                  adjustment={data.adjustment}
+                  lastTuned={new Date(safeData.lastTuned)}
+                  reason={safeData.tuningReason}
+                  adjustment={safeData.adjustment}
                 />
               )}
 

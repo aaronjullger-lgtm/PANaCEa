@@ -315,5 +315,24 @@ scripts/temp-*
 scripts/temp_*
 scripts/test-*
 
+# Python bytecode (multi-agent tooling)
+__pycache__/
+*.pyc
+*.pyo
+
+# Third-party Claude skills (installed from registry, not source)
+.claude/skills/aris-*/
+.claude/skills/baoyu-*/
+.claude/skills/algorithmic-art/
+.claude/skills/alirezarezvani-*/
+
+# Root-level dev/prompt artifacts
+/PROMPT-*.md
+/UILibraries.md
+/medicalUI.md
+/prompts/
+/skills-lock.json
+/test_analyze.*
+
 # Accidental redirect artifacts
 -

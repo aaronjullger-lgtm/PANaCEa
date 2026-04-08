@@ -48,6 +48,25 @@ The GLM coder runs behind a Claude Code Anthropic-compatible slot for cost savin
 
 All logs, events, and history entries include the `actual_backend` field so you always know which model produced what.
 
+### Task-Aware Model Variant Selection
+
+Each provider has multiple model variants optimized for different tasks. The orchestrator automatically selects the best variant based on `task_type`, configured in `config/settings.json` under `model_variants`:
+
+| Task Type | Zhipu (GLM) | OpenAI | Gemini | DeepSeek | Claude |
+|-----------|-------------|--------|--------|----------|--------|
+| `code_implementation` | **glm-5.1** (heavy) | gpt-4.1 | — | deepseek-chat | — |
+| `refactor` | **glm-5.1** | — | — | deepseek-chat | — |
+| `test_generation` | **glm-5-turbo** (fast) | — | — | deepseek-chat | — |
+| `planning` | — | — | **gemini-3.1-pro** | — | — |
+| `architecture_review` | — | — | **gemini-3.1-pro** | **deepseek-reasoner** | — |
+| `risk_analysis` | — | — | **gemini-3.1-pro** | **deepseek-reasoner** | — |
+| `code_review` | — | **gpt-4.1** (full) | — | **deepseek-reasoner** | — |
+| `research` | — | **gpt-4.1-mini** (fast) | — | deepseek-chat | — |
+| `critique` | — | gpt-4.1-mini | **gemini-2.5-flash** | — | — |
+| `overseer` / `synthesis` | — | — | — | — | **claude-sonnet-4-6** |
+
+**How it works:** `RoleRouter.resolve_model_variant(model_key, task_type)` returns the optimal model string. The orchestrator passes this as `model_override` to `send_with_retry()`, so the provider uses the task-specific variant for that single call without mutating its default. When no variant mapping exists, the provider's default model is used. Variant selections are logged as `variant_selection` events.
+
 ## Pipeline Flow
 
 ```

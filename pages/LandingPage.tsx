@@ -358,6 +358,7 @@ export function LandingPage() {
                 <motion.article
                   key={feature.title}
                   {...fadeUpView(idx * 0.06)}
+                  whileHover={prefersReducedMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
                   className="group relative p-7 rounded-2xl border transition-all duration-300 hover:shadow-xl"
                   style={{
                     backgroundColor: 'var(--color-bg-secondary, #fff)',
@@ -604,15 +605,19 @@ export function LandingPage() {
 
       {/* ═══════════════ AUTH MODAL ═══════════════ */}
       {showAuth && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-y-auto"
           style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
             zIndex: 50,
             backgroundColor: 'rgba(15,23,42,0.8)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -622,7 +627,10 @@ export function LandingPage() {
           aria-modal="true"
           aria-labelledby="auth-modal-title"
         >
-          <div
+          <motion.div
+            initial={prefersReducedMotion ? false : { scale: 0.95, y: 10 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
             style={{ width: '100%', maxWidth: '28rem', margin: '2rem 0' }}
           >
@@ -717,8 +725,8 @@ export function LandingPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
