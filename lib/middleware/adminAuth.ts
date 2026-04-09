@@ -167,18 +167,9 @@ async function getUserRole(userId: string): Promise<'admin' | 'superadmin' | nul
   } catch (error) {
     console.error('[ADMIN_AUTH] Database error checking user role:', error);
 
-    // Fallback to environment variables if database is unavailable
-    const adminUserIds = process.env.ADMIN_USER_IDS?.split(',') || [];
-    const superAdminUserIds = process.env.SUPERADMIN_USER_IDS?.split(',') || [];
-
-    if (superAdminUserIds.includes(userId)) {
-      return 'superadmin';
-    }
-
-    if (adminUserIds.includes(userId)) {
-      return 'admin';
-    }
-
+    // Database unavailable — cannot verify admin role.
+    // Note: process.env is NOT available in Cloudflare Edge runtime,
+    // so we cannot fall back to environment variables here.
     return null;
   }
 }
@@ -208,25 +199,9 @@ export async function logAdminAction(
     timestamp: new Date().toISOString(),
   };
 
-  // Audit entry logged to database and structured logger
-
-  try {
-    // Store in database for permanent audit trail
-    const { prisma } = await import('../prisma');
-
-    // await prisma.adminAuditLog.create({
-    //   data: {
-    //     action: 'admin_login',
-    //     entityType: 'auth',
-    //     entityId: userId,
-    //     userId: userId,
-    //     details: { ip: req.ip, userAgent: req.headers['user-agent'] }
-    //   }
-    // });
-  } catch (error) {
-    // Don't fail the request if audit logging fails, but log the error
-    console.error('[ADMIN_AUDIT] Failed to store audit log in database:', error);
-  }
+  // Log to structured console for now.
+  // Database persistence requires adding an AdminAuditLog model to the Prisma schema.
+  console.log('[ADMIN_AUDIT]', JSON.stringify(auditEntry));
 }
 
 /**

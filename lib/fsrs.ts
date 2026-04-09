@@ -166,7 +166,6 @@ export function computeDecayFactor(w19: number, w20: number): { decay: number; f
 
 export class FSRS {
   private p: FSRSParameters;
-  private readonly DECAY = -0.5; // Fixed decay constant for interval calculation
   private decayFactor: { decay: number; factor: number };
 
   constructor(parameters: FSRSParameters = defaultParameters) {

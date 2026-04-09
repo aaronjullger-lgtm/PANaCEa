@@ -163,8 +163,8 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
-  sessionType?: 'main' | 'cram' | 'rapid_recall';
+  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'drill' | 'cram' | 'rapid_recall';
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -646,16 +646,21 @@ export async function submitDrillReview(
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
 
-  updateReviewOutcome(
-    userId,
-    questionId,
-    {
-      quality,
-      timeToAnswer: numericTime,
-      baselineTime: parTimeMs,
-    },
-    prisma as any
-  );
+  try {
+    await updateReviewOutcome(
+      userId,
+      questionId,
+      {
+        quality,
+        timeToAnswer: numericTime,
+        baselineTime: parTimeMs,
+      },
+      prisma as any
+    );
+  } catch (reviewOutcomeErr) {
+    // Non-fatal: log but don't block the review pipeline
+    logger?.warn?.('updateReviewOutcome failed', { questionId, error: String(reviewOutcomeErr) });
+  }
 
   try {
     await applyAttemptToUserStatistics(prisma as any, userId, {
@@ -1214,8 +1219,8 @@ export async function submitDrillReview(
         // If the model consistently overestimates retention for this system,
         // the correction factor < 1.0 → shorter intervals. Vice versa for underestimation.
         try {
-          const calibrationFactor = await getStabilityCorrectionFactor(prisma, userId, question.system);
-          modifiedStability *= calibrationFactor;
+          const stabilityCorrectionFactor = await getStabilityCorrectionFactor(prisma, userId, question.system);
+          modifiedStability *= stabilityCorrectionFactor;
         } catch (calErr) {
           // Non-fatal: if calibration fails, proceed without correction
           logger?.warn?.('Calibration correction failed, using uncorrected stability', {
