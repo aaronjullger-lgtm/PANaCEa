@@ -166,20 +166,23 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       const params = new URLSearchParams({ system });
       if (subcategory) params.set('subcategory', subcategory);
 
-      const res = await fetch(`/api/questions/condition-drill?${params}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ system, subcategory, count: 1 }),
+      const res = await fetch(`/api/conditions/high-yield?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      // For now, populate from available data
-      // TODO: Add a dedicated /api/content/conditions endpoint
-      setConditions([]);
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : data?.conditions ?? data?.data ?? [];
+        setConditions(items.map((c: { id?: string; condition?: string; name?: string }) => ({
+          id: c.id ?? c.condition ?? c.name ?? '',
+          name: c.condition ?? c.name ?? c.id ?? '',
+        })));
+      } else {
+        setConditions([]);
+      }
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load conditions:', err);
+      setConditions([]);
     } finally {
       setLoadingConditions(false);
     }

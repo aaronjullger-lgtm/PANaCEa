@@ -34,7 +34,7 @@ import type {
   EncounterSession,
   PatientPersona,
 } from '@/types/drill-modes';
-import type { PlacedOrder, ExamFinding, OSCEScoreReport, OrderCategory } from '@/types/osce-enhanced';
+import type { PlacedOrder, ExamFinding, OrderCategory } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
 import {
@@ -83,7 +83,7 @@ import { streamGeminiText } from '@/lib/utils/streamingClient';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { ChatSkeleton } from '@/components/loading';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
-import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';
+import { formatPatientAgeShort } from '@/lib/utils/ageFormatter';
 
 import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
 import {

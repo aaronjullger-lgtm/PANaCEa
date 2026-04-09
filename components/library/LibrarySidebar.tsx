@@ -278,24 +278,6 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         </h2>
       </div>
 
-      {/* Search consolidated to header for single source of truth - sidebar no longer has duplicate search input */}
-      {/* eslint-disable-next-line no-constant-binary-expression -- dead code kept for potential reuse */}
-      {false && (
-      <div className="p-3 border-b border-[var(--color-border)]">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
-          <input
-            type="text"
-            value=""
-            onChange={() => {}}
-            placeholder="Search conditions..."
-            aria-label="Search conditions"
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50"
-          />
-        </div>
-      </div>
-      )}
-
       {/* High Yield Toggle */}
       <div className="px-3 py-2.5" style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}>
         <button

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Trophy, Loader2, Copy, Check } from 'lucide-react';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/clerk-react';
 
 // Types
 interface StudyGroup {
@@ -27,7 +27,6 @@ interface LeaderboardEntry {
 export default function StudyGroupDashboard() {
   const socialGroupsEnabled = import.meta.env.VITE_SOCIAL_GROUPS_ENABLED === 'true';
   const { getToken } = useAuth();
-  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<'groups' | 'leaderboard'>('groups');
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -474,9 +473,9 @@ export default function StudyGroupDashboard() {
 
       {/* Create Group Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="create-group-title">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
+            <h3 id="create-group-title" className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
               Create Study Group
             </h3>
             <form onSubmit={handleCreateGroup}>
@@ -533,9 +532,9 @@ export default function StudyGroupDashboard() {
 
       {/* Join Group Modal */}
       {showJoinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="join-group-title">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
+            <h3 id="join-group-title" className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
               Join Study Group
             </h3>
             <form onSubmit={handleJoinGroup}>

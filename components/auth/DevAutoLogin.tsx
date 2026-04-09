@@ -86,7 +86,8 @@ export function DevAutoLogin() {
     };
 
     runAutoLogin();
-  }, [import.meta.env.DEV, isLoaded, signIn, setActive, isSignedIn]);
+  // import.meta.env.DEV is a compile-time constant — not a reactive dep
+  }, [isLoaded, signIn, setActive, isSignedIn]);
 
   return null;
 }
