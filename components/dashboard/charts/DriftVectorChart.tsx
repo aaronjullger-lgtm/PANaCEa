@@ -116,7 +116,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
       preserveAspectRatio="xMidYMid meet"
     >
       {/* Grid Lines */}
-      <g className="text-data-neutral dark:text-data-neutral">
+      <g className="text-data-neutral">
         {[0, 7, 14].map((day) => (
           <line
             key={`grid-${day}`}
@@ -303,7 +303,7 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
 
       {/* Stats Row */}
       {showDetails && (
-        <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-data-neutral dark:border-data-neutral">
+        <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-data-neutral">
           <div className="text-center">
             <div className="text-2xl font-bold text-[var(--color-category-practice)]">{drift.currentScore}</div>
             <div className="text-xs text-data-neutral">Current</div>
@@ -344,10 +344,10 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
         className={cn(
           'mt-3 p-2 rounded-lg text-sm',
           drift.urgency === 'critical'
-            ? 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
+            ? 'bg-data-fail text-data-fail'
             : drift.urgency === 'high'
               ? 'bg-[var(--color-data-provisional)]/20 dark:bg-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
-              : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
+              : 'bg-data-neutral text-data-neutral'
         )}
       >
         {message}

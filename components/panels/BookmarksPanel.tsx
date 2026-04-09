@@ -124,7 +124,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
         </div>
 
         {/* Search and Filters */}
-        <div className="p-4 border-b border-data-neutral dark:border-data-neutral space-y-3">
+        <div className="p-4 border-b border-data-neutral space-y-3">
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-data-neutral" />
@@ -147,7 +147,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTag === null
                     ? 'bg-data-provisional text-[var(--color-text-inverse)]'
-                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
+                    : 'bg-data-neutral text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
                 All
@@ -159,7 +159,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${
                     selectedTag === tag
                       ? 'bg-data-provisional text-[var(--color-text-inverse)]'
-                      : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
+                      : 'bg-data-neutral text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                   }`}
                 >
                   {tag}
@@ -226,7 +226,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
 
                         {/* Question Preview */}
                         <p
-                          className="text-sm text-data-neutral dark:text-data-neutral mb-2 overflow-hidden"
+                          className="text-sm text-data-neutral mb-2 overflow-hidden"
                           style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -242,7 +242,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                             {question.tags.map((tag: string) => (
                               <span
                                 key={tag}
-                                className="inline-block px-2 py-0.5 bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral text-xs rounded"
+                                className="inline-block px-2 py-0.5 bg-data-neutral text-data-neutral text-xs rounded"
                               >
                                 {tag}
                               </span>
@@ -251,7 +251,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                         )}
 
                         {/* Metadata */}
-                        <div className="flex items-center gap-4 text-xs text-data-neutral dark:text-data-neutral">
+                        <div className="flex items-center gap-4 text-xs text-data-neutral">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(question.bookmarkedAt)}

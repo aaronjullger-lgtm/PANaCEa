@@ -52,7 +52,7 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
     <motion.div
       initial={{ y: 10 }}
       animate={{ y: 0 }}
-      className="flex items-center justify-center gap-4 py-2 px-4 bg-data-neutral dark:bg-data-neutral/50 border-t border-data-neutral dark:border-data-neutral text-xs"
+      className="flex items-center justify-center gap-4 py-2 px-4 bg-data-neutral border-t border-data-neutral text-xs"
     >
       {/* Accuracy */}
       <div className="flex items-center gap-1.5">
@@ -65,8 +65,8 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
                 : 'text-[var(--color-data-fail)]'
           }`}
         />
-        <span className="font-medium text-data-neutral dark:text-data-neutral">{stats.accuracy}%</span>
-        <span className="text-data-neutral dark:text-data-neutral">
+        <span className="font-medium text-data-neutral">{stats.accuracy}%</span>
+        <span className="text-data-neutral">
           ({stats.correct}/{stats.total})
         </span>
       </div>

@@ -192,9 +192,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   };
 
   const getTimeColor = (): string => {
-    if (timeRemaining > 180) return 'text-data-pass dark:text-data-pass';
+    if (timeRemaining > 180) return 'text-data-pass';
     if (timeRemaining > 60) return 'text-[var(--color-data-provisional)]';
-    return 'text-data-fail dark:text-data-fail';
+    return 'text-data-fail';
   };
 
   if (showIntro) {
@@ -288,7 +288,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </div>
                 <div>
                   <div className="text-sm text-[var(--color-text-muted)]">Score</div>
-                  <div className="text-2xl font-bold text-data-pass dark:text-data-pass">
+                  <div className="text-2xl font-bold text-data-pass">
                     {quarterlyProgress.questionsCompleted > 0
                       ? Math.round(
                           (quarterlyProgress.score / quarterlyProgress.questionsCompleted) * 100
@@ -368,9 +368,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
                     showFeedback
                       ? index === currentQuestionData.correctAnswerIndex
-                        ? 'border-data-pass bg-data-pass dark:bg-data-pass/20'
+                        ? 'border-data-pass bg-data-pass'
                         : index === selectedAnswer
-                          ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
+                          ? 'border-data-fail bg-data-fail'
                           : 'border-[var(--color-border)] border-[var(--color-border)] opacity-50'
                       : selectedAnswer === index
                         ? 'border-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
@@ -434,15 +434,15 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 exit={{ opacity: 0, y: -20 }}
                 className={`rounded-xl p-6 ${
                   selectedAnswer === currentQuestionData.correctAnswerIndex
-                    ? 'bg-data-pass dark:bg-data-pass/20 border-2 border-data-pass'
-                    : 'bg-data-fail dark:bg-data-fail/20 border-2 border-data-fail'
+                    ? 'bg-data-pass border-2 border-data-pass'
+                    : 'bg-data-fail border-2 border-data-fail'
                 }`}
               >
                 <h4
                   className={`text-xl font-bold mb-3 ${
                     selectedAnswer === currentQuestionData.correctAnswerIndex
-                      ? 'text-data-pass dark:text-data-pass'
-                      : 'text-data-fail dark:text-data-fail'
+                      ? 'text-data-pass'
+                      : 'text-data-fail'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -492,11 +492,11 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     Evidence-based clinical resource
                   </div>
                 </div>
-                <div className="block p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg">
-                  <div className="font-semibold text-data-pass dark:text-data-pass text-sm">
+                <div className="block p-3 bg-data-pass rounded-lg">
+                  <div className="font-semibold text-data-pass text-sm">
                     Clinical Guidelines
                   </div>
-                  <div className="text-xs text-data-pass dark:text-data-pass">
+                  <div className="text-xs text-data-pass">
                     ACC/AHA, ADA, IDSA guidelines
                   </div>
                 </div>

@@ -163,8 +163,8 @@ export const CompactTrendBadge = () => {
   const recentScores = [75, 78, 80, 82, 85];
 
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-2 bg-data-pass dark:bg-data-pass/20 rounded-lg">
-      <span className="text-xs font-medium text-data-pass dark:text-data-pass">Trending Up</span>
+    <div className="inline-flex items-center gap-2 px-3 py-2 bg-data-pass rounded-lg">
+      <span className="text-xs font-medium text-data-pass">Trending Up</span>
       <TrendSparklineCompact data={recentScores} colorScheme="success" />
     </div>
   );

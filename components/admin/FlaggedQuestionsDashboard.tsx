@@ -410,7 +410,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                             <StatusIcon className="w-3 h-3" />
                             {statusConfig.label}
                           </span>
-                          <span className="text-xs text-data-neutral dark:text-data-neutral">
+                          <span className="text-xs text-data-neutral">
                             {FLAG_TYPE_LABELS[flag.flagType] || flag.flagType}
                           </span>
                         </div>

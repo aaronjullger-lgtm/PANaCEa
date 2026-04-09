@@ -238,7 +238,7 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
           >
             {showPercentage ? `${displayValue}%` : displayValue}
           </span>
-          <span className="text-xs text-data-neutral dark:text-data-neutral">n={dataPoints}</span>
+          <span className="text-xs text-data-neutral">n={dataPoints}</span>
         </div>
 
         {/* Tooltip on hover for low confidence */}
@@ -351,11 +351,11 @@ export const EpistemicRadialGauge: React.FC<
 
       {/* Center value */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-data-neutral dark:text-data-neutral">
+        <span className="text-xl font-bold text-data-neutral">
           {showPercentage ? `${displayValue}%` : displayValue}
         </span>
         {label && (
-          <span className="text-xs text-data-neutral dark:text-data-neutral text-center max-w-[80%]">
+          <span className="text-xs text-data-neutral text-center max-w-[80%]">
             {label}
           </span>
         )}
@@ -437,17 +437,17 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
     <motion.div
       initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-data-neutral dark:border-data-neutral"
+      className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-data-neutral"
     >
       <div className="flex items-start gap-4">
         <div className="p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
           <Info className="w-6 h-6 text-[var(--color-category-practice)]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-data-neutral dark:text-data-neutral mb-1">
+          <h3 className="text-lg font-semibold text-data-neutral mb-1">
             Calibration in Progress
           </h3>
-          <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
+          <p className="text-sm text-data-neutral mb-4">
             Complete{' '}
             <span className="font-semibold text-[var(--color-category-practice)]">{remaining}</span> more
             questions to unlock your personalized analytics dashboard.
@@ -456,14 +456,14 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
           {/* Progress bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-data-neutral dark:text-data-neutral">
+              <span className="text-xs font-medium text-data-neutral">
                 Calibration Progress
               </span>
-              <span className="text-xs font-semibold text-data-neutral dark:text-data-neutral">
+              <span className="text-xs font-semibold text-data-neutral">
                 {currentCount}/{targetCount}
               </span>
             </div>
-            <div className="h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+            <div className="h-2 bg-data-neutral rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress * 100}%` }}

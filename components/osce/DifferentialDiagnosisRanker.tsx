@@ -96,10 +96,10 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return 'text-data-pass dark:text-data-pass';
+    if (score >= 90) return 'text-data-pass';
     if (score >= 75) return 'text-[var(--color-category-practice)] dark:text-[var(--color-category-practice)]';
     if (score >= 60) return 'text-[var(--color-data-provisional)]';
-    return 'text-data-fail dark:text-data-fail';
+    return 'text-data-fail';
   };
 
   return (
@@ -208,13 +208,13 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                     transition={{ delay: result.userRank * 0.1 }}
                     className={`p-4 rounded-lg border-2 ${
                       result.isCorrectPosition
-                        ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'
+                        ? 'bg-data-pass border-data-pass'
                         : 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {result.isCorrectPosition ? (
-                        <CheckCircle className="w-5 h-5 text-data-pass dark:text-data-pass mt-1 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-data-pass mt-1 flex-shrink-0" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)] mt-1 flex-shrink-0" />
                       )}

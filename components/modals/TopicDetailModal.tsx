@@ -136,7 +136,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-[var(--color-overlay)] px-4">
-      <div className="w-full max-w-md bg-[var(--color-bg-primary)] rounded-2xl shadow-xl p-6 relative border border-data-neutral dark:border-data-neutral ring-1 ring-black/10 dark:ring-white/10" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md bg-[var(--color-bg-primary)] rounded-2xl shadow-xl p-6 relative border border-data-neutral ring-1 ring-black/10 dark:ring-white/10" role="dialog" aria-modal="true">
         {/* Close */}
         <button
           onClick={onClose}
@@ -227,7 +227,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                         {c.score.toFixed(0)}% ({c.correct}/{c.total})
                       </span>
                     </div>
-                    <div className="w-full bg-data-neutral dark:bg-data-neutral rounded-full h-1.5">
+                    <div className="w-full bg-data-neutral rounded-full h-1.5">
                       <div
                         className={`h-1.5 rounded-full ${getBarColor(c.score)}`}
                         style={{ width: `${c.score}%` }}

@@ -5,7 +5,8 @@
  * These components safely handle JSONB fields from the database.
  */
 
-export { MarkdownRenderer } from './MarkdownRenderer';
+// MarkdownRenderer omitted from barrel — dynamically imported by ContentFieldRenderer.
+// Import directly: '@/components/ui/content-renderers/MarkdownRenderer' when needed.
 
 export { BulletListRenderer, ClinicalPearlsList, TreatmentStepsList } from './BulletListRenderer';
 

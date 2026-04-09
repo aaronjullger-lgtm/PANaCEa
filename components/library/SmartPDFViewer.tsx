@@ -333,7 +333,7 @@ export function SmartPDFViewer({
       {/* Liquid Mode: citation highlights not supported */}
       {liquidMode && highlights.length > 0 && (
         <div
-          className="flex items-center gap-2 px-3 py-2 bg-data-provisional/10 border-b border-data-provisional/20 text-data-provisional dark:text-data-provisional text-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-data-provisional/10 border-b border-data-provisional/20 text-data-provisional text-sm"
           role="alert"
         >
           <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden />

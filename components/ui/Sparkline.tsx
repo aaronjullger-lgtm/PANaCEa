@@ -58,7 +58,7 @@ export function Sparkline({
   if (sanitizedData.length === 0) {
     return (
       <div className={`inline-flex items-center ${className}`} style={{ width, height }}>
-        <div className="w-full h-full bg-data-neutral dark:bg-data-neutral rounded animate-pulse" />
+        <div className="w-full h-full bg-data-neutral rounded animate-pulse" />
       </div>
     );
   }
@@ -223,7 +223,7 @@ export function SparklineBar({
   if (sanitizedData.length === 0) {
     return (
       <div className={`sparkline-bar ${className}`} style={{ width, height }}>
-        <div className="w-full h-full bg-data-neutral dark:bg-data-neutral rounded animate-pulse" />
+        <div className="w-full h-full bg-data-neutral rounded animate-pulse" />
       </div>
     );
   }
@@ -280,8 +280,8 @@ export function TrendIndicator({
   const color = isNeutral
     ? 'text-data-neutral'
     : isPositive
-      ? 'text-data-pass dark:text-data-pass'
-      : 'text-data-fail dark:text-data-fail';
+      ? 'text-data-pass'
+      : 'text-data-fail';
   const arrow = isNeutral ? '→' : isPositive ? '↑' : '↓';
 
   return (

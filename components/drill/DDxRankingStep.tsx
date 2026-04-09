@@ -167,7 +167,7 @@ export function DDxRankingStep({
       return 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]';
     }
 
-    return 'bg-data-neutral dark:bg-data-neutral/50 border-data-neutral dark:border-data-neutral';
+    return 'bg-data-neutral border-data-neutral';
   };
 
   return (
@@ -180,7 +180,7 @@ export function DDxRankingStep({
             Rank the Differential Diagnoses
           </h3>
         </div>
-        <p className="text-sm text-data-neutral dark:text-data-neutral">
+        <p className="text-sm text-data-neutral">
           Drag to reorder from most likely (#1) to least likely. Then submit your ranking.
         </p>
       </div>
@@ -223,7 +223,7 @@ export function DDxRankingStep({
                   ${
                     isSubmitted && item.id === correctAnswerId
                       ? 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]'
-                      : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
+                      : 'bg-data-neutral text-data-neutral'
                   }
                 `}
                 >
@@ -232,7 +232,7 @@ export function DDxRankingStep({
 
                 {/* Drag Handle */}
                 {!isSubmitted && (
-                  <div className="text-data-neutral dark:text-data-neutral">
+                  <div className="text-data-neutral">
                     <GripVertical className="h-5 w-5" />
                   </div>
                 )}
@@ -245,7 +245,7 @@ export function DDxRankingStep({
                     ${
                       isSubmitted && item.id === correctAnswerId
                         ? 'text-[var(--color-data-pass)]'
-                        : 'text-data-neutral dark:text-data-neutral'
+                        : 'text-data-neutral'
                     }
                   `}
                   >
@@ -254,7 +254,7 @@ export function DDxRankingStep({
 
                   {/* Show reasoning after submission */}
                   {isSubmitted && showReasoning && item.reasoning && (
-                    <p className="text-xs text-data-neutral dark:text-data-neutral mt-1">
+                    <p className="text-xs text-data-neutral mt-1">
                       {item.reasoning}
                     </p>
                   )}
@@ -349,8 +349,8 @@ export function DDxRankingStep({
               >
                 DDx Ranking Score
               </h4>
-              <p className="text-sm text-data-neutral dark:text-data-neutral">{result.feedback}</p>
-              <p className="text-xs text-data-neutral dark:text-data-neutral mt-2">
+              <p className="text-sm text-data-neutral">{result.feedback}</p>
+              <p className="text-xs text-data-neutral mt-2">
                 You ranked the correct answer #{result.correctPosition + 1} out of {items.length}
               </p>
             </div>
@@ -372,7 +372,7 @@ export function DDxRankingStep({
           <button
             onClick={onSkip}
             disabled={disabled}
-            className="px-4 py-2 text-sm text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral transition-colors"
+            className="px-4 py-2 text-sm text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral transition-colors"
           >
             Skip ranking
           </button>

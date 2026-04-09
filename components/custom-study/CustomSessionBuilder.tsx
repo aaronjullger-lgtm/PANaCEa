@@ -163,7 +163,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
             Custom Study Session
           </h1>
-          <p className="text-data-neutral dark:text-data-neutral mt-1">
+          <p className="text-data-neutral mt-1">
             Create a focused practice session with your chosen topics
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
                 currentStep === step.id
                   ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)]'
                   : index < stepIndex
-                    ? 'text-data-pass dark:text-data-pass'
+                    ? 'text-data-pass'
                     : 'text-data-neutral'
               }`}
             >
@@ -196,7 +196,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
             {index < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 ${
-                  index < stepIndex ? 'bg-data-pass' : 'bg-data-neutral dark:bg-data-neutral'
+                  index < stepIndex ? 'bg-data-pass' : 'bg-data-neutral'
                 }`}
               />
             )}
@@ -302,7 +302,7 @@ function ContentStep({
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Select Organ Systems
           </h2>
-          <p className="text-sm text-data-neutral dark:text-data-neutral">
+          <p className="text-sm text-data-neutral">
             Choose the systems you want to study ({config.systems.length} selected)
           </p>
         </div>
@@ -316,7 +316,7 @@ function ContentStep({
           <span className="text-data-neutral">|</span>
           <button
             onClick={onDeselectAll}
-            className="text-sm text-data-neutral hover:text-data-neutral dark:text-data-neutral"
+            className="text-sm text-data-neutral hover:text-data-neutral"
           >
             Clear
           </button>
@@ -334,7 +334,7 @@ function ContentStep({
               className={`min-w-0 p-3 rounded-xl border-2 transition-all text-left ${
                 config.systems.includes(system.code)
                   ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                  : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/50'
+                  : 'border-data-neutral hover:border-[var(--color-accent)]/50'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -342,7 +342,7 @@ function ContentStep({
                   className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${
                     config.systems.includes(system.code)
                       ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                      : 'bg-data-neutral dark:bg-data-neutral'
+                      : 'bg-data-neutral'
                   }`}
                 >
                   {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
@@ -355,7 +355,7 @@ function ContentStep({
                     {system.code}
                   </div>
                   <div
-                    className="text-xs text-data-neutral dark:text-data-neutral truncate"
+                    className="text-xs text-data-neutral truncate"
                     title={fullName}
                   >
                     {fullName}
@@ -368,7 +368,7 @@ function ContentStep({
       </div>
 
       {config.systems.length === 0 && (
-        <div className="mt-4 p-3 bg-data-provisional dark:bg-data-provisional/20 rounded-lg flex items-center gap-2 text-data-provisional dark:text-data-provisional">
+        <div className="mt-4 p-3 bg-data-provisional rounded-lg flex items-center gap-2 text-data-provisional">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">Please select at least one organ system</span>
         </div>
@@ -393,7 +393,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
         Choose Focus Areas
       </h2>
-      <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
+      <p className="text-sm text-data-neutral mb-4">
         What aspects do you want to be tested on? ({config.focusAreas.length} selected)
       </p>
 
@@ -405,14 +405,14 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               config.focusAreas.includes(area)
                 ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 dark:bg-[var(--color-accent)]/20'
-                : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/30'
+                : 'border-data-neutral hover:border-[var(--color-accent)]/30'
             }`}
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{meta.icon}</span>
               <div>
                 <div className="font-medium text-[var(--color-text-primary)]">{meta.label}</div>
-                <div className="text-sm text-data-neutral dark:text-data-neutral">{meta.description}</div>
+                <div className="text-sm text-data-neutral">{meta.description}</div>
               </div>
               {config.focusAreas.includes(area) && (
                 <Check className="w-5 h-5 text-[var(--color-accent)] ml-auto" />
@@ -423,7 +423,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
       </div>
 
       {config.focusAreas.length === 0 && (
-        <div className="mt-4 p-3 bg-data-provisional dark:bg-data-provisional/20 rounded-lg flex items-center gap-2 text-data-provisional dark:text-data-provisional">
+        <div className="mt-4 p-3 bg-data-provisional rounded-lg flex items-center gap-2 text-data-provisional">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">Please select at least one focus area</span>
         </div>
@@ -447,7 +447,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
       <div className="space-y-6">
         {/* Questions per increment */}
         <div>
-          <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+          <label className="block text-sm font-medium text-data-neutral mb-2">
             Questions per round
           </label>
           <div className="flex gap-2">
@@ -458,7 +458,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   config.questionsPerIncrement === num
                     ? 'bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]'
-                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
+                    : 'bg-data-neutral text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
                 {num}
@@ -469,14 +469,14 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
 
         {/* Difficulty - Fixed at PANCE-Level for standardized practice */}
         <div>
-          <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+          <label className="block text-sm font-medium text-data-neutral mb-2">
             Difficulty
           </label>
           <div className="flex gap-2">
             <div className="px-4 py-2 rounded-lg font-medium bg-[var(--color-category-practice)] text-[var(--color-text-inverse)]">
               PANCE-Level
             </div>
-            <span className="text-sm text-data-neutral dark:text-data-neutral self-center ml-2">
+            <span className="text-sm text-data-neutral self-center ml-2">
               (Standardized difficulty for accurate practice)
             </span>
           </div>
@@ -488,7 +488,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             <div className="font-medium text-[var(--color-text-primary)]">
               Retry questions to review
             </div>
-            <div className="text-sm text-data-neutral dark:text-data-neutral">
+            <div className="text-sm text-data-neutral">
               Review questions you got wrong at the end of each round
             </div>
           </div>
@@ -497,7 +497,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
               onChange({ ...config, retryMissedQuestions: !config.retryMissedQuestions })
             }
             className={`relative w-12 h-6 rounded-full transition-colors ${
-              config.retryMissedQuestions ? 'bg-[var(--color-category-practice)]' : 'bg-data-neutral dark:bg-data-neutral'
+              config.retryMissedQuestions ? 'bg-[var(--color-category-practice)]' : 'bg-data-neutral'
             }`}
           >
             <div
@@ -526,8 +526,8 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
 
       <div className="space-y-4">
         {/* Systems */}
-        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
-          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
+        <div className="p-4 bg-data-neutral rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral mb-2">
             <Layers className="w-4 h-4" />
             <span className="font-medium">Systems ({config.systems.length})</span>
           </div>
@@ -544,8 +544,8 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         </div>
 
         {/* Focus Areas */}
-        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
-          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
+        <div className="p-4 bg-data-neutral rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral mb-2">
             <Target className="w-4 h-4" />
             <span className="font-medium">Focus Areas ({config.focusAreas.length})</span>
           </div>
@@ -562,21 +562,21 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         </div>
 
         {/* Settings Summary */}
-        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
-          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
+        <div className="p-4 bg-data-neutral rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral mb-2">
             <Settings className="w-4 h-4" />
             <span className="font-medium">Settings</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-data-neutral dark:text-data-neutral">Questions per round:</div>
+            <div className="text-data-neutral">Questions per round:</div>
             <div className="font-medium text-[var(--color-text-primary)]">
               {config.questionsPerIncrement}
             </div>
-            <div className="text-data-neutral dark:text-data-neutral">Difficulty:</div>
+            <div className="text-data-neutral">Difficulty:</div>
             <div className="font-medium text-[var(--color-text-primary)] capitalize">
               {config.difficulty}
             </div>
-            <div className="text-data-neutral dark:text-data-neutral">Retry missed:</div>
+            <div className="text-data-neutral">Retry missed:</div>
             <div className="font-medium text-[var(--color-text-primary)]">
               {config.retryMissedQuestions ? 'Yes' : 'No'}
             </div>

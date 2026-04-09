@@ -701,7 +701,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-data-fail dark:bg-data-fail/20 border border-data-fail dark:border-data-fail rounded-lg text-data-fail dark:text-data-fail text-sm">
+          <div className="mb-4 p-3 bg-data-fail border border-data-fail rounded-lg text-data-fail text-sm">
             {error}
           </div>
         )}

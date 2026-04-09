@@ -47,13 +47,13 @@ export const GoalCard: React.FC<GoalCardProps> = ({
       case 'active':
         return 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       case 'completed':
-        return 'text-data-pass bg-data-pass dark:bg-data-pass/30';
+        return 'text-data-pass bg-data-pass';
       case 'paused':
         return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/20 dark:bg-[var(--color-data-provisional)]/30';
       case 'failed':
-        return 'text-data-fail bg-data-fail dark:bg-data-fail/30';
+        return 'text-data-fail bg-data-fail';
       default:
-        return 'text-data-neutral bg-data-neutral dark:bg-data-neutral';
+        return 'text-data-neutral bg-data-neutral';
     }
   };
 
@@ -115,7 +115,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-data-neutral dark:text-data-neutral">
+            <h3 className="text-lg font-semibold text-data-neutral">
               {goal.title}
             </h3>
             <span
@@ -124,13 +124,13 @@ export const GoalCard: React.FC<GoalCardProps> = ({
               {getStatusIcon(goal.status)}
               {goal.status}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-data-neutral text-data-neutral">
               {getTypeLabel(goal.goalType)}
             </span>
           </div>
 
           {goal.description && (
-            <p className="text-sm text-data-neutral dark:text-data-neutral mb-2">{goal.description}</p>
+            <p className="text-sm text-data-neutral mb-2">{goal.description}</p>
           )}
 
           {goal.motivationNotes && (
@@ -165,7 +165,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
                 aria-label="Edit goal"
                 className="p-2.5 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
               >
-                <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" aria-hidden="true" />
+                <Edit2 className="w-4 h-4 text-data-neutral" aria-hidden="true" />
               </button>
               <button
                 onClick={onDelete}
@@ -182,15 +182,15 @@ export const GoalCard: React.FC<GoalCardProps> = ({
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-data-neutral dark:text-data-neutral">
+          <span className="text-data-neutral">
             Progress: {goal.currentValue} / {goal.targetValue || '∞'} {goal.targetUnit || 'units'}
           </span>
-          <span className="font-semibold text-data-neutral dark:text-data-neutral">
+          <span className="font-semibold text-data-neutral">
             {goal.progressPercentage.toFixed(0)}%
           </span>
         </div>
 
-        <div className="w-full bg-data-neutral dark:bg-data-neutral rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-data-neutral rounded-full h-3 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
@@ -208,7 +208,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
             <Flame className="w-4 h-4" />
             <span>{goal.currentStreak} day streak</span>
             {goal.bestStreak > goal.currentStreak && (
-              <span className="text-xs text-data-neutral dark:text-data-neutral">
+              <span className="text-xs text-data-neutral">
                 (best: {goal.bestStreak})
               </span>
             )}
@@ -217,7 +217,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
 
         {/* Target Date */}
         {goal.targetDate && (
-          <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
+          <div className="flex items-center gap-1.5 text-data-neutral">
             <Calendar className="w-4 h-4" />
             <span>
               {formatDate(goal.targetDate)}
@@ -233,7 +233,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
 
         {/* Target System */}
         {goal.targetSystem && (
-          <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
+          <div className="flex items-center gap-1.5 text-data-neutral">
             <Target className="w-4 h-4" />
             <span>{goal.targetSystem}</span>
           </div>
@@ -249,16 +249,16 @@ export const GoalCard: React.FC<GoalCardProps> = ({
 
       {/* Milestones */}
       {goal.milestones && Array.isArray(goal.milestones) && goal.milestones.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
-          <div className="text-xs text-data-neutral dark:text-data-neutral mb-2">Milestones:</div>
+        <div className="mt-4 pt-4 border-t border-data-neutral">
+          <div className="text-xs text-data-neutral mb-2">Milestones:</div>
           <div className="flex gap-2 flex-wrap">
             {(goal.milestones as any[]).map((milestone, idx) => (
               <div
                 key={idx}
                 className={`px-2 py-1 rounded text-xs ${
                   milestone.reached
-                    ? 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
-                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
+                    ? 'bg-data-pass text-data-pass'
+                    : 'bg-data-neutral text-data-neutral'
                 }`}
               >
                 {milestone.reached && '✓ '}
@@ -271,8 +271,8 @@ export const GoalCard: React.FC<GoalCardProps> = ({
 
       {/* Reward Message */}
       {goal.status === 'completed' && goal.rewardMessage && (
-        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
-          <div className="text-sm text-data-pass dark:text-data-pass font-medium flex items-center gap-2">
+        <div className="mt-4 pt-4 border-t border-data-neutral">
+          <div className="text-sm text-data-pass font-medium flex items-center gap-2">
             <CheckCircle className="w-4 h-4 shrink-0" />
             {goal.rewardMessage}
           </div>

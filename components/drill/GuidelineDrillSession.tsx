@@ -363,8 +363,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         transition={{ duration: 0.2 }}
         className={`p-3 sm:p-4 ${
           isCorrect
-            ? 'bg-data-pass dark:bg-data-pass/50 border-t-2 border-data-pass'
-            : 'bg-data-fail dark:bg-data-fail/50 border-t-2 border-data-fail'
+            ? 'bg-data-pass border-t-2 border-data-pass'
+            : 'bg-data-fail border-t-2 border-data-fail'
         }`}
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -418,15 +418,15 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             animate={{ scale: 1 }}
             className={`p-6 rounded-xl border mb-4 ${
               isCorrect
-                ? 'bg-data-pass dark:bg-data-pass/30 border-data-pass dark:border-data-pass'
-                : 'bg-data-fail dark:bg-data-fail/30 border-data-fail dark:border-data-fail'
+                ? 'bg-data-pass border-data-pass'
+                : 'bg-data-fail border-data-fail'
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
               {isCorrect ? (
-                <CheckCircle className="w-8 h-8 text-data-pass dark:text-data-pass" />
+                <CheckCircle className="w-8 h-8 text-data-pass" />
               ) : (
-                <XCircle className="w-8 h-8 text-data-fail dark:text-data-fail" />
+                <XCircle className="w-8 h-8 text-data-fail" />
               )}
               <div>
                 <h2

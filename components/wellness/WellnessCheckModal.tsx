@@ -203,8 +203,8 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
                 Take a moment to drink water or grab a healthy snack
               </p>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg">
-              <Wind className="w-5 h-5 text-data-pass dark:text-data-pass mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-3 bg-data-pass rounded-lg">
+              <Wind className="w-5 h-5 text-data-pass mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Try the 4-7-8 breathing technique to reset your focus
               </p>

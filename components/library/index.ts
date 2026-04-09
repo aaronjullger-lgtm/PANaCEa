@@ -7,8 +7,8 @@
  * Now includes intelligent DDx features with database integration
  */
 
-// Main Library Component
-export { ClinicalReferenceLibrary } from './ClinicalReferenceLibrary';
+// ClinicalReferenceLibrary intentionally omitted from barrel — must be lazy-loaded
+// to enable code splitting. Import directly: '@/components/library/ClinicalReferenceLibrary'
 
 // Navigation Components
 export { LibrarySidebar } from './LibrarySidebar';

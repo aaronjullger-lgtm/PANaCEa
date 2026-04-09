@@ -12,7 +12,7 @@ export const StrengthsWeaknesses: React.FC<Props> = ({ strengths, weaknesses }) 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Strengths</p>
         {strengths.length ? (
-          <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
+          <ul className="space-y-1 text-sm text-data-neutral">
             {strengths.map((item) => (
               <li key={item} className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-data-pass" />
@@ -27,7 +27,7 @@ export const StrengthsWeaknesses: React.FC<Props> = ({ strengths, weaknesses }) 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Needs Work</p>
         {weaknesses.length ? (
-          <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
+          <ul className="space-y-1 text-sm text-data-neutral">
             {weaknesses.map((item) => (
               <li key={item} className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[var(--color-data-fail)]" />

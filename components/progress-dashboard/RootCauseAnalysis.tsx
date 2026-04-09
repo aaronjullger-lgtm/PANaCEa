@@ -66,7 +66,7 @@ const DonutChart: React.FC<{
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-data-neutral dark:text-data-neutral"
+          className="text-data-neutral"
         />
         <text x="50" y="55" textAnchor="middle" className="fill-data-neutral text-xs" fontSize="12">
           No data
@@ -155,7 +155,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
       {totalIncorrect === 0 ? (
         <div className="text-center py-6">
-          <p className="text-sm text-data-neutral dark:text-data-neutral">
+          <p className="text-sm text-data-neutral">
             No incorrect answers to analyze yet.
           </p>
         </div>
@@ -172,12 +172,12 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
               <div key={item.tag} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full ${ERROR_TAG_CONFIG[item.tag].bgColor}`} />
-                  <span className="text-data-neutral dark:text-data-neutral text-xs">
+                  <span className="text-data-neutral text-xs">
                     {ERROR_TAG_CONFIG[item.tag].label}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-light text-data-neutral dark:text-data-neutral">
+                  <span className="text-lg font-light text-data-neutral">
                     {item.count}
                   </span>
                   <span className="text-xs text-data-neutral">({item.percentage}%)</span>
@@ -186,10 +186,10 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
             ))}
 
             {untaggedCount > 0 && (
-              <div className="flex items-center justify-between text-sm pt-1 border-t border-data-neutral dark:border-data-neutral">
+              <div className="flex items-center justify-between text-sm pt-1 border-t border-data-neutral">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-data-neutral dark:bg-data-neutral" />
-                  <span className="text-data-neutral dark:text-data-neutral text-xs">Untagged</span>
+                  <span className="w-3 h-3 rounded-full bg-data-neutral" />
+                  <span className="text-data-neutral text-xs">Untagged</span>
                 </div>
                 <span className="text-sm text-data-neutral">{untaggedCount}</span>
               </div>
@@ -200,7 +200,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
       {/* Insight */}
       {totalIncorrect > 0 && (
-        <p className="text-[10px] text-data-neutral dark:text-data-neutral mt-4 pt-3 border-t border-data-neutral dark:border-data-neutral flex items-start gap-1">
+        <p className="text-[10px] text-data-neutral mt-4 pt-3 border-t border-data-neutral flex items-start gap-1">
           <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
           <span>{getInsight()}</span>
         </p>

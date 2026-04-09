@@ -93,8 +93,8 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             {/* Strong Areas */}
             {summary.strongAreas.length > 0 && (
-              <div className="p-4 bg-data-pass dark:bg-data-pass/20 rounded-xl">
-                <div className="flex items-center gap-2 text-data-pass dark:text-data-pass mb-2">
+              <div className="p-4 bg-data-pass rounded-xl">
+                <div className="flex items-center gap-2 text-data-pass mb-2">
                   <TrendingUp className="w-4 h-4" aria-hidden="true" />
                   <span className="font-medium">Strong Areas</span>
                 </div>
@@ -102,7 +102,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   {summary.strongAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-2 py-1 bg-data-pass dark:bg-data-pass/40 text-data-pass dark:text-data-pass rounded-full text-sm"
+                      className="px-2 py-1 bg-data-pass text-data-pass rounded-full text-sm"
                     >
                       {area}
                     </span>
@@ -113,8 +113,8 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
 
             {/* Focus Areas */}
             {summary.weakAreas.length > 0 && (
-              <div className="p-4 bg-data-provisional dark:bg-data-provisional/20 rounded-xl">
-                <div className="flex items-center gap-2 text-data-provisional dark:text-data-provisional mb-2">
+              <div className="p-4 bg-data-provisional rounded-xl">
+                <div className="flex items-center gap-2 text-data-provisional mb-2">
                   <AlertTriangle className="w-4 h-4" aria-hidden="true" />
                   <span className="font-medium">Needs Review</span>
                 </div>
@@ -122,7 +122,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   {summary.weakAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-2 py-1 bg-data-provisional dark:bg-data-provisional/40 text-data-provisional dark:text-data-provisional rounded-full text-sm"
+                      className="px-2 py-1 bg-data-provisional text-data-provisional rounded-full text-sm"
                     >
                       {area}
                     </span>
@@ -135,16 +135,16 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           {/* System Breakdown */}
           {summary.systemBreakdown.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-3">
+              <h3 className="text-sm font-medium text-data-neutral mb-3">
                 Performance by System
               </h3>
               <div className="space-y-2">
                 {summary.systemBreakdown.map((system) => (
                   <div key={system.system} className="flex items-center gap-3">
-                    <div className="w-32 text-sm text-data-neutral dark:text-data-neutral truncate">
+                    <div className="w-32 text-sm text-data-neutral truncate">
                       {system.systemName}
                     </div>
-                    <div className="flex-1 h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-data-neutral rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${system.accuracy}%` }}
@@ -170,28 +170,28 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           {/* Focus Area Breakdown */}
           {summary.focusAreaBreakdown.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-3">
+              <h3 className="text-sm font-medium text-data-neutral mb-3">
                 Performance by Focus Area
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {summary.focusAreaBreakdown.map((fa) => (
                   <div
                     key={fa.focusArea}
-                    className="p-3 bg-data-neutral dark:bg-data-neutral/50 rounded-xl"
+                    className="p-3 bg-data-neutral rounded-xl"
                   >
                     <div className="text-2xl mb-1">
                       {FOCUS_AREA_META[fa.focusArea]?.icon || '📋'}
                     </div>
-                    <div className="text-xs text-data-neutral dark:text-data-neutral truncate">
+                    <div className="text-xs text-data-neutral truncate">
                       {FOCUS_AREA_META[fa.focusArea]?.label || fa.focusArea}
                     </div>
                     <div
                       className={`text-lg font-bold ${
                         fa.accuracy >= 80
-                          ? 'text-data-pass dark:text-data-pass'
+                          ? 'text-data-pass'
                           : fa.accuracy >= 60
-                            ? 'text-data-provisional dark:text-data-provisional'
-                            : 'text-data-fail dark:text-data-fail'
+                            ? 'text-data-provisional'
+                            : 'text-data-fail'
                       }`}
                     >
                       <span className="tabular-nums">{fa.accuracy.toFixed(0)}%</span>
@@ -218,7 +218,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <div className="flex gap-3">
             <button
               onClick={onGoHome}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-data-neutral dark:border-data-neutral rounded-xl text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-data-neutral rounded-xl text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               <Home className="w-5 h-5" aria-hidden="true" />
               Back to Menu
@@ -250,11 +250,11 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, color }: StatCardProps) {
   const colorClasses = {
-    green: 'text-data-pass dark:text-data-pass bg-data-pass dark:bg-data-pass/20',
-    amber: 'text-data-provisional dark:text-data-provisional bg-data-provisional dark:bg-data-provisional/20',
+    green: 'text-data-pass bg-data-pass',
+    amber: 'text-data-provisional bg-data-provisional',
     blue: 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]',
     purple: 'text-[var(--color-accent)] bg-[var(--color-accent)]/5 dark:bg-[var(--color-accent)]/20',
-    red: 'text-data-fail dark:text-data-fail bg-data-fail dark:bg-data-fail/20',
+    red: 'text-data-fail bg-data-fail',
   };
 
   return (

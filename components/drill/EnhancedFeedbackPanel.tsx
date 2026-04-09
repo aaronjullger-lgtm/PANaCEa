@@ -78,7 +78,7 @@ const TYPE_COLORS: Record<string, string> = {
   procedure: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
   ecg: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   finding: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]',
-  imaging: 'bg-data-neutral/10 text-data-neutral dark:text-data-neutral',
+  imaging: 'bg-data-neutral/10 text-data-neutral',
 };
 
 export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({

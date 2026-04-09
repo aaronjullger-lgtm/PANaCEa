@@ -40,21 +40,21 @@ function getPanceYieldBadge(yield_level?: number): {
       return {
         label: 'High Yield',
         color:
-          'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass border-data-pass dark:border-data-pass',
+          'bg-data-pass text-data-pass border-data-pass',
         icon: <Sparkles className="w-3 h-3" />,
       };
     case 2:
       return {
         label: 'Medium',
         color:
-          'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional border-data-provisional dark:border-data-provisional',
+          'bg-data-provisional text-data-provisional border-data-provisional',
         icon: <Target className="w-3 h-3" />,
       };
     case 1:
       return {
         label: 'Low Yield',
         color:
-          'bg-data-neutral dark:bg-data-neutral/30 text-data-neutral dark:text-data-neutral border-data-neutral dark:border-data-neutral',
+          'bg-data-neutral text-data-neutral border-data-neutral',
         icon: <Target className="w-3 h-3" />,
       };
     default:
@@ -108,7 +108,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-bold text-data-neutral dark:text-data-neutral line-clamp-2">
+              <h3 className="text-base font-bold text-data-neutral line-clamp-2">
                 {condition.condition}
               </h3>
 
@@ -134,7 +134,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
                 {condition.relatedSystems.map((sys) => (
                   <span
                     key={sys}
-                    className="text-[10px] px-1.5 py-0.5 rounded bg-data-neutral/60 dark:bg-data-neutral/60 text-data-neutral dark:text-data-neutral font-medium"
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-data-neutral/60 text-data-neutral font-medium"
                   >
                     {sys}
                   </span>
@@ -155,9 +155,9 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
-                className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[var(--color-bg-primary)]/60 dark:bg-data-neutral/60 border border-data-neutral dark:border-data-neutral"
+                className="inline-flex items-center px-2.5 py-1 rounded-lg bg-[var(--color-bg-primary)]/60 border border-data-neutral"
               >
-                <span className="text-xs font-medium text-data-neutral dark:text-data-neutral line-clamp-1">
+                <span className="text-xs font-medium text-data-neutral line-clamp-1">
                   {snippet}
                 </span>
               </motion.div>
@@ -167,7 +167,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
 
         {/* Empty State */}
         {snippets.length === 0 && (
-          <div className="text-xs text-data-neutral dark:text-data-neutral italic">
+          <div className="text-xs text-data-neutral italic">
             Click to view full details
           </div>
         )}
@@ -175,7 +175,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
 
       {/* Quick Actions Footer */}
       {showActions && (onDrill || onBookmark) && (
-        <div className="px-4 pb-3 pt-2 border-t border-data-neutral/50 dark:border-data-neutral/50 flex gap-2">
+        <div className="px-4 pb-3 pt-2 border-t border-data-neutral/50 flex gap-2">
           {onDrill && (
             <button
               onClick={(e) => handleActionClick(e, onDrill)}

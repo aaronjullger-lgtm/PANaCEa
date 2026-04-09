@@ -93,7 +93,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
       case 'low':
         return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
-        return 'bg-data-neutral/20 text-data-neutral dark:text-data-neutral border-data-neutral/30 dark:border-data-neutral/30';
+        return 'bg-data-neutral/20 text-data-neutral border-data-neutral/30';
     }
   };
 
@@ -108,7 +108,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
       case 'pending':
         return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
-        return 'bg-data-neutral/20 text-data-neutral dark:text-data-neutral border-data-neutral/30 dark:border-data-neutral/30';
+        return 'bg-data-neutral/20 text-data-neutral border-data-neutral/30';
     }
   };
 

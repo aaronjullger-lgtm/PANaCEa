@@ -38,7 +38,7 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
 
   return (
     <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl shadow-md">
-      <h3 className="text-lg font-bold text-data-neutral dark:text-data-neutral mb-4">
+      <h3 className="text-lg font-bold text-data-neutral mb-4">
         Performance Trend: {topic}
       </h3>
       <div className="w-full min-h-[300px] h-[300px]">

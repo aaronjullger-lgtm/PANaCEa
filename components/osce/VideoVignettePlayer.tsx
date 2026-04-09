@@ -130,10 +130,10 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
         return 'border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
       }
       if (index === correctAnswerIndex) {
-        return 'border-data-pass bg-data-pass dark:bg-data-pass/20';
+        return 'border-data-pass bg-data-pass';
       }
       if (index === selectedAnswer) {
-        return 'border-data-fail bg-data-fail dark:bg-data-fail/20';
+        return 'border-data-fail bg-data-fail';
       }
       return 'border-[var(--color-border)] opacity-50';
     };
@@ -283,15 +283,15 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
               exit={{ opacity: 0, y: -20 }}
               className={`rounded-xl p-6 ${
                 selectedAnswer === correctAnswerIndex
-                  ? 'bg-data-pass dark:bg-data-pass/20 border-2 border-data-pass'
-                  : 'bg-data-fail dark:bg-data-fail/20 border-2 border-data-fail'
+                  ? 'bg-data-pass border-2 border-data-pass'
+                  : 'bg-data-fail border-2 border-data-fail'
               }`}
             >
               <h4
                 className={`text-xl font-bold mb-3 flex items-center gap-2 ${
                   selectedAnswer === correctAnswerIndex
-                    ? 'text-data-pass dark:text-data-pass'
-                    : 'text-data-fail dark:text-data-fail'
+                    ? 'text-data-pass'
+                    : 'text-data-fail'
                 }`}
               >
                 {selectedAnswer === correctAnswerIndex ? (

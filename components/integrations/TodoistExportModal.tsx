@@ -248,7 +248,7 @@ export default function TodoistExportModal({
                   {isConnected ? (
                     <>
                       <CheckCircle className="w-5 h-5 text-data-pass mr-2" />
-                      <span className="text-data-pass dark:text-data-pass">
+                      <span className="text-data-pass">
                         Connected to Todoist
                       </span>
                     </>
@@ -265,7 +265,7 @@ export default function TodoistExportModal({
                 {isConnected ? (
                   <button
                     onClick={handleDisconnect}
-                    className="text-sm text-data-fail hover:text-data-fail dark:text-data-fail"
+                    className="text-sm text-data-fail hover:text-data-fail"
                   >
                     Disconnect
                   </button>
@@ -316,10 +316,10 @@ export default function TodoistExportModal({
 
           {/* Status Messages */}
           {exportStatus === 'success' && (
-            <div className="bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass rounded-lg p-4">
+            <div className="bg-data-pass border border-data-pass rounded-lg p-4">
               <div className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-data-pass mr-2" />
-                <span className="text-data-pass dark:text-data-pass">
+                <span className="text-data-pass">
                   {options.exportMethod === 'csv'
                     ? 'CSV file downloaded successfully!'
                     : 'Tasks exported to Todoist successfully!'}

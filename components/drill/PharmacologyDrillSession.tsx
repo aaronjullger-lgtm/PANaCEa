@@ -306,7 +306,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-data-pass dark:text-data-pass" />
+              <BarChart3 className="w-5 h-5 text-data-pass" />
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Drug Class Progress
               </h3>
@@ -322,10 +322,10 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
                     <span
                       className={`font-semibold ${
                         cat.accuracy >= 80
-                          ? 'text-data-pass dark:text-data-pass'
+                          ? 'text-data-pass'
                           : cat.accuracy >= 70
-                            ? 'text-data-provisional dark:text-data-provisional'
-                            : 'text-data-fail dark:text-data-fail'
+                            ? 'text-data-provisional'
+                            : 'text-data-fail'
                       }`}
                     >
                       {cat.accuracy}%

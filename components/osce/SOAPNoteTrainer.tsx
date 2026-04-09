@@ -74,11 +74,11 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-data-pass dark:text-data-pass';
+    if (score >= 90) return 'text-data-pass';
     if (score >= 80) return 'text-[var(--color-category-practice)]';
     if (score >= 70) return 'text-[var(--color-warning)]';
     if (score >= 60) return 'text-[var(--color-warning-secondary)]';
-    return 'text-data-fail dark:text-data-fail';
+    return 'text-data-fail';
   };
 
   const computeSectionTotal = (result: GradingResult | null) => {
@@ -323,7 +323,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                     safety, completeness, and clear clinical reasoning.
                   </p>
                   {gradingResult.totalScore >= 90 && (
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-data-pass dark:bg-data-pass/20 px-3 py-1 text-xs font-semibold text-data-pass dark:text-data-pass">
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-data-pass px-3 py-1 text-xs font-semibold text-data-pass">
                       <Award className="w-4 h-4" />
                       Honors-level performance
                     </div>
@@ -406,7 +406,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
               {/* Strengths */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <CheckCircle className="w-5 h-5 text-data-pass dark:text-data-pass" />
+                  <CheckCircle className="w-5 h-5 text-data-pass" />
                   <h4 className="font-bold text-[var(--color-text-primary)]">Strengths</h4>
                 </div>
                 <ul className="space-y-2">
@@ -415,7 +415,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                       key={i}
                       className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
-                      <Check className="w-4 h-4 text-data-pass dark:text-data-pass mt-0.5 flex-shrink-0" />
+                      <Check className="w-4 h-4 text-data-pass mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
                   ))}
@@ -425,7 +425,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
               {/* Missed Concepts */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-5 h-5 text-data-fail dark:text-data-fail" />
+                  <AlertCircle className="w-5 h-5 text-data-fail" />
                   <h4 className="font-bold text-[var(--color-text-primary)]">Missed Concepts</h4>
                 </div>
                 <ul className="space-y-2">
@@ -434,7 +434,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                       key={i}
                       className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
-                      <span className="text-data-fail dark:text-data-fail mt-1">!</span>
+                      <span className="text-data-fail mt-1">!</span>
                       {item}
                     </li>
                   ))}

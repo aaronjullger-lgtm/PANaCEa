@@ -117,7 +117,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         onBack={() => setShowSetPicker(false)}
       >
         <div className="max-w-2xl mx-auto space-y-4 p-4">
-          <p className="text-data-neutral dark:text-data-neutral">
+          <p className="text-data-neutral">
             Choose a symptom to practice distinguishing between similar conditions.
           </p>
 
@@ -141,11 +141,11 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                     <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)]">
                       {set.symptom}
                     </h3>
-                    <p className="text-sm text-data-neutral dark:text-data-neutral">
+                    <p className="text-sm text-data-neutral">
                       {Object.keys(set.distinguishers).length} conditions ·{' '}
                       {set.system || 'Multi-system'}
                       {set.highYield && (
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded-full">
+                        <span className="ml-2 px-2 py-0.5 text-xs bg-data-provisional text-data-provisional rounded-full">
                           High Yield
                         </span>
                       )}

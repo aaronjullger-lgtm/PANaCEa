@@ -11,7 +11,7 @@ export const TimingPatterns: React.FC<Props> = ({ patterns }) => {
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Rushing</p>
         {patterns.rushedSystems.length ? (
-          <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
+          <ul className="space-y-1 text-sm text-data-neutral">
             {patterns.rushedSystems.map((sys) => (
               <li key={sys} className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-data-pass" />
@@ -26,7 +26,7 @@ export const TimingPatterns: React.FC<Props> = ({ patterns }) => {
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Overthinking</p>
         {patterns.overthinkingSystems.length ? (
-          <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
+          <ul className="space-y-1 text-sm text-data-neutral">
             {patterns.overthinkingSystems.map((sys) => (
               <li key={sys} className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-data-provisional" />

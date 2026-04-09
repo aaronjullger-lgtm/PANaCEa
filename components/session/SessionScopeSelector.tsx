@@ -299,6 +299,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
             {step !== 'mode' && (
               <button
                 onClick={handleBack}
+                aria-label="Go back"
                 className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
               >
                 <ChevronLeft className="w-5 h-5 text-[var(--color-text-secondary)]" />

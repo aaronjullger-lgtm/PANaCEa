@@ -131,9 +131,9 @@ const ExportControls: React.FC<ExportControlsProps> = ({
         disabled={data.length === 0}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
           data.length === 0
-            ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
+            ? 'bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'csv'
-              ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
+              ? 'bg-data-pass text-data-pass'
               : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
         }`}
       >
@@ -150,9 +150,9 @@ const ExportControls: React.FC<ExportControlsProps> = ({
         disabled={data.length === 0}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
           data.length === 0
-            ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
+            ? 'bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'json'
-              ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
+              ? 'bg-data-pass text-data-pass'
               : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
         }`}
       >

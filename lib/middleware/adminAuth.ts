@@ -95,9 +95,6 @@ export async function verifyAdminRole(
       return null;
     }
 
-    // TODO: In production, fetch user role from database
-    // For now, we'll check if the user ID matches known admin patterns
-    // This should be replaced with actual database lookup
     const userId = verifiedToken.sub;
     const userRole = await getUserRole(userId);
 

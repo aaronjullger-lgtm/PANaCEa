@@ -4,7 +4,7 @@
  * Implements skeleton loaders that exactly match the dimensions of loaded content
  * to achieve Cumulative Layout Shift (CLS) of 0.0 during data fetching.
  *
- * All skeletons use consistent styling: bg-data-neutral dark:bg-data-neutral animate-pulse rounded-xl
+ * All skeletons use consistent styling: bg-data-neutral animate-pulse rounded-xl
  */
 
 import React from 'react';

@@ -251,17 +251,17 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                 className={`w-full p-4 rounded-xl text-left transition-all ${
                   phase === 'feedback'
                     ? index === currentQuestion.correctAnswerIndex
-                      ? 'bg-data-pass dark:bg-data-pass/30 border-2 border-data-pass'
+                      ? 'bg-data-pass border-2 border-data-pass'
                       : index === selectedAnswer && !isCorrect
                         ? 'bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)]'
-                        : 'bg-data-neutral dark:bg-data-neutral opacity-50'
+                        : 'bg-data-neutral opacity-50'
                     : selectedAnswer === index
                       ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border-2 border-[var(--color-category-practice)]'
-                      : 'bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral border-2 border-transparent'
+                      : 'bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral border-2 border-transparent'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-data-neutral dark:bg-data-neutral text-sm font-medium">
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-data-neutral text-sm font-medium">
                     {String.fromCharCode(65 + index)}
                   </span>
                   <span className="flex-1 text-[var(--color-text-primary)]">{option}</span>
@@ -281,12 +281,12 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mt-6 p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl"
+              className="mt-6 p-4 bg-data-neutral rounded-xl"
             >
-              <p className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
+              <p className="text-sm font-medium text-data-neutral mb-2">
                 Explanation
               </p>
-              <p className="text-sm text-data-neutral dark:text-data-neutral">
+              <p className="text-sm text-data-neutral">
                 {currentQuestion.rationale}
               </p>
             </motion.div>
@@ -328,7 +328,7 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
   return (
     <div className="max-w-md mx-auto p-4">
       <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg p-6 text-center">
-        <div className="w-16 h-16 bg-data-pass dark:bg-data-pass/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-data-pass rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-data-pass" />
         </div>
 
@@ -337,24 +337,24 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
         </h2>
 
         <div className="grid grid-cols-2 gap-4 my-6">
-          <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
-            <div className="text-2xl font-bold text-data-pass dark:text-data-pass">
+          <div className="p-4 bg-data-neutral rounded-xl">
+            <div className="text-2xl font-bold text-data-pass">
               {stats?.correctCount}
             </div>
-            <div className="text-sm text-data-neutral dark:text-data-neutral">Correct</div>
+            <div className="text-sm text-data-neutral">Correct</div>
           </div>
-          <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
+          <div className="p-4 bg-data-neutral rounded-xl">
             <div className="text-2xl font-bold text-[var(--color-category-practice)]">
               {stats?.accuracy.toFixed(0)}%
             </div>
-            <div className="text-sm text-data-neutral dark:text-data-neutral">Accuracy</div>
+            <div className="text-sm text-data-neutral">Accuracy</div>
           </div>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={onEnd}
-            className="flex-1 px-4 py-2 border border-data-neutral dark:border-data-neutral rounded-lg text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral"
+            className="flex-1 px-4 py-2 border border-data-neutral rounded-lg text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral"
           >
             End Session
           </button>

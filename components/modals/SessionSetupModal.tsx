@@ -29,13 +29,13 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/15 dark:border-data-neutral transition-colors"
+      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/15 transition-colors"
     >
       <div className="flex items-center gap-4">
         <Icon className="w-6 h-6 text-[var(--color-accent)]" />
         <div>
           <h4 className="font-bold text-[var(--color-accent)]">{preset.label}</h4>
-          <p className="text-sm text-data-neutral dark:text-data-neutral">{preset.description}</p>
+          <p className="text-sm text-data-neutral">{preset.description}</p>
         </div>
       </div>
     </button>
@@ -107,7 +107,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
 
         {!isCustomizing ? (
           <>
-            <p className="text-data-neutral dark:text-data-neutral mb-6">
+            <p className="text-data-neutral mb-6">
               Choose a preset or create a custom session.
             </p>
             <div className="space-y-3">
@@ -131,7 +131,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
           </>
         ) : (
           <>
-            <p className="text-data-neutral dark:text-data-neutral mb-6">Customize your practice quiz.</p>
+            <p className="text-data-neutral mb-6">Customize your practice quiz.</p>
 
             {/* System Selection */}
             <div className="mb-6">
@@ -143,7 +143,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                 aria-label="Focus organ system"
                 value={selectedSystem}
                 onChange={(e) => setSelectedSystem(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] dark:border-data-neutral focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
+                className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
               >
                 <option value="">All Systems (NCCPA Blueprint Weights)</option>
                 {organSystems.map((system) => (
@@ -152,7 +152,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-data-neutral dark:text-data-neutral mt-1">
+              <p className="text-xs text-data-neutral mt-1">
                 {selectedSystem
                   ? `Practice questions exclusively from ${selectedSystem}`
                   : 'Questions will follow official NCCPA 2025 Blueprint distribution'}
@@ -194,7 +194,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   </button>
                 </div>
               </div>
-              <p className="text-xs text-data-neutral dark:text-data-neutral mt-1">
+              <p className="text-xs text-data-neutral mt-1">
                 {interleaveMode === 'interleaved'
                   ? 'Questions mix across organ systems for stronger discrimination skills.'
                   : 'Questions focus on a single system for deep practice.'}
@@ -222,7 +222,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   setIsCustomizing(false);
                   setSelectedSystem(''); // Reset selection
                 }}
-                className="text-sm font-semibold text-data-neutral dark:text-data-neutral hover:underline"
+                className="text-sm font-semibold text-data-neutral hover:underline"
               >
                 Back to presets
               </button>
@@ -230,7 +230,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-md font-semibold text-sm bg-data-neutral text-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:text-data-neutral dark:hover:bg-data-neutral"
+                  className="px-4 py-2 rounded-md font-semibold text-sm bg-data-neutral text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral"
                 >
                   Cancel
                 </button>

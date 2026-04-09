@@ -183,7 +183,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-data-neutral" />
-            <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
+            <span className="text-sm font-medium text-data-neutral">
               Confidence Calibration
             </span>
           </div>
@@ -218,7 +218,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral dark:border-data-neutral pt-3">
+            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral pt-3">
               {/* Very Sure */}
               <ConfidenceRow
                 label="Very Sure"
@@ -298,7 +298,7 @@ const ConfidenceRow: React.FC<{
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${colorClasses[color].split(' ')[0]}`} />
-        <span className="text-sm text-data-neutral dark:text-data-neutral">{label}</span>
+        <span className="text-sm text-data-neutral">{label}</span>
         <span className="text-xs text-data-neutral">({count})</span>
       </div>
       <div className="flex items-center gap-2">

@@ -66,7 +66,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
           bg-data-provisional/10
-          text-data-provisional dark:text-data-provisional
+          text-data-provisional
           border border-data-provisional/30
           rounded-full font-medium
           ${className}

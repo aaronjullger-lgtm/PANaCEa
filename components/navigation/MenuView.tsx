@@ -986,7 +986,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 Settings & Profile
               </h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-data-neutral rounded-xl">
                   <div className="flex items-center gap-3">
                     <User className="w-5 h-5 text-data-neutral" />
                     <span className="font-medium text-[var(--color-text-primary)]">Account</span>
@@ -997,7 +997,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 </div>
                 <button
                   onClick={() => onNavigateToIntegrations?.()}
-                  className="w-full flex items-center justify-between p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
+                  className="w-full flex items-center justify-between p-4 bg-data-neutral rounded-xl hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <Settings className="w-5 h-5 text-data-neutral" />
@@ -1092,7 +1092,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="text-data-neutral dark:text-data-neutral mb-6">
+            <p className="text-data-neutral mb-6">
               The daily competitive leaderboard has moved to Grand Rounds mode. Compete against
               other students with speed-weighted scoring!
             </p>

@@ -164,8 +164,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
             animate={{ y: 0 }}
             className={`p-6 ${
               isCorrect
-                ? 'bg-data-pass dark:bg-data-pass/50 border-t-2 border-data-pass'
-                : 'bg-data-fail dark:bg-data-fail/50 border-t-2 border-data-fail'
+                ? 'bg-data-pass border-t-2 border-data-pass'
+                : 'bg-data-fail border-t-2 border-data-fail'
             }`}
           >
             <div className="max-w-4xl mx-auto">
@@ -174,8 +174,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   <div
                     className={`text-lg font-bold ${
                       isCorrect
-                        ? 'text-data-pass dark:text-data-pass'
-                        : 'text-data-fail dark:text-data-fail'
+                        ? 'text-data-pass'
+                        : 'text-data-fail'
                     }`}
                   >
                     {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
@@ -309,10 +309,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.pH < 7.35
-                          ? 'text-data-fail dark:text-data-fail'
+                          ? 'text-data-fail'
                           : currentCase.abg.pH > 7.45
                             ? 'text-[var(--color-data-provisional)]'
-                            : 'text-data-pass dark:text-data-pass'
+                            : 'text-data-pass'
                       }`}
                     >
                       {currentCase.abg.pH.toFixed(2)}
@@ -325,8 +325,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.paCO2 < 35
                           ? 'text-[var(--color-data-provisional)]'
                           : currentCase.abg.paCO2 > 45
-                            ? 'text-data-fail dark:text-data-fail'
-                            : 'text-data-pass dark:text-data-pass'
+                            ? 'text-data-fail'
+                            : 'text-data-pass'
                       }`}
                     >
                       {currentCase.abg.paCO2} mmHg
@@ -337,10 +337,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.paO2 < 60
-                          ? 'text-data-fail dark:text-data-fail'
+                          ? 'text-data-fail'
                           : currentCase.abg.paO2 < 80
                             ? 'text-[var(--color-data-provisional)]'
-                            : 'text-data-pass dark:text-data-pass'
+                            : 'text-data-pass'
                       }`}
                     >
                       {currentCase.abg.paO2} mmHg
@@ -357,10 +357,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.sao2 < 90
-                          ? 'text-data-fail dark:text-data-fail'
+                          ? 'text-data-fail'
                           : currentCase.abg.sao2 < 95
                             ? 'text-[var(--color-data-provisional)]'
-                            : 'text-data-pass dark:text-data-pass'
+                            : 'text-data-pass'
                       }`}
                     >
                       {currentCase.abg.sao2}%
