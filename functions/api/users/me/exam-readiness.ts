@@ -115,8 +115,8 @@ export async function onRequestGet(request: Request): Promise<Response> {
           lastComputedAt: phenotype.lastComputedAt?.toISOString(),
           computedAtDaysBeforeExam: phenotype.lastComputedAt
             ? Math.round(
-                (phenotype.daysToExam || 365 -
-                (new Date().getTime() - phenotype.lastComputedAt.getTime()) / (1000 * 60 * 60 * 24))
+                (phenotype.daysToExam || 365) -
+                (new Date().getTime() - phenotype.lastComputedAt.getTime()) / (1000 * 60 * 60 * 24)
               )
             : null,
         },

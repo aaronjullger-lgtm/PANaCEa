@@ -27,7 +27,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   // Auth: require cron secret for manual triggers
   const authHeader = request.headers.get('Authorization');
   const cronSecret = env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -44,7 +44,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   let prisma;
   try {
-    prisma = createEdgePrismaClient();
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Parse optional body params
     let systemFilter: string | undefined;

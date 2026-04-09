@@ -90,7 +90,7 @@ export async function onRequestPost(request: Request): Promise<Response> {
     return new Response(
       JSON.stringify({
         success: true,
-        outcomId: outcome.id,
+        outcomeId: outcome.id,
         examType: body.examType,
         score: body.score,
         passed: body.passed,

@@ -326,9 +326,6 @@ export async function authenticateRequest(request: Request, env: Env): Promise<A
   }
 
   const isTestEnv = secretKey.startsWith('sk_test_');
-  const maskedKey = maskSecretKey(secretKey);
-  console.log('[AUTH] Secret key verified (masked):', maskedKey);
-  console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
 
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);

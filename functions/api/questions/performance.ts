@@ -30,7 +30,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const limit = parseInt(validated.query?.limit || '50');
+    const limit = Math.min(Math.max(parseInt(validated.query?.limit || '50', 10) || 50, 1), 200);
     const sortBy = validated.query?.sortBy || 'accuracy';
     const order = validated.query?.order || 'asc';
 

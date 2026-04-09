@@ -172,9 +172,9 @@ function formatPlanResponse(plan: {
     progress: {
       questionsAnswered: plan.actualQuestionsAnswered,
       questionsTarget: plan.targetQuestionsCount,
-      percentComplete: Math.round(
-        (plan.actualQuestionsAnswered / plan.targetQuestionsCount) * 100
-      ),
+      percentComplete: plan.targetQuestionsCount > 0
+        ? Math.round((plan.actualQuestionsAnswered / plan.targetQuestionsCount) * 100)
+        : 0,
       accuracy: plan.actualAccuracy
         ? parseFloat((plan.actualAccuracy * 100).toFixed(1))
         : null,
