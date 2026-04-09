@@ -105,12 +105,15 @@ function normalizeDatabaseUrl(url: string): string {
  * @returns Configured PrismaClient with Accelerate extension
  */
 export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
-  const databaseUrl =
+  const rawDatabaseUrl =
     typeof databaseUrlOrEnv === 'string'
       ? databaseUrlOrEnv
       : (databaseUrlOrEnv && 'DATABASE_URL' in databaseUrlOrEnv
           ? (databaseUrlOrEnv as any).DATABASE_URL
           : (databaseUrlOrEnv as any)?.env?.DATABASE_URL) || '';
+
+  // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
+  const databaseUrl = rawDatabaseUrl.trim().replace(/^["']|["']$/g, '');
 
   if (!databaseUrl) {
     console.error('[Prisma Edge] DATABASE_URL is missing');

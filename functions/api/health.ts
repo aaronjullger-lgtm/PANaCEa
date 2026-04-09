@@ -49,7 +49,9 @@ export const onRequestGet = async (context: any) => {
     // Exposing even 8 characters of secret keys reduces brute-force search space.
 
     // 2. DATABASE_URL type
-    const dbUrl = env.DATABASE_URL as string | undefined;
+    const rawDbUrl = env.DATABASE_URL as string | undefined;
+    // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
+    const dbUrl = rawDbUrl?.trim().replace(/^["']|["']$/g, '') || undefined;
     if (dbUrl) {
       const isAccelerate = dbUrl.startsWith('prisma://') || dbUrl.startsWith('prisma+postgres://');
       const isPostgres = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
