@@ -158,7 +158,7 @@ export const MVRT_THRESHOLDS = {
 /**
  * Question type identifiers for MVRT selection
  */
-export type QuestionType = 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown';
+export type TelemetryQuestionType = 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown';
 
 /**
  * Per-user MVRT calibration data.
@@ -173,8 +173,8 @@ export type QuestionType = 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'u
  * Below that threshold, the system falls back to population-level constants.
  */
 export interface UserMVRTCalibration {
-  /** Per-type RT percentile data. Key = QuestionType, value = { p5, p10, median, count }. */
-  byType: Partial<Record<QuestionType, {
+  /** Per-type RT percentile data. Key = TelemetryQuestionType, value = { p5, p10, median, count }. */
+  byType: Partial<Record<TelemetryQuestionType, {
     /** 5th percentile response time (ms) — faster than 95% of this user's responses */
     p5: number;
     /** 10th percentile response time (ms) */
@@ -190,14 +190,14 @@ export interface UserMVRTCalibration {
  * Minimum number of attempts per question type before per-user calibration activates.
  * Below this, population-level MVRT constants are used as fallback.
  */
-const MIN_CALIBRATION_ATTEMPTS = 20;
+export const MIN_CALIBRATION_ATTEMPTS = 20;
 
 /**
  * Safety floor: per-user MVRT can never go below these absolute minimums (ms).
  * This prevents the system from accepting impossibly fast responses even if the
  * user historically answers very quickly.
  */
-const MVRT_ABSOLUTE_FLOOR: Record<string, number> = {
+export const MVRT_ABSOLUTE_FLOOR: Record<string, number> = {
   vignette: 1500,
   recall: 800,
   image: 1000,
@@ -216,7 +216,7 @@ const MVRT_ABSOLUTE_FLOOR: Record<string, number> = {
  * The threshold is floored at MVRT_ABSOLUTE_FLOOR to prevent pathological values.
  */
 export function getMVRTThreshold(
-  questionType: QuestionType,
+  questionType: TelemetryQuestionType,
   calibration?: UserMVRTCalibration | null
 ): number {
   // Population-level default
@@ -246,7 +246,7 @@ export function getMVRTThreshold(
  * Get population-level (uncalibrated) MVRT for a question type.
  * Extracted for reuse in calibration logic.
  */
-function getPopulationMVRT(questionType: QuestionType): number {
+function getPopulationMVRT(questionType: TelemetryQuestionType): number {
   switch (questionType) {
     case 'vignette':
       return MVRT_THRESHOLDS.VIGNETTE;
@@ -270,11 +270,11 @@ function getPopulationMVRT(questionType: QuestionType): number {
  * @returns Calibration object suitable for getMVRTThreshold()
  */
 export function computeUserMVRTCalibration(
-  rtsByType: Partial<Record<QuestionType, number[]>>
+  rtsByType: Partial<Record<TelemetryQuestionType, number[]>>
 ): UserMVRTCalibration {
   const byType: UserMVRTCalibration['byType'] = {};
 
-  for (const [type, rts] of Object.entries(rtsByType) as [QuestionType, number[]][]) {
+  for (const [type, rts] of Object.entries(rtsByType) as [TelemetryQuestionType, number[]][]) {
     if (!rts || rts.length < MIN_CALIBRATION_ATTEMPTS) continue;
 
     // Sort ascending for percentile computation
@@ -310,7 +310,7 @@ export interface RapidGuessResult {
   threshold_ms: number;
 
   /** Question type used for threshold selection */
-  question_type: QuestionType;
+  question_type: TelemetryQuestionType;
 
   /** How much faster than threshold (negative if slower) */
   delta_ms: number;
@@ -352,7 +352,7 @@ export interface TelemetryData {
   rapid_guess: boolean;
 
   /** Question type used for MVRT calculation */
-  question_type: QuestionType;
+  question_type: TelemetryQuestionType;
 
   /** MVRT threshold applied (ms) */
   mvrt_threshold_ms: number;
@@ -501,7 +501,7 @@ export interface DeviceInfo {
  * Creates a new telemetry collector for a question session
  * @returns Collector instance with methods to track interactions
  */
-export function createTelemetryCollector(questionType: QuestionType = 'unknown') {
+export function createTelemetryCollector(questionType: TelemetryQuestionType = 'unknown') {
   const startTime = Date.now();
   const startIso = new Date().toISOString();
   const interactions: InteractionEvent[] = [];
@@ -595,7 +595,7 @@ export function createTelemetryCollector(questionType: QuestionType = 'unknown')
  */
 export function detectRapidGuess(
   durationMs: number,
-  questionType: QuestionType = 'unknown'
+  questionType: TelemetryQuestionType = 'unknown'
 ): RapidGuessResult {
   const threshold = getMVRTThreshold(questionType);
 
@@ -658,7 +658,7 @@ export interface TelemetryAggregate {
 
   /** Breakdown by question type */
   by_question_type: Record<
-    QuestionType,
+    TelemetryQuestionType,
     {
       count: number;
       rapid_guess_rate: number;
@@ -690,12 +690,12 @@ export function aggregateTelemetry(data: TelemetryData[]): TelemetryAggregate | 
       if (d.rapid_guess) acc[d.question_type].rapidGuesses++;
       return acc;
     },
-    {} as Record<QuestionType, { durations: number[]; rapidGuesses: number }>
+    {} as Record<TelemetryQuestionType, { durations: number[]; rapidGuesses: number }>
   );
 
-  const byQuestionType = Object.entries(byType).reduce(
+  const byTelemetryQuestionType = Object.entries(byType).reduce(
     (acc, [type, stats]) => {
-      acc[type as QuestionType] = {
+      acc[type as TelemetryQuestionType] = {
         count: stats.durations.length,
         rapid_guess_rate: stats.rapidGuesses / stats.durations.length,
         avg_duration_ms: stats.durations.reduce((a, b) => a + b, 0) / stats.durations.length,
@@ -720,7 +720,7 @@ export function aggregateTelemetry(data: TelemetryData[]): TelemetryAggregate | 
         : null,
     hint_usage_rate: hintViewedCount / data.length,
     avg_answer_changes: data.reduce((sum, d) => sum + d.answer_changes, 0) / data.length,
-    by_question_type: byQuestionType,
+    by_question_type: byTelemetryQuestionType,
   };
 }
 

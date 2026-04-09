@@ -23,7 +23,7 @@ export interface ConditionData {
 /**
  * Medical content status enum
  */
-export type ContentStatus = 'draft' | 'published' | 'archived';
+export type ContentStatus = 'draft' | 'pending_review' | 'approved' | 'published' | 'archived';
 
 /**
  * Medical Content Display Interface - Used by library components

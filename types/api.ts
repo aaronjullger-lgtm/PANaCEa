@@ -349,60 +349,6 @@ export interface RateLimitInfo {
   retryAfter?: number;
 }
 
-// ============================================================================
-// TYPE GUARDS
-// ============================================================================
-
-/**
- * Type guard for API error responses
- */
-export function isApiError(response: unknown): response is ApiErrorResponse {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'success' in response &&
-    (response as any).success === false &&
-    'error' in response
-  );
-}
-
-/**
- * Type guard for successful API responses
- */
-export function isApiSuccess<T>(response: unknown): response is ApiResponse<T> {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'success' in response &&
-    (response as any).success === true
-  );
-}
-
-/**
- * Create a standardized success response
- */
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
-  return {
-    success: true,
-    data,
-    timestamp: new Date().toISOString(),
-    ...(message && { message }),
-  };
-}
-
-/**
- * Create a standardized error response
- */
-export function createErrorResponse(
-  error: string,
-  code?: string,
-  details?: Record<string, unknown>
-): ApiErrorResponse {
-  return {
-    success: false,
-    error,
-    code,
-    details,
-    timestamp: new Date().toISOString(),
-  };
-}
+// Type guards (isApiError, isApiSuccess) are re-exported from lib/api/types/common on line 24.
+// Response creators (createErrorResponse, createSuccessResponse) live in lib/errorHandling.ts
+// and functions/api/_shared/auth.ts — import from there.

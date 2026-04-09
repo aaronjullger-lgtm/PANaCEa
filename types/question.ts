@@ -23,12 +23,19 @@ export interface PanceAnchors {
   bestInitialTest?: string;
 }
 
-export interface ConditionData {
+/**
+ * Condition data shape used for question generation prompts.
+ * NOT the same as ConditionData in types/medical-content.ts (DB record shape).
+ */
+export interface QuestionGenConditionData {
   condition: string;
   sections: ConditionSection;
   /** PANCE-specific anchors — inject into prompt to improve distractor quality */
   panceAnchors?: PanceAnchors;
 }
+
+/** @deprecated Use QuestionGenConditionData — renamed to avoid collision with medical-content.ts ConditionData */
+export type ConditionData = QuestionGenConditionData;
 
 export interface QuestionExplanation {
   rationale: string;

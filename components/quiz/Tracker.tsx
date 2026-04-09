@@ -15,7 +15,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import type { TelemetryData, OptionInteractionTelemetry } from '@/types/telemetry';
-import { getMVRTThreshold, type QuestionType } from '@/types/telemetry';
+import { getMVRTThreshold, type TelemetryTelemetryQuestionType } from '@/types/telemetry';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -35,7 +35,7 @@ export interface BehavioralPayload {
   duration_ms: number;
   question_displayed_at: string;
   answer_submitted_at: string;
-  question_type: QuestionType;
+  question_type: TelemetryQuestionType;
   mvrt_threshold_ms: number;
   rapid_guess: boolean;
   /** Wave 2: Full sequence of option selections for distractor chronometry & switch direction analysis */
@@ -43,7 +43,7 @@ export interface BehavioralPayload {
 }
 
 export interface BehavioralTrackerApi {
-  start: (questionType?: QuestionType) => void;
+  start: (questionType?: TelemetryQuestionType) => void;
   recordFirstInteraction: () => void;
   recordAnswerChange: () => void;
   /** Wave 2: Record a full option selection (with chronometry). Call this when the user selects an option. */
@@ -83,13 +83,13 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
   const answerChangeCountRef = useRef<number>(0);
   const hoverMsRef = useRef<Record<string, number>>({ A: 0, B: 0, C: 0, D: 0 });
   const hoverEnterTimeRef = useRef<Record<string, number>>({});
-  const questionTypeRef = useRef<QuestionType>('unknown');
+  const questionTypeRef = useRef<TelemetryQuestionType>('unknown');
   const activeRef = useRef<boolean>(false);
   // Wave 2: Option interaction sequence tracking
   const optionInteractionsRef = useRef<OptionInteraction[]>([]);
   const currentSelectionRef = useRef<OptionInteraction | null>(null);
 
-  const start = useCallback((questionType: QuestionType = 'unknown') => {
+  const start = useCallback((questionType: TelemetryQuestionType = 'unknown') => {
     activeRef.current = true;
     startTimeRef.current = Date.now();
     startIsoRef.current = new Date().toISOString();

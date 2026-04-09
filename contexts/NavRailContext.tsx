@@ -28,12 +28,9 @@ export const NavRailProvider = ({ children }: { children: ReactNode }) => {
   // spread these as deps (e.g. useEffect([setContext])) don't re-run needlessly.
   const setContext = useCallback((context: NavRailContextType['currentContext']) => {
     setCurrentContext(context);
-    if (context) {
-      setRelatedModules([
-        { type: 'drug', id: '1', label: 'Aspirin', icon: {} as LucideIcon, href: '/d/aspirin' },
-        { type: 'lab', id: '2', label: 'Troponin', icon: {} as LucideIcon, href: '/l/troponin' },
-      ]);
-    } else {
+    // Related modules will be populated when a real data source is wired.
+    // Previously held hardcoded stub data with unsafe {} as LucideIcon casts.
+    if (!context) {
       setRelatedModules([]);
     }
   }, []);

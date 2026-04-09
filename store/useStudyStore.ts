@@ -53,8 +53,8 @@ export interface DailyProgress {
 export interface ActiveSessionMeta {
   /** Whether a study session is currently active */
   isActive: boolean;
-  /** Session type (main, drill, cram) */
-  sessionType: 'main' | 'drill' | 'cram' | null;
+  /** Session type — covers all Prisma SessionType values (lowercase) */
+  sessionType: 'main' | 'drill' | 'cram' | 'rapid_recall' | 'grand_rounds' | 'osce' | 'pance_simulator' | null;
   /** When the session started */
   startedAt: number | null;
   /** Questions completed in this session */

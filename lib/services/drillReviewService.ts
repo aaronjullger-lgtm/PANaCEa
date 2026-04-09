@@ -17,7 +17,7 @@ import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
 import { deriveContinuousRating, assessTelemetryQuality, confidenceStabilityMultiplier, fluencyIllusionDampener, type UserBaseline, type CardBaseline } from '../implicit-metrics';
-import { getMVRTThreshold, type QuestionType } from '../../types/telemetry';
+import { getMVRTThreshold, type TelemetryQuestionType } from '../../types/telemetry';
 import { buildCircadianContext, applyCircadianModifier, applyCircadianParTimeModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
@@ -420,7 +420,7 @@ export async function submitDrillReview(
   // Detect rapid guesses BEFORE deriving implicit rating — don't waste compute on accidental taps
   // Use question-type-specific MVRT when available; server floor prevents client from lowering threshold
   const questionTypeMvrt = getMVRTThreshold(
-    ((telemetry?.question_type as string) ?? 'unknown') as QuestionType
+    ((telemetry?.question_type as string) ?? 'unknown') as TelemetryQuestionType
   );
   // Research (Wise & DeMars, 2006): rapid-guess threshold at ~10% of median item RT.
   // When per-user behavioral baseline exists, use 10% of their personal median RT
