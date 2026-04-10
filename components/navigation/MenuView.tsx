@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
 import {
   Award,
   Hospital,
@@ -683,20 +684,18 @@ const MenuView: React.FC<MenuViewProps> = ({
                 transition={{ delay: 0.18 }}
                 className="flex flex-wrap gap-2 justify-center"
               >
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => onConfirmSession({ focus: 'all', count: 10 })}
-                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
                 >
                   Quick 10 (~5 min)
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => onConfirmSession({ focus: 'all', count: 30 })}
-                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
                 >
                   Quick 30 (~15 min)
-                </button>
+                </Button>
               </motion.div>
 
               {/* Session controls */}
@@ -1009,9 +1008,9 @@ const MenuView: React.FC<MenuViewProps> = ({
                 </button>
                 <div className="pt-4">
                   <SignOutButton>
-                    <button className="w-full px-6 py-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-xl font-semibold hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]">
+                    <Button variant="secondary" className="w-full">
                       Sign Out
-                    </button>
+                    </Button>
                   </SignOutButton>
                 </div>
               </div>
