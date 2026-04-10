@@ -71,7 +71,9 @@ export function estimateCostUsd(
     bestMatch = 'gemini-2.5-flash';
   }
 
-  const pricing = MODEL_PRICING[bestMatch];
+  // Non-null assertion is safe: bestMatch is either a validated prefix match above
+  // or the hardcoded fallback 'gemini-2.5-flash' — both guaranteed to be keys.
+  const pricing = MODEL_PRICING[bestMatch]!;
   const inputCost = (promptTokens / 1_000_000) * pricing.inputPer1M;
   const outputCost = (candidatesTokens / 1_000_000) * pricing.outputPer1M;
   return inputCost + outputCost;
@@ -224,15 +226,15 @@ export async function getUserTokenUsageSummary(
     totalTokens += r.totalTokenCount;
     totalCostUsd += r.estimatedCostUsd ?? 0;
 
-    if (!byModel[r.model]) byModel[r.model] = { tokens: 0, cost: 0, calls: 0 };
-    byModel[r.model].tokens += r.totalTokenCount;
-    byModel[r.model].cost += r.estimatedCostUsd ?? 0;
-    byModel[r.model].calls += 1;
+    const modelEntry = (byModel[r.model] ??= { tokens: 0, cost: 0, calls: 0 });
+    modelEntry.tokens += r.totalTokenCount;
+    modelEntry.cost += r.estimatedCostUsd ?? 0;
+    modelEntry.calls += 1;
 
-    if (!byEndpoint[r.endpoint]) byEndpoint[r.endpoint] = { tokens: 0, cost: 0, calls: 0 };
-    byEndpoint[r.endpoint].tokens += r.totalTokenCount;
-    byEndpoint[r.endpoint].cost += r.estimatedCostUsd ?? 0;
-    byEndpoint[r.endpoint].calls += 1;
+    const endpointEntry = (byEndpoint[r.endpoint] ??= { tokens: 0, cost: 0, calls: 0 });
+    endpointEntry.tokens += r.totalTokenCount;
+    endpointEntry.cost += r.estimatedCostUsd ?? 0;
+    endpointEntry.calls += 1;
   }
 
   return { totalTokens, totalCostUsd, callCount: records.length, byModel, byEndpoint };

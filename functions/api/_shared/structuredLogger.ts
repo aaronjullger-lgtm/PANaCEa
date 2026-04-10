@@ -40,7 +40,11 @@ async function getSentry(): Promise<any> {
   if (sentryLoadAttempted) return SentryEdge;
   sentryLoadAttempted = true;
   try {
-    SentryEdge = await import('@sentry/cloudflare');
+    // Indirect module name so tsc can't statically resolve the (optional) package.
+    // @sentry/cloudflare is intentionally NOT installed; we load it only if it
+    // happens to be present at runtime (e.g. future infra upgrade).
+    const mod = '@sentry/cloudflare';
+    SentryEdge = await import(/* @vite-ignore */ mod);
   } catch {
     // Package not installed — graceful degradation
   }
