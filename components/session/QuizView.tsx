@@ -902,32 +902,6 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsSubmitting(true);
 
-    // Runtime validation: Log undefined functions to debug "S is not a function" error
-    const functionChecks = {
-      recordBehavioralConfidence: typeof recordBehavioralConfidence,
-      recordMomentumResult: typeof recordMomentumResult,
-      recordAnswerPattern: typeof recordAnswerPattern,
-      updatePerformancePrediction: typeof updatePerformancePrediction,
-      recordPauseResult: typeof recordPauseResult,
-      recordCircadianPerformance: typeof recordCircadianPerformance,
-      inferConfidence: typeof inferConfidence,
-      recordQuestionResult: typeof recordQuestionResult,
-      recordQuestion: typeof recordQuestion,
-      recordSessionAnswer: typeof recordSessionAnswer,
-    };
-
-    const undefinedFunctions = Object.entries(functionChecks)
-      .filter(([_, type]) => type !== 'function')
-      .map(([name, type]) => `${name}: ${type}`);
-
-    if (undefinedFunctions.length > 0) {
-      logger.error(
-        LOG_SCOPE,
-        'CRITICAL: Undefined functions detected in handleSubmitAnswer',
-        undefinedFunctions
-      );
-    }
-
     setIsAnswered(true);
     microKinetics.onAnswersRevealed();
 
