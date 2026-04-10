@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useCallback, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -1286,13 +1287,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
             </div>
             {onExit && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={onExit}
                 aria-label="Exit Encounter"
-                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1675,13 +1676,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Past Encounters Toggle */}
             <div className="text-center">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowHistoryPanel(prev => !prev)}
-                className="text-sm text-data-neutral hover:text-[var(--color-accent)] transition-colors flex items-center gap-1.5 mx-auto"
               >
                 <Clock className="w-4 h-4" />
                 {showHistoryPanel ? 'Hide Past Encounters' : 'View Past Encounters'}
-              </button>
+              </Button>
             </div>
 
             {/* History Panel */}
@@ -1733,12 +1735,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <p className="text-sm text-[var(--color-data-fail)]">
                     {loadError}
                   </p>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setLoadError(null)}
-                    className="mt-2 text-xs text-[var(--color-data-fail)]/80 hover:underline"
                   >
                     Dismiss
-                  </button>
+                  </Button>
                 </motion.div>
               )}
             </div>
@@ -1763,13 +1766,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
             </div>
             {onExit && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={onExit}
                 aria-label="Exit"
-                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -2091,13 +2094,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </button>
               {/* Timer is rendered by EncounterTimer component above */}
               {onExit && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={onExit}
                   aria-label="Exit Encounter"
-                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -2517,23 +2520,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                       autoComplete="off"
                     />
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={handleAskQuestion}
                       disabled={!currentQuestion.trim()}
                       aria-label="Send Question"
-                      className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                     >
                       <Send className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                   <div className="mt-4 flex justify-end">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => advancePhase('physical')}
-                      className="text-sm text-data-neutral hover:text-data-neutral hover:underline flex items-center gap-1"
                     >
                       Move to Physical Exam <ArrowRight className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -2614,27 +2617,27 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
                       autoComplete="off"
                     />
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={handleOrderTest}
                       disabled={!currentQuestion.trim() || isLoading}
                       aria-label="Order Diagnostic Test"
-                      className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-[var(--color-text-inverse)] shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center min-w-[3.5rem]"
                     >
                       {isLoading ? (
                         <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       ) : (
                         <Activity className="w-5 h-5" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                   <div className="mt-4 flex justify-end">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => advancePhase('diagnosis')}
-                      className="text-sm text-data-neutral hover:text-data-neutral hover:underline flex items-center gap-1"
                     >
                       Move to Diagnosis <ArrowRight className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -2719,12 +2722,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     )}
                   </div>
 
-                  <button
+                  <Button
+                    variant="primary"
                     onClick={handleSubmitDiagnosis}
                     disabled={!userDiagnosis.trim() || isLoading}
-                    className="w-full bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg
-                             disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-[var(--color-text-inverse)]
-                             transition-colors shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] flex items-center justify-center gap-2"
+                    className="w-full min-h-[44px] py-3"
                   >
                     {isLoading ? (
                       <>
@@ -2734,7 +2736,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     ) : (
                       'Submit Diagnosis'
                     )}
-                  </button>
+                  </Button>
                 </motion.div>
               )}
 
@@ -2834,12 +2836,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </div>
               </div>
               {onExit && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -2871,12 +2873,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </div>
               </div>
               {onExit && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -3229,14 +3231,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     Grading could not be completed. You can retry below or use the Preceptor feedback.
                   </p>
                   {session?.id && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={handleRetryGrading}
                       disabled={gradeResultLoading}
-                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 disabled:opacity-50 transition-colors"
                     >
                       {gradeResultLoading ? 'Grading…' : 'Retry grading'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
