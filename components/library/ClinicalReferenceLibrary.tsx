@@ -20,6 +20,7 @@ import React, {
   lazy,
 } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -600,46 +601,46 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 style={{ boxShadow: '0 0 0 1px var(--color-border)' }}
               />
               {searchQuery && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   aria-label="Clear search"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[var(--color-bg-secondary)] transition-colors"
                 >
                   <X className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setIsShortcutsOpen(true)}
-              className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 transition-colors"
               aria-label="Keyboard shortcuts (?)"
               title="Keyboard shortcuts (?)"
             >
               <HelpCircle className="w-5 h-5" />
-            </button>
+            </Button>
             {onExit && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={onExit}
-                className="px-3 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 rounded-lg text-sm font-medium transition-colors"
               >
                 Back
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               aria-label="Refresh content"
               onClick={fetchContent}
               disabled={loading}
-              className="flex items-center gap-2 px-2.5 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -675,13 +676,12 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   No reference cards matched &quot;{searchQuery}&quot;. Try different wording or
                   browse by system.
                 </p>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
                   onClick={() => setSearchQuery('')}
-                  className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-primary)]"
                 >
                   Clear search
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="space-y-6">
@@ -760,18 +760,17 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   ? 'No high-yield conditions match your criteria. Try disabling the High Yield filter.'
                   : 'No conditions match your current filters.'}
               </p>
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => {
                   setActiveSystem('all');
                   setActiveSubcategory(null);
                   setHighYieldOnly(false);
                   setSearchQuery('');
                 }}
-                className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-primary)]"
               >
                 Clear filters
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="space-y-5">
@@ -836,7 +835,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     {/* Show More / Show Less Button */}
                     {hasMore && (
                       <div className="mt-3 text-center">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setExpandedSubcats((prev) => {
                               const next = new Set(prev);
@@ -848,7 +849,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                               return next;
                             });
                           }}
-                          className="px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
                         >
                           {isExpanded ? (
                             <>Show Less</>
@@ -857,7 +857,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                               Show {remainingCount} More Condition{remainingCount !== 1 ? 's' : ''}
                             </>
                           )}
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -897,33 +897,36 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 style={{ boxShadow: '0 1px 0 0 var(--color-border)' }}
               >
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handlePrevCondition}
                     disabled={selectedIndex <= 0}
-                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     aria-label="Previous condition"
                   >
                     <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-                  </button>
+                  </Button>
                   <span className="text-sm text-[var(--color-text-muted)] tabular-nums">
                     {selectedIndex + 1} / {content.length}
                   </span>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleNextCondition}
                     disabled={selectedIndex >= content.length - 1}
-                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     aria-label="Next condition"
                   >
                     <ChevronRight className="w-5 h-5" aria-hidden="true" />
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() =>
                       selected && toggleBookmark({ id: selected.id!, condition: selected.condition!, system: selected.system })
                     }
-                    className={`p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors ${selected && isBookmarked(selected.id!) ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+                    className={`${selected && isBookmarked(selected.id!) ? 'text-[var(--color-accent)]' : ''}`}
                     title={selected && isBookmarked(selected.id!) ? 'Remove bookmark' : 'Bookmark condition'}
                     aria-label={selected && isBookmarked(selected.id!) ? 'Remove bookmark' : 'Bookmark condition'}
                   >
@@ -931,16 +934,17 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                       aria-hidden="true"
                       className={`w-5 h-5 ${selected && isBookmarked(selected.id!) ? 'fill-current' : ''}`}
                     />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     ref={detailPanelCloseRef}
                     onClick={() => setSelected(null)}
-                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
                     title="Close (Esc)"
                     aria-label="Close (Esc)"
                   >
                     <X className="w-5 h-5" aria-hidden="true" />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
