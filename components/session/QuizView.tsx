@@ -117,6 +117,7 @@ import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
+import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -380,6 +381,8 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Causal Reasoning Chain — mechanistic "Why This Happens" (tier1 Item 4)
   const causalChainHook = useCausalChain();
+  const { trackAnswer: analyticsTrackerTrack } = useAnalyticsTracking();
+  const analyticsTracker = { trackAnswer: analyticsTrackerTrack };
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -1072,42 +1075,20 @@ const QuizView: React.FC<QuizViewProps> = ({
         firstSelectedAnswerRef.current !== null && Date.now() - questionStartTime < parTime * 0.5,
     };
 
-    // Defensive calls - wrap analytics functions to prevent crashes
-    try {
-      if (typeof recordBehavioralConfidence === 'function') {
-        recordBehavioralConfidence(behaviorSignals, isCorrect);
-      }
-    } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordBehavioralConfidence failed', e);
-    }
-
-    // Sprint 4: Record momentum data
-    try {
-      if (typeof recordMomentumResult === 'function') {
-        recordMomentumResult(isCorrect, timeToAnswer, parTime);
-      }
-    } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordMomentumResult failed', e);
-    }
-
-    // Sprint 4: Record answer pattern for post-session analysis
-    try {
-      if (typeof recordAnswerPattern === 'function') {
-        recordAnswerPattern({
-          questionId: currentQuestion.id || `temp-${questionNumber}`,
-          firstAnswer: firstSelectedAnswerRef.current ?? selectedAnswerIndex,
-          finalAnswer: selectedAnswerIndex,
-          correctAnswer: currentQuestion.correctAnswerIndex,
-          timeSpentMs: timeToAnswer,
-          parTimeMs: parTime,
-          eliminatedCount: eliminatedAnswers.size,
-          answerChangeCount: answerChangeCountRef.current,
-          wasCorrect: isCorrect,
-        });
-      }
-    } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordAnswerPattern failed', e);
-    }
+    // Sprint 2: Use consolidated analytics tracking hook
+    analyticsTracker.trackAnswer({
+      isCorrect,
+      timeToAnswer,
+      parTime,
+      behaviorSignals,
+      questionNumber,
+      questionId,
+      selectedAnswerIndex,
+      eliminatedCount: eliminatedAnswers.size,
+      answerChangeCount: answerChangeCountRef.current,
+      firstAnswer: firstSelectedAnswerRef.current,
+      question: currentQuestion as any,
+    });
 
     // Sprint 4: Update performance prediction
     try {
@@ -1201,10 +1182,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setCurrentStreak(0);
     }
 
-    // Sprint 4: Record question for PANCE distribution tracking
-    if (currentQuestion.system) {
-      recordQuestion(currentQuestion.system, undefined);
-    }
+    // recordQuestion + recordCircadianPerformance now handled by analyticsTracker.trackAnswer()
 
     if (sessionSettings.focus === 'review') {
       updateReviewQuestion(currentQuestion, isCorrect);
@@ -1250,13 +1228,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       currentQuestion.system || 'Unknown',
       timeToAnswer
     );
-
-    // Record circadian performance data
-    recordCircadianPerformance({
-      timestamp,
-      isCorrect,
-      topic: currentQuestion.topic,
-    });
 
     // Track questions answered and check for wellness triggers
     questionsAnsweredInSession.current += 1;
