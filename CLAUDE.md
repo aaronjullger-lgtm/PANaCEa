@@ -345,14 +345,13 @@ npm run orchestrate:full     # Full automation pipeline
 
 ---
 
-## Current Priorities (2026-04-07)
+## Current Priorities (2026-04-10)
 
 1. Generate questions for under-represented PANCE blueprint areas (CV, PULM)
-2. Run Prisma migration for `questionOrder`, `taskCategory`, `accountStatus`, `deletionScheduledAt`
-3. Wire `RotationFocusCard` to real user profile (`currentRotation`, `eorDate`)
-4. Wire `useStudyWellness` to real session history
-5. Fix Knowledge Base content loading
-6. Optimize skill descriptions for automatic Claude triggering
+2. Finish/resume the parked QuizView refactor on `wip/quizview-refactor-parked` (currently 192 TS errors — state + button primitives need rewiring)
+3. Fix Knowledge Base content loading
+4. Resolve drill routing split (DrillShell vs. useDrillFSRS) — decide which drill types consolidate
+5. Optimize skill descriptions for automatic Claude triggering
 
 ---
 
