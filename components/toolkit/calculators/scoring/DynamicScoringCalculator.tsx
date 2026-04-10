@@ -315,11 +315,23 @@ export default function DynamicScoringCalculator({
     setRadioSelections({});
   }, []);
 
-  // ---- Risk color mapping ----
+  // ---- Risk color mapping (uses design tokens for dark mode support) ----
   const riskColors: Record<RiskLevel, { bg: string; border: string; text: string }> = {
-    low: { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
-    moderate: { bg: '#fef9c3', border: '#eab308', text: '#854d0e' },
-    high: { bg: '#fee2e2', border: 'var(--color-data-fail)', text: '#991b1b' },
+    low: {
+      bg: 'color-mix(in srgb, var(--color-data-pass) 15%, var(--color-bg-primary))',
+      border: 'var(--color-data-pass)',
+      text: 'var(--color-data-pass)',
+    },
+    moderate: {
+      bg: 'color-mix(in srgb, var(--color-data-provisional) 15%, var(--color-bg-primary))',
+      border: 'var(--color-data-provisional)',
+      text: 'var(--color-data-provisional)',
+    },
+    high: {
+      bg: 'color-mix(in srgb, var(--color-data-fail) 15%, var(--color-bg-primary))',
+      border: 'var(--color-data-fail)',
+      text: 'var(--color-data-fail)',
+    },
   };
 
   // ---- Loading / Error states ----
@@ -425,7 +437,7 @@ export default function DynamicScoringCalculator({
         </div>
 
         {/* Score progress bar */}
-        <div style={{ marginTop: 12, height: 6, borderRadius: 3, background: 'rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+        <div style={{ marginTop: 12, height: 6, borderRadius: 3, background: 'color-mix(in srgb, var(--color-text-primary) 10%, transparent)', overflow: 'hidden' }}>
           <motion.div
             animate={{ width: `${maxScore > 0 ? (score / maxScore) * 100 : 0}%` }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -491,7 +503,7 @@ export default function DynamicScoringCalculator({
                     <span style={{
                       fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 9999,
                       background: isSelected ? 'var(--color-accent)' : 'var(--color-bg-secondary)',
-                      color: isSelected ? '#fff' : 'var(--color-text-secondary)',
+                      color: isSelected ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
                     }}>
                       {opt.points} pt{opt.points !== 1 ? 's' : ''}
                     </span>
@@ -534,7 +546,7 @@ export default function DynamicScoringCalculator({
                   <span style={{
                     fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 9999,
                     background: isChecked ? 'var(--color-accent)' : 'var(--color-bg-secondary)',
-                    color: isChecked ? '#fff' : 'var(--color-text-secondary)',
+                    color: isChecked ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
                     flexShrink: 0,
                   }}>
                     {opt.points > 0 ? '+' : ''}{opt.points} pt{Math.abs(opt.points) !== 1 ? 's' : ''}
@@ -588,7 +600,7 @@ export default function DynamicScoringCalculator({
           padding: '12px 16px', borderRadius: 12, marginBottom: 16,
           border: '2px solid var(--color-accent)',
           background: showStudyPanel ? 'var(--color-accent)' : 'transparent',
-          color: showStudyPanel ? '#fff' : 'var(--color-accent)',
+          color: showStudyPanel ? 'var(--color-text-inverse)' : 'var(--color-accent)',
           cursor: 'pointer', fontSize: 14, fontWeight: 700,
           transition: 'all 0.2s',
         }}

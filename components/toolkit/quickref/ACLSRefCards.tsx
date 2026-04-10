@@ -142,12 +142,12 @@ export default function ACLSRefCards() {
           </div>
 
           {/* Step timeline */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12, borderLeft: '3px solid #fee2e2' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12, borderLeft: '3px solid color-mix(in srgb, var(--color-data-fail) 20%, var(--color-bg-primary))' }}>
             {steps.map((step) => {
               const isExpanded = expandedId === step.id;
               return (
                 <motion.div key={step.id} layout
-                  style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-primary, #fff)' }}>
+                  style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden', background: 'var(--color-bg-primary)' }}>
                   <button onClick={() => setExpandedId(isExpanded ? null : step.id)}
                     style={{ width: '100%', padding: '12px 14px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

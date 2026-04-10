@@ -51,9 +51,9 @@ const variantStyles: Record<CardVariant, { bg: string; border: string; glow: str
     useShadow: false,
   },
   info: {
-    bg: 'bg-gradient-to-br from-[var(--color-accent)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/8',
-    border: 'border border-[var(--color-accent)]/15 hover:border-[var(--color-accent)]/30',
-    glow: 'bg-[var(--color-accent)]/8',
+    bg: 'bg-gradient-to-br from-[var(--color-accent-secondary)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent-secondary)]/8',
+    border: 'border border-[var(--color-accent-secondary)]/15 hover:border-[var(--color-accent-secondary)]/30',
+    glow: 'bg-[var(--color-accent-secondary)]/8',
     useShadow: false,
   },
   neutral: {

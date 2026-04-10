@@ -38,7 +38,7 @@ const baseClasses = `
   border border-[var(--color-border)]
   placeholder:text-[var(--color-text-muted)]
   hover:border-[var(--color-accent)]/40
-  focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
+  focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]
   disabled:opacity-50 disabled:cursor-not-allowed
 `;
 
