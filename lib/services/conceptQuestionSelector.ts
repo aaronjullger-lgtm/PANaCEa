@@ -26,6 +26,9 @@ import type { PrismaClient } from '@prisma/client';
 import type { LearnerStage } from './learnerStageBlueprint';
 import { batchGetLeastSeenQuestions } from './batchVariantService';
 import { letterToIndex, ANSWER_LETTERS } from '../answerLetterMap';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'ConceptQuestionSelector';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -617,8 +620,13 @@ function normalizeQuestion(
 
   if (correctIdx === null) {
     // Log but don't crash — return with index -1 so callers can filter
-    console.warn(
-      `[normalizeQuestion] Could not resolve correctAnswerIndex for question ${raw.id}: correctAnswer="${raw.correctAnswer}", options=[${opts.length}]`
+    logger.warn(
+      `[${LOG_SCOPE}] normalizeQuestion: could not resolve correctAnswerIndex`,
+      {
+        questionId: raw.id,
+        correctAnswer: raw.correctAnswer,
+        optionsCount: opts.length,
+      }
     );
     correctIdx = -1;
   }

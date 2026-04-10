@@ -13,6 +13,9 @@
 import { Prisma } from '@prisma/client';
 import type { FSRSCard, Rating, ReviewSnapshot } from '../fsrs';
 import { createReviewSnapshot } from '../fsrs';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'UserProgress';
 
 export interface UpdateUserProgressInput {
   userId: string;
@@ -178,9 +181,15 @@ export async function updateUserProgressWithHistory(
     if (error.code === 'P2003' || error.code === 'P2002') {
       // Log the error but don't throw - this allows the review to continue
       // even if UserProgress can't be created due to missing user/condition
-      console.warn(
-        `Failed to create/update UserProgress for user ${userId}, condition ${conditionId} (${progressContext}):`,
-        error.message
+      logger.warn(
+        `[${LOG_SCOPE}] Failed to create/update UserProgress`,
+        {
+          userId,
+          conditionId,
+          progressContext,
+          errorCode: error.code,
+          message: error.message,
+        }
       );
       return;
     }

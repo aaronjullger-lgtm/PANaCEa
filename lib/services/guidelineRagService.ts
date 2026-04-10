@@ -21,6 +21,9 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'GuidelineRAG';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -233,7 +236,9 @@ export async function retrieveGuidelineContext(
     };
   } catch (error) {
     // Non-fatal — Preceptor can still generate feedback without guidelines
-    console.warn('[GuidelineRAG] Retrieval failed:', error instanceof Error ? error.message : error);
+    logger.warn(`[${LOG_SCOPE}] Retrieval failed`, {
+      error: error instanceof Error ? error.message : error,
+    });
     return emptyResult;
   }
 }

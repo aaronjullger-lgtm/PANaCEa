@@ -338,3 +338,42 @@ Completed the accessibility sweep across the final 3 drill components and migrat
 - **Phase 5:** Question data normalization + content backfill
 - Logger migration for remaining ~13 service files
 - Extract `useAnswerSubmission` hook from QuizView.tsx
+
+---
+
+## 2026-04-10 — Batch #5: Logger Migration (5 lib/services files)
+
+### What was done
+Continued the structured-logger sweep started in Batches #2–#4. Migrated 5 more `lib/services/*.ts` files from bare `console.*` calls to the scoped `logger` + `LOG_SCOPE` pattern used across the rest of the services layer.
+
+### Files modified
+1. **conceptQuestionSelector.ts** — `normalizeQuestion` warn → `logger.warn` with `LOG_SCOPE='ConceptQuestionSelector'` (logs unresolved `correctAnswerIndex` with questionId + options count)
+2. **contentSearchService.ts** — search catch → `logger.error` with `LOG_SCOPE='ContentSearch'` (surfaces query failures to structured logs before rethrow)
+3. **guidelineRagService.ts** — RAG retrieval catch → `logger.warn` with `LOG_SCOPE='GuidelineRAG'` (non-fatal path; Preceptor still generates feedback without guidelines)
+4. **semanticValidationService.ts** — Gemini judge catch → `logger.error` with `LOG_SCOPE='SemanticValidation'` (AI fallback errors now traceable)
+5. **userProgressService.ts** — Prisma P2003/P2002 catch → `logger.warn` with `LOG_SCOPE='UserProgress'` (structured FK constraint failures with userId + conditionId + progressContext)
+
+### Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| `console.*` calls in these 5 files | 5 | 0 |
+| Files still using bare `console.*` in `lib/services/` | N-5 | N-10 (cumulative) |
+
+### Cumulative totals (5 batches)
+| Metric | Total |
+|--------|-------|
+| `console.*` calls migrated to logger | 75 (57 services + 18 hooks) across 19 files |
+| `as any` casts eliminated | 27 across 5 files |
+| Drill components with a11y | 28 of 34 |
+| Error boundaries | 13 (all active drills via DrillShell) |
+| New test cases | 89 (59 implicit-metrics + 30 useDrillFSRS) |
+
+### Verification
+- **Build:** ✅ `npm run build` — EXIT=0, 15.31s, all chunks emitted. Sentry source-map upload warning is pre-existing (no `SENTRY_AUTH_TOKEN` in local env).
+- **Tests:** ✅ 2566/2571 pass. The 5 failures are all in `tests/useDrillFSRS-offline-fallback.test.ts` (`React.act is not a function`) — pre-existing React 19 compat issue explicitly listed under CLAUDE.md "Known exclusions: React 19 compat issues in components/admin, Goals, offline tests". None of the failing tests reference the 5 modified files.
+- **Typecheck:** ⚠️ `tsc --noEmit -p tsconfig.json` reports 2125 errors. Verified these are **pre-existing and unrelated**: a clean run against `HEAD` (with the 5 files reverted to pristine) reports the exact same 2125 error count. The errors are concentrated in `services/optimizer/*.test.ts` (Vitest mockResolvedValue typing), `services/optimizer/retentionAwareScheduler.ts` (missing `computeRetrievability` export), `services/scribe/*Service.ts` (`data is unknown`), and `types/telemetry.ts` — none of which import any of the 5 modified files. Batch #5 introduces zero new type errors.
+
+### Next priority
+- Continue logger migration for remaining `console.*` call sites in `lib/services/` (grep shows ~8 files still to go)
+- Address the 2125 pre-existing tsc error cliff — likely from a recent Prisma client regen or Vitest types mismatch. Candidate for a dedicated "tsc baseline restoration" sprint
+- Extract `useAnswerSubmission` hook from QuizView.tsx

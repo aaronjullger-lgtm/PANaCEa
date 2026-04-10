@@ -5,6 +5,9 @@
  */
 
 import { prisma } from '../../lib/prisma';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'ContentSearch';
 
 // Client-safe interfaces (structural typing, no Prisma import)
 interface ConditionLike {
@@ -376,7 +379,7 @@ export async function searchContent(
     // Format results
     return topResults.map(formatSearchResult);
   } catch (error) {
-    console.error('Error searching content:', error);
+    logger.error(`[${LOG_SCOPE}] Error searching content`, { error });
     throw new Error('Failed to search content');
   }
 }

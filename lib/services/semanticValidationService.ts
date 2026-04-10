@@ -2,6 +2,9 @@
 // Semantic validation for short-answer drills with caching and AI fallback
 
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { logger } from '@/lib/logger';
+
+const LOG_SCOPE = 'SemanticValidation';
 
 interface SemanticValidationResult {
   isEquivalent: boolean;
@@ -70,7 +73,7 @@ class SemanticValidationService {
       this.cache.set(cacheKey, isYes);
       return { isEquivalent: isYes, viaModel: true };
     } catch (error) {
-      console.error('Semantic validation failed:', error);
+      logger.error(`[${LOG_SCOPE}] Semantic validation failed`, { error });
       return { isEquivalent: false, viaModel: true };
     }
   }
