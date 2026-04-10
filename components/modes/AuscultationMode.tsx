@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Volume2,
@@ -335,13 +336,13 @@ export function AuscultationMode({
         </div>
 
         {mode === 'quiz' && !quizState && (
-          <button
+          <Button
+            variant="primary"
             onClick={startQuiz}
-            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/80 flex items-center gap-2"
           >
             <Play className="h-4 w-4" />
             Start Quiz
-          </button>
+          </Button>
         )}
       </div>
 
@@ -474,9 +475,10 @@ export function AuscultationMode({
               </div>
 
               {showAnswer && (
-                <button
+                <Button
+                  variant="primary"
                   onClick={nextQuestion}
-                  className="mt-4 w-full py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl hover:bg-[var(--color-accent)]/80 flex items-center justify-center gap-2"
+                  className="mt-4 w-full"
                 >
                   {quizState.currentIndex + 1 < quizSounds.length ? (
                     <>
@@ -487,7 +489,7 @@ export function AuscultationMode({
                       View Results <Award className="h-4 w-4" />
                     </>
                   )}
-                </button>
+                </Button>
               )}
             </div>
           ) : (
@@ -601,72 +603,69 @@ export function AuscultationMode({
 
                 {/* Controls */}
                 <div className="flex items-center justify-center gap-4">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setIsLooping(!isLooping)}
-                    className={`p-2 rounded-full ${
-                      isLooping ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'text-data-neutral'
+                    className={`rounded-full ${
+                      isLooping ? 'text-[var(--color-accent)]' : ''
                     }`}
                     aria-label={isLooping ? 'Disable loop' : 'Loop track'}
                   >
                     <Repeat className="h-5 w-5" />
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={skipBack}
-                    className="p-2 text-data-neutral hover:text-data-neutral"
                     aria-label="Skip back 2 seconds"
                   >
                     <SkipBack className="h-6 w-6" />
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={togglePlay}
-                    className="p-4 rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/80"
+                    className="rounded-full p-4"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={skipForward}
-                    className="p-2 text-data-neutral hover:text-data-neutral"
                     aria-label="Skip forward 2 seconds"
                   >
                     <SkipForward className="h-6 w-6" />
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setIsMuted(!isMuted)}
-                    className={`p-2 rounded-full ${isMuted ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-text-muted)]'}`}
+                    className={`rounded-full ${isMuted ? 'text-[var(--color-data-fail)]' : ''}`}
                     aria-label={isMuted ? 'Unmute' : 'Mute'}
                   >
                     {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Speed control */}
                 <div className="flex items-center justify-center gap-2 mt-4">
                   <span className="text-xs text-data-neutral">Speed:</span>
                   {[0.5, 0.75, 1, 1.25].map((rate) => (
-                    <button
+                    <Button
                       key={rate}
+                      variant={playbackRate === rate ? 'primary' : 'ghost'}
+                      size="sm"
                       onClick={() => setPlaybackRate(rate)}
-                      className={`
-                        px-2 py-1 text-xs rounded
-                        ${
-                          playbackRate === rate
-                            ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                            : 'bg-data-neutral text-data-neutral'
-                        }
-                      `}
                     >
                       {rate}x
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
