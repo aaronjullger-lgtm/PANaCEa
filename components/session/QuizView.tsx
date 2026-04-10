@@ -119,6 +119,7 @@ import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
 import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
+import { computeScore } from '@/lib/scoring/computeScore';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -914,70 +915,24 @@ const QuizView: React.FC<QuizViewProps> = ({
       return;
     }
 
-    // Sprint 4: Calculate correctness IMMEDIATELY
-    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
-    const timeToAnswer = Date.now() - questionStartTime;
-    const questionId = currentQuestion.id || `temp-${questionNumber}`;
+    // Sprint 4: Compute score using extracted utility
+    const behavioralPayload = behavioralTracker.finalize();
+    const microMetrics = microKinetics.getMetrics();
+
+    const score = computeScore({
+      selectedAnswerIndex,
+      questionStartTime,
+      question: currentQuestion,
+      questionNumber,
+      behavioralPayload,
+      microMetrics,
+      eliminationTimestamps: eliminationTimestampsRef.current,
+    });
+
+    const { isCorrect, timeToAnswer, questionId, parTime, telemetryWithPosition } = score;
 
     // Feed the wellness engine for mid-session diminishing returns detection
     sessionWellness.recordAttempt(isCorrect, timeToAnswer);
-
-    const behavioralPayload = behavioralTracker.finalize();
-    const microMetrics = microKinetics.getMetrics();
-    const elimTimestamps = eliminationTimestampsRef.current;
-    const eliminationVelocity =
-      elimTimestamps.length >= 2
-        ? elimTimestamps.length /
-          ((elimTimestamps[elimTimestamps.length - 1]! - elimTimestamps[0]!) / 1000)
-        : undefined;
-    const telemetryForApi =
-      behavioralPayload != null
-        ? behavioralPayloadToTelemetryData(
-            behavioralPayload,
-            behavioralPayload.answer_change_count,
-            false,
-            {
-              oscillations: microMetrics.oscillations,
-              vignetteRegressions: microMetrics.vignetteRegressions,
-              selectionDriftMs: microMetrics.selectionDriftMs,
-              tremorScore: microMetrics.tremorScore,
-              cursorEntropy: microMetrics.cursorEntropy,
-              inputMethod: microKinetics.inputMethod,
-            },
-            eliminationVelocity
-          )
-        : undefined;
-
-    // Enrich telemetry with session position for server-side fatigue detection
-    const telemetryWithPosition = telemetryForApi
-      ? enrichTelemetryWithSessionPosition(telemetryForApi, questionNumber)
-      : undefined;
-
-    // Derive FSRS rating from behavioral signals — fully implicit, no self-rating buttons.
-    // When behavioral data is available, use the full pipeline (deriveContinuousRating +
-    // Ghost Grader) that matches the server-side computation in drillReviewService.
-    // Falls back to binary correct/incorrect only if the tracker was inactive.
-    const parTimeForRating = calculateParTime(currentQuestion);
-    const fsrsRating = behavioralPayload
-      ? deriveFsrsRatingFromBehavior({
-          isCorrect,
-          timeToFirstClickMs: behavioralPayload.time_to_first_interaction_ms,
-          totalDwellTimeMs: behavioralPayload.duration_ms,
-          parTimeMs: parTimeForRating,
-          answerSwitches: behavioralPayload.answer_change_count,
-          cursorEntropy: microMetrics.cursorEntropy,
-          hoverOscillations: microMetrics.oscillations,
-          vignetteRegressions: microMetrics.vignetteRegressions,
-          selectionDriftMs: microMetrics.selectionDriftMs,
-          tremorScore: microMetrics.tremorScore,
-        })
-      : deriveFsrsRatingFromBehavior({
-          isCorrect,
-          timeToFirstClickMs: null,
-          totalDwellTimeMs: timeToAnswer,
-          parTimeMs: parTimeForRating,
-          answerSwitches: 0,
-        });
 
     // Sprint 2: queueAnswer removed — drillReviewService is now the single canonical
     // writer for all session types (main, drill, cram, rapid_recall). It handles:
@@ -1028,8 +983,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     }
 
-    // Sprint 4: Calculate par time (isCorrect and timeToAnswer already calculated above for instant feedback)
-    const parTime = calculateParTime(currentQuestion);
+    // parTime already computed by computeScore()
 
     // Sprint 4: Record behavioral confidence (auto-inferred, no manual input)
     const behaviorSignals: BehaviorSignals = {
