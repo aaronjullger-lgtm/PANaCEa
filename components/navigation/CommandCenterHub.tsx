@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { Button } from '@/components/ui/button';
 import { RecommendationFeed } from '@/components/dashboard/RecommendationFeed';
 import { useUser } from '@clerk/clerk-react';
 import {
@@ -635,14 +636,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   : 'Your progress is saved locally and will sync when the connection is restored.'}
               </p>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setDismissedSyncError(syncError)}
-              className="flex-shrink-0 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors rounded-md hover:bg-[var(--color-bg-tertiary)]"
               aria-label="Dismiss error"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </motion.div>
         )}
 
@@ -665,15 +666,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             <div className="flex flex-wrap items-center gap-2 mt-4" role="group" aria-label="Session status indicators">
               {/* Due Count Chip */}
               {(propDueCount ?? 0) > 0 && (
-                <button
-                  type="button"
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={onNavigateToSrsReview}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/15 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   title="Open Due Review — variant PANCE questions"
+                  className="rounded-full"
                 >
                   <span className="font-semibold">{propDueCount}</span>
                   <span>due for review</span>
-                </button>
+                </Button>
               )}
 
               {/* Flagged Count Chip */}
@@ -728,31 +730,28 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {onNavigateToSimulation && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="primary"
                       onClick={() => onNavigateToSimulation()}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity min-h-[44px]"
                     >
                       <Play className="w-4 h-4" aria-hidden />
                       Start practice session
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
                     onClick={() => onNavigateToDrillMode('grand_rounds')}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
                   >
                     <Trophy className="w-4 h-4" aria-hidden />
                     Try today&apos;s Grand Rounds
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={onNavigateToToolkit}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
                   >
                     <Calculator className="w-4 h-4" aria-hidden />
                     Explore the Toolkit
-                  </button>
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -805,14 +804,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={onResumeSession}
-                  className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 min-h-[44px]"
                 >
                   <Play className="w-4 h-4" aria-hidden />
                   Resume
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -963,13 +961,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="outline"
                 onClick={onNavigateToStudyPathDashboard}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[40px]"
               >
                 Open Dashboard
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -1072,8 +1070,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </div>
                 {/* Unified toolbar: Enable All, Disable All, More options */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
                       setEnabledSystems(all);
@@ -1083,31 +1082,30 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       );
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   >
                     Enable All
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setEnabledSystems(new Set());
                       localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify([]));
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                   >
                     Disable All
-                  </button>
+                  </Button>
                   {onOpenSettings && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={onOpenSettings}
                       title="More options"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
                     >
                       <MoreHorizontal className="w-4 h-4" aria-hidden />
                       <span>More options</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -1150,13 +1148,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="primary"
                 onClick={() => onNavigateToDrillMode('panre_la')}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--color-category-simulation)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity min-h-[40px]"
               >
                 Start Practice
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}
