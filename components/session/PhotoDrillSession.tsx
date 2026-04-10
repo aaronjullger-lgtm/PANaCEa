@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   usePhotoDrill,
@@ -252,14 +253,14 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-          <button
+          <Button
+            variant="ghost"
             onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium">Exit</span>
-          </button>
+          </Button>
           <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Photo Drill</h1>
           <div className="w-16" /> {/* Spacer for centering */}
         </header>
@@ -322,14 +323,14 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Floating Header */}
         <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
-          <button
+          <Button
+            variant="ghost"
             onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit session"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
+          </Button>
 
           <div className="flex items-center gap-4">
             {/* Score */}
@@ -373,20 +374,18 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                   : 'There are no questions for this filter yet. Try another category or retry.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={retryLoadCases}
-                  className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90 transition-opacity"
                 >
                   Retry
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={handleExit}
-                  className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)] transition-colors"
                 >
                   Try another category
-                </button>
+                </Button>
               </div>
             </motion.div>
           )}
@@ -510,13 +509,14 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     </div>
 
                     {/* Reveal Image Button */}
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={handleRevealImage}
-                      className="w-full py-4 bg-[var(--color-bg-elevated)]/70 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)] rounded-xl text-[var(--color-text-primary)] font-semibold flex items-center justify-center gap-3 transition-all shadow-lg"
+                      className="w-full py-4"
                     >
                       <Eye className="w-5 h-5" />
                       View Clinical Findings
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -530,14 +530,15 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       {/* Draw to locate: for ECG and radiology */}
                       {(currentCase.modality === 'ecg' || currentCase.modality === 'xray') &&
                         !spatialResult && (
-                          <button
-                            type="button"
+                          <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => setDrawModeActive(true)}
-                            className="absolute bottom-3 left-3 px-3 py-2 bg-[var(--color-accent)]/90 hover:bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
+                            className="absolute bottom-3 left-3"
                           >
                             <Pencil className="w-4 h-4" aria-hidden />
                             Draw to locate
-                          </button>
+                          </Button>
                         )}
                       <div
                         className={`absolute inset-0 bg-[var(--color-bg-elevated)] animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
@@ -557,19 +558,20 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       )}
                       {/* Zoom on demand: load high-res only when user requests (saves data for X-rays/derm) */}
                       {currentCase.highResUrl && !requestHighRes && (
-                        <button
-                          type="button"
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => {
                             setRequestHighRes(true);
                             setIsImageLoaded(false);
                           }}
-                          className="absolute top-3 right-3 px-2.5 py-1.5 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex items-center gap-1.5"
+                          className="absolute top-3 right-3"
                           aria-label="View full resolution (loads high-res image)"
                           title="Load full-resolution image for zoom/detail"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           Full resolution
-                        </button>
+                        </Button>
                       )}
                       {/* Modality Badge */}
                       <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
@@ -590,13 +592,13 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                           Draw a box around the finding
                         </span>
                         {!spatialResult && (
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setDrawModeActive(false)}
-                            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
                           >
                             Skip
-                          </button>
+                          </Button>
                         )}
                       </div>
                       <SpatialAnswerCanvas
@@ -642,16 +644,16 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                                 : 'Incorrect — see red outline for correct area'}
                             </span>
                           </div>
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               setDrawModeActive(false);
                               resetSpatial();
                             }}
-                            className="text-sm text-[var(--color-accent)] hover:underline"
                           >
                             Continue to diagnosis
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -730,17 +732,13 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                         </div>
                       )}
                     </div>
-                    <button
+                    <Button
+                      variant={isCorrect ? 'primary' : 'outline'}
                       onClick={handleNextCase}
-                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
-                        isCorrect
-                          ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)]'
-                          : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
-                      }`}
                     >
                       Next Case
                       <ArrowRight className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Explanation */}
@@ -786,19 +784,19 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           </div>
 
           <div className="flex flex-col gap-3">
-            <button
+            <Button
+              variant="primary"
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Start New Session
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               onClick={handleExit}
-              className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
             >
               Exit to Menu
-            </button>
+            </Button>
           </div>
         </motion.div>
       </div>
