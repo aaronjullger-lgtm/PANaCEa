@@ -29,6 +29,7 @@ import {
   KnowledgeBaseHub,
   MyLibraryPage,
   TutorChatPage,
+  AgentChat,
   StudyCompanionPage,
   SrsFlashcardView,
   CustomStudyMode,
@@ -1160,6 +1161,27 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               >
                                 <Suspense fallback={<Loader />}>
                                   <TutorChatPage onExit={() => setView('command_center')} />
+                                </Suspense>
+                              </WithGeminiErrorBoundary>
+                            </motion.div>
+                          )}
+
+                          {view === 'agent_chat' && (
+                            <motion.div
+                              key="agent_chat"
+                              variants={pageVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              transition={pageTransition}
+                              className="h-full min-h-0"
+                            >
+                              <WithGeminiErrorBoundary
+                                viewName="agent_chat"
+                                onRetry={() => setView('agent_chat')}
+                              >
+                                <Suspense fallback={<Loader />}>
+                                  <AgentChat onExit={() => setView('command_center')} />
                                 </Suspense>
                               </WithGeminiErrorBoundary>
                             </motion.div>

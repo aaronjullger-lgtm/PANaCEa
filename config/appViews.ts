@@ -52,6 +52,7 @@ export type View =
   | 'pearl_deck'
   | 'my_library'
   | 'tutor_chat'
+  | 'agent_chat'
   | 'study_companion'
   | 'srs_review'
   | 'medical_database'

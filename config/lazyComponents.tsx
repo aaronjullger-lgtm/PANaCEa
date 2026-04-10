@@ -131,6 +131,7 @@ export const MyLibraryPage = lazy(() =>
 export const TutorChatPage = lazy(() =>
   import('../components/pages/TutorChatPage').then((m) => ({ default: m.TutorChatPage }))
 );
+export const AgentChat = lazy(() => import('../components/agents/AgentChat'));
 export const StudyCompanionPage = lazy(() =>
   import('../components/pages/StudyCompanionPage').then((m) => ({ default: m.StudyCompanionPage }))
 );
