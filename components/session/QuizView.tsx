@@ -118,6 +118,7 @@ import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
 import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
+import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -440,17 +441,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     { optionLetter: string; count: number; percent: number }[] | null
   >(null);
 
-  // Wellness check state and constants
-  const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
-  const LATE_NIGHT_START_HOUR = 22;
-  const LATE_NIGHT_END_HOUR = 5;
-  const LATE_NIGHT_CHECK_INTERVAL = 15;
-
-  const [showWellnessModal, setShowWellnessModal] = useState(false);
-  const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>(
-    'rapid_questions'
-  );
-  const questionsAnsweredInSession = useRef(0);
+  // Sprint 3: Wellness checks extracted to useWellnessChecks hook
+  const wellness = useWellnessChecks();
 
   // Sprint 4: Enhanced session state
   const [showStatsOverlay, setShowStatsOverlay] = useState(false);
@@ -1229,28 +1221,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeToAnswer
     );
 
-    // Track questions answered and check for wellness triggers
-    questionsAnsweredInSession.current += 1;
-
-    // Trigger wellness check after threshold questions
-    if (
-      questionsAnsweredInSession.current > 0 &&
-      questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0
-    ) {
-      setWellnessReason('rapid_questions');
-      setShowWellnessModal(true);
-    }
-
-    // Check if studying late at night
-    const currentHour = new Date().getHours();
-    if (
-      (currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) &&
-      questionsAnsweredInSession.current > 0 &&
-      questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0
-    ) {
-      setWellnessReason('late_night');
-      setShowWellnessModal(true);
-    }
+    // Sprint 3: Wellness check (delegated to hook)
+    wellness.checkAfterAnswer();
 
     // Clear submitting state (both ref and state)
     submittingRef.current = false;
@@ -1861,9 +1833,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
       {/* Wellness Check Modal */}
       <WellnessCheckModal
-        isOpen={showWellnessModal}
-        onClose={() => setShowWellnessModal(false)}
-        reason={wellnessReason}
+        isOpen={wellness.showModal}
+        onClose={() => wellness.dismiss()}
+        reason={wellness.reason}
       />
 
       {/* Session Pacer — diminishing returns detection (non-blocking) */}
