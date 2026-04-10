@@ -6,7 +6,7 @@
 
 Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Express `routes/` directory is legacy, used only for local dev via `npm run dev:all`. This checklist tracks which Express routes have been ported and which still need migration before `routes/` can be removed.
 
-**Current coverage: ~21% of Express endpoints have Edge equivalents.**
+**Current coverage: ~32% of Express endpoints have Edge equivalents.**
 
 ## Status Key
 
@@ -25,10 +25,10 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 |---|---|---|
 | `GET /api/conditions` | `functions/api/conditions/index.ts` | ✅ PORTED |
 | `GET /api/conditions/:id/extended` | `functions/api/conditions/index.ts` | ✅ PORTED |
-| `GET /api/content/all` | — | ❌ MISSING |
-| `GET /api/content/condition/:id` | — | ❌ MISSING |
-| `GET /api/content/:conditionId` | — | ❌ MISSING |
-| `GET /api/content/search` | — | ❌ MISSING |
+| `GET /api/content/all` | `functions/api/content/all.ts` | ✅ PORTED |
+| `GET /api/content/condition/:id` | `functions/api/content/condition/[conditionId].ts` | ✅ PORTED |
+| `GET /api/content/:conditionId` | `functions/api/content/[conditionId].ts` | ✅ PORTED |
+| `GET /api/content/search` | `functions/api/content/search.ts` | ✅ PORTED |
 | `GET /api/reference/anatomy` | `functions/api/reference/anatomy/` | ✅ PORTED |
 | `GET /api/reference/special-tests` | — | ❌ MISSING |
 | `GET /api/reference/physiology` | — | ❌ MISSING |
@@ -80,11 +80,11 @@ Production runs on **Cloudflare Pages Functions** (`functions/api/`). The Expres
 
 | Express Route | Edge Equivalent | Status |
 |---|---|---|
-| `POST /api/analytics/reactions` | — | ❌ MISSING |
-| `POST /api/analytics/weakness` | — | ❌ MISSING |
-| `POST /api/analytics/confusion` | — | ❌ MISSING |
-| `POST /api/analytics/soap-note` | — | ❌ MISSING |
-| `GET /api/analytics/performance-deltas` | — | ❌ MISSING |
+| `POST /api/analytics/reactions` | `functions/api/analytics/reactions.ts` | ✅ PORTED |
+| `POST /api/analytics/weakness` | `functions/api/analytics/weakness.ts` | ✅ PORTED |
+| `POST /api/analytics/confusion` | `functions/api/analytics/confusion.ts` | ✅ PORTED |
+| `POST /api/analytics/soap-note` | `functions/api/analytics/soap-note.ts` | ✅ PORTED |
+| `GET /api/analytics/performance-deltas` | `functions/api/analytics/performance-deltas.ts` | ✅ PORTED |
 | `GET /api/achievements` | — | ❌ MISSING |
 | `GET /api/performance` | — | ❌ MISSING |
 | `POST /api/performance` | — | ❌ MISSING |
