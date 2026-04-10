@@ -9,6 +9,7 @@ import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
 import { enhancedHaptics } from '@/lib/enhancedHaptics';
 import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
 import { debounce } from '@/lib/utils/debounce';
+import { useQuizTimer } from '@/hooks/useQuizTimer';
 
 // Core services - using client-safe API wrappers
 import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
@@ -447,14 +448,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     'rapid_questions'
   );
   const questionsAnsweredInSession = useRef(0);
-  const sessionStartTime = useRef(Date.now());
 
   // Sprint 4: Enhanced session state
   const [showStatsOverlay, setShowStatsOverlay] = useState(false);
   const [showSessionEndSummary, setShowSessionEndSummary] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [showTimer, setShowTimer] = useState(true);
-  const [timeRemainingMs, setTimeRemainingMs] = useState<number | null>(null);
   const commuter = useCommuter();
   const showTimerVisible = showTimer && !commuter?.isCommuterMode;
   // Auto‑read question aloud when commuter mode is active
@@ -683,47 +682,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
   }, [onEndSession, shouldEndlesslyReplenish, performanceData]);
 
-  // Quick Wins: Time limit checking (auto-end session at limit)
-  useEffect(() => {
-    if (!sessionSettings.timeLimit) {
-      setTimeRemainingMs(null);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - sessionStartTime.current;
-      const remaining = sessionSettings.timeLimit! - elapsed;
-
-      if (remaining <= 0) {
-        // Time's up - end session
-        clearInterval(interval);
-        setTimeRemainingMs(0);
-        handleEndSession();
-      } else {
-        setTimeRemainingMs(remaining);
-      }
-    }, 1000); // Update every second
-
-    return () => clearInterval(interval);
-  }, [sessionSettings.timeLimit, handleEndSession]);
-
-  // Pause the exam-mode timer when the user switches tabs so hidden time isn't counted
-  useEffect(() => {
-    if (!sessionSettings.timeLimit) return;
-    let hiddenAt: number | null = null;
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        hiddenAt = Date.now();
-      } else if (hiddenAt !== null) {
-        // Advance the epoch so elapsed = Date.now() - sessionStartTime.current
-        // stays accurate (hidden time is subtracted automatically)
-        sessionStartTime.current += Date.now() - hiddenAt;
-        hiddenAt = null;
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [sessionSettings.timeLimit]);
+  // ---- EXAM TIMER (extracted to useQuizTimer hook) ----
+  const { timeRemainingMs, sessionStartTime } = useQuizTimer({
+    timeLimitMs: sessionSettings.timeLimit,
+    onTimeUp: handleEndSession,
+  });
 
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
