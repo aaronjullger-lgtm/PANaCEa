@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import {
@@ -1077,15 +1078,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       : 'Account'}
               </h2>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClose}
               aria-label="Close modal and return to dashboard"
               title="Close"
-              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="rounded-full"
             >
               <X className="w-5 h-5" aria-hidden />
-            </button>
+            </Button>
           </div>
 
           {/* Tab Switcher - Desktop: top tabs (internal navigation; X above closes entire modal) */}
@@ -1414,9 +1416,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Toggle for Lifetime Stats */}
                 <div className="flex justify-center">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                   >
                     {showAdvanced ? (
                       <>
@@ -1429,7 +1431,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         Show Lifetime Stats
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : activeTab === 'activity' ? (
@@ -2073,18 +2075,18 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
 
                   <div className="flex gap-2 mb-3">
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={handleEnableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors border border-[var(--color-border)]"
                     >
                       Enable All
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={handleDisableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors border border-[var(--color-border)]"
                     >
                       Disable All
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -2853,9 +2855,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Advanced Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl overflow-hidden">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-bg-primary)] transition-colors"
+                    className="w-full flex items-center justify-between p-4"
                   >
                     <span className="font-medium text-[var(--color-text-primary)]">Advanced</span>
                     {showAdvanced ? (
@@ -2863,7 +2866,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     ) : (
                       <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
                     )}
-                  </button>
+                  </Button>
 
                   <AnimatePresence>
                     {showAdvanced && (
@@ -2874,11 +2877,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         className="border-t border-[var(--color-border)]"
                       >
                         <div className="p-4 space-y-3">
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
                             onClick={handleExportJSON}
                             disabled={performanceData.length === 0}
-                            className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full flex items-center gap-3 p-3"
                             aria-label="Export progress data as JSON"
                           >
                             <Download className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -2890,7 +2893,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                 Download your progress as JSON
                               </div>
                             </div>
-                          </button>
+                          </Button>
                           <div className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg opacity-50 cursor-not-allowed">
                             <Upload className="w-5 h-5 text-[var(--color-text-muted)]" />
                             <div className="text-left">
