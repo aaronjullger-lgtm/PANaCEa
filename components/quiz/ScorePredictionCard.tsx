@@ -14,6 +14,20 @@ const PANCE_PASSING_SCORE = 450;
 /** Score at which prediction is considered "strong pass" */
 const PANCE_STRONG_PASS_SCORE = 500;
 
+// ─── Prediction & Rendering Constants ─────────────────────────────────────────
+/** Minimum performance records needed before showing prediction */
+const MIN_RECORDS_FOR_PREDICTION = 10;
+/** Minimum records per system to include in system-level analysis */
+const MIN_RECORDS_PER_SYSTEM = 2;
+/** Number of recent records to sample for trend calculation */
+const TREND_WINDOW_SIZE = 5;
+/** Pass likelihood threshold for "strong pass" indicator */
+const PASS_LIKELIHOOD_HIGH = 70;
+/** Pass likelihood threshold for "at risk" indicator */
+const PASS_LIKELIHOOD_MID = 50;
+/** SVG arc length for the semicircular gauge (2πr/2 for r=45) */
+const GAUGE_ARC_LENGTH = 141.37;
+
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -47,7 +61,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
   avgStreak,
 }) => {
   const prediction = useMemo(() => {
-    if (performanceData.length < 10) return null;
+    if (performanceData.length < MIN_RECORDS_FOR_PREDICTION) return null;
 
     // Calculate overall accuracy
     const correct = performanceData.filter((p) => p.isCorrect).length;
@@ -65,13 +79,13 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
 
     const systemPerformance: SystemPerformance[] = [];
     systemMap.forEach((records, system) => {
-      if (records.length >= 2) {
+      if (records.length >= MIN_RECORDS_PER_SYSTEM) {
         const sysCorrect = records.filter((r) => r.isCorrect).length;
         const accuracy = (sysCorrect / records.length) * 100;
         const avgTime = records.reduce((s, r) => s + (r.timeSpentMs || 60000), 0) / records.length;
 
         // Calculate trend from last 5 questions in this system
-        const recentAccuracies = records.slice(-5).map((r) => (r.isCorrect ? 100 : 0));
+        const recentAccuracies = records.slice(-TREND_WINDOW_SIZE).map((r) => (r.isCorrect ? 100 : 0));
         const trend = calculateTrend(recentAccuracies);
 
         systemPerformance.push({
@@ -95,7 +109,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
     return (
       <div className="p-4 bg-data-neutral/50 rounded-xl text-center">
         <p className="text-sm text-data-neutral">
-          Answer at least 10 questions to see score prediction
+          Answer at least {MIN_RECORDS_FOR_PREDICTION} questions to see score prediction
         </p>
       </div>
     );
@@ -166,7 +180,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="8"
-              strokeDasharray={`${(gaugeRotation / 180) * 141.37} 141.37`}
+              strokeDasharray={`${(gaugeRotation / 180) * GAUGE_ARC_LENGTH} ${GAUGE_ARC_LENGTH}`}
               className={
                 prediction.predictedScore >= PANCE_STRONG_PASS_SCORE
                   ? 'text-[var(--color-data-pass)]'
@@ -194,14 +208,14 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
         <div className="text-center mb-4">
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
-              prediction.passLikelihood >= 70
+              prediction.passLikelihood >= PASS_LIKELIHOOD_HIGH
                 ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]/90'
-                : prediction.passLikelihood >= 50
+                : prediction.passLikelihood >= PASS_LIKELIHOOD_MID
                   ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]/90'
                   : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]/90'
             }`}
           >
-            {prediction.passLikelihood >= 70 ? (
+            {prediction.passLikelihood >= PASS_LIKELIHOOD_HIGH ? (
               <CheckCircle className="w-4 h-4" />
             ) : (
               <AlertTriangle className="w-4 h-4" />

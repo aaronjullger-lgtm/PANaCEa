@@ -27,6 +27,32 @@ interface DifficultyIndicatorProps {
   showBreakdown?: boolean;
 }
 
+// ─── Word Count Thresholds ──────────────────────────────────────────────────────
+const WORD_COUNT_LONG = 150;
+const WORD_COUNT_MEDIUM = 80;
+const WORD_COUNT_SHORT = 60;
+
+// ─── Scoring Weights (points added to difficulty score, max 100) ──────────────
+const SCORE_LONG_VIGNETTE = 25;
+const SCORE_MEDIUM_VIGNETTE = 15;
+const SCORE_SHORT_VIGNETTE = 8;
+const SCORE_TABLE = 15;
+const SCORE_LAB_VALUES = 15;
+const SCORE_MULTI_STEP = 20;
+
+// ─── Topic Accuracy Modifiers ─────────────────────────────────────────────────
+const ACCURACY_CHALLENGING_THRESHOLD = 50;
+const ACCURACY_REVIEW_THRESHOLD = 70;
+const ACCURACY_MINOR_THRESHOLD = 85;
+const SCORE_CHALLENGING_TOPIC = 25;
+const SCORE_REVIEW_TOPIC = 15;
+const SCORE_MINOR_TOPIC = 5;
+
+// ─── Difficulty Level Thresholds (on 0–100 score) ─────────────────────────────
+const DIFFICULTY_EXPERT_THRESHOLD = 70;
+const DIFFICULTY_HARD_THRESHOLD = 45;
+const DIFFICULTY_MEDIUM_THRESHOLD = 20;
+
 interface DifficultyFactors {
   wordCount: number;
   hasTable: boolean;
@@ -68,8 +94,8 @@ function analyzeQuestion(text: string): DifficultyFactors {
 
   // Vignette complexity based on word count
   let vignetteComplexity: 'short' | 'medium' | 'long' = 'short';
-  if (wordCount > 150) vignetteComplexity = 'long';
-  else if (wordCount > 80) vignetteComplexity = 'medium';
+  if (wordCount > WORD_COUNT_LONG) vignetteComplexity = 'long';
+  else if (wordCount > WORD_COUNT_MEDIUM) vignetteComplexity = 'medium';
 
   return {
     wordCount,
@@ -88,44 +114,44 @@ function calculateDifficulty(
   const reasoning: string[] = [];
 
   // Word count scoring (0-25 points)
-  if (factors.wordCount > 150) {
-    score += 25;
+  if (factors.wordCount > WORD_COUNT_LONG) {
+    score += SCORE_LONG_VIGNETTE;
     reasoning.push('Long vignette');
-  } else if (factors.wordCount > 100) {
-    score += 15;
+  } else if (factors.wordCount > WORD_COUNT_MEDIUM) {
+    score += SCORE_MEDIUM_VIGNETTE;
     reasoning.push('Medium-length vignette');
-  } else if (factors.wordCount > 60) {
-    score += 8;
+  } else if (factors.wordCount > WORD_COUNT_SHORT) {
+    score += SCORE_SHORT_VIGNETTE;
   }
 
   // Table presence (15 points)
   if (factors.hasTable) {
-    score += 15;
+    score += SCORE_TABLE;
     reasoning.push('Contains table data');
   }
 
   // Lab values (15 points)
   if (factors.hasLabValues) {
-    score += 15;
+    score += SCORE_LAB_VALUES;
     reasoning.push('Lab interpretation required');
   }
 
   // Multi-step reasoning (20 points)
   if (factors.hasMultipleSteps) {
-    score += 20;
+    score += SCORE_MULTI_STEP;
     reasoning.push('Multi-step reasoning');
   }
 
   // Topic accuracy modifier (0-25 points)
   if (topicAccuracy !== null && topicAccuracy !== undefined) {
-    if (topicAccuracy < 50) {
-      score += 25;
+    if (topicAccuracy < ACCURACY_CHALLENGING_THRESHOLD) {
+      score += SCORE_CHALLENGING_TOPIC;
       reasoning.push('Challenging topic for you');
-    } else if (topicAccuracy < 70) {
-      score += 15;
+    } else if (topicAccuracy < ACCURACY_REVIEW_THRESHOLD) {
+      score += SCORE_REVIEW_TOPIC;
       reasoning.push('Topic needs review');
-    } else if (topicAccuracy < 85) {
-      score += 5;
+    } else if (topicAccuracy < ACCURACY_MINOR_THRESHOLD) {
+      score += SCORE_MINOR_TOPIC;
     }
   }
 
@@ -134,9 +160,9 @@ function calculateDifficulty(
 
   // Determine level
   let level: DifficultyLevel = 'easy';
-  if (normalizedScore >= 70) level = 'expert';
-  else if (normalizedScore >= 45) level = 'hard';
-  else if (normalizedScore >= 20) level = 'medium';
+  if (normalizedScore >= DIFFICULTY_EXPERT_THRESHOLD) level = 'expert';
+  else if (normalizedScore >= DIFFICULTY_HARD_THRESHOLD) level = 'hard';
+  else if (normalizedScore >= DIFFICULTY_MEDIUM_THRESHOLD) level = 'medium';
 
   return { level, score: normalizedScore, reasoning };
 }
