@@ -33,7 +33,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   
   # Permissions Policy (restrict sensitive browser APIs)
-  Permissions-Policy: geolocation=(self), microphone=(), camera=(), payment=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
 
 # Vite-generated assets - Apply specific CSP for hashed JavaScript chunks
 /assets/*
