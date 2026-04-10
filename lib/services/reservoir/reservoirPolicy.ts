@@ -41,6 +41,8 @@ export const RESERVOIR_POLICY = {
   /** Priority weights for different question sources */
   PRIORITY: {
     OVERDUE_REVIEW: 9,
+    /** Confusion-pair targeted remediation — above normal due reviews */
+    CONFUSION_REMEDIATION: 8,
     DUE_REVIEW: 7,
     NEW_BLUEPRINT_GAP: 6,
     NEW_STANDARD: 5,
@@ -114,9 +116,10 @@ export function computeExpiry(isReview: boolean): Date {
  */
 export function deriveScope(
   mode: string,
-  options: { system?: string; conditionId?: string }
+  options: { system?: string; conditionId?: string; userId?: string }
 ): string {
   if (mode === 'system' && options.system) return `system:${options.system}`;
   if (mode === 'condition' && options.conditionId) return `condition:${options.conditionId}`;
+  if (mode === 'confusion-remediation' && options.userId) return `confusion-remediation:${options.userId}`;
   return 'adaptive';
 }
