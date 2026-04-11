@@ -28,7 +28,7 @@ vi.mock('../functions/api/_shared/requestLogger', () => ({
   getRequestId: vi.fn(() => 'test-req-id'),
 }));
 vi.mock('../functions/api/_shared/structuredLogger', () => ({
-  createSpan: vi.fn((_name: unknown, fn: Function) => fn()),
+  createSpan: vi.fn((_name: unknown, fn: () => unknown) => fn()),
 }));
 vi.mock('../lib/services/drillReviewService', () => ({
   submitDrillReview: vi.fn(),

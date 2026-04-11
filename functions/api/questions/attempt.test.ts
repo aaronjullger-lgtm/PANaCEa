@@ -51,8 +51,8 @@ vi.mock('../../../lib/answerLetterMap', () => ({
   ANSWER_LETTERS: ['A', 'B', 'C', 'D', 'E'],
 }));
 
-vi.mock('../../../lib/api/schemas/questions', () => {
-  const { z } = require('zod');
+vi.mock('../../../lib/api/schemas/questions', async () => {
+  const { z } = await import('zod');
   return {
     QuestionAttemptRequestSchema: z.any(),
   };

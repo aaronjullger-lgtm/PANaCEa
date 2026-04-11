@@ -499,7 +499,7 @@ describe('SyncManager', () => {
       const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
 
       // First failure: consecutiveFailures 0 → 1, base = 30s * 2^1 = 60s
-      try { await syncManager.syncAll(); } catch {}
+      try { await syncManager.syncAll(); } catch { /* expected - testing retry backoff */ }
       const delay1 = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;
 
       const base1 = 30000 * Math.pow(2, 1); // 60s
@@ -509,7 +509,7 @@ describe('SyncManager', () => {
       // Second failure: consecutiveFailures 1 → 2, base = 30s * 2^2 = 120s
       vi.clearAllTimers();
       setTimeoutSpy.mockClear();
-      try { await syncManager.syncAll(); } catch {}
+      try { await syncManager.syncAll(); } catch { /* expected - testing retry backoff */ }
       const delay2 = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;
 
       const base2 = 30000 * Math.pow(2, 2); // 120s
@@ -535,7 +535,7 @@ describe('SyncManager', () => {
         }
         vi.clearAllTimers();
         setTimeoutSpy.mockClear();
-        try { await syncManager.syncAll(); } catch {}
+        try { await syncManager.syncAll(); } catch { /* expected - testing retry backoff */ }
       }
 
       const lastDelay = setTimeoutSpy.mock.calls[setTimeoutSpy.mock.calls.length - 1]?.[1] as number;

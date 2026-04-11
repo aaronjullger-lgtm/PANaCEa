@@ -26,7 +26,7 @@ vi.mock('@prisma/client', () => ({
       // Sprint 2: added for ported UserQuestionSeen + Question stats
       userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
       question: { update: vi.fn() },
-      $transaction: vi.fn(function(fn: Function) { return fn(self); }),
+      $transaction: vi.fn(function(fn: (tx: unknown) => unknown) { return fn(self); }),
       $disconnect: vi.fn(),
     };
     return self;

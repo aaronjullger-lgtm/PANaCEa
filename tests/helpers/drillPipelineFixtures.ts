@@ -235,7 +235,7 @@ export function createPrismaMock() {
     question: { update: questionUpdate },
     user: { findUnique: vi.fn().mockResolvedValue(null) },
     $executeRaw: vi.fn().mockResolvedValue(0),
-    $transaction: vi.fn((fn: Function) => fn(prisma)),
+    $transaction: vi.fn((fn: (tx: unknown) => unknown) => fn(prisma)),
     $disconnect: vi.fn(),
   };
 
