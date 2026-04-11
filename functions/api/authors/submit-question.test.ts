@@ -33,9 +33,9 @@ vi.mock('../_shared/middleware', async () => {
   const actual = await vi.importActual('../_shared/middleware');
   return {
     ...actual,
-    authenticatedEndpoint: (schema, handler) => {
+    authenticatedEndpoint: (_schema: unknown, handler: (ctx: any) => Promise<any>) => {
       // Return a function that directly calls the handler with a properly constructed context
-      return async (context) => {
+      return async (context: any) => {
         // Enrich context with auth and validated data
         const enrichedContext = {
           ...context,
@@ -46,7 +46,7 @@ vi.mock('../_shared/middleware', async () => {
         return await handler(enrichedContext);
       };
     },
-    withCors: () => (context, next) => next(),
+    withCors: () => (_context: any, next: () => any) => next(),
   };
 });
 
@@ -108,7 +108,7 @@ describe('POST /api/authors/submit-question', () => {
       vi.mocked(prismaModule.createEdgePrismaClient).mockReturnValue(
         prismaModule.prisma as any
       );
-      vi.mocked(prismaModule.prisma.contentAuthor.findUnique).mockResolvedValueOnce(null);
+      vi.mocked(prismaModule.prisma.contentAuthor.findUnique).mockResolvedValueOnce(null as any);
       vi.mocked(prismaModule.prisma.contentAuthor.create).mockResolvedValueOnce({
         id: mockAuthorId,
         userId: mockUserId,
@@ -116,19 +116,19 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
         isDuplicate: false,
         coversGap: true,
         estimatedDifficulty: 0.65,
         estimatedHealthScore: 0.75,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -148,7 +148,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.contentAuthor.update).mockResolvedValueOnce({
         id: mockAuthorId,
@@ -157,12 +157,12 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(201);
-      expect(result.data.submissionId).toBe(mockSubmissionId);
+      expect((result as any).data.submissionId).toBe(mockSubmissionId);
       expect(vi.mocked(prismaModule.prisma.contentAuthor.create)).toHaveBeenCalled();
     });
   });
@@ -183,12 +183,12 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(400);
-      expect(result.data.error).toContain('correctAnswer must be between 0 and');
+      expect((result as any).data.error).toContain('correctAnswer must be between 0 and');
     });
   });
 
@@ -203,15 +203,15 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       // Condition does not exist
-      vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce(null);
+      vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce(null as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(404);
-      expect(result.data.error).toBe('Condition not found');
+      expect((result as any).data.error).toBe('Condition not found');
     });
 
     it('should return 400 when submission system does not match condition system', async () => {
@@ -224,18 +224,18 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       // Condition exists but with different system
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Renal', // Mismatch
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(400);
-      expect(result.data.error).toContain('System does not match');
+      expect((result as any).data.error).toContain('System does not match');
     });
   });
 
@@ -250,12 +250,12 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       // AI detects duplicate (false positive)
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
@@ -264,7 +264,7 @@ describe('POST /api/authors/submit-question', () => {
         coversGap: false,
         estimatedDifficulty: 0.6,
         estimatedHealthScore: 0.55,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -284,7 +284,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.contentAuthor.update).mockResolvedValueOnce({
         id: mockAuthorId,
@@ -293,14 +293,14 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(201);
-      expect(result.data.submissionId).toBe(mockSubmissionId);
-      expect(result.data.validationResults.isDuplicate).toBe(true);
-      expect(result.data.message).toContain('flagged as potential duplicate');
+      expect((result as any).data.submissionId).toBe(mockSubmissionId);
+      expect((result as any).data.validationResults.isDuplicate).toBe(true);
+      expect((result as any).data.message).toContain('flagged as potential duplicate');
       // Counter should still increment
       expect(vi.mocked(prismaModule.prisma.contentAuthor.update)).toHaveBeenCalled();
     });
@@ -318,19 +318,19 @@ describe('POST /api/authors/submit-question', () => {
         userId: mockUserId,
         role: 'CONTRIBUTOR',
         questionsCreated: 5,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
         isDuplicate: false,
         coversGap: true,
         estimatedDifficulty: 0.65,
         estimatedHealthScore: 0.75,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -350,7 +350,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const updateSpy = vi
         .mocked(prismaModule.prisma.contentAuthor.update)
@@ -361,7 +361,7 @@ describe('POST /api/authors/submit-question', () => {
           questionsCreated: 6, // Incremented by 1
           createdAt: new Date(),
           updatedAt: new Date(),
-        });
+        } as any);
 
       const result = await onRequestPost(context as any);
 
@@ -384,19 +384,19 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
         isDuplicate: false,
         coversGap: false,
         estimatedDifficulty: 0.5,
         estimatedHealthScore: 0.6,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -416,7 +416,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const updateSpy = vi
         .mocked(prismaModule.prisma.contentAuthor.update)
@@ -427,7 +427,7 @@ describe('POST /api/authors/submit-question', () => {
           questionsCreated: 1,
           createdAt: new Date(),
           updatedAt: new Date(),
-        });
+        } as any);
 
       await onRequestPost(context as any);
 
@@ -452,12 +452,12 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       // AI service timeout
       vi.mocked(aiModule.validateNewQuestion).mockRejectedValueOnce(
@@ -468,7 +468,7 @@ describe('POST /api/authors/submit-question', () => {
 
       // Should gracefully handle the error
       expect(result.status).toBe(500);
-      expect(result.data.error).toBeDefined();
+      expect((result as any).data.error).toBeDefined();
     });
 
     it('should use sensible defaults when AI service is unavailable', async () => {
@@ -481,12 +481,12 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       // AI service unavailable - returns degraded response
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
@@ -494,7 +494,7 @@ describe('POST /api/authors/submit-question', () => {
         coversGap: false, // Conservative: don't claim gap coverage
         estimatedDifficulty: 0.5, // Neutral default
         estimatedHealthScore: 0.6, // Neutral default
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -514,7 +514,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.contentAuthor.update).mockResolvedValueOnce({
         id: mockAuthorId,
@@ -523,13 +523,13 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
       expect(result.status).toBe(201);
-      expect(result.data.validationResults.isDuplicate).toBe(false);
-      expect(result.data.validationResults.coversGap).toBe(false);
+      expect((result as any).data.validationResults.isDuplicate).toBe(false);
+      expect((result as any).data.validationResults.coversGap).toBe(false);
     });
   });
 
@@ -544,19 +544,19 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
         isDuplicate: false,
         coversGap: true,
         estimatedDifficulty: 0.7,
         estimatedHealthScore: 0.8,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -576,7 +576,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.contentAuthor.update).mockResolvedValueOnce({
         id: mockAuthorId,
@@ -585,11 +585,11 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
-      expect(result.data.message).toContain('Expedited review recommended');
+      expect((result as any).data.message).toContain('Expedited review recommended');
     });
 
     it('should return standard message for typical submissions', async () => {
@@ -602,19 +602,19 @@ describe('POST /api/authors/submit-question', () => {
         id: mockAuthorId,
         userId: mockUserId,
         role: 'CONTRIBUTOR',
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.condition.findUnique).mockResolvedValueOnce({
         id: mockConditionId,
         system: 'Cardiovascular',
-      });
+      } as any);
 
       vi.mocked(aiModule.validateNewQuestion).mockResolvedValueOnce({
         isDuplicate: false,
         coversGap: false,
         estimatedDifficulty: 0.55,
         estimatedHealthScore: 0.65,
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.questionSubmission.create).mockResolvedValueOnce({
         id: mockSubmissionId,
@@ -634,7 +634,7 @@ describe('POST /api/authors/submit-question', () => {
         reviewComments: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       vi.mocked(prismaModule.prisma.contentAuthor.update).mockResolvedValueOnce({
         id: mockAuthorId,
@@ -643,11 +643,11 @@ describe('POST /api/authors/submit-question', () => {
         questionsCreated: 1,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       const result = await onRequestPost(context as any);
 
-      expect(result.data.message).toContain('queued for reviewer approval');
+      expect((result as any).data.message).toContain('queued for reviewer approval');
     });
   });
 });

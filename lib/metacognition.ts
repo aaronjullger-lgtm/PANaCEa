@@ -195,7 +195,9 @@ export function shouldShowMetacognition(params: {
   }
 
   // Limit total metacognition prompts per session (max 30%)
-  const metacognitionRate = tracker.metacognitionCount / tracker.totalAnswered;
+  const metacognitionRate = tracker.totalAnswered > 0
+    ? tracker.metacognitionCount / tracker.totalAnswered
+    : 0;
   if (metacognitionRate > 0.3) {
     return {
       shouldShow: false,

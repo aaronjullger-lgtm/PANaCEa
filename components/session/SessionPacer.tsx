@@ -15,7 +15,7 @@
  * @module components/session/SessionPacer
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, TrendingUp, ArrowRight, X } from 'lucide-react';
 import type { SessionWellnessCheck, StopReason } from '@/lib/services/wellnessEngine';
@@ -41,7 +41,7 @@ const REASON_ICONS: Record<StopReason, React.ReactNode> = {
   optimal_session_complete: <TrendingUp className="w-5 h-5" />,
 };
 
-export const SessionPacer: React.FC<SessionPacerProps> = ({
+const SessionPacerBase: React.FC<SessionPacerProps> = ({
   check,
   dismissed,
   onDismiss,
@@ -117,4 +117,5 @@ export const SessionPacer: React.FC<SessionPacerProps> = ({
   );
 };
 
+export const SessionPacer = memo(SessionPacerBase);
 export default SessionPacer;

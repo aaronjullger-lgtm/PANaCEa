@@ -107,7 +107,7 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
       const merged = mergeQuestionsWithTimestamps([localQuestion], [remoteQuestion]);
 
       expect(merged).toHaveLength(1);
-      expect(merged[0].updatedAt).toBe(remoteQuestion.updatedAt);
+      expect(merged[0]!.updatedAt).toBe(remoteQuestion.updatedAt);
     });
 
     it('should keep local version when it is newer', () => {
@@ -123,7 +123,7 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
       const merged = mergeQuestionsWithTimestamps([localQuestion], [remoteQuestion]);
 
       expect(merged).toHaveLength(1);
-      expect(merged[0].updatedAt).toBe(localQuestion.updatedAt);
+      expect(merged[0]!.updatedAt).toBe(localQuestion.updatedAt);
     });
 
     it('should use deterministic ordering when timestamps are equal', () => {
@@ -140,8 +140,8 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
 
       expect(merged).toHaveLength(1);
       // When timestamps equal, local (first added) should be kept
-      expect(merged[0].id).toBe(localQuestion.id);
-      expect(merged[0].updatedAt).toBe(sameTime);
+      expect(merged[0]!.id).toBe(localQuestion.id);
+      expect(merged[0]!.updatedAt).toBe(sameTime);
     });
 
     it('should handle multiple questions with mixed timestamps', () => {
@@ -164,11 +164,11 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
 
       // q1: remote is newer
       const q1 = merged.find((q) => q.id === 'q1');
-      expect(q1?.updatedAt).toBe(remote[0].updatedAt);
+      expect(q1?.updatedAt).toBe(remote[0]!.updatedAt);
 
       // q2: local is newer
       const q2 = merged.find((q) => q.id === 'q2');
-      expect(q2?.updatedAt).toBe(local[1].updatedAt);
+      expect(q2?.updatedAt).toBe(local[1]!.updatedAt);
 
       // q3: only in remote
       const q3 = merged.find((q) => q.id === 'q3');
@@ -190,7 +190,7 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
       const merged = mergeQuestionsWithTimestamps([localQuestion], [remoteQuestion]);
 
       // Remote with updatedAt is newer than local with only lastReviewedAt
-      expect(merged[0].updatedAt).toBe(remoteQuestion.updatedAt);
+      expect(merged[0]!.updatedAt).toBe(remoteQuestion.updatedAt);
     });
 
     it('should preserve all fields when merging', () => {
@@ -202,16 +202,16 @@ describe('useUserStats Hook - Timestamp-based Conflict Resolution', () => {
 
       const remoteQuestion = createMockQuestion('q1', 'cond1', {
         updatedAt: new Date(now).toISOString(),
-        explanation: 'Updated explanation',
+        rationale: 'Updated rationale',
       });
 
       const merged = mergeQuestionsWithTimestamps([localQuestion], [remoteQuestion]);
 
-      expect(merged[0]).toMatchObject({
+      expect(merged[0]!).toMatchObject({
         id: 'q1',
         conditionId: 'cond1',
         question: remoteQuestion.question,
-        explanation: 'Updated explanation',
+        rationale: 'Updated rationale',
       });
     });
   });
@@ -300,7 +300,7 @@ describe('useUserStats Hook - Local Deletion Tracking', () => {
 
       // Merge logic with deletion awareness
       const stored = localStorage.getItem(DELETIONS_KEY);
-      const deletedIds = new Map(stored ? JSON.parse(stored) : []);
+      const deletedIds = new Map<string, number>(stored ? JSON.parse(stored) : []);
 
       const wasDeletedAfterServerVersion =
         deletedIds.has('q1-cond1') &&
@@ -332,7 +332,7 @@ describe('useUserStats Hook - Local Deletion Tracking', () => {
 
       // Merge logic
       const stored = localStorage.getItem(DELETIONS_KEY);
-      const deletedIds = new Map(stored ? JSON.parse(stored) : []);
+      const deletedIds = new Map<string, number>(stored ? JSON.parse(stored) : []);
 
       const wasDeletedAfterServerVersion =
         deletedIds.has('q1-cond1') &&
@@ -360,7 +360,7 @@ describe('useUserStats Hook - Local Deletion Tracking', () => {
 
       // Verify all are tracked independently
       const stored = localStorage.getItem(DELETIONS_KEY);
-      const recovered = new Map(JSON.parse(stored || '[]'));
+      const recovered = new Map<string, number>(JSON.parse(stored || '[]'));
 
       expect(recovered.size).toBe(3);
       expect(recovered.has('q1-cond1')).toBe(true);
@@ -385,8 +385,8 @@ describe('useUserStats Hook - Sync State Management', () => {
 
       expect(missedQuestions).toHaveLength(1);
       expect(flaggedQuestions).toHaveLength(1);
-      expect(missedQuestions[0].id).toBe('q1');
-      expect(flaggedQuestions[0].id).toBe('q2');
+      expect(missedQuestions[0]!.id).toBe('q1');
+      expect(flaggedQuestions[0]!.id).toBe('q2');
     });
 
     it('should handle overlapping questions in different lists', () => {
@@ -401,7 +401,7 @@ describe('useUserStats Hook - Sync State Management', () => {
 
       expect(missedQuestions).toHaveLength(1);
       expect(flaggedQuestions).toHaveLength(1);
-      expect(missedQuestions[0].id).toBe(flaggedQuestions[0].id);
+      expect(missedQuestions[0]!.id).toBe(flaggedQuestions[0]!.id);
     });
   });
 });
@@ -446,8 +446,8 @@ describe('useUserStats Hook - Integration Scenarios', () => {
 
     // Filter out deleted before merging
     const stored = localStorage.getItem(DELETIONS_KEY);
-    const deletedIds = new Set(
-      stored ? JSON.parse(stored).map((entry: any) => entry[0]) : []
+    const deletedIds = new Set<string>(
+      stored ? JSON.parse(stored).map((entry: [string, number]) => entry[0]) : []
     );
 
     const remoteFiltered = remote.filter((q) => !deletedIds.has(getQuestionKey(q)));
@@ -460,7 +460,7 @@ describe('useUserStats Hook - Integration Scenarios', () => {
 
     // q1 should have newer version
     const q1 = merged.find((q) => q.id === 'q1');
-    expect(q1?.updatedAt).toBe(remote[0].updatedAt);
+    expect(q1?.updatedAt).toBe(remote[0]!.updatedAt);
 
     // q2 should not be restored despite being in remote
     const q2 = merged.find((q) => q.id === 'q2');

@@ -12,7 +12,7 @@
  * - Notes section
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import ExplanationPanel from '@/components/questions/ExplanationPanel';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import { CalibrationFeedbackBadge } from '@/components/session/CalibrationFeedbackBadge';
@@ -292,4 +292,4 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   );
 };
 
-export default AnswerFeedback;
+export default memo(AnswerFeedback);

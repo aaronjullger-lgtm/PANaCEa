@@ -40,6 +40,8 @@ export interface Question {
   /** Optional tags for organization */
   tags?: string[];
   lastReviewedAt?: string; // ISO timestamp
+  /** ISO timestamp of last mutation — used for conflict resolution in local storage sync */
+  updatedAt?: string;
   /** Task category for Due Cards sibling lookup (e.g. diagnosis, workup, treatment) */
   taskType?: string;
   /** Set when question is a sibling for a Due item; used to remove concept from due queue on correct */

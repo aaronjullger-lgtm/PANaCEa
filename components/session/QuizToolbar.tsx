@@ -10,7 +10,7 @@
  * - Replenishment error banner
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
 import { CloseIcon } from '@/components/icons/CloseIcon';
@@ -372,4 +372,4 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
   );
 };
 
-export default QuizToolbar;
+export default memo(QuizToolbar);
