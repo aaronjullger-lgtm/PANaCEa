@@ -54,10 +54,11 @@ export function generatePatientPersonality(seed?: string): PatientPersonalityMat
     const random = Math.random();
     let sum = 0;
     for (let i = 0; i < items.length; i++) {
-      sum += weights[i];
-      if (random <= sum) return items[i];
+      // Parallel arrays, bounded by items.length; indices are valid.
+      sum += weights[i] ?? 0;
+      if (random <= sum) return items[i] as T;
     }
-    return items[0];
+    return items[0] as T;
   };
 
   return {
@@ -127,7 +128,7 @@ export function selectNonVerbalCue(
   // 40% chance to inject a cue
   if (Math.random() > 0.4) return null;
 
-  return cues[Math.floor(Math.random() * cues.length)];
+  return cues[Math.floor(Math.random() * cues.length)] ?? null;
 }
 
 // ============================================================================

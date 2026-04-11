@@ -454,8 +454,12 @@ Important: Only include information that is explicitly stated or can be confiden
         throw new Error(`Gemini API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const extractedNote = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+      const data = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const extractedNote = JSON.parse(
+        data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
+      );
 
       // Merge with current note
       return this.mergeNotes(currentNote, extractedNote);

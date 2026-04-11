@@ -238,7 +238,8 @@ export function getMVRTThreshold(
   const calibratedThreshold = userStats.p10;
 
   // Apply absolute floor — no MVRT below physical minimum for the question type
-  const floor = MVRT_ABSOLUTE_FLOOR[questionType] ?? MVRT_ABSOLUTE_FLOOR.unknown;
+  // `unknown` is always defined in MVRT_ABSOLUTE_FLOOR; narrow the indexed-access return.
+  const floor = MVRT_ABSOLUTE_FLOOR[questionType] ?? MVRT_ABSOLUTE_FLOOR.unknown ?? 800;
   return Math.max(floor, calibratedThreshold);
 }
 
@@ -280,11 +281,13 @@ export function computeUserMVRTCalibration(
     // Sort ascending for percentile computation
     const sorted = [...rts].sort((a, b) => a - b);
     const n = sorted.length;
+    // n >= MIN_CALIBRATION_ATTEMPTS (>0) guarantees sorted[0] exists.
+    const first = sorted[0] ?? 0;
 
     byType[type] = {
-      p5: sorted[Math.floor(n * 0.05)] ?? sorted[0],
-      p10: sorted[Math.floor(n * 0.10)] ?? sorted[0],
-      median: sorted[Math.floor(n * 0.50)] ?? sorted[0],
+      p5: sorted[Math.floor(n * 0.05)] ?? first,
+      p10: sorted[Math.floor(n * 0.10)] ?? first,
+      median: sorted[Math.floor(n * 0.50)] ?? first,
       count: n,
     };
   }

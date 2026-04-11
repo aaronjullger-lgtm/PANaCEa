@@ -25,6 +25,7 @@ backup/
 .cache
 .temp
 .tmp
+.tmp_*
 coverage/
 .nyc_output/
 .env.local

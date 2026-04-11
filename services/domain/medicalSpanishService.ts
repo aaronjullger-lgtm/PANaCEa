@@ -120,7 +120,9 @@ export function searchMedicalVocabulary(query: string): MedicalTerm[] {
  * Get random medical term for flashcard
  */
 export function getRandomMedicalTerm(): MedicalTerm {
-  return MEDICAL_VOCABULARY[Math.floor(Math.random() * MEDICAL_VOCABULARY.length)];
+  // MEDICAL_VOCABULARY is a non-empty constant array; assert to satisfy
+  // noUncheckedIndexedAccess without adding a runtime check.
+  return MEDICAL_VOCABULARY[Math.floor(Math.random() * MEDICAL_VOCABULARY.length)]!;
 }
 
 /**

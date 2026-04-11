@@ -3,9 +3,12 @@
  * - Dev: debug/info/warn/error all go to console with a consistent tag.
  * - Prod: only warn and error are emitted to reduce noise; debug/info are no-op.
  */
+/// <reference types="vite/client" />
 
 const TAG = '[PANaCEa]';
-const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV === true;
+const isDev =
+  typeof import.meta !== 'undefined' &&
+  (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV === true;
 
 function formatPayload(payload: unknown): string {
   if (payload === undefined) return '';

@@ -212,13 +212,14 @@ export function getNextRecommendedSystem(): string | null {
   let random = Math.random() * totalWeight;
 
   for (let i = 0; i < underRepresented.length; i++) {
-    random -= weights[i];
+    // underRepresented.length bounded loop: indices are valid.
+    random -= weights[i]!;
     if (random <= 0) {
-      return underRepresented[i].system;
+      return underRepresented[i]!.system;
     }
   }
 
-  return underRepresented[0].system;
+  return underRepresented[0]!.system;
 }
 
 /**
@@ -299,9 +300,9 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
     deck = [...PANCE_DECK];
   }
 
-  // Shuffle and pick
+  // Shuffle and pick; deck is guaranteed non-empty by the fallback above.
   const index = Math.floor(Math.random() * deck.length);
-  return deck[index];
+  return deck[index]!;
 }
 
 /**
@@ -310,5 +311,6 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
 export function getWeightedRandomTask(): string {
   const deck = [...TASK_DECK];
   const index = Math.floor(Math.random() * deck.length);
-  return deck[index];
+  // TASK_DECK is a non-empty constant.
+  return deck[index]!;
 }

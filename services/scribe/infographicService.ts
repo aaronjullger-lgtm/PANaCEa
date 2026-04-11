@@ -81,18 +81,22 @@ export class InfoGraphicService {
         throw new Error(`Info Genius API error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        imageUrl?: string;
+        svgMarkup?: string;
+        thumbnailUrl?: string;
+      };
 
       const infographic: GeneratedInfographic = {
         id: `infographic-${Date.now()}`,
         requestId: request.id,
-        imageUrl: data.imageUrl,
-        svgMarkup: data.svgMarkup,
-        thumbnailUrl: data.thumbnailUrl,
+        imageUrl: data.imageUrl ?? '',
+        svgMarkup: data.svgMarkup ?? '',
+        thumbnailUrl: data.thumbnailUrl ?? '',
         title: this.generateTitle(request),
         description: this.generateDescription(request),
         keyTakeaways: request.teachingPoints,
-        interactiveElements: this.extractInteractiveElements(data.svgMarkup),
+        interactiveElements: this.extractInteractiveElements(data.svgMarkup ?? ''),
         metadata: {
           generatedAt: new Date().toISOString(),
           model: 'info-genius',

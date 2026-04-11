@@ -118,7 +118,8 @@ export function analyzePauseNeed(): PauseAnalysis {
   // Consecutive incorrect count
   let consecutiveIncorrect = 0;
   for (let i = results.length - 1; i >= 0; i--) {
-    if (!results[i].correct) {
+    // Loop bound is results.length; indices are always valid.
+    if (!results[i]!.correct) {
       consecutiveIncorrect++;
     } else {
       break;
@@ -253,13 +254,13 @@ export function getQuickEncouragement(): string | null {
   // 3 in a row correct
   if (last3Correct === 3) {
     const messages = ['On a roll!', 'Great focus!', 'Keep it up!', 'Locked in!'];
-    return messages[Math.floor(Math.random() * messages.length)];
+    return messages[Math.floor(Math.random() * messages.length)] ?? null;
   }
 
   // After recovering from a miss
   if (!results[results.length - 2]?.correct && results[results.length - 1]?.correct) {
     const messages = ['Back on track!', 'Nice recovery!', 'Learning in action!'];
-    return messages[Math.floor(Math.random() * messages.length)];
+    return messages[Math.floor(Math.random() * messages.length)] ?? null;
   }
 
   return null;
