@@ -42,8 +42,30 @@ import { recordQuestion, getSessionSummary, resetSessionDistribution } from '@/s
 // AI services
 // generateAlternateRationale removed — moved to AnswerFeedback component
 
-// Components
-import { FlagQuestionModal } from '@/components/modals/FlagQuestionModal';
+// Components — lazy-load conditionally shown modals/overlays
+import { lazy, Suspense } from 'react';
+const FlagQuestionModal = lazy(() =>
+  import('@/components/modals/FlagQuestionModal').then((m) => ({ default: m.FlagQuestionModal }))
+);
+const QuizLabCalcModal = lazy(() =>
+  import('@/components/quiz/QuizLabCalcModal').then((m) => ({ default: m.QuizLabCalcModal }))
+);
+const WellnessCheckModal = lazy(() =>
+  import('@/components/wellness/WellnessCheckModal').then((m) => ({ default: m.default }))
+);
+const BreakTimer = lazy(() =>
+  import('@/components/session/BreakTimer').then((m) => ({ default: m.BreakTimer }))
+);
+const FatigueBreakPrompt = lazy(() =>
+  import('@/components/session/FatigueBreakPrompt').then((m) => ({ default: m.FatigueBreakPrompt }))
+);
+const SessionEndSummary = lazy(() =>
+  import('@/components/quiz').then((m) => ({ default: m.SessionEndSummary }))
+);
+const SocraticTutorChat = lazy(() =>
+  import('@/components/quiz').then((m) => ({ default: m.SocraticTutorChat }))
+);
+
 import AnswerChoice from '@/components/quiz/AnswerChoice';
 import {
   useBehavioralTracker,
@@ -53,17 +75,11 @@ import {
 } from '@/components/quiz/Tracker';
 import { useUnifiedKinetics } from '@/hooks/useUnifiedKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
-import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 // ErrorTagger moved to AnswerFeedback component
 import { DrillLoadingState } from '@/components/loading';
-import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
-import {
-  SessionStatsOverlay,
-  SessionEndSummary,
-  SocraticTutorChat,
-} from '@/components/quiz';
+import { SessionStatsOverlay } from '@/components/quiz';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 
 // Sprint 10: Trust badges for question source indication
@@ -83,8 +99,6 @@ import type { SRSScheduleResult } from '@/lib/services/srsService';
 import QuizToolbar from '@/components/session/QuizToolbar';
 import AnswerFeedback from '@/components/session/AnswerFeedback';
 import { SessionPacer } from '@/components/session/SessionPacer';
-import { BreakTimer } from '@/components/session/BreakTimer';
-import { FatigueBreakPrompt } from '@/components/session/FatigueBreakPrompt';
 import { useSessionWellness } from '@/hooks/useSessionWellness';
 
 // Lib utils
@@ -1717,6 +1731,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {/* Proactive fatigue break prompt — inline between feedback and Next button */}
           {isAnswered && (
+            <Suspense fallback={null}>
             <FatigueBreakPrompt
               fatigue={sessionWellness.fatigue}
               dismissed={sessionWellness.breakDismissed}
@@ -1724,6 +1739,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               onDismiss={sessionWellness.dismissBreak}
               hardStopVisible={sessionWellness.check.shouldStop && !sessionWellness.dismissed}
             />
+            </Suspense>
           )}
 
           {isAnswered && !sessionWellness.onBreak && (
@@ -1760,11 +1776,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
 
       {/* Wellness Check Modal */}
+      <Suspense fallback={null}>
       <WellnessCheckModal
         isOpen={wellness.showModal}
         onClose={() => wellness.dismiss()}
         reason={wellness.reason}
       />
+      </Suspense>
 
       {/* Session Pacer — diminishing returns detection (non-blocking) */}
       <SessionPacer
@@ -1775,6 +1793,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       />
 
       {/* Break Timer — full-screen timed break overlay */}
+      <Suspense fallback={null}>
       <BreakTimer
         isActive={sessionWellness.onBreak}
         secondsLeft={sessionWellness.breakSecondsLeft}
@@ -1783,9 +1802,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         questionsAnswered={sessionWellness.check.stats.questionsAnswered}
         accuracy={sessionWellness.check.stats.accuracy}
       />
+      </Suspense>
 
       {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}
-      {showLabCalcModal && <QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} />}
+      {showLabCalcModal && <Suspense fallback={null}><QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} /></Suspense>}
 
       {/* Normal Labs reference panel (slide-out from right) */}
       <NormalLabsPanel
@@ -1795,6 +1815,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
       {/* Report Question Issue Modal */}
       {currentQuestion && (
+        <Suspense fallback={null}>
         <FlagQuestionModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
@@ -1811,6 +1832,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           userEmail={user?.primaryEmailAddress?.emailAddress}
           userFirstName={user?.firstName || undefined}
         />
+        </Suspense>
       )}
 
       {/* Sprint 4: Session Stats Overlay */}
@@ -1822,6 +1844,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       />
 
       {/* Sprint 4: Session End Summary */}
+      <Suspense fallback={null}>
       <SessionEndSummary
         isOpen={showSessionEndSummary}
         celebrateStreak={performanceData.length >= 10}
@@ -1861,6 +1884,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             : undefined
         }
       />
+      </Suspense>
 
       {/* Socratic Tutor: Tutor Me for incorrect answers */}
       <AnimatePresence>
@@ -1868,6 +1892,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           currentQuestion &&
           selectedAnswerIndex !== null &&
           selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+            <Suspense fallback={null}>
             <SocraticTutorChat
               vignette={currentQuestion.vignette || ''}
               question={currentQuestion.question}
@@ -1896,6 +1921,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               })()}
               onClose={() => setShowSocraticTutor(false)}
             />
+            </Suspense>
           )}
       </AnimatePresence>
     </div>

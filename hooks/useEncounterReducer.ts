@@ -37,10 +37,26 @@ export interface PatientPersona {
   [key: string]: unknown;
 }
 
+export interface EncounterSessionQuestion {
+  questionText: string;
+  response: string;
+  category?: string;
+  relevance?: string;
+  timestamp?: number;
+}
+
+export interface EncounterSessionScore {
+  overall: number;
+  thoroughness: number;
+  efficiency: number;
+}
+
 export interface EncounterSession {
   id: string;
   startTime: number;
-  [key: string]: unknown;
+  questions: EncounterSessionQuestion[];
+  caseId?: string;
+  score?: EncounterSessionScore;
 }
 
 export interface DiagnosisFeedback {
