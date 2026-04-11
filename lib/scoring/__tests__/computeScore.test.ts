@@ -11,14 +11,14 @@ vi.mock('@/lib/utils/questionComplexity', () => ({
   calculateParTime: vi.fn(() => 30000),
 }));
 
-vi.mock('@/lib/implicit-metrics', () => ({
+vi.mock('@/components/quiz/Tracker', () => ({
   behavioralPayloadToTelemetryData: vi.fn(() => ({ mock: 'telemetry' })),
   enrichTelemetryWithSessionPosition: vi.fn((t) => ({ ...t, position: true })),
 }));
 
 import { computeScore } from '../computeScore';
 import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
-import { behavioralPayloadToTelemetryData } from '@/lib/implicit-metrics';
+import { behavioralPayloadToTelemetryData } from '@/components/quiz/Tracker';
 
 const baseParams = {
   selectedAnswerIndex: 0,

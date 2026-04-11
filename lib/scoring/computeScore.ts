@@ -9,7 +9,7 @@
 import type { Question } from '@/types';
 import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { calculateParTime } from '@/lib/utils/questionComplexity';
-import { behavioralPayloadToTelemetryData, enrichTelemetryWithSessionPosition } from '@/lib/implicit-metrics';
+import { behavioralPayloadToTelemetryData, enrichTelemetryWithSessionPosition } from '@/components/quiz/Tracker';
 
 interface MicroMetrics {
   oscillations: number;
