@@ -1,78 +1,34 @@
 /**
- * Lab Cases Reference API
- * GET /api/labs/cases - Fetch all lab cases
- *
- * Security: Public endpoint - lab cases are educational reference content
- * similar to conditions and drugs. Authentication not required.
+ * GET /api/labs/cases — List all lab cases
+ * Edge port of routes/labs.ts
  */
 
-import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
-import {
-  createEdgePrismaClient,
-  safePrismaDisconnect,
-  EdgePrismaClient,
-} from '../_shared/prisma-edge';
+import { withCors, authenticatedEndpoint } from '../_shared/middleware';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-
-// ============================================================================
-// VALIDATION SCHEMA (flattened for query params)
-// ============================================================================
-
-const LabCasesQuerySchema = z.object({
-  difficulty: z.string().max(50).optional(),
-  category: z.string().max(100).optional(),
-});
-
-// ============================================================================
-// ENDPOINT HANDLERS
-// ============================================================================
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(
-  LabCasesQuerySchema,
-  async ({ env, validated }) => {
-    const log = createEndpointLogger('/api/labs/cases');
-    let prisma: EdgePrismaClient | null = null;
+export const onRequestGet = authenticatedEndpoint(
+  undefined,
+  async (context) => {
+    const log = createEndpointLogger('labs/cases');
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const cases = await prisma.labCase.findMany();
 
-      // Direct access to validated fields (no longer nested under .query)
-      const { difficulty, category } = validated;
-
-      log.info('Fetching lab cases', {
-        difficulty: difficulty || 'all',
-        category: category || 'all',
+      return new Response(JSON.stringify(cases), {
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      const where: Record<string, string> = {};
-      if (difficulty) where.difficulty = difficulty;
-      if (category) where.category = category;
-
-      const cases = await prisma.labCase.findMany({
-        where: Object.keys(where).length > 0 ? where : undefined,
-        orderBy: { createdAt: 'desc' },
-      });
-
-      log.info('Lab cases fetched successfully', { count: cases.length });
-
-      return {
-        data: {
-          success: true,
-          data: cases,
-        },
-      };
     } catch (error) {
-      log.error('Error fetching lab cases', error);
-      return {
+      log.error('Failed to fetch lab cases', error);
+      return new Response(JSON.stringify({ error: 'Failed to fetch lab cases' }), {
         status: 500,
-        error: 'Failed to fetch lab cases',
-      };
+        headers: { 'Content-Type': 'application/json' },
+      });
     } finally {
-      await safePrismaDisconnect(prisma);
+      await prisma.$disconnect();
     }
   },
-  { source: 'query' }
 );
