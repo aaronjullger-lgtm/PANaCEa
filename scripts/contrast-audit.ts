@@ -105,10 +105,13 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 function getLuminance(rgb: [number, number, number]): number {
-  const [r, g, b] = rgb.map((c) => {
+  const linearize = (c: number): number => {
     const normalized = c / 255;
     return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
-  });
+  };
+  const r = linearize(rgb[0]);
+  const g = linearize(rgb[1]);
+  const b = linearize(rgb[2]);
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
@@ -161,37 +164,38 @@ function getRecommendation(
 
 function analyzeColorPairs(
   colors: Record<string, string>,
-  mode: 'light' | 'dark'
+  _mode: 'light' | 'dark'
 ): ContrastIssue[] {
   const issues: ContrastIssue[] = [];
+  const c = (key: string): string => colors[key] ?? '#000000';
 
   // Common color combinations to check
   const colorPairs: ColorPair[] = [
     // Primary text combinations
     {
-      foreground: colors['text-primary'],
-      background: colors['bg-primary'],
+      foreground: c('text-primary'),
+      background: c('bg-primary'),
       foregroundName: 'text-primary',
       backgroundName: 'bg-primary',
       description: 'Primary text on primary background',
     },
     {
-      foreground: colors['text-primary'],
-      background: colors['bg-secondary'],
+      foreground: c('text-primary'),
+      background: c('bg-secondary'),
       foregroundName: 'text-primary',
       backgroundName: 'bg-secondary',
       description: 'Primary text on secondary background',
     },
     {
-      foreground: colors['text-secondary'],
-      background: colors['bg-primary'],
+      foreground: c('text-secondary'),
+      background: c('bg-primary'),
       foregroundName: 'text-secondary',
       backgroundName: 'bg-primary',
       description: 'Secondary text on primary background',
     },
     {
-      foreground: colors['text-muted'],
-      background: colors['bg-primary'],
+      foreground: c('text-muted'),
+      background: c('bg-primary'),
       foregroundName: 'text-muted',
       backgroundName: 'bg-primary',
       description: 'Muted text on primary background',
@@ -199,15 +203,15 @@ function analyzeColorPairs(
 
     // Accent color combinations
     {
-      foreground: colors['accent'],
-      background: colors['bg-primary'],
+      foreground: c('accent'),
+      background: c('bg-primary'),
       foregroundName: 'accent',
       backgroundName: 'bg-primary',
       description: 'Accent color on primary background',
     },
     {
-      foreground: colors['accent-button'],
-      background: colors['bg-primary'],
+      foreground: c('accent-button'),
+      background: c('bg-primary'),
       foregroundName: 'accent-button',
       backgroundName: 'bg-primary',
       description: 'Accent button color on primary background',
@@ -216,7 +220,7 @@ function analyzeColorPairs(
     // Button text on accent backgrounds
     {
       foreground: '#ffffff', // White text
-      background: colors['accent-button'],
+      background: c('accent-button'),
       foregroundName: 'white',
       backgroundName: 'accent-button',
       description: 'White text on accent button background',
@@ -224,22 +228,22 @@ function analyzeColorPairs(
 
     // Semantic data colors
     {
-      foreground: colors['data-pass'],
-      background: colors['bg-primary'],
+      foreground: c('data-pass'),
+      background: c('bg-primary'),
       foregroundName: 'data-pass',
       backgroundName: 'bg-primary',
       description: 'Pass/success color on primary background',
     },
     {
-      foreground: colors['data-fail'],
-      background: colors['bg-primary'],
+      foreground: c('data-fail'),
+      background: c('bg-primary'),
       foregroundName: 'data-fail',
       backgroundName: 'bg-primary',
       description: 'Fail/error color on primary background',
     },
     {
-      foreground: colors['data-provisional'],
-      background: colors['bg-primary'],
+      foreground: c('data-provisional'),
+      background: c('bg-primary'),
       foregroundName: 'data-provisional',
       backgroundName: 'bg-primary',
       description: 'Provisional/warning color on primary background',
@@ -247,15 +251,15 @@ function analyzeColorPairs(
 
     // Category colors
     {
-      foreground: colors['category-visual'],
-      background: colors['bg-primary'],
+      foreground: c('category-visual'),
+      background: c('bg-primary'),
       foregroundName: 'category-visual',
       backgroundName: 'bg-primary',
       description: 'Visual category color on primary background',
     },
     {
-      foreground: colors['category-simulation'],
-      background: colors['bg-primary'],
+      foreground: c('category-simulation'),
+      background: c('bg-primary'),
       foregroundName: 'category-simulation',
       backgroundName: 'bg-primary',
       description: 'Simulation category color on primary background',

@@ -41,7 +41,7 @@ interface CoreAdaptiveSessionProps {
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   performanceData: PerformanceRecord[];
   fontSizeAdjustment: number;
-  setFontSizeAdjustment: (n: number) => void;
+  setFontSizeAdjustment: React.Dispatch<React.SetStateAction<number>>;
   flaggedQuestions: QuizQuestion[];
   addFlaggedQuestion: (q: QuizQuestion) => void;
   removeFlaggedQuestion: (q: QuizQuestion) => void;
@@ -132,6 +132,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   // Only runs after the user has selected a session scope (or skipped via Quick Start)
   useEffect(() => {
     if (!sessionScope) return; // Wait for scope selection
+    const scope = sessionScope; // Narrow for closure capture
     let cancelled = false;
 
     async function initialize() {
@@ -202,8 +203,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            mode: sessionScope.mode,
-            size: sessionScope.size,
+            mode: scope.mode,
+            size: scope.size,
             blueprintWeights: bp.weights,
             gatedSystems: bp.gatedSystems,
             boostSystems: distData?.constraints?.boostSystems,
@@ -214,9 +215,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             blueprintLabel: bp.label,
             urgencyMultiplier: bp.urgencyMultiplier,
             // Scope filters from user selection
-            system: sessionScope.system,
-            subcategory: sessionScope.subcategory,
-            conditionId: sessionScope.conditionId,
+            system: scope.system,
+            subcategory: scope.subcategory,
+            conditionId: scope.conditionId,
           }),
         });
 

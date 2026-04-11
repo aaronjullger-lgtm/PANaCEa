@@ -22,6 +22,10 @@ export interface ComplianceDashboardData {
   blueprintAdherence: number;
   recentChecks: ContentComplianceCheck[];
   upcomingReviews: { standard: string; date: Date }[];
+  // Optional UI fields (used by unwired MedicalComplianceDashboard)
+  complianceScore?: number;
+  blueprintDistribution?: Record<string, number>;
+  actualDistribution?: Record<string, number>;
 }
 
 export interface UseMedicalComplianceReturn {
@@ -62,13 +66,13 @@ export function useMedicalCompliance(): UseMedicalComplianceReturn {
     setIsLoading(true);
     try {
       // Get all compliance standards
-      const standards = complianceService.getAllStandards();
+      const standards = complianceService.getStandards();
 
       // Run comprehensive audit
-      const auditResult = await complianceService.runComprehensiveAudit();
+      const auditResult = await complianceService.runComplianceAudit();
 
       // Get blueprint distribution analysis
-      const blueprintAnalysis = await complianceService.getBlueprintDistributionAnalysis();
+      const blueprintAnalysis = await complianceService.getBlueprintDistribution();
 
       // Calculate overall compliance
       const overallCompliance = calculateOverallCompliance(auditResult);
@@ -83,11 +87,14 @@ export function useMedicalCompliance(): UseMedicalComplianceReturn {
         (issue) => issue.status === 'open' || issue.status === 'in_progress'
       ).length;
 
-      // Calculate blueprint adherence
+      // Calculate blueprint adherence (derived from target/difference)
       const blueprintAdherence =
         blueprintAnalysis.length > 0
-          ? blueprintAnalysis.reduce((sum, item) => sum + item.adherence, 0) /
-            blueprintAnalysis.length
+          ? blueprintAnalysis.reduce(
+              (sum, item) =>
+                sum + (item.target > 0 ? Math.max(0, 1 - item.difference / item.target) : 0),
+              0
+            ) / blueprintAnalysis.length
           : 0;
 
       // Get recent compliance checks (mock for now)
@@ -154,10 +161,9 @@ export function useMedicalCompliance(): UseMedicalComplianceReturn {
   const runComprehensiveAudit = useCallback(async () => {
     setIsLoading(true);
     try {
-      const auditResult = await complianceService.runComprehensiveAudit();
+      const auditResult = await complianceService.runComplianceAudit();
       setComplianceIssues(auditResult.issues);
       await loadComplianceData(); // Refresh dashboard data
-      return auditResult;
     } finally {
       setIsLoading(false);
     }
@@ -194,10 +200,16 @@ export function useMedicalCompliance(): UseMedicalComplianceReturn {
 
   const calculateBlueprintAdherence = useCallback(async (): Promise<number> => {
     try {
-      const analysis = await complianceService.getBlueprintDistributionAnalysis();
+      const analysis = await complianceService.getBlueprintDistribution();
       if (analysis.length === 0) return 0;
 
-      return analysis.reduce((sum, item) => sum + item.adherence, 0) / analysis.length;
+      return (
+        analysis.reduce(
+          (sum, item) =>
+            sum + (item.target > 0 ? Math.max(0, 1 - item.difference / item.target) : 0),
+          0
+        ) / analysis.length
+      );
     } catch (error) {
       console.error('Failed to calculate blueprint adherence:', error);
       return 0;

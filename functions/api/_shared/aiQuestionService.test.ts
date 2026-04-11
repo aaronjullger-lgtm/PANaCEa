@@ -42,7 +42,7 @@ describe('AI Question Service', () => {
 
   describe('validateNewQuestion - Duplicate Detection', () => {
     it('should detect high-similarity questions as duplicates', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question:
           'What is the gold standard diagnostic test for acute myocardial infarction?',
         options: ['ECG only', 'Troponin', 'ECG and troponin', 'Angiography'],
@@ -53,14 +53,14 @@ describe('AI Question Service', () => {
       };
 
       // Mock existing question that is nearly identical (must exceed 0.85 similarity threshold)
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([ 
         {
           id: 'q_existing_001',
           question:
             'What is the gold standard diagnostic test for acute myocardial infarction?',
           conditionId: mockConditionId,
         },
-      ]);
+      ] as any);
 
       const result = await validateNewQuestion(submission);
 
@@ -69,7 +69,7 @@ describe('AI Question Service', () => {
     });
 
     it('should not flag low-similarity questions as duplicates', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What are the complications of acute myocardial infarction?',
         options: [
           'Arrhythmias',
@@ -83,13 +83,13 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([ 
         {
           id: 'q_existing_001',
           question: 'What is the epidemiology of coronary artery disease?',
           conditionId: mockConditionId,
         },
-      ]);
+      ] as any);
 
       const result = await validateNewQuestion(submission);
 
@@ -98,7 +98,7 @@ describe('AI Question Service', () => {
     });
 
     it('should return empty duplicateOf for single non-matching question', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'How is troponin used in MI diagnosis?',
         options: ['Immediate marker', 'Delayed marker', 'Chronic indicator', 'Prognostic'],
         correctAnswer: 'Delayed marker',
@@ -107,7 +107,7 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
 
       const result = await validateNewQuestion(submission);
 
@@ -118,7 +118,7 @@ describe('AI Question Service', () => {
 
   describe('validateNewQuestion - Blueprint Gap Analysis', () => {
     it('should identify when question covers a blueprint gap', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What is the pathophysiology of myocardial infarction?',
         options: ['Thrombus formation', 'Plaque rupture', 'Vasospasm', 'All of above'],
         correctAnswer: 'All of above',
@@ -129,9 +129,9 @@ describe('AI Question Service', () => {
 
       // Mock blueprint target: 15% coverage but only 5% currently covered
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -147,7 +147,7 @@ describe('AI Question Service', () => {
     });
 
     it('should not mark as gap-covering when blueprint already exceeded', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What is another cardiovascular concept?',
         options: ['Option A', 'Option B', 'Option C', 'Option D'],
         correctAnswer: 'Option A',
@@ -158,9 +158,9 @@ describe('AI Question Service', () => {
 
       // Blueprint target: 15% but 25% currently covered
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -176,7 +176,7 @@ describe('AI Question Service', () => {
     });
 
     it('should mark as gap-covering when no blueprint target exists', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What is a rare cardiovascular condition?',
         options: ['A', 'B', 'C', 'D'],
         correctAnswer: 'A',
@@ -200,7 +200,7 @@ describe('AI Question Service', () => {
 
   describe('validateNewQuestion - Difficulty Estimation', () => {
     it('should estimate moderate difficulty for medium-length explanations', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What is the pathophysiology of heart failure?',
         options: ['Systolic dysfunction', 'Diastolic dysfunction', 'Both', 'Neither'],
         correctAnswer: 'Both',
@@ -210,11 +210,11 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -229,7 +229,7 @@ describe('AI Question Service', () => {
     });
 
     it('should estimate higher difficulty for complex explanations', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'What is the pathophysiology of acute MI?',
         options: ['Thrombus', 'Plaque rupture', 'Vasospasm', 'All of above'],
         correctAnswer: 'All of above',
@@ -238,11 +238,11 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -258,7 +258,7 @@ describe('AI Question Service', () => {
 
   describe('validateNewQuestion - Health Score Calculation', () => {
     it('should calculate higher health score for gap-covering questions', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'Rare cardiovascular question for gap coverage?',
         options: ['A', 'B', 'C', 'D'],
         correctAnswer: 'A',
@@ -267,11 +267,11 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -286,7 +286,7 @@ describe('AI Question Service', () => {
     });
 
     it('should calculate moderate health score for standard submissions', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'Standard question without gap?',
         options: ['A', 'B', 'C', 'D'],
         correctAnswer: 'A',
@@ -295,11 +295,11 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce({
-        examType: 'PANCE',
+        id: 'bp_1', examType: 'PANCE',
         system: mockSystemName,
-        targetPercentage: 15,
+        targetPercent: 15,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -315,7 +315,7 @@ describe('AI Question Service', () => {
     });
 
     it('should use sensible defaults when data is incomplete', async () => {
-      const submission = {
+      const submission = { vignette: '',
         question: 'Question with missing blueprint?',
         options: ['A', 'B', 'C', 'D'],
         correctAnswer: 'A',
@@ -324,7 +324,7 @@ describe('AI Question Service', () => {
         conditionId: mockConditionId,
       };
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
       vi.mocked(prismaModule.prisma.examBlueprintSystem.findUnique).mockResolvedValueOnce(null);
       vi.mocked(prismaModule.prisma.question.count)
         .mockResolvedValueOnce(0)
@@ -344,12 +344,12 @@ describe('AI Question Service', () => {
       const guideline =
         'This is a comprehensive clinical guideline covering multiple aspects of a complex medical condition.';
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
-      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
+      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([ 
         {
-          examType: 'PANCE',
+          id: 'bp_1', examType: 'PANCE',
           system: mockSystemName,
-          targetPercentage: 15,
+          targetPercent: 15,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -375,12 +375,12 @@ describe('AI Question Service', () => {
         { id: 'q2', question: 'Similar question 2', conditionId: mockConditionId },
       ];
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce(mockCandidates);
-      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce(mockCandidates as any);
+      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([ 
         {
-          examType: 'PANCE',
+          id: 'bp_1', examType: 'PANCE',
           system: mockSystemName,
-          targetPercentage: 15,
+          targetPercent: 15,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -393,18 +393,18 @@ describe('AI Question Service', () => {
       );
 
       expect(result.duplicateCandidates).toHaveLength(2);
-      expect(result.duplicateCandidates[0].id).toBe('q1');
+      expect(result.duplicateCandidates[0]!.id).toBe('q1');
     });
 
     it('should analyze blueprint coverage', async () => {
       const guideline = 'Guideline for rare disease.';
 
-      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([]);
-      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([
+      vi.mocked(prismaModule.prisma.question.findMany).mockResolvedValueOnce([] as any);
+      vi.mocked(prismaModule.prisma.examBlueprintSystem.findMany).mockResolvedValueOnce([ 
         {
-          examType: 'PANCE',
+          id: 'bp_1', examType: 'PANCE',
           system: mockSystemName,
-          targetPercentage: 15,
+          targetPercent: 15,
           createdAt: new Date(),
           updatedAt: new Date(),
         },

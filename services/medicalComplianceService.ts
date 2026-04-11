@@ -15,6 +15,10 @@ export interface ComplianceStandard {
   effectiveDate: Date;
   reviewDate: Date;
   requirements: ComplianceRequirement[];
+  // Optional UI fields (used by unwired MedicalComplianceDashboard)
+  status?: 'compliant' | 'partial' | 'non-compliant';
+  description?: string;
+  complianceRate?: number;
 }
 
 export interface ComplianceRequirement {
@@ -57,6 +61,10 @@ export interface ComplianceIssue {
   dueDate: Date;
   assignedTo: string;
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  // Optional UI fields (used by unwired MedicalComplianceDashboard)
+  title?: string;
+  standard?: string;
+  createdAt?: Date;
 }
 
 export interface ContentComplianceCheck {

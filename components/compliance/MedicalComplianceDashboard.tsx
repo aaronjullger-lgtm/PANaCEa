@@ -112,7 +112,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !dashboardData) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -212,7 +212,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                           <CheckCircle className="w-6 h-6 text-data-pass" />
                         </div>
                         <span className="text-xs font-medium px-2 py-1 rounded-full bg-data-pass/20 text-data-pass">
-                          {dashboardData.complianceScore.toFixed(1)}%
+                          {(dashboardData.complianceScore ?? dashboardData.overallCompliance).toFixed(1)}%
                         </span>
                       </div>
                       <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
@@ -330,7 +330,9 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                   </div>
 
                   <div className="space-y-4">
-                    {dashboardData.standards.map((standard) => (
+                    {dashboardData.standards.map((standard) => {
+                      const stdStatus = standard.status ?? 'pending';
+                      return (
                       <div
                         key={standard.id}
                         className="bg-[var(--color-bg-secondary)] rounded-xl p-5 border border-[var(--color-border)]"
@@ -339,14 +341,14 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                           <div className="flex items-center gap-3">
                             <div
                               className={`p-2 rounded-lg ${
-                                standard.status === 'compliant'
+                                stdStatus === 'compliant'
                                   ? 'bg-data-pass/10'
-                                  : standard.status === 'partial'
+                                  : stdStatus === 'partial'
                                     ? 'bg-[var(--color-data-provisional)]/10'
                                     : 'bg-data-fail/10'
                               }`}
                             >
-                              {standard.status === 'compliant' ? (
+                              {stdStatus === 'compliant' ? (
                                 <CheckCircle className="w-5 h-5 text-data-pass" />
                               ) : (
                                 <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
@@ -362,24 +364,25 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                             </div>
                           </div>
                           <span
-                            className={`px-3 py-1 text-sm rounded-full ${getStatusColor(standard.status)}`}
+                            className={`px-3 py-1 text-sm rounded-full ${getStatusColor(stdStatus)}`}
                           >
-                            {standard.status.replace('_', ' ').toUpperCase()}
+                            {stdStatus.replace('_', ' ').toUpperCase()}
                           </span>
                         </div>
                         <p className="text-sm text-[var(--color-text-primary)] mb-3">
-                          {standard.description}
+                          {standard.description ?? ''}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-[var(--color-text-muted)]">
-                            Compliance: {standard.complianceRate}%
+                            Compliance: {standard.complianceRate ?? 0}%
                           </span>
                           <StandardButton variant="ghost" size="xs">
                             View Details
                           </StandardButton>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -445,11 +448,11 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                               </div>
                               <div>
                                 <h4 className="font-semibold text-[var(--color-text-primary)]">
-                                  {issue.title}
+                                  {issue.title ?? issue.description}
                                 </h4>
                                 <p className="text-xs text-[var(--color-text-muted)]">
-                                  {issue.standard} •{' '}
-                                  {new Date(issue.createdAt).toLocaleDateString()}
+                                  {issue.standard ?? ''} •{' '}
+                                  {new Date(issue.createdAt ?? Date.now()).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -512,8 +515,9 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
                     <div className="space-y-4">
                       {Object.entries(dashboardData.blueprintDistribution || {}).map(
-                        ([system, target]) => {
-                          const actual = dashboardData.actualDistribution?.[system] || 0;
+                        ([system, targetVal]) => {
+                          const target = Number(targetVal) || 0;
+                          const actual = dashboardData!.actualDistribution?.[system] || 0;
                           const difference = actual - target;
                           const isWithinTolerance = Math.abs(difference) <= 2;
 
@@ -569,7 +573,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                       onClick={() => {
                         const report = {
                           generatedAt: new Date().toISOString(),
-                          complianceScore: dashboardData.complianceScore,
+                          complianceScore: dashboardData.complianceScore ?? dashboardData.overallCompliance,
                           blueprintAdherence: dashboardData.blueprintAdherence,
                           totalIssues: complianceIssues.length,
                           standards: dashboardData.standards.length,
