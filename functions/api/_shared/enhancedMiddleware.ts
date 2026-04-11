@@ -6,20 +6,14 @@
  */
 
 import { z } from 'zod';
-import { logger, createEndpointLogger } from './secureLogger';
-import { validateFunctionEnv, MissingEnvError } from './env-validation';
-import { IDSchema } from './schemas';
 import {
-  createEnhancedRateLimiter,
   withEnhancedRateLimit,
   EnhancedRateLimitType,
-  ENHANCED_RATE_LIMITS,
 } from '@/services/security/enhancedRateLimiter';
 import {
   getSecurityMonitor,
-  recordRateLimitEvent,
-  withSecurityMonitoring,
   SecurityEventType,
+  SecurityEventSeverity,
 } from '@/services/security/securityMonitor';
 import {
   getPermissionSystem,
@@ -28,10 +22,16 @@ import {
   ResourceType,
   PermissionContext,
 } from '@/lib/auth/permissionSystem';
-import { AppError, ErrorCategory, ErrorCode } from '@/lib/errors/appError';
+import {
+  AppErrorFactory,
+  isAppError,
+  ErrorCategory,
+  ErrorCode,
+  type AppError,
+} from '@/lib/errors/appError';
 
-// Re-export types from original middleware for compatibility
-export type {
+// Import types from original middleware for local use
+import type {
   CloudflareContext,
   AuthenticatedContext,
   ValidatedContext,
@@ -39,6 +39,16 @@ export type {
   HandlerResponse,
   Middleware,
 } from './middleware';
+
+// Re-export types for downstream consumers
+export type {
+  CloudflareContext,
+  AuthenticatedContext,
+  ValidatedContext,
+  Handler,
+  HandlerResponse,
+  Middleware,
+};
 
 // Import original middleware functions we'll enhance
 import {
@@ -51,6 +61,7 @@ import {
   withErrorHandling as originalWithErrorHandling,
   withLogging as originalWithLogging,
 } from './middleware';
+
 
 // ============================================================================
 // ENHANCED RATE LIMITING MIDDLEWARE
@@ -106,7 +117,7 @@ export function withEnhancedRateLimitMiddleware(options: {
           userAgent,
           endpoint: new URL(request.url).pathname,
           method: request.method,
-          severity: 'high',
+          severity: SecurityEventSeverity.HIGH,
         }
       );
 
@@ -118,10 +129,11 @@ export function withEnhancedRateLimitMiddleware(options: {
 
     if (originalResponse && typeof originalResponse === 'object' && 'status' in originalResponse) {
       // This is a HandlerResponse (object with status/body)
+      const res = originalResponse as HandlerResponse & { headers?: Record<string, string> };
       return {
-        ...originalResponse,
+        ...res,
         headers: {
-          ...(originalResponse.headers || {}),
+          ...(res.headers || {}),
           ...headers,
         },
       };
@@ -163,18 +175,19 @@ export function withPermission(
     const { auth, params } = context;
 
     if (!auth?.userId) {
-      throw new AppError(
+      throw AppErrorFactory.create(
         'Authentication required',
         ErrorCategory.AUTHENTICATION,
-        ErrorCode.AUTH_TOKEN_MISSING
+        ErrorCode.AUTH_TOKEN_INVALID
       );
     }
 
     // Build permission context
+    const authExt = auth as { userId: string; userRole?: string; additionalPermissions?: Permission[] };
     const permissionContext: PermissionContext = {
-      userId: auth.userId,
-      role: (auth.userRole as UserRole) || UserRole.STUDENT,
-      additionalPermissions: auth.additionalPermissions as Permission[],
+      userId: authExt.userId,
+      role: (authExt.userRole as UserRole) || UserRole.STUDENT,
+      additionalPermissions: authExt.additionalPermissions as Permission[],
       resourceType: options.resourceType,
       resourceId: options.resourceIdParam ? params?.[options.resourceIdParam] : undefined,
       resourceOwnerId: auth.userId, // Default to user themselves
@@ -192,10 +205,10 @@ export function withPermission(
     });
 
     if (!result.allowed) {
-      throw new AppError(
+      throw AppErrorFactory.create(
         result.reason || 'Permission denied',
         ErrorCategory.AUTHENTICATION,
-        ErrorCode.PERMISSION_DENIED,
+        ErrorCode.AUTH_PERMISSION_DENIED,
         {
           userId: auth.userId,
           permission,
@@ -248,7 +261,7 @@ export function withEnhancedSecurityMonitoring(
 
           // Redact sensitive fields
           if (options.sensitiveFields && requestBody && typeof requestBody === 'object') {
-            requestBody = this.redactSensitiveFields(requestBody, options.sensitiveFields);
+            requestBody = redactSensitiveFields(requestBody, options.sensitiveFields);
           }
         } catch {
           // Not JSON, keep as text
@@ -279,7 +292,7 @@ export function withEnhancedSecurityMonitoring(
 
             // Redact sensitive fields
             if (options.sensitiveFields && responseBody && typeof responseBody === 'object') {
-              responseBody = this.redactSensitiveFields(responseBody, options.sensitiveFields);
+              responseBody = redactSensitiveFields(responseBody, options.sensitiveFields);
             }
           } catch {
             // Not JSON, keep as text
@@ -288,7 +301,7 @@ export function withEnhancedSecurityMonitoring(
           // Failed to read body, continue without it
         }
       } else if (response && typeof response === 'object' && 'status' in response) {
-        statusCode = response.status;
+        statusCode = (response as { status?: number }).status ?? 200;
       }
 
       // Record successful request
@@ -306,8 +319,8 @@ export function withEnhancedSecurityMonitoring(
         },
         {
           userId: auth?.userId,
-          userEmail: auth?.userEmail,
-          userRole: auth?.userRole,
+          userEmail: (auth as any)?.userEmail,
+          userRole: (auth as any)?.userRole,
           ipAddress,
           userAgent,
           endpoint,
@@ -325,9 +338,9 @@ export function withEnhancedSecurityMonitoring(
       let errorMessage = 'Unknown error';
       let statusCode = 500;
 
-      if (error instanceof AppError) {
+      if (isAppError(error)) {
         errorMessage = error.message;
-        statusCode = error.statusCode || 500;
+        statusCode = (error.context?.statusCode as number | undefined) || 500;
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
@@ -347,8 +360,8 @@ export function withEnhancedSecurityMonitoring(
         },
         {
           userId: auth?.userId,
-          userEmail: auth?.userEmail,
-          userRole: auth?.userRole,
+          userEmail: (auth as any)?.userEmail,
+          userRole: (auth as any)?.userRole,
           ipAddress,
           userAgent,
           endpoint,
@@ -356,7 +369,7 @@ export function withEnhancedSecurityMonitoring(
           statusCode,
           responseTime,
           errorMessage,
-          severity: statusCode >= 500 ? 'high' : 'medium',
+          severity: statusCode >= 500 ? SecurityEventSeverity.HIGH : SecurityEventSeverity.MEDIUM,
         }
       );
 
@@ -384,7 +397,7 @@ export function enhancedAdminEndpoint<T>(
   const rateLimitType = options.rateLimitType || 'admin';
 
   return withMiddleware(
-    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    originalWithEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     originalWithAuth(),
     originalWithAdminRole(),
     withEnhancedRateLimitMiddleware({ limitType: rateLimitType }),
@@ -399,8 +412,8 @@ export function enhancedAdminEndpoint<T>(
         const permissionSystem = getPermissionSystem();
         const permissionContext: PermissionContext = {
           userId: context.auth.userId,
-          role: (context.auth.userRole as UserRole) || UserRole.ADMIN,
-          additionalPermissions: context.auth.additionalPermissions as Permission[],
+          role: ((context.auth as any).userRole as UserRole) || UserRole.ADMIN,
+          additionalPermissions: (context.auth as any).additionalPermissions as Permission[],
         };
 
         const result = await permissionSystem.checkPermissions(
@@ -409,10 +422,10 @@ export function enhancedAdminEndpoint<T>(
         );
 
         if (!result.allowed) {
-          throw new AppError(
+          throw AppErrorFactory.create(
             result.reason || 'Insufficient permissions',
             ErrorCategory.AUTHENTICATION,
-            ErrorCode.PERMISSION_DENIED,
+            ErrorCode.AUTH_PERMISSION_DENIED,
             {
               userId: context.auth.userId,
               requiredPermissions: options.requiredPermissions,
@@ -438,7 +451,7 @@ export function enhancedAIEndpoint<T>(
   } = {}
 ) {
   return withMiddleware(
-    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY', 'GEMINI_API_KEY']),
+    originalWithEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY', 'GEMINI_API_KEY']),
     originalWithAuth(),
     withEnhancedRateLimitMiddleware({
       limitType: 'gemini',
@@ -455,8 +468,8 @@ export function enhancedAIEndpoint<T>(
         const permissionSystem = getPermissionSystem();
         const permissionContext: PermissionContext = {
           userId: context.auth.userId,
-          role: (context.auth.userRole as UserRole) || UserRole.STUDENT,
-          additionalPermissions: context.auth.additionalPermissions as Permission[],
+          role: ((context.auth as any).userRole as UserRole) || UserRole.STUDENT,
+          additionalPermissions: (context.auth as any).additionalPermissions as Permission[],
         };
 
         const result = await permissionSystem.checkPermissions(
@@ -465,10 +478,10 @@ export function enhancedAIEndpoint<T>(
         );
 
         if (!result.allowed) {
-          throw new AppError(
+          throw AppErrorFactory.create(
             result.reason || 'Insufficient permissions for AI operations',
             ErrorCategory.AUTHENTICATION,
-            ErrorCode.PERMISSION_DENIED,
+            ErrorCode.AUTH_PERMISSION_DENIED,
             {
               userId: context.auth.userId,
               requiredPermissions: options.requiredPermissions,
@@ -494,7 +507,7 @@ export function enhancedPublicEndpoint<T>(
   } = {}
 ) {
   const rateLimitType = options.rateLimitType || 'standard';
-  const middlewares: Middleware[] = [
+  const middlewares: Array<Middleware<any>> = [
     originalWithCors(),
     withEnhancedRateLimitMiddleware({ limitType: rateLimitType }),
     withEnhancedSecurityMonitoring({
@@ -509,7 +522,7 @@ export function enhancedPublicEndpoint<T>(
 
   middlewares.push(originalWithValidation(schema));
 
-  return withMiddleware(...middlewares)(handler);
+  return withMiddleware(...(middlewares as [...Array<Middleware<any>>]), handler as Handler<any>);
 }
 
 /**
@@ -526,7 +539,7 @@ export function enhancedAuthenticatedEndpoint<T>(
   const rateLimitType = options.rateLimitType || 'standard';
 
   return withMiddleware(
-    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    originalWithEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     originalWithAuth(),
     withEnhancedRateLimitMiddleware({ limitType: rateLimitType }),
     withEnhancedSecurityMonitoring({
@@ -540,8 +553,8 @@ export function enhancedAuthenticatedEndpoint<T>(
         const permissionSystem = getPermissionSystem();
         const permissionContext: PermissionContext = {
           userId: context.auth.userId,
-          role: (context.auth.userRole as UserRole) || UserRole.STUDENT,
-          additionalPermissions: context.auth.additionalPermissions as Permission[],
+          role: ((context.auth as any).userRole as UserRole) || UserRole.STUDENT,
+          additionalPermissions: (context.auth as any).additionalPermissions as Permission[],
         };
 
         const result = await permissionSystem.checkPermissions(
@@ -550,10 +563,10 @@ export function enhancedAuthenticatedEndpoint<T>(
         );
 
         if (!result.allowed) {
-          throw new AppError(
+          throw AppErrorFactory.create(
             result.reason || 'Insufficient permissions',
             ErrorCategory.AUTHENTICATION,
-            ErrorCode.PERMISSION_DENIED,
+            ErrorCode.AUTH_PERMISSION_DENIED,
             {
               userId: context.auth.userId,
               requiredPermissions: options.requiredPermissions,
@@ -635,7 +648,7 @@ export function getEndpointRateLimitConfig(endpoint: string): {
     }
   }
 
-  return endpointConfigs.default;
+  return endpointConfigs.default!;
 }
 
 // Re-export original middleware functions for compatibility
