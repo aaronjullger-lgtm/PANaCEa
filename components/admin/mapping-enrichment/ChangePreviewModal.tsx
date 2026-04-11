@@ -84,15 +84,20 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
         throw new Error(errorMsg);
       }
 
-      const result = await response.json();
-      setPreviewResult(result.data);
+      const result = (await response.json()) as { data?: PreviewResult };
+      setPreviewResult(result.data ?? null);
 
-      // Log audit event for preview
+      // Log audit event for preview (single-event, batch encoded in metadata)
+      const firstSuggestion = selectedSuggestions[0];
       await logAuditEvent({
         action: 'PREVIEW',
-        taxonomyCodes: selectedSuggestions.map(s => s.taxonomyCode),
-        systemCodes: selectedSuggestions.map(s => s.suggestedSystemCode),
-        metadata: { previewId: 'generated' },
+        taxonomyCode: firstSuggestion?.taxonomyCode ?? '',
+        systemCode: firstSuggestion?.suggestedSystemCode ?? '',
+        metadata: {
+          previewId: 'generated',
+          batchTaxonomyCodes: selectedSuggestions.map(s => s.taxonomyCode),
+          batchSystemCodes: selectedSuggestions.map(s => s.suggestedSystemCode),
+        },
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

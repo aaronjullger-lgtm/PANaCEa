@@ -583,11 +583,19 @@ export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
   </div>
 );
 
-// SkeletonLoader — alias for backwards compatibility (imported by some components from @/components/loading)
-export const SkeletonLoader: React.FC<{ height?: string; width?: string; className?: string }> = ({
+// SkeletonLoader — alias for backwards compatibility (imported by some components from @/components/loading).
+// Accepts an optional `variant` prop for API parity with components/ui/SkeletonLoader;
+// the variant is intentionally ignored here since this barrel uses the unified Skeleton primitive.
+export const SkeletonLoader: React.FC<{
+  height?: string;
+  width?: string;
+  className?: string;
+  variant?: 'text' | 'rectangular' | 'circular';
+}> = ({
   height,
   width,
   className = '',
+  variant: _variant,
 }) => (
   <Skeleton
     className={`${height ? `h-[${height}]` : ''} ${width ? `w-[${width}]` : 'w-full'} ${className}`.trim()}

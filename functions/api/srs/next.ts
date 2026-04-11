@@ -112,7 +112,7 @@ export const onRequestGet = authenticatedEndpoint(
               where: { id: variant.id },
               data: { timesServed: { increment: 1 } },
             })
-            .catch(() => {});
+            .catch((e) => logger.warn('Failed to increment timesServed', e));
 
           return {
             data: {

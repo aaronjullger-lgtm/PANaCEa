@@ -696,7 +696,7 @@ class SyncManager {
 
     this.syncRetryTimeout = setTimeout(() => {
       if (this.isOnline()) {
-        this.syncAll().catch(() => {});
+        this.syncAll().catch((err) => logger.warn(SCOPE, 'Background sync failed', err));
       }
     }, retryDelay);
   }
@@ -750,7 +750,7 @@ class SyncManager {
       (target as any).add(record).catch((err: unknown) => {
         logger.warn(SCOPE, `IndexedDB write failed for ${store}`, err);
       });
-    }).catch(() => {});
+    }).catch(() => { logger.debug(SCOPE, "IndexedDB not available for persist"); });
   }
 
   /**
@@ -789,11 +789,11 @@ class SyncManager {
     // Also clear IndexedDB stores
     isIndexedDBAvailable().then((available) => {
       if (available) {
-        offlineStore.answers.clear().catch(() => {});
-        offlineStore.pearlActions.clear().catch(() => {});
-        offlineStore.reviews.clear().catch(() => {});
+        offlineStore.answers.clear().catch((e) => logger.debug(SCOPE, "IndexedDB answers clear skipped", e));
+        offlineStore.pearlActions.clear().catch((e) => logger.debug(SCOPE, "IndexedDB pearlActions clear skipped", e));
+        offlineStore.reviews.clear().catch((e) => logger.debug(SCOPE, "IndexedDB reviews clear skipped", e));
       }
-    }).catch(() => {});
+    }).catch(() => { logger.debug(SCOPE, "IndexedDB not available for clear"); });
     logger.debug(SCOPE, 'Cleared all pending items');
   }
 }

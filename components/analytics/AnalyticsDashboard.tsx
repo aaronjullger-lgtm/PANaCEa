@@ -416,7 +416,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             Complete your first 20-question session to unlock personalized analytics, track your
             progress across organ systems, and identify your focus areas.
           </p>
-          <PrimaryButton size="md" icon={Play} onClick={handleStartSession}>
+          <PrimaryButton size="md" icon={<Play />} onClick={handleStartSession}>
             Start Calibration Session
           </PrimaryButton>
           <p className="text-xs text-[var(--color-text-muted)] mt-3">
@@ -723,7 +723,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       data={systemPerformanceBarData}
                       margin={{ top: 4, right: 24, left: 0, bottom: 24 }}
                     >
-                      <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+                      <CartesianGrid {...chartTheme.grid} stroke="var(--chart-grid-stroke)" />
                       <XAxis
                         type="number"
                         domain={[0, 100]}
@@ -736,8 +736,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                       />
                       <Tooltip
-                        formatter={(value?: number) => [
-                          formatPercentForDisplay(value ?? 0),
+                        formatter={(value) => [
+                          formatPercentForDisplay(typeof value === 'number' ? value : 0),
                           'Accuracy',
                         ]}
                         contentStyle={chartTheme.tooltip.contentStyle}
@@ -867,14 +867,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <Tooltip
                         contentStyle={chartTheme.tooltip.contentStyle}
                         labelStyle={chartTheme.tooltip.labelStyle}
-                        formatter={(value: number | string | undefined, name?: string) => {
-                          if (value === undefined || (typeof value === 'number' && (isNaN(value) || !isFinite(value)))) return ['—', name ?? ''];
-                          if (name === 'avgStability')
+                        formatter={(value, name) => {
+                          const label = typeof name === 'string' ? name : '';
+                          if (value === undefined || (typeof value === 'number' && (isNaN(value) || !isFinite(value)))) return ['—', label];
+                          if (label === 'avgStability')
                             return [
-                              typeof value === 'number' ? value.toFixed(1) : value,
+                              typeof value === 'number' ? value.toFixed(1) : String(value),
                               'Stability',
                             ];
-                          return [value, name ?? ''];
+                          return [String(value), label];
                         }}
                       />
                       <Line
@@ -946,7 +947,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
                 <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                   <BarChart data={timeData.filter(d => !isNaN(d.seconds) && isFinite(d.seconds))} margin={{ bottom: 28 }}>
-                    <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+                    <CartesianGrid {...chartTheme.grid} stroke="var(--chart-grid-stroke)" />
                     <XAxis
                       dataKey="system"
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
@@ -956,13 +957,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     />
                     <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                     <Tooltip
-                      formatter={(
-                        value: number | string | undefined,
-                        name?: string,
-                        props?: { payload?: TimeDatum }
-                      ) => {
+                      formatter={(value, _name, item) => {
                         if (value === undefined || (typeof value === 'number' && (isNaN(value) || !isFinite(value)))) return ['—', 'Avg time'];
-                        const entry = props?.payload;
+                        const entry = (item as { payload?: TimeDatum } | undefined)?.payload;
                         return [
                           `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
                           'Avg time',

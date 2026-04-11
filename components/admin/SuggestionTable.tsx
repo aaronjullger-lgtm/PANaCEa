@@ -182,7 +182,10 @@ export function SuggestionTable({
       if (!response.ok) {
         throw new Error(`Failed to fetch suggestions: ${response.statusText}`);
       }
-      const data = await response.json();
+      const data = (await response.json()) as {
+        suggestions: MappingSuggestion[];
+        pagination: { total: number; totalPages: number };
+      };
       setSuggestions(data.suggestions);
       setPagination((prev) => ({
         ...prev,
@@ -202,7 +205,9 @@ export function SuggestionTable({
   }, [fetchSuggestions]);
 
   const handleSelectAll = (checked: boolean) => {
-    const newSelected = checked ? new Set(suggestions.map(s => s.id)) : new Set();
+    const newSelected: Set<string> = checked
+      ? new Set<string>(suggestions.map(s => s.id))
+      : new Set<string>();
     setSelectedIds(newSelected);
     onSelectionChange?.(Array.from(newSelected));
   };

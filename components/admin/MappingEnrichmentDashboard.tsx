@@ -90,22 +90,26 @@ export const MappingEnrichmentDashboard: React.FC = () => {
         throw new Error(`Failed to fetch gaps: ${gapsRes.status}`);
       }
 
-      const suggestionsData = await suggestionsRes.json();
-      const gapsData = await gapsRes.json();
+      const suggestionsData = (await suggestionsRes.json()) as {
+        suggestions?: Array<{ status?: string }>;
+      };
+      const gapsData = (await gapsRes.json()) as {
+        gaps?: GapDetectionResult[];
+      };
 
       // Calculate stats
       const totalSuggestions = suggestionsData.suggestions?.length || 0;
       const pendingSuggestions = suggestionsData.suggestions?.filter(
-        (s: any) => s.status === 'PENDING'
+        (s) => s.status === 'PENDING'
       ).length || 0;
       const approvedSuggestions = suggestionsData.suggestions?.filter(
-        (s: any) => s.status === 'APPROVED'
+        (s) => s.status === 'APPROVED'
       ).length || 0;
       const rejectedSuggestions = suggestionsData.suggestions?.filter(
-        (s: any) => s.status === 'REJECTED'
+        (s) => s.status === 'REJECTED'
       ).length || 0;
       const totalGaps = gapsData.gaps?.length || 0;
-      const activeGaps = gapsData.gaps?.filter((g: any) => g.isActive).length || 0;
+      const activeGaps = gapsData.gaps?.filter((g) => g.isActive).length || 0;
       const inactiveGaps = totalGaps - activeGaps;
 
       setStats({
@@ -492,8 +496,10 @@ export const MappingEnrichmentDashboard: React.FC = () => {
       {selectedSuggestionIds.length > 0 && (
         <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
           <BulkApprovalPanel
-            selectedSuggestionIds={selectedSuggestionIds}
-            onComplete={handleBulkActionComplete}
+            selectedIds={selectedSuggestionIds}
+            totalCount={selectedSuggestionIds.length}
+            onClearSelection={() => setSelectedSuggestionIds([])}
+            onActionComplete={handleBulkActionComplete}
           />
         </div>
       )}

@@ -109,8 +109,11 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
         { credentials: 'include' }
       );
       if (!res.ok) return;
-      const data = await res.json();
-      setStats(data?.data?.stats ?? data?.stats ?? null);
+      const data = (await res.json()) as {
+        data?: { stats?: unknown };
+        stats?: unknown;
+      };
+      setStats((data?.data?.stats ?? data?.stats ?? null) as typeof stats);
     } catch {
       // Stats are non-critical — fail silently
     }
@@ -133,9 +136,12 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
         { credentials: 'include' }
       );
       if (!res.ok) throw new Error(res.statusText || 'Failed to load');
-      const data = await res.json();
+      const data = (await res.json()) as {
+        data?: { questions?: unknown };
+        questions?: unknown;
+      };
       const list = data?.data?.questions ?? data?.questions ?? [];
-      setQuestions(Array.isArray(list) ? list : []);
+      setQuestions(Array.isArray(list) ? (list as typeof questions) : []);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to load review queue';
       onError?.(msg);
@@ -190,7 +196,10 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Auto-approve failed');
-      const data = await res.json();
+      const data = (await res.json()) as {
+        data?: { approvedCount?: number };
+        approvedCount?: number;
+      };
       const count = data?.data?.approvedCount ?? data?.approvedCount ?? 0;
       // Refresh both lists
       fetchQuestions();

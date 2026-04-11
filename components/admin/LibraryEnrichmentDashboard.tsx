@@ -98,8 +98,13 @@ export const LibraryEnrichmentDashboard: React.FC = () => {
         throw new Error(`Failed to fetch priority: ${priorityRes.status}`);
       }
 
-      const logsData = await logsRes.json();
-      const priorityData = await priorityRes.json();
+      const logsData = (await logsRes.json()) as {
+        logs?: EnrichmentLogEntry[];
+        total?: number;
+      };
+      const priorityData = (await priorityRes.json()) as {
+        priorityList?: PriorityRecord[];
+      };
 
       setLogs(logsData.logs || []);
       setLogsTotal(logsData.total || 0);

@@ -134,7 +134,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
               env.GEMINI_API_KEY as string | undefined,
               { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
               user.id // pass userId so confusion pairs are injected into the variant prompt
-            ).catch(() => {});
+            ).catch((e) => logger.warn("Background confusion processing failed", e));
           }
         }
 

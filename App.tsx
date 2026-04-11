@@ -646,7 +646,10 @@ const App: React.FC = () => {
               const results = json?.data?.results ?? [];
               const resultByOriginalId = new Map<string, (typeof results)[0]>();
               dueItems.forEach((d, i) => {
-                resultByOriginalId.set(d.originalQuestionId, results[i]);
+                const r = results[i];
+                if (r !== undefined) {
+                  resultByOriginalId.set(d.originalQuestionId, r);
+                }
               });
               const queue: QuizQuestion[] = flaggedQuestions.map((original) => {
                 const r = resultByOriginalId.get(original.id ?? (original as { questionId?: string }).questionId ?? '');
@@ -1071,7 +1074,7 @@ const App: React.FC = () => {
           growthAreas={growthAreas}
           isSyncing={isSyncing}
           isStatsLoading={isStatsLoading}
-          lastSyncTime={lastSyncTime}
+          lastSyncTime={lastSyncTime != null ? new Date(lastSyncTime) : null}
           syncError={syncError}
           fontSizeAdjustment={fontSizeAdjustment}
           setFontSizeAdjustment={setFontSizeAdjustment}
@@ -1125,7 +1128,7 @@ const App: React.FC = () => {
           handleYourPlanStartSession={handleYourPlanStartSession}
           handleYourPlanSkip={handleYourPlanSkip}
           theme={theme}
-          setTheme={setTheme}
+          setTheme={(t: string) => setTheme(t as typeof theme)}
           examLabel={examLabel}
           commandCenterInitialTab={commandCenterInitialTab}
           simulationInitialFocus={simulationInitialFocus}

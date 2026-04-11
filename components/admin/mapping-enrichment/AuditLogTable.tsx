@@ -76,7 +76,10 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
         throw new Error(`Failed to fetch audit logs: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        logs?: AuditLogEntry[];
+        total?: number;
+      };
       setLogs(data.logs || []);
       setTotal(data.total || 0);
     } catch (err) {
