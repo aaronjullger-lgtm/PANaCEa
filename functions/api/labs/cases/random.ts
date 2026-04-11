@@ -1,88 +1,51 @@
 /**
- * Random Lab Cases API
- * GET /api/labs/cases/random - Fetch random lab cases for drills
- *
- * Security: Sprint 3 - Secured with authenticatedEndpoint middleware
+ * GET /api/labs/cases/random — Random lab cases for drills
+ * Edge port of routes/labs.ts (replaces $queryRaw with findMany + shuffle)
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
-import {
-  createEdgePrismaClient,
-  safePrismaDisconnect,
-  EdgePrismaClient,
-} from '../../_shared/prisma-edge';
-import { createEndpointLogger } from '../../_shared/secureLogger';
+import { withCors, authenticatedEndpoint } from '../_shared/middleware';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-// ============================================================================
-// VALIDATION SCHEMA
-// ============================================================================
-
-const RandomLabCasesQuerySchema = z.object({
-  query: z
-    .object({
-      count: z.string().regex(/^\d+$/).transform(Number).optional(),
-      difficulty: z.string().max(50).optional(),
-    })
-    .optional(),
+const RandomCasesSchema = z.object({
+  count: z.string().optional(),
 });
 
-// ============================================================================
-// ENDPOINT HANDLERS
-// ============================================================================
+/** Fisher-Yates shuffle */
+function shuffle<T>(arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j]!, result[i]!];
+  }
+  return result;
+}
 
 export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
-  RandomLabCasesQuerySchema,
-  async ({ env, auth, validated, request }) => {
-    const log = createEndpointLogger('/api/labs/cases/random', auth.userId);
-    let prisma: EdgePrismaClient | null = null;
+  RandomCasesSchema,
+  async (context) => {
+    const log = createEndpointLogger('labs/cases/random');
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    const count = Math.min(parseInt(context.validated.count ?? '1', 10), 20);
 
     try {
-      prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const allCases = await prisma.labCase.findMany();
+      const selected = shuffle(allCases).slice(0, count);
 
-      const url = new URL(request.url);
-      const count = Math.min(parseInt(url.searchParams.get('count') || '1'), 10); // Cap at 10
-      const difficulty = url.searchParams.get('difficulty');
-
-      log.info('Fetching random lab cases', { count, difficulty: difficulty || 'all' });
-
-      // Build WHERE clause for raw query if difficulty filter is provided
-      let cases;
-      if (difficulty) {
-        cases = await prisma.$queryRaw`
-          SELECT * FROM "LabCase"
-          WHERE "difficulty" = ${difficulty}
-          ORDER BY RANDOM()
-          LIMIT ${count}
-        `;
-      } else {
-        cases = await prisma.$queryRaw`
-          SELECT * FROM "LabCase"
-          ORDER BY RANDOM()
-          LIMIT ${count}
-        `;
-      }
-
-      log.info('Random lab cases fetched successfully', {
-        count: Array.isArray(cases) ? cases.length : 0,
+      return new Response(JSON.stringify(selected), {
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      return {
-        data: {
-          success: true,
-          data: cases,
-        },
-      };
     } catch (error) {
-      log.error('Error fetching random lab cases', error);
-      return {
+      log.error('Failed to fetch random lab cases', error);
+      return new Response(JSON.stringify({ error: 'Failed to fetch random lab cases' }), {
         status: 500,
-        error: 'Failed to fetch random lab cases',
-      };
+        headers: { 'Content-Type': 'application/json' },
+      });
     } finally {
-      await safePrismaDisconnect(prisma);
+      await prisma.$disconnect();
     }
-  }
+  },
 );
