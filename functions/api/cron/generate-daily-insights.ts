@@ -152,6 +152,37 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
   if (accuracyDelta > 0.05) accuracyTrend = 'improving';
   else if (accuracyDelta < -0.05) accuracyTrend = 'declining';
 
+  // Average session length: cluster attempts into sessions (gap > 30min = new session)
+  const recentAttempts = await prisma.questionAttempt.findMany({
+    where: { userId, createdAt: { gte: sevenDaysAgo } },
+    orderBy: { createdAt: 'asc' },
+    select: { createdAt: true },
+  });
+
+  let totalSessionMs = 0;
+  let sessionCount = 0;
+  if (recentAttempts.length >= 2) {
+    let sessionStart = recentAttempts[0]!.createdAt.getTime();
+    let lastAttempt = sessionStart;
+    const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes
+
+    for (let i = 1; i < recentAttempts.length; i++) {
+      const t = recentAttempts[i]!.createdAt.getTime();
+      if (t - lastAttempt > SESSION_GAP_MS) {
+        // Session ended
+        totalSessionMs += lastAttempt - sessionStart;
+        sessionCount++;
+        sessionStart = t;
+      }
+      lastAttempt = t;
+    }
+    // Close last session
+    totalSessionMs += lastAttempt - sessionStart;
+    sessionCount++;
+  }
+
+  const avgSessionLength = sessionCount > 0 ? Math.round(totalSessionMs / sessionCount / 60000) : 0; // in minutes
+
   return {
     userId,
     totalAttempts7d: stats7d._count?.id ?? 0,
@@ -162,7 +193,7 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
     weakestSystem,
     currentStreak,
     fsrsBacklog,
-    avgSessionLength: 0, // TODO: compute from session analytics
+    avgSessionLength,
     studyDaysLast7: uniqueDays.size,
     accuracyTrend,
   };

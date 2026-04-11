@@ -1,11 +1,11 @@
 // functions/geminiProxy.ts
-// DEPRECATED: Gemini proxy has moved to /api/gemini and /api/gemini/stream.
-// This file returns 410 Gone so clients use the Cloudflare Functions under functions/api/gemini/.
+// DEPRECATED: Gemini proxy has moved to /api/ai/chat/stream (streaming) and /api/ai/models (non-streaming).
+// This file returns 410 Gone so clients use the consolidated Cloudflare Functions.
 
 const MIGRATION_MESSAGE = {
   error: 'Endpoint deprecated',
-  message: 'Use /api/gemini for non-streaming or /api/gemini/stream for streaming.',
-  migration: { nonStreaming: '/api/gemini', streaming: '/api/gemini/stream' },
+  message: 'Use /api/ai/models for model listing or /api/ai/chat/stream for streaming.',
+  migration: { models: '/api/ai/models', streaming: '/api/ai/chat/stream' },
 };
 
 function corsHeaders(): Record<string, string> {

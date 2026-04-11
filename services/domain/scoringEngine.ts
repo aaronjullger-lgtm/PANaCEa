@@ -184,8 +184,14 @@ export async function computeConfidenceForNode(
     stability = progress?.fsrsStability ?? undefined;
   }
 
-  // TODO: Incorporate FSRS retrievability
-  const confidence = accuracy; // for now, confidence = accuracy
+  // FSRS retrievability: R = e^(-t/S) where t = elapsed days since last review
+  let retrievability = accuracy; // fallback
+  if (stability && lastReviewedAt) {
+    const elapsedDays = (Date.now() - lastReviewedAt.getTime()) / (24 * 3600 * 1000);
+    retrievability = Math.exp(-elapsedDays / stability);
+  }
+
+  const confidence = retrievability;
 
   return {
     nodeId: node.id,

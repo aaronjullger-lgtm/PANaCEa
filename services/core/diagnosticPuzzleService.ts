@@ -237,6 +237,24 @@ const normalizeGuess = (guess: string): string => {
   return sanitized;
 };
 
+/** Simple Levenshtein distance for fuzzy matching */
+const levenshtein = (a: string, b: string): number => {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0) as number[]);
+  for (let i = 0; i <= m; i++) dp[i]![0] = i;
+  for (let j = 0; j <= n; j++) dp[0]![j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i]![j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1]![j - 1]!
+        : 1 + Math.min(dp[i - 1]![j]!, dp[i]![j - 1]!, dp[i - 1]![j - 1]!);
+    }
+  }
+  return dp[m]![n]!;
+};
+
+const FUZZY_MATCH_THRESHOLD = 0.75; // 75% similarity required
+
 const guessMatchesCondition = (guess: string, conditionName: string, aliases: string[]): boolean => {
   const normalizedGuess = guess.trim().toLowerCase();
   const normalizedCondition = conditionName.trim().toLowerCase();
@@ -245,7 +263,15 @@ const guessMatchesCondition = (guess: string, conditionName: string, aliases: st
   for (const alias of aliases) {
     if (alias.trim().toLowerCase() === normalizedGuess) return true;
   }
-  // TODO: implement fuzzy matching (Levenshtein distance) later
+  // Fuzzy match: accept if similarity ratio exceeds threshold
+  const candidates = [normalizedCondition, ...aliases.map(a => a.trim().toLowerCase())];
+  for (const candidate of candidates) {
+    const maxLen = Math.max(normalizedGuess.length, candidate.length);
+    if (maxLen === 0) continue;
+    const distance = levenshtein(normalizedGuess, candidate);
+    const similarity = 1 - distance / maxLen;
+    if (similarity >= FUZZY_MATCH_THRESHOLD) return true;
+  }
   return false;
 };
 
