@@ -98,7 +98,7 @@ export function BlueprintComplianceAuditorMode() {
     try {
       const token = await getToken();
       const response = await fetch(
-        `${getApiEndpoint((API_ENDPOINTS as Record<string, string>).COMPLIANCE_BLUEPRINT ?? '/api/admin/compliance/blueprint')}?type=${type}`,
+        `${getApiEndpoint((API_ENDPOINTS as unknown as Record<string, string>).COMPLIANCE_BLUEPRINT ?? '/api/admin/compliance/blueprint')}?type=${type}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -466,7 +466,7 @@ export function BlueprintComplianceAuditorMode() {
                             <TableCell>{action.action}</TableCell>
                             <TableCell className="text-right">{action.quantity}</TableCell>
                             <TableCell className="text-right">
-                              <Badge variant={action.priority === 'high' ? 'destructive' : action.priority === 'medium' ? 'secondary' : 'default'}>
+                              <Badge variant={action.priority === 'high' ? 'highYield' : action.priority === 'medium' ? 'category' : 'default'}>
                                 {action.priority}
                               </Badge>
                             </TableCell>
