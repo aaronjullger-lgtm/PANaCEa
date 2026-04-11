@@ -39,7 +39,7 @@ vi.mock('../lib/observability/pipelineTracer', () => ({
 vi.mock('../lib/fsrs/eorScheduler', () => ({
   getEorRotationEnd: vi.fn(),
 }));
-vi.mock('../functions/api/intelligence/profile', () => ({
+vi.mock('../functions/api/ai/learning/profile-crud', () => ({
   scheduleConceptReview: vi.fn(),
 }));
 vi.mock('../lib/ensureDueVariant', () => ({

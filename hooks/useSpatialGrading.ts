@@ -1,7 +1,7 @@
 /**
  * useSpatialGrading
  *
- * Hook to grade a student's drawn bounding box against the pathology via /api/vision/grade-spatial.
+ * Hook to grade a student's drawn bounding box against the pathology via /api/ai/vision/grade-spatial.
  * Use with SpatialAnswerCanvas for ECG/X-ray draw-to-identify flows.
  */
 
@@ -75,7 +75,7 @@ export function useSpatialGrading() {
           return null;
         }
 
-        const url = getApiEndpoint('/api/vision/grade-spatial');
+        const url = getApiEndpoint('/api/ai/vision/grade-spatial');
         const res = await fetch(url, {
           method: 'POST',
           headers: {

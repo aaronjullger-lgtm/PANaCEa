@@ -1,5 +1,5 @@
 // lib/services/soapGradingService.ts
-// SOAP Note grading via Gemini proxy (Cloudflare /api/gemini)
+// SOAP Note grading via Gemini proxy (Cloudflare /api/ai/models)
 
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { geminiLogger } from '../logger';

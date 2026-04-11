@@ -1307,7 +1307,7 @@ Provide an ALTERNATE explanation that approaches this from a different angle. Us
 
 Keep it concise (3-4 sentences max) and focus on helping them understand WHY they made this mistake.`;
 
-      // Use Edge streaming API (/api/gemini/stream) so user sees tokens immediately (latency masking)
+      // Use Edge streaming API (/api/ai/chat/stream) so user sees tokens immediately (latency masking)
       const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
 
       try {

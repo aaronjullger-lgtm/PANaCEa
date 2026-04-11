@@ -48,7 +48,7 @@ export function SocraticTutorChat({
 
       setLoading(true);
       try {
-        const url = getApiEndpoint('/api/intelligence/socratic-remediation');
+        const url = getApiEndpoint('/api/ai/learning/socratic');
         const historyForApi = userReply
           ? [...messages, { role: 'user' as const, text: userReply }]
           : messages;

@@ -85,7 +85,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
           text: m.text,
         }));
 
-      const response = await fetch('/api/intelligence/tutor', {
+      const response = await fetch('/api/ai/tutor/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

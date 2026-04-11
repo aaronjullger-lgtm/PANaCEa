@@ -13,7 +13,7 @@
  *   await monitor.recordEvent('rate_limit', {
  *     userId: 'user_123',
  *     ipAddress: '192.168.1.1',
- *     endpoint: '/api/gemini',
+ *     endpoint: '/api/ai/models',
  *     limitType: 'gemini',
  *   });
  */
