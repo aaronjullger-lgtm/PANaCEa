@@ -598,7 +598,7 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
 
 /**
  * Gemini streaming API request body
- * Used by: /api/gemini/stream
+ * Used by: /api/ai/chat/stream
  */
 export const geminiStreamRequestSchema = z
   .object({

@@ -6,7 +6,7 @@ import { createSpan } from '../_shared/structuredLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { createPipelineTracer } from '../../../lib/observability/pipelineTracer';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
-import { scheduleConceptReview } from '../intelligence/profile';
+import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';

@@ -88,7 +88,7 @@ export interface GeminiRequestOptions {
   toolConfig?: Record<string, unknown>;
   /** Pre-created cached content reference */
   cachedContent?: string;
-  /** Endpoint name for token tracking (e.g., '/api/intelligence/tutor') */
+  /** Endpoint name for token tracking (e.g., '/api/ai/tutor/chat') */
   endpoint?: string;
   /** Abort signal for request cancellation */
   signal?: AbortSignal;

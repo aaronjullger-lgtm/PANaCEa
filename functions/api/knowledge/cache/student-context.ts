@@ -9,7 +9,7 @@ import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
-import { generateTutorContext } from '../../intelligence/profile';
+import { generateTutorContext } from '../../ai/learning/profile-crud';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const CACHE_MODEL = 'gemini-2.0-flash';

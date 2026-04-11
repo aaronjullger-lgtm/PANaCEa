@@ -43,7 +43,7 @@ vi.mock('../_shared/secureLogger', () => ({
   })),
 }));
 
-vi.mock('../intelligence/profile', () => ({
+vi.mock('../ai/learning/profile-crud', () => ({
   scheduleConceptReview: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -61,7 +61,7 @@ vi.mock('../../../lib/api/schemas/questions', async () => {
 // Import after mocks
 import { onRequestPost } from './attempt';
 import { safePrismaDisconnect } from '../_shared/prisma-edge';
-import { scheduleConceptReview } from '../intelligence/profile';
+import { scheduleConceptReview } from '../ai/learning/profile-crud';
 
 // ---------------------------------------------------------------------------
 // Helpers

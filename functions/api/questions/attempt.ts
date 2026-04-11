@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { scheduleConceptReview } from '../intelligence/profile';
+import { scheduleConceptReview } from '../ai/learning/profile-crud';
 
 import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 

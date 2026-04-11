@@ -22,7 +22,7 @@ import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { IDSchema } from '../../_shared/schemas';
-import { scheduleConceptReview } from '../../intelligence/profile';
+import { scheduleConceptReview } from '../../ai/learning/profile-crud';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 // Stable: gemini-2.5-pro; use gemini-3-pro-preview when needed for latest reasoning.

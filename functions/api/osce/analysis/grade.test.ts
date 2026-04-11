@@ -72,7 +72,7 @@ vi.mock('../../_shared/inferSystem', () => ({
   resolveSystem: vi.fn(() => 'cardiovascular'),
 }));
 
-vi.mock('../../intelligence/profile', () => ({
+vi.mock('../../ai/learning/profile-crud', () => ({
   scheduleConceptReview: vi.fn(),
 }));
 

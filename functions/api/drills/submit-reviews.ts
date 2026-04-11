@@ -3,7 +3,7 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
-import { scheduleConceptReview } from '../intelligence/profile';
+import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { DrillSubmitReviewSchema } from './submit-review';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';

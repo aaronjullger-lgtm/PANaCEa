@@ -61,7 +61,7 @@ vi.mock('../../../lib/fsrs/eorScheduler', () => ({
   getEorRotationEnd: vi.fn(() => null),
 }));
 
-vi.mock('../intelligence/profile', () => ({
+vi.mock('../ai/learning/profile-crud', () => ({
   scheduleConceptReview: vi.fn(),
 }));
 
@@ -84,7 +84,7 @@ vi.mock('../../../lib/api/schemas/drills', () => ({
 // ── Import mocked functions ────────────────────────────────────────────────
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
-import { scheduleConceptReview } from '../intelligence/profile';
+import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';

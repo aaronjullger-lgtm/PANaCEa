@@ -18,7 +18,7 @@ import {
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
-import { calculateConceptGaps } from '../intelligence/profile';
+import { calculateConceptGaps } from '../ai/learning/profile-crud';
 import { NCCPA_2025_BLUEPRINT_PERCENT } from '../../../lib/constants/blueprint';
 import { computeCurrentStreak as calcStreak, type StreakGoalDays } from '../../../lib/streakCalc';
 

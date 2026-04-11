@@ -604,9 +604,9 @@ export function getEndpointRateLimitConfig(endpoint: string): {
   > = {
     // AI endpoints
     '/api/gemini': { limitType: 'gemini', estimatedTokens: 1000 },
-    '/api/gemini/stream': { limitType: 'gemini', estimatedTokens: 1000 },
-    '/api/vision/analyze': { limitType: 'gemini', estimatedTokens: 500 },
-    '/api/vision/analyze-3d': { limitType: 'gemini', estimatedTokens: 2000 },
+    '/api/ai/chat/stream': { limitType: 'gemini', estimatedTokens: 1000 },
+    '/api/ai/vision/analyze': { limitType: 'gemini', estimatedTokens: 500 },
+    '/api/ai/vision/analyze-3d': { limitType: 'gemini', estimatedTokens: 2000 },
     '/api/tutor/chat': { limitType: 'gemini', estimatedTokens: 500 },
 
     // Question endpoints
