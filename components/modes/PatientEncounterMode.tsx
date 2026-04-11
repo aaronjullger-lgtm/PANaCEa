@@ -666,9 +666,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           { role: 'user' as const, content: currentQuestion },
           { role: 'assistant' as const, content: response },
         ];
+        const savedSessionId = session.id;
         chatSaveQueueRef.current = chatSaveQueueRef.current
           .then(async () => {
-            const saved = await saveOSCEChat(session.id, messages, token);
+            if (!savedSessionId) return;
+            const saved = await saveOSCEChat(savedSessionId, messages, token);
             if (!saved) {
               toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
             }
@@ -1704,7 +1706,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Start Button */}
             <div className="text-center space-y-4">
               <motion.button
-                onClick={handleStartEncounter}
+                onClick={() => handleStartEncounter()}
                 disabled={isLoading}
                 className="px-10 py-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/90
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg

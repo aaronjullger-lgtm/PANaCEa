@@ -13,11 +13,20 @@
  */
 
 import { useReducer, useCallback, useMemo } from 'react';
-import type { PatientEncounterCase } from '@/types/drill-modes';
+import type {
+  PatientEncounterCase,
+  PatientPersona,
+  EncounterSession,
+} from '@/types/drill-modes';
 import type { OSCEScoreReport } from '@/types/osce-enhanced';
 import type { AVState } from '@/types/patient-av-state-machine';
 import type { PatientAVEngine } from '@/services/av/patientAVEngine';
 import type { OSCEConditionSchedule } from '@/lib/osce-spaced-repetition';
+import type { PreceptorFeedback } from '@/services/ai';
+import type { OsceGradeResult } from '@/services/domain';
+
+// Re-export canonical types for consumers that used to get them from this hook
+export type { PatientPersona, EncounterSession, PreceptorFeedback, OsceGradeResult };
 
 // ---------------------------------------------------------------------------
 // Type Aliases
@@ -29,48 +38,11 @@ export type SpanishMode = 'english' | 'spanish' | 'side-by-side';
 export type EmrTab = 'hpi' | 'pmh' | 'meds' | 'vitals' | 'labs';
 export type AIDifficulty = 'cooperative' | 'difficult' | 'very_difficult';
 
-export interface PatientPersona {
-  name: string;
-  age: number;
-  gender: string;
-  chiefComplaint: string;
-  [key: string]: unknown;
-}
-
-export interface EncounterSessionQuestion {
-  questionText: string;
-  response: string;
-  category?: string;
-  relevance?: string;
-  timestamp?: number;
-}
-
-export interface EncounterSessionScore {
-  overall: number;
-  thoroughness: number;
-  efficiency: number;
-}
-
-export interface EncounterSession {
-  id: string;
-  startTime: number;
-  questions: EncounterSessionQuestion[];
-  caseId?: string;
-  score?: EncounterSessionScore;
-}
-
 export interface DiagnosisFeedback {
   isCorrect: boolean;
   feedback: string;
-  score: number;
-}
-
-export interface PreceptorFeedback {
-  [key: string]: unknown;
-}
-
-export interface OsceGradeResult {
-  [key: string]: unknown;
+  score?: number;
+  correctDiagnosis?: string;
 }
 
 export interface OsceStats {
@@ -343,7 +315,7 @@ export function useEncounterReducer() {
           dispatch({
             type: 'UPDATE_FIELD',
             field,
-            updater: value as (prev: EncounterState[K]) => EncounterState[K],
+            updater: value as unknown as (prev: EncounterState[keyof EncounterState]) => EncounterState[keyof EncounterState],
           });
         } else {
           dispatch({ type: 'SET_FIELD', field, value });
