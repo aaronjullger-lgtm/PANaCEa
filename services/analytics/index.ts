@@ -108,6 +108,25 @@ export const answerPatternService = answerPatternServiceModule;
 export const behavioralConfidenceService = behavioralConfidenceServiceModule;
 export const learningPatternEngine = learningPatternEngineModule;
 
+// Named exports from behavioral confidence service
+export {
+  recordBehavioralConfidence,
+  inferConfidence,
+  getBehavioralRecords,
+  calculateBehavioralCalibration,
+  resetBehavioralRecords,
+  getBehavioralInsights,
+} from './behavioralConfidenceService';
+export type {
+  BehaviorSignals,
+  InferredConfidence,
+  InferredConfidenceResult,
+  BehavioralConfidenceRecord,
+} from './behavioralConfidenceService';
+
+// Named exports from answer pattern service
+export { recordAnswerPattern } from './answerPatternService';
+
 // ============================================================================
 // PREDICTIVE ANALYTICS
 // ============================================================================
@@ -135,6 +154,20 @@ export {
   processPendingSync,
   fetchLearningProfile,
 } from './sessionAnalyticsSyncService';
+
+// Named exports from session momentum service
+export {
+  recordMomentumResult,
+  calculateMomentum,
+  detectFatigueSignals,
+  resetMomentum,
+  getMomentumInsights,
+} from './sessionMomentumService';
+export type { MomentumState, MomentumLevel } from './sessionMomentumService';
+
+// Re-export pause tracking from smart-pause (lives in services/domain but
+// consumed by analytics-tracking hook alongside momentum + confidence signals).
+export { recordPauseResult } from '../domain/smartPauseService';
 
 // ============================================================================
 // DRILL ANALYTICS
