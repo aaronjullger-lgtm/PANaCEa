@@ -32,19 +32,27 @@ import { Badge } from '@/components/ui/Badge';
 import { Progress } from '@/components/ui/progress';
 
 // Inline minimal Tabs/Table stubs — this mode is not yet wired into the app
-const Tabs: React.FC<{ defaultValue?: string; className?: string; children: React.ReactNode }> = ({ className, children }) => <div className={className}>{children}</div>;
-const TabsList: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className="flex gap-1">{children}</div>;
-const TabsTrigger: React.FC<{ value: string; children: React.ReactNode }> = ({ children }) => <button>{children}</button>;
-const TabsContent: React.FC<{ value: string; children: React.ReactNode }> = ({ children }) => <div>{children}</div>;
-const Table: React.FC<{ children: React.ReactNode }> = ({ children }) => <table>{children}</table>;
-const TableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => <thead>{children}</thead>;
-const TableBody: React.FC<{ children: React.ReactNode }> = ({ children }) => <tbody>{children}</tbody>;
-const TableRow: React.FC<{ children: React.ReactNode }> = ({ children }) => <tr>{children}</tr>;
-const TableHead: React.FC<{ children: React.ReactNode }> = ({ children }) => <th>{children}</th>;
-const TableCell: React.FC<{ children: React.ReactNode }> = ({ children }) => <td>{children}</td>;
+const Tabs: React.FC<{ defaultValue?: string; value?: string; onValueChange?: (v: string) => void; className?: string; children: React.ReactNode }> = ({ className, children }) => <div className={className}>{children}</div>;
+const TabsList: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <div className={`flex gap-1 ${className ?? ''}`}>{children}</div>;
+const TabsTrigger: React.FC<{ value: string; className?: string; children: React.ReactNode }> = ({ className, children }) => <button className={className}>{children}</button>;
+const TabsContent: React.FC<{ value: string; className?: string; children: React.ReactNode }> = ({ className, children }) => <div className={className}>{children}</div>;
+const Table: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <table className={className}>{children}</table>;
+const TableHeader: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <thead className={className}>{children}</thead>;
+const TableBody: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <tbody className={className}>{children}</tbody>;
+const TableRow: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <tr className={className}>{children}</tr>;
+const TableHead: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <th className={className}>{children}</th>;
+const TableCell: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => <td className={className}>{children}</td>;
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
-import type { CorrectiveAction } from '../../../services/domain/blueprintComplianceService';
+
+// Local type — services/domain/blueprintComplianceService isn't built yet
+interface CorrectiveAction {
+  system: string;
+  action: string;
+  quantity: number;
+  priority: 'high' | 'medium' | 'low';
+  reason: string;
+}
 
 interface SystemCompliance {
   system: string;
@@ -90,7 +98,7 @@ export function BlueprintComplianceAuditorMode() {
     try {
       const token = await getToken();
       const response = await fetch(
-        `${getApiEndpoint(API_ENDPOINTS.COMPLIANCE_BLUEPRINT)}?type=${type}`,
+        `${getApiEndpoint((API_ENDPOINTS as Record<string, string>).COMPLIANCE_BLUEPRINT ?? '/api/admin/compliance/blueprint')}?type=${type}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -101,13 +109,13 @@ export function BlueprintComplianceAuditorMode() {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${await response.text()}`);
       }
-      const { data } = await response.json();
+      const { data } = (await response.json()) as { data: { medical?: ComplianceSummary; questions?: ComplianceSummary; medicalCorrectiveActions?: CorrectiveAction[]; questionsCorrectiveActions?: CorrectiveAction[] } };
       if (type === 'medical' || type === 'both') {
-        setMedicalData(data.medical);
+        setMedicalData(data.medical ?? null);
         setMedicalCorrectiveActions(data.medicalCorrectiveActions || null);
       }
       if (type === 'questions' || type === 'both') {
-        setQuestionsData(data.questions);
+        setQuestionsData(data.questions ?? null);
         setQuestionsCorrectiveActions(data.questionsCorrectiveActions || null);
       }
     } catch (err) {
@@ -249,7 +257,7 @@ export function BlueprintComplianceAuditorMode() {
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AnalysisType)} className="mb-8">
+        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as AnalysisType)} className="mb-8">
           <TabsList className="grid grid-cols-3 w-full max-w-md">
             <TabsTrigger value="medical" className="gap-2">
               <FileText className="w-4 h-4" />
@@ -458,7 +466,7 @@ export function BlueprintComplianceAuditorMode() {
                             <TableCell>{action.action}</TableCell>
                             <TableCell className="text-right">{action.quantity}</TableCell>
                             <TableCell className="text-right">
-                              <Badge variant={action.priority === 'high' ? 'destructive' : action.priority === 'medium' ? 'warning' : 'default'}>
+                              <Badge variant={action.priority === 'high' ? 'destructive' : action.priority === 'medium' ? 'secondary' : 'default'}>
                                 {action.priority}
                               </Badge>
                             </TableCell>
