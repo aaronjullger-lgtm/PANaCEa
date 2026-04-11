@@ -10,14 +10,14 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
   findSimilarCachedQuestion,
   cacheGeneratedQuestion,
-} from '../_shared/semantic-cache';
-import { trackTokenUsage } from '../_shared/tokenTracking';
-import { callGemini, GeminiModel, type GeminiError } from '../_shared/ai-service';
+} from '../../_shared/semantic-cache';
+import { trackTokenUsage } from '../../_shared/tokenTracking';
+import { callGemini, GeminiModel, type GeminiError } from '../../_shared/ai-service';
 
 const GenerateMnemonicSchema = z.object({
   concept: z.string().min(1, 'Concept is required'),
