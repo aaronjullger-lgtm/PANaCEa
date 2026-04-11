@@ -336,3 +336,4 @@ __pycache__/
 
 # Accidental redirect artifacts
 -
+.claude/skills/
