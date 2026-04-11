@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { Beaker, ChevronDown, RefreshCw } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 import type { NormalLabEntry } from '@/components/session/NormalLabsPanel';
 
 const CATEGORIES = [
@@ -51,8 +52,11 @@ export const NormalLabsLibraryView: React.FC = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as { data?: { data?: NormalLabEntry[]; labs?: NormalLabEntry[] } };
-      setLabs(json?.data?.data ?? json?.data?.labs ?? []);
+      const json = await res.json();
+      // Middleware unwraps handler's { data: X } → body is X directly,
+      // so the endpoint returns { success, data: [...] }. Use shared
+      // normalizer to stay resilient to legacy shapes.
+      setLabs(normalizeApiItems(json) as NormalLabEntry[]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load normal labs');
       setLabs([]);
