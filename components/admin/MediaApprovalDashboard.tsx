@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@clerk/clerk-react';
 import {
   X,
@@ -225,12 +226,13 @@ export function MediaApprovalDashboard() {
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setError(null)}
-              className="text-[var(--color-data-fail)] hover:opacity-80"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -247,21 +249,21 @@ export function MediaApprovalDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="outline"
               onClick={loadPendingMedia}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors"
             >
               <Upload className="w-4 h-4" />
               Upload Media
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -397,29 +399,31 @@ export function MediaApprovalDashboard() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="primary"
                       onClick={() => handleApprove(media.id)}
-                      className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1"
                     >
                       <Check className="w-4 h-4" />
                       Approve
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="danger"
                       onClick={() => {
                         setSelectedMedia(media);
                         setShowRejectionModal(true);
                       }}
-                      className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="flex-1"
                     >
                       <ThumbsDown className="w-4 h-4" />
                       Reject
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => setSelectedMedia(media)}
-                      className="bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] p-2 rounded-lg transition-colors"
                     >
                       <Eye className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -437,12 +441,12 @@ export function MediaApprovalDashboard() {
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                   Media Details
                 </h2>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setSelectedMedia(null)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                 >
                   <X className="w-6 h-6" />
-                </button>
+                </Button>
               </div>
 
               {/* Full Image */}
@@ -533,20 +537,22 @@ export function MediaApprovalDashboard() {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => handleApprove(selectedMedia.id)}
-                  className="flex-1 bg-[var(--color-data-pass)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1"
                 >
                   <Check className="w-5 h-5" />
                   Approve for Use
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
                   onClick={() => setShowRejectionModal(true)}
-                  className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1"
                 >
                   <ThumbsDown className="w-5 h-5" />
                   Reject
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -570,22 +576,24 @@ export function MediaApprovalDashboard() {
               placeholder="e.g., Poor image quality, not clinically relevant, duplicate..."
             />
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowRejectionModal(false);
                   setRejectionReason('');
                 }}
-                className="flex-1 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
                 disabled={!rejectionReason.trim() || actionLoading}
-                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1"
               >
                 {actionLoading ? 'Processing...' : 'Confirm Rejection'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -692,12 +700,12 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
             Upload Medical Image
           </h2>
-          <button
+          <Button
+            variant="ghost"
             onClick={onClose}
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {error && (
@@ -732,12 +740,13 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 <p className="text-xs text-[var(--color-text-muted)]">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setFile(null)}
-                  className="text-xs text-[var(--color-data-fail)] hover:opacity-80 mt-1"
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -821,19 +830,21 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="flex-1 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-[var(--color-text-inverse)] font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1"
           >
             {uploading ? 'Uploading...' : 'Upload'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
