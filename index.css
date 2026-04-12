@@ -185,27 +185,27 @@ a,
   border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.04),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 4%, transparent),
     0 2px 8px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-cinematic:hover {
-  border-color: rgba(59, 130, 246, 0.12);
+  border-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent),
     0 12px 32px -8px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 .dark .card-cinematic {
   border-color: rgba(71, 85, 105, 0.5);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 6%, transparent),
     0 2px 8px -2px rgba(0, 0, 0, 0.3);
 }
 .dark .card-cinematic:hover {
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
   box-shadow:
-    0 0 0 1px rgba(59, 130, 246, 0.15),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 15%, transparent),
     0 12px 32px -8px rgba(0, 0, 0, 0.4);
 }
 
@@ -251,8 +251,8 @@ a,
   transition: opacity 0.3s ease;
 }
 .card-stat:hover {
-  border-color: rgba(59, 130, 246, 0.1);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.06), 0 6px 16px -4px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 6%, transparent), 0 6px 16px -4px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 .card-stat:hover::before {
@@ -263,8 +263,8 @@ a,
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 1px 4px -1px rgba(0, 0, 0, 0.2);
 }
 .dark .card-stat:hover {
-  border-color: rgba(59, 130, 246, 0.15);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1), 0 6px 16px -4px rgba(0, 0, 0, 0.3);
+  border-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent), 0 6px 16px -4px rgba(0, 0, 0, 0.3);
 }
 
 /* Premium header bar - glass with depth */
@@ -307,16 +307,16 @@ a,
   transition: background 0.2s ease;
 }
 .nav-item-glow:hover::after {
-  background: rgba(59, 130, 246, 0.04);
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
 }
 .dark .nav-item-glow:hover::after {
-  background: rgba(59, 130, 246, 0.08);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 .nav-item-glow[data-active='true']::after {
-  background: rgba(59, 130, 246, 0.08);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 .dark .nav-item-glow[data-active='true']::after {
-  background: rgba(59, 130, 246, 0.12);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 /* Quick start card - interactive with subtle gradient border */
@@ -331,14 +331,14 @@ a,
   position: relative;
 }
 .card-quick-start:hover {
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
   background: var(--color-bg-tertiary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.08);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 .dark .card-quick-start:hover {
-  border-color: rgba(59, 130, 246, 0.25);
-  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.12);
+  border-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 /* Button cinematic - premium CTA button */
@@ -838,7 +838,7 @@ a,
   /* Subtle borders with glow potential */
   --clinical-border-primary: rgba(71, 85, 105, 0.5); /* slate-600/50 */
   --clinical-border-secondary: rgba(100, 116, 139, 0.3); /* slate-500/30 */
-  --clinical-border-accent: rgba(59, 130, 246, 0.5); /* blue-500/50 */
+  --clinical-border-accent: color-mix(in srgb, var(--color-accent) 50%, transparent); /* blue-500/50 */
 
   /* System-specific accent backgrounds (for badges) */
   --clinical-cv-bg: rgba(127, 29, 29, 0.4); /* red-950/40 */
@@ -856,8 +856,8 @@ a,
   --clinical-yield-low: rgba(30, 41, 59, 0.5); /* slate-800/50 */
 
   /* Hover and interaction effects */
-  --clinical-glow-blue: rgba(59, 130, 246, 0.2); /* blue-500/20 */
-  --clinical-glow-accent: rgba(59, 130, 246, 0.3); /* blue-500/30 */
+  --clinical-glow-blue: color-mix(in srgb, var(--color-accent) 20%, transparent); /* blue-500/20 */
+  --clinical-glow-accent: color-mix(in srgb, var(--color-accent) 30%, transparent); /* blue-500/30 */
   --clinical-shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 
   /* ===== SPACING SYSTEM VARIABLES ===== */
