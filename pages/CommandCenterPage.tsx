@@ -59,7 +59,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
           animate={{ y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
+          <h1 className="text-display-sm font-bold text-[var(--color-text-primary)]" style={{ letterSpacing: '-0.025em' }}>
             Training Command Center
           </h1>
           <p className="text-[var(--color-text-muted)] mt-1">

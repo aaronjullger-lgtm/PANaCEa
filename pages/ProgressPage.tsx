@@ -45,10 +45,10 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <div className="mb-6 space-y-3">
         <BackLink to={ROUTES.STUDY} />
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h1 className="text-display-sm font-bold text-[var(--color-text-primary)] mb-2" style={{ letterSpacing: '-0.025em' }}>
             Progress & Analytics
           </h1>
-          <p className="text-[var(--color-text-muted)]">
+          <p className="text-body-lg text-[var(--color-text-muted)]">
             Track your learning journey and identify areas for improvement
           </p>
         </div>
@@ -57,7 +57,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       {/* Research-Backed User-Friendly Stats */}
       <section className="mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="text-h2 font-bold text-[var(--color-text-primary)] flex items-center gap-2" style={{ letterSpacing: '-0.015em' }}>
             <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
             Your Learning Analytics
           </h3>
@@ -85,7 +85,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       {/* Learning Profile */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="text-h2 font-bold text-[var(--color-text-primary)] flex items-center gap-2" style={{ letterSpacing: '-0.015em' }}>
             <User className="w-5 h-5 text-[var(--color-text-muted)]" />
             Detailed Learning Profile
           </h3>

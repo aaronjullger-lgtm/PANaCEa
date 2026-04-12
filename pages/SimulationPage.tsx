@@ -203,7 +203,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <Brain className="w-10 h-10 text-[var(--color-accent)]" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
+              <h1 className="text-display-sm font-bold text-[var(--color-text-primary)]" style={{ letterSpacing: '-0.025em' }}>
                 {examLabel === 'PANRE' ? 'Knowledge Maintenance' : `Core ${examLabel} Simulation`}
               </h1>
               <p className="text-[var(--color-text-muted)] mt-1">
@@ -222,42 +222,42 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           transition={{ delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="card-stat p-4">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-[var(--color-data-pass)]" />
-              <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
+              <span className="text-label text-[var(--color-text-muted)]">Accuracy</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <div className="kpi-metric text-[var(--color-text-primary)]">
               {stats.accuracy}%
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="card-stat p-4">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4 text-[var(--color-accent)]" />
-              <span className="text-sm text-[var(--color-text-muted)]">Today</span>
+              <span className="text-label text-[var(--color-text-muted)]">Today</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <div className="kpi-metric text-[var(--color-text-primary)]">
               {stats.todayQuestions}
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="card-stat p-4">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-[var(--color-data-provisional)]" />
-              <span className="text-sm text-[var(--color-text-muted)]">Growth Areas</span>
+              <span className="text-label text-[var(--color-text-muted)]">Growth Areas</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <div className="kpi-metric text-[var(--color-text-primary)]">
               {stats.growthAreasCount}
             </div>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
+          <div className="card-stat p-4">
             <div className="flex items-center gap-2 mb-1">
               <Flag className="w-4 h-4 text-[var(--color-data-fail)]" />
-              <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
+              <span className="text-label text-[var(--color-text-muted)]">Flagged</span>
             </div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            <div className="kpi-metric text-[var(--color-text-primary)]">
               {stats.flaggedCount}
             </div>
           </div>

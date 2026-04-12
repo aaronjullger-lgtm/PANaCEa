@@ -89,7 +89,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
           animate={{ y: 0 }}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
         >
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">
+          <h1 className="text-h2 font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-2" style={{ letterSpacing: '-0.015em' }}>
             <Video className="w-6 h-6" />
             Technique Check
           </h1>

@@ -81,7 +81,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
           animate={{ y: 0 }}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
         >
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h1 className="text-h2 font-bold text-[var(--color-text-primary)] mb-2" style={{ letterSpacing: '-0.015em' }}>
             Lecture Converter
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mb-6">

@@ -106,7 +106,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         <BackLink to={ROUTES.STUDY} className="mb-6" />
 
         <motion.div initial={{ y: 10 }} animate={{ y: 0 }} className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h1 className="text-display-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2" style={{ letterSpacing: '-0.025em' }}>
             <ImageIcon className="w-8 h-8" />
             Anatomy Visualizer
           </h1>
