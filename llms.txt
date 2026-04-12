@@ -1,0 +1,41 @@
+# PANaCEa — LLM Context File
+
+> AI-optimized project description for agent discoverability
+
+## Purpose
+PA student cognitive prosthetic — not flashcards, a teaching engine. Evidence-based learning platform with three competitive moats: content-aware intelligence, implicit mastery inference (Ghost Grader), adaptive pedagogical depth.
+
+## Stack
+- React 19 + TypeScript strict + Vite 6 + Tailwind CSS
+- Cloudflare Edge (Hono) + Prisma 7 + Supabase Postgres
+- Gemini AI (2.5-pro, 2.5-flash) + Clerk auth
+- Vitest 4.1 testing, 2700+ tests
+
+## Key Paths
+- `components/session/QuizView.tsx` — Main study session (1900 lines)
+- `components/dashboard/DashboardPage.tsx` — Home dashboard (847 lines)
+- `components/landing/` — Landing page (5 modular components)
+- `functions/api/` — Edge API (461 functions)
+- `lib/scoring/` — FSRS v6 + scoring engine
+- `services/` — Domain services (169 files)
+- `prisma/schema.prisma` — Data models (165 models)
+
+## Commands
+- `npm run dev` — Vite dev server
+- `npm run build` — Production build (~16s)
+- `npx vitest run --no-file-parallelism` — Test suite (avoids OOM)
+- `npx wrangler dev` — Cloudflare Workers local
+- `npx wrangler deploy` — Deploy to production
+
+## Architecture Rules
+- Binary rating ONLY (Again/Good) — never Hard/Easy or self-rated difficulty
+- Only review_type 'real' with MAIN/DRILL sessions update FSRS
+- Par time is per-question-type, not global
+- Never process.env in Edge — use context.env.*
+- Never Prisma in frontend, never skip safePrismaDisconnect
+
+## Status
+- Production build: PASSING
+- Edge migration: ~100% complete
+- Landing page: Complete (cinematic, modular)
+- In-app UI overhaul: Phase 3 in progress
