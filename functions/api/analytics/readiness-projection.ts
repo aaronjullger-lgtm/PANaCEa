@@ -19,7 +19,7 @@ import type { CloudflareEnv } from '../_shared/types';
 import {
   computeExamReadiness,
   type CardState,
-} from '../../lib/services/readinessProjectionService';
+} from '../../../lib/services/readinessProjectionService';
 
 const QuerySchema = z.object({
   examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

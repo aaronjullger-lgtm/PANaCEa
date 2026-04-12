@@ -22,7 +22,7 @@ import {
   retrieveForQuestionGeneration,
   formatContextForPrompt,
   assessRetrievalQuality,
-} from '../../lib/services/ragContextService';
+} from '../../../lib/services/ragContextService';
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
 

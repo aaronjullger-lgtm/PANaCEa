@@ -20,7 +20,7 @@ import {
   MIN_OBSERVATIONS,
   type AttemptRecord,
   type ItemCalibration,
-} from '../../lib/services/itemCalibrationService';
+} from '../../../lib/services/itemCalibrationService';
 
 const BodySchema = z
   .object({

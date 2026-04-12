@@ -28,7 +28,7 @@ import {
   retrieveForExplanation,
   formatContextForPrompt,
   assessRetrievalQuality,
-} from '../../lib/services/ragContextService';
+} from '../../../lib/services/ragContextService';
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
 const CACHE_TTL_SECONDS = 86400; // 24 hours
