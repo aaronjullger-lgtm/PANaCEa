@@ -36,7 +36,8 @@ export type WidgetId =
   | 'circadian_insight'
   | 'confusion_pairs'
   | 'overlearning_alert'
-  | 'wellness_status';
+  | 'wellness_status'
+  | 'readiness_projection';
 
 export interface DashboardConfig {
   stage: LearnerStage;

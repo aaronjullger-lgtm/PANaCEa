@@ -29,6 +29,7 @@ import AlgorithmStatusWidget from './AlgorithmStatusWidget';
 import { ClinicalSkeleton } from '@/components/loading';
 import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
+import { ReadinessProjectionWidget } from './ReadinessProjectionWidget';
 import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
 import CalibrationChart from './CalibrationChart';
 import { MetacognitiveMirror } from './metacognitive';
@@ -716,6 +717,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   />
                 )}
               </div>
+
+              {/* FSRS-Based Readiness Projection */}
+              <ReadinessProjectionWidget
+                examDate={userProfile?.eorTestDate ?? undefined}
+              />
 
               {/* Daily Practice */}
               <SectionHeader
