@@ -338,3 +338,5 @@ __pycache__/
 # Accidental redirect artifacts
 -
 .claude/skills/
+.aidesigner/*
+!.aidesigner/.gitkeep
