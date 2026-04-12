@@ -15,7 +15,6 @@ export type { AppBrandSize, AppBrandProps } from './AppBrand';
 export { PageContainer } from './PageContainer';
 export type { PageContainerMaxWidth, PageContainerProps } from './PageContainer';
 export { SiteFooter } from './SiteFooter';
-export type { SiteFooterProps } from './SiteFooter';
 export { SectorGrid } from './SectorGrid';
 export type { SectorItem } from './SectorGrid';
 export { default as DrillShell } from '../drill/DrillShell';
