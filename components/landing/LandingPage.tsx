@@ -10,6 +10,7 @@ import { HeroSection } from './HeroSection';
 import { FeaturesGrid } from './FeaturesGrid';
 import { HowItWorks } from './HowItWorks';
 import { FinalCTA } from './FinalCTA';
+import { SocialProof } from './SocialProof';
 
 /**
  * Landing Page — Cinematic Rebuild
@@ -92,6 +93,7 @@ export function LandingPage() {
       <main id="landing-main">
         <HeroSection onSignUp={openSignUp} onSignIn={openSignIn} prefersReducedMotion={prefersReducedMotion} />
         <FeaturesGrid prefersReducedMotion={prefersReducedMotion} />
+        <SocialProof prefersReducedMotion={prefersReducedMotion} />
         <HowItWorks onSignUp={openSignUp} prefersReducedMotion={prefersReducedMotion} />
         <FinalCTA onSignUp={openSignUp} onSignIn={openSignIn} prefersReducedMotion={prefersReducedMotion} />
       </main>
