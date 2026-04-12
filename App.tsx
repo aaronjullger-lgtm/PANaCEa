@@ -15,7 +15,7 @@ import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { useEnhancedAuth } from './hooks/useEnhancedAuth';
 import { Loader, LoadingProgress } from './components/loading';
 import { useTheme } from './hooks/useTheme';
-import { LandingPage } from './pages/LandingPage';
+import { LandingPage } from './components/landing/LandingPage';
 import { getQuestionBatch } from './services/questionService';
 import { initializeSession, fetchSessionQuestions, prefetchQuestions } from './services/core';
 import { inferTaskType } from './lib/taskTypes';
