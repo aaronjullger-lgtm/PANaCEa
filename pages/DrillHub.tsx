@@ -191,16 +191,16 @@ export default function DrillHub(): JSX.Element {
         <motion.div
           initial={{ y: -20 }}
           animate={{ y: 0 }}
-          className="w-full text-center mb-12"
+          className="w-full text-center mb-14"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Zap className="w-12 h-12 text-[var(--color-data-provisional)]" />
-            <h1 className="text-5xl font-bold text-[var(--color-text-primary)]">Drill & Kill</h1>
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <Zap className="w-10 h-10 text-[var(--color-data-provisional)]" />
+            <h1 className="text-display-sm font-bold text-[var(--color-text-primary)]" style={{ letterSpacing: '-0.025em' }}>Drill & Kill</h1>
           </div>
-          <p className="text-xl text-[var(--color-text-secondary)]">
+          <p className="text-body-lg text-[var(--color-text-secondary)]">
             High-intensity active recall training modes
           </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-2">
+          <p className="text-body-sm text-[var(--color-text-muted)] mt-2">
             Active recall across all training modes
           </p>
         </motion.div>
@@ -213,43 +213,43 @@ export default function DrillHub(): JSX.Element {
             transition={{ delay: 0.1 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
           >
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="card-stat p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-6 h-6 text-[var(--color-data-provisional)]" />
-                <span className="text-[var(--color-text-muted)] text-sm">Total Sessions</span>
+                <span className="text-label uppercase text-[var(--color-text-muted)]">Total Sessions</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
+              <p className="kpi-metric text-[var(--color-text-primary)]">
                 {overview.totalSessions}
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="card-stat p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Target className="w-6 h-6 text-[var(--color-data-pass)]" />
-                <span className="text-[var(--color-text-muted)] text-sm">Overall Accuracy</span>
+                <span className="text-label uppercase text-[var(--color-text-muted)]">Overall Accuracy</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
+              <p className="kpi-metric text-[var(--color-text-primary)]">
                 {(overview.overallAccuracy * 100).toFixed(1)}%
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="card-stat p-6">
               <div className="flex items-center gap-3 mb-2">
                 <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
-                <span className="text-[var(--color-text-muted)] text-sm">Current Streak</span>
+                <span className="text-label uppercase text-[var(--color-text-muted)]">Current Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
-                {overview.currentStreak} days
+              <p className="kpi-metric text-[var(--color-text-primary)]">
+                {overview.currentStreak} <span className="text-body-sm font-normal text-[var(--color-text-muted)]">days</span>
               </p>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
+            <div className="card-stat p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Award className="w-6 h-6 text-[var(--color-data-provisional)]" />
-                <span className="text-[var(--color-text-muted)] text-sm">Best Streak</span>
+                <span className="text-label uppercase text-[var(--color-text-muted)]">Best Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
-                {overview.bestStreak} days
+              <p className="kpi-metric text-[var(--color-text-primary)]">
+                {overview.bestStreak} <span className="text-body-sm font-normal text-[var(--color-text-muted)]">days</span>
               </p>
             </div>
           </motion.div>
@@ -258,11 +258,11 @@ export default function DrillHub(): JSX.Element {
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-12 p-8 text-center bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+            className="mb-12 p-10 text-center card-cinematic"
           >
             <Trophy className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" />
             <p className="text-[var(--color-text-secondary)] font-medium mb-1">No drill sessions yet</p>
-            <p className="text-sm text-[var(--color-text-muted)]">
+            <p className="text-body-sm text-[var(--color-text-muted)]">
               Complete your first drill below to start tracking your stats here.
             </p>
           </motion.div>
@@ -367,11 +367,11 @@ export default function DrillHub(): JSX.Element {
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[var(--color-bg-secondary)] rounded-xl p-8 border border-[var(--color-border)]"
+            className="card-cinematic p-8"
           >
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-h2 font-bold text-[var(--color-text-primary)]" style={{ letterSpacing: '-0.015em' }}>
                 Recent Activity
               </h2>
             </div>
@@ -380,7 +380,7 @@ export default function DrillHub(): JSX.Element {
               {overview.recentActivity.slice(0, 5).map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 bg-[var(--color-bg-tertiary)] rounded-lg"
+                  className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-bg-tertiary)]/60"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-2 h-2 rounded-full bg-[var(--color-accent)]" />
@@ -406,7 +406,7 @@ export default function DrillHub(): JSX.Element {
             </div>
           </motion.div>
         ) : overview ? (
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] text-center mb-6">
+          <div className="card-cinematic p-6 text-center mb-6">
             <BarChart3 className="w-8 h-8 text-[var(--color-text-muted)] mx-auto mb-2" />
             <p className="text-sm text-[var(--color-text-muted)]">
               Your recent drill activity will appear here after your first session.
@@ -419,12 +419,12 @@ export default function DrillHub(): JSX.Element {
           initial={false}
           animate={{}}
           transition={{ delay: 0.7 }}
-          className="mt-12 p-6 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-xl"
+          className="mt-12 p-6 bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 rounded-2xl"
         >
           <div className="flex items-start gap-3">
             <Brain className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-1" />
             <div>
-              <h3 className="text-[var(--color-text-primary)] font-bold mb-2">
+              <h3 className="text-h3 font-semibold text-[var(--color-text-primary)] mb-2">
                 How Drill Modes Work
               </h3>
               <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
