@@ -252,7 +252,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#10b981" />
                   <stop offset="50%" stopColor="var(--color-accent)" />
-                  <stop offset="100%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="var(--color-data-fail)" />
                 </linearGradient>
                 <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.5" />

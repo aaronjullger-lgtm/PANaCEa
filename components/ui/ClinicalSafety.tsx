@@ -29,7 +29,7 @@ import { AlertTriangle, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 
 const FONT_BODY = "'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif";
 
-const CRITICAL_BORDER = '#ef4444';
+const CRITICAL_BORDER = 'var(--color-data-fail)';
 const CRITICAL_LABEL_COLOR = '#dc2626';
 
 // ── Tier 1: Critical (safety-critical content) ─────────────────────────────

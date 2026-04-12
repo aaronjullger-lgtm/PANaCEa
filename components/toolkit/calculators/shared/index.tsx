@@ -75,7 +75,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
             aria-describedby={hasError ? `${label}-error` : undefined}
             className={`w-full px-4 py-3 bg-[var(--color-bg-secondary)] border rounded-lg text-[var(--color-text-primary)] text-lg font-medium placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
               hasError
-                ? 'border-[#ef4444] focus:ring-[#ef4444]/30'
+                ? 'border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]/30'
                 : 'border-[var(--color-border)] focus:ring-[var(--color-accent)]'
             }`}
           />
@@ -103,7 +103,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
 
       {/* Validation error message */}
       {hasError && (
-        <p id={`${label}-error`} role="alert" className="flex items-center gap-1.5 text-xs text-[#ef4444] font-medium">
+        <p id={`${label}-error`} role="alert" className="flex items-center gap-1.5 text-xs text-[var(--color-data-fail)] font-medium">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
           {validation}
         </p>

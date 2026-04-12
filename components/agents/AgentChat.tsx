@@ -590,7 +590,7 @@ const TracePart: React.FC<{ part: AgentPart }> = ({ part }) => {
       className={`rounded border p-2 font-mono text-[11px] ${
         part.ok
           ? 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]'
-          : 'border-[#ef4444] bg-[#fef2f2] text-[#991b1b]'
+          : 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]'
       }`}
     >
       <div className="mb-1 flex items-center justify-between gap-2 font-semibold">

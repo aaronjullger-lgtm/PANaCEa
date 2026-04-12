@@ -281,7 +281,7 @@ export default function GenericReferenceView<T>({
   if (error) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
-        <AlertCircle size={32} style={{ color: '#ef4444', marginBottom: 12 }} />
+        <AlertCircle size={32} style={{ color: 'var(--color-data-fail)', marginBottom: 12 }} />
         <p style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>Failed to load {config.entityName.toLowerCase()}</p>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{error}</p>
       </div>
