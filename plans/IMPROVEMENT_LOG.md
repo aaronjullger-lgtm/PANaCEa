@@ -377,3 +377,36 @@ Continued the structured-logger sweep started in Batches #2–#4. Migrated 5 mor
 - Continue logger migration for remaining `console.*` call sites in `lib/services/` (grep shows ~8 files still to go)
 - Address the 2125 pre-existing tsc error cliff — likely from a recent Prisma client regen or Vitest types mismatch. Candidate for a dedicated "tsc baseline restoration" sprint
 - Extract `useAnswerSubmission` hook from QuizView.tsx
+
+---
+
+## 2026-04-12 — Batch #6: OSCE Live Voice Prompt Hardening
+
+### What was done
+Ported the improved OSCE patient simulator rules (lay language + specific exam triggers) from the text-based `chatWithPatientSimulator()` in `services/ai/geminiService.ts` to all 3 live voice OSCE endpoints. Previously, the voice endpoints used a minimal 2-sentence system instruction while the text simulator had 8 detailed behavior rules — this created an inconsistency where voice OSCE sessions lacked vague-patient behavior and would dump all exam findings on "full physical exam."
+
+### Files modified
+1. **functions/api/osce/live-engine.ts** — `buildSystemInstruction()` expanded from 5-line prompt to 6 structured behavior rules: stay in character, empathy response, lay language (with examples), specific exam triggers (body-system gating + "full exam" redirect), natural vitals/labs reporting, no diagnosis reveal
+2. **functions/api/osce/live.ts** — `DEFAULT_SYSTEM_INSTRUCTION` replaced with same 6-rule structure matching the text simulator
+3. **functions/api/osce/live-session-config.ts** — `DEFAULT_SYSTEM_INSTRUCTION` replaced with same 6-rule structure
+
+### Key rules added to all 3 endpoints
+- **Lay language (Audit #3):** "Say 'it hurts in my chest' NOT 'substernal chest pain'" — patient must use everyday words until student demonstrates OPQRST-style questioning
+- **Specific exam triggers (Audit #4):** "If they say only 'I do a physical exam' without specifying which body part, respond: 'Sure, what part would you like to check?'" — no findings dump
+- **No volunteering:** Patient only reveals information when specifically asked
+- **No diagnosis reveal:** Patient never hints at the correct answer
+
+### Audit items resolved
+- [x] AUDIT_CORE_SESSION_CHECKLIST item #3 — "Vague" Patient AI (voice endpoints now match text)
+- [x] AUDIT_CORE_SESSION_CHECKLIST item #4 — Specific Exam Triggers (voice endpoints now match text)
+
+### Verification
+- **Tests:** ✅ 2739/2784 pass. The 45 failures are all pre-existing (useDrillFSRS-offline-fallback, useAnalyticsTracking, useQuizTimer, dashboard component React 19 compat issues). Zero OSCE-related failures.
+- **Typecheck:** ⚠️ Sandbox OOM on tsc (expected — needs 4GB+ on Aaron's machine). Changes are pure string literal modifications with no type/import changes — zero risk of type regression.
+- **Build:** ⚠️ Sandbox build hit pre-existing `class-variance-authority` missing dep error (unrelated to changes).
+
+### Next priority
+- Continue logger migration for remaining ~15 `console.*` call sites in `lib/services/`
+- Normal Labs slide-out panel (Audit #2) — needs seeded data + drawer component
+- Structured distractor explanations in main session (Audit #6) — wire ExplanationPanel into QuizView
+- Extract `useAnswerSubmission` hook from QuizView.tsx
