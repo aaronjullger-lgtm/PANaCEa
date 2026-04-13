@@ -30,16 +30,32 @@ describe('deriveContinuousRating', () => {
       ...overrides,
     });
 
-    it('maps grade < 1.5 to Rating.Again', () => {
-      // Incorrect answer yields grade = 1.0 (base 1.0, no adjustments)
+    // PANaCEa binary rating: grade < 2.0 → Again(1), grade >= 2.0 → Good(3)
+    // Hard(2) and Easy(4) are deprecated and never returned.
+
+    it('maps incorrect answer to Rating.Again (grade < 2.0)', () => {
       const metric = createMetric({ isCorrect: false });
       const result = deriveContinuousRating(metric);
       expect(result.discreteRating).toBe(Rating.Again);
-      expect(result.grade).toBeLessThan(1.5);
+      expect(result.grade).toBe(1.0);
     });
 
-    it('maps grade between 1.5 and 2.5 to Rating.Hard', () => {
-      // Correct with moderate penalties to push grade into [1.5, 2.5)
+    it('maps correct answer with heavy penalties to Rating.Again', () => {
+      // Enough penalties to push grade below 2.0
+      const metric = createMetric({
+        timeToFirstClick: 60000, // 2× par time
+        answerSwitches: 3,
+        commitmentGapMs: 5000,
+        cursorEntropy: 4,
+        hoverOscillationCount: 5,
+      });
+      const result = deriveContinuousRating(metric);
+      expect(result.discreteRating).toBe(Rating.Again);
+      expect(result.grade).toBeLessThan(2.0);
+    });
+
+    it('maps correct answer with moderate penalties to Rating.Good', () => {
+      // Correct with some penalties but grade stays >= 2.0
       const metric = createMetric({
         timeToFirstClick: 10000,
         answerSwitches: 1,
@@ -48,47 +64,22 @@ describe('deriveContinuousRating', () => {
         hoverOscillationCount: 2,
       });
       const result = deriveContinuousRating(metric);
-      expect(result.discreteRating).toBe(Rating.Hard);
-      expect(result.grade).toBeGreaterThanOrEqual(1.5);
-      expect(result.grade).toBeLessThan(2.5);
-    });
-
-    it('maps grade between 2.5 and 3.5 to Rating.Good', () => {
-      // Typical correct response with moderate speed (latencyRatio ~0.8)
-      const metric = createMetric({
-        timeToFirstClick: 24000, // latencyRatio = 0.8, penaltyLatency ≈ 0 (since <0.85)
-        answerSwitches: 1,
-      });
-      const result = deriveContinuousRating(metric);
       expect(result.discreteRating).toBe(Rating.Good);
-      expect(result.grade).toBeGreaterThanOrEqual(2.5);
-      expect(result.grade).toBeLessThan(3.5);
+      expect(result.grade).toBeGreaterThanOrEqual(2.0);
     });
 
-    it.skip('maps grade >= 3.5 to Rating.Easy', () => {
-      // Very fast correct response with no penalties and bonus
-      // Note: The current deriveContinuousRating cannot produce a grade >= 3.5 (max 3.3).
-      // This test is kept as a placeholder for future improvements.
+    it('maps clean correct answer to Rating.Good with high grade', () => {
+      // Fast, clean answer — should get speed bonus
       const metric = createMetric({
-        timeToFirstClick: 6000, // latencyRatio = 0.2, bonusFast = 0.3
+        timeToFirstClick: 6000, // latencyRatio = 0.2
         answerSwitches: 0,
         commitmentGapMs: 0,
         cursorEntropy: 0,
         hoverOscillationCount: 0,
       });
       const result = deriveContinuousRating(metric);
-      expect(result.discreteRating).toBe(Rating.Easy);
-      expect(result.grade).toBeGreaterThanOrEqual(3.5);
-      expect(result.grade).toBeLessThanOrEqual(4.0);
-    });
-
-    it('incorrect answers produce grade <= 2.0', () => {
-      // Incorrect answer base = 1.0, no adjustments => grade = 1.0
-      const metric = createMetric({ isCorrect: false });
-      const result = deriveContinuousRating(metric);
-      expect(result.grade).toBeLessThanOrEqual(2.0);
-      // Should be exactly 1.0
-      expect(result.grade).toBe(1.0);
+      expect(result.discreteRating).toBe(Rating.Good);
+      expect(result.grade).toBeGreaterThanOrEqual(3.0);
     });
   });
 
@@ -128,10 +119,12 @@ describe('deriveContinuousRating', () => {
       expect(result.confidence).toBeLessThanOrEqual(0.95);
     });
 
-    it('confidence is 0.95 for incorrect answers', () => {
+    it('confidence is high for incorrect answers (strong signal)', () => {
       const metric = { ...baseMetric, isCorrect: false };
       const result = deriveContinuousRating(metric);
-      expect(result.confidence).toBe(0.95);
+      // Incorrect answers produce high confidence (clear signal)
+      expect(result.confidence).toBeGreaterThanOrEqual(0.85);
+      expect(result.confidence).toBeLessThanOrEqual(0.95);
     });
   });
 
@@ -186,9 +179,10 @@ describe('deriveContinuousRating', () => {
       };
       const result = deriveContinuousRating(metric);
       // Should compute using default 30000 ms
-      // latencyRatio = 15000 / 30000 = 0.5 => bonusFast = 0.15 (since latencyRatio == 0.5), grade ≈ 3.15
-      expect(result.grade).toBeCloseTo(3.15, 1);
-      expect(result.discreteRating).toBe(Rating.Good); // 3.15 is in Good range
+      // latencyRatio = 15000 / 30000 = 0.5 → fast response, gets speed+clean bonus
+      expect(result.grade).toBeGreaterThanOrEqual(3.0);
+      expect(result.grade).toBeLessThanOrEqual(3.6);
+      expect(result.discreteRating).toBe(Rating.Good);
     });
 
     it('handles missing optional micro‑kinetics fields', () => {

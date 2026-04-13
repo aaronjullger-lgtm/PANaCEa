@@ -36,6 +36,37 @@ vi.mock('@/lib/services/sync/syncManager', () => ({
   },
 }));
 
+// Mock SDK client
+const mockSubmitReview = vi.fn();
+vi.mock('@/lib/sdk', () => {
+  class ApiError extends Error {
+    public code: string;
+    public userMessage: string;
+    constructor(code: string, message: string, userMessage?: string) {
+      super(message);
+      this.code = code;
+      this.userMessage = userMessage ?? message;
+    }
+  }
+  return {
+    createApiClient: vi.fn(() => ({})),
+    createDrillsClient: vi.fn(() => ({
+      submitReview: (...args: any[]) => mockSubmitReview(...args),
+    })),
+    ApiError,
+  };
+});
+
+// Mock toast
+vi.mock('@/lib/toast', () => ({
+  toast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+  },
+}));
+
 // Mock fetch globally
 global.fetch = vi.fn();
 

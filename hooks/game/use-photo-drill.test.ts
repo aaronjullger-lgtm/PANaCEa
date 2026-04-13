@@ -53,8 +53,14 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.streak).toBe(0);
     });
 
-    it('should load MOCK_CASES by default when no session started', () => {
+    it('should start with empty cases when VITE_USE_MOCK is not set', () => {
       const { result } = renderHook(() => usePhotoDrill());
+
+      expect(result.current.totalCases).toBe(0);
+    });
+
+    it('should load MOCK_CASES when passed explicitly', () => {
+      const { result } = renderHook(() => usePhotoDrill(MOCK_CASES));
 
       expect(result.current.totalCases).toBe(MOCK_CASES.length);
       expect(result.current.currentCase).toEqual(MOCK_CASES[0]);

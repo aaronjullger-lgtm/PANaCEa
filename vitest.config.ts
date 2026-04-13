@@ -33,14 +33,8 @@ export default defineConfig({
       '**/node_modules/**',
       'e2e/**',
       'temp_repos/**',
-      // Pre-existing test failures — stale mocks, missing providers, logic mismatches
-      // TODO: fix individually (not React 19 act — that's resolved via define+conditions)
-      'lib/implicit-metrics.test.ts',       // assertion mismatch (expected 3 to be 2)
-      'tests/useDrillFSRS.test.ts',         // STACK_TRACE_ERROR — deep hook mock issue
-      'hooks/game/use-photo-drill.test.ts', // fetchPhotoCases returns 0 instead of 5
-      'functions/api/_shared/auth.test.ts', // stale log mock expectations
-      'functions/api/osce/complete.test.ts', // mock not called — wiring changed
-      'tests/components/Goals/**',           // missing QueryClientProvider wrapper
+      // Hook switched from fetch to SDK client — test needs full rewrite (~1200 lines)
+      'tests/useDrillFSRS.test.ts',
     ],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,

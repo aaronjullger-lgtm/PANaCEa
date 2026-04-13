@@ -6,10 +6,6 @@ const mockPrisma = {
   patientEncounterSession: {
     findUnique: vi.fn(),
     update: vi.fn(),
-    updateMany: vi.fn(),
-  },
-  caseFile: {
-    create: vi.fn(),
   },
 };
 
@@ -67,11 +63,10 @@ describe('POST /api/osce/complete', () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true, alreadyCompleted: true });
-    expect(mockPrisma.patientEncounterSession.updateMany).not.toHaveBeenCalled();
-    expect(mockPrisma.caseFile.create).not.toHaveBeenCalled();
+    expect(mockPrisma.patientEncounterSession.update).not.toHaveBeenCalled();
   });
 
-  it('creates CaseFile when analytics payload is present', async () => {
+  it('completes session and persists osceTelemetry', async () => {
     mockPrisma.patientEncounterSession.findUnique.mockResolvedValue({ status: 'active' });
     mockPrisma.patientEncounterSession.update.mockResolvedValue({ id: 'session_2', status: 'completed' });
 
@@ -82,9 +77,7 @@ describe('POST /api/osce/complete', () => {
           sessionId: 'session_2',
           diagnosis: 'Acute coronary syndrome',
           treatmentPlan: 'Admit, aspirin, telemetry',
-          soapComparison: { subjective: 's' },
-          timingAnalytics: { totalSeconds: 180 },
-          infographics: ['https://cdn.example.com/infographic.svg'],
+          osceTelemetry: { totalTimeMs: 180000 },
         },
       },
     } as any);
@@ -92,22 +85,25 @@ describe('POST /api/osce/complete', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true });
     expect(mockPrisma.patientEncounterSession.update).toHaveBeenCalledTimes(1);
-    expect(mockPrisma.caseFile.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.patientEncounterSession.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: 'completed',
+          diagnosis: 'Acute coronary syndrome',
+          osceTelemetry: { totalTimeMs: 180000 },
+        }),
+      })
+    );
   });
 
-  it('does not fail completion if CaseFile create throws', async () => {
+  it('succeeds without optional analytics fields', async () => {
     mockPrisma.patientEncounterSession.findUnique.mockResolvedValue({ status: 'active' });
     mockPrisma.patientEncounterSession.update.mockResolvedValue({ id: 'session_3', status: 'completed' });
-    mockPrisma.caseFile.create.mockRejectedValue(new Error('casefile write failed'));
 
     const response = await onRequestPost({
       ...baseContext,
       validated: {
-        body: {
-          sessionId: 'session_3',
-          soapComparison: { note: 'x' },
-          timingAnalytics: { totalSeconds: 120 },
-        },
+        body: { sessionId: 'session_3' },
       },
     } as any);
 
