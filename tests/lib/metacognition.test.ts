@@ -123,12 +123,15 @@ describe('shouldShowMetacognition', () => {
   });
 
   it('does not trigger confusion pair for unrelated conditions', () => {
+    // Mock Math.random to return > 0.1 so random sampling trigger doesn't fire
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const result = shouldShowMetacognition(makeParams({
       conditionName: 'Gout',
       subcategory: 'unique-subcat',
     }));
-    // Not consecutive (1st miss), not a confusion pair, yield=2 (not high), random bypassed by seed
+    // Not consecutive (1st miss), not a confusion pair, yield=2 (not high), random mocked out
     expect(result.shouldShow).toBe(false);
+    randomSpy.mockRestore();
   });
 
   // ── Trigger 3: High-yield miss ──
