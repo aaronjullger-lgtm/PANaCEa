@@ -1,7 +1,6 @@
 /**
- * SiteFooter – Professional multi-column footer.
- * 4-column layout: Product, Resources, Company, Legal.
- * Dark background with subtle divider.
+ * SiteFooter – Cinematic multi-column footer.
+ * Glassmorphism treatment with gold accents, gradient fade-in from content.
  */
 
 import React from 'react';
@@ -39,8 +38,7 @@ export const SiteFooter: React.FC = () => {
   return (
     <footer
       style={{
-        backgroundColor: '#0a0e1a',
-        borderTop: '1px solid rgba(148, 163, 184, 0.06)',
+        background: 'linear-gradient(180deg, rgba(10, 14, 26, 0) 0%, rgba(10, 14, 26, 1) 12%)',
       }}
     >
       {/* Main footer grid */}
@@ -49,7 +47,17 @@ export const SiteFooter: React.FC = () => {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-xl font-bold" style={{ color: '#c4b78a' }}>PANaCEa</span>
+              <span
+                className="text-xl font-bold"
+                style={{
+                  background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                PANaCEa
+              </span>
             </div>
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: '#64748b' }}>
               The cognitive prosthetic for PA students. Adaptive, evidence-based, built for clinical-year realities.
@@ -60,8 +68,13 @@ export const SiteFooter: React.FC = () => {
           {Object.entries(LINKS).map(([title, links]) => (
             <div key={title}>
               <h4
-                className="text-label font-semibold uppercase mb-4"
-                style={{ color: '#94a3b8', letterSpacing: '0.06em', fontSize: '0.6875rem' }}
+                className="font-semibold uppercase mb-4"
+                style={{
+                  color: '#c4b78a',
+                  letterSpacing: '0.08em',
+                  fontSize: '0.6875rem',
+                  opacity: 0.7,
+                }}
               >
                 {title}
               </h4>
@@ -72,7 +85,7 @@ export const SiteFooter: React.FC = () => {
                       href={link.href}
                       className="text-sm transition-colors duration-200"
                       style={{ color: '#64748b' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#f1f5f9'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#c4b78a'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
                     >
                       {link.label}
@@ -85,11 +98,15 @@ export const SiteFooter: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div style={{ borderTop: '1px solid rgba(148, 163, 184, 0.06)' }}>
+      {/* Bottom bar with glass divider */}
+      <div
+        style={{
+          borderTop: '1px solid rgba(196, 183, 138, 0.08)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs" style={{ color: '#475569' }}>
-            © {year} PANaCEa. All rights reserved.
+            &copy; {year} PANaCEa. All rights reserved.
           </p>
           <p className="text-xs" style={{ color: '#475569' }}>
             Not affiliated with NCCPA. Study smarter, not harder.

@@ -1505,7 +1505,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }, [isAnswered]);
 
   return (
-    <div className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}>
+    <div
+      className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}
+      style={{
+        background: 'linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(15,23,42,0.5) 50%, rgba(10,14,26,1) 100%)',
+        minHeight: '100vh',
+      }}
+    >
       {/* Skip link — keyboard users can jump past toolbar to question content */}
       <a
         href="#question-container"
@@ -1577,9 +1583,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 )}
                 {currentQuestion.imageUrl && (
                   <div
-                    className="mb-5 rounded-xl overflow-hidden bg-[var(--color-bg-secondary)]"
+                    className="mb-5 rounded-xl overflow-hidden"
                     style={{
-                      boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 4px 16px -4px rgba(0, 0, 0, 0.08)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
                     }}
                   >
                     <img

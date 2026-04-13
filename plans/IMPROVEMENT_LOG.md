@@ -410,3 +410,49 @@ Ported the improved OSCE patient simulator rules (lay language + specific exam t
 - Normal Labs slide-out panel (Audit #2) — needs seeded data + drawer component
 - Structured distractor explanations in main session (Audit #6) — wire ExplanationPanel into QuizView
 - Extract `useAnswerSubmission` hook from QuizView.tsx
+
+---
+
+## 2026-04-13 — Batch #7: Complete lib/services Logger Migration
+
+### What was done
+Migrated the remaining 12 `lib/services/*.ts` files from bare `console.*` calls to the scoped `logger` + `LOG_SCOPE` pattern. This **completes** the structured logger migration for the entire `lib/services/` directory — only the `autoAuthor/` CLI pipeline retains `console.*` (intentional user-facing output for CLI progress bars and status).
+
+### Files modified (37 calls migrated)
+1. **sync/offlineSync.ts** (17 calls) — `LOG_SCOPE='OfflineSync'`; DEBUG_OFFLINE_SYNC guards now use `logger.debug`, error/warn calls use `logger.error`/`logger.warn`
+2. **question/generationService.ts** (3 calls) — `LOG_SCOPE='QuestionGenerationService'`; grounded generation fallback + JSON parse errors
+3. **question/pubmedEnricher.ts** (3 calls) — `LOG_SCOPE='PubMed'`; search/summary API failures and enrichment errors
+4. **question/trialEnricher.ts** (2 calls) — `LOG_SCOPE='TrialEnricher'`; ClinicalTrials.gov API status codes and fetch failures
+5. **content/contentService.ts** (2 calls) — `LOG_SCOPE='ContentService'`; Zod validation failures for medical content
+6. **reservoir/confusionPairBoost.ts** (1 call) — `LOG_SCOPE='ConfusionPairBoost'`; DB query failures for confusion pairs
+7. **reservoir/reservoirService.ts** (1 call) — `LOG_SCOPE='Reservoir'`; batch insert errors
+8. **reservoir/refillOrchestrator.ts** (1 call) — `LOG_SCOPE='RefillOrchestrator'`; refill job creation failures
+9. **review/reviewSubmissionService.ts** (1 call) — `LOG_SCOPE='ReviewSubmission'`; review submission + offline queue fallback
+10. **ragContextService.ts** (1 call) — `LOG_SCOPE='RAGContext'`; CRAG content gap logging
+11. **sync/registrySync.ts** (2 calls) — `LOG_SCOPE='RegistrySync'`; condition and drug sync failures
+12. **offline/offlineSyncService.ts** (3 calls) — `LOG_SCOPE='OfflineSyncService'`; queue load/persist/process errors
+
+### Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| `console.*` in lib/services/ (excluding autoAuthor CLI) | 37 | 0 |
+| Files with bare `console.*` in lib/services/ | 12 | 0 (only autoAuthor/ CLI remains — intentional) |
+
+### Cumulative totals (7 batches)
+| Metric | Total |
+|--------|-------|
+| `console.*` calls migrated to logger | 112 (75 prior + 37 this batch) across 31 files |
+| `as any` casts eliminated | 27 across 5 files |
+| Drill components with a11y | 28 of 34 |
+| Error boundaries | 13 (all active drills via DrillShell) |
+| New test cases | 89 (59 implicit-metrics + 30 useDrillFSRS) |
+
+### Verification
+- **Build:** ✅ `npm run build` — EXIT=0, 26.98s, all chunks emitted
+- **Tests:** ✅ 3174/3219 pass. 45 failures are all pre-existing React 19 `React.act is not a function` compat issues in dashboard component tests. Zero new failures.
+
+### Next priority
+- **Logger migration for hooks/** — 29 files still using `console.*` in `hooks/`
+- Normal Labs slide-out panel (Audit #2) — needs seeded data + drawer component
+- Structured distractor explanations in main session (Audit #6)
+- Extract `useAnswerSubmission` hook from QuizView.tsx

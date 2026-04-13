@@ -79,14 +79,31 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left transition-all group ${
-        isActive
-          ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]'
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-transparent'
-      } ${variant === 'mobile' ? 'text-base' : 'text-sm'}`}
+      className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+        variant === 'mobile' ? 'text-base' : 'text-sm'
+      }`}
+      style={{
+        background: isActive ? 'rgba(196, 183, 138, 0.08)' : 'transparent',
+        border: isActive ? '1px solid rgba(196, 183, 138, 0.15)' : '1px solid transparent',
+        color: isActive ? '#c4b78a' : '#94a3b8',
+        boxShadow: isActive ? '0 0 12px rgba(196, 183, 138, 0.08), inset 0 1px 0 rgba(255,255,255,0.04)' : 'none',
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+          e.currentTarget.style.color = '#f1f5f9';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.color = '#94a3b8';
+        }
+      }}
     >
       <Icon
-        className={`w-5 h-5 flex-shrink-0 ${isActive ? '' : 'group-hover:text-[var(--color-accent)]'}`}
+        className="w-5 h-5 flex-shrink-0"
+        style={{ color: isActive ? '#c4b78a' : undefined }}
       />
       <div className="flex-1 min-w-0">
         <div className={`font-medium truncate ${isActive ? 'font-semibold' : ''}`}>{tab.label}</div>
@@ -183,16 +200,42 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
   const currentTab = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0]!;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex min-w-0 flex-1 overflow-hidden">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
-          <div className="p-4 border-b border-[var(--color-border)]">
+    <div
+      className="min-h-screen flex min-w-0 flex-1 overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(15,23,42,0.5) 50%, rgba(10,14,26,1) 100%)',
+      }}
+    >
+      {/* Desktop Sidebar — dark cinematic glassmorphism */}
+      <div
+        className="hidden lg:block w-64 flex-shrink-0 overflow-y-auto overflow-x-hidden"
+        style={{
+          background: 'rgba(10, 14, 26, 0.85)',
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+        }}
+      >
+          <div
+            className="p-4"
+            style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}
+          >
             <BackLink to={ROUTES.STUDY} className="mb-4 w-full justify-start" />
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Knowledge Base</h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">Medical Reference</p>
+            <h2
+              className="text-lg font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Knowledge Base
+            </h2>
+            <p className="text-xs mt-1" style={{ color: '#64748b' }}>Medical Reference</p>
           </div>
 
-          <nav className="p-2">
+          <nav className="p-2 space-y-1">
             {NAV_TABS.map((tab) => (
               <SidebarNavButton
                 key={tab.id}
@@ -205,11 +248,17 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
           </nav>
       </div>
 
-      {/* Mobile Sidebar Toggle */}
+      {/* Mobile Sidebar Toggle — glass button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-lg"
+          className="p-2.5 rounded-xl shadow-lg transition-all duration-200"
+          style={{
+            background: 'rgba(10, 14, 26, 0.9)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            color: '#94a3b8',
+          }}
           aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -237,12 +286,28 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             animate={{ x: 0 }}
             exit={{ x: -300 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] z-50 overflow-y-auto shadow-2xl"
+            className="lg:hidden fixed left-0 top-0 bottom-0 w-64 z-50 overflow-y-auto"
+            style={{
+              background: 'rgba(10, 14, 26, 0.95)',
+              backdropFilter: 'blur(24px) saturate(160%)',
+              borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+              boxShadow: '4px 0 24px rgba(0, 0, 0, 0.4)',
+            }}
           >
-            <div className="p-4 border-b border-[var(--color-border)]">
+            <div className="p-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
               <BackLink to={ROUTES.STUDY} className="mb-4" />
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Knowledge Base</h2>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Medical Reference</p>
+              <h2
+                className="text-lg font-bold"
+                style={{
+                  background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Knowledge Base
+              </h2>
+              <p className="text-xs mt-1" style={{ color: '#64748b' }}>Medical Reference</p>
             </div>
             <nav className="p-2">
               {NAV_TABS.map((tab) => (
@@ -263,7 +328,15 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden relative">
         <div className="p-6 max-w-7xl mx-auto">
           <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{
+                background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
               {currentTab.label}
             </h1>
             <p className="text-[var(--color-text-muted)] mb-6">{currentTab.description}</p>

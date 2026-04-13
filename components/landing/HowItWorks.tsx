@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Target, Activity, TrendingUp } from 'lucide-react';
+import React, { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Target, Activity, TrendingUp, Check, ArrowRight } from 'lucide-react';
 
 const STEPS = [
   {
@@ -23,12 +23,24 @@ const STEPS = [
   },
 ] as const;
 
+const BENEFITS = [
+  'NCCPA content blueprint alignment across all modes',
+  'Implicit behavioral rating — no self-grading bias',
+  'End-of-rotation scheduling for clinical year students',
+  'Performance tracking by organ system and topic',
+  'Rapid recall drills for time-constrained sessions',
+  'Detailed rationales with clinical pearls & mnemonics',
+];
+
 interface HowItWorksProps {
   onSignUp: () => void;
   prefersReducedMotion: boolean;
 }
 
 export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.1 });
+
   const fadeUpView = (delay = 0) =>
     prefersReducedMotion
       ? {}
@@ -39,13 +51,38 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
           transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
         };
 
+  const pulseVariants = prefersReducedMotion
+    ? {}
+    : {
+        initial: { scale: 1, opacity: 0.6 },
+        animate: { scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] },
+        transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+      };
+
+  const glowLineVariants = prefersReducedMotion
+    ? {}
+    : {
+        initial: { scaleY: 0 },
+        animate: { scaleY: 1 },
+        transition: { duration: 1.2, ease: 'easeOut' },
+      };
+
   return (
     <section
+      ref={containerRef}
       className="relative py-24 sm:py-32 overflow-hidden"
       style={{
         background: 'linear-gradient(180deg, #0a0e1a 0%, #0f172a 50%, #0a0e1a 100%)',
       }}
     >
+      {/* Animated background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl opacity-[0.08]"
+          style={{ backgroundColor: '#c4b78a' }}
+        />
+      </div>
+
       {/* Subtle grid pattern */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.03]"
@@ -62,9 +99,9 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
           <span
             className="inline-block px-4 py-1.5 rounded-full text-overline font-semibold uppercase mb-5"
             style={{
-              backgroundColor: 'rgba(196, 183, 138, 0.08)',
+              backgroundColor: 'rgba(196, 183, 138, 0.12)',
               color: '#c4b78a',
-              border: '1px solid rgba(196, 183, 138, 0.15)',
+              border: '1px solid rgba(196, 183, 138, 0.2)',
               letterSpacing: '0.1em',
               fontSize: '0.6875rem',
             }}
@@ -82,14 +119,17 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
           </p>
         </motion.div>
 
-        {/* Steps with connected timeline */}
+        {/* Steps with animated timeline */}
         <div className="relative max-w-4xl mx-auto">
-          {/* Vertical connecting line */}
-          <div
-            className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 hidden md:block"
+          {/* Animated glow centerline (desktop only) */}
+          <motion.div
+            className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 origin-top"
             style={{
-              background: 'linear-gradient(180deg, transparent, rgba(196, 183, 138, 0.2) 15%, rgba(196, 183, 138, 0.2) 85%, transparent)',
+              background: 'linear-gradient(180deg, transparent, rgba(196, 183, 138, 0.3) 15%, rgba(196, 183, 138, 0.3) 85%, transparent)',
+              boxShadow: '0 0 20px rgba(196, 183, 138, 0.15)',
             }}
+            {...glowLineVariants}
+            animate={isInView && !prefersReducedMotion ? 'animate' : 'initial'}
             aria-hidden="true"
           />
 
@@ -100,80 +140,134 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
                 {...fadeUpView(idx * 0.12)}
                 className="relative md:grid md:grid-cols-2 md:gap-16 items-center"
               >
-                {/* Step number circle (centered on timeline) */}
-                <div
+                {/* Animated node circle (centered on timeline) */}
+                <motion.div
                   className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-12 h-12 rounded-full items-center justify-center z-10"
                   style={{
                     backgroundColor: '#0f172a',
-                    border: '2px solid rgba(196, 183, 138, 0.3)',
-                    boxShadow: '0 0 0 4px #0a0e1a',
+                    border: '2px solid rgba(196, 183, 138, 0.4)',
+                    boxShadow: '0 0 0 6px #0a0e1a',
                   }}
+                  {...pulseVariants}
+                  animate={isInView && !prefersReducedMotion ? 'animate' : 'initial'}
                 >
-                  <span className="text-sm font-bold tabular-nums" style={{ color: '#c4b78a' }}>{item.step}</span>
-                </div>
+                  <span className="text-sm font-bold tabular-nums" style={{ color: '#c4b78a' }}>
+                    {item.step}
+                  </span>
+                </motion.div>
 
-                {/* Content — alternating sides */}
-                <div className={`${idx % 2 === 0 ? 'md:text-right md:pr-12' : 'md:col-start-2 md:pl-12'} text-center`}>
-                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 ${idx % 2 === 0 ? '' : ''}`}
-                    style={{ backgroundColor: 'rgba(196, 183, 138, 0.1)', border: '1px solid rgba(196, 183, 138, 0.15)' }}
+                {/* Glassmorphism step card */}
+                <motion.div
+                  className={`${idx % 2 === 0 ? 'md:text-right md:pr-12' : 'md:col-start-2 md:pl-12'} text-center`}
+                  whileHover={
+                    prefersReducedMotion
+                      ? undefined
+                      : {
+                          y: -4,
+                          transition: { duration: 0.3 },
+                        }
+                  }
+                >
+                  <div
+                    className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5 backdrop-blur-sm transition-all duration-300"
+                    style={{
+                      backgroundColor: 'rgba(196, 183, 138, 0.12)',
+                      border: '1px solid rgba(196, 183, 138, 0.2)',
+                      boxShadow: '0 8px 32px rgba(196, 183, 138, 0.08)',
+                    }}
                   >
                     <item.icon className="w-6 h-6" style={{ color: '#c4b78a' }} />
                   </div>
-                  <h3 className="text-h2 font-bold mb-3" style={{ color: '#f1f5f9' }}>{item.title}</h3>
-                  <p className="text-body leading-relaxed max-w-sm mx-auto md:mx-0" style={{ color: '#94a3b8' }}>{item.desc}</p>
-                </div>
+                  <h3 className="text-h2 font-bold mb-3" style={{ color: '#f1f5f9' }}>
+                    {item.title}
+                  </h3>
+                  <p className="text-body leading-relaxed max-w-sm mx-auto md:mx-0" style={{ color: '#94a3b8' }}>
+                    {item.desc}
+                  </p>
+                </motion.div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Benefits checklist */}
-        <motion.div {...fadeUpView(0.4)} className="mt-24 max-w-2xl mx-auto">
-          <div className="space-y-3">
-            {[
-              'NCCPA content blueprint alignment across all modes',
-              'Implicit behavioral rating — no self-grading bias',
-              'End-of-rotation scheduling for clinical year students',
-              'Performance tracking by organ system and topic',
-              'Rapid recall drills for time-constrained sessions',
-              'Detailed rationales with clinical pearls & mnemonics',
-            ].map((benefit) => (
-              <div
+        {/* Benefits grid (2-column) */}
+        <motion.div {...fadeUpView(0.36)} className="mt-24 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {BENEFITS.map((benefit, idx) => (
+              <motion.div
                 key={benefit}
-                className="flex items-start gap-3 rounded-xl p-3.5"
+                className="flex items-start gap-3 rounded-lg p-4 backdrop-blur-sm transition-all duration-300 hover:bg-opacity-10"
                 style={{
-                  backgroundColor: 'rgba(241, 245, 249, 0.03)',
-                  border: '1px solid rgba(148, 163, 184, 0.06)',
+                  backgroundColor: 'rgba(196, 183, 138, 0.06)',
+                  border: '1px solid rgba(196, 183, 138, 0.12)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
                 }}
+                whileHover={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        x: 4,
+                        backgroundColor: 'rgba(196, 183, 138, 0.1)',
+                        transition: { duration: 0.3 },
+                      }
+                }
               >
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#c4b78a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <div className="flex-shrink-0 mt-0.5">
+                  <Check className="w-5 h-5" style={{ color: '#c4b78a' }} />
+                </div>
                 <span className="text-body-sm font-medium" style={{ color: '#cbd5e1' }}>
                   {benefit}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          <div className="text-center mt-10">
+          {/* Enhanced CTA button */}
+          <div className="text-center mt-12">
             <motion.button
               type="button"
               onClick={onSignUp}
-              className="group inline-flex items-center gap-2.5 px-7 py-3.5 font-semibold text-base rounded-xl min-h-[48px]"
+              className="group relative inline-flex items-center gap-2.5 px-8 py-4 font-semibold text-base rounded-xl min-h-[48px] overflow-hidden"
               style={{
                 backgroundColor: '#c4b78a',
                 color: '#0a0e1a',
-                borderRadius: '12px',
-                boxShadow: '0 4px 16px rgba(196, 183, 138, 0.2)',
+                boxShadow: '0 8px 32px rgba(196, 183, 138, 0.3), 0 0 40px rgba(196, 183, 138, 0.15)',
               }}
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              whileHover={
+                prefersReducedMotion
+                  ? undefined
+                  : {
+                      scale: 1.03,
+                      boxShadow: '0 12px 48px rgba(196, 183, 138, 0.4), 0 0 60px rgba(196, 183, 138, 0.2)',
+                    }
+              }
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
             >
-              Start Studying Free
-              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              {/* Animated glow background */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                }}
+                animate={
+                  prefersReducedMotion
+                    ? {}
+                    : {
+                        x: ['-100%', '100%'],
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? {}
+                    : {
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }
+                }
+              />
+              <span className="relative">Start Studying Free</span>
+              <ArrowRight className="w-4 h-4 relative group-hover:translate-x-1 transition-transform" />
             </motion.button>
           </div>
         </motion.div>

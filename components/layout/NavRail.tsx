@@ -116,10 +116,16 @@ function BottomTabBar({
       }}
       aria-label="Main navigation"
     >
-      {/* Glass backdrop for mobile bottom bar */}
+      {/* Glass backdrop for mobile bottom bar — dark cinematic */}
       <div
-        className="absolute inset-0 header-glass"
-        style={{ borderBottom: 'none', borderTop: '1px solid var(--color-border)', boxShadow: '0 -2px 8px rgba(0,0,0,0.04)' }}
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(10, 14, 26, 0.92)',
+          backdropFilter: 'blur(24px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.3)',
+        }}
       />
       <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
         {tabs.map((item) => {
@@ -148,7 +154,8 @@ function BottomTabBar({
               {isActive && (
                 <motion.span
                   layoutId="bottom-tab-indicator"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[var(--color-accent)]"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
+                  style={{ background: '#c4b78a', boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)' }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
@@ -311,7 +318,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         <li key={item.id}>
           <Link
             to={item.href}
-            className={`${baseClass} ${isActive ? '' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
+            className={`${baseClass} ${isActive ? '' : 'hover:bg-white/[0.04]'}`}
             aria-current={isActive ? 'page' : undefined}
           >
             {isActive && (
@@ -320,9 +327,8 @@ export const NavRail: React.FC<NavRailProps> = ({
                   layoutId="active-nav-pill"
                   className="absolute inset-0 rounded-xl z-0"
                   style={{
-                    background: 'var(--color-bg-tertiary)',
-                    opacity: 0.7,
-                    boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
+                    background: 'rgba(196, 183, 138, 0.08)',
+                    boxShadow: '0 0 12px rgba(196, 183, 138, 0.1), inset 0 1px 0 rgba(255,255,255,0.06)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
@@ -331,8 +337,8 @@ export const NavRail: React.FC<NavRailProps> = ({
                   layoutId="active-nav-accent"
                   className={`absolute top-1/2 z-0 h-5 w-[3px] -translate-y-1/2 rounded-full ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1'}`}
                   style={{
-                    background: 'linear-gradient(180deg, var(--color-accent) 0%, rgba(59, 130, 246, 0.6) 100%)',
-                    boxShadow: '0 0 8px var(--color-accent)',
+                    background: 'linear-gradient(180deg, #c4b78a 0%, rgba(196, 183, 138, 0.4) 100%)',
+                    boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
@@ -356,7 +362,16 @@ export const NavRail: React.FC<NavRailProps> = ({
     <div key={label} className="mb-2 first:mt-0">
       {!collapsed && (
         <div className="px-3 py-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+          <span
+            className="font-medium uppercase"
+            style={{
+              fontSize: '0.625rem',
+              letterSpacing: '0.12em',
+              color: '#64748b',
+              borderLeft: '2px solid rgba(196, 183, 138, 0.15)',
+              paddingLeft: '8px',
+            }}
+          >
             {label}
           </span>
         </div>
@@ -370,7 +385,7 @@ export const NavRail: React.FC<NavRailProps> = ({
       initial={false}
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className={`nav-rail-premium scrollbar-premium ${className}`}
+      className={`scrollbar-premium ${className}`}
       style={{
         position: 'fixed',
         left: 0,
@@ -381,10 +396,15 @@ export const NavRail: React.FC<NavRailProps> = ({
         height: 'calc(100vh - var(--header-height, 4rem))',
         overflowY: 'auto',
         overflowX: 'hidden',
-      }}
+        background: 'rgba(10, 14, 26, 0.85)',
+        backdropFilter: 'blur(20px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: 'inset -1px 0 0 rgba(255, 255, 255, 0.04)',
+      }
       aria-label="Main navigation"
     >
-      {/* Header with collapse/hide controls */}
+      {/* Header with collapse/hide controls — glass buttons */}
       <div
         className={`flex h-10 shrink-0 items-center ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
       >
@@ -392,7 +412,10 @@ export const NavRail: React.FC<NavRailProps> = ({
           <button
             type="button"
             onClick={() => setHidden(true)}
-            className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="p-1.5 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            style={{ color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#f1f5f9'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
             aria-label="Hide sidebar"
             title="Hide sidebar (press [)"
           >
@@ -402,7 +425,10 @@ export const NavRail: React.FC<NavRailProps> = ({
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-1.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+          className="p-1.5 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+          style={{ color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.06)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#f1f5f9'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
         >

@@ -39,6 +39,7 @@ interface DrillShellProps {
  * - Clear exit/back buttons
  * - Optional header content for scores/stats
  * - Responsive layout
+ * - Dark cinematic visual treatment with glassmorphism and gold accents
  *
  * Usage:
  * ```tsx
@@ -65,21 +66,49 @@ const DrillShell: React.FC<DrillShellProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const hubTarget = backTo ?? ROUTES.PRACTICE;
+
   return (
-    <div className={`min-h-screen bg-[var(--color-bg-primary)] flex flex-col ${className}`}>
-      {/* Header with Breadcrumb — glass morphism */}
+    <div
+      className={`min-h-screen flex flex-col ${className}`}
+      style={{
+        background: 'linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(15,23,42,0.6) 100%)',
+        backgroundAttachment: 'fixed',
+        position: 'relative',
+      }}
+    >
+      {/* Cinematic noise overlay */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-5"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' seed='2'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`,
+          backgroundSize: '200px 200px',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Header with Breadcrumb — dark cinematic glassmorphism */}
       {!hideBreadcrumb && (
         <motion.header
           initial={prefersReducedMotion ? false : { y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="header-glass sticky top-0 z-40"
+          className="sticky top-0 z-40 relative"
+          style={{
+            backdropFilter: 'blur(20px)',
+            background: 'linear-gradient(180deg, rgba(20,27,47,0.95) 0%, rgba(15,23,42,0.85) 100%)',
+            borderBottom: '1px solid rgba(196,183,138,0.15)',
+            boxShadow: 'inset 0 1px 0 rgba(196,183,138,0.1), 0 8px 32px rgba(0,0,0,0.4)',
+          }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
             {/* Breadcrumb Navigation */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-caption text-[var(--color-text-muted)] mb-2">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-caption text-slate-400 mb-3">
               {backTo !== undefined ? (
-                <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
+                <BackLink
+                  to={hubTarget}
+                  label="Back to Practice"
+                  className="text-sm text-slate-300 hover:text-[#c4b78a] transition-colors duration-200"
+                />
               ) : (
                 <Button
                   variant="ghost"
@@ -87,18 +116,19 @@ const DrillShell: React.FC<DrillShellProps> = ({
                   onClick={onBackToHub}
                   icon={<Home className="w-3.5 h-3.5" />}
                   aria-label="Back to hub"
+                  className="text-slate-300 hover:text-[#c4b78a] transition-colors duration-200"
                 >
                   Hub
                 </Button>
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  <span className="text-[var(--color-border)] mx-0.5" aria-hidden="true">/</span>
+                  <span className="text-slate-600 mx-0.5" aria-hidden="true">/</span>
                   <span
                     className={
                       index === breadcrumb.length - 1
-                        ? 'text-[var(--color-text-primary)] font-semibold'
-                        : 'transition-colors duration-150 hover:text-[var(--color-text-secondary)]'
+                        ? 'text-[#c4b78a] font-semibold drop-shadow-lg'
+                        : 'text-slate-400 transition-colors duration-150 hover:text-[#c4b78a]'
                     }
                     {...(index === breadcrumb.length - 1 ? { 'aria-current': 'page' as const } : {})}
                   >
@@ -117,25 +147,37 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     size="icon"
                     onClick={onBack}
                     aria-label="Go back"
-                    className="rounded-xl hover:bg-[var(--color-bg-tertiary)] transition-all duration-200 ease-premium"
+                    className="rounded-xl transition-all duration-200 ease-premium text-slate-300 hover:text-[#c4b78a] hover:bg-white/5"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 )}
-                <h1 className="text-h2 text-[var(--color-text-primary)]">
+                <h1
+                  className="text-h2 font-bold drop-shadow-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   {title}
                 </h1>
               </div>
 
               {/* Header Content (Scores, Streaks, etc.) */}
-              {headerContent && <div className="flex items-center gap-3">{headerContent}</div>}
+              {headerContent && (
+                <div className="flex items-center gap-3">
+                  {headerContent}
+                </div>
+              )}
             </div>
           </div>
         </motion.header>
       )}
 
       {/* Main Content Area — aria-live announces question transitions to screen readers */}
-      <main className="flex-1 relative scroll-mt-16" aria-live="polite" aria-atomic="false">
+      <main className="flex-1 relative scroll-mt-16 z-10" aria-live="polite" aria-atomic="false">
         <DrillErrorBoundary drillName={title}>
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}

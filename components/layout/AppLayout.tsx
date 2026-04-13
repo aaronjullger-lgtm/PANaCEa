@@ -69,6 +69,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             top: 0,
             zIndex: 50,
             height: 'var(--header-height, 4rem)',
+            background: 'rgba(10, 14, 26, 0.88)',
+            backdropFilter: 'blur(24px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.04)',
           }}
         >
           <div className="h-full w-full flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -83,7 +88,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
                   to={ROUTES.ADMIN}
-                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
+                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
+                  style={{
+                    color: '#64748b',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                    (e.currentTarget as HTMLElement).style.color = '#64748b';
+                  }}
                   aria-label="Admin Dashboard"
                 >
                   <Shield className="w-5 h-5" />
@@ -93,7 +109,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <motion.button
                   ref={settingsButtonRef}
                   onClick={onSettingsClick}
-                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
+                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
+                  style={{
+                    color: '#64748b',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                    (e.currentTarget as HTMLElement).style.color = '#64748b';
+                  }}
                   aria-label="Settings and Stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -106,7 +133,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="p-2 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]/60 transition-all duration-200 ease-premium"
+                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
+                  style={{
+                    color: '#64748b',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                    (e.currentTarget as HTMLElement).style.color = '#64748b';
+                  }}
                   aria-label="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />
@@ -128,14 +166,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         style={{
           marginLeft: showNavRail ? 'var(--nav-rail-width, 56px)' : '0',
           paddingTop: showHeader ? 'var(--header-height, 4rem)' : '0',
+          background: 'linear-gradient(180deg, rgba(10, 14, 26, 1) 0%, rgba(15, 23, 42, 0.5) 50%, rgba(10, 14, 26, 1) 100%)',
         }}
       >
-        <div
+        <motion.div
           className="mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 py-6"
           style={{ maxWidth: 'var(--content-max-width, 72rem)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           {children}
-        </div>
+        </motion.div>
       </main>
     </>
   );

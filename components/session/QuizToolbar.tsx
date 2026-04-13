@@ -117,7 +117,15 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
 
   return (
     <div className="mb-6">
-      <div className="flex justify-between items-center mb-4 mt-1">
+      <div
+        className="flex justify-between items-center mb-4 mt-1 px-4 py-3 rounded-2xl"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.04)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+        }}
+      >
         <div className="flex items-center space-x-3 min-w-0">
           {/* Back to Practice */}
           {!isFullSitDownTest && (

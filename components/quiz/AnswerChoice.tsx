@@ -100,9 +100,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
       buttonClasses +=
         ' bg-[var(--color-accent)]/8 text-[var(--color-text-primary)] font-semibold';
     } else {
-      // Default hoverable state — subtle lift with cinematic shadow
+      // Default hoverable state — glassmorphism card with cinematic lift
       buttonClasses +=
-        ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:-translate-y-0.5';
+        ' text-[var(--color-text-primary)] hover:-translate-y-0.5';
     }
 
     return (
@@ -117,11 +117,20 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         style={{
           fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`,
           transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          background: isEliminated && !isAnswered
+            ? 'rgba(255, 255, 255, 0.01)'
+            : isAnswered
+              ? undefined
+              : isSelected
+                ? 'rgba(196, 183, 138, 0.08)'
+                : 'rgba(255, 255, 255, 0.03)',
+          border: isAnswered ? undefined : '1px solid rgba(255, 255, 255, 0.06)',
+          backdropFilter: (!isAnswered && !isEliminated) ? 'blur(8px)' : undefined,
           ...(!isAnswered && isSelected
-            ? { boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px -2px rgba(59, 130, 246, 0.2), 0 4px 12px -4px rgba(0, 0, 0, 0.08)' }
+            ? { boxShadow: '0 0 0 2px #c4b78a, 0 0 16px -2px rgba(196, 183, 138, 0.25), 0 4px 12px -4px rgba(0, 0, 0, 0.2)', borderColor: 'transparent' }
             : isAnswered && (isCorrect || isSelected)
-              ? { boxShadow: isCorrect ? '0 0 16px -4px rgba(34, 197, 94, 0.3)' : '0 0 16px -4px rgba(239, 68, 68, 0.3)' }
-              : { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)' }),
+              ? { boxShadow: isCorrect ? '0 0 20px -4px rgba(34, 197, 94, 0.4)' : '0 0 20px -4px rgba(239, 68, 68, 0.4)' }
+              : { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)' }),
         }}
         aria-label={`Option ${String.fromCharCode(65 + index)}: ${displayText}${isEliminated ? ' (eliminated)' : ''}${isAnswered && isCorrect ? ' (correct answer)' : ''}${isAnswered && isSelected && !isCorrect ? ' (your incorrect answer)' : ''}`}
       >
@@ -134,8 +143,10 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
             <kbd
               className="inline-flex items-center justify-center min-w-[26px] h-[26px] px-1.5 mr-3 rounded-lg text-xs font-mono font-bold"
               style={{
-                background: 'var(--color-bg-tertiary)',
-                boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: isSelected && !isAnswered ? '#c4b78a' : undefined,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >
               {String.fromCharCode(65 + index)}

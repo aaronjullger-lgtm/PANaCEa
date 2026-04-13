@@ -57,7 +57,16 @@ export const AppBrand: React.FC<AppBrandProps> = ({
         alt={BRAND_ALT}
         className={`${logoClass} w-auto`}
       />
-      <span key="brand-text" className={`font-bold text-[var(--color-text-primary)] font-poppins ${textClass}`}>
+      <span
+        key="brand-text"
+        className={`font-bold font-poppins ${textClass}`}
+        style={{
+          background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 50%, #c4b78a 100%)',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}
+      >
         PANaCEa
       </span>
     </>
