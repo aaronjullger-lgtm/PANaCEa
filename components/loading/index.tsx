@@ -29,7 +29,7 @@ import {
  * Animated shimmer overlay with warm gold highlight.
  * Uses a diagonal gradient sweep for premium feel.
  */
-const ShimmerOverlay: React.FC<{ intensity?: 'subtle' | 'medium' | 'strong' }> = ({
+export const ShimmerOverlay: React.FC<{ intensity?: 'subtle' | 'medium' | 'strong' }> = ({
   intensity = 'medium',
 }) => {
   const opacityMap = { subtle: 0.06, medium: 0.1, strong: 0.15 };
