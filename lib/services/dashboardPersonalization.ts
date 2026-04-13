@@ -40,7 +40,8 @@ export type WidgetId =
   | 'readiness_projection'
   | 'daily_load'
   | 'error_patterns'
-  | 'learner_insights';
+  | 'learner_insights'
+  | 'knowledge_graph';
 
 export interface DashboardConfig {
   stage: LearnerStage;
@@ -171,6 +172,7 @@ const CLINICAL_ROTATION_CONFIG: DashboardConfig = {
   ],
   dataWidgets: [
     'learner_insights',
+    'knowledge_graph',
     'system_performance',
     'error_patterns',
     'calibration_quadrant',
@@ -225,6 +227,7 @@ const PANCE_PREP_CONFIG: DashboardConfig = {
   ],
   dataWidgets: [
     'learner_insights',
+    'knowledge_graph',
     'system_performance',
     'error_patterns',
     'calibration_quadrant',
