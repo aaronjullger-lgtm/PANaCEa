@@ -15,16 +15,24 @@ import { cn } from '@/lib/utils';
 /* ---------- Ring-shadow value (single source of truth) ---------- */
 const RING_SHADOW = '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)';
 
+/* ---------- Glassmorphism card style ---------- */
+const GLASS_CARD_STYLE: React.CSSProperties = {
+  boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 4px 16px -2px var(--color-glass-shadow, rgba(0,0,0,0.1))',
+  backdropFilter: 'blur(12px) saturate(130%)',
+  WebkitBackdropFilter: 'blur(12px) saturate(130%)',
+  background: 'var(--color-card-bg, var(--color-bg-secondary))',
+};
+
 /* ---------- Card ---------- */
 
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { onClick?: () => void }
->(({ className, onClick, ...props }, ref) => (
+>(({ className, onClick, style, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('bg-[var(--color-bg-secondary)] rounded-xl', className)}
-    style={{ boxShadow: RING_SHADOW }}
+    className={cn('rounded-xl transition-shadow duration-200', className)}
+    style={{ ...GLASS_CARD_STYLE, ...style }}
     onClick={onClick}
     role={onClick ? 'button' : undefined}
     tabIndex={onClick ? 0 : undefined}
@@ -40,7 +48,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
     <div
       ref={ref}
       className={cn('px-5 py-3.5', className)}
-      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}
+      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-glass-border, var(--color-border))' }}
       {...props}
     />
   ),
@@ -91,7 +99,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
     <div
       ref={ref}
       className={cn('px-5 py-3', className)}
-      style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}
+      style={{ boxShadow: 'inset 0 1px 0 0 var(--color-glass-border, var(--color-border))' }}
       {...props}
     />
   ),

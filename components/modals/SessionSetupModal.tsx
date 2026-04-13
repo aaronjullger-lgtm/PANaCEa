@@ -29,7 +29,19 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/15 transition-colors"
+      className="w-full text-left p-4 rounded-xl transition-all duration-200"
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(196, 183, 138, 0.08)';
+        e.currentTarget.style.borderColor = 'rgba(196, 183, 138, 0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+      }}
     >
       <div className="flex items-center gap-4">
         <Icon className="w-6 h-6 text-[var(--color-accent)]" />
@@ -90,7 +102,12 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
+      style={{
+        backgroundColor: 'rgba(10, 14, 26, 0.88)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+      }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -98,7 +115,14 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
+        className="rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        style={{
+          background: 'rgba(17, 24, 39, 0.8)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="session-setup-title" className="text-2xl font-bold text-[var(--color-accent)] mb-2">

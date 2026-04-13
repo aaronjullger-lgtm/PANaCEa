@@ -528,9 +528,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="pt-4 pb-2"
         >
-          <h1 className="text-h1 text-[var(--color-text-primary)] truncate max-w-full" style={{ letterSpacing: '-0.025em' }}>
+          <h1 className="text-h1 truncate max-w-full" style={{ letterSpacing: '-0.025em', color: 'var(--color-text-primary)' }}>
             {getGreeting()},{' '}
-            <span className="font-bold">
+            <span
+              className="font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
               {user?.firstName || 'Student'}
             </span>
           </h1>
@@ -544,7 +552,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           role="tablist"
           aria-label="Dashboard views"
           className="inline-flex gap-1 p-1 rounded-xl"
-          style={{ backgroundColor: 'var(--color-bg-tertiary)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)' }}
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)',
+          }}
         >
           {DASHBOARD_VIEWS.map((v) => {
             const Icon = v.icon;
@@ -560,10 +574,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 onClick={() => setView(v.id)}
                 className={`relative flex items-center justify-center gap-1.5 py-2 px-5 rounded-lg text-[13px] font-medium transition-all duration-200 ease-premium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 ${
                   isActive
-                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]'
+                    ? 'text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
-                style={isActive ? { boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.06), 0 2px 6px -1px rgba(0,0,0,0.06)' } : undefined}
+                style={isActive ? {
+                  background: 'rgba(196, 183, 138, 0.08)',
+                  boxShadow: '0 0 0 1px rgba(196, 183, 138, 0.12), 0 2px 8px -1px rgba(0,0,0,0.15)',
+                } : undefined}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 <span className="hidden sm:inline">{v.label}</span>

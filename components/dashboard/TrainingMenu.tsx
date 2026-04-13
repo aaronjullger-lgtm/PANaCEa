@@ -482,12 +482,18 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           text-left transition-all duration-200
           ${
             isDisabled
-              ? 'opacity-40 grayscale cursor-not-allowed bg-[var(--color-bg-secondary)]/30 text-[var(--color-text-muted)] border-dashed border-[var(--color-border)]'
-              : 'bg-[var(--color-bg-primary)] cursor-pointer border-[var(--color-border)] shadow-md hover:bg-[var(--color-bg-secondary)]/20 hover:border-[var(--color-text-primary)] hover:shadow-xl active:shadow-lg'
+              ? 'opacity-40 grayscale cursor-not-allowed text-[var(--color-text-muted)] border-dashed border-[var(--color-border)]'
+              : 'cursor-pointer shadow-md hover:shadow-xl active:shadow-lg'
           }
           ${featuredClasses}
-          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-[var(--color-text-primary)] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
+          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-[#c4b78a] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
         `}
+        style={isDisabled ? { background: 'rgba(17, 24, 39, 0.3)' } : {
+          background: 'rgba(17, 24, 39, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          backdropFilter: 'blur(12px) saturate(130%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(130%)',
+        }}
       >
         {isDisabled && (
           <span className="absolute top-2 right-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 px-2 py-0.5 rounded-full z-10 border border-[var(--color-border)]/30">
@@ -559,7 +565,15 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     return (
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)]">
+          <h2
+            className="text-xl md:text-2xl font-semibold"
+            style={{
+              background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
             {title}
           </h2>
           <p className="text-sm text-[var(--color-text-muted)] hidden sm:block">{description}</p>
@@ -588,8 +602,20 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="flex gap-6 h-full">
       {/* Sticky Category Sidebar - Desktop only */}
       <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-0 h-fit">
-        <div className="bg-[var(--color-bg-secondary)]/50 rounded-2xl p-4 space-y-2" style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
-          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
+        <div
+          className="rounded-2xl p-4 space-y-2"
+          style={{
+            background: 'rgba(17, 24, 39, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(12px) saturate(130%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(130%)',
+            boxShadow: '0 4px 16px -2px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <h3
+            className="text-xs font-semibold uppercase mb-3 px-2"
+            style={{ color: '#c4b78a', letterSpacing: '0.08em', opacity: 0.7 }}
+          >
             Categories
           </h3>
           {CATEGORY_SECTIONS.map((section) => (
@@ -598,9 +624,16 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               onClick={() => scrollToSection(section.key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                 activeSection === section.key
-                  ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium border border-[var(--color-border)]'
-                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]'
+                  ? 'text-[var(--color-text-primary)] font-medium'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
+              style={activeSection === section.key ? {
+                background: 'rgba(196, 183, 138, 0.08)',
+                border: '1px solid rgba(196, 183, 138, 0.12)',
+                boxShadow: '0 0 8px rgba(196, 183, 138, 0.06)',
+              } : {
+                border: '1px solid transparent',
+              }}
             >
               <span className="text-sm truncate">{section.title}</span>
               <ChevronRight className="w-4 h-4 ml-auto flex-shrink-0" />
@@ -619,7 +652,13 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             placeholder="Search modes (e.g., ECG, Antibiotics, Rapid)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-text-primary)]/30 focus:border-[var(--color-text-primary)]/50"
+            className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#c4b78a]/30 focus:border-[#c4b78a]/50"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
           />
         </div>
 
