@@ -27,12 +27,22 @@ import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
 // Source: Google AI pricing page. Update these when pricing changes.
 // Keys are model name prefixes; we match the longest prefix first.
 const MODEL_PRICING: Record<string, { inputPer1M: number; outputPer1M: number }> = {
+  // ── Gemini ──
   'gemini-2.5-pro': { inputPer1M: 1.25, outputPer1M: 10.0 },
   'gemini-2.5-flash': { inputPer1M: 0.15, outputPer1M: 0.60 },
   'gemini-2.0-flash': { inputPer1M: 0.10, outputPer1M: 0.40 },
   'gemini-1.5-pro': { inputPer1M: 1.25, outputPer1M: 5.0 },
   'gemini-1.5-flash': { inputPer1M: 0.075, outputPer1M: 0.30 },
   'text-embedding-005': { inputPer1M: 0.025, outputPer1M: 0.0 },
+  // ── OpenAI (via LangChain multi-provider) ──
+  'openai/gpt-4o-mini': { inputPer1M: 0.15, outputPer1M: 0.60 },
+  'openai/gpt-4o': { inputPer1M: 2.50, outputPer1M: 10.0 },
+  'openai/o3-mini': { inputPer1M: 1.10, outputPer1M: 4.40 },
+  // ── Anthropic (via LangChain multi-provider) ──
+  'anthropic/claude-sonnet-4': { inputPer1M: 3.00, outputPer1M: 15.0 },
+  'anthropic/claude-haiku-3.5': { inputPer1M: 0.80, outputPer1M: 4.0 },
+  // ── DeepSeek (via LangChain multi-provider) ──
+  'deepseek/deepseek-chat': { inputPer1M: 0.14, outputPer1M: 0.28 },
 };
 
 export interface TokenUsageMetadata {

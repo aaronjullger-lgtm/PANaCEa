@@ -17,7 +17,7 @@ import {
   cacheGeneratedQuestion,
 } from '../../_shared/semantic-cache';
 import { trackTokenUsage } from '../../_shared/tokenTracking';
-import { callGemini, GeminiModel, type GeminiError } from '../../_shared/ai-service';
+import { callAIMultiProvider, GeminiModel, type GeminiError } from '../../_shared/ai-service';
 
 const GenerateMnemonicSchema = z.object({
   concept: z.string().min(1, 'Concept is required'),
@@ -100,9 +100,10 @@ export const onRequestPost = aiEndpoint(
       .filter(Boolean)
       .join('\n');
 
-    // ─── Call Gemini via Unified Service ────────────────────────────
+    // ─── Call AI via Multi-Provider Router ───────────────────────────
     try {
-      const result = await callGemini(context as any, {
+      const result = await callAIMultiProvider(context as any, {
+        langchainTask: 'mnemonic',
         model,
         systemInstruction:
           'You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners. Respond with a JSON object only, no markdown: {"mnemonic": "...", "explanation": "brief explanation", "type": "acronym"|"story"|"visual"|"rhyme"}.',

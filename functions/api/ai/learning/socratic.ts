@@ -13,7 +13,7 @@ import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { buildSystemPrompt } from '../../_shared/socraticZpd';
-import { callGemini, GeminiModel } from '../../_shared/ai-service';
+import { callAIMultiProvider, GeminiModel } from '../../_shared/ai-service';
 
 const BodySchema = z.object({
   body: z.object({
@@ -88,9 +88,10 @@ ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
   const FALLBACK_QUESTION = 'What detail in the vignette suggests your answer might not fit this patient?';
 
   try {
-    const result = await callGemini(
+    const result = await callAIMultiProvider(
       { env, auth },
       {
+        langchainTask: 'socratic',
         model: GeminiModel.FLASH_2_5,
         systemInstruction: systemPrompt,
         prompt: userPrompt,

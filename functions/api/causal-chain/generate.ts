@@ -19,7 +19,7 @@
 
 import { z } from 'zod';
 import { aiEndpoint, withCors } from '../_shared/middleware';
-import { callGemini, GeminiModel, type GeminiError } from '../_shared/ai-service';
+import { callAIMultiProvider, GeminiModel, type GeminiError } from '../_shared/ai-service';
 
 // ─── Validation Schema ─────────────────────────────────────────────
 
@@ -229,7 +229,8 @@ export const onRequestPost = aiEndpoint(
     const prompt = buildPrompt(validated);
 
     try {
-      const result = await callGemini(context as any, {
+      const result = await callAIMultiProvider(context as any, {
+        langchainTask: 'session-analysis',
         model,
         systemInstruction:
           'You are a medical education AI specializing in mechanistic causal reasoning. ' +

@@ -25,6 +25,10 @@
  */
 
 import { trackTokenUsage, type TokenUsageMetadata } from './tokenTracking';
+import { routeTask, type RouteOptions, type RouteResult } from '@/lib/langchain/router';
+import { fromCloudflareEnv } from '@/lib/langchain/envAdapter';
+import { configureLangSmithEnv } from '@/lib/langchain/tracing';
+import type { TaskType } from '@/lib/langchain/config';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -433,5 +437,167 @@ export function thinkingBudget(level: 'minimal' | 'low' | 'medium' | 'high'): nu
       return 8192;
     case 'high':
       return 24576;
+  }
+}
+
+// ─── Multi-Provider Bridge ────────────────────────────────────────────────
+
+/**
+ * Map an AITaskType (used by existing endpoints) to a LangChain TaskType.
+ */
+function mapToLangChainTask(task: AITaskType): TaskType | string {
+  switch (task) {
+    case 'mnemonic':
+    case 'general':
+      return 'content-generation';
+    case 'tutor':
+    case 'socratic':
+      return 'osce-chat'; // conversational tasks
+    case 'session-analysis':
+    case 'vision-analysis':
+      return 'clinical-reasoning';
+    case 'question-generation':
+      return 'question-generation';
+    case 'osce-grading':
+      return 'clinical-reasoning';
+    default:
+      return 'content-generation';
+  }
+}
+
+export interface MultiProviderOptions extends GeminiRequestOptions {
+  /** Task type for LangChain model routing. If omitted, inferred from the Gemini model. */
+  langchainTask?: AITaskType | string;
+  /** If true, fall back to callGemini when LangChain fails (default: true) */
+  geminiiFallback?: boolean;
+}
+
+/**
+ * Call AI with multi-provider fallback via LangChain router.
+ *
+ * Drop-in enhancement over callGemini: same GeminiRequestOptions input,
+ * same GeminiResponse output shape. Uses LangChain router for multi-provider
+ * failover (Gemini → OpenAI → Anthropic → DeepSeek), then falls back to
+ * direct Gemini if LangChain routing fails entirely.
+ *
+ * Migration: Replace `callGemini(context, opts)` with
+ * `callAIMultiProvider(context, { ...opts, langchainTask: 'content-generation' })`
+ *
+ * @example
+ * ```ts
+ * const result = await callAIMultiProvider(context, {
+ *   langchainTask: 'content-generation',
+ *   systemInstruction: 'You are a medical education assistant.',
+ *   prompt: 'Generate a mnemonic for CHF...',
+ *   generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
+ *   endpoint: '/api/ai/generate-mnemonic',
+ * });
+ * ```
+ */
+export async function callAIMultiProvider(
+  context: AIServiceContext,
+  options: MultiProviderOptions
+): Promise<GeminiResponse> {
+  const startMs = Date.now();
+  const model = options.model ?? GeminiModel.FLASH_2_5;
+  const shouldFallback = options.geminiiFallback !== false;
+
+  // Determine LangChain task type
+  const task: string = options.langchainTask
+    ? (typeof options.langchainTask === 'string'
+        ? options.langchainTask
+        : mapToLangChainTask(options.langchainTask as AITaskType))
+    : 'content-generation';
+
+  try {
+    // Extract AI keys from Cloudflare env
+    const aiEnv = fromCloudflareEnv(context.env);
+
+    // Configure LangSmith tracing if available
+    configureLangSmithEnv(context.env as Record<string, string | undefined>);
+
+    // Build user prompt from either prompt or contents
+    let userPrompt = '';
+    if (options.prompt) {
+      userPrompt = options.prompt;
+    } else if (options.contents) {
+      userPrompt = options.contents
+        .filter((c) => c.role === 'user')
+        .flatMap((c) => c.parts.filter((p) => p.text).map((p) => p.text!))
+        .join('\n\n');
+    }
+
+    if (!userPrompt) {
+      // No prompt extractable — fall through to direct Gemini
+      if (shouldFallback) return callGemini(context, options);
+      throw { status: 400, error: 'No prompt provided', code: 'BAD_REQUEST', retryable: false } satisfies GeminiError;
+    }
+
+    const routeOpts: RouteOptions = {
+      temperature: options.generationConfig?.temperature,
+      maxOutputTokens: options.generationConfig?.maxOutputTokens,
+      runName: options.endpoint ? `panacea:${options.endpoint}` : undefined,
+      metadata: { endpoint: options.endpoint },
+    };
+
+    const result: RouteResult<string> = await routeTask(
+      task,
+      aiEnv,
+      {
+        systemPrompt: options.systemInstruction,
+        userPrompt,
+      },
+      routeOpts
+    );
+
+    const latencyMs = Date.now() - startMs;
+
+    // Map RouteResult → GeminiResponse shape
+    const geminiResponse: GeminiResponse = {
+      text: result.output,
+      raw: {
+        langchain: true,
+        model: result.model,
+        provider: result.provider,
+        attempts: result.attempts,
+      },
+      usage: {
+        promptTokenCount: result.usage?.inputTokens,
+        candidatesTokenCount: result.usage?.outputTokens,
+        totalTokenCount: result.usage?.totalTokens,
+      },
+      blocked: false,
+    };
+
+    // Track via existing token tracking system
+    trackTokenUsage(context, {
+      endpoint: options.endpoint ?? 'unknown',
+      model: `${result.provider}/${result.model}`,
+      usage: geminiResponse.usage,
+      latencyMs,
+      statusCode: 200,
+      cacheHit: false,
+    });
+
+    return geminiResponse;
+  } catch (lcError) {
+    console.warn(
+      `[callAIMultiProvider] LangChain routing failed for task "${task}":`,
+      lcError instanceof Error ? lcError.message : String(lcError)
+    );
+
+    // Fall back to direct Gemini call
+    if (shouldFallback) {
+      console.info('[callAIMultiProvider] Falling back to direct Gemini call');
+      return callGemini(context, options);
+    }
+
+    // Re-throw as GeminiError shape for consistency
+    throw {
+      status: 503,
+      error: `Multi-provider routing failed: ${lcError instanceof Error ? lcError.message : String(lcError)}`,
+      code: 'ALL_PROVIDERS_FAILED',
+      retryable: true,
+    } satisfies GeminiError;
   }
 }
