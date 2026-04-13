@@ -94,20 +94,22 @@ body {
   animation: buzzword-marquee 20s linear infinite;
 }
 
-/* Shimmer loading animation — premium skeleton screens */
+/* Shimmer loading animation — premium cinematic skeleton screens */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 .skeleton-shimmer {
   background: linear-gradient(
-    90deg,
-    var(--color-bg-secondary) 25%,
-    var(--color-bg-tertiary) 50%,
-    var(--color-bg-secondary) 75%
+    105deg,
+    var(--color-bg-secondary) 20%,
+    color-mix(in srgb, var(--color-bg-tertiary) 92%, #c4b78a) 45%,
+    color-mix(in srgb, var(--color-bg-tertiary) 85%, #e6d9b5) 50%,
+    color-mix(in srgb, var(--color-bg-tertiary) 92%, #c4b78a) 55%,
+    var(--color-bg-secondary) 80%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   border-radius: 8px;
 }
 
@@ -2126,7 +2128,7 @@ a,
    SKELETON SHIMMER (LEFT-TO-RIGHT, DESIGN SYSTEM)
    =============================================== */
 
-/* Single skeleton: left-to-right shimmer overlay (blue-gray, not pure gray) */
+/* Single skeleton: left-to-right gold-tinted shimmer overlay */
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
@@ -2135,8 +2137,15 @@ a,
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(71, 85, 105, 0.15) 50%, transparent 100%);
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(196, 183, 138, 0.08) 42%,
+    rgba(230, 217, 181, 0.12) 50%,
+    rgba(196, 183, 138, 0.08) 58%,
+    transparent 70%
+  );
+  animation: skeleton-shimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 @keyframes skeleton-shimmer {
   0% {
@@ -2601,6 +2610,48 @@ html:not(.dark) .clinical-achievement {
   background: rgb(19 78 74 / 0.35);
   border-color: rgb(20 184 166 / 0.4);
   color: rgb(94 234 212);
+}
+
+/* ===============================================
+   DIALOG CINEMATIC ANIMATIONS — Spring overshoot
+   =============================================== */
+@keyframes dialog-enter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.92);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.02);
+    filter: blur(0px);
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0px);
+  }
+}
+@keyframes dialog-exit {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.95);
+    filter: blur(4px);
+  }
+}
+.dialog-cinematic-enter {
+  animation: dialog-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.dialog-cinematic-exit {
+  animation: dialog-exit 0.2s cubic-bezier(0.32, 0, 0.67, 0) forwards;
 }
 
 /* Smooth animations */

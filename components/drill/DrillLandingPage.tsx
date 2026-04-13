@@ -15,6 +15,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs, buttonPressVariants, widgetEntrance } from '@/config/appViews';
 import {
   LucideIcon,
   Play,
@@ -98,16 +99,19 @@ export function DrillLandingPage({
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       <motion.div
-        initial={{ y: 20 }}
-        animate={{ y: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0, filter: 'blur(6px)' }}
+        animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+        transition={springs.snappy}
         className="max-w-4xl mx-auto"
       >
         {/* Back Button */}
         {onExit && (
           <motion.button
-            initial={{ x: -20 }}
-            animate={{ x: 0 }}
+            initial={prefersReducedMotion ? false : { x: -16, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ ...springs.snappy, delay: 0.05 }}
             onClick={onExit}
+            whileHover={prefersReducedMotion ? undefined : { x: -3 }}
             aria-label="Go back to training hub"
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
           >
@@ -154,17 +158,25 @@ export function DrillLandingPage({
             </p>
           )}
 
-          {/* Start Button */}
+          {/* Start Button — anticipation → action → follow-through */}
           <motion.button
-            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+            variants={prefersReducedMotion ? undefined : buttonPressVariants}
+            initial="idle"
+            whileHover="hover"
+            whileTap="tap"
             onClick={onStart}
             disabled={isLoading}
             aria-label={isLoading ? 'Starting drill...' : `Start ${title} drill`}
             className={`w-full ${colors.button} text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2`}
           >
             {isLoading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading" />
+              <motion.div
+                className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                role="status"
+                aria-label="Loading"
+              />
             ) : (
               <Play className="w-6 h-6" aria-hidden="true" />
             )}
@@ -201,14 +213,16 @@ export function DrillLandingPage({
           </motion.div>
         )}
 
-        {/* Stats Cards */}
+        {/* Stats Cards — staggered widget entrance with blur-dissolve */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" aria-live="polite" aria-label="Drill statistics">
             {stats.totalAttempts !== undefined && (
               <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.15 }}
+                variants={widgetEntrance}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={0}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -223,9 +237,11 @@ export function DrillLandingPage({
 
             {stats.averageScore !== undefined && (
               <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.2 }}
+                variants={widgetEntrance}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={1}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -240,9 +256,11 @@ export function DrillLandingPage({
 
             {stats.bestScore !== undefined && (
               <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.25 }}
+                variants={widgetEntrance}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={2}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -257,9 +275,11 @@ export function DrillLandingPage({
 
             {stats.timeSpent !== undefined && (
               <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                transition={{ delay: 0.3 }}
+                variants={widgetEntrance}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={3}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">

@@ -4,11 +4,63 @@
  * Centralized exports for all loading/skeleton components.
  * This is THE ONLY place to import loaders and skeletons from.
  *
+ * Cinematic design: gold-tinted shimmer, staggered spring entrances,
+ * blur-dissolve transitions, Disney 12-principles animation.
+ *
  * All other loading/skeleton implementations are deprecated.
  */
 
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  springs,
+  skeletonLineVariants,
+  skeletonShimmer,
+  contentRevealVariants,
+  contentAppearVariants,
+  easings,
+} from '@/config/appViews';
+
+// ============================================================================
+// Shared Shimmer Overlay — Gold-tinted cinematic sweep
+// ============================================================================
+
+/**
+ * Animated shimmer overlay with warm gold highlight.
+ * Uses a diagonal gradient sweep for premium feel.
+ */
+const ShimmerOverlay: React.FC<{ intensity?: 'subtle' | 'medium' | 'strong' }> = ({
+  intensity = 'medium',
+}) => {
+  const opacityMap = { subtle: 0.06, medium: 0.1, strong: 0.15 };
+  const goldOpacity = opacityMap[intensity];
+
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none overflow-hidden"
+      aria-hidden="true"
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(
+            105deg,
+            transparent 35%,
+            rgba(196, 183, 138, ${goldOpacity}) 45%,
+            rgba(230, 217, 181, ${goldOpacity * 1.2}) 50%,
+            rgba(196, 183, 138, ${goldOpacity}) 55%,
+            transparent 65%
+          )`,
+          width: '200%',
+          left: '-50%',
+        }}
+        variants={skeletonShimmer}
+      />
+    </motion.div>
+  );
+};
 
 // ============================================================================
 // Loader Component
@@ -23,7 +75,7 @@ export interface LoaderProps {
 }
 
 /**
- * CANONICAL Loader - unified loading spinner
+ * CANONICAL Loader - unified loading spinner with spring-animated dots
  */
 export const Loader: React.FC<LoaderProps> = ({
   variant = 'spinner',
@@ -56,63 +108,89 @@ export const Loader: React.FC<LoaderProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.25, ease: easings.snap }}
       className={`fixed inset-0 ${bgClass} flex flex-col items-center justify-center z-50`}
       style={{ backdropFilter: 'blur(16px) saturate(1.2)', WebkitBackdropFilter: 'blur(16px) saturate(1.2)' }}
     >
-      {/* Spinner variant (default) */}
+      {/* Spinner variant (default) — bouncing dots with squash & stretch */}
       {variant === 'spinner' && (
         <>
-          <div className="flex space-x-2.5">
-            <motion.div
-              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.7, repeat: Infinity, delay: 0, ease: [0.16, 1, 0.3, 1] }}
-            />
-            <motion.div
-              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.7, repeat: Infinity, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            />
-            <motion.div
-              className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
-              animate={{ y: [-8, 0, -8], scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.7, repeat: Infinity, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            />
+          <div className="flex space-x-3">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className={`w-2.5 h-2.5 ${dotClass} rounded-full`}
+                animate={{
+                  y: [-8, 2, -8],
+                  scaleY: [1, 1.3, 1],
+                  scaleX: [1, 0.85, 1],
+                }}
+                transition={{
+                  duration: 0.65,
+                  repeat: Infinity,
+                  delay: i * 0.12,
+                  ease: easings.snap,
+                  times: [0, 0.5, 1],
+                }}
+              />
+            ))}
           </div>
-          <p
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, ...springs.gentle }}
             className={`mt-5 ${textClass} text-body font-semibold tracking-tight`}
             role="status"
             aria-live="polite"
           >
             {message}
-          </p>
+          </motion.p>
         </>
       )}
 
-      {/* Progress variant */}
+      {/* Progress variant — sweeping bar with gold gradient */}
       {variant === 'progress' && (
         <>
-          <div className="w-56 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+          <div className="w-56 h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden relative">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #818cf8))' }}
-              initial={{ width: 0 }}
-              animate={{ width: '100%' }}
+              style={{
+                background: 'linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #e6d9b5))',
+              }}
+              initial={{ width: 0, opacity: 0.7 }}
+              animate={{ width: '100%', opacity: 1 }}
               transition={{
-                duration: 2,
+                duration: 1.8,
                 repeat: Infinity,
-                ease: [0.16, 1, 0.3, 1],
+                ease: easings.linear,
+              }}
+            />
+            {/* Glow trailing the progress */}
+            <motion.div
+              className="absolute top-0 h-full w-8 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(196,183,138,0.4) 0%, transparent 70%)',
+                filter: 'blur(4px)',
+              }}
+              initial={{ left: '-10%' }}
+              animate={{ left: '100%' }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: easings.linear,
               }}
             />
           </div>
-          <p
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, ...springs.gentle }}
             className={`mt-5 ${textClass} text-body font-semibold tracking-tight`}
             role="status"
             aria-live="polite"
           >
             {message}
-          </p>
+          </motion.p>
         </>
       )}
     </motion.div>
@@ -120,7 +198,7 @@ export const Loader: React.FC<LoaderProps> = ({
 };
 
 // ============================================================================
-// Skeleton Component
+// Skeleton Component — Base with gold shimmer
 // ============================================================================
 
 export interface SkeletonProps {
@@ -129,20 +207,16 @@ export interface SkeletonProps {
 }
 
 /**
- * CANONICAL Skeleton - Generic content placeholder with pulse animation
- *
- * Uses Tailwind's animate-pulse and semantic color tokens (bg-[var(--color-bg-tertiary)] to bg-[var(--color-bg-tertiary)]).
- * Follows ui-design-system.mdc skeleton rules.
+ * CANONICAL Skeleton - Generic content placeholder with cinematic shimmer
  */
 export const Skeleton: React.FC<SkeletonProps> = ({
   className = '',
-  shimmer = false,
+  shimmer = true,
 }) => {
   return (
     <div
       className={`
         bg-[var(--color-bg-tertiary)]
-        animate-pulse
         relative
         overflow-hidden
         rounded-xl
@@ -152,18 +226,20 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       aria-busy="true"
       aria-live="polite"
     >
-      {shimmer && (
-        <div
-          className="absolute inset-0 min-w-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent"
-          aria-hidden
-        />
-      )}
+      {/* Subtle pulse underneath */}
+      <motion.div
+        className="absolute inset-0 rounded-xl"
+        animate={{ opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ background: 'inherit' }}
+      />
+      {shimmer && <ShimmerOverlay intensity="subtle" />}
     </div>
   );
 };
 
 // ============================================================================
-// ClinicalSkeleton Component
+// ClinicalSkeleton Component — Multi-line with staggered spring entrance
 // ============================================================================
 
 export interface ClinicalSkeletonProps {
@@ -172,26 +248,15 @@ export interface ClinicalSkeletonProps {
   className?: string;
 }
 
-const pulseAnimation = {
-  initial: { opacity: 0.3 },
-  animate: { opacity: 0.8 },
-  transition: {
-    repeat: Infinity,
-    repeatType: 'reverse' as const,
-    duration: 1.4,
-    ease: [0.16, 1, 0.3, 1] as number[],
-  },
-};
-
 /**
  * CANONICAL ClinicalSkeleton - Medical/professional loading state
  *
- * Used for AI content streaming, medical question display.
- * Follows ui-design-system.mdc skeleton rules with slate colors.
+ * Features:
+ * - Staggered line entrance with spring physics
+ * - Gold-tinted shimmer sweep
+ * - Varied line widths for natural text appearance
+ * - Blur-dissolve on each line
  */
-// React.memo prevents re-rendering when a parent re-renders with the same props.
-// ClinicalSkeleton is a pure display component — wrapping it avoids thrashing
-// the shimmer animation every time the parent state changes (e.g. streaming text).
 export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
   variant = 'default',
   lines = 3,
@@ -199,78 +264,97 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
 }) => {
   const isCompact = variant === 'compact';
 
-  // Generate varied line widths for natural appearance.
-  // Deterministic values based on index avoid non-deterministic Math.random()
-  // which causes layout shifts and React hydration warnings on each render.
+  // Deterministic varied widths for natural text appearance
   const SKELETON_WIDTHS = [85, 92, 78, 88, 75, 90, 82, 95, 70, 87] as const;
   const lineWidths = Array.from({ length: lines }, (_, i) => {
     const base = SKELETON_WIDTHS[i % SKELETON_WIDTHS.length];
-    // Last line is intentionally shorter (mimics real text)
-    return i === lines - 1 ? Math.round(base * 0.75) : base;
+    return i === lines - 1 ? Math.round(base * 0.65) : base;
   });
 
   return (
-    <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
       className={`
-        relative overflow-hidden skeleton-shimmer
-        ${
-          isCompact
-            ? 'p-4 rounded-lg'
-            : 'rounded-xl p-6'
-        }
+        relative overflow-hidden
+        ${isCompact ? 'p-4 rounded-lg' : 'rounded-xl p-6'}
         bg-[var(--color-card-bg)]
         ${className}
       `}
       role="status"
       aria-label="Loading content"
     >
-      <div className="space-y-3">
+      {/* Gold shimmer overlay */}
+      <ShimmerOverlay intensity="medium" />
+
+      <div className="space-y-3 relative z-[1]">
         {lineWidths.map((width, index) => (
           <motion.div
             key={index}
-            {...pulseAnimation}
-            style={{
-              animationDelay: `${index * 0.1}s`,
-              width: `${width}%`,
-            }}
+            custom={index}
+            variants={skeletonLineVariants}
+            style={{ width: `${width}%` }}
             className={`
-              ${isCompact ? 'h-4' : 'h-5'}
-              bg-gradient-to-r from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)]
-              rounded
+              ${isCompact ? 'h-3.5' : 'h-4'}
+              bg-gradient-to-r from-[var(--color-bg-tertiary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]
+              rounded-md
             `}
-          />
+          >
+            {/* Inner pulse — secondary action */}
+            <motion.div
+              className="w-full h-full rounded-md"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                delay: index * 0.15,
+                ease: 'easeInOut',
+              }}
+              style={{ background: 'inherit' }}
+            />
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 });
 ClinicalSkeleton.displayName = 'ClinicalSkeleton';
 
 /**
- * StreamingSkeleton - Skeleton that fades out as content streams in
+ * StreamingSkeleton - Skeleton that morphs into content (blur dissolve)
  */
 export const StreamingSkeleton: React.FC<{
   isStreaming: boolean;
   children: React.ReactNode;
   lines?: number;
 }> = ({ isStreaming, children, lines = 3 }) => {
-  if (!isStreaming) {
-    return <>{children}</>;
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: children ? 0 : 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <ClinicalSkeleton lines={lines} />
-    </motion.div>
+    <AnimatePresence mode="wait">
+      {isStreaming ? (
+        <motion.div
+          key="skeleton"
+          variants={contentRevealVariants}
+          initial="skeleton"
+          exit="revealing"
+        >
+          <ClinicalSkeleton lines={lines} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="content"
+          variants={contentAppearVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 // ============================================================================
-// DrillLoadingState Component
+// DrillLoadingState Component — Structured drill skeleton with cinematic treatment
 // ============================================================================
 
 export interface DrillLoadingStateProps {
@@ -282,9 +366,13 @@ export interface DrillLoadingStateProps {
 }
 
 /**
- * CANONICAL DrillLoadingState - Specialized drill mode loading skeleton
+ * CANONICAL DrillLoadingState - Cinematic drill mode loading skeleton
  *
- * Displays structured loading state for drill questions with options, timer, and progress.
+ * Features:
+ * - Staggered option card entrances with spring physics
+ * - Gold shimmer on question area
+ * - Animated progress bar
+ * - Blur-dissolve entrance for header elements
  */
 export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   optionCount = 4,
@@ -293,61 +381,107 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   message = 'Loading question...',
   variant = 'question',
 }) => {
-  const SkeletonLine = ({ width = 'w-full', height = 'h-4' }) => (
-    <div className={`${width} ${height} bg-[var(--color-bg-tertiary)] rounded animate-pulse`} />
-  );
-
   return (
-    <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
       className="min-h-[500px] bg-[var(--color-bg-primary)] p-6"
       role="status"
       aria-live="polite"
       aria-label={message}
     >
       <div className="max-w-3xl mx-auto">
-        {/* Header skeleton */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Header skeleton — blur dissolve entrance */}
+        <motion.div
+          custom={0}
+          variants={skeletonLineVariants}
+          className="flex items-center justify-between mb-6"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] relative overflow-hidden">
+              <ShimmerOverlay intensity="subtle" />
+            </div>
             <div>
-              <div className="w-32 h-5 bg-[var(--color-bg-tertiary)] rounded animate-pulse mb-1" />
-              <div className="w-24 h-4 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+              <div className="w-32 h-5 bg-[var(--color-bg-tertiary)] rounded-md mb-1 relative overflow-hidden">
+                <ShimmerOverlay intensity="subtle" />
+              </div>
+              <div className="w-24 h-3.5 bg-[var(--color-bg-tertiary)] rounded-md relative overflow-hidden">
+                <ShimmerOverlay intensity="subtle" />
+              </div>
             </div>
           </div>
 
           {showTimer && (
-            <div className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
+            <div className="w-12 h-12 rounded-lg bg-[var(--color-bg-tertiary)] relative overflow-hidden">
+              <ShimmerOverlay intensity="subtle" />
             </div>
           )}
-        </div>
+        </motion.div>
 
+        {/* Animated progress bar */}
         {showProgress && (
-          <div className="mb-6 h-1 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
+          <motion.div
+            custom={1}
+            variants={skeletonLineVariants}
+            className="mb-6 h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden relative"
+          >
+            <motion.div
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, rgba(196,183,138,0.2), rgba(196,183,138,0.08))',
+              }}
+              animate={{ width: ['0%', '65%', '40%', '80%', '60%'] }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </motion.div>
         )}
 
-        {/* Question skeleton */}
-        <div className="card-cinematic mb-8 p-6">
-          <SkeletonLine width="w-3/4" height="h-6" />
-          <SkeletonLine width="w-full" height="h-4" className="mt-4" />
-          <SkeletonLine width="w-5/6" height="h-4" className="mt-2" />
-        </div>
+        {/* Question skeleton — cinematic card with shimmer */}
+        <motion.div
+          custom={2}
+          variants={skeletonLineVariants}
+          className="card-cinematic mb-8 p-6 relative overflow-hidden"
+        >
+          <ShimmerOverlay intensity="medium" />
+          <div className="relative z-[1] space-y-4">
+            <div className="w-3/4 h-6 bg-[var(--color-bg-tertiary)] rounded-md" />
+            <div className="w-full h-4 bg-[var(--color-bg-tertiary)] rounded-md" />
+            <div className="w-5/6 h-4 bg-[var(--color-bg-tertiary)] rounded-md" />
+            {variant === 'image' && (
+              <div className="w-full h-48 bg-[var(--color-bg-tertiary)] rounded-lg mt-2 relative overflow-hidden">
+                <ShimmerOverlay intensity="strong" />
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-        {/* Options skeleton */}
+        {/* Options skeleton — staggered spring entrance */}
         <div className="space-y-3">
           {Array.from({ length: optionCount }).map((_, i) => (
-            <div
+            <motion.div
               key={i}
-              className="p-4 rounded-xl bg-[var(--color-card-bg)] flex items-center gap-3"
-              style={{ boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)' }}
+              custom={i + 3}
+              variants={skeletonLineVariants}
+              className="p-4 rounded-xl bg-[var(--color-card-bg)] flex items-center gap-3 relative overflow-hidden"
+              style={{
+                boxShadow: '0 0 0 1px rgba(196, 183, 138, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.06)',
+              }}
             >
-              <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse flex-shrink-0" />
-              <SkeletonLine width="w-3/4" height="h-4" />
-            </div>
+              <ShimmerOverlay intensity="subtle" />
+              <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] flex-shrink-0 relative z-[1]" />
+              <div
+                className="h-4 bg-[var(--color-bg-tertiary)] rounded-md relative z-[1]"
+                style={{ width: `${60 + (i % 3) * 12}%` }}
+              />
+            </motion.div>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -356,7 +490,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
 // ============================================================================
 
 /**
- * LoadingProgress - Top-of-page progress bar for perceived performance
+ * LoadingProgress - Top-of-page progress bar with gold gradient + glow
  */
 export interface LoadingProgressProps {
   isLoading: boolean;
@@ -392,134 +526,266 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
   }, [isLoading, duration]);
 
   return (
-    <motion.div
-     
-      animate={{ opacity: isLoading || progress > 0 ? 1 : 0 }}
-      exit={{ opacity: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 h-1 bg-transparent"
-    >
-      <motion.div
-        className="h-full bg-[var(--color-accent)]"
-        animate={{ width: `${progress}%` }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      />
-    </motion.div>
+    <AnimatePresence>
+      {(isLoading || progress > 0) && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed top-0 left-0 right-0 z-50 h-1"
+        >
+          <motion.div
+            className="h-full relative"
+            style={{
+              background: 'linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #e6d9b5))',
+            }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            {/* Glow dot at leading edge */}
+            <motion.div
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-4 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(196,183,138,0.6) 0%, transparent 70%)',
+                filter: 'blur(3px)',
+              }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 /**
- * CommandCenterSkeleton - Dashboard-shaped skeleton for Command Center lazy load.
+ * CommandCenterSkeleton - Dashboard-shaped skeleton with cinematic treatment.
  *
  * Layout mirrors the real CommandCenterHub above-the-fold content:
  *   1. Greeting heading + subtitle
  *   2. Status chip row
  *   3. Quick stats bar (2-col mobile, 4-col desktop)
  *   4. Hero action card
- * This prevents a visible layout "jump" when the lazy component replaces
- * the skeleton after Suspense resolves.
  */
 export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
   message = 'Loading dashboard...',
 }) => (
-  <div className="pt-6 space-y-6" role="status" aria-label={message}>
+  <motion.div
+    initial="hidden"
+    animate="visible"
+    className="pt-6 space-y-6"
+    role="status"
+    aria-label={message}
+  >
     {/* Greeting skeleton */}
-    <div>
-      <div className="h-8 w-56 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
-      <div className="flex gap-2 mt-3">
-        <div className="h-7 w-16 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
-        <div className="h-7 w-20 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
+    <motion.div custom={0} variants={skeletonLineVariants}>
+      <div className="h-8 w-56 bg-[var(--color-bg-tertiary)] rounded-lg relative overflow-hidden">
+        <ShimmerOverlay intensity="medium" />
       </div>
-      <div className="h-4 w-64 bg-[var(--color-bg-tertiary)] rounded mt-3 animate-pulse" />
-    </div>
+      <div className="flex gap-2 mt-3">
+        <div className="h-7 w-16 bg-[var(--color-bg-tertiary)] rounded-full relative overflow-hidden">
+          <ShimmerOverlay intensity="subtle" />
+        </div>
+        <div className="h-7 w-20 bg-[var(--color-bg-tertiary)] rounded-full relative overflow-hidden">
+          <ShimmerOverlay intensity="subtle" />
+        </div>
+      </div>
+      <div className="h-4 w-64 bg-[var(--color-bg-tertiary)] rounded mt-3 relative overflow-hidden">
+        <ShimmerOverlay intensity="subtle" />
+      </div>
+    </motion.div>
 
-    {/* Quick stats bar skeleton (matches 2-col mobile / 4-col desktop grid) */}
+    {/* Quick stats bar skeleton — staggered cards */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div
+        <motion.div
           key={i}
-          className="card-stat flex items-center gap-3 p-3.5"
+          custom={i + 1}
+          variants={skeletonLineVariants}
+          className="card-stat flex items-center gap-3 p-3.5 relative overflow-hidden"
         >
-          <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
+          <ShimmerOverlay intensity="subtle" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] shrink-0" />
           <div className="flex-1 space-y-1.5">
-            <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
-            <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+            <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded" />
+            <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded" />
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
 
-    {/* Hero card skeleton */}
-    <div className="card-cinematic h-40 animate-pulse" />
+    {/* Hero card skeleton — large cinematic card */}
+    <motion.div
+      custom={5}
+      variants={skeletonLineVariants}
+      className="card-cinematic h-40 relative overflow-hidden"
+    >
+      <ShimmerOverlay intensity="strong" />
+    </motion.div>
 
-    <p className="text-sm text-[var(--color-text-muted)]" aria-live="polite">{message}</p>
-  </div>
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="text-sm text-[var(--color-text-muted)]"
+      aria-live="polite"
+    >
+      {message}
+    </motion.p>
+  </motion.div>
 );
 
 /**
- * QuickStatsBarSkeleton - Skeleton for stats bar component.
- * Uses the same grid-cols-2 / md:grid-cols-4 as the real QuickStatsBar
- * so there's no layout shift when the real component mounts.
+ * QuickStatsBarSkeleton - Skeleton for stats bar with staggered entrance
  */
 export const QuickStatsBarSkeleton: React.FC = () => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" role="status" aria-label="Loading stats">
+  <motion.div
+    initial="hidden"
+    animate="visible"
+    className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+    role="status"
+    aria-label="Loading stats"
+  >
     {Array.from({ length: 4 }).map((_, i) => (
-      <div
+      <motion.div
         key={i}
-        className="card-stat flex items-center gap-3 p-3.5"
+        custom={i}
+        variants={skeletonLineVariants}
+        className="card-stat flex items-center gap-3 p-3.5 relative overflow-hidden"
       >
-        <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse shrink-0" />
+        <ShimmerOverlay intensity="subtle" />
+        <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-tertiary)] shrink-0" />
         <div className="flex-1 space-y-1.5">
-          <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
-          <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
+          <div className="h-5 w-10 bg-[var(--color-bg-tertiary)] rounded" />
+          <div className="h-3 w-16 bg-[var(--color-bg-tertiary)] rounded" />
         </div>
-      </div>
+      </motion.div>
     ))}
-  </div>
+  </motion.div>
 );
 
 // ============================================================================
-// Specialized Question & Chat Skeletons (re-exported for backward compat)
+// Specialized Question & Chat Skeletons
 // ============================================================================
 
 /**
- * QuestionSkeleton - Loading state for quiz/drill questions
+ * QuestionSkeleton - Loading state for quiz/drill questions with stagger
  */
 export const QuestionSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`space-y-4 ${className}`}>
-    <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-3/4 animate-pulse" />
-    <div className="space-y-2">
-      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full animate-pulse" />
-      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6 animate-pulse" />
-    </div>
+  <motion.div
+    initial="hidden"
+    animate="visible"
+    className={`space-y-4 ${className}`}
+  >
+    <motion.div custom={0} variants={skeletonLineVariants}>
+      <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-3/4 relative overflow-hidden">
+        <ShimmerOverlay intensity="medium" />
+      </div>
+    </motion.div>
+    <motion.div custom={1} variants={skeletonLineVariants} className="space-y-2">
+      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full relative overflow-hidden">
+        <ShimmerOverlay intensity="subtle" />
+      </div>
+      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6 relative overflow-hidden">
+        <ShimmerOverlay intensity="subtle" />
+      </div>
+    </motion.div>
     <div className="space-y-2 pt-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-10 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
+        <motion.div
+          key={i}
+          custom={i + 2}
+          variants={skeletonLineVariants}
+          className="h-12 bg-[var(--color-bg-tertiary)] rounded-lg relative overflow-hidden"
+        >
+          <ShimmerOverlay intensity="subtle" />
+        </motion.div>
       ))}
     </div>
-  </div>
+  </motion.div>
 );
 
 /**
- * ChatSkeleton - Loading state for chat/conversation streams
+ * ChatSkeleton - Loading state for chat/conversation with staggered messages
  */
 export const ChatSkeleton: React.FC<{
   messageCount?: number;
   className?: string;
 }> = ({ messageCount = 3, className = '' }) => (
-  <div className={`space-y-3 ${className}`}>
+  <motion.div
+    initial="hidden"
+    animate="visible"
+    className={`space-y-3 ${className}`}
+  >
     {Array.from({ length: messageCount }).map((_, i) => (
-      <div key={i} className="flex gap-3">
-        <div className="w-8 h-8 bg-[var(--color-bg-tertiary)] rounded-full flex-shrink-0 animate-pulse" />
+      <motion.div
+        key={i}
+        custom={i}
+        variants={skeletonLineVariants}
+        className="flex gap-3"
+      >
+        <div className="w-8 h-8 bg-[var(--color-bg-tertiary)] rounded-full flex-shrink-0 relative overflow-hidden">
+          <ShimmerOverlay intensity="subtle" />
+        </div>
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/3 animate-pulse" />
+          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/3 relative overflow-hidden">
+            <ShimmerOverlay intensity="subtle" />
+          </div>
           <div className="space-y-1">
-            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-full animate-pulse" />
-            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-5/6 animate-pulse" />
+            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-full relative overflow-hidden">
+              <ShimmerOverlay intensity="subtle" />
+            </div>
+            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-5/6 relative overflow-hidden">
+              <ShimmerOverlay intensity="subtle" />
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     ))}
-  </div>
+  </motion.div>
+);
+
+// ============================================================================
+// ContentTransition — Skeleton-to-content morphing wrapper
+// ============================================================================
+
+/**
+ * ContentTransition wraps any content that loads asynchronously.
+ * Shows a skeleton while loading, then morphs into the real content
+ * with a blur-dissolve transition.
+ */
+export const ContentTransition: React.FC<{
+  isLoading: boolean;
+  skeleton?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ isLoading, skeleton, children, className = '' }) => (
+  <AnimatePresence mode="wait">
+    {isLoading ? (
+      <motion.div
+        key="skeleton-state"
+        initial={{ opacity: 0, filter: 'blur(4px)' }}
+        animate={{ opacity: 1, filter: 'blur(0px)' }}
+        exit={{ opacity: 0, filter: 'blur(6px)', scale: 0.98 }}
+        transition={{ duration: 0.25, ease: easings.exit }}
+        className={className}
+      >
+        {skeleton || <ClinicalSkeleton lines={4} />}
+      </motion.div>
+    ) : (
+      <motion.div
+        key="content-state"
+        initial={{ opacity: 0, filter: 'blur(8px)', y: 6 }}
+        animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+        transition={{ ...springs.snappy, opacity: { duration: 0.3 } }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    )}
+  </AnimatePresence>
 );
 
 // ============================================================================
@@ -537,18 +803,23 @@ export default {
   QuickStatsBarSkeleton,
   QuestionSkeleton,
   ChatSkeleton,
+  ContentTransition,
 };
 
 // Skeleton aliases for backwards compatibility
 export const UserStatsOverviewSkeleton: React.FC = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-20 w-full rounded-xl" />
+  <motion.div initial="hidden" animate="visible" className="space-y-4">
+    <motion.div custom={0} variants={skeletonLineVariants}>
+      <Skeleton className="h-20 w-full rounded-xl" />
+    </motion.div>
     <div className="grid grid-cols-3 gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        <motion.div key={i} custom={i + 1} variants={skeletonLineVariants}>
+          <Skeleton className="h-16 w-full rounded-xl" />
+        </motion.div>
       ))}
     </div>
-  </div>
+  </motion.div>
 );
 
 export const StatCardSkeleton: React.FC = () => (
@@ -560,31 +831,45 @@ export const SkeletonWidget: React.FC<{ className?: string }> = ({ className = '
 );
 
 export const SkeletonDrillCard: React.FC = () => (
-  <Skeleton className="h-48 w-full rounded-xl" />
+  <motion.div
+    initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+    transition={springs.snappy}
+  >
+    <Skeleton className="h-48 w-full rounded-xl" />
+  </motion.div>
 );
 
 export const SkeletonQuizQuestion: React.FC = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-6 w-full rounded" />
-    <Skeleton className="h-4 w-3/4 rounded" />
+  <motion.div initial="hidden" animate="visible" className="space-y-4">
+    <motion.div custom={0} variants={skeletonLineVariants}>
+      <Skeleton className="h-6 w-full rounded" />
+    </motion.div>
+    <motion.div custom={1} variants={skeletonLineVariants}>
+      <Skeleton className="h-4 w-3/4 rounded" />
+    </motion.div>
     {Array.from({ length: 4 }).map((_, i) => (
-      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+      <motion.div key={i} custom={i + 2} variants={skeletonLineVariants}>
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </motion.div>
     ))}
-  </div>
+  </motion.div>
 );
 
 export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
-  <div className="space-y-2">
-    <Skeleton className="h-10 w-full rounded" />
+  <motion.div initial="hidden" animate="visible" className="space-y-2">
+    <motion.div custom={0} variants={skeletonLineVariants}>
+      <Skeleton className="h-10 w-full rounded" />
+    </motion.div>
     {Array.from({ length: rows }).map((_, i) => (
-      <Skeleton key={i} className="h-12 w-full rounded" />
+      <motion.div key={i} custom={i + 1} variants={skeletonLineVariants}>
+        <Skeleton className="h-12 w-full rounded" />
+      </motion.div>
     ))}
-  </div>
+  </motion.div>
 );
 
-// SkeletonLoader — alias for backwards compatibility (imported by some components from @/components/loading).
-// Accepts an optional `variant` prop for API parity with components/ui/SkeletonLoader;
-// the variant is intentionally ignored here since this barrel uses the unified Skeleton primitive.
+// SkeletonLoader — alias for backwards compatibility
 export const SkeletonLoader: React.FC<{
   height?: string;
   width?: string;
@@ -608,8 +893,6 @@ export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' 
 
 /**
  * SkeletonText — multi-line text placeholder.
- * Thin alias for ClinicalSkeleton with variant="compact" so the padding
- * matches inline text blocks rather than standalone cards.
  */
 export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
   lines = 3,
