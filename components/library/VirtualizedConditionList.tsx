@@ -7,6 +7,8 @@
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { skeletonLineVariants, springs } from '@/config/appViews';
+import { ShimmerOverlay } from '@/components/loading';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
 
@@ -101,7 +103,7 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  // Loading skeleton
+  // Loading skeleton — staggered cinematic entrance with shimmer
   if (isLoading) {
     return (
       <div className="p-4 space-y-4">
@@ -118,24 +120,48 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
                     : 'grid-cols-4'
             }`}
           >
-            {Array.from({ length: columns }).map((_, j) => (
-              <div
-                key={j}
-                className="h-44 rounded-xl bg-[var(--color-bg-secondary)] animate-pulse"
-              />
-            ))}
+            {Array.from({ length: columns }).map((_, j) => {
+              const staggerIndex = i * columns + j;
+              return (
+                <motion.div
+                  key={j}
+                  custom={staggerIndex}
+                  variants={skeletonLineVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="relative h-44 rounded-xl bg-[var(--color-bg-secondary)] overflow-hidden"
+                >
+                  <ShimmerOverlay intensity="subtle" />
+                  {/* Faux card structure */}
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 w-3/4 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+                    <div className="h-3 w-1/2 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+                    <div className="h-3 w-5/6 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+                    <div className="flex gap-2 mt-4">
+                      <div className="h-6 w-16 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse" />
+                      <div className="h-6 w-20 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         ))}
       </div>
     );
   }
 
-  // Empty state
+  // Empty state — cinematic fade entrance
   if (conditions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={springs.gentle}
+        className="flex flex-col items-center justify-center py-16 px-4"
+      >
         <p className="text-lg text-[var(--color-text-muted)]">{emptyMessage}</p>
-      </div>
+      </motion.div>
     );
   }
 
