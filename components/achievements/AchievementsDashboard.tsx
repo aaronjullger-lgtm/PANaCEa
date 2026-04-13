@@ -92,7 +92,7 @@ export function AchievementsDashboard({
           <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gold-gradient flex items-center gap-3">
                   <Trophy className="w-7 h-7 text-[var(--color-accent)]" />
                   Achievements
                 </h2>

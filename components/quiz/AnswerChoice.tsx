@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion, useAnimationControls } from 'framer-motion';
 import { X } from 'lucide-react';
 import { feedback } from '@/services/core/feedbackService';
+import { answerRevealVariants, springs } from '@/config/appViews';
 
 interface AnswerChoiceProps {
   /** The answer text content */
@@ -76,7 +78,18 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     // Base button classes — cinematic answer card with premium easing
     let buttonClasses =
       'w-full text-left p-4 min-h-[48px] rounded-xl transition-all duration-200 disabled:cursor-not-allowed active:scale-[0.98] font-medium relative group';
-    let animationClass = '';
+    // Animation controls for answer reveal
+    const controls = useAnimationControls();
+    const [hasAnimated, setHasAnimated] = useState(false);
+
+    // Trigger answer reveal animation when isAnswered becomes true
+    useEffect(() => {
+      if (isAnswered && !hasAnimated && (isCorrect || isSelected)) {
+        setHasAnimated(true);
+        const variant = isCorrect ? 'correct' : 'incorrect';
+        controls.start(answerRevealVariants[variant]);
+      }
+    }, [isAnswered, isCorrect, isSelected, hasAnimated, controls]);
 
     // Eliminated state styling
     if (isEliminated && !isAnswered) {
@@ -90,7 +103,6 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
       } else if (isSelected) {
         buttonClasses +=
           ' !bg-[var(--color-data-fail)] !text-[var(--color-text-inverse)] !border-transparent font-semibold';
-        animationClass = 'animate-shake';
       } else {
         buttonClasses +=
           ' bg-[var(--color-card-bg)] text-[var(--color-text-primary)] opacity-50';
@@ -106,14 +118,18 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     }
 
     return (
-      <button
+      <motion.button
         ref={ref}
         type="button"
         role="radio"
         aria-checked={isSelected}
         onClick={handleMainClick}
         disabled={isAnswered}
-        className={`${buttonClasses} ${animationClass}`}
+        animate={controls}
+        whileHover={!isAnswered && !isEliminated ? { scale: 1.008, y: -1 } : undefined}
+        whileTap={!isAnswered && !isEliminated ? { scale: 0.98 } : undefined}
+        transition={springs.snappy}
+        className={buttonClasses}
         style={{
           fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`,
           transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -183,7 +199,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
             </span>
           )}
         </span>
-      </button>
+      </motion.button>
     );
   }
 );

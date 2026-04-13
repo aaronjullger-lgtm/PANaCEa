@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem, cardHoverVariants, springs } from '@/config/appViews';
 import {
   Brain,
   Image as ImageIcon,
@@ -471,19 +473,23 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         : '';
 
     return (
-      <button
+      <motion.button
         type="button"
         key={mode.id}
+        variants={staggerItem}
+        whileHover={!isDisabled ? { scale: 1.015, y: -3, boxShadow: '0 12px 40px -8px rgba(0, 0, 0, 0.4), 0 0 20px -4px rgba(196, 183, 138, 0.12)' } : undefined}
+        whileTap={!isDisabled ? { scale: 0.98 } : undefined}
+        transition={springs.snappy}
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
         aria-label={`Open ${mode.label}`}
         className={`
           relative p-6 rounded-2xl border overflow-hidden
-          text-left transition-all duration-200
+          text-left transition-colors duration-200
           ${
             isDisabled
               ? 'opacity-40 grayscale cursor-not-allowed text-[var(--color-text-muted)] border-dashed border-[var(--color-border)]'
-              : 'cursor-pointer shadow-md hover:shadow-xl active:shadow-lg'
+              : 'cursor-pointer shadow-md'
           }
           ${featuredClasses}
           ${isDailyRecommended && !isDisabled ? 'ring-2 ring-[#c4b78a] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
@@ -542,7 +548,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           </div>
           {!isDisabled && renderProgressBar(mode.id)}
         </div>
-      </button>
+      </motion.button>
     );
   };
 
@@ -579,10 +585,16 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <p className="text-sm text-[var(--color-text-muted)] hidden sm:block">{description}</p>
         </div>
 
-        {/* Desktop: Standard 3-column grid */}
-        <div className="hidden md:grid grid-cols-3 gap-4">
+        {/* Desktop: Standard 3-column grid with staggered entrance */}
+        <motion.div
+          className="hidden md:grid grid-cols-3 gap-4"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-40px' }}
+        >
           {modes.map((mode) => renderDrillCard(mode, 'standard'))}
-        </div>
+        </motion.div>
 
         {/* Mobile: Horizontal scrolling */}
         <div className="md:hidden overflow-x-auto -mx-4 px-4 pb-2">

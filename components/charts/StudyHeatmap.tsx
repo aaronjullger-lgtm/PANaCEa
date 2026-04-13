@@ -66,12 +66,12 @@ export default function StudyHeatmap({
   const colors = useMemo(
     () =>
       isDark
-        ? ['#1e293b', '#1e3a5f', '#2563EB', '#3B82F6']  // dark: slate-800 → blue ramp
+        ? ['#1e293b', '#2a2520', '#6b5d3e', '#c4b78a']  // dark: slate-800 → gold ramp (cinematic)
         : ['#DBEAFE', '#93C5FD', '#3B82F6', '#1D4ED8'],  // light: blue-100 → blue-700
     [isDark],
   );
 
-  const emptyColor = isDark ? '#0f172a' : '#f1f5f9';
+  const emptyColor = isDark ? '#0a0e1a' : '#f1f5f9';
   const textColor = isDark ? '#94a3b8' : '#64748b';
 
   return (

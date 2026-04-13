@@ -10,7 +10,9 @@
  */
 
 import React from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { cardHoverVariants, springs } from '@/config/appViews';
 
 /* ---------- Ring-shadow value (single source of truth) ---------- */
 const RING_SHADOW = '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)';
@@ -106,9 +108,32 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardFooter.displayName = 'CardFooter';
 
+/* ---------- AnimatedCard (motion.div with hover/tap micro-interactions) ---------- */
+
+type AnimatedCardProps = HTMLMotionProps<'div'> & {
+  /** Disable hover lift + glow (e.g. for reduced-motion or static contexts) */
+  disableHover?: boolean;
+};
+
+const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
+  ({ className, style, disableHover, ...props }, ref) => (
+    <motion.div
+      ref={ref}
+      variants={disableHover ? undefined : cardHoverVariants}
+      initial="rest"
+      whileHover={disableHover ? undefined : 'hover'}
+      whileTap={disableHover ? undefined : 'tap'}
+      className={cn('rounded-xl', className)}
+      style={{ ...GLASS_CARD_STYLE, ...style }}
+      {...props}
+    />
+  ),
+);
+AnimatedCard.displayName = 'AnimatedCard';
+
 /* ---------- Exports ---------- */
 
 /** Re-export the ring-shadow value for components that need it inline */
 const CARD_RING_SHADOW = RING_SHADOW;
 
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CARD_RING_SHADOW };
+export { Card, AnimatedCard, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CARD_RING_SHADOW };

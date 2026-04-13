@@ -350,6 +350,55 @@ a,
   box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
+/* ===== CINEMATIC UTILITY CLASSES ===== */
+
+/* Gold gradient text — apply to any heading for premium cinematic feel */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cinematic section label — small uppercase gold label above sections */
+.label-cinematic {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-accent);
+}
+.dark .label-cinematic {
+  color: #c4b78a;
+}
+
+/* Glass surface — reusable glassmorphism for any element */
+.surface-glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.dark .surface-glass {
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Gold glow hover — subtle gold border glow on hover */
+.hover-gold-glow {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.dark .hover-gold-glow:hover {
+  border-color: rgba(196, 183, 138, 0.2);
+  box-shadow: 0 0 16px -4px rgba(196, 183, 138, 0.12);
+}
+
+/* Cinematic divider — gold-tinted gradient border */
+.divider-cinematic {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(196, 183, 138, 0.15), transparent);
+}
+
 /* Button cinematic - premium CTA button */
 .btn-cinematic {
   position: relative;
@@ -1071,6 +1120,31 @@ a,
   color-scheme: dark;
   scrollbar-width: thin;
   scrollbar-color: rgba(71, 85, 105, 0.6) var(--color-bg-primary);
+}
+
+/* ===== DARK MODE: CINEMATIC SHADOW OVERRIDES ===== */
+/* Remap Tailwind shadow utilities to ring-shadow elevation system in dark mode.
+   This single block upgrades shadow-sm / shadow-md / hover:shadow-md across ALL components. */
+.dark .shadow-sm {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 1px 3px -1px rgba(0, 0, 0, 0.4) !important;
+}
+.dark .shadow-md {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 4px 12px -2px rgba(0, 0, 0, 0.5) !important;
+}
+.dark .shadow-lg {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 12px -2px rgba(196, 183, 138, 0.04) !important;
+}
+.dark .hover\:shadow-sm:hover {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
+}
+.dark .hover\:shadow-md:hover {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 16px -4px rgba(196, 183, 138, 0.06) !important;
+}
+.dark .hover\:shadow-lg:hover {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 12px 32px -6px rgba(0, 0, 0, 0.5), 0 0 20px -4px rgba(196, 183, 138, 0.08) !important;
+}
+.dark .hover\:shadow-xl:hover {
+  box-shadow: 0 0 0 1px var(--color-glass-border), 0 16px 48px -8px rgba(0, 0, 0, 0.6), 0 0 24px -4px rgba(196, 183, 138, 0.10) !important;
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */

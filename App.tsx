@@ -997,8 +997,9 @@ const App: React.FC = () => {
   }, []);
 
   const pageTransition = useAccessibleTransition({
-    duration: 0.25,
-    ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
+    type: 'spring',
+    stiffness: 400,
+    damping: 28,
   });
 
   // While Clerk is initializing, show the landing page immediately so FCP fires

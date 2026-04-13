@@ -147,7 +147,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     size="icon"
                     onClick={onBack}
                     aria-label="Go back"
-                    className="rounded-xl transition-all duration-200 ease-premium text-slate-300 hover:text-[#c4b78a] hover:bg-white/5"
+                    className="rounded-xl transition-all duration-200 ease-premium text-slate-300 hover:text-[#c4b78a] hover:bg-[var(--color-bg-tertiary)]"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>

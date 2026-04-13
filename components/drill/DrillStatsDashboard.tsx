@@ -147,7 +147,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
         <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+            <h2 className="text-xl font-semibold text-gold-gradient">
               Drill Performance Dashboard
             </h2>
           </div>

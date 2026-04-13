@@ -92,7 +92,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-data-neutral flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gold-gradient flex items-center gap-2">
             <Target className="w-8 h-8 text-[var(--color-category-practice)]" />
             Your Goals
           </h1>

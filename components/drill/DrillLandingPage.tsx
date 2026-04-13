@@ -123,7 +123,7 @@ export function DrillLandingPage({
               <Icon className="w-12 h-12" />
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-semibold text-[var(--color-text-primary)] mb-2">{title}</h1>
+              <h1 className="text-3xl font-semibold text-gold-gradient mb-2">{title}</h1>
               <p className="text-lg text-[var(--color-text-secondary)]">{description}</p>
             </div>
           </div>

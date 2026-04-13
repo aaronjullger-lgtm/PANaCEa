@@ -318,7 +318,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         <li key={item.id}>
           <Link
             to={item.href}
-            className={`${baseClass} ${isActive ? '' : 'hover:bg-white/[0.04]'}`}
+            className={`${baseClass} ${isActive ? '' : 'hover:bg-[rgba(255,255,255,0.04)]'}`}
             aria-current={isActive ? 'page' : undefined}
           >
             {isActive && (
@@ -401,7 +401,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         WebkitBackdropFilter: 'blur(20px) saturate(140%)',
         borderRight: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: 'inset -1px 0 0 rgba(255, 255, 255, 0.04)',
-      }
+      }}
       aria-label="Main navigation"
     >
       {/* Header with collapse/hide controls — glass buttons */}

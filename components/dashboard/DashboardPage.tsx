@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { widgetEntrance, springs, cardHoverVariants } from '@/config/appViews';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
@@ -132,6 +133,8 @@ interface QuickStatProps {
   value: string | number;
   trend?: { value: number; isPositive: boolean };
   accentColor: string;
+  /** Index for staggered entrance (0, 1, 2…) */
+  index?: number;
   delay?: number;
 }
 
@@ -141,14 +144,18 @@ const QuickStat: React.FC<QuickStatProps> = ({
   value,
   trend,
   accentColor,
-  delay = 0,
+  index = 0,
+  delay: _legacyDelay,
 }) => {
   const prefersReducedMotion = useReducedMotion();
   return (
   <motion.div
-    initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
+    variants={prefersReducedMotion ? undefined : widgetEntrance}
+    initial={prefersReducedMotion ? false : 'hidden'}
+    animate={prefersReducedMotion ? undefined : 'visible'}
+    custom={index}
+    whileHover={prefersReducedMotion ? undefined : cardHoverVariants.hover}
+    whileTap={prefersReducedMotion ? undefined : cardHoverVariants.tap}
     className="card-stat group"
     style={{ '--stat-accent': accentColor } as React.CSSProperties}
   >
@@ -597,10 +604,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               role="tabpanel"
               id="tabpanel-pilot"
               aria-labelledby="tab-pilot"
-              initial={prefersReducedMotion ? false : { y: 8 }}
-              animate={{ y: 0 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
-              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
+              initial={prefersReducedMotion ? false : { y: 12, opacity: 0, filter: 'blur(4px)' }}
+              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8, opacity: 0, filter: 'blur(2px)' }}
+              transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
               className="space-y-6"
             >
               {/* Quick Stats Row */}
@@ -612,7 +619,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     value={currentStreak}
                     trend={currentStreak > 0 ? { value: currentStreak, isPositive: true } : undefined}
                     accentColor="var(--color-data-provisional)"
-                    delay={0}
+                    index={0}
                   />
                 )}
                 <QuickStat
@@ -620,14 +627,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   label="Due Reviews"
                   value={safeData.dueCount || 0}
                   accentColor="var(--color-accent)"
-                  delay={0.05}
+                  index={1}
                 />
                 <QuickStat
                   icon={<Target className="w-5 h-5 text-[var(--color-data-pass)]" />}
                   label="Cards Learned"
                   value={totalCardsLearned}
                   accentColor="var(--color-data-pass)"
-                  delay={0.1}
+                  index={2}
                 />
               </div>
 
@@ -783,10 +790,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               role="tabpanel"
               id="tabpanel-data"
               aria-labelledby="tab-data"
-              initial={prefersReducedMotion ? false : { y: 8 }}
-              animate={{ y: 0 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8 }}
-              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
+              initial={prefersReducedMotion ? false : { y: 12, opacity: 0, filter: 'blur(4px)' }}
+              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8, opacity: 0, filter: 'blur(2px)' }}
+              transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
               className="space-y-6"
             >
               {/* System Performance + Calibration — stage-aware */}
