@@ -33,8 +33,6 @@ export default defineConfig({
       '**/node_modules/**',
       'e2e/**',
       'temp_repos/**',
-      // Hook switched from fetch to SDK client — test needs full rewrite (~1200 lines)
-      'tests/useDrillFSRS.test.ts',
     ],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,

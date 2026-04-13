@@ -6,21 +6,26 @@
  * Coverage:
  * - Hook initialization and cleanup
  * - Telemetry tracking (time-to-first-click, answer switches, dwell time)
- * - API request payload structure
- * - Error handling and edge cases
+ * - SDK client submission (createDrillsClient → submitReview)
+ * - Error handling and offline fallback via syncManager
  * - FSRS response parsing
  * - State management (submitting, error, response)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useDrillFSRS, type UseDrillFSRSOptions, type SubmitAnswerParams, type DrillFSRSResponse } from '../hooks/useDrillFSRS';
+import { renderHook, act } from '@testing-library/react';
+import { useDrillFSRS, type DrillFSRSResponse } from '../hooks/useDrillFSRS';
 
-// Mock Clerk
+// ---------------------------------------------------------------------------
+// Mocks
+// ---------------------------------------------------------------------------
+
+// Mock Clerk — use vi.hoisted so the fn survives mockReset
+const mockUseAuth = vi.hoisted(() => vi.fn(() => ({
+  getToken: vi.fn().mockResolvedValue('mock-clerk-token'),
+})));
 vi.mock('@clerk/clerk-react', () => ({
-  useAuth: vi.fn(() => ({
-    getToken: vi.fn().mockResolvedValue('mock-clerk-token'),
-  })),
+  useAuth: mockUseAuth,
 }));
 
 // Mock circadian utilities
@@ -32,43 +37,46 @@ vi.mock('@/lib/circadian', () => ({
 const mockQueueReview = vi.fn();
 vi.mock('@/lib/services/sync/syncManager', () => ({
   syncManager: {
-    queueReview: (...args: any[]) => mockQueueReview(...args),
+    queueReview: (...args: unknown[]) => mockQueueReview(...args),
   },
 }));
 
-// Mock SDK client
-const mockSubmitReview = vi.fn();
-vi.mock('@/lib/sdk', () => {
-  class ApiError extends Error {
+// Mock SDK client — use vi.hoisted so fns survive mockReset
+const { mockSubmitReview, MockApiError, mockCreateApiClient, mockCreateDrillsClient } = vi.hoisted(() => {
+  const mockSubmitReview = vi.fn();
+  class MockApiError extends Error {
     public code: string;
     public userMessage: string;
+    public isAuthError: boolean;
     constructor(code: string, message: string, userMessage?: string) {
       super(message);
       this.code = code;
       this.userMessage = userMessage ?? message;
+      this.isAuthError = code === 'AUTH_ERROR';
     }
   }
-  return {
-    createApiClient: vi.fn(() => ({})),
-    createDrillsClient: vi.fn(() => ({
-      submitReview: (...args: any[]) => mockSubmitReview(...args),
-    })),
-    ApiError,
-  };
+  const mockCreateApiClient = vi.fn(() => ({}));
+  const mockCreateDrillsClient = vi.fn(() => ({
+    submitReview: (...args: unknown[]) => mockSubmitReview(...args),
+  }));
+  return { mockSubmitReview, MockApiError, mockCreateApiClient, mockCreateDrillsClient };
 });
-
-// Mock toast
-vi.mock('@/lib/toast', () => ({
-  toast: {
-    error: vi.fn(),
-    warning: vi.fn(),
-    success: vi.fn(),
-    info: vi.fn(),
-  },
+vi.mock('@/lib/sdk', () => ({
+  createApiClient: mockCreateApiClient,
+  createDrillsClient: mockCreateDrillsClient,
+  ApiError: MockApiError,
 }));
 
-// Mock fetch globally
-global.fetch = vi.fn();
+// Mock toast — use vi.hoisted to ensure the variable is available before vi.mock hoisting
+const mockToast = vi.hoisted(() => ({
+  error: vi.fn(),
+  warning: vi.fn(),
+  success: vi.fn(),
+  info: vi.fn(),
+}));
+vi.mock('@/lib/toast', () => ({
+  toast: mockToast,
+}));
 
 // Mock import.meta.env for DEV checks
 Object.defineProperty(import.meta, 'env', {
@@ -76,10 +84,90 @@ Object.defineProperty(import.meta, 'env', {
   writable: true,
 });
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Standard mock response for a correct answer with FSRS scheduling */
+function mockCorrectResponse(overrides: Partial<DrillFSRSResponse> = {}): DrillFSRSResponse {
+  return {
+    success: true,
+    isCorrect: true,
+    quality: 3,
+    parTimeMs: 5000,
+    timeSpentMs: 3000,
+    isRapidGuess: false,
+    implicitMetrics: {
+      rating: 3,
+      gradeContinuous: 3.5,
+      confidence: 0.8,
+      latencyRatio: 0.6,
+      answerSwitches: 0,
+    },
+    circadian: {
+      phase: 'NEUTRAL',
+      stabilityModifier: 1.0,
+      localHour: 14,
+    },
+    nextReview: {
+      intervalDays: 3,
+      nextDueDate: '2026-04-02T14:00:00Z',
+      stability: 25,
+      difficulty: 5.2,
+    },
+    ...overrides,
+  };
+}
+
+/** Standard mock response for an incorrect answer */
+function mockIncorrectResponse(overrides: Partial<DrillFSRSResponse> = {}): DrillFSRSResponse {
+  return {
+    success: true,
+    isCorrect: false,
+    quality: 1,
+    parTimeMs: 5000,
+    timeSpentMs: 1500,
+    isRapidGuess: false,
+    implicitMetrics: {
+      rating: 1,
+      gradeContinuous: 1.2,
+      confidence: 0.3,
+      latencyRatio: 0.3,
+      answerSwitches: 2,
+    },
+    circadian: {
+      phase: 'TROUGH',
+      stabilityModifier: 0.85,
+      localHour: 22,
+    },
+    nextReview: {
+      intervalDays: 1,
+      nextDueDate: '2026-03-31T09:00:00Z',
+      stability: 15,
+      difficulty: 6.8,
+    },
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('useDrillFSRS Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockReset();
+    mockSubmitReview.mockReset();
+
+    // Re-apply implementations wiped by vitest config's mockReset: true
+    mockUseAuth.mockReturnValue({
+      getToken: vi.fn().mockResolvedValue('mock-clerk-token'),
+    });
+    mockCreateApiClient.mockReturnValue({});
+    mockCreateDrillsClient.mockReturnValue({
+      submitReview: (...args: unknown[]) => mockSubmitReview(...args),
+    });
+
     vi.useFakeTimers();
   });
 
@@ -87,6 +175,9 @@ describe('useDrillFSRS Hook', () => {
     vi.useRealTimers();
   });
 
+  // =========================================================================
+  // Initialization & Cleanup
+  // =========================================================================
   describe('initialization and cleanup', () => {
     it('should initialize with default state', () => {
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
@@ -131,6 +222,9 @@ describe('useDrillFSRS Hook', () => {
     });
   });
 
+  // =========================================================================
+  // startQuestion
+  // =========================================================================
   describe('startQuestion', () => {
     it('should initialize telemetry state for a new question', () => {
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
@@ -139,14 +233,11 @@ describe('useDrillFSRS Hook', () => {
         result.current.startQuestion();
       });
 
-      // After startQuestion, subsequent calls should track time properly
       act(() => {
         vi.advanceTimersByTime(100);
         result.current.recordAnswerChange('option-a');
       });
 
-      // The timing should be captured
-      // We can verify by submitting and checking the payload
       expect(result.current.lastFSRSResponse).toBeNull(); // Not yet submitted
     });
 
@@ -167,7 +258,6 @@ describe('useDrillFSRS Hook', () => {
         result.current.recordAnswerChange('b');
       });
 
-      // Second attempt should have fresh metrics
       expect(result.current.lastFSRSResponse).toBeNull();
     });
 
@@ -184,18 +274,19 @@ describe('useDrillFSRS Hook', () => {
     });
   });
 
+  // =========================================================================
+  // recordAnswerChange
+  // =========================================================================
   describe('recordAnswerChange', () => {
     it('should track time to first click on first answer selection', () => {
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
       act(() => {
         result.current.startQuestion();
-        vi.advanceTimersByTime(250); // Simulate 250ms elapsed
+        vi.advanceTimersByTime(250);
         result.current.recordAnswerChange('option-a');
       });
 
-      // First click should be recorded in telemetry
-      // We'll verify via submitAnswer payload
       expect(result.current.lastFSRSResponse).toBeNull();
     });
 
@@ -240,100 +331,54 @@ describe('useDrillFSRS Hook', () => {
         result.current.recordAnswerChange('option-a');
       });
 
-      // Dwell time should be tracked
       expect(result.current.lastFSRSResponse).toBeNull();
     });
   });
 
+  // =========================================================================
+  // submitAnswer (SDK path)
+  // =========================================================================
   describe('submitAnswer', () => {
-    it('should build correct API request payload', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 3000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.5,
-          confidence: 0.8,
-          latencyRatio: 0.6,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 14,
-        },
-        nextReview: {
-          intervalDays: 3,
-          nextDueDate: '2026-04-02T14:00:00Z',
-          stability: 25,
-          difficulty: 5.2,
-        },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+    it('should call SDK submitReview with correct payload', async () => {
+      const response = mockCorrectResponse();
+      mockSubmitReview.mockResolvedValueOnce(response);
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let submitted: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         vi.advanceTimersByTime(100);
         result.current.recordAnswerChange('option-a');
         vi.advanceTimersByTime(2900);
 
-        response = await result.current.submitAnswer({
+        submitted = await result.current.submitAnswer({
           questionId: 'q-123',
           selectedAnswer: 'option-a',
           timeSpentMs: 3000,
         });
       });
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/drills/submit-review',
+      // Verify SDK was called (not fetch)
+      expect(mockSubmitReview).toHaveBeenCalledTimes(1);
+      expect(mockSubmitReview).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer mock-clerk-token',
-          }),
-          body: expect.stringContaining('q-123'),
+          questionId: 'q-123',
+          selectedAnswer: 'option-a',
+          timeSpentMs: 3000,
+          sessionType: 'drill',
+          timezone: 'America/New_York',
+          timeToFirstClick: expect.any(Number),
+          answerSwitches: expect.any(Number),
+          totalDwellTime: expect.any(Number),
         })
       );
 
-      expect(response).toEqual(mockResponse);
+      expect(submitted).toEqual(response);
     });
 
     it('should include sessionType=drill in request', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 3000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.5,
-          confidence: 0.8,
-          latencyRatio: 0.6,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 14,
-        },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse());
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'pharm' }));
 
@@ -346,37 +391,12 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      const callArgs = (global.fetch as any).mock.calls[0];
-      const body = JSON.parse(callArgs[1].body);
-
-      expect(body.sessionType).toBe('drill');
+      const payload = mockSubmitReview.mock.calls[0][0];
+      expect(payload.sessionType).toBe('drill');
     });
 
     it('should include telemetry in request payload', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: false,
-        quality: 1,
-        parTimeMs: 5000,
-        timeSpentMs: 1500,
-        implicitMetrics: {
-          rating: 1,
-          gradeContinuous: 1.2,
-          confidence: 0.3,
-          latencyRatio: 0.3,
-          answerSwitches: 2,
-        },
-        circadian: {
-          phase: 'TROUGH',
-          stabilityModifier: 0.85,
-          localHour: 22,
-        },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockSubmitReview.mockResolvedValueOnce(mockIncorrectResponse());
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'ddx' }));
 
@@ -395,23 +415,25 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      const callArgs = (global.fetch as any).mock.calls[0];
-      const body = JSON.parse(callArgs[1].body);
+      const payload = mockSubmitReview.mock.calls[0][0];
 
-      expect(body.questionId).toBe('q-789');
-      expect(body.selectedAnswer).toBe('diagnosis-b');
-      expect(body.timeSpentMs).toBe(1500);
-      expect(body.timeToFirstClick).toBeDefined();
-      expect(body.answerSwitches).toBeGreaterThanOrEqual(0);
-      expect(body.totalDwellTime).toBeGreaterThanOrEqual(0);
-      expect(body.timezone).toBe('America/New_York');
+      expect(payload.questionId).toBe('q-789');
+      expect(payload.selectedAnswer).toBe('diagnosis-b');
+      expect(payload.timeSpentMs).toBe(1500);
+      expect(payload.timeToFirstClick).toBeDefined();
+      expect(payload.answerSwitches).toBeGreaterThanOrEqual(0);
+      expect(payload.totalDwellTime).toBeGreaterThanOrEqual(0);
+      expect(payload.timezone).toBe('America/New_York');
     });
 
-    it('should set isSubmitting to true during request', async () => {
-      let resolveFetch: any;
-      (global.fetch as any).mockReturnValueOnce(
-        new Promise((resolve) => {
-          resolveFetch = resolve;
+    it('should set isSubmitting to true during request and false after', async () => {
+      // Use real timers for this test since we need async resolution
+      vi.useRealTimers();
+
+      let resolveSdk!: (v: DrillFSRSResponse) => void;
+      mockSubmitReview.mockReturnValueOnce(
+        new Promise<DrillFSRSResponse>((resolve) => {
+          resolveSdk = resolve;
         })
       );
 
@@ -419,78 +441,41 @@ describe('useDrillFSRS Hook', () => {
 
       expect(result.current.isSubmitting).toBe(false);
 
-      const submitPromise = act(async () => {
-        result.current.startQuestion();
-        return result.current.submitAnswer({
-          questionId: 'q-delayed',
-          selectedAnswer: 'a',
-          timeSpentMs: 1000,
-        });
+      // Start submit without awaiting — check intermediate state
+      let submitPromise!: Promise<void>;
+      act(() => {
+        submitPromise = (async () => {
+          result.current.startQuestion();
+          await result.current.submitAnswer({
+            questionId: 'q-delayed',
+            selectedAnswer: 'a',
+            timeSpentMs: 1000,
+          });
+        })();
       });
 
-      await waitFor(() => {
-        expect(result.current.isSubmitting).toBe(true);
+      // Allow microtasks to flush so isSubmitting is set
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 10));
       });
 
-      resolveFetch({
-        ok: true,
-        json: async () => ({
-          success: true,
-          isCorrect: true,
-          quality: 3,
-          parTimeMs: 5000,
-          timeSpentMs: 1000,
-          implicitMetrics: {
-            rating: 3,
-            gradeContinuous: 3.0,
-            confidence: 0.9,
-            latencyRatio: 0.2,
-            answerSwitches: 0,
-          },
-          circadian: {
-            phase: 'NEUTRAL',
-            stabilityModifier: 1.0,
-            localHour: 10,
-          },
-        }),
-      });
+      expect(result.current.isSubmitting).toBe(true);
 
-      await submitPromise;
+      // Resolve the SDK call
+      await act(async () => {
+        resolveSdk(mockCorrectResponse({ timeSpentMs: 1000 }));
+        await submitPromise;
+      });
 
       expect(result.current.isSubmitting).toBe(false);
+
+      // Re-enable fake timers for remaining tests in afterEach cleanup
+      vi.useFakeTimers();
     });
 
     it('should store FSRS response when successful', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 3000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.5,
-          confidence: 0.8,
-          latencyRatio: 0.6,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 14,
-        },
-        nextReview: {
-          intervalDays: 3,
-          nextDueDate: '2026-04-02T14:00:00Z',
-          stability: 25,
-          difficulty: 5.2,
-        },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      const response = mockCorrectResponse();
+      mockSubmitReview.mockResolvedValueOnce(response);
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -503,40 +488,19 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      expect(result.current.lastFSRSResponse).toEqual(mockResponse);
+      expect(result.current.lastFSRSResponse).toEqual(response);
     });
 
     it('should compute fsrsNextReview from response', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 3000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.5,
-          confidence: 0.8,
-          latencyRatio: 0.6,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 14,
-        },
+      const response = mockCorrectResponse({
         nextReview: {
           intervalDays: 5,
           nextDueDate: '2026-04-04T14:00:00Z',
           stability: 30,
           difficulty: 4.8,
         },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
       });
+      mockSubmitReview.mockResolvedValueOnce(response);
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'anatomy' }));
 
@@ -557,17 +521,12 @@ describe('useDrillFSRS Hook', () => {
       });
     });
 
-    it('should return null and set error on HTTP failure', async () => {
-      const errorMessage = 'Unauthorized';
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: async () => ({ error: errorMessage }),
-      });
+    it('should return null and set error on SDK rejection', async () => {
+      mockSubmitReview.mockRejectedValueOnce(new Error('Unauthorized'));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
@@ -583,12 +542,11 @@ describe('useDrillFSRS Hook', () => {
     });
 
     it('should handle network errors gracefully', async () => {
-      const networkError = new Error('Network timeout');
-      (global.fetch as any).mockRejectedValueOnce(networkError);
+      mockSubmitReview.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
@@ -600,25 +558,21 @@ describe('useDrillFSRS Hook', () => {
 
       expect(response).toBeNull();
       expect(result.current.error).toBeDefined();
-      expect(result.current.error?.message).toContain('Failed to submit answer');
+      // Original error is TypeError('Failed to fetch'), but hook wraps non-Error
+      // as new Error('Failed to submit answer'). TypeError IS an Error, so it keeps it.
+      expect(result.current.error?.message).toContain('Failed to fetch');
     });
 
-    it('should handle JSON parse errors', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        json: async () => {
-          throw new Error('Invalid JSON');
-        },
-      });
+    it('should handle non-Error throws from SDK', async () => {
+      mockSubmitReview.mockRejectedValueOnce('string error');
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
-          questionId: 'q-json-err',
+          questionId: 'q-string-err',
           selectedAnswer: 'a',
           timeSpentMs: 1000,
         });
@@ -626,33 +580,12 @@ describe('useDrillFSRS Hook', () => {
 
       expect(response).toBeNull();
       expect(result.current.error).toBeDefined();
+      expect(result.current.error?.message).toBe('Failed to submit answer');
     });
 
     it('should clear dwell interval after submission', async () => {
       const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          isCorrect: true,
-          quality: 3,
-          parTimeMs: 5000,
-          timeSpentMs: 2000,
-          implicitMetrics: {
-            rating: 3,
-            gradeContinuous: 3.0,
-            confidence: 0.9,
-            latencyRatio: 0.4,
-            answerSwitches: 0,
-          },
-          circadian: {
-            phase: 'NEUTRAL',
-            stabilityModifier: 1.0,
-            localHour: 12,
-          },
-        }),
-      });
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse({ timeSpentMs: 2000 }));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -670,6 +603,9 @@ describe('useDrillFSRS Hook', () => {
     });
   });
 
+  // =========================================================================
+  // reset
+  // =========================================================================
   describe('reset', () => {
     it('should clear telemetry state', () => {
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
@@ -684,35 +620,11 @@ describe('useDrillFSRS Hook', () => {
         result.current.reset();
       });
 
-      // After reset, a new submission should start fresh
       expect(result.current.lastFSRSResponse).toBeNull();
     });
 
     it('should clear last FSRS response', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 2000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.0,
-          confidence: 0.9,
-          latencyRatio: 0.4,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 12,
-        },
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse({ timeSpentMs: 2000 }));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -750,36 +662,15 @@ describe('useDrillFSRS Hook', () => {
     });
   });
 
+  // =========================================================================
+  // Error handling
+  // =========================================================================
   describe('error handling', () => {
     it('should clear previous error on new submission', async () => {
-      (global.fetch as any)
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 500,
-          json: async () => ({ error: 'First error' }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({
-            success: true,
-            isCorrect: true,
-            quality: 3,
-            parTimeMs: 5000,
-            timeSpentMs: 2000,
-            implicitMetrics: {
-              rating: 3,
-              gradeContinuous: 3.0,
-              confidence: 0.9,
-              latencyRatio: 0.4,
-              answerSwitches: 0,
-            },
-            circadian: {
-              phase: 'NEUTRAL',
-              stabilityModifier: 1.0,
-              localHour: 10,
-            },
-          }),
-        });
+      // First: fail
+      mockSubmitReview.mockRejectedValueOnce(new Error('First error'));
+      // Second: succeed
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse({ timeSpentMs: 2000 }));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -809,33 +700,14 @@ describe('useDrillFSRS Hook', () => {
       expect(result.current.lastFSRSResponse).not.toBeNull();
     });
 
-    it('should handle missing questionId', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          isCorrect: false,
-          quality: 1,
-          parTimeMs: 5000,
-          timeSpentMs: 1000,
-          implicitMetrics: {
-            rating: 1,
-            gradeContinuous: 1.0,
-            confidence: 0.5,
-            latencyRatio: 0.2,
-            answerSwitches: 0,
-          },
-          circadian: {
-            phase: 'NEUTRAL',
-            stabilityModifier: 1.0,
-            localHour: 10,
-          },
-        }),
-      });
+    it('should handle empty questionId (API validates)', async () => {
+      mockSubmitReview.mockResolvedValueOnce(
+        mockIncorrectResponse({ timeSpentMs: 1000 })
+      );
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
@@ -848,66 +720,55 @@ describe('useDrillFSRS Hook', () => {
       // Should still submit (API will handle validation)
       expect(response).toBeDefined();
     });
+
+    it('should show auth error toast for ApiError with isAuthError', async () => {
+      const authErr = new MockApiError('AUTH_ERROR', 'Token expired', 'Please sign in again');
+      mockSubmitReview.mockRejectedValueOnce(authErr);
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-auth',
+          selectedAnswer: 'a',
+          timeSpentMs: 1000,
+        });
+      });
+
+      expect(result.current.error).toBeDefined();
+      expect(mockToast.error).toHaveBeenCalledWith('Please sign in again');
+      // Auth errors should NOT queue to syncManager
+      expect(mockQueueReview).not.toHaveBeenCalled();
+    });
   });
 
+  // =========================================================================
+  // Multiple sequential submissions
+  // =========================================================================
   describe('multiple submissions', () => {
     it('should handle sequential questions without state bleed', async () => {
-      const responses: DrillFSRSResponse[] = [
-        {
-          success: true,
-          isCorrect: true,
-          quality: 3,
-          parTimeMs: 5000,
-          timeSpentMs: 2000,
-          implicitMetrics: {
-            rating: 3,
-            gradeContinuous: 3.0,
-            confidence: 0.9,
-            latencyRatio: 0.4,
-            answerSwitches: 0,
-          },
-          circadian: {
-            phase: 'NEUTRAL',
-            stabilityModifier: 1.0,
-            localHour: 12,
-          },
-          nextReview: {
-            intervalDays: 3,
-            nextDueDate: '2026-04-02T14:00:00Z',
-            stability: 25,
-            difficulty: 5.2,
-          },
+      const resp1 = mockCorrectResponse({
+        timeSpentMs: 2000,
+        nextReview: {
+          intervalDays: 3,
+          nextDueDate: '2026-04-02T14:00:00Z',
+          stability: 25,
+          difficulty: 5.2,
         },
-        {
-          success: true,
-          isCorrect: false,
-          quality: 1,
-          parTimeMs: 5000,
-          timeSpentMs: 1500,
-          implicitMetrics: {
-            rating: 1,
-            gradeContinuous: 1.2,
-            confidence: 0.3,
-            latencyRatio: 0.3,
-            answerSwitches: 1,
-          },
-          circadian: {
-            phase: 'PEAK',
-            stabilityModifier: 1.15,
-            localHour: 9,
-          },
-          nextReview: {
-            intervalDays: 1,
-            nextDueDate: '2026-03-31T09:00:00Z',
-            stability: 15,
-            difficulty: 6.8,
-          },
+      });
+      const resp2 = mockIncorrectResponse({
+        timeSpentMs: 1500,
+        nextReview: {
+          intervalDays: 1,
+          nextDueDate: '2026-03-31T09:00:00Z',
+          stability: 15,
+          difficulty: 6.8,
         },
-      ];
+      });
 
-      (global.fetch as any)
-        .mockResolvedValueOnce({ ok: true, json: async () => responses[0] })
-        .mockResolvedValueOnce({ ok: true, json: async () => responses[1] });
+      mockSubmitReview.mockResolvedValueOnce(resp1);
+      mockSubmitReview.mockResolvedValueOnce(resp2);
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -940,37 +801,18 @@ describe('useDrillFSRS Hook', () => {
 
       expect(result.current.lastFSRSResponse?.isCorrect).toBe(false);
       expect(result.current.lastFSRSResponse?.nextReview?.intervalDays).toBe(1);
-      expect(result.current.lastFSRSResponse?.implicitMetrics.answerSwitches).toBe(1);
+      expect(result.current.lastFSRSResponse?.implicitMetrics.answerSwitches).toBe(2);
     });
   });
 
+  // =========================================================================
+  // Edge cases
+  // =========================================================================
   describe('edge cases', () => {
     it('should handle null nextReview in response', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: true,
-        quality: 3,
-        parTimeMs: 5000,
-        timeSpentMs: 2000,
-        implicitMetrics: {
-          rating: 3,
-          gradeContinuous: 3.0,
-          confidence: 0.9,
-          latencyRatio: 0.4,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 12,
-        },
-        nextReview: null,
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockSubmitReview.mockResolvedValueOnce(
+        mockCorrectResponse({ nextReview: null, timeSpentMs: 2000 })
+      );
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -987,32 +829,11 @@ describe('useDrillFSRS Hook', () => {
     });
 
     it('should handle numeric selectedAnswer', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          isCorrect: true,
-          quality: 3,
-          parTimeMs: 5000,
-          timeSpentMs: 2000,
-          implicitMetrics: {
-            rating: 3,
-            gradeContinuous: 3.0,
-            confidence: 0.9,
-            latencyRatio: 0.4,
-            answerSwitches: 0,
-          },
-          circadian: {
-            phase: 'NEUTRAL',
-            stabilityModifier: 1.0,
-            localHour: 12,
-          },
-        }),
-      });
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse({ timeSpentMs: 2000 }));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
@@ -1026,31 +847,19 @@ describe('useDrillFSRS Hook', () => {
     });
 
     it('should include rapid-guess indicator if present in response', async () => {
-      const mockResponse: DrillFSRSResponse = {
-        success: true,
-        isCorrect: false,
-        quality: 1,
-        parTimeMs: 5000,
-        timeSpentMs: 500,
-        implicitMetrics: {
-          rating: 1,
-          gradeContinuous: 1.0,
-          confidence: 0.1,
-          latencyRatio: 0.1,
-          answerSwitches: 0,
-        },
-        circadian: {
-          phase: 'NEUTRAL',
-          stabilityModifier: 1.0,
-          localHour: 12,
-        },
-        isRapidGuess: true,
-      };
-
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockSubmitReview.mockResolvedValueOnce(
+        mockIncorrectResponse({
+          timeSpentMs: 500,
+          isRapidGuess: true,
+          implicitMetrics: {
+            rating: 1,
+            gradeContinuous: 1.0,
+            confidence: 0.1,
+            latencyRatio: 0.1,
+            answerSwitches: 0,
+          },
+        })
+      );
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -1066,22 +875,39 @@ describe('useDrillFSRS Hook', () => {
 
       expect(result.current.lastFSRSResponse?.isRapidGuess).toBe(true);
     });
-  });
 
-  // --------------------------------------------------------------------------
-  // OFFLINE FALLBACK (Lane 3 reliability)
-  // --------------------------------------------------------------------------
-
-  describe('offline fallback to syncManager', () => {
-    it('should queue review via syncManager when API call fails with network error', async () => {
-      mockQueueReview.mockReturnValue('review-offline-1');
-
-      // Simulate network failure (offline scenario)
-      (global.fetch as any).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    it('should handle response wrapped in data envelope', async () => {
+      // Some SDK responses come wrapped: { data: { ...result } }
+      const inner = mockCorrectResponse({ timeSpentMs: 2000 });
+      mockSubmitReview.mockResolvedValueOnce({ data: inner });
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-envelope',
+          selectedAnswer: 'a',
+          timeSpentMs: 2000,
+        });
+      });
+
+      // Hook uses `submitted?.data ?? submitted` so inner should be extracted
+      expect(result.current.lastFSRSResponse).toEqual(inner);
+    });
+  });
+
+  // =========================================================================
+  // Offline fallback (syncManager)
+  // =========================================================================
+  describe('offline fallback to syncManager', () => {
+    it('should queue review via syncManager when SDK call fails with network error', async () => {
+      mockQueueReview.mockReturnValue('review-offline-1');
+      mockSubmitReview.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         vi.advanceTimersByTime(200);
@@ -1094,7 +920,7 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      // Should return null (API failed) and set error
+      // Should return null (SDK failed) and set error
       expect(response).toBeNull();
       expect(result.current.error).toBeDefined();
 
@@ -1113,7 +939,7 @@ describe('useDrillFSRS Hook', () => {
 
     it('should pass all telemetry fields to syncManager when offline', async () => {
       mockQueueReview.mockReturnValue('review-offline-2');
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      mockSubmitReview.mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'ddx' }));
 
@@ -1148,7 +974,7 @@ describe('useDrillFSRS Hook', () => {
 
     it('should handle numeric selectedAnswer when queuing offline', async () => {
       mockQueueReview.mockReturnValue('review-offline-3');
-      (global.fetch as any).mockRejectedValueOnce(new Error('Failed to fetch'));
+      mockSubmitReview.mockRejectedValueOnce(new Error('Failed to fetch'));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'pharm' }));
 
@@ -1169,19 +995,8 @@ describe('useDrillFSRS Hook', () => {
       );
     });
 
-    it('should NOT queue to syncManager when API succeeds', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          isCorrect: true,
-          quality: 3,
-          parTimeMs: 5000,
-          timeSpentMs: 2000,
-          implicitMetrics: { rating: 3, gradeContinuous: 3.0, confidence: 0.9, latencyRatio: 0.4, answerSwitches: 0 },
-          circadian: { phase: 'NEUTRAL', stabilityModifier: 1.0, localHour: 12 },
-        }),
-      });
+    it('should NOT queue to syncManager when SDK succeeds', async () => {
+      mockSubmitReview.mockResolvedValueOnce(mockCorrectResponse({ timeSpentMs: 2000 }));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
@@ -1194,20 +1009,40 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      // Should NOT have queued to syncManager since API succeeded
       expect(mockQueueReview).not.toHaveBeenCalled();
       expect(result.current.lastFSRSResponse).not.toBeNull();
+    });
+
+    it('should show warning toast when answer is queued offline', async () => {
+      mockQueueReview.mockReturnValue('review-offline-toast');
+      mockSubmitReview.mockRejectedValueOnce(new Error('Network error'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-toast',
+          selectedAnswer: 'a',
+          timeSpentMs: 1000,
+        });
+      });
+
+      expect(mockToast.warning).toHaveBeenCalledWith(
+        expect.stringContaining('saved offline'),
+        expect.objectContaining({ duration: 4000 })
+      );
     });
 
     it('should not crash if syncManager.queueReview also throws', async () => {
       mockQueueReview.mockImplementation(() => {
         throw new Error('localStorage full');
       });
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      mockSubmitReview.mockRejectedValueOnce(new Error('Network error'));
 
       const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
 
-      let response: any;
+      let response: DrillFSRSResponse | null = null;
       await act(async () => {
         result.current.startQuestion();
         response = await result.current.submitAnswer({
@@ -1220,7 +1055,9 @@ describe('useDrillFSRS Hook', () => {
       // Should still return null and set the original error
       expect(response).toBeNull();
       expect(result.current.error).toBeDefined();
-      expect(result.current.error?.message).toContain('Failed to submit answer');
+
+      // Should show error toast (not warning) since offline queue also failed
+      expect(mockToast.error).toHaveBeenCalled();
     });
   });
 });
