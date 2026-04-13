@@ -577,13 +577,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
   const prefersReducedMotion = useReducedMotion();
   // NOTE: opacity removed from initial — Framer Motion animations can stall (especially
-  // in dev/StrictMode), leaving sections invisible. y-transform alone gives a smooth entrance.
-  const sectionEnter = prefersReducedMotion ? false : { y: 16 };
-  const sectionAnimate = prefersReducedMotion ? false : { y: 0 };
+  // in dev/StrictMode), leaving sections invisible. y-transform + blur alone gives a smooth entrance.
+  const sectionEnter = prefersReducedMotion ? false : { y: 16, filter: 'blur(4px)' };
+  const sectionAnimate = prefersReducedMotion ? false : { y: 0, filter: 'blur(0px)' };
   const sectionTransition = (delay: number) =>
     prefersReducedMotion
       ? { duration: 0 }
-      : { duration: 0.3, ease: [0.32, 0.72, 0, 1] as const, delay };
+      : { type: 'spring' as const, stiffness: 400, damping: 28, delay };
 
   return (
     <>

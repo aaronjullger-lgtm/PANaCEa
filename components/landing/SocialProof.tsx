@@ -77,10 +77,10 @@ export function SocialProof({ prefersReducedMotion }: SocialProofProps) {
     prefersReducedMotion
       ? {}
       : {
-          initial: { opacity: 0, y: 20 },
-          whileInView: { opacity: 1, y: 0 },
+          initial: { opacity: 0, y: 20, filter: 'blur(4px)' },
+          whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
           viewport: { once: true, amount: 0.2 },
-          transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
+          transition: { type: 'spring' as const, stiffness: 350, damping: 26, delay, opacity: { duration: 0.35, delay } },
         };
 
   return (

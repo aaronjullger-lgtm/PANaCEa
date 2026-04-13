@@ -84,19 +84,32 @@ export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSe
     reduceMotion
       ? {}
       : {
-          initial: { opacity: 0, y: 28 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] },
+          initial: { opacity: 0, y: 28, filter: 'blur(6px)' },
+          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          transition: {
+            type: 'spring' as const,
+            stiffness: 300,
+            damping: 24,
+            delay,
+            opacity: { duration: 0.4, delay },
+            filter: { duration: 0.35, delay },
+          },
         };
 
   const fadeUpView = (delay = 0) =>
     reduceMotion
       ? {}
       : {
-          initial: { opacity: 0, y: 20 },
-          whileInView: { opacity: 1, y: 0 },
+          initial: { opacity: 0, y: 20, filter: 'blur(4px)' },
+          whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
           viewport: { once: true, amount: 0.15 },
-          transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
+          transition: {
+            type: 'spring' as const,
+            stiffness: 350,
+            damping: 26,
+            delay,
+            opacity: { duration: 0.35, delay },
+          },
         };
 
   const floatAnimation = useMemo(() =>
@@ -326,9 +339,15 @@ export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSe
                   {'Study Smarter for the '.split('').map((char, i) => (
                     <motion.span
                       key={`text-${i}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 + i * 0.02, ease: [0.16, 1, 0.3, 1] }}
+                      initial={{ opacity: 0, y: 16, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 400,
+                        damping: 28,
+                        delay: 0.1 + i * 0.018,
+                        opacity: { duration: 0.3, delay: 0.1 + i * 0.018 },
+                      }}
                     >
                       {char}
                     </motion.span>
@@ -537,9 +556,15 @@ export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSe
                 {FEATURES.map((feature) => (
                   <motion.div
                     key={feature.text}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ delay: feature.delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, scale: 0.8, y: 20, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 600,
+                      damping: 20,
+                      delay: feature.delay,
+                      opacity: { duration: 0.3, delay: feature.delay },
+                    }}
                     className="absolute rounded-lg px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
                     style={{
                       backgroundColor: 'rgba(196, 183, 138, 0.12)',

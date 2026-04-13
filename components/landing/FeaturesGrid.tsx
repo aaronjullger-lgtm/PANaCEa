@@ -81,10 +81,10 @@ function FeatureCard({
   const fadeUpView = prefersReducedMotion
     ? {}
     : {
-        initial: { opacity: 0, y: 24 },
-        whileInView: { opacity: 1, y: 0 },
+        initial: { opacity: 0, y: 24, filter: 'blur(4px)' },
+        whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
         viewport: { once: true, amount: 0.15 },
-        transition: { duration: 0.6, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] },
+        transition: { type: 'spring', stiffness: 350, damping: 26, delay: idx * 0.06 },
       };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -134,7 +134,7 @@ function FeatureCard({
         whileHover={
           prefersReducedMotion
             ? undefined
-            : { opacity: 1, scale: 1, transition: { duration: 0.3 } }
+            : { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 600, damping: 20 } }
         }
         className="pointer-events-none absolute inset-0 rounded-2xl"
         style={{
@@ -272,10 +272,10 @@ export function FeaturesGrid({ prefersReducedMotion }: FeaturesGridProps) {
   const fadeUpView = prefersReducedMotion
     ? {}
     : {
-        initial: { opacity: 0, y: 24 },
-        whileInView: { opacity: 1, y: 0 },
+        initial: { opacity: 0, y: 24, filter: 'blur(4px)' },
+        whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
         viewport: { once: true, amount: 0.15 },
-        transition: { duration: 0.6, delay: 0, ease: [0.16, 1, 0.3, 1] },
+        transition: { type: 'spring', stiffness: 350, damping: 26, delay: 0 },
       };
 
   const containerVariants = prefersReducedMotion

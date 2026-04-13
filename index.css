@@ -141,6 +141,35 @@ body {
   .pulse-badge {
     animation: none !important;
   }
+  .dialog-cinematic-enter,
+  .dialog-cinematic-exit {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+    filter: none !important;
+  }
+}
+
+/* ===============================================
+   CINEMATIC PULSE — Override Tailwind's animate-pulse
+   Slower, smoother, with subtle scale + warm glow
+   =============================================== */
+@keyframes cinematic-pulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.002);
+  }
+}
+.animate-pulse {
+  animation: cinematic-pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+/* Dark mode pulse has slightly lower contrast range */
+.dark .animate-pulse {
+  animation: cinematic-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
 }
 
 /* Smooth scroll behavior */
