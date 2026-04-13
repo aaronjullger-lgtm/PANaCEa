@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, Trophy, Star, Shield } from 'lucide-react';
 import { getAchievementById, getAchievementRarityColor } from '../../config/achievements';
+import { springs } from '@/config/appViews';
 
 interface UnlockAnimationProps {
   achievementId: string;
@@ -82,11 +83,7 @@ export function UnlockAnimation({
             initial={{ scale: 0.5, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: -20 }}
-            transition={{
-              type: 'spring',
-              stiffness: 200,
-              damping: 20,
-            }}
+            transition={springs.gentle}
             className="relative z-10 pointer-events-auto"
           >
             {/* Outer glow ring */}
@@ -132,12 +129,7 @@ export function UnlockAnimation({
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 200,
-                    damping: 15,
-                    delay: 0.3,
-                  }}
+                  transition={{ ...springs.bouncy, delay: 0.3 }}
                   className="mb-4 flex justify-center"
                 >
                   <div

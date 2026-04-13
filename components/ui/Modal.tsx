@@ -15,6 +15,7 @@
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { X } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
@@ -118,7 +119,7 @@ export const Modal: React.FC<ModalProps> = ({
             transition={
               prefersReducedMotion
                 ? { duration: 0 }
-                : { type: 'spring', damping: 25, stiffness: 300 }
+                : springs.snappy
             }
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             role="dialog"

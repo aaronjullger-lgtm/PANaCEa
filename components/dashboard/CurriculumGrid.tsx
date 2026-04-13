@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { SkeletonLoader } from '@/components/loading';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -26,7 +27,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring' as const, stiffness: 260, damping: 20 },
+    transition: springs.snappy,
   },
 };
 

@@ -23,6 +23,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   AlertCircle,
   RefreshCw,
@@ -887,7 +888,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={springs.snappy}
               className="fixed top-0 right-0 h-full w-full md:w-[60%] min-w-0 md:min-w-[400px] max-w-4xl bg-[var(--color-bg-primary)] z-50 flex flex-col"
               style={{ boxShadow: '-1px 0 0 0 var(--color-border), -8px 0 24px -8px rgba(0,0,0,0.08)' }}
             >

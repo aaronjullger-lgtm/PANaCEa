@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { Brain, Lightbulb, ArrowRight, X, AlertTriangle, Target } from 'lucide-react';
 import type { MetacognitionPrompt } from '@/lib/metacognition';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          transition={springs.snappy}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"

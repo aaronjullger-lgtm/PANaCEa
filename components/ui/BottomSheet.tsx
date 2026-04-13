@@ -15,6 +15,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo, useAnimation } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { X } from 'lucide-react';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 
@@ -142,7 +143,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               initial={{ y: '100%' }}
               animate={controls}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              transition={springs.snappy}
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.5 }}

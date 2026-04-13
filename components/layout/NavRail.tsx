@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   ChevronLeft,
   ChevronRight,
@@ -156,7 +157,7 @@ function BottomTabBar({
                   layoutId="bottom-tab-indicator"
                   className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
                   style={{ background: '#c4b78a', boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)' }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  transition={springs.snappy}
                 />
               )}
             </span>
@@ -330,7 +331,7 @@ export const NavRail: React.FC<NavRailProps> = ({
                     background: 'rgba(196, 183, 138, 0.08)',
                     boxShadow: '0 0 12px rgba(196, 183, 138, 0.1), inset 0 1px 0 rgba(255,255,255,0.06)',
                   }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  transition={springs.snappy}
                   aria-hidden
                 />
                 <motion.span
@@ -340,7 +341,7 @@ export const NavRail: React.FC<NavRailProps> = ({
                     background: 'linear-gradient(180deg, #c4b78a 0%, rgba(196, 183, 138, 0.4) 100%)',
                     boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)',
                   }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  transition={springs.snappy}
                   aria-hidden
                 />
               </>
@@ -384,7 +385,7 @@ export const NavRail: React.FC<NavRailProps> = ({
     <motion.aside
       initial={false}
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      transition={springs.gentle}
       className={`scrollbar-premium ${className}`}
       style={{
         position: 'fixed',

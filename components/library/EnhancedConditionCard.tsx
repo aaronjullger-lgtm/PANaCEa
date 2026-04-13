@@ -10,6 +10,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { FlaskConical, Pill, Lightbulb, Target } from 'lucide-react';
 import { RetrievabilityBadge, YieldBadge } from '@/components/ui/badges';
 import { ProvenanceBadge } from '@/components/ui/ProvenanceBadge';
@@ -120,7 +121,7 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
     <motion.button
       onClick={onClick}
       whileTap={{ scale: 0.99 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      transition={springs.snappy}
       className={`
         group w-full text-left rounded-xl overflow-hidden
         bg-[var(--color-bg-primary)] transition-colors duration-150

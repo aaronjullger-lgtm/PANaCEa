@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, X, Star, Trophy } from 'lucide-react';
+import { springs } from '@/config/appViews';
 import type { AchievementBadge } from '@/types/interface-fabric-system';
 
 interface AchievementNotificationProps {
@@ -90,11 +91,7 @@ export function AchievementNotification({
             initial={{ scale: 0.5, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0, y: 50 }}
-            transition={{
-              type: 'spring',
-              damping: 15,
-              stiffness: 300,
-            }}
+            transition={springs.bouncy}
             className="bg-[var(--color-bg-primary)] rounded-2xl p-8 max-w-md w-full border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)]"
             style={{ boxShadow: getRarityGlow(badge.rarity) }}
             onClick={(e) => e.stopPropagation()}
@@ -116,7 +113,7 @@ export function AchievementNotification({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1, rotate: 360 }}
-                transition={{ delay: 0.2, type: 'spring', damping: 10 }}
+                transition={{ delay: 0.2, ...springs.wobbly }}
                 className="inline-block mb-4"
               >
                 <div

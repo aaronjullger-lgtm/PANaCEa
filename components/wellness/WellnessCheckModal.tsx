@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Coffee, Wind } from 'lucide-react';
+import { springs } from '@/config/appViews';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 
 interface WellnessCheckModalProps {
@@ -172,7 +173,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: 'spring', damping: 20 }}
+          transition={springs.gentle}
           ref={modalRef}
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}

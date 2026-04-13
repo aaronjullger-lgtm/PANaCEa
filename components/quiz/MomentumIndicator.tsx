@@ -7,6 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { Flame, TrendingUp, Equal, TrendingDown, Snowflake, Zap, Coffee, Lightbulb } from 'lucide-react';
 import {
   calculateMomentum,
@@ -114,7 +115,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         key={momentum.level}
         initial={noMotion ? false : { scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={noMotion ? { duration: 0 } : { type: 'spring', stiffness: 300 }}
+        transition={noMotion ? { duration: 0 } : springs.snappy}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
       >
         <div className={`p-2 rounded-lg bg-[var(--color-bg-tertiary)]/80 ${config.color}`}>

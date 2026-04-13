@@ -118,11 +118,6 @@ export const staggerContainer = {
   },
 };
 
-export const staggerItem = {
-  hidden: { y: 20, opacity: 0 },
-  animate: { y: 0, opacity: 1 },
-};
-
 /** Spring presets — from Disney's 12 Principles */
 export const springs = {
   /** Gentle entrance — modals, overlays, content reveals */
@@ -135,6 +130,16 @@ export const springs = {
   wobbly: { type: 'spring' as const, stiffness: 180, damping: 10 },
   /** Stiff precision — cards, panels, layout shifts */
   stiff: { type: 'spring' as const, stiffness: 700, damping: 40 },
+};
+
+export const staggerItem = {
+  hidden: { y: 20, opacity: 0, filter: 'blur(4px)' },
+  animate: {
+    y: 0,
+    opacity: 1,
+    filter: 'blur(0px)',
+    transition: springs.snappy,
+  },
 };
 
 /** Legacy alias */

@@ -20,6 +20,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { RotateCcw, LogOut, Target, Zap, Clock, CheckCircle, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -150,7 +151,7 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
         transition={
           prefersReducedMotion
             ? { duration: 0 }
-            : { type: 'spring', damping: 22, stiffness: 260 }
+            : springs.snappy
         }
         className="w-full max-w-md"
       >

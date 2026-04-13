@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import { useBreakpoint, useMediaQuery } from '@/lib/utils/mobileOptimization';
+import { springs } from '@/config/appViews';
 
 export interface GestureConfig {
   /** Enable swipe gestures for navigation */
@@ -573,7 +574,7 @@ export const PullToRefresh: React.FC<{
       )}
       <motion.div
         style={{ y: gesture.type === 'pull' ? Math.min(gesture.progress * 50, 50) : 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={springs.snappy}
       >
         {children}
       </motion.div>

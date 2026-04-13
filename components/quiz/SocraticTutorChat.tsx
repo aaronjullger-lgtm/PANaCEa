@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
@@ -139,7 +140,7 @@ export function SocraticTutorChat({
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      transition={springs.gentle}
       className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[50vh] rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] shadow-[0_-8px_32px_rgba(15,23,42,0.25)]"
     >
       <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)]">
