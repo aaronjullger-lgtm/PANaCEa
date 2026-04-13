@@ -125,13 +125,14 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop — cinematic blur entrance */}
             <motion.div
-             
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+              animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+              exit={{ opacity: 0, backdropFilter: 'blur(0px)', transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] } }}
+              transition={{ duration: 0.25, ease: [0.0, 0.0, 0.2, 1] }}
               onClick={onClose}
-              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[35]"
+              className="fixed inset-0 bg-[var(--color-overlay)] z-[35]"
             />
 
             {/* Sheet */}
@@ -199,13 +200,14 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop — cinematic blur entrance */}
           <motion.div
-           
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)', transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] } }}
+            transition={{ duration: 0.25, ease: [0.0, 0.0, 0.2, 1] }}
             onClick={onClose}
-            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[35] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-[var(--color-overlay)] z-[35] flex items-center justify-center p-4"
           >
             {/* Modal */}
             <motion.div
@@ -213,9 +215,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               role="dialog"
               aria-modal="true"
               aria-labelledby={title ? 'modal-title' : undefined}
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ scale: 0.92, y: 12, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.95, y: 8, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
+              transition={springs.bouncy}
               onClick={(e) => e.stopPropagation()}
               className={`
                 bg-[var(--color-bg-primary)] 

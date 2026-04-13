@@ -15,13 +15,13 @@ import { cn } from '@/lib/utils';
 import { cardHoverVariants, springs } from '@/config/appViews';
 
 /* ---------- Ring-shadow value (single source of truth) ---------- */
-const RING_SHADOW = '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)';
+const RING_SHADOW = '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)';
 
 /* ---------- Glassmorphism card style ---------- */
 const GLASS_CARD_STYLE: React.CSSProperties = {
-  boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 4px 16px -2px var(--color-glass-shadow, rgba(0,0,0,0.1))',
-  backdropFilter: 'blur(12px) saturate(130%)',
-  WebkitBackdropFilter: 'blur(12px) saturate(130%)',
+  boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 4px 16px -4px var(--color-glass-shadow, rgba(0,0,0,0.12)), 0 2px 6px -2px rgba(0,0,0,0.04)',
+  backdropFilter: 'blur(16px) saturate(140%)',
+  WebkitBackdropFilter: 'blur(16px) saturate(140%)',
   background: 'var(--color-card-bg, var(--color-bg-secondary))',
 };
 
@@ -50,7 +50,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
     <div
       ref={ref}
       className={cn('px-5 py-3.5', className)}
-      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-glass-border, var(--color-border))' }}
+      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-glass-border, var(--color-border))', borderBottom: '1px solid transparent' }}
       {...props}
     />
   ),

@@ -16,6 +16,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { ChevronRight } from '@/components/ui/icons';
 import { useReducedMotion, useAccessibleAnimation } from '@/hooks/useReducedMotion';
 
@@ -86,9 +87,11 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: animDuration }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8, filter: 'blur(3px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      whileHover={prefersReducedMotion ? undefined : { y: -2, transition: springs.snappy }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98, transition: { duration: 0.08 } }}
+      transition={prefersReducedMotion ? { duration: 0 } : { ...springs.snappy, opacity: { duration: animDuration }, filter: { duration: 0.25 } }}
       onClick={handleClick}
       className="group w-full text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
     >

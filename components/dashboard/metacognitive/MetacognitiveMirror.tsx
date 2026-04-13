@@ -9,6 +9,9 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { springs, skeletonLineVariants, widgetEntrance } from '@/config/appViews';
+import { ShimmerOverlay } from '@/components/loading';
 import { useMetacognitiveStats } from '@/hooks/useMetacognitiveStats';
 import { FirstInstinctCard } from './FirstInstinctCard';
 import { CircadianHeatmap } from './CircadianHeatmap';
@@ -31,10 +34,21 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
+            <motion.div
               key={i}
-              className="h-48 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] animate-pulse"
-            />
+              custom={i}
+              variants={skeletonLineVariants}
+              initial="hidden"
+              animate="visible"
+              className="relative h-48 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] overflow-hidden"
+            >
+              <ShimmerOverlay intensity="subtle" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 w-1/3 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+                <div className="h-24 w-full rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
+                <div className="h-3 w-2/3 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+              </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -47,15 +61,25 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
           Metacognitive Mirror
         </h2>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <motion.p
+          initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={springs.gentle}
+          className="text-sm text-[var(--color-text-muted)]"
+        >
           {error || 'Unable to load behavioral insights.'}
-        </p>
+        </motion.p>
       </section>
     );
   }
 
   return (
-    <section className="space-y-4">
+    <motion.section
+      initial={{ y: 12, filter: 'blur(4px)' }}
+      animate={{ y: 0, filter: 'blur(0px)' }}
+      transition={springs.snappy}
+      className="space-y-4"
+    >
       <div className="flex items-baseline justify-between">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
           Metacognitive Mirror
@@ -66,12 +90,24 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FirstInstinctCard insight={data.answerSwitchInsight} />
-        <CircadianHeatmap buckets={data.circadianPerformance} />
-        <SpeedAccuracyCard buckets={data.speedAccuracy} />
-        <ConfidenceCalibrationCard buckets={data.confidenceCurve} />
+        {([
+          <FirstInstinctCard key="first-instinct" insight={data.answerSwitchInsight} />,
+          <CircadianHeatmap key="circadian" buckets={data.circadianPerformance} />,
+          <SpeedAccuracyCard key="speed-accuracy" buckets={data.speedAccuracy} />,
+          <ConfidenceCalibrationCard key="confidence" buckets={data.confidenceCurve} />,
+        ] as React.ReactElement[]).map((widget, i) => (
+          <motion.div
+            key={widget.key}
+            variants={widgetEntrance}
+            initial="hidden"
+            animate="visible"
+            custom={i}
+          >
+            {widget}
+          </motion.div>
+        ))}
       </div>
-    </section>
+    </motion.section>
   );
 };
 

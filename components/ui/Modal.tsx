@@ -103,23 +103,23 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
-          className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)', transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] } }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.0, 0.0, 0.2, 1] }}
+          className="fixed inset-0 z-50 bg-[var(--color-overlay)] flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
           <motion.div
             ref={modalRef}
             tabIndex={-1}
-            initial={prefersReducedMotion ? false : { scale: 0.95, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0.95, opacity: 0, y: 10 }}
+            initial={prefersReducedMotion ? false : { scale: 0.92, opacity: 0, y: 12, filter: 'blur(8px)' }}
+            animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0.95, opacity: 0, y: 8, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
             transition={
               prefersReducedMotion
                 ? { duration: 0 }
-                : springs.snappy
+                : { ...springs.bouncy, opacity: { duration: 0.2 }, filter: { duration: 0.25 } }
             }
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             role="dialog"

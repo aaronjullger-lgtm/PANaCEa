@@ -39,12 +39,10 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       exit={prefersReducedMotion ? { opacity: 0 } : { y: -10 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' }}
       className={`
-        relative overflow-hidden rounded-xl
-        bg-[var(--color-bg-secondary)]
+        card-cinematic relative overflow-hidden
         p-5
         ${className}
       `}
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
     >
       {/* Dismiss button */}
       <button

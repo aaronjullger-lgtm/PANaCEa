@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs, cardHoverVariants } from '@/config/appViews';
 import { Library, Search, Star, X, ChevronRight, Clock, RefreshCw } from 'lucide-react';
 import GenericReferenceView from './GenericReferenceView';
 import type { ReferenceViewConfig } from './GenericReferenceView';
@@ -51,17 +52,21 @@ interface EntityCardProps {
   config: ReferenceViewConfig<any>;
   count: number | null;
   onClick: () => void;
+  index?: number;
 }
 
 const FONT_HEADING = "'Poppins', system-ui, sans-serif";
 const FONT_BODY = "'Inter', system-ui, sans-serif";
 
-function EntityCard({ config, count, onClick }: EntityCardProps) {
+function EntityCard({ config, count, onClick, index = 0 }: EntityCardProps) {
   const Icon = config.icon;
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ ...springs.snappy, delay: 0.05 + index * 0.04 }}
+      whileHover={cardHoverVariants.hover}
+      whileTap={cardHoverVariants.tap}
       onClick={onClick}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
@@ -243,10 +248,10 @@ export default function ReferenceHub() {
       <AnimatePresence mode="wait">
         <motion.div
           key="high-yield"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, x: -20, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
+          transition={springs.snappy}
         >
           <HighYieldSummary onBack={() => setShowHighYield(false)} />
         </motion.div>
@@ -260,10 +265,10 @@ export default function ReferenceHub() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeConfig.entitySlug}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, x: 20, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, x: -20, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
+          transition={springs.snappy}
         >
           <GenericReferenceView
             config={activeConfig}
@@ -456,12 +461,13 @@ export default function ReferenceHub() {
             config.entitySlug.toLowerCase().includes(q) ||
             desc.toLowerCase().includes(q)
           );
-        }).map((config) => (
+        }).map((config, i) => (
           <EntityCard
             key={config.entitySlug}
             config={config}
             count={entityCounts[config.entitySlug] ?? null}
             onClick={() => handleSelectEntity(config as ReferenceViewConfig<any>)}
+            index={i}
           />
         ))}
       </div>
