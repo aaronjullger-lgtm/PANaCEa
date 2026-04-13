@@ -1,6 +1,13 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../../_shared/auth';
-import { errorHandler } from '../../_shared/error-handler';
+import {
+  withMiddleware,
+  withCors,
+  withErrorHandling,
+  withEnvCheck,
+  withAuth,
+  withRateLimit,
+  withLogging,
+  type AuthenticatedContext,
+} from '../../_shared/middleware';
 import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
 
@@ -10,23 +17,29 @@ import { prisma } from '../../_shared/prisma-edge';
  *
  * Optional query params:
  * - date: ISO date string (default: today)
- *
- * Returns:
- * - Recommended study sessions for the day
- * - Target question count and systems to focus
- * - Estimated duration
- * - Current progress on the plan
- */
-export async function onRequestGet(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
+ */export const onRequestGet = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+  withAuth(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
+  withLogging(),
+  async (context: AuthenticatedContext) => {
+    const clerkId = context.auth.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
 
     // Parse optional date param
-    const url = new URL(request.url);
+    const url = new URL(context.request.url);
     const dateParam = url.searchParams.get('date');
     const targetDate = dateParam ? new Date(dateParam) : new Date();
     targetDate.setUTCHours(0, 0, 0, 0);
-
     // Get the plan for the specified date
     const plan = await prisma.dailyStudyPlan.findUnique({
       where: {
@@ -45,42 +58,41 @@ export async function onRequestGet(request: Request): Promise<Response> {
       });
 
       if (!newPlan) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to generate daily plan' }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
+        return { status: 500, error: 'Failed to generate daily plan' };
       }
 
-      return new Response(JSON.stringify(formatPlanResponse(newPlan)), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 200, data: formatPlanResponse(newPlan) };
     }
 
-    return new Response(JSON.stringify(formatPlanResponse(plan)), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    return errorHandler(error);
+    return { status: 200, data: formatPlanResponse(plan) };
   }
-}
-
+);
 /**
  * POST /api/users/me/daily-plan/complete
  * Mark today's plan as completed
  */
-export async function onRequestPost(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
-    const body = await request.json() as { accuracy?: number; durationMinutes?: number };
+export const onRequestPost = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+  withAuth(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
+  withLogging(),
+  async (context: AuthenticatedContext) => {
+    const clerkId = context.auth.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
+
+    const body = await context.request.json() as { accuracy?: number; durationMinutes?: number };
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-
     // Find today's plan
     const plan = await prisma.dailyStudyPlan.findUnique({
       where: {
@@ -92,13 +104,7 @@ export async function onRequestPost(request: Request): Promise<Response> {
     });
 
     if (!plan) {
-      return new Response(
-        JSON.stringify({ error: 'No plan found for today' }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return { status: 404, error: 'No plan found for today' };
     }
 
     // Update plan with completion data
@@ -113,15 +119,9 @@ export async function onRequestPost(request: Request): Promise<Response> {
       },
     });
 
-    return new Response(JSON.stringify(formatPlanResponse(updatedPlan)), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    return errorHandler(error);
+    return { status: 200, data: formatPlanResponse(updatedPlan) };
   }
-}
-
+);
 // ============================================
 // Helper functions
 // ============================================
@@ -151,8 +151,7 @@ function formatPlanResponse(plan: {
   feedbackReason: string | null;
   createdAt: Date;
   updatedAt: Date;
-}) {
-  const sessions = Array.isArray(plan.recommendedSessions)
+}) {  const sessions = Array.isArray(plan.recommendedSessions)
     ? (plan.recommendedSessions as RecommendedSession[])
     : [];
 
@@ -181,7 +180,6 @@ function formatPlanResponse(plan: {
       durationMinutes: plan.actualDurationMinutes,
       estimatedDurationMinutes: plan.estimatedTimeMinutes,
     },
-
     // Metadata
     completedAt: plan.completedAt ? plan.completedAt.toISOString() : null,
     wasEffective: plan.wasEffective,

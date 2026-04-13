@@ -1,7 +1,15 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../../_shared/auth';
-import { errorHandler } from '../../_shared/error-handler';
+import {
+  withMiddleware,
+  withCors,
+  withErrorHandling,
+  withEnvCheck,
+  withAuth,
+  withRateLimit,
+  withLogging,
+  type AuthenticatedContext,
+} from '../../_shared/middleware';
 import { recordExamOutcome } from '../../_shared/outcomeOptimizationService';
+import { prisma } from '../../_shared/prisma-edge';
 
 /**
  * POST /api/users/me/exam-outcome
@@ -17,15 +25,24 @@ import { recordExamOutcome } from '../../_shared/outcomeOptimizationService';
  *   timeLimit?: number (seconds)
  *   timeUsed?: number (seconds)
  * }
- *
- * Returns:
- * - Outcome record created
- * - Comparison to user's predicted readiness
- * - Performance breakdown by system
- */
-export async function onRequestPost(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
+ */export const onRequestPost = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+  withAuth(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'exam-outcome' }),
+  withLogging(),
+  async (context: AuthenticatedContext) => {
+    const userId = context.auth.userId;
+
+    // Look up internal user ID from Clerk ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
 
     // Parse request body
     let body: {
@@ -37,43 +54,24 @@ export async function onRequestPost(request: Request): Promise<Response> {
       timeLimit?: number;
       timeUsed?: number;
     };
-
     try {
-      body = await request.json();
+      body = await context.request.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return { status: 400, error: 'Invalid JSON in request body' };
     }
 
     // Validate required fields
     if (!body.examType || !body.examDate || typeof body.score !== 'number' || typeof body.passed !== 'boolean') {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          required: ['examType', 'examDate', 'score', 'passed'],
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return {
+        status: 400,
+        error: 'Missing required fields: examType, examDate, score, passed',
+      };
     }
 
     // Parse exam date
     const examDate = new Date(body.examDate);
     if (isNaN(examDate.getTime())) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid exam date' }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return { status: 400, error: 'Invalid exam date' };
     }
 
     // Record the outcome
@@ -86,22 +84,16 @@ export async function onRequestPost(request: Request): Promise<Response> {
       timeLimit: body.timeLimit,
       timeUsed: body.timeUsed,
     });
-
-    return new Response(
-      JSON.stringify({
+    return {
+      status: 201,
+      data: {
         success: true,
         outcomeId: outcome.id,
         examType: body.examType,
         score: body.score,
         passed: body.passed,
         message: 'Exam outcome recorded. System predictiveness will be updated in the next analysis run.',
-      }),
-      {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return errorHandler(error);
+      },
+    };
   }
-}
+);

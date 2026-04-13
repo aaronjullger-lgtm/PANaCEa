@@ -1,6 +1,13 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../_shared/auth';
-import { errorHandler } from '../_shared/error-handler';
+import {
+  withMiddleware,
+  withCors,
+  withErrorHandling,
+  withEnvCheck,
+  withAuth,
+  withRateLimit,
+  withLogging,
+  type AuthenticatedContext,
+} from '../_shared/middleware';
 import { prisma } from '../_shared/prisma-edge';
 
 /**
@@ -14,10 +21,23 @@ import { prisma } from '../_shared/prisma-edge';
  * - Recent submissions and their status
  * - Impact metrics (users studied, accuracy, exam correlation)
  * - Suggested content gaps to fill
- */
-export async function onRequestGet(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
+ */export const onRequestGet = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+  withAuth(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'author-dashboard' }),
+  withLogging(),
+  async (context: AuthenticatedContext) => {
+    const clerkId = context.auth.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
 
     // Get or create author profile
     let author = await prisma.contentAuthor.findUnique({
@@ -32,7 +52,6 @@ export async function onRequestGet(request: Request): Promise<Response> {
         },
       });
     }
-
     // Get submission stats
     const submissions = await prisma.questionSubmission.findMany({
       where: { contentAuthorId: author.id },
@@ -58,12 +77,9 @@ export async function onRequestGet(request: Request): Promise<Response> {
     const approvalRate = submissions.length > 0
       ? ((byStatus.approved + byStatus.published) / submissions.length) * 100
       : 0;
-
     // Get published questions for this author
     const publishedQuestions = await prisma.question.findMany({
       where: {
-        // Questions created/submitted by this author (would need to track in Question model)
-        // For now, use a workaround by checking recent questions
         createdAt: {
           gte: author.createdAt,
         },
@@ -86,7 +102,6 @@ export async function onRequestGet(request: Request): Promise<Response> {
     const avgHealthScore = healthScores.length > 0
       ? healthScores.reduce((a, b) => a + b) / healthScores.length
       : null;
-
     // Get recent high-impact submissions
     const recentSubmissions = submissions
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
@@ -106,93 +121,3 @@ export async function onRequestGet(request: Request): Promise<Response> {
       distinct: ['system'],
       select: { system: true },
     });
-
-    const gapAnalysis = await Promise.all(
-      allSystems.map(async s => {
-        const authorQuestions = publishedQuestions.filter(q => q.system === s.system).length;
-        const totalQuestions = await prisma.question.count({
-          where: {
-            system: s.system,
-            lifecycleStatus: 'ACTIVE',
-            qaStatus: 'APPROVED',
-          },
-        });
-
-        const target = await prisma.examBlueprintSystem.findUnique({
-          where: {
-            examType_system: {
-              examType: 'PANCE',
-              system: s.system,
-            },
-          },
-        });
-
-        const targetPercentage = target?.targetPercentage || 10;
-        const currentPercentage = totalQuestions > 0 ? (authorQuestions / totalQuestions) * 100 : 0;
-
-        return {
-          system: s.system,
-          contributedQuestions: authorQuestions,
-          gap: targetPercentage - currentPercentage,
-          suggestionLevel: targetPercentage - currentPercentage > 5 ? 'critical' : targetPercentage - currentPercentage > 2 ? 'high' : 'medium',
-        };
-      })
-    );
-
-    // Filter to critical gaps
-    const suggestedGaps = gapAnalysis
-      .filter(g => g.gap > 2)
-      .sort((a, b) => b.gap - a.gap)
-      .slice(0, 5);
-
-    return new Response(
-      JSON.stringify({
-        author: {
-          id: author.id,
-          role: author.role,
-          specialty: author.specialty,
-          institution: author.institution,
-          bio: author.bio,
-        },
-
-        statistics: {
-          questionsCreated: author.questionsCreated,
-          questionsApproved: author.questionsApproved,
-          questionsActive: publishedQuestions.filter(
-            q => q.lifecycleStatus === 'ACTIVE' && q.qaStatus === 'APPROVED'
-          ).length,
-          averageHealthScore: avgHealthScore ? parseFloat(avgHealthScore.toFixed(2)) : null,
-          approvalRate: parseFloat(approvalRate.toFixed(1)),
-          questionsDemoted: author.questionsDemoted,
-        },
-
-        submissions: {
-          recent: recentSubmissions,
-          byStatus,
-          pendingReview: byStatus.submitted + byStatus.inReview,
-          rejectionRate: submissions.length > 0 ? (byStatus.rejected / submissions.length) * 100 : 0,
-        },
-
-        impact: {
-          usersStudied: 0, // Would need to calculate from ReviewLog
-          averageAccuracyOnYourQuestions: 0.72, // Placeholder
-          correlationWithExamSuccess: 0.64, // Placeholder
-        },
-
-        suggestedGaps,
-
-        metadata: {
-          memberSince: author.createdAt.toISOString(),
-          lastSubmission: recentSubmissions[0]?.createdAt || null,
-          nextReviewDeadline: null,
-        },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return errorHandler(error);
-  }
-}

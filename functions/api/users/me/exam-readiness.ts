@@ -1,6 +1,13 @@
-import { Request } from '@cloudflare/workers-types';
-import { requireAuth } from '../../_shared/auth';
-import { errorHandler } from '../../_shared/error-handler';
+import {
+  withMiddleware,
+  withCors,
+  withErrorHandling,
+  withEnvCheck,
+  withAuth,
+  withRateLimit,
+  withLogging,
+  type AuthenticatedContext,
+} from '../../_shared/middleware';
 import { getExamReadinessBySystem } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
 
@@ -16,13 +23,26 @@ import { prisma } from '../../_shared/prisma-edge';
  * - Blueprint targets vs current coverage
  * - Critical gaps needing focus
  * - Days until exam
- */
-export async function onRequestGet(request: Request): Promise<Response> {
-  try {
-    const user = await requireAuth(request);
-
-    const url = new URL(request.url);
+ */export const onRequestGet = withMiddleware(
+  withCors(),
+  withErrorHandling(),
+  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+  withAuth(),
+  withRateLimit({ requestsPerMinute: 60, endpointType: 'api', keyPrefix: 'exam-readiness' }),
+  withLogging(),
+  async (context: AuthenticatedContext) => {
+    const url = new URL(context.request.url);
     const examType = url.searchParams.get('examType') || 'PANCE';
+    const userId = context.auth.userId;
+
+    // Look up internal user ID from Clerk ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
 
     // Get user's phenotype
     const phenotype = await prisma.userStudyPhenotype.findUnique({
@@ -30,18 +50,12 @@ export async function onRequestGet(request: Request): Promise<Response> {
     });
 
     if (!phenotype) {
-      return new Response(
-        JSON.stringify({
-          error: 'No phenotype available',
-          message: 'User study profile has not been computed yet',
-        }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return {
+        status: 404,
+        error: 'No phenotype available',
+        data: { message: 'User study profile has not been computed yet' },
+      };
     }
-
     // Get exam readiness by system
     const readinessBySystem = await getExamReadinessBySystem(user.id, examType);
 
@@ -59,7 +73,6 @@ export async function onRequestGet(request: Request): Promise<Response> {
     for (const { system, readiness } of readinessBySystem) {
       const target = blueprintMap.get(system)?.targetPercentage || 10;
 
-      // Get question count for system
       const questionCount = await prisma.question.count({
         where: {
           system,
@@ -77,7 +90,6 @@ export async function onRequestGet(request: Request): Promise<Response> {
           readiness > 0.8 ? 'strong' : readiness > 0.6 ? 'good' : readiness > 0.4 ? 'weak' : 'critical',
       });
     }
-
     // Sort by readiness (weakest first)
     systemCoverage.sort((a, b) => (a.readiness as number) - (b.readiness as number));
 
@@ -86,8 +98,9 @@ export async function onRequestGet(request: Request): Promise<Response> {
       s => (s.readiness as number) < 40 || phenotype.criticalGapsForExam.includes(s.system as string)
     );
 
-    return new Response(
-      JSON.stringify({
+    return {
+      status: 200,
+      data: {
         examType,
         overallReadiness: phenotype.estimatedReadiness,
         readinessPercentage: parseFloat((phenotype.estimatedReadiness * 100).toFixed(1)),
@@ -120,13 +133,7 @@ export async function onRequestGet(request: Request): Promise<Response> {
               )
             : null,
         },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    return errorHandler(error);
+      },
+    };
   }
-}
+);
