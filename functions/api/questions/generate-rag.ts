@@ -22,6 +22,7 @@ import {
   retrieveForQuestionGeneration,
   formatContextForPrompt,
   assessRetrievalQuality,
+  refineRetrievedContext,
 } from '../../../lib/services/ragContextService';
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
@@ -60,9 +61,43 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
   try {
     // 1. Retrieve clinical context via RAG
-    const ragContext = await retrieveForQuestionGeneration(conditionName, system, prisma, apiKey);
+    const rawContext = await retrieveForQuestionGeneration(conditionName, system, prisma, apiKey);
+
+    // 2. Refine: Rerank → CRAG guardrail
+    const refined = refineRetrievedContext(
+      rawContext,
+      `${conditionName} ${system} clinical presentation diagnosis treatment pathophysiology`,
+      system,
+      conditionName,
+      'generation'
+    );
+
+    // If CRAG says INCORRECT, bail early — not enough grounding
+    if (refined.cragAction === 'INCORRECT') {
+      const quality = assessRetrievalQuality(rawContext);
+      return {
+        data: {
+          questions: [],
+          ragMetadata: {
+            sourceChunkIds: [],
+            retrievalQuality: quality.grade,
+            retrievalMessage: `CRAG rejected: ${quality.message}`,
+            isGrounded: false,
+            chunksUsed: 0,
+            avgSimilarity: 0,
+            cragAction: 'INCORRECT',
+            pipelineMetrics: refined.pipelineMetrics,
+          },
+        },
+      };
+    }
+
+    const ragContext = refined.context;
     const quality = assessRetrievalQuality(ragContext);
-    const formattedContext = formatContextForPrompt(ragContext, 3000);
+
+    // Prepend caution prefix if AMBIGUOUS
+    const cautionBlock = refined.cautionPrefix ? `${refined.cautionPrefix}\n\n` : '';
+    const formattedContext = cautionBlock + formatContextForPrompt(ragContext, 3000);
 
     // 2. Build grounded generation prompt
     const systemInstruction = `You are a board-certified physician and experienced NBME item-writer creating PANCE-style clinical questions for PA students.
@@ -156,6 +191,8 @@ Return ONLY valid JSON. No markdown fences.`;
               ? ragContext.retrievalScores.reduce((a, b) => a + b, 0) /
                 ragContext.retrievalScores.length
               : 0,
+          cragAction: refined.cragAction,
+          pipelineMetrics: refined.pipelineMetrics,
         },
       },
     };

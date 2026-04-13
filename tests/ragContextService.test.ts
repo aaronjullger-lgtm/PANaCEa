@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   formatContextForPrompt,
   assessRetrievalQuality,
+  refineRetrievedContext,
   type RAGContext,
   type RAGChunk,
 } from '@/lib/services/ragContextService';
@@ -114,5 +115,78 @@ describe('assessRetrievalQuality', () => {
       retrievalScores: [0.20],
     });
     expect(assessRetrievalQuality(ctx).grade).toBe('poor');
+  });
+});
+
+// ─── refineRetrievedContext (integration: rerank → CRAG) ────────
+
+describe('refineRetrievedContext', () => {
+  it('routes high-quality retrieval to CORRECT', () => {
+    const ctx = makeContext({
+      chunks: [
+        makeChunk({ similarity: 0.80, system: 'Cardiovascular', content: 'Heart failure: sensitivity 95%, specificity 88%. ACE inhibitors per ACC/AHA guidelines. Dose: 5mg daily.' }),
+        makeChunk({ similarity: 0.70, system: 'Cardiovascular', contentType: 'treatment', content: 'First-line treatment for Heart failure includes ACE inhibitors and beta-blockers per guideline recommendations.' }),
+        makeChunk({ similarity: 0.65, system: 'Cardiovascular', contentType: 'diagnostics', content: 'Gold standard diagnosis: echocardiography. BNP levels > 100 pg/mL support the diagnosis of Heart failure.' }),
+      ],
+      retrievalScores: [0.80, 0.70, 0.65],
+    });
+
+    const result = refineRetrievedContext(
+      ctx,
+      'Heart failure pathophysiology and treatment',
+      'Cardiovascular',
+      'Heart failure',
+      'generation'
+    );
+
+    expect(result.cragAction).toBe('CORRECT');
+    expect(result.context.chunks.length).toBeGreaterThan(0);
+    expect(result.cautionPrefix).toBeNull();
+    expect(result.pipelineMetrics.rawChunks).toBe(3);
+    expect(result.pipelineMetrics.afterCRAG).toBeGreaterThan(0);
+  });
+
+  it('routes low-quality retrieval to INCORRECT', () => {
+    const ctx = makeContext({
+      chunks: [
+        makeChunk({ similarity: 0.20, system: 'Dermatology', condition: 'Psoriasis', content: 'Psoriasis is a chronic skin condition.' }),
+        makeChunk({ similarity: 0.15, system: 'Psychiatry', condition: 'Depression', content: 'Depression affects mood and behavior.' }),
+      ],
+      retrievalScores: [0.20, 0.15],
+    });
+
+    const result = refineRetrievedContext(
+      ctx,
+      'Heart failure treatment',
+      'Cardiovascular',
+      'Heart failure',
+      'generation'
+    );
+
+    expect(result.cragAction).toBe('INCORRECT');
+    expect(result.contentGap).not.toBeNull();
+    expect(result.contentGap!.system).toBe('Cardiovascular');
+  });
+
+  it('returns pipeline metrics with timing', () => {
+    const ctx = makeContext({
+      chunks: [makeChunk({ similarity: 0.60 })],
+      retrievalScores: [0.60],
+    });
+
+    const result = refineRetrievedContext(ctx, 'test query');
+    expect(result.pipelineMetrics.rawChunks).toBe(1);
+    expect(result.pipelineMetrics.rerankDurationMs).toBeGreaterThanOrEqual(0);
+    expect(result.pipelineMetrics.retrievalConfidence).toBeGreaterThanOrEqual(0);
+    expect(result.pipelineMetrics.retrievalConfidence).toBeLessThanOrEqual(1);
+  });
+
+  it('handles empty context gracefully', () => {
+    const ctx = makeContext({ chunks: [], retrievalScores: [] });
+    const result = refineRetrievedContext(ctx, 'query', 'Cardio', 'HF', 'generation');
+
+    expect(result.cragAction).toBe('INCORRECT');
+    expect(result.context.chunks).toHaveLength(0);
+    expect(result.pipelineMetrics.rawChunks).toBe(0);
   });
 });

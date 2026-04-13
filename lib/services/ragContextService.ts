@@ -241,6 +241,93 @@ export function formatContextForPrompt(
   return result;
 }
 
+// ─── Refined Pipeline (Retrieve → Rerank → CRAG) ────────────────
+
+import { rerankPipeline } from './rerankService';
+import { evaluateRetrieval, formatGapForLogging } from './cragGuardrailService';
+import type { CRAGResult, ContentGapSignal } from './cragGuardrailService';
+import type { RerankResult, RerankOptions } from './rerankService';
+
+export interface RefinedRAGResult {
+  /** Final context to use for generation (post-CRAG filtering) */
+  context: RAGContext;
+  /** CRAG routing decision */
+  cragAction: 'CORRECT' | 'AMBIGUOUS' | 'INCORRECT';
+  /** Caution prefix to prepend to LLM prompt (null if CORRECT) */
+  cautionPrefix: string | null;
+  /** Content gap signal for knowledge base improvement */
+  contentGap: ContentGapSignal | null;
+  /** Pipeline metrics */
+  pipelineMetrics: {
+    rawChunks: number;
+    afterRerank: number;
+    afterCRAG: number;
+    rerankDurationMs: number;
+    retrievalConfidence: number;
+    cragAction: string;
+  };
+}
+
+/**
+ * Full RAG refinement pipeline: Retrieve → Rerank → CRAG Evaluate.
+ *
+ * This is the recommended entry point for all RAG consumers.
+ * It applies cross-encoder reranking to improve chunk ordering,
+ * then CRAG guardrails to filter irrelevant chunks and route
+ * the context to the appropriate action.
+ *
+ * @param rawContext - Raw retrieval output from retrieveContext()
+ * @param query - Original user/generation query
+ * @param targetSystem - Target organ system (for alignment scoring)
+ * @param targetCondition - Target condition (for alignment scoring)
+ * @param contentType - What the context will be used for
+ * @param rerankOptions - Optional rerank configuration overrides
+ */
+export function refineRetrievedContext(
+  rawContext: RAGContext,
+  query: string,
+  targetSystem?: string,
+  targetCondition?: string,
+  contentType: 'generation' | 'explanation' | 'osce' | 'general' = 'general',
+  rerankOptions?: RerankOptions
+): RefinedRAGResult {
+  // Step 1: Rerank chunks
+  const rerankResult: RerankResult = rerankPipeline(rawContext, query, {
+    targetSystem,
+    targetCondition,
+    ...rerankOptions,
+  });
+
+  // Step 2: CRAG evaluate the reranked context
+  const cragResult: CRAGResult = evaluateRetrieval(
+    rerankResult.context,
+    query,
+    targetSystem,
+    targetCondition,
+    contentType
+  );
+
+  // Step 3: Log content gaps for knowledge base improvement
+  if (cragResult.contentGap) {
+    console.warn(formatGapForLogging(cragResult.contentGap));
+  }
+
+  return {
+    context: cragResult.refinedContext,
+    cragAction: cragResult.action,
+    cautionPrefix: cragResult.cautionPrefix,
+    contentGap: cragResult.contentGap,
+    pipelineMetrics: {
+      rawChunks: rawContext.chunks.length,
+      afterRerank: rerankResult.context.chunks.length,
+      afterCRAG: cragResult.refinedContext.chunks.length,
+      rerankDurationMs: rerankResult.durationMs,
+      retrievalConfidence: cragResult.metrics.retrievalConfidence,
+      cragAction: cragResult.action,
+    },
+  };
+}
+
 // ─── Convenience Wrappers ─────────────────────────────────────────
 
 export async function retrieveForQuestionGeneration(
