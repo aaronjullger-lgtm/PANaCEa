@@ -11,6 +11,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
 import { hybridSearchRRF, classifyQuery } from '@/lib/services/search/hybridSearch';
+import { gradeDocuments, buildCRAGContext, type RetrievedDocument, type CRAGResult } from '@/lib/services/search/correctiveRag';
 
 const EMBED_MODEL = 'text-embedding-005';
 const EMBED_DIMS = 768;
@@ -22,6 +23,8 @@ const BodySchema = z.object({
   limit: z.number().int().min(1).max(MAX_LIMIT).optional().default(DEFAULT_LIMIT),
   /** Search mode: 'semantic' (default, pure vector) or 'hybrid' (keyword + semantic RRF) */
   mode: z.enum(['semantic', 'hybrid']).optional().default('semantic'),
+  /** Enable corrective RAG grading to filter low-relevance results */
+  crag: z.boolean().optional().default(false),
 });
 
 type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
@@ -48,6 +51,36 @@ async function getQueryEmbedding(query: string, apiKey: string): Promise<number[
   return values;
 }
 
+/** Convert search results to CRAG documents for grading */
+function toCRAGDocs(results: Array<{ id: string; condition?: string | null; overview?: string | null; symptoms?: string | null; similarity: number }>): RetrievedDocument[] {
+  return results.map((r) => ({
+    id: r.id,
+    text: [r.condition, r.overview, r.symptoms].filter(Boolean).join(' ').slice(0, 1000),
+    score: r.similarity,
+    source: 'semantic-search',
+  }));
+}
+
+/** Apply CRAG grading and filter results, returning quality metadata */
+async function applyCRAG(
+  query: string,
+  results: Array<Record<string, unknown> & { id: string; similarity: number }>,
+): Promise<{ filtered: typeof results; cragMeta: { qualityScore: number; accepted: number; rejected: number; fallbackTriggered: boolean } }> {
+  const docs = toCRAGDocs(results as Array<{ id: string; condition?: string | null; overview?: string | null; symptoms?: string | null; similarity: number }>);
+  const cragResult: CRAGResult = await gradeDocuments(query, docs);
+  const acceptedIds = new Set(cragResult.accepted.map((d) => d.id));
+  const filtered = results.filter((r) => acceptedIds.has(r.id));
+  return {
+    filtered,
+    cragMeta: {
+      qualityScore: cragResult.qualityScore,
+      accepted: cragResult.accepted.length,
+      rejected: cragResult.rejected.length,
+      fallbackTriggered: cragResult.fallbackTriggered,
+    },
+  };
+}
+
 export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
@@ -68,7 +101,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const { query, limit, mode } = validated;
+  const { query, limit, mode, crag: enableCRAG } = validated;
 
   try {
     const apiKey = env.GEMINI_API_KEY;
@@ -120,6 +153,15 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
           } : null;
         })
         .filter((r): r is NonNullable<typeof r> => r !== null);
+
+      // Apply CRAG if enabled
+      if (enableCRAG && hybridMapped.length > 0) {
+        const { filtered, cragMeta } = await applyCRAG(query, hybridMapped as Array<Record<string, unknown> & { id: string; similarity: number }>);
+        return {
+          data: { results: filtered, count: filtered.length, mode: 'hybrid', queryComplexity: complexity, crag: cragMeta },
+          headers: { 'Cache-Control': 'private, max-age=60' },
+        };
+      }
 
       return {
         data: { results: hybridMapped, count: hybridMapped.length, mode: 'hybrid', queryComplexity: complexity },
@@ -181,6 +223,15 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
         return item ? { ...item, similarity } : null;
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
+
+    // Apply CRAG if enabled
+    if (enableCRAG && results.length > 0) {
+      const { filtered, cragMeta } = await applyCRAG(query, results as Array<Record<string, unknown> & { id: string; similarity: number }>);
+      return {
+        data: { results: filtered, count: filtered.length, mode: 'semantic', crag: cragMeta },
+        headers: { 'Cache-Control': 'private, max-age=60' },
+      };
+    }
 
     return {
       data: { results, count: results.length, mode: 'semantic' },

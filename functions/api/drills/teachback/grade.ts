@@ -21,6 +21,9 @@
 
 import { authenticatedEndpoint } from '../../_shared/middleware';
 import { z } from 'zod';
+import { aiGenerateObject } from '@/lib/ai-sdk';
+import type { AIProviderEnv } from '@/lib/ai-sdk/providers';
+import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 
 const bodySchema = z.object({
   topicId: z.string(),
@@ -47,6 +50,19 @@ interface TeachBackGradeResult {
   strengths: string[];
   modelExplanation: string;
 }
+
+/** Zod schema for AI SDK generateObject() — structured grading output */
+const TeachBackGradeSchema = z.object({
+  categories: z.array(z.object({
+    category: z.string().describe('Category name: Definition/Pathophysiology, Presentation/Recognition, Diagnosis/Workup, or Treatment/Management'),
+    score: z.number().min(0).max(3).describe('Score 0-3 for this category'),
+    feedback: z.string().describe('One sentence of specific feedback'),
+  })).length(4),
+  overallFeedback: z.string().describe('2-3 sentences of encouraging, constructive feedback'),
+  missingConcepts: z.array(z.string()).describe('Key concepts the student missed'),
+  strengths: z.array(z.string()).describe('Things the student explained well'),
+  modelExplanation: z.string().describe('A concise ideal explanation in 3-4 sentences'),
+});
 
 function buildGradingPrompt(
   topic: string,
@@ -112,7 +128,38 @@ Respond in this exact JSON format:
 Be encouraging but honest. This is a learning exercise, not a pass/fail exam.`;
 }
 
-async function gradeWithGemini(
+/** Primary: Vercel AI SDK generateObject() with Zod schema validation */
+async function gradeWithAISDK(
+  env: AIProviderEnv,
+  gradingPrompt: string
+): Promise<TeachBackGradeResult> {
+  const result = await aiGenerateObject(env, {
+    model: 'gemini-2.0-flash',
+    system: 'You are grading a PA student teach-back explanation. Be encouraging but honest.',
+    prompt: gradingPrompt,
+    schema: TeachBackGradeSchema,
+    schemaName: 'TeachBackGrade',
+    schemaDescription: 'Structured grading of a teach-back explanation across 4 clinical categories',
+    temperature: 0.3,
+    maxTokens: 1024,
+  });
+
+  const { object } = result;
+  const totalScore = object.categories.reduce((sum: number, c: { score: number }) => sum + c.score, 0);
+
+  return {
+    categories: object.categories.map((c: { category: string; score: number; feedback: string }) => ({ ...c, maxScore: 3 })),
+    totalScore,
+    maxScore: 12,
+    overallFeedback: object.overallFeedback,
+    missingConcepts: object.missingConcepts || [],
+    strengths: object.strengths || [],
+    modelExplanation: object.modelExplanation || '',
+  };
+}
+
+/** Fallback: raw Gemini API call with JSON response parsing */
+async function gradeWithGeminiRaw(
   apiKey: string,
   prompt: string
 ): Promise<TeachBackGradeResult> {
@@ -203,21 +250,48 @@ export const onRequestPost = authenticatedEndpoint(
   bodySchema,
   async (context) => {
     const { topic, system, explanation, expectedConcepts, prompt: studentPrompt } = context.data;
-    const geminiApiKey = (context.env as Record<string, string>).GEMINI_API_KEY;
+    const env = context.env as Record<string, string>;
+    const geminiApiKey = env.GEMINI_API_KEY;
 
     let result: TeachBackGradeResult;
+    let gradingMethod = 'offline';
 
     if (geminiApiKey) {
+      const gradingPrompt = buildGradingPrompt(topic, system, studentPrompt, explanation, expectedConcepts);
+
+      // Primary: AI SDK generateObject() with Zod schema
       try {
-        const gradingPrompt = buildGradingPrompt(topic, system, studentPrompt, explanation, expectedConcepts);
-        result = await gradeWithGemini(geminiApiKey, gradingPrompt);
-      } catch (err) {
-        console.warn('[teachback/grade] Gemini grading failed, using offline fallback:', err);
-        result = gradeOffline(explanation, expectedConcepts);
+        const aiSdkEnv: AIProviderEnv = { GEMINI_API_KEY: geminiApiKey };
+        result = await gradeWithAISDK(aiSdkEnv, gradingPrompt);
+        gradingMethod = 'ai-sdk';
+      } catch (aiSdkErr) {
+        // Fallback: raw Gemini API
+        try {
+          result = await gradeWithGeminiRaw(geminiApiKey, gradingPrompt);
+          gradingMethod = 'gemini-raw';
+        } catch (rawErr) {
+          console.warn('[teachback/grade] All AI grading failed, using offline fallback:', rawErr);
+          result = gradeOffline(explanation, expectedConcepts);
+        }
       }
     } else {
       result = gradeOffline(explanation, expectedConcepts);
     }
+
+    // Langfuse tracing (fire-and-forget)
+    try {
+      const trace = createTrace(env as unknown as LangfuseEnv, {
+        name: 'teachback-grade',
+        userId: (context.auth as { userId?: string })?.userId,
+        tags: [gradingMethod, 'ghost-grader', 'teachback'],
+        metadata: { topic, system, gradingMethod, totalScore: result.totalScore },
+      });
+      if (trace) {
+        trace.score({ name: 'teachback_score', value: result.totalScore / 12 });
+        const ctx = context as unknown as { waitUntil?: (p: Promise<unknown>) => void };
+        if (ctx.waitUntil && trace.flush) ctx.waitUntil(trace.flush());
+      }
+    } catch { /* Never block for observability */ }
 
     // Map to FSRS: ≤6/12 → Again (1), ≥7/12 → Good (3)
     const fsrsRating = result.totalScore >= 7 ? 3 : 1;
@@ -227,6 +301,7 @@ export const onRequestPost = authenticatedEndpoint(
         ...result,
         fsrsRating,
         passed: result.totalScore >= 7,
+        gradingMethod,
       },
     });
   }

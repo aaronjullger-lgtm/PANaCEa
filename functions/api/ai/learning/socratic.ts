@@ -14,6 +14,8 @@ import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validati
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { buildSystemPrompt } from '../../_shared/socraticZpd';
 import { callAIMultiProvider, GeminiModel } from '../../_shared/ai-service';
+import { aiGenerateText } from '@/lib/ai-sdk';
+import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 
 const BodySchema = z.object({
   body: z.object({
@@ -86,39 +88,80 @@ ${options?.length ? `All options: ${options.join(' | ')}` : ''}
 ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
 
   const FALLBACK_QUESTION = 'What detail in the vignette suggests your answer might not fit this patient?';
+  const maxTokens = (turnNumber ?? 0) >= 3 ? 512 : 256;
 
+  // ── Primary: Vercel AI SDK ──────────────────────────────────────────────
   try {
-    const result = await callAIMultiProvider(
-      { env, auth },
-      {
-        langchainTask: 'socratic',
-        model: GeminiModel.FLASH_2_5,
-        systemInstruction: systemPrompt,
-        prompt: userPrompt,
-        generationConfig: {
-          temperature: 0.5,
-          // Hint level 4 (full explanation) needs more tokens than levels 1-3
-          maxOutputTokens: (turnNumber ?? 0) >= 3 ? 512 : 256,
-        },
-        endpoint: '/api/intelligence/socratic-remediation',
-      }
-    );
+    const aiSdkEnv = { GEMINI_API_KEY: env.GEMINI_API_KEY };
+    const result = await aiGenerateText(aiSdkEnv, {
+      model: 'gemini-2.5-flash',
+      system: systemPrompt,
+      prompt: userPrompt,
+      temperature: 0.5,
+      maxTokens,
+      endpoint: '/api/intelligence/socratic-remediation',
+    });
 
-    if (result.blocked) {
-      return { data: { guidingQuestion: FALLBACK_QUESTION } };
-    }
+    // Langfuse tracing (fire-and-forget)
+    try {
+      const trace = createTrace(env as unknown as LangfuseEnv, {
+        name: 'socratic-remediation',
+        userId: auth.userId,
+        tags: ['ai-sdk', 'gemini-2.5-flash', 'socratic'],
+        metadata: { model: result.model, provider: result.provider, latencyMs: result.latencyMs },
+      });
+      if (trace) {
+        trace.generation({
+          name: 'socratic-generation',
+          model: result.model,
+          input: userPrompt.slice(0, 500),
+          output: result.text.slice(0, 500),
+          usage: { promptTokens: result.usage.promptTokens, completionTokens: result.usage.completionTokens, totalTokens: result.usage.totalTokens },
+          modelParameters: { temperature: 0.5, maxTokens },
+        });
+        const ctx = context as { waitUntil?: (p: Promise<unknown>) => void };
+        if (ctx.waitUntil && trace.flush) ctx.waitUntil(trace.flush());
+      }
+    } catch { /* Never block AI response for observability */ }
 
     return {
       data: {
         guidingQuestion: result.text.trim() || FALLBACK_QUESTION,
       },
     };
-  } catch (err: unknown) {
-    // Graceful degradation: return a generic Socratic question rather than failing
-    const status = (err as { status?: number })?.status;
-    if (status === 429) {
-      return { status: 429, error: 'Rate limit exceeded' };
+  } catch (aiSdkErr: unknown) {
+    // ── Fallback: callAIMultiProvider (LangChain router) ────────────────
+    try {
+      const result = await callAIMultiProvider(
+        { env, auth },
+        {
+          langchainTask: 'socratic',
+          model: GeminiModel.FLASH_2_5,
+          systemInstruction: systemPrompt,
+          prompt: userPrompt,
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: maxTokens,
+          },
+          endpoint: '/api/intelligence/socratic-remediation',
+        }
+      );
+
+      if (result.blocked) {
+        return { data: { guidingQuestion: FALLBACK_QUESTION } };
+      }
+
+      return {
+        data: {
+          guidingQuestion: result.text.trim() || FALLBACK_QUESTION,
+        },
+      };
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 429) {
+        return { status: 429, error: 'Rate limit exceeded' };
+      }
+      return { data: { guidingQuestion: FALLBACK_QUESTION } };
     }
-    return { data: { guidingQuestion: FALLBACK_QUESTION } };
   }
 });
