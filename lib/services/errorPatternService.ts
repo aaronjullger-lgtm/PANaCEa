@@ -137,7 +137,7 @@ export function classifyErrorPattern(
   if (timeRatio < THRESHOLDS.RAPID_GUESS_RATIO) {
     candidates.push({
       pattern: 'RAPID_GUESS',
-      confidence: Math.min(1, (THRESHOLDS.RAPID_GUESS_RATIO - timeRatio) / THRESHOLDS.RAPID_GUESS_RATIO + 0.5),
+      confidence: Math.min(1, 0.5 + 0.5 * ((THRESHOLDS.RAPID_GUESS_RATIO - timeRatio) / THRESHOLDS.RAPID_GUESS_RATIO)),
       evidence: [
         `Dwell time ${Math.round(attempt.totalDwellTimeMs)}ms vs par ${Math.round(attempt.parTimeMs)}ms (${Math.round(timeRatio * 100)}% of par)`,
       ],
