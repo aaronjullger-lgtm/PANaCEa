@@ -20,12 +20,59 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { withAccelerate } from '@prisma/extension-accelerate';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
+import * as dotenv from 'dotenv';
 
-const prisma = new PrismaClient();
+dotenv.config();
+
+const databaseUrl = process.env.DATABASE_URL ?? process.env.DIRECT_DATABASE_URL;
+if (!databaseUrl) throw new Error('DATABASE_URL or DIRECT_DATABASE_URL required');
+
+// Support both Accelerate (prisma://) and direct Postgres URLs
+let prisma: any;
+let pool: pg.Pool | null = null;
+
+if (databaseUrl.startsWith('prisma://')) {
+  prisma = new PrismaClient({ accelerateUrl: databaseUrl }).$extends(withAccelerate());
+} else {
+  pool = new pg.Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
+  prisma = new PrismaClient({ adapter });
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+// ---------------------------------------------------------------------------
+// DB enum mappings
+// ---------------------------------------------------------------------------
+
+const TASK_TYPE_MAP: Record<string, string> = {
+  'History Taking & Physical Examination': 'HISTORY_PE',
+  'Diagnostic Studies': 'DIAGNOSTIC_STUDIES',
+  'Diagnosis': 'DIAGNOSIS',
+  'Health Maintenance & Disease Prevention': 'HEALTH_MAINTENANCE',
+  'Clinical Intervention': 'CLINICAL_INTERVENTION',
+  'Pharmaceutical Therapeutics': 'PHARMACEUTICAL_THERAPEUTICS',
+  'Clinical Therapeutics': 'CLINICAL_THERAPEUTICS',
+  'Applying Basic Science Concepts': 'BASIC_SCIENCE',
+};
+
+const COGNITIVE_LEVEL_MAP: Record<string, string> = {
+  first: 'LEVEL_1_RECALL',
+  second: 'LEVEL_2_CONCEPT',
+  third: 'LEVEL_3_VIGNETTE',
+};
+
+const QUESTION_FORMAT_MAP: Record<string, string> = {
+  first: 'RECALL',
+  second: 'VIGNETTE',
+  third: 'VIGNETTE',
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -379,9 +426,14 @@ async function main() {
   // Fetch conditions
   console.log('\n📊 Fetching CV/PULM conditions from MedicalContent...');
 
+  // DB uses short codes: CV, PULM
+  const SYSTEM_ALIASES: Record<string, string> = {
+    cardiovascular: 'CV', cv: 'CV',
+    pulmonary: 'PULM', pulm: 'PULM',
+  };
   const targetSystems = systemFilter
-    ? [systemFilter.toLowerCase()]
-    : ['cardiovascular', 'pulmonary'];
+    ? [SYSTEM_ALIASES[systemFilter.toLowerCase()] ?? systemFilter]
+    : ['CV', 'PULM'];
 
   const medicalContent = await prisma.medicalContent.findMany({
     where: {
@@ -417,10 +469,10 @@ async function main() {
 
   console.log(`  Found ${conditions.length} published conditions`);
 
-  // Log by system
+  // Log by system (use actual system codes from DB: CV, PULM)
   const bySystem: Record<string, ConditionWithContent[]> = {};
   for (const c of conditions) {
-    const sys = c.system.toLowerCase();
+    const sys = c.system.toUpperCase();
     if (!bySystem[sys]) bySystem[sys] = [];
     bySystem[sys].push(c);
   }
@@ -431,6 +483,7 @@ async function main() {
   if (conditions.length === 0) {
     console.log('\n❌ No published conditions found! Check MedicalContent table.');
     await prisma.$disconnect();
+    if (pool) await pool.end();
     return;
   }
 
@@ -478,6 +531,7 @@ async function main() {
   if (dryRun) {
     console.log('\n🏁 Dry run complete — no questions generated.');
     await prisma.$disconnect();
+    if (pool) await pool.end();
     return;
   }
 
@@ -487,11 +541,11 @@ async function main() {
   let duplicates = 0;
 
   const systemTargets: Array<{ system: string; count: number; conditions: ConditionWithContent[] }> = [];
-  if (bySystem['cardiovascular']?.length && (!systemFilter || systemFilter === 'cardiovascular')) {
-    systemTargets.push({ system: 'cardiovascular', count: cvCount, conditions: bySystem['cardiovascular'] });
+  if (bySystem['CV']?.length && targetSystems.includes('CV')) {
+    systemTargets.push({ system: 'CV', count: cvCount, conditions: bySystem['CV'] });
   }
-  if (bySystem['pulmonary']?.length && (!systemFilter || systemFilter === 'pulmonary')) {
-    systemTargets.push({ system: 'pulmonary', count: pulmCount, conditions: bySystem['pulmonary'] });
+  if (bySystem['PULM']?.length && targetSystems.includes('PULM')) {
+    systemTargets.push({ system: 'PULM', count: pulmCount, conditions: bySystem['PULM'] });
   }
 
   for (const { system, count, conditions: systemConditions } of systemTargets) {
@@ -548,14 +602,13 @@ async function main() {
             source: 'ai-generated',
             conditionId: condition.conditionId,
             medicalContentId: condition.medicalContentId,
-            // Store enhanced metadata in questionData JSON
-            questionData: {
-              taskCategory: data.taskCategory,
-              questionOrder: data.questionOrder,
-              difficultyNumeric: data.difficulty,
-              generatedAt: new Date().toISOString(),
-              generator: 'cv-pulm-batch-v1',
-            },
+            taskType: TASK_TYPE_MAP[data.taskCategory] ?? 'DIAGNOSIS',
+            cognitiveLevel: COGNITIVE_LEVEL_MAP[data.questionOrder] ?? 'LEVEL_3_VIGNETTE',
+            questionFormat: QUESTION_FORMAT_MAP[data.questionOrder] ?? 'VIGNETTE',
+            generatedByModel: 'gemini-2.0-flash',
+            generatedAt: new Date(),
+            lifecycleStatus: 'ACTIVE',
+            qaStatus: 'UNREVIEWED',
           } as any,
         });
 
@@ -611,11 +664,13 @@ async function main() {
   console.log('    (run with --dry-run to preview distribution without generating)');
 
   await prisma.$disconnect();
+  if (pool) await pool.end();
   console.log('\n✅ Done!');
 }
 
 main().catch(async (error) => {
   console.error('Fatal error:', error);
   await prisma.$disconnect();
+  if (pool) await pool.end();
   process.exit(1);
 });
