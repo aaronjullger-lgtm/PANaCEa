@@ -64,13 +64,13 @@ These rules apply to **every session**, regardless of which skill is loaded.
 | **Frontend** | React 19.2 + TypeScript (strict) + Vite 6.2 | JSX auto-runtime, path alias `@/*` → repo root |
 | **Styling** | TailwindCSS 3.4 + Framer Motion | Custom semantic color tokens (deep-plum, steel-blue, sage, etc.) |
 | **State** | Zustand 5.0 + TanStack Query 5.90 | Zustand for client state, RQ for server state |
-| **Backend** | Cloudflare Pages Functions (Edge) | `functions/api/` — 76 endpoint directories |
+| **Backend** | Cloudflare Pages Functions (Edge) | `functions/api/` — 81+ endpoint directories |
 | **Database** | PostgreSQL (Supabase) + Prisma 7.6 | pgbouncer pooling, direct URL for migrations |
 | **Auth** | Clerk (`@clerk/clerk-react` + `@clerk/backend`) | Token provider pattern, RBAC via UserRole enum |
 | **AI** | Google Gemini | Question gen, Ghost Grader, OSCE sim, content enrichment |
 | **Monitoring** | Sentry | Source maps, performance tracing, error tracking |
 | **PWA** | vite-plugin-pwa | Offline-first, StaleWhileRevalidate + CacheFirst strategies, cache ID `panacea-v12-offline-first` |
-| **Testing** | Vitest 4.1 + Playwright | jsdom env, 254+ tests passing, coverage thresholds enforced |
+| **Testing** | Vitest 4.1 + Playwright | jsdom env, 3200+ tests passing (205/213 test files), coverage thresholds enforced |
 | **CI/CD** | GitHub Actions → Cloudflare Pages | Auto-deploy on push to main |
 | **Node** | v22 (.node-version) | Required for Edge runtime compatibility |
 
@@ -122,7 +122,7 @@ Bayesian accumulation → calibration dampener → fatigue → interference → 
 - **Binary rating ONLY:** Again (0) / Good (1). Never introduce Hard/Easy.
 - **Only real sessions update FSRS:** `review_type: 'real'` with `MAIN` or `DRILL` session types. Cram and rapid_recall are excluded.
 - **Par time is per-question-type**, not global. Calculated from historical data.
-- **254 tests passing** across confidence pipeline + FSRS subsystems — do not break these.
+- **3200+ tests passing** (205/213 test files) across confidence pipeline, FSRS, and all service subsystems — do not break these.
 
 ---
 
@@ -196,7 +196,7 @@ StudyPANaCEa/
 │   │   └── spacing.ts             # SRS interval constants
 │   ├── srs/             # Spacing retrieval system
 │   └── nccpa-question-weighting.ts  # Question order + taskCategory
-├── functions/api/       # 76 endpoint directories (Cloudflare Edge)
+├── functions/api/       # 81+ endpoint directories (Cloudflare Edge)
 │   ├── _shared/         # prisma-edge.ts, auth.ts, middleware
 │   ├── drills/          # submit-review.ts + drill endpoints
 │   ├── questions/       # Question CRUD, attempt, search
@@ -345,13 +345,25 @@ npm run orchestrate:full     # Full automation pipeline
 
 ---
 
-## Current Priorities (2026-04-10)
+## Current Priorities (2026-04-13)
 
 1. Generate questions for under-represented PANCE blueprint areas (CV, PULM)
 2. Finish/resume the parked QuizView refactor on `wip/quizview-refactor-parked` (currently 192 TS errors — state + button primitives need rewiring)
-3. Fix Knowledge Base content loading
-4. Resolve drill routing split (DrillShell vs. useDrillFSRS) — decide which drill types consolidate
-5. Optimize skill descriptions for automatic Claude triggering
+3. Resolve drill routing split (DrillShell vs. useDrillFSRS) — decide which drill types consolidate
+4. Pending Prisma migrations: `ContentGap` model (Sprint 15), `banditState` on `UserPreferences` (Sprint 16), `PushSubscription` + `NotificationLog` (Sprint 18) — all need Aaron's approval
+5. Production dependency: `web-push` npm package for notification cron (Sprint 18) — needs Aaron's approval
+
+### Recently Completed (2026-04-13 Integration Session)
+- ✅ KB content loading — SmartConditionView already has comprehensive error/loading/retry states
+- ✅ Skill descriptions — already well-optimized with trigger phrases
+- ✅ 12 new services (Sprints 13-25) written and tested (263+ tests)
+- ✅ 8 services wired into production: CRAG+reranker→RAG, bandit→selector, clustering→dashboard, self-refine→generate-rag, FIRe→drillReviewService, error patterns, daily load, item metrics
+- ✅ 5 new API endpoints: error-patterns, daily-load, learner-profile, knowledge-graph, compute-item-metrics
+- ✅ 5 new dashboard widgets: DailyLoadWidget, ErrorPatternWidget, LearnerInsightsCard, KnowledgeGraphWidget
+- ✅ Dashboard personalization: 3 new WidgetIds registered across PANCE_PREP + CLINICAL_ROTATION configs
+- ✅ Landing page redesign: HeroSection, FeaturesGrid, HowItWorks, SocialProof, FinalCTA
+- ✅ Code review: confidence overflow fix, aria-expanded accessibility, auth policy review (5/5 pass)
+- ✅ Test suite: 205/213 files pass, 3200+/3219 tests pass, 0 new regressions
 
 ---
 
