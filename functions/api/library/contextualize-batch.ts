@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { aiGenerateText } from '@/lib/ai-sdk';
 import type { AIProviderEnv } from '@/lib/ai-sdk/providers';
@@ -51,7 +51,7 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
+export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
     validated: z.infer<typeof BodySchema>;
@@ -65,8 +65,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
     throw e;
   }
 
-  // TODO: Add admin role check when RBAC is wired
-  // if (auth.role !== 'Admin') return { status: 403, error: 'Admin only' };
+  // Admin role is enforced by adminAuthenticatedEndpoint middleware
 
   const { chunks, documentSummary, splitParentChild, concurrency } = validated;
   const aiSdkEnv: AIProviderEnv = { GEMINI_API_KEY: env.GEMINI_API_KEY };
