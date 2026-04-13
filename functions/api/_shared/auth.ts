@@ -4,6 +4,7 @@
 
 import { verifyToken } from '@clerk/backend';
 import { CloudflareEnv } from './types';
+import { sanitizeEnvValue } from './env-validation';
 
 // Edge-safe logger stub (no dependency on lib/ outside functions)
 const authLogger = {
@@ -127,7 +128,7 @@ export async function verifyAuthToken(
   if (typeof envOrSecret === 'string') {
     secretKey = envOrSecret;
   } else if (envOrSecret && typeof envOrSecret === 'object') {
-    secretKey = envOrSecret.CLERK_SECRET_KEY || '';
+    secretKey = sanitizeEnvValue(envOrSecret.CLERK_SECRET_KEY || '');
   }
 
   // Phase 3.1: Verify header format
@@ -307,7 +308,8 @@ export function handleCorsOptions(context: { request: Request; env?: Env }): Res
  * Returns null if authentication fails
  */
 export async function authenticateRequest(request: Request, env: Env): Promise<AuthContext | null> {
-  const secretKey = env.CLERK_SECRET_KEY;
+  // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
+  const secretKey = sanitizeEnvValue(env.CLERK_SECRET_KEY || '');
 
   // Phase 1.1: Verify secret key exists
   if (!secretKey) {

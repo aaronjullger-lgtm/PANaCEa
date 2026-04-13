@@ -19,6 +19,7 @@
 // The /edge import provides a lightweight JS/WASM wrapper instead of the ~15MB Rust binary
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
+import { sanitizeEnvValue } from './env-validation';
 
 /**
  * Prisma Accelerate Cache Strategy Configuration
@@ -113,7 +114,7 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
           : (databaseUrlOrEnv as any)?.env?.DATABASE_URL) || '';
 
   // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
-  const databaseUrl = rawDatabaseUrl.trim().replace(/^["']|["']$/g, '');
+  const databaseUrl = sanitizeEnvValue(rawDatabaseUrl);
 
   if (!databaseUrl) {
     console.error('[Prisma Edge] DATABASE_URL is missing');

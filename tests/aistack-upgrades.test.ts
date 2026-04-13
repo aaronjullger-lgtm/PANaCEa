@@ -314,3 +314,125 @@ describe('Langfuse Observability', () => {
     expect(typeof trace!.flush).toBe('function');
   });
 });
+
+// ─── Corrective RAG ──────────────────────────────────────────────────────
+
+describe('Corrective RAG Grader', () => {
+  it('gradeDocument returns relevant for high keyword overlap', async () => {
+    const { gradeDocument } = await import('@/lib/services/search/correctiveRag');
+    const result = gradeDocument('metoprolol beta blocker hypertension', {
+      id: 'doc-1',
+      text: 'Metoprolol is a selective beta-1 blocker used for hypertension and heart failure.',
+      score: 0.85,
+      source: 'medical-content',
+    });
+    expect(result.relevant).toBe(true);
+    expect(result.confidence).toBeGreaterThan(0.4);
+  });
+
+  it('gradeDocument returns irrelevant for unrelated content', async () => {
+    const { gradeDocument } = await import('@/lib/services/search/correctiveRag');
+    const result = gradeDocument('metoprolol beta blocker', {
+      id: 'doc-2',
+      text: 'Cooking recipes for Italian pasta with tomato sauce.',
+      score: 0.2,
+      source: 'random',
+    });
+    expect(result.relevant).toBe(false);
+    expect(result.confidence).toBeLessThan(0.5);
+  });
+
+  it('gradeDocuments computes quality score', async () => {
+    const { gradeDocuments } = await import('@/lib/services/search/correctiveRag');
+    const result = await gradeDocuments('CHF management', [
+      { id: '1', text: 'Heart failure management includes ACE inhibitors and beta blockers.', score: 0.9, source: 'mc' },
+      { id: '2', text: 'Irrelevant content about cooking.', score: 0.1, source: 'mc' },
+    ]);
+    expect(result.qualityScore).toBeGreaterThan(0);
+    expect(result.accepted.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('buildCRAGContext formats documents with source attribution', async () => {
+    const { buildCRAGContext } = await import('@/lib/services/search/correctiveRag');
+    const context = buildCRAGContext([
+      { id: '1', text: 'ACE inhibitors reduce mortality in CHF.', score: 0.9, source: 'guidelines' },
+    ]);
+    expect(context).toContain('ACE inhibitors');
+    expect(context).toContain('guidelines');
+  });
+});
+
+// ─── OpenFDA Integration ─────────────────────────────────────────────────
+
+describe('OpenFDA Integration', () => {
+  it('searchOpenFDA returns empty for network errors', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+    const { searchOpenFDA } = await import('@/lib/services/medical-apis/openfda');
+    const results = await searchOpenFDA('nonexistentdrug');
+    expect(results).toEqual([]);
+    vi.unstubAllGlobals();
+  });
+
+  it('searchAdverseEvents returns empty for 404', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    }));
+    const { searchAdverseEvents } = await import('@/lib/services/medical-apis/openfda');
+    const events = await searchAdverseEvents('nonexistentdrug');
+    expect(events).toEqual([]);
+    vi.unstubAllGlobals();
+  });
+
+  it('lookupDrugLabel handles valid response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        results: [{
+          openfda: {
+            brand_name: ['Lopressor'],
+            generic_name: ['metoprolol tartrate'],
+            manufacturer_name: ['Novartis'],
+            route: ['ORAL'],
+            substance_name: ['METOPROLOL TARTRATE'],
+          },
+          indications_and_usage: ['Treatment of hypertension.'],
+          contraindications: ['Sinus bradycardia.'],
+          mechanism_of_action: ['Beta-1 selective blocker.'],
+        }],
+      }),
+    }));
+    const { lookupDrugLabel } = await import('@/lib/services/medical-apis/openfda');
+    const result = await lookupDrugLabel('metoprolol');
+    expect(result).not.toBeNull();
+    expect(result!.brandName).toBe('Lopressor');
+    expect(result!.genericName).toBe('metoprolol tartrate');
+    expect(result!.indications).toContain('hypertension');
+    expect(result!.mechanismOfAction).toContain('Beta-1');
+    vi.unstubAllGlobals();
+  });
+});
+
+// ─── Barrel Exports ──────────────────────────────────────────────────────
+
+describe('Barrel Exports', () => {
+  it('search barrel exports all modules', async () => {
+    const search = await import('@/lib/services/search');
+    expect(typeof search.hybridSearchRRF).toBe('function');
+    expect(typeof search.classifyQuery).toBe('function');
+    expect(typeof search.contextualizeChunk).toBe('function');
+    expect(typeof search.batchContextualize).toBe('function');
+    expect(typeof search.gradeDocument).toBe('function');
+    expect(typeof search.gradeDocuments).toBe('function');
+    expect(typeof search.buildCRAGContext).toBe('function');
+  });
+
+  it('ai-sdk barrel exports all modules', async () => {
+    const aiSdk = await import('@/lib/ai-sdk');
+    expect(typeof aiSdk.createAIModel).toBe('function');
+    expect(typeof aiSdk.selectModelForTier).toBe('function');
+    expect(typeof aiSdk.aiGenerateText).toBe('function');
+    expect(typeof aiSdk.aiGenerateObject).toBe('function');
+    expect(typeof aiSdk.aiStreamText).toBe('function');
+  });
+});

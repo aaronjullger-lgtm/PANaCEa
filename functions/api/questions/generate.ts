@@ -18,6 +18,23 @@ import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/se
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
+
+/**
+ * Extract drug names from question text using common pharmaceutical suffixes.
+ * Returns deduplicated drug candidates for RxNorm validation.
+ */
+function extractDrugNames(text: string): string[] {
+  const drugSuffixPattern = /\b[A-Za-z]*(?:olol|pril|statin|mycin|azole|sartan|dipine|prazole|oxacin|cillin|cycline|mab|nib|zumab|parin|formin|gliptin|flozin|tidine|navir|vudine|ophen|profen|tadine|nazole|setron|lukast|phylline|zosin|amide|barbital|zepam|zolam|afil|triptan|xaban|gatran)\b/gi;
+  const matches = text.match(drugSuffixPattern) ?? [];
+
+  // Also catch well-known drug names that don't follow suffix patterns
+  const knownDrugPattern = /\b(aspirin|warfarin|heparin|insulin|epinephrine|norepinephrine|dopamine|dobutamine|atropine|morphine|fentanyl|naloxone|nitroglycerin|digoxin|lithium|colchicine|dantrolene|mannitol|dexamethasone|prednisone|hydrocortisone)\b/gi;
+  const knownMatches = text.match(knownDrugPattern) ?? [];
+
+  const all = [...matches, ...knownMatches].map((d) => d.toLowerCase());
+  return [...new Set(all)];
+}
 
 /**
  * Extract clinical pearls from a question's rationale using regex patterns
@@ -349,6 +366,41 @@ export const onRequestPost = authenticatedEndpoint(
                 error: pearlError instanceof Error ? pearlError.message : String(pearlError),
                 conditionId: conditionData.id,
                 userId: auth.userId,
+              });
+            }
+
+            // ── RxNorm drug validation (advisory, non-blocking) ──
+            try {
+              const questionText = [
+                generatedQ.text ?? '',
+                ...(Array.isArray(generatedQ.options) ? generatedQ.options : []),
+                generatedQ.explanation?.rationale ?? '',
+              ].join(' ');
+              const drugNames = extractDrugNames(questionText);
+              if (drugNames.length > 0) {
+                const drugValidation = await validateQuestionDrugs(drugNames);
+                (newQuestion as any).drugValidation = {
+                  checked: true,
+                  allValid: drugValidation.allValid,
+                  drugCount: drugNames.length,
+                  invalidDrugs: drugValidation.results
+                    .filter((r) => !r.validation.isValid)
+                    .map((r) => ({ drug: r.drug, suggestions: r.validation.suggestions })),
+                  hasInteractions: drugValidation.interactions?.hasInteractions ?? false,
+                };
+                if (!drugValidation.allValid) {
+                  logger.warn('RxNorm: invalid drug names detected in generated question', {
+                    invalidDrugs: drugValidation.results
+                      .filter((r) => !r.validation.isValid)
+                      .map((r) => r.drug),
+                    userId: auth.userId,
+                  });
+                }
+              }
+            } catch (rxError) {
+              // RxNorm is advisory — never block question delivery
+              logger.debug('RxNorm validation skipped', {
+                error: rxError instanceof Error ? rxError.message : String(rxError),
               });
             }
 

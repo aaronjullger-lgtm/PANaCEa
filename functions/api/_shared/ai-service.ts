@@ -29,6 +29,8 @@ import { routeTask, type RouteOptions, type RouteResult } from '@/lib/langchain/
 import { fromCloudflareEnv } from '@/lib/langchain/envAdapter';
 import { configureLangSmithEnv } from '@/lib/langchain/tracing';
 import type { TaskType } from '@/lib/langchain/config';
+import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
+import { sanitizeEnvValue } from './env-validation';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -275,7 +277,8 @@ export async function callGemini(
   options: GeminiRequestOptions
 ): Promise<GeminiResponse> {
   const model = options.model ?? GeminiModel.FLASH_2_5;
-  const apiKey = context.env.GEMINI_API_KEY;
+  // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
+  const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
   const startMs = Date.now();
 
   if (!apiKey) {
@@ -328,6 +331,39 @@ export async function callGemini(
     cacheHit: false,
   });
 
+  // ── Langfuse tracing (fire-and-forget) ──
+  try {
+    const trace = createTrace(context.env as LangfuseEnv, {
+      name: options.endpoint ?? 'callGemini',
+      userId: context.auth?.userId,
+      tags: ['gemini', model],
+      metadata: { model, endpoint: options.endpoint },
+    });
+    if (trace) {
+      trace.generation({
+        name: options.endpoint ?? 'gemini-generation',
+        model,
+        input: options.prompt ?? JSON.stringify(options.contents?.slice(-1)),
+        output: result.text,
+        usage: {
+          promptTokens: result.usage?.promptTokenCount,
+          completionTokens: result.usage?.candidatesTokenCount,
+          totalTokens: result.usage?.totalTokenCount,
+        },
+        modelParameters: {
+          temperature: options.generationConfig?.temperature,
+          maxTokens: options.generationConfig?.maxOutputTokens,
+        },
+        latencyMs,
+      });
+      if (context.waitUntil) {
+        context.waitUntil(trace.flush());
+      }
+    }
+  } catch {
+    // Never block AI response for observability
+  }
+
   return result;
 }
 
@@ -342,7 +378,7 @@ export async function streamGemini(
   options: GeminiRequestOptions
 ): Promise<Response> {
   const model = options.model ?? GeminiModel.FLASH_2_5;
-  const apiKey = context.env.GEMINI_API_KEY;
+  const apiKey = context.env.GEMINI_API_KEY ? sanitizeEnvValue(context.env.GEMINI_API_KEY) : undefined;
 
   if (!apiKey) {
     return new Response(
@@ -578,6 +614,39 @@ export async function callAIMultiProvider(
       statusCode: 200,
       cacheHit: false,
     });
+
+    // ── Langfuse tracing (fire-and-forget) ──
+    try {
+      const trace = createTrace(context.env as LangfuseEnv, {
+        name: options.endpoint ?? 'callAIMultiProvider',
+        userId: context.auth?.userId,
+        tags: ['multi-provider', result.provider, result.model],
+        metadata: { task, model: result.model, provider: result.provider, attempts: result.attempts },
+      });
+      if (trace) {
+        trace.generation({
+          name: options.endpoint ?? 'multi-provider-generation',
+          model: `${result.provider}/${result.model}`,
+          input: userPrompt,
+          output: result.output,
+          usage: {
+            promptTokens: result.usage?.inputTokens,
+            completionTokens: result.usage?.outputTokens,
+            totalTokens: result.usage?.totalTokens,
+          },
+          modelParameters: {
+            temperature: options.generationConfig?.temperature,
+            maxTokens: options.generationConfig?.maxOutputTokens,
+          },
+          latencyMs,
+        });
+        if (context.waitUntil) {
+          context.waitUntil(trace.flush());
+        }
+      }
+    } catch {
+      // Never block AI response for observability
+    }
 
     return geminiResponse;
   } catch (lcError) {

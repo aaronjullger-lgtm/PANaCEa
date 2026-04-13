@@ -40,6 +40,28 @@ export const ENV_REQUIREMENTS = {
 export type EnvRequirement = keyof typeof ENV_REQUIREMENTS;
 
 /**
+ * Sanitize an environment variable value.
+ *
+ * Cloudflare Pages dashboard (and some CI/CD tools) can inject literal
+ * quote characters when values are copy-pasted with surrounding quotes.
+ * This caused a total API outage in April 2026 when DATABASE_URL was
+ * stored as `"prisma://..."` instead of `prisma://...`.
+ *
+ * Strips leading/trailing whitespace and wrapping `"` or `'` characters.
+ */
+export function sanitizeEnvValue(value: string): string {
+  const trimmed = value.trim();
+  // Only strip quotes when they form a matching pair (same char on both ends)
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+/**
  * Custom error for missing environment variables
  */
 export class MissingEnvError extends Error {
@@ -155,7 +177,8 @@ export function getEnvVar<T extends boolean>(
   key: string,
   required: T
 ): T extends true ? string : string | undefined {
-  const value = env[key];
+  const raw = env[key];
+  const value = typeof raw === 'string' ? sanitizeEnvValue(raw) : undefined;
 
   if (typeof value === 'string' && value.length > 0) {
     return value as T extends true ? string : string | undefined;

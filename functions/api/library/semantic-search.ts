@@ -10,6 +10,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
+import { hybridSearchRRF, classifyQuery } from '@/lib/services/search/hybridSearch';
 
 const EMBED_MODEL = 'text-embedding-005';
 const EMBED_DIMS = 768;
@@ -19,6 +20,8 @@ const MAX_LIMIT = 50;
 const BodySchema = z.object({
   query: z.string().min(1).max(2000),
   limit: z.number().int().min(1).max(MAX_LIMIT).optional().default(DEFAULT_LIMIT),
+  /** Search mode: 'semantic' (default, pure vector) or 'hybrid' (keyword + semantic RRF) */
+  mode: z.enum(['semantic', 'hybrid']).optional().default('semantic'),
 });
 
 type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
@@ -65,7 +68,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const { query, limit } = validated;
+  const { query, limit, mode } = validated;
 
   try {
     const apiKey = env.GEMINI_API_KEY;
@@ -73,6 +76,58 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
       return { status: 500, error: 'GEMINI_API_KEY not configured' };
     }
 
+    // ── Hybrid search path (keyword + semantic RRF fusion) ──
+    if (mode === 'hybrid') {
+      const complexity = classifyQuery(query);
+      const hybridResults = await hybridSearchRRF(query, {
+        prisma: prisma as any,
+        apiKey,
+        limit,
+      });
+
+      if (hybridResults.length === 0) {
+        return {
+          data: { results: [], count: 0, mode: 'hybrid', queryComplexity: complexity },
+          headers: { 'Cache-Control': 'private, max-age=60' },
+        };
+      }
+
+      const hybridIds = hybridResults.map((r) => r.id);
+      const hybridScoreMap = new Map(hybridResults.map((r) => [r.id, r]));
+
+      const hybridContent = await prisma.medicalContent.findMany({
+        where: { id: { in: hybridIds } },
+        select: {
+          id: true, condition: true, conditionId: true, system: true,
+          subcategory: true, pance_yield: true, classic_patient: true,
+          buzzwords: true, gold_standard_dx: true, first_line_rx: true,
+          overview: true, symptoms: true, pathophysiology: true,
+          treatment: true, diagnostics: true, best_initial_test: true,
+          clinical_pearls: true,
+        },
+      });
+
+      const hybridMapped = hybridIds
+        .map((id) => {
+          const item = hybridContent.find((c) => c.id === id);
+          const scores = hybridScoreMap.get(id);
+          return item ? {
+            ...item,
+            similarity: scores?.score ?? 0,
+            keywordScore: scores?.keywordScore ?? 0,
+            semanticScore: scores?.semanticScore ?? 0,
+            source: scores?.source ?? 'semantic',
+          } : null;
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null);
+
+      return {
+        data: { results: hybridMapped, count: hybridMapped.length, mode: 'hybrid', queryComplexity: complexity },
+        headers: { 'Cache-Control': 'private, max-age=60' },
+      };
+    }
+
+    // ── Pure semantic search path (default, backward compat) ──
     const embedding = await getQueryEmbedding(query, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
 
@@ -88,7 +143,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
     if (rows.length === 0) {
       return {
-        data: { results: [], count: 0 },
+        data: { results: [], count: 0, mode: 'semantic' },
         headers: { 'Cache-Control': 'private, max-age=60' },
       };
     }
@@ -128,7 +183,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
     return {
-      data: { results, count: results.length },
+      data: { results, count: results.length, mode: 'semantic' },
       headers: { 'Cache-Control': 'private, max-age=60' },
     };
   } catch (error) {

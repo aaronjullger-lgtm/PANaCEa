@@ -8,6 +8,7 @@
 
 import { getCorsHeaders, getCorsConfig } from './_shared/cors';
 import { withRateLimit, getRateLimitIdentifier } from './_shared/rateLimiter';
+import { sanitizeEnvValue } from './_shared/env-validation';
 
 export const onRequestOptions = async (context: any) => {
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
@@ -51,7 +52,7 @@ export const onRequestGet = async (context: any) => {
     // 2. DATABASE_URL type
     const rawDbUrl = env.DATABASE_URL as string | undefined;
     // Defensive: strip wrapping quotes that Cloudflare dashboard may inject
-    const dbUrl = rawDbUrl?.trim().replace(/^["']|["']$/g, '') || undefined;
+    const dbUrl = rawDbUrl ? sanitizeEnvValue(rawDbUrl) || undefined : undefined;
     if (dbUrl) {
       const isAccelerate = dbUrl.startsWith('prisma://') || dbUrl.startsWith('prisma+postgres://');
       const isPostgres = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
