@@ -12,6 +12,9 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { springs, listItemVariants, skeletonLineVariants } from '@/config/appViews';
+import { ShimmerOverlay } from '@/components/loading';
 import { useNavigate } from 'react-router-dom';
 import { useDrillRecommendations } from '@/hooks/useDrillRecommendations';
 import type { DrillRecommendation } from '@/hooks/useDrillRecommendations';
@@ -57,7 +60,13 @@ const RecommendationRow: React.FC<{
   const impact = IMPACT_STYLES[rec.impact] ?? IMPACT_STYLES['medium']!;
 
   return (
-    <button
+    <motion.button
+      custom={index}
+      variants={listItemVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ x: 4, transition: springs.snappy }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.08 } }}
       onClick={() => onStart(rec)}
       className="w-full text-left group rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors p-3.5"
     >
@@ -86,7 +95,7 @@ const RecommendationRow: React.FC<{
           </span>
         </div>
       )}
-    </button>
+    </motion.button>
   );
 };
 
@@ -115,7 +124,7 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
     navigate(query ? `${basePath}?${query}` : basePath);
   };
 
-  // Loading state
+  // Loading state — staggered skeleton with shimmer
   if (isLoading) {
     return (
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
@@ -124,10 +133,20 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
         </h2>
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div
+            <motion.div
               key={i}
-              className="h-20 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] animate-pulse"
-            />
+              custom={i}
+              variants={skeletonLineVariants}
+              initial="hidden"
+              animate="visible"
+              className="relative h-20 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] overflow-hidden"
+            >
+              <ShimmerOverlay intensity="subtle" />
+              <div className="p-3.5 space-y-2">
+                <div className="h-3.5 w-2/3 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+                <div className="h-2.5 w-4/5 rounded bg-[var(--color-bg-tertiary)] animate-pulse" />
+              </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -165,7 +184,12 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
   }
 
   return (
-    <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
+    <motion.section
+      initial={{ y: 12, filter: 'blur(4px)' }}
+      animate={{ y: 0, filter: 'blur(0px)' }}
+      transition={springs.snappy}
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5"
+    >
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
           Recommended Drills
@@ -185,7 +209,7 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
           />
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 };
 

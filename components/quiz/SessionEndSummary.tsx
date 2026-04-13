@@ -463,10 +463,11 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
   return (
     <motion.div
-      initial={false}
-      animate={{}}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4"
+      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+      exit={{ opacity: 0, backdropFilter: 'blur(0px)', transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] } }}
+      transition={{ duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4"
     >
       <motion.div
         ref={modalRef}
@@ -474,17 +475,18 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="session-summary-title"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.92, opacity: 0, y: 12, filter: 'blur(8px)' }}
+        animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
+        exit={{ scale: 0.95, opacity: 0, y: 8, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
+        transition={{ ...springs.bouncy, opacity: { duration: 0.25 }, filter: { duration: 0.3 } }}
         className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)] outline-none"
       >
         {/* Header with Grade */}
         <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ ...springs.gentle, delay: 0.2 }}
+            initial={{ scale: 0, rotate: -15 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ ...springs.bouncy, delay: 0.2 }}
             className="mb-4"
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} aria-hidden="true" />
@@ -534,37 +536,57 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         {/* Stats Grid */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ delay: 0.3, ...springs.bouncy, opacity: { delay: 0.3, duration: 0.25 } }}
+              className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
+            >
               <Target className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" aria-hidden="true" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.total}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Questions</div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ delay: 0.4, ...springs.bouncy, opacity: { delay: 0.4, duration: 0.25 } }}
+              className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
+            >
               <Clock className="w-6 h-6 mx-auto mb-2 text-[var(--color-accent)]" aria-hidden="true" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.durationMinutes}m
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Duration</div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ delay: 0.5, ...springs.bouncy, opacity: { delay: 0.5, duration: 0.25 } }}
+              className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
+            >
               <Zap className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" aria-hidden="true" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.questionsPerMinute}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Q/min</div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]">
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ delay: 0.6, ...springs.bouncy, opacity: { delay: 0.6, duration: 0.25 } }}
+              className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
+            >
               <Flame className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-provisional)]" aria-hidden="true" />
               <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
                 {overallStats.maxStreak}
               </div>
               <div className="text-xs text-[var(--color-text-secondary)]">Best Streak</div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Distribution Score */}
@@ -584,9 +606,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
             <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
               <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${summary.distributionScore}%` }}
-                transition={{ duration: 0.8, delay: 0.3 }}
+                initial={{ width: 0, filter: 'blur(2px)' }}
+                animate={{ width: `${summary.distributionScore}%`, filter: 'blur(0px)' }}
+                transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1], filter: { duration: 0.4, delay: 0.9 } }}
                 className={`h-full rounded-full ${getDistributionBarClass(summary.distributionScore)}`}
               />
             </div>

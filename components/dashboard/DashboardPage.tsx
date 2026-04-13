@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { widgetEntrance, springs, cardHoverVariants } from '@/config/appViews';
+import { widgetEntrance, springs, cardHoverVariants, tabContentVariants } from '@/config/appViews';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
@@ -287,6 +287,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     const stored = localStorage.getItem(DASHBOARD_VIEW_KEY);
     return stored === 'data' ? 'data' : 'pilot';
   });
+  // Direction for tab slide: +1 = right (pilot→data), -1 = left (data→pilot)
+  const [tabDirection, setTabDirection] = useState(0);
+  const handleViewChange = useCallback((newView: DashboardViewId) => {
+    const viewOrder: DashboardViewId[] = ['pilot', 'data'];
+    const oldIdx = viewOrder.indexOf(view);
+    const newIdx = viewOrder.indexOf(newView);
+    setTabDirection(newIdx > oldIdx ? 1 : -1);
+    setView(newView);
+  }, [view]);
 
   useEffect(() => {
     try {
@@ -578,7 +587,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 aria-selected={isActive}
                 aria-controls={`tabpanel-${v.id}`}
                 id={`tab-${v.id}`}
-                onClick={() => setView(v.id)}
+                onClick={() => handleViewChange(v.id)}
                 className={`relative flex items-center justify-center gap-1.5 py-2 px-5 rounded-lg text-[13px] font-medium transition-all duration-200 ease-premium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 ${
                   isActive
                     ? 'text-[var(--color-text-primary)]'
@@ -604,10 +613,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               role="tabpanel"
               id="tabpanel-pilot"
               aria-labelledby="tab-pilot"
-              initial={prefersReducedMotion ? false : { y: 12, opacity: 0, filter: 'blur(4px)' }}
-              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8, opacity: 0, filter: 'blur(2px)' }}
-              transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+              custom={tabDirection}
+              variants={prefersReducedMotion ? undefined : tabContentVariants}
+              initial={prefersReducedMotion ? false : 'enter'}
+              animate="center"
+              exit="exit"
               className="space-y-6"
             >
               {/* Quick Stats Row */}
@@ -790,10 +800,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               role="tabpanel"
               id="tabpanel-data"
               aria-labelledby="tab-data"
-              initial={prefersReducedMotion ? false : { y: 12, opacity: 0, filter: 'blur(4px)' }}
-              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { y: -8, opacity: 0, filter: 'blur(2px)' }}
-              transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+              custom={tabDirection}
+              variants={prefersReducedMotion ? undefined : tabContentVariants}
+              initial={prefersReducedMotion ? false : 'enter'}
+              animate="center"
+              exit="exit"
               className="space-y-6"
             >
               {/* System Performance + Calibration — stage-aware */}

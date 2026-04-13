@@ -9,6 +9,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   AreaChart,
@@ -91,9 +92,9 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
   if (dueCount === 0) {
     return (
       <motion.div
-        initial={prefersReducedMotion ? false : { y: 8 }}
-        animate={{ y: 0 }}
-        transition={prefersReducedMotion ? { duration: 0 } : undefined}
+        initial={prefersReducedMotion ? false : { y: 12, filter: 'blur(4px)' }}
+        animate={{ y: 0, filter: 'blur(0px)' }}
+        transition={prefersReducedMotion ? { duration: 0 } : { ...springs.snappy, filter: { duration: 0.3 } }}
         className={`card-cinematic group p-6 transition-all duration-300 ${className}`}
       >
         <div className="flex items-center gap-3.5 mb-4">
@@ -124,9 +125,9 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
   return (
     <motion.div
-      initial={prefersReducedMotion ? false : { x: -20 }}
-      animate={{ x: 0 }}
-      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
+      initial={prefersReducedMotion ? false : { x: -20, filter: 'blur(6px)' }}
+      animate={{ x: 0, filter: 'blur(0px)' }}
+      transition={prefersReducedMotion ? { duration: 0 } : { ...springs.snappy, filter: { duration: 0.35 } }}
       className={`card-cinematic group p-6 transition-all duration-300 ${className}`}
     >
       <div className="flex items-center gap-3.5 mb-4">

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle, CheckCircle, Clock, Zap, Brain } from 'lucide-react';
 import { formatLoadingTime, getLoadingSeverity } from '@/hooks/useLoadingState';
 import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
+import { springs, errorShakeVariants } from '@/config/appViews';
 
 export interface LoadingSystemProps {
   /** Whether loading is active */
@@ -108,19 +109,26 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
 
   const content = (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.95, filter: 'blur(6px)' }}
+      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
+      transition={{ ...springs.snappy, opacity: { duration: 0.25 }, filter: { duration: 0.3 } }}
       className={`flex flex-col items-center justify-center ${className}`}
     >
       {/* Loading State */}
       {isLoading && !hasTimedOut && (
         <div className="text-center space-y-4">
-          {/* Spinner */}
+          {/* Spinner — organic spring rotation with pulse */}
           <div className="relative">
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              animate={{
+                rotate: 360,
+                scale: [1, 1.06, 1],
+              }}
+              transition={{
+                rotate: { duration: 1, repeat: Infinity, ease: 'linear' },
+                scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+              }}
               className={`${spinnerClass} ${iconColor} mx-auto`}
             >
               <IconComponent size={iconSize} className="w-full h-full" />
@@ -207,10 +215,21 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error State — shake entrance */}
       {error && !isLoading && (
-        <div className="text-center space-y-4 max-w-sm">
-          <AlertCircle className="w-12 h-12 text-[var(--color-danger)] mx-auto" />
+        <motion.div
+          className="text-center space-y-4 max-w-sm"
+          variants={errorShakeVariants}
+          initial="initial"
+          animate="shake"
+        >
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={springs.bouncy}
+          >
+            <AlertCircle className="w-12 h-12 text-[var(--color-danger)] mx-auto" />
+          </motion.div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg text-[var(--color-text-primary)]">
               Something went wrong
@@ -218,11 +237,17 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
             <p className="text-sm text-[var(--color-text-secondary)]">{error}</p>
           </div>
           {onRetry && (
-            <PrimaryButton size="sm" onClick={onRetry}>
-              Try Again
-            </PrimaryButton>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, ...springs.snappy }}
+            >
+              <PrimaryButton size="sm" onClick={onRetry}>
+                Try Again
+              </PrimaryButton>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );
@@ -232,14 +257,21 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
+          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
+          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+          transition={{ duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
+          className="fixed inset-0 z-50 bg-[var(--color-overlay)] flex items-center justify-center p-4"
         >
-          <div className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <motion.div
+            initial={{ scale: 0.92, y: 12, filter: 'blur(8px)' }}
+            animate={{ scale: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ scale: 0.95, y: 8, filter: 'blur(4px)' }}
+            transition={springs.bouncy}
+            className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl p-8 max-w-md w-full"
+          >
             {content}
-          </div>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     );
@@ -355,12 +387,31 @@ export const ContentSkeleton: React.FC<{
   lines?: number;
   className?: string;
 }> = ({ type = 'text', lines = 3, className = '' }) => {
+  // Staggered line entrance
+  const lineVariants = {
+    hidden: { opacity: 0, scaleX: 0.7, originX: 0, filter: 'blur(3px)' },
+    visible: (i: number) => ({
+      opacity: 1,
+      scaleX: 1,
+      filter: 'blur(0px)',
+      transition: {
+        delay: i * 0.06,
+        ...springs.gentle,
+        opacity: { delay: i * 0.06, duration: 0.25 },
+      },
+    }),
+  };
+
   if (type === 'text') {
     return (
       <div className={`space-y-2 ${className}`}>
         {Array.from({ length: lines }).map((_, i) => (
-          <div
+          <motion.div
             key={i}
+            custom={i}
+            variants={lineVariants}
+            initial="hidden"
+            animate="visible"
             className="h-4 bg-[var(--color-bg-secondary)] rounded animate-pulse"
             style={{ width: i === lines - 1 ? '70%' : '100%' }}
           />
@@ -371,16 +422,19 @@ export const ContentSkeleton: React.FC<{
 
   if (type === 'card') {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={springs.snappy}
         className={`p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] ${className}`}
       >
-        <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-3/4 mb-3 animate-pulse" />
+        <motion.div custom={0} variants={lineVariants} initial="hidden" animate="visible" className="h-6 bg-[var(--color-bg-tertiary)] rounded w-3/4 mb-3 animate-pulse" />
         <div className="space-y-2">
-          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full" />
-          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6" />
-          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-4/6" />
+          <motion.div custom={1} variants={lineVariants} initial="hidden" animate="visible" className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full animate-pulse" />
+          <motion.div custom={2} variants={lineVariants} initial="hidden" animate="visible" className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6 animate-pulse" />
+          <motion.div custom={3} variants={lineVariants} initial="hidden" animate="visible" className="h-4 bg-[var(--color-bg-tertiary)] rounded w-4/6 animate-pulse" />
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -388,8 +442,12 @@ export const ContentSkeleton: React.FC<{
     return (
       <div className={`space-y-2 ${className}`}>
         {Array.from({ length: lines }).map((_, i) => (
-          <div
+          <motion.div
             key={i}
+            custom={i}
+            variants={lineVariants}
+            initial="hidden"
+            animate="visible"
             className="flex items-center gap-3 p-3 border border-[var(--color-border)] rounded-lg"
           >
             <div className="w-8 h-8 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
@@ -397,7 +455,7 @@ export const ContentSkeleton: React.FC<{
               <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-3/4 animate-pulse" />
               <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-1/2 animate-pulse" />
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     );
