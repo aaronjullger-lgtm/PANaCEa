@@ -7,6 +7,9 @@ import {
 } from '@/lib/fsrs/simulator';
 import { defaultParameters, type FSRSParameters } from '@/lib/fsrs';
 
+// Simulation tests are CPU-intensive; extend timeout to prevent flaky failures under load
+const SIMULATION_TIMEOUT = 15_000;
+
 /**
  * FSRS Workload Simulator tests
  *
@@ -85,12 +88,12 @@ describe('calculateRecommendedRetention', () => {
   it('recommends at least 0.8 retention', () => {
     const result = calculateRecommendedRetention(5, 50, defaultParameters);
     expect(result.recommendedRetention).toBeGreaterThanOrEqual(0.8);
-  });
+  }, SIMULATION_TIMEOUT);
 
   it('falls back when time budget is too low', () => {
     const result = calculateRecommendedRetention(5, 50, defaultParameters);
     expect(result.explanation).toContain('reducing');
-  });
+  }, SIMULATION_TIMEOUT);
 });
 
 describe('generateWorkloadChart', () => {

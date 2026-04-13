@@ -151,7 +151,7 @@ export async function validateNewQuestion(submission: {
   });
 
   const currentCoverage = totalQuestions > 0 ? (currentCount / totalQuestions) * 100 : 0;
-  const coversGap = !blueprintTarget || currentCoverage < blueprintTarget.targetPercentage;
+  const coversGap = !blueprintTarget || currentCoverage < blueprintTarget.targetPercent;
 
   // Estimate difficulty
   const estimatedDifficulty = estimateDifficultyFromContent(submission);

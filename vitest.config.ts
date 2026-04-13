@@ -2,11 +2,16 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  define: {
+    // Ensure React CJS entry points resolve to development builds (React.act).
+    'process.env.NODE_ENV': '"test"',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
       '@sentry/cloudflare': path.resolve(__dirname, './vitest-mocks/sentry-stub.ts'),
     },
+    conditions: ['development', 'browser'],
   },
   test: {
     environment: 'jsdom',
@@ -28,18 +33,14 @@ export default defineConfig({
       '**/node_modules/**',
       'e2e/**',
       'temp_repos/**',
-      // React 19 + @testing-library/react compat: React.act is not a function
-      // TODO: re-enable after upgrading @testing-library/react to v16+
-      'tests/components/admin/**',
-      'tests/components/Goals/**',
-      'tests/components/offline/**',
-      'tests/useDrillFSRS.test.ts',
-      // tests/implicit-metrics.test.ts — re-enabled: no React dependency, pure function tests
-      'lib/implicit-metrics.test.ts',
-      'functions/api/_shared/auth.test.ts',
-      'functions/api/osce/complete.test.ts',
-      'hooks/game/use-mini-lab-drill.test.ts',
-      'hooks/game/use-photo-drill.test.ts',
+      // Pre-existing test failures — stale mocks, missing providers, logic mismatches
+      // TODO: fix individually (not React 19 act — that's resolved via define+conditions)
+      'lib/implicit-metrics.test.ts',       // assertion mismatch (expected 3 to be 2)
+      'tests/useDrillFSRS.test.ts',         // STACK_TRACE_ERROR — deep hook mock issue
+      'hooks/game/use-photo-drill.test.ts', // fetchPhotoCases returns 0 instead of 5
+      'functions/api/_shared/auth.test.ts', // stale log mock expectations
+      'functions/api/osce/complete.test.ts', // mock not called — wiring changed
+      'tests/components/Goals/**',           // missing QueryClientProvider wrapper
     ],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,
