@@ -356,7 +356,7 @@ export function buildConsequences(
   imagingFindings: ReadonlyArray<RawImagingFinding> = []
 ): ClinicalConsequence[] {
   const consequences: ClinicalConsequence[] = [];
-  const buzzwordSet = new Set((mc.buzzwords ?? []).map((b) => b.toLowerCase()));
+  const buzzwordSet = new Set((mc.buzzwords ?? []).filter(Boolean).map((b) => b.toLowerCase()));
 
   // Symptoms (patient-reported)
   if (mc.symptoms) {

@@ -127,6 +127,7 @@ export function generateAnatomyPrerequisiteEdges(
   const seen = new Set<string>();
 
   for (const link of links) {
+    if (!link.conditionNodeId || !link.anatomyNodeId) continue; // skip invalid IDs
     const key = `${link.conditionNodeId}→${link.anatomyNodeId}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -204,6 +205,7 @@ export function generateDrugConditionEdges(
   const seen = new Set<string>();
 
   for (const link of links) {
+    if (!link.drugNodeId || !link.conditionNodeId) continue; // skip invalid IDs
     const key = `${link.drugNodeId}→${link.conditionNodeId}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -241,6 +243,7 @@ export function generateParentChildEdges(
   const seen = new Set<string>();
 
   for (const link of links) {
+    if (!link.childNodeId || !link.parentNodeId) continue; // skip invalid IDs
     const key = `${link.childNodeId}→${link.parentNodeId}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -278,6 +281,7 @@ export function generateComplicationChainEdges(
   const seen = new Set<string>();
 
   for (const link of links) {
+    if (!link.targetNodeId || !link.sourceNodeId) continue; // skip invalid IDs
     const key = `${link.targetNodeId}→${link.sourceNodeId}`;
     if (seen.has(key)) continue;
     seen.add(key);
