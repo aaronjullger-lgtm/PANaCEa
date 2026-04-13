@@ -164,6 +164,7 @@ export const LabReferenceView: React.FC = () => {
               >
                 <button
                   onClick={() => setExpandedLab(isExpanded ? null : lab.id)}
+                  aria-expanded={isExpanded}
                   className="w-full text-left p-4 flex items-start justify-between gap-4"
                 >
                   <div className="flex-1 min-w-0">

@@ -64,13 +64,13 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
   const icon = type === 'pharm' ? Pill : Activity;
   const Icon = icon;
   const title = type === 'pharm' ? 'Pharmacology' : 'Pathophysiology';
-  const color = type === 'pharm' ? 'blue' : 'purple';
+  const iconColor = type === 'pharm' ? 'var(--color-data-pass)' : 'var(--color-accent)';
 
   if (loading) {
     return (
       <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Icon className={`w-5 h-5 text-${color}-600`} />
+          <Icon className="w-5 h-5" style={{ color: iconColor }} />
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
         </div>
         <div className="flex items-center justify-center py-8">
@@ -84,7 +84,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
     return (
       <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Icon className={`w-5 h-5 text-${color}-600`} />
+          <Icon className="w-5 h-5" style={{ color: iconColor }} />
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
         </div>
         <div className="flex items-center gap-2 text-data-fail">

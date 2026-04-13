@@ -262,6 +262,7 @@ function Section({
     <div className="border-b border-[var(--color-border)]">
       <button
         onClick={onToggle}
+        aria-expanded={isExpanded}
         className="w-full flex items-center justify-between p-4 transition-colors hover:bg-[var(--color-bg-secondary)]"
       >
         <div className="flex items-center gap-3">

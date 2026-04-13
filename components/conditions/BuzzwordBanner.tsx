@@ -29,7 +29,7 @@ export const BuzzwordBanner: React.FC<BuzzwordBannerProps> = ({ conditionName })
   if (!info) return null;
 
   return (
-    <div className="mb-8 relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
+    <div role="status" className="mb-8 relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
       <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-[var(--color-accent)]/10 blur-2xl" />
 
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">

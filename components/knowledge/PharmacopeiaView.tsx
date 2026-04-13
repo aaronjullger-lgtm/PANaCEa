@@ -36,10 +36,12 @@ export const PharmacopeiaView: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div role="tablist" className="flex flex-wrap gap-2">
         {PHARM_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
+            role="tab"
+            aria-selected={categoryId === cat.id}
             onClick={() => setCategoryId(cat.id)}
             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
               categoryId === cat.id

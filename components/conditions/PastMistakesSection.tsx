@@ -161,6 +161,7 @@ export function PastMistakesSection({ conditionId, getToken }: PastMistakesSecti
                           <button
                             type="button"
                             onClick={() => toggleExpand(item.questionId)}
+                            aria-expanded={false}
                             className="flex items-center gap-1 mt-2 text-sm font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors min-h-[44px] min-w-[44px]"
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -175,6 +176,7 @@ export function PastMistakesSection({ conditionId, getToken }: PastMistakesSecti
                           <button
                             type="button"
                             onClick={() => toggleExpand(item.questionId)}
+                            aria-expanded={true}
                             className="flex items-center gap-1 mt-2 text-sm font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors min-h-[44px] min-w-[44px]"
                           >
                             <ChevronUp className="w-4 h-4" />
