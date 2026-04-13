@@ -38,6 +38,22 @@ export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com';
 export const GEMINI_API_VERSION = 'v1beta';
 
 /**
+ * Cloudflare AI Gateway base URL.
+ * When CF_AI_GATEWAY_ID and CF_ACCOUNT_ID are set in env, all Gemini requests
+ * are proxied through Cloudflare AI Gateway for:
+ * - Semantic caching (configurable TTL, great for repeated student queries)
+ * - Per-model analytics and cost tracking at edge
+ * - Rate limiting across providers
+ * - Zero additional infrastructure cost
+ */
+function getAIGatewayBaseUrl(env?: Record<string, string>): string | null {
+  const accountId = env?.CF_ACCOUNT_ID;
+  const gatewayId = env?.CF_AI_GATEWAY_ID;
+  if (!accountId || !gatewayId) return null;
+  return `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/google-ai-studio`;
+}
+
+/**
  * Canonical model identifiers. Use these instead of hardcoded strings
  * to ensure consistent model selection across all endpoints.
  *
@@ -140,12 +156,19 @@ interface AIServiceContext {
 
 /**
  * Build the full Gemini API URL for a given model and action.
+ * Routes through Cloudflare AI Gateway when CF_ACCOUNT_ID + CF_AI_GATEWAY_ID are set.
  */
 export function buildGeminiUrl(
   apiKey: string,
   model: string,
-  action: 'generateContent' | 'streamGenerateContent' | 'embedContent' = 'generateContent'
+  action: 'generateContent' | 'streamGenerateContent' | 'embedContent' = 'generateContent',
+  env?: Record<string, string>
 ): string {
+  const gatewayBase = getAIGatewayBaseUrl(env);
+  if (gatewayBase) {
+    // CF AI Gateway proxies: gateway/google-ai-studio/v1beta/models/...
+    return `${gatewayBase}/${GEMINI_API_VERSION}/models/${model}:${action}?key=${apiKey}`;
+  }
   return `${GEMINI_BASE_URL}/${GEMINI_API_VERSION}/models/${model}:${action}?key=${apiKey}`;
 }
 
@@ -285,7 +308,7 @@ export async function callGemini(
     throw { status: 500, error: 'GEMINI_API_KEY not configured', code: 'MISSING_KEY', retryable: false } satisfies GeminiError;
   }
 
-  const url = buildGeminiUrl(apiKey, model);
+  const url = buildGeminiUrl(apiKey, model, 'generateContent', context.env as Record<string, string>);
   const body = buildRequestBody(options);
 
   const response = await fetch(url, {
@@ -387,7 +410,7 @@ export async function streamGemini(
     );
   }
 
-  const url = buildGeminiUrl(apiKey, model, 'streamGenerateContent') + '&alt=sse';
+  const url = buildGeminiUrl(apiKey, model, 'streamGenerateContent', context.env as Record<string, string>) + '&alt=sse';
   const body = buildRequestBody(options);
 
   const response = await fetch(url, {

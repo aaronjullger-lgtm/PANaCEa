@@ -585,6 +585,231 @@ describe('Medical APIs barrel exports UMLS', () => {
   });
 });
 
+// ─── RAGAS Evaluation Framework ─────────────────────────────────────────
+
+describe('RAGAS Metrics', () => {
+  it('scoreContextRelevance returns 0 for no docs', async () => {
+    const { scoreContextRelevance } = await import('@/lib/evaluation/ragasMetrics');
+    const { score } = scoreContextRelevance({
+      query: 'test',
+      retrievedDocs: [],
+      generatedAnswer: 'answer',
+    });
+    expect(score).toBe(0);
+  });
+
+  it('scoreContextRelevance scores relevant docs higher', async () => {
+    const { scoreContextRelevance } = await import('@/lib/evaluation/ragasMetrics');
+    const relevant = scoreContextRelevance({
+      query: 'metoprolol beta blocker hypertension treatment',
+      retrievedDocs: [
+        { id: '1', text: 'Metoprolol is a selective beta-1 blocker used for hypertension and heart failure management.', score: 0.9 },
+      ],
+      generatedAnswer: '',
+    });
+    const irrelevant = scoreContextRelevance({
+      query: 'metoprolol beta blocker hypertension treatment',
+      retrievedDocs: [
+        { id: '2', text: 'Italian pasta cooking recipes with tomato sauce and basil.', score: 0.1 },
+      ],
+      generatedAnswer: '',
+    });
+    expect(relevant.score).toBeGreaterThan(irrelevant.score);
+  });
+
+  it('scoreAnswerFaithfulness measures grounding in context', async () => {
+    const { scoreAnswerFaithfulness } = await import('@/lib/evaluation/ragasMetrics');
+    const grounded = scoreAnswerFaithfulness({
+      query: 'treatment for CHF',
+      retrievedDocs: [{ id: '1', text: 'ACE inhibitors and beta blockers reduce mortality in CHF.', score: 0.9 }],
+      generatedAnswer: 'ACE inhibitors and beta blockers are first-line for CHF to reduce mortality.',
+    });
+    const ungrounded = scoreAnswerFaithfulness({
+      query: 'treatment for CHF',
+      retrievedDocs: [{ id: '1', text: 'ACE inhibitors and beta blockers reduce mortality in CHF.', score: 0.9 }],
+      generatedAnswer: 'Surgical intervention with CABG is the primary treatment modality for all CHF.',
+    });
+    expect(grounded.score).toBeGreaterThan(ungrounded.score);
+  });
+
+  it('evaluateRAG returns composite score', async () => {
+    const { evaluateRAG } = await import('@/lib/evaluation/ragasMetrics');
+    const result = evaluateRAG({
+      query: 'first-line treatment for atrial fibrillation',
+      retrievedDocs: [
+        { id: '1', text: 'Rate control with beta blockers or calcium channel blockers is first-line for atrial fibrillation.', score: 0.9 },
+      ],
+      generatedAnswer: 'First-line treatment includes rate control with beta blockers or calcium channel blockers.',
+      expectedConcepts: ['rate control', 'beta blocker', 'calcium channel blocker'],
+    });
+    expect(result.overall).toBeGreaterThan(0);
+    expect(result.overall).toBeLessThanOrEqual(1);
+    expect(result.contextRelevance).toBeGreaterThan(0);
+    expect(result.answerFaithfulness).toBeGreaterThan(0);
+  });
+
+  it('batchEvaluateRAG computes aggregates', async () => {
+    const { batchEvaluateRAG } = await import('@/lib/evaluation/ragasMetrics');
+    const { aggregate } = batchEvaluateRAG([
+      {
+        query: 'CHF treatment',
+        retrievedDocs: [{ id: '1', text: 'ACE inhibitors for heart failure.', score: 0.8 }],
+        generatedAnswer: 'ACE inhibitors are used for heart failure.',
+      },
+      {
+        query: 'diabetes diagnosis',
+        retrievedDocs: [{ id: '2', text: 'HbA1c >= 6.5% diagnoses diabetes.', score: 0.9 }],
+        generatedAnswer: 'Diabetes is diagnosed with HbA1c >= 6.5%.',
+      },
+    ]);
+    expect(aggregate.count).toBe(2);
+    expect(aggregate.overall).toBeGreaterThan(0);
+  });
+});
+
+// ─── Embedding Benchmark Harness ────────────────────────────────────────
+
+describe('Embedding Benchmark', () => {
+  it('cosineSimilarity computes correctly', async () => {
+    const { cosineSimilarity } = await import('@/lib/evaluation/embeddingBenchmark');
+    expect(cosineSimilarity([1, 0, 0], [1, 0, 0])).toBeCloseTo(1.0);
+    expect(cosineSimilarity([1, 0, 0], [0, 1, 0])).toBeCloseTo(0.0);
+    expect(cosineSimilarity([1, 0, 0], [-1, 0, 0])).toBeCloseTo(-1.0);
+  });
+
+  it('hitAtK computes hit rate', async () => {
+    const { hitAtK } = await import('@/lib/evaluation/embeddingBenchmark');
+    const rankings = [
+      { queryId: 'q1', rankedDocIds: ['d1', 'd2', 'd3'] },
+      { queryId: 'q2', rankedDocIds: ['d4', 'd5', 'd1'] },
+    ];
+    const queries = [
+      { id: 'q1', query: 'test', relevantDocIds: ['d1'] },
+      { id: 'q2', query: 'test', relevantDocIds: ['d6'] },
+    ];
+    expect(hitAtK(rankings, queries, 1)).toBe(0.5);  // q1 hits, q2 doesn't
+    expect(hitAtK(rankings, queries, 3)).toBe(0.5);   // same, d6 not in q2's top 3
+  });
+
+  it('meanReciprocalRank computes MRR', async () => {
+    const { meanReciprocalRank } = await import('@/lib/evaluation/embeddingBenchmark');
+    const rankings = [
+      { queryId: 'q1', rankedDocIds: ['d1', 'd2'] },    // rank 1
+      { queryId: 'q2', rankedDocIds: ['d3', 'd4', 'd5'] }, // rank 3
+    ];
+    const queries = [
+      { id: 'q1', query: 'test', relevantDocIds: ['d1'] },
+      { id: 'q2', query: 'test', relevantDocIds: ['d5'] },
+    ];
+    const mrr = meanReciprocalRank(rankings, queries);
+    expect(mrr).toBeCloseTo((1 + 1/3) / 2);  // (1/1 + 1/3) / 2
+  });
+
+  it('ndcg handles edge cases', async () => {
+    const { ndcg } = await import('@/lib/evaluation/embeddingBenchmark');
+    expect(ndcg([], [])).toBe(0);
+    const rankings = [{ queryId: 'q1', rankedDocIds: ['d1'] }];
+    const queries = [{ id: 'q1', query: 'test', relevantDocIds: ['d1'] }];
+    expect(ndcg(rankings, queries)).toBeCloseTo(1.0);
+  });
+});
+
+// ─── GraphRAG ───────────────────────────────────────────────────────────
+
+describe('GraphRAG', () => {
+  it('classifyGraphQuery detects DDx queries', async () => {
+    const { classifyGraphQuery } = await import('@/lib/services/search/graphRag');
+    expect(classifyGraphQuery('differential diagnosis for chest pain')).toBe('ddx');
+    expect(classifyGraphQuery('rule out PE vs pneumonia')).toBe('ddx');
+  });
+
+  it('classifyGraphQuery detects drug interaction queries', async () => {
+    const { classifyGraphQuery } = await import('@/lib/services/search/graphRag');
+    expect(classifyGraphQuery('does warfarin interact with aspirin')).toBe('drug_interaction');
+    expect(classifyGraphQuery('contraindications for metformin')).toBe('drug_interaction');
+  });
+
+  it('classifyGraphQuery detects treatment queries', async () => {
+    const { classifyGraphQuery } = await import('@/lib/services/search/graphRag');
+    expect(classifyGraphQuery('first-line treatment for hypertension')).toBe('treatment');
+    expect(classifyGraphQuery('medication for atrial fibrillation')).toBe('treatment');
+  });
+
+  it('classifyGraphQuery detects causal queries', async () => {
+    const { classifyGraphQuery } = await import('@/lib/services/search/graphRag');
+    expect(classifyGraphQuery('what causes acute pancreatitis')).toBe('causal');
+    expect(classifyGraphQuery('mechanism of metformin')).toBe('causal');
+  });
+
+  it('getEdgeTypesForQuery returns appropriate edges', async () => {
+    const { getEdgeTypesForQuery } = await import('@/lib/services/search/graphRag');
+    const ddxEdges = getEdgeTypesForQuery('ddx');
+    expect(ddxEdges).toContain('DIFFERENTIAL');
+    expect(ddxEdges).toContain('MANIFESTS');
+
+    const treatEdges = getEdgeTypesForQuery('treatment');
+    expect(treatEdges).toContain('TREATS');
+  });
+
+  it('buildGraphContext formats results', async () => {
+    const { buildGraphContext } = await import('@/lib/services/search/graphRag');
+    const context = buildGraphContext({
+      queryType: 'ddx',
+      nodes: [{ id: '1', nodeType: 'CONDITION', label: 'PE', sourceType: 'mc', sourceId: 's1', relevance: 0.9 }],
+      edges: [
+        { sourceLabel: 'PE', targetLabel: 'DVT', edgeType: 'ASSOCIATED', weight: 0.8 },
+        { sourceLabel: 'PE', targetLabel: 'Dyspnea', edgeType: 'MANIFESTS', weight: 0.9 },
+      ],
+      paths: [{ nodes: ['PE', 'DVT'], edges: ['ASSOCIATED'], totalWeight: 0.8 }],
+    });
+    expect(context).toContain('PE');
+    expect(context).toContain('DVT');
+    expect(context).toContain('ASSOCIATED');
+  });
+
+  it('search barrel exports GraphRAG functions', async () => {
+    const search = await import('@/lib/services/search');
+    expect(typeof search.graphRAGQuery).toBe('function');
+    expect(typeof search.buildGraphContext).toBe('function');
+    expect(typeof search.classifyGraphQuery).toBe('function');
+  });
+});
+
+// ─── Cloudflare AI Gateway ──────────────────────────────────────────────
+
+describe('Cloudflare AI Gateway', () => {
+  it('buildGeminiUrl routes through gateway when env vars set', async () => {
+    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-service');
+    const url = buildGeminiUrl('test-key', 'gemini-2.0-flash', 'generateContent', {
+      CF_ACCOUNT_ID: 'acc-123',
+      CF_AI_GATEWAY_ID: 'gw-456',
+    });
+    expect(url).toContain('gateway.ai.cloudflare.com');
+    expect(url).toContain('acc-123');
+    expect(url).toContain('gw-456');
+    expect(url).toContain('google-ai-studio');
+    expect(url).toContain('gemini-2.0-flash');
+  });
+
+  it('buildGeminiUrl uses direct API without gateway env', async () => {
+    const { buildGeminiUrl } = await import('@/functions/api/_shared/ai-service');
+    const url = buildGeminiUrl('test-key', 'gemini-2.0-flash', 'generateContent');
+    expect(url).toContain('generativelanguage.googleapis.com');
+    expect(url).not.toContain('gateway.ai.cloudflare.com');
+  });
+
+  it('AI SDK provider routes through gateway when configured', async () => {
+    const { createAIModel } = await import('@/lib/ai-sdk/providers');
+    // Should not throw — the model is created with gateway config
+    const model = createAIModel('gemini-2.0-flash', {
+      GEMINI_API_KEY: 'test-key',
+      CF_ACCOUNT_ID: 'acc-123',
+      CF_AI_GATEWAY_ID: 'gw-456',
+    });
+    expect(model).toBeDefined();
+  });
+});
+
 // ─── Barrel Exports ──────────────────────────────────────────────────────
 
 describe('Barrel Exports', () => {

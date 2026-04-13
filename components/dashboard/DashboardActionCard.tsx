@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
+import { springs } from '@/config/appViews';
 import { PrimaryButton, type ButtonVariant } from '../ui/PrimaryButton';
 
 interface StatItem {
@@ -98,11 +99,11 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   };
   return (
     <motion.div
-      initial={{ y: 8 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.995 }}
+      initial={{ y: 8, filter: 'blur(3px)' }}
+      animate={{ y: 0, filter: 'blur(0px)' }}
+      transition={springs.snappy}
+      whileHover={{ y: -3, transition: springs.snappy }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.08 } }}
       className="group relative overflow-hidden rounded-2xl cursor-pointer
                  border border-[var(--color-border)] 
                  bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 

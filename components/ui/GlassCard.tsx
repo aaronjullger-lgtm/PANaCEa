@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/config/appViews';
 import { CARD_RING_SHADOW } from '@/components/ui/card';
 
 /**
@@ -83,9 +84,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   return (
     <motion.div
       // Fixed: removed initial opacity:0 which caused invisible-card stall in StrictMode
-      initial={prefersReducedMotion ? false : { y: 12 }}
-      animate={{ y: 0 }}
-      transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: [0.32, 0.72, 0, 1] }}
+      // Uses blur-dissolve + spring for cinematic entrance without opacity risk
+      initial={prefersReducedMotion ? false : { y: 12, filter: 'blur(4px)' }}
+      animate={{ y: 0, filter: 'blur(0px)' }}
+      whileHover={hoverable && !prefersReducedMotion ? { y: -2, transition: springs.snappy } : undefined}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
       className={`
         relative overflow-hidden rounded-xl
         ${styles.bg}
