@@ -27,6 +27,14 @@ import type { LearnerStage } from './learnerStageBlueprint';
 import { batchGetLeastSeenQuestions } from './batchVariantService';
 import { letterToIndex, ANSWER_LETTERS } from '../answerLetterMap';
 import { logger } from '../logger';
+import {
+  buildBanditArm,
+  rankCandidates,
+  type BanditState,
+  type BanditConfig,
+  type QuestionMetadata,
+  type ScoredArm,
+} from './contextualBanditService';
 
 const LOG_SCOPE = 'ConceptQuestionSelector';
 
@@ -57,6 +65,16 @@ export interface SessionRequest {
   urgencyMultiplier: number;
   /** Systems the learner hasn't been exposed to yet (didactic gating) */
   gatedSystems?: string[];
+
+  // ── Bandit reranking (optional) ──
+  /** Bandit state for LinUCB reranking. If provided, candidates are reranked. */
+  banditState?: BanditState;
+  /** Per-system weakness scores (0=strong, 1=weakest) for bandit context */
+  systemWeaknesses?: Record<string, number>;
+  /** Per-question mastery scores (0=new, 1=mastered) for bandit context */
+  topicMasteryMap?: Record<string, number>;
+  /** Override bandit config */
+  banditConfig?: BanditConfig;
 }
 
 export interface SelectedQuestion {
@@ -183,10 +201,21 @@ export async function selectSessionQuestions(
     gatedSystems,
   });
 
-  // Step 5: Combine and interleave
+  // Step 5: Combine candidates
+  const allCandidates = [
+    ...selectedDue.map(q => ({ ...q, source: 'due_review' as const })),
+    ...selectedNew.map(q => ({ ...q, source: 'new_card' as const })),
+  ];
+
+  // Step 5b: Bandit reranking (if state provided)
+  const rerankedCandidates = request.banditState
+    ? banditRerankQuestions(allCandidates, request)
+    : allCandidates;
+
+  // Step 5c: Interleave across systems
   const combined = interleaveQuestions(
-    selectedDue.map(q => ({ ...q, source: 'due_review' as const })),
-    selectedNew.map(q => ({ ...q, source: 'new_card' as const }))
+    rerankedCandidates.filter(q => q.source === 'due_review') as (SelectedQuestion & { source: 'due_review' })[],
+    rerankedCandidates.filter(q => q.source === 'new_card') as (SelectedQuestion & { source: 'new_card' })[],
   );
 
   // Step 6: Create session record
@@ -574,6 +603,56 @@ function interleaveQuestions(
   }
 
   return result;
+}
+
+// ─── Bandit Reranking ───────────────────────────────────────────────────────
+
+/**
+ * Re-rank selected questions using LinUCB contextual bandit.
+ *
+ * Builds a BanditArm for each question from available metadata,
+ * scores them via the bandit, and returns questions in bandit-optimal order.
+ * Pure function — no database calls.
+ *
+ * @see lib/services/contextualBanditService.ts
+ */
+export function banditRerankQuestions(
+  questions: (SelectedQuestion & { source: 'due_review' | 'new_card' })[],
+  request: Pick<SessionRequest, 'banditState' | 'systemWeaknesses' | 'topicMasteryMap' | 'blueprintWeights' | 'banditConfig' | 'size'>
+): (SelectedQuestion & { source: 'due_review' | 'new_card' })[] {
+  if (!request.banditState || questions.length <= 1) return questions;
+
+  const arms = questions.map((q, idx) => {
+    const meta: QuestionMetadata = {
+      questionId: q.id,
+      system: q.system,
+      difficulty: q.difficulty,
+      topic: q.topic,
+      topicMastery: request.topicMasteryMap?.[q.conditionId ?? ''] ?? 0.5,
+      overdueRatio: q.source === 'due_review' ? 1.0 : 0.0,
+      systemWeakness: request.systemWeaknesses?.[q.system ?? ''] ?? 0.5,
+      blueprintWeight: request.blueprintWeights[q.system ?? ''] ?? 0.08,
+      daysSinceReview: q.source === 'due_review' ? 7 : undefined,
+      sessionIndex: idx,
+      sessionSize: request.size,
+    };
+    return buildBanditArm(meta);
+  });
+
+  const scored: ScoredArm[] = rankCandidates(arms, request.banditState, request.banditConfig);
+
+  // Build a map from questionId → rank position
+  const rankMap = new Map<string, number>();
+  scored.forEach((s, i) => rankMap.set(s.questionId, i));
+
+  // Sort questions by bandit rank (lower rank = higher UCB score)
+  const sorted = [...questions].sort((a, b) => {
+    const rankA = rankMap.get(a.id) ?? questions.length;
+    const rankB = rankMap.get(b.id) ?? questions.length;
+    return rankA - rankB;
+  });
+
+  return sorted;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
