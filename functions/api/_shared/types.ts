@@ -43,6 +43,11 @@ export interface CloudflareEnv {
   SENTRY_DSN?: string;
   ENVIRONMENT?: string;
 
+  // Langfuse Observability
+  LANGFUSE_PUBLIC_KEY?: string;
+  LANGFUSE_SECRET_KEY?: string;
+  LANGFUSE_BASE_URL?: string;
+
   // Optional feature flags
   ENABLE_LOGGING?: string;
   LOG_LEVEL?: string;
