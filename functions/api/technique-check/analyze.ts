@@ -5,7 +5,7 @@
  * Returns { critique: string, boundingBoxes?: Array<{ label, x, y, w, h }> }.
  */
 
-import { withMiddleware, withCors, withErrorHandling, withAuth } from '../_shared/middleware';
+import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
 import type { AuthenticatedContext } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -23,6 +23,7 @@ export const onRequestPost = withMiddleware(
   withCors(),
   withErrorHandling(),
   withAuth(),
+  withRateLimit({ requestsPerMinute: 10, endpointType: 'api', keyPrefix: 'technique-check' }),
   async (context: AuthenticatedContext) => {
     const { request, env } = context;
     const log = createEndpointLogger('/api/technique-check/analyze', context.auth?.userId ?? 'system');

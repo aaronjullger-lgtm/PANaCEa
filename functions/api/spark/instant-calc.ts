@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { withMiddleware, withCors, withErrorHandling, withAuth } from '../_shared/middleware';
+import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
 import type { AuthenticatedContext } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -25,6 +25,7 @@ export const onRequestPost = withMiddleware(
   withCors(),
   withErrorHandling(),
   withAuth(),
+  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'spark' }),
   async (context: AuthenticatedContext) => {
     const { request, env } = context;
     const log = createEndpointLogger('/api/spark/instant-calc', context.auth?.userId ?? 'system');

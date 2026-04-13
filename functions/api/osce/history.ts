@@ -15,6 +15,7 @@ import {
   withCors,
   withMiddleware,
   withAuth,
+  withRateLimit,
   withErrorHandling,
   withLogging,
 } from '../_shared/middleware';
@@ -35,6 +36,7 @@ export const onRequestGet = withMiddleware(
   withCors(),
   withErrorHandling(),
   withAuth(),
+  withRateLimit({ requestsPerMinute: 60, endpointType: 'api', keyPrefix: 'osce-history' }),
   withLogging(),
   async (context: any) => {
     const { env, auth } = context;

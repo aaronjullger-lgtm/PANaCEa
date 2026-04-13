@@ -4,7 +4,7 @@
  * Auth required. Body: multipart (file = PDF) or { pdfUrl }. Returns script + audioBase64 or job/status.
  */
 
-import { withMiddleware, withCors, withErrorHandling, withAuth } from '../_shared/middleware';
+import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
 import type { AuthenticatedContext } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -18,6 +18,7 @@ export const onRequestPost = withMiddleware(
   withCors(),
   withErrorHandling(),
   withAuth(),
+  withRateLimit({ requestsPerMinute: 5, endpointType: 'api', keyPrefix: 'podcast' }),
   async (context: AuthenticatedContext) => {
     const { request, env } = context;
     const log = createEndpointLogger('/api/podcast/generate', context.auth?.userId ?? 'system');
