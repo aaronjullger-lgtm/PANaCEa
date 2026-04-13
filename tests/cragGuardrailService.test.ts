@@ -101,6 +101,18 @@ describe('evaluateChunk', () => {
     expect(shortResult.relevanceScore).toBeLessThan(normalResult.relevanceScore);
   });
 
+  it('clamps score to [0, 1] even with all bonuses applied', () => {
+    // High similarity + all bonuses: 0.95 + 0.05 + 0.08 + 0.03 = 1.11 before clamp
+    const chunk = makeChunk({
+      similarity: 0.95,
+      system: 'Cardiovascular',
+      content: 'Heart Failure treatment: sensitivity 95%, specificity 88%. ACE inhibitors per ACC/AHA guidelines. Dose-dependent response with standard dosing protocol.',
+    });
+    const result = evaluateChunk(chunk, 'Cardiovascular', 'Heart Failure');
+    expect(result.relevanceScore).toBeLessThanOrEqual(1.0);
+    expect(result.relevanceScore).toBeGreaterThanOrEqual(0);
+  });
+
   it('adds structured clinical markers bonus', () => {
     const structured = makeChunk({
       similarity: 0.50,

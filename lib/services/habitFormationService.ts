@@ -566,7 +566,7 @@ function scheduleAt(
   // If we're in quiet hours, defer to first active hour
   if (isQuietHour(localHour, config.quietHoursStart, config.quietHoursEnd)) {
     const activeHour = nextActiveHour(localHour, config.quietHoursStart, config.quietHoursEnd);
-    const deferred = new Date(now);
+    const deferred = new Date(now.getTime()); // clone to avoid mutating input
     const hourDiff = (activeHour - localHour + 24) % 24;
     deferred.setHours(deferred.getHours() + hourDiff);
     deferred.setMinutes(0, 0, 0);

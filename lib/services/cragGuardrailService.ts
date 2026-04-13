@@ -178,11 +178,14 @@ export function evaluateChunk(
     reasons.push('structured clinical markers');
   }
 
+  // Clamp score to [0, 1] before threshold comparison
+  score = Math.min(Math.max(score, 0), 1.0);
+
   const isRelevant = score >= config.chunkRelevanceThreshold;
 
   return {
     chunk,
-    relevanceScore: Math.min(score, 1.0),
+    relevanceScore: score,
     isRelevant,
     reason: isRelevant
       ? `Relevant (${reasons.join(', ')})`

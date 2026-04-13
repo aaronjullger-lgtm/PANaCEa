@@ -455,6 +455,18 @@ describe('Edge cases', () => {
       expect(c.ttlSeconds).toBeGreaterThan(0);
     }
   });
+
+  it('does not mutate the input Date object during quiet-hour deferral', () => {
+    // Set up: 3 AM UTC, EST offset = local 22:00 (quiet hours)
+    const now = dateAtHour(3);
+    const originalTime = now.getTime();
+    const profile = makeProfile({
+      timezoneOffsetHours: -5,
+      cardsDueNow: 20,
+    });
+    generateCandidateNotifications(profile, now);
+    expect(now.getTime()).toBe(originalTime);
+  });
 });
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

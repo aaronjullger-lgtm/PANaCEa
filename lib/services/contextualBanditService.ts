@@ -366,15 +366,25 @@ export function rankCandidates(
     };
   });
 
-  // ε-greedy floor: randomly promote a fraction of arms
-  if (epsilonFloor > 0) {
+  // ε-greedy floor: randomly promote a fraction of arms to the top
+  // Uses a separate promotions set to avoid mutating scores during iteration
+  if (epsilonFloor > 0 && scored.length > 0) {
+    const promotedIndices = new Set<number>();
     const numRandom = Math.max(1, Math.floor(scored.length * epsilonFloor));
-    for (let i = 0; i < numRandom && i < scored.length; i++) {
+    for (let i = 0; i < numRandom; i++) {
       const randomIdx = Math.floor(deterministicRandom(
         state.totalSelections + i
       ) * scored.length);
-      if (randomIdx < scored.length && scored[randomIdx]) {
-        scored[randomIdx]!.ucbScore += 1000; // Promote to top
+      if (randomIdx < scored.length) {
+        promotedIndices.add(randomIdx);
+      }
+    }
+    // Find the max UCB score, then set promoted arms above it
+    const maxScore = scored.reduce((m, s) => Math.max(m, s.ucbScore), -Infinity);
+    for (const idx of promotedIndices) {
+      const arm = scored[idx];
+      if (arm) {
+        arm.ucbScore = maxScore + 1 + idx * 0.001; // deterministic tie-breaking
       }
     }
   }
