@@ -382,3 +382,175 @@ export function detectRisk(
 
   return { level, reasons };
 }
+
+// ─── Sprint 24: Forgetting Curve Projection to Exam Date ────────────
+
+/**
+ * Per-system intervention plan for reaching target readiness by exam.
+ */
+export interface SystemIntervention {
+  system: string;
+  currentReadiness: number;
+  projectedAtExam: number;
+  targetReadiness: number;
+  /** Estimated additional reviews needed to reach target */
+  reviewsNeeded: number;
+  /** Daily review pace required to finish before exam */
+  dailyReviewPace: number;
+  /** Whether the target is achievable at realistic daily pace */
+  achievable: boolean;
+  /** Risk level for this system */
+  risk: RiskLevel;
+}
+
+/**
+ * Exam countdown projection.
+ */
+export interface ExamCountdownProjection {
+  daysUntilExam: number;
+  /** If you stop studying today */
+  projectedScoreIfStop: number;
+  /** If you maintain current pace */
+  projectedScoreCurrentPace: number;
+  /** Per-system intervention plan */
+  interventions: SystemIntervention[];
+  /** Total additional reviews needed across all systems */
+  totalReviewsNeeded: number;
+  /** Overall daily pace to hit 0.85 target */
+  overallDailyPace: number;
+}
+
+/**
+ * Project forgetting curves to exam date and generate intervention plans.
+ *
+ * For each system, computes:
+ *   - Retrievability at exam date using FSRS power-law decay (no more study)
+ *   - Reviews needed to push each card's stability high enough to survive to exam
+ *   - Required daily pace to complete all reviews before exam
+ *
+ * @param cards All user cards with stability and elapsed days
+ * @param daysUntilExam Days until the exam
+ * @param targetReadiness Target readiness at exam (default 0.85)
+ * @param avgReviewsPerDay Current average reviews per day (for pace comparison)
+ */
+export function projectToExamDate(
+  cards: CardState[],
+  daysUntilExam: number,
+  targetReadiness: number = 0.85,
+  avgReviewsPerDay: number = 20
+): ExamCountdownProjection {
+  if (daysUntilExam <= 0) {
+    // Exam is today or past
+    const current = computeExamReadiness(cards, 0);
+    return {
+      daysUntilExam: 0,
+      projectedScoreIfStop: 300 + 500 * current.overallReadiness,
+      projectedScoreCurrentPace: 300 + 500 * current.overallReadiness,
+      interventions: [],
+      totalReviewsNeeded: 0,
+      overallDailyPace: 0,
+    };
+  }
+
+  // Group cards by system
+  const systemCards = new Map<string, CardState[]>();
+  for (const card of cards) {
+    if (!systemCards.has(card.system)) systemCards.set(card.system, []);
+    systemCards.get(card.system)!.push(card);
+  }
+
+  // Compute "if stop" scenario — project all cards forward by daysUntilExam
+  let weightedStopReadiness = 0;
+  let totalWeight = 0;
+
+  const interventions: SystemIntervention[] = [];
+
+  for (const [system, sCards] of systemCards) {
+    // Current readiness
+    const currentRetrievabilities = sCards.map((c) =>
+      projectRetrievability(c.stability, c.elapsedDays)
+    );
+    const currentReadiness = currentRetrievabilities.length > 0
+      ? currentRetrievabilities.reduce((s, r) => s + r, 0) / currentRetrievabilities.length
+      : 0;
+
+    // Projected readiness at exam (no more study)
+    const stopRetrievabilities = sCards.map((c) =>
+      projectRetrievability(c.stability, c.elapsedDays, daysUntilExam)
+    );
+    const stopReadiness = stopRetrievabilities.length > 0
+      ? stopRetrievabilities.reduce((s, r) => s + r, 0) / stopRetrievabilities.length
+      : 0;
+
+    // How many reviews needed?
+    // Each review roughly doubles stability. We need each card's retrievability
+    // at exam date to be ≥ targetReadiness.
+    let reviewsNeeded = 0;
+    for (let i = 0; i < sCards.length; i++) {
+      const card = sCards[i]!;
+      const examR = stopRetrievabilities[i]!;
+      if (examR < targetReadiness) {
+        // How much must stability increase so R(daysUntilExam) ≥ target?
+        // R = (1 + F * t / S)^D ≥ target
+        // S ≥ F * t / (target^(1/D) - 1)
+        const targetInverse = Math.pow(targetReadiness, 1 / FSRS_DECAY) - 1;
+        if (targetInverse > 0) {
+          const requiredStability = (FSRS_FACTOR * (card.elapsedDays + daysUntilExam)) / targetInverse;
+          const stabilityGap = requiredStability - card.stability;
+          if (stabilityGap > 0) {
+            // Rough model: each successful review multiplies stability by ~2.5
+            const reviewsForCard = Math.ceil(Math.log(requiredStability / Math.max(card.stability, 0.1)) / Math.log(2.5));
+            reviewsNeeded += Math.max(0, reviewsForCard);
+          }
+        }
+      }
+    }
+
+    const dailyReviewPace = daysUntilExam > 0 ? reviewsNeeded / daysUntilExam : reviewsNeeded;
+    const achievable = dailyReviewPace <= avgReviewsPerDay * 1.5; // 1.5× current pace is realistic
+    const bpWeight = sCards.length; // proxy for blueprint weight
+
+    const risk: RiskLevel = stopReadiness < 0.4 ? 'critical'
+      : stopReadiness < 0.6 ? 'high'
+      : stopReadiness < 0.8 ? 'moderate'
+      : 'low';
+
+    interventions.push({
+      system,
+      currentReadiness,
+      projectedAtExam: stopReadiness,
+      targetReadiness,
+      reviewsNeeded,
+      dailyReviewPace: Math.round(dailyReviewPace * 10) / 10,
+      achievable,
+      risk,
+    });
+
+    weightedStopReadiness += stopReadiness * bpWeight;
+    totalWeight += bpWeight;
+  }
+
+  // Sort interventions: most urgent first
+  interventions.sort((a, b) => a.projectedAtExam - b.projectedAtExam);
+
+  const overallStopReadiness = totalWeight > 0 ? weightedStopReadiness / totalWeight : 0;
+  const projectedScoreIfStop = Math.round(300 + 500 * overallStopReadiness);
+
+  // "Current pace" projection: assume daily reviews maintain current readiness
+  const currentExam = computeExamReadiness(cards, daysUntilExam);
+  const projectedScoreCurrentPace = Math.round(300 + 500 * currentExam.projectedAtExam);
+
+  const totalReviewsNeeded = interventions.reduce((s, i) => s + i.reviewsNeeded, 0);
+  const overallDailyPace = daysUntilExam > 0
+    ? Math.round((totalReviewsNeeded / daysUntilExam) * 10) / 10
+    : 0;
+
+  return {
+    daysUntilExam,
+    projectedScoreIfStop,
+    projectedScoreCurrentPace,
+    interventions,
+    totalReviewsNeeded,
+    overallDailyPace,
+  };
+}

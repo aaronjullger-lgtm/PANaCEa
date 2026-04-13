@@ -64,7 +64,8 @@ export type View =
   | 'elaboration_drill'
   | 'icd_coding_drill'
   | 'teach_back_drill'
-  | 'calibration_dashboard';
+  | 'calibration_dashboard'
+  | 'illness_script';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {

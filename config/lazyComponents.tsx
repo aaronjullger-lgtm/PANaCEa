@@ -197,3 +197,8 @@ export const ProgressPage = lazy(() => import('../pages/ProgressPage').then((m) 
 export const ElaborationDrill = lazy(() => import('../components/drill/ElaborationDrill'));
 export const ICDCodingDrill = lazy(() => import('../components/drill/ICDCodingDrill'));
 export const TeachBackDrill = lazy(() => import('../components/drill/TeachBackDrill'));
+export const IllnessScriptView = lazy(() =>
+  import('../components/library/IllnessScriptView').then((m) => ({
+    default: m.IllnessScriptView,
+  }))
+);

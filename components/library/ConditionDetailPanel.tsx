@@ -10,7 +10,7 @@
  * 6. Study Aids
  */
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import {
   Stethoscope,
@@ -23,6 +23,10 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+
+const LazyIllnessScriptView = lazy(() =>
+  import('./IllnessScriptView').then((m) => ({ default: m.IllnessScriptView }))
+);
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { normalizeMedicalContent, parseListField, parseTextField } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
@@ -258,6 +262,7 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
   }, [onClose]);
 
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
+  const [showIllnessScript, setShowIllnessScript] = useState(false);
 
   return (
     <motion.div
@@ -302,6 +307,20 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
                 {normalized.subcategory}
               </span>
             )}
+            {normalized.conditionId && (
+              <button
+                onClick={() => setShowIllnessScript(!showIllnessScript)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors"
+                style={{
+                  background: showIllnessScript ? 'var(--color-accent)' : 'var(--color-bg-primary)',
+                  color: showIllnessScript ? '#fff' : 'var(--color-text-secondary)',
+                  border: `1px solid ${showIllnessScript ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                }}
+              >
+                <Brain size={13} aria-hidden="true" />
+                Illness Script
+              </button>
+            )}
           </div>
 
           {/* Overview */}
@@ -317,6 +336,25 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
 
         {/* Scrollable Content - min-h-0 so flex allows shrink and scroll */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-4">
+          {/* Illness Script View (lazy-loaded) */}
+          {showIllnessScript && normalized.conditionId && (
+            <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-secondary)]/30" style={{ maxHeight: '60vh' }}>
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center p-8 text-[var(--color-text-muted)]">
+                    Building illness script…
+                  </div>
+                }
+              >
+                <LazyIllnessScriptView
+                  conditionId={normalized.conditionId}
+                  conditionName={normalized.condition}
+                  onClose={() => setShowIllnessScript(false)}
+                />
+              </Suspense>
+            </div>
+          )}
+
           {/* Topic Mastery Breakdown - Second Chance System */}
           {normalized.conditionId && (
             <TopicMasteryBreakdown
