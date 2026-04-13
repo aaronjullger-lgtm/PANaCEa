@@ -24,6 +24,14 @@ import {
   assessRetrievalQuality,
   refineRetrievedContext,
 } from '../../../lib/services/ragContextService';
+import {
+  shouldRefine,
+  buildCritiquePrompt,
+  parseCritiqueResponse,
+  buildRewritePrompt,
+  buildRefinementMetrics,
+  type GeneratedQuestion,
+} from '../../../lib/services/selfRefineService';
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
 
@@ -174,7 +182,79 @@ Return ONLY valid JSON. No markdown fences.`;
       return { status: 502, error: 'Invalid JSON from generation model' };
     }
 
-    // 5. Attach RAG metadata
+    // 5. Self-refine loop (draft → critique → rewrite) for qualifying questions
+    let refinementMetrics = null;
+    const refinedQuestions: unknown[] = [];
+    for (const q of questions) {
+      const gen = q as GeneratedQuestion;
+      if (shouldRefine(gen)) {
+        try {
+          // Critique
+          const critiquePrompt = buildCritiquePrompt(gen);
+          const critiqueRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: critiquePrompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2048,
+                responseMimeType: 'application/json',
+              },
+            }),
+          });
+
+          if (critiqueRes.ok) {
+            const critiqueData = (await critiqueRes.json()) as {
+              candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+            };
+            const critiqueText = critiqueData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (critiqueText) {
+              const critique = parseCritiqueResponse(critiqueText);
+              if (critique.overallScore < 0.8) {
+                // Rewrite needed
+                const rewritePrompt = buildRewritePrompt(gen, critique);
+                const rewriteRes = await fetch(geminiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: rewritePrompt }] }],
+                    generationConfig: {
+                      temperature: 0.5,
+                      maxOutputTokens: 4096,
+                      responseMimeType: 'application/json',
+                    },
+                  }),
+                });
+
+                if (rewriteRes.ok) {
+                  const rewriteData = (await rewriteRes.json()) as {
+                    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+                  };
+                  const rewriteText = rewriteData.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (rewriteText) {
+                    try {
+                      const rewritten = JSON.parse(rewriteText.replace(/```json|```/g, '').trim());
+                      refinedQuestions.push({ ...rewritten, _refined: true });
+                      refinementMetrics = buildRefinementMetrics(gen, critique);
+                      continue;
+                    } catch { /* fall through to original */ }
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[generate-rag] Self-refine failed, using original:', e);
+        }
+      }
+      refinedQuestions.push(q);
+    }
+
+    // Use refined questions
+    questions = refinedQuestions;
+
+    // 6. Attach RAG metadata
     const sourceChunkIds = [...new Set(ragContext.chunks.map((c) => c.sourceId))];
 
     return {
@@ -193,6 +273,7 @@ Return ONLY valid JSON. No markdown fences.`;
               : 0,
           cragAction: refined.cragAction,
           pipelineMetrics: refined.pipelineMetrics,
+          refinementMetrics,
         },
       },
     };

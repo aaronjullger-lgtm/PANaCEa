@@ -1647,6 +1647,46 @@ export async function submitDrillReview(
     });
   }
 
+  // ── FIRe implicit review compression (non-blocking) ──
+  // Propagate review credit/penalty to prerequisite concepts via the graph.
+  // Runs only for FSRS-eligible reviews with a valid conditionId.
+  let fireCredits: Array<{ conceptId: string; stabilityMultiplier: number }> | undefined;
+  if (countForFSRS && question.conditionId) {
+    try {
+      const fireModule = await import('./fireCompressionService');
+      // Fetch prerequisite edges for this condition's system
+      const edges = await prisma.graphEdge.findMany({
+        where: {
+          OR: [{ sourceId: question.conditionId }, { targetId: question.conditionId }],
+          type: 'SEMANTIC',
+        },
+        select: { sourceId: true, targetId: true, weight: true, type: true },
+      });
+
+      if (edges.length > 0) {
+        const prereqEdges = edges.map((e) => ({
+          sourceId: e.sourceId,
+          targetId: e.targetId,
+          weight: e.weight ?? 0.5,
+          type: 'SEMANTIC' as const,
+        }));
+
+        const reviewResult = {
+          conceptId: question.conditionId!,
+          grade: isCorrect ? 1 : 0,
+          isSuccess: isCorrect,
+        };
+
+        fireCredits = fireModule.computeCredits(reviewResult, prereqEdges)
+          .map((c) => ({ conceptId: c.conceptId, stabilityMultiplier: c.stabilityMultiplier }));
+      }
+    } catch (fireErr) {
+      logger?.warn?.('FIRe compression failed (non-fatal)', {
+        error: fireErr instanceof Error ? fireErr.message : String(fireErr),
+      });
+    }
+  }
+
   return {
     success: true,
     isCorrect,
@@ -1667,6 +1707,8 @@ export async function submitDrillReview(
     },
     // Real FSRS schedule data — undefined when FSRS was skipped (cram, rapid_recall, rapid guess, no conditionId)
     fsrsSchedule,
+    // FIRe implicit review credits — stability multipliers for prerequisite concepts
+    fireCredits,
   };
 }
 
