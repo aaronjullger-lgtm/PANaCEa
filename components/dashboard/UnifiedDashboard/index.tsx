@@ -17,6 +17,8 @@ import {
 import Card from './Card';
 import CardGrid from './CardGrid';
 import DailyTriad from '../DailyTriad';
+import DailyLoadWidget from '../DailyLoadWidget';
+import ErrorPatternWidget from '../ErrorPatternWidget';
 import DataView from './DataView';
 import {
   ExamReadinessCard,
@@ -76,6 +78,11 @@ function createRetentionFetcher(getToken: () => Promise<string | null>) {
 const PilotView = () => {
   return (
     <CardGrid>
+      <div className="lg:col-span-1">
+        <Card>
+          <DailyLoadWidget />
+        </Card>
+      </div>
       <div className="lg:col-span-2">
         <Card>
           <ExamReadinessCard />
@@ -86,7 +93,12 @@ const PilotView = () => {
           <DailyTriad />
         </Card>
       </div>
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-1">
+        <Card>
+          <ErrorPatternWidget />
+        </Card>
+      </div>
+      <div className="lg:col-span-1">
         <Card>
           <SystemPerformanceWidget />
         </Card>

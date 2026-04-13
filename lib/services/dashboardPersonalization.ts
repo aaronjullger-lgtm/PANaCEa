@@ -37,7 +37,9 @@ export type WidgetId =
   | 'confusion_pairs'
   | 'overlearning_alert'
   | 'wellness_status'
-  | 'readiness_projection';
+  | 'readiness_projection'
+  | 'daily_load'
+  | 'error_patterns';
 
 export interface DashboardConfig {
   stage: LearnerStage;
@@ -159,6 +161,7 @@ const DIDACTIC_LATE_CONFIG: DashboardConfig = {
 const CLINICAL_ROTATION_CONFIG: DashboardConfig = {
   stage: 'clinical_rotation',
   pilotWidgets: [
+    'daily_load',
     'daily_triad',
     'eor_countdown',
     'rotation_context',
@@ -167,6 +170,7 @@ const CLINICAL_ROTATION_CONFIG: DashboardConfig = {
   ],
   dataWidgets: [
     'system_performance',
+    'error_patterns',
     'calibration_quadrant',
     'calibration_chart',
     'blueprint_gaps',
@@ -209,6 +213,7 @@ const CLINICAL_ROTATION_CONFIG: DashboardConfig = {
 const PANCE_PREP_CONFIG: DashboardConfig = {
   stage: 'pance_prep',
   pilotWidgets: [
+    'daily_load',
     'daily_triad',
     'exam_countdown',
     'blueprint_gaps',
@@ -218,6 +223,7 @@ const PANCE_PREP_CONFIG: DashboardConfig = {
   ],
   dataWidgets: [
     'system_performance',
+    'error_patterns',
     'calibration_quadrant',
     'calibration_chart',
     'confusion_pairs',
