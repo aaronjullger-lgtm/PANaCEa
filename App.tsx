@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User } from 'lucide-react';
 import { runStorageKeyMigration } from './lib/storage/storageRegistry';
-import { type View, DRILL_MODE_IDS } from './config/appViews';
+import { type View, DRILL_MODE_IDS, springs } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
@@ -996,11 +996,7 @@ const App: React.FC = () => {
     setView('study_path_dashboard');
   }, []);
 
-  const pageTransition = useAccessibleTransition({
-    type: 'spring',
-    stiffness: 400,
-    damping: 28,
-  });
+  const pageTransition = useAccessibleTransition(springs.snappy);
 
   // While Clerk is initializing, show the landing page immediately so FCP fires
   // on real content rather than a blank spinner. Signed-in users will see a

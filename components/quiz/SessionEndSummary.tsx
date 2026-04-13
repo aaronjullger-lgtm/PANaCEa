@@ -8,6 +8,7 @@
 
 import React, { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
 import {
@@ -483,7 +484,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.2 }}
+            transition={{ ...springs.gentle, delay: 0.2 }}
             className="mb-4"
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} aria-hidden="true" />

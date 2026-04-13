@@ -6,6 +6,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { ClipboardCheck, TrendingUp, Brain, Award, ChevronRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -325,7 +326,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            transition={springs.bouncy}
             className="flex justify-center mb-6"
           >
             <div className="p-4 bg-[var(--color-data-pass)]/20 rounded-full">

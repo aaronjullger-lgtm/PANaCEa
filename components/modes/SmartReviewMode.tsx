@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   X,
   Brain,
@@ -256,7 +257,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.2 }}
+            transition={{ ...springs.gentle, delay: 0.2 }}
           >
             <CheckCircle className="w-24 h-24 text-[var(--color-text-inverse)] mx-auto mb-6" />
           </motion.div>

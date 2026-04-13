@@ -8,6 +8,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { X, ArrowRight, Layers } from 'lucide-react';
 import type { DDxComparison } from '@/lib/services/confusionService';
 import DDxTable from './DDxTable';
@@ -68,7 +69,7 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={springs.snappy}
             role="dialog"
             aria-modal="true"
             aria-label={`DDx comparison: ${comparison.conditionA} vs ${comparison.conditionB}`}

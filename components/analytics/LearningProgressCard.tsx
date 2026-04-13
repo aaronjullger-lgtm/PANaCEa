@@ -16,6 +16,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   TrendingUp,
   TrendingDown,
@@ -252,7 +253,7 @@ const PANCEPredictionBadge: React.FC<{
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 1.2, type: 'spring' }}
+          transition={{ ...springs.gentle, delay: 1.2 }}
           className={`text-4xl font-bold bg-gradient-to-r ${getStatusColor()} bg-clip-text text-transparent`}
         >
           {prediction.predictedScore}
@@ -392,7 +393,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.8, type: 'spring' }}
+          transition={{ ...springs.gentle, delay: 0.8 }}
           className="mt-4 flex items-center gap-2"
         >
           <span className="text-sm text-[var(--color-text-muted)]">Grade:</span>

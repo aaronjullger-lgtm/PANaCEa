@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   Heart,
   Users,
@@ -101,7 +102,7 @@ export function RotationSelector({
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                    transition={springs.bouncy}
                     className="ml-auto"
                   >
                     <Check className="w-4 h-4 text-[var(--color-accent)]" />

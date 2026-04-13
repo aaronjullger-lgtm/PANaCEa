@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import type { TimeScope } from './WidgetGrid';
 
 interface TimeScopeFilterProps {
@@ -36,7 +37,7 @@ const TimeScopeFilter: React.FC<TimeScopeFilterProps> = ({ value, onChange }) =>
             <motion.div
               layoutId="timeScopeIndicator"
               className="absolute inset-0 bg-[var(--color-accent)] rounded-md"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+              transition={springs.snappy}
             />
           )}
           <span className="relative z-10">{option.label}</span>

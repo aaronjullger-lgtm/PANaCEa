@@ -108,39 +108,52 @@ import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 /** Hook to fetch entity counts from all APIs */
 function useEntityCounts(configs: readonly ReferenceViewConfig<any>[], token: string | null) {
   const [counts, setCounts] = useState<Record<string, number | null>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
+    setIsLoading(true);
+    setError(null);
 
     async function fetchCounts() {
-      const results = await Promise.allSettled(
-        configs.map(async (config) => {
-          const res = await fetch(config.apiEndpoint, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) return { slug: config.entitySlug, count: null };
-          const json = await res.json();
-          const arr = normalizeApiItems(json);
-          return { slug: config.entitySlug, count: arr.length };
-        })
-      );
+      try {
+        const results = await Promise.allSettled(
+          configs.map(async (config) => {
+            const res = await fetch(config.apiEndpoint, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) return { slug: config.entitySlug, count: null };
+            const json = await res.json();
+            const arr = normalizeApiItems(json);
+            return { slug: config.entitySlug, count: arr.length };
+          })
+        );
 
-      if (cancelled) return;
-      const newCounts: Record<string, number | null> = {};
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          newCounts[result.value.slug] = result.value.count;
+        if (cancelled) return;
+        const newCounts: Record<string, number | null> = {};
+        let anySucceeded = false;
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value) {
+            newCounts[result.value.slug] = result.value.count;
+            if (result.value.count !== null) anySucceeded = true;
+          }
         }
+        setCounts(newCounts);
+        if (!anySucceeded) setError('Could not load entity counts');
+      } catch (err) {
+        if (!cancelled) setError('Failed to load library data');
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      setCounts(newCounts);
     }
 
     fetchCounts();
     return () => { cancelled = true; };
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return counts;
+  return { counts, isLoading, error };
 }
 
 // ============================================================================
@@ -154,7 +167,7 @@ export default function ReferenceHub() {
 
   useEffect(() => { getToken().then(setToken).catch(() => setToken(null)); }, [getToken]);
 
-  const entityCounts = useEntityCounts(allReferenceConfigs, token);
+  const { counts: entityCounts, isLoading: countsLoading, error: countsError } = useEntityCounts(allReferenceConfigs, token);
 
   const [showHighYield, setShowHighYield] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
@@ -412,6 +425,19 @@ export default function ReferenceHub() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Loading / error state */}
+      {countsLoading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}>
+          <RefreshCw size={14} className="animate-spin" />
+          Loading reference library...
+        </div>
+      )}
+      {countsError && !countsLoading && (
+        <div style={{ padding: '12px 16px', borderRadius: 10, border: '1px solid var(--color-border-warning)', background: 'var(--color-bg-secondary)', marginBottom: 14, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+          {countsError}. Entity cards are still browsable below.
         </div>
       )}
 

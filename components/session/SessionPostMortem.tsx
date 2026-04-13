@@ -12,6 +12,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   Shield,
   Calendar,
@@ -111,7 +112,7 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.5, type: 'spring' }}
+      transition={springs.gentle}
       className="text-center py-6"
     >
       <motion.div
@@ -317,7 +318,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
     <motion.div
       initial={{ scale: 0, rotate: -10 }}
       animate={{ scale: 1, rotate: 0 }}
-      transition={{ delay: 0.9, type: 'spring', stiffness: 200 }}
+      transition={{ ...springs.gentle, delay: 0.9 }}
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
@@ -343,7 +344,7 @@ function AchievementBadge({ achievement }: { achievement: string }) {
     <motion.div
       initial={{ y: 20, opacity: 0, scale: 0.9 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
-      transition={{ delay: 1.0, type: 'spring' }}
+      transition={{ ...springs.gentle, delay: 1.0 }}
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">

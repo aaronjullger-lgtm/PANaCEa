@@ -8,6 +8,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   Trophy,
   Medal,
@@ -424,7 +425,7 @@ function PodiumSpot({ entry, position, currentUserId, onClick }: PodiumSpotProps
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: 'spring' }}
+            transition={{ ...springs.gentle, delay: 0.5 }}
             className="absolute -top-4 left-1/2 -translate-x-1/2"
           >
             <Crown className="h-6 w-6 text-[var(--color-data-provisional)] fill-[var(--color-data-provisional)]" />

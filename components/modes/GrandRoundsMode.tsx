@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   Trophy,
   Users,
@@ -1061,7 +1062,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: 'spring', bounce: 0.5 }}
+              transition={springs.bouncy}
             >
               {isTopPercentile ? (
                 <Crown className="w-20 h-20 text-muted-amber-500 mx-auto" aria-hidden="true" />

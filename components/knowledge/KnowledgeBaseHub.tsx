@@ -10,6 +10,7 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { BookOpen, Pill, Beaker, Library, Menu, X } from 'lucide-react';
 import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
@@ -285,7 +286,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            transition={springs.snappy}
             className="lg:hidden fixed left-0 top-0 bottom-0 w-64 z-50 overflow-y-auto"
             style={{
               background: 'rgba(10, 14, 26, 0.95)',

@@ -88,7 +88,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
                 : { scale: 1.03, y: -4, boxShadow: '0 10px 20px -4px rgba(15,23,42,0.15)' }
             }
             whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            transition={springs.snappy}
             title={fullName}
             aria-pressed={isSelected}
             aria-label={`${fullName} — ${isSelected ? 'enabled' : 'disabled'}`}
@@ -115,7 +115,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  transition={springs.snappy}
                   className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-muted-amber-500 shadow-[0_0_6px_rgba(176,155,115,0.6)]"
                 />
               )}

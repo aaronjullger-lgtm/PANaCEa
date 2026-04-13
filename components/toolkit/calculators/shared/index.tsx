@@ -6,6 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import { AlertCircle, CheckCircle2, Info, TrendingUp, RotateCcw, Copy, Check } from 'lucide-react';
 import type { CalculatorResult, CriteriaItem, InputFieldConfig } from '../types';
 
@@ -245,7 +246,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: 'spring' }}
+                transition={{ ...springs.gentle, delay: 0.1 }}
                 className="text-5xl font-bold text-[var(--color-text-primary)] font-teko"
               >
                 {result.score}

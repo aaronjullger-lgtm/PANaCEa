@@ -8,6 +8,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { springs } from '@/config/appViews';
 import {
   Target,
   TrendingUp,
@@ -326,7 +327,7 @@ export function PredictedScoreCard({
             <motion.div
               initial={{ left: '0%' }}
               animate={{ left: `${scorePosition}%` }}
-              transition={{ type: 'spring', damping: 20 }}
+              transition={springs.gentle}
               className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
             >
               <div
