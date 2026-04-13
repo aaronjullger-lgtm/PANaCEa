@@ -168,28 +168,30 @@ export function OfflineSyncIndicator() {
 
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Compact badge */}
-      <button
-        type="button"
-        onClick={() => setDropdownOpen((o) => !o)}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-colors ${badgeColorClass}`}
-        aria-label="Sync status"
-        aria-expanded={dropdownOpen}
-      >
-        {badgeIcon}
-        <span>{badgeLabel}</span>
+      {/* Compact badge — retry button is a sibling, not nested inside */}
+      <div className="flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => setDropdownOpen((o) => !o)}
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-colors ${badgeColorClass}`}
+          aria-label="Sync status"
+          aria-expanded={dropdownOpen}
+        >
+          {badgeIcon}
+          <span>{badgeLabel}</span>
+        </button>
         {(totalPending > 0 || hasSyncError) && !isOfflineState && !syncing && (
           <button
             type="button"
             onClick={handleManualSync}
             disabled={syncing}
-            className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-[var(--color-bg-primary)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-[var(--color-bg-primary)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Retry sync"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         )}
-      </button>
+      </div>
 
       {/* Dropdown detail panel */}
       {dropdownOpen && (

@@ -14,6 +14,7 @@ import React, { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { useToastStore, type Toast, type ToastVariant } from '@/lib/stores/useToastStore';
+import { springs } from '@/config/appViews';
 
 // Re-export types and hook for backward compatibility
 export type { Toast, ToastVariant };
@@ -92,15 +93,23 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 100, scale: 0.9 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      initial={{ opacity: 0, y: 40, x: 16, scale: 0.92, filter: 'blur(4px)' }}
+      animate={{ opacity: 1, y: 0, x: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={{
+        opacity: 0,
+        x: 80,
+        scale: 0.95,
+        filter: 'blur(2px)',
+        transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] },
+      }}
+      transition={springs.bouncy}
       className={`
-        pointer-events-auto rounded-xl p-4
+        pointer-events-auto rounded-xl p-4 backdrop-blur-md
         ${TOAST_STYLES[toast.variant]}
       `}
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 4px 12px rgba(0,0,0,0.08)' }}
+      style={{
+        boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 8px 24px -4px rgba(0,0,0,0.15), 0 0 12px -2px rgba(196,183,138,0.06)',
+      }}
       role="alert"
       aria-live={toast.variant === 'error' ? 'assertive' : 'polite'}
     >
