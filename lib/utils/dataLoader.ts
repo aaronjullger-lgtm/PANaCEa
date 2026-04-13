@@ -1,6 +1,6 @@
 import { getApiEndpoint, API_ENDPOINTS } from './apiConfig';
 import { parseJsonOrThrow } from './safeJsonResponse';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();

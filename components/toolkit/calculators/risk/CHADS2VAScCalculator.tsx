@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { calculateCHADS2VASc } from '@/lib/calculators';
 
@@ -151,13 +151,22 @@ export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <CalculatorHeader
           title="CHA₂DS₂-VASc Score"
           subtitle="Stroke Risk in Atrial Fibrillation"
           onBack={onBack}
         />
-        <ResetButton onReset={() => { setChf(false); setHypertension(false); setAge75(false); setDiabetes(false); setStroke(false); setVascular(false); setAge65(false); setFemale(false); }} />
+        <div className="flex gap-2">
+          <ResetButton onReset={() => { setChf(false); setHypertension(false); setAge75(false); setDiabetes(false); setStroke(false); setVascular(false); setAge65(false); setFemale(false); }} />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `CHA2DS2-VASc Score\nScore: ${result.score}\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">

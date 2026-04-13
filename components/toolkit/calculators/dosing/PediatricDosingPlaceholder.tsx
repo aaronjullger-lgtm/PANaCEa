@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { CalculatorHeader, CalculatorInput, SimpleCalculatorResult } from '../shared';
+import { CalculatorHeader, CalculatorInput, SimpleCalculatorResult, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps } from '../types';
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
@@ -86,11 +86,14 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
   const [weight, setWeight] = useState('');
   const [selectedDrug, setSelectedDrug] = useState<PediatricDrug>(COMMON_PEDS_DRUGS[0]!);
 
+  const handleReset = () => { setWeight(''); setSelectedDrug(COMMON_PEDS_DRUGS[0]!); };
+
   const calculation = useMemo(() => {
     const weightKg = parseFloat(weight);
     if (!weightKg || weightKg < 0 || weightKg > 100) return null;
 
     const calculatedDose = weightKg * selectedDrug.dosePerKg;
+    const dosePrecision = selectedDrug.dosePerKg < 1 ? 2 : 1;
     const actualDose = Math.min(calculatedDose, selectedDrug.maxDose);
     const isMaxed = calculatedDose > selectedDrug.maxDose;
     const isTooLight = weightKg < selectedDrug.minWeight;
@@ -102,16 +105,29 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
       isTooLight,
       perDose: actualDose,
       dailyMax: actualDose,
+      dosePrecision,
     };
   }, [weight, selectedDrug]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CalculatorHeader
-        title="Pediatric Dosing Calculator"
-        subtitle="Weight-based medication dosing for common pediatric drugs"
-        onBack={onBack}
-      />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <CalculatorHeader
+          title="Pediatric Dosing Calculator"
+          subtitle="Weight-based medication dosing for common pediatric drugs"
+          onBack={onBack}
+        />
+        <div className="flex gap-2">
+          <ResetButton onReset={handleReset} />
+          {calculation && !calculation.isTooLight && (
+            <CopyResultButton
+              getText={() =>
+                `Pediatric Dosing Calculator\nDrug: ${selectedDrug.name} (${selectedDrug.indication})\nWeight: ${weight} kg\nDose: ${calculation.actualDose.toFixed(calculation.dosePrecision)} ${selectedDrug.unit} ${selectedDrug.route} ${selectedDrug.frequency}`
+              }
+            />
+          )}
+        </div>
+      </div>
 
       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 space-y-6">
         {/* Drug Selection */}
@@ -182,12 +198,12 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
         {calculation && (
           <div className="space-y-4">
             {calculation.isTooLight && (
-              <div className="p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-data-provisional flex-shrink-0 mt-0.5" />
+              <div className="p-4 bg-data-fail/10 border border-data-fail/30 rounded-lg flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-data-fail flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-data-provisional">Weight Below Minimum</p>
-                  <p className="text-data-provisional/80">
-                    Minimum weight: {selectedDrug.minWeight} kg. Consult pharmacy for dosing.
+                  <p className="font-medium text-data-fail">Weight Below Minimum</p>
+                  <p className="text-data-fail/80">
+                    Minimum weight: {selectedDrug.minWeight} kg. Dosing not calculated. Consult pharmacy.
                   </p>
                 </div>
               </div>
@@ -197,7 +213,7 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
               <>
                 <SimpleCalculatorResult
                   label="Calculated Dose"
-                  value={`${calculation.calculatedDose.toFixed(1)} ${selectedDrug.unit}`}
+                  value={`${calculation.calculatedDose.toFixed(calculation.dosePrecision)} ${selectedDrug.unit}`}
                   highlight={!calculation.isMaxed}
                 />
 
@@ -205,7 +221,7 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
                   <>
                     <SimpleCalculatorResult
                       label="Actual Dose (Max Capped)"
-                      value={`${calculation.actualDose} ${selectedDrug.unit}`}
+                      value={`${calculation.actualDose.toFixed(calculation.dosePrecision)} ${selectedDrug.unit}`}
                       highlight
                     />
                     <div className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg flex items-start gap-3">
@@ -226,7 +242,7 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
                   <div className="text-sm">
                     <p className="font-medium text-data-pass">Dosing Recommendation</p>
                     <p className="text-data-pass/80">
-                      Give {calculation.actualDose.toFixed(1)} {selectedDrug.unit}{' '}
+                      Give {calculation.actualDose.toFixed(calculation.dosePrecision)} {selectedDrug.unit}{' '}
                       {selectedDrug.route} {selectedDrug.frequency}
                     </p>
                   </div>

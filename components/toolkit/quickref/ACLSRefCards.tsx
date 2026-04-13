@@ -125,6 +125,7 @@ export default function ACLSRefCards() {
             style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: 'var(--color-text-primary)', fontFamily: FONT_BODY }} />
         </div>
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
           style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)', fontSize: 13, color: 'var(--color-text-primary)', cursor: 'pointer' }}>
           {categories.map((c) => <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>)}
         </select>

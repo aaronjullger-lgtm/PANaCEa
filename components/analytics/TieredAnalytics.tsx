@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import type { PerformanceRecord } from '@/types';
 import { SkeletonLoader, SkeletonCard } from '@/components/loading';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 type AnalyticsTier = 'quick' | 'dashboard' | 'deep';
 

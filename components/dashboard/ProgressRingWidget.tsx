@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import type { SystemCode } from '@/types';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 

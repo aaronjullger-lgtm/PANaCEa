@@ -15,6 +15,7 @@
 
 import React, { useState } from 'react';
 import { CalculatorHeader, ClinicalInput, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
+import { Info } from 'lucide-react';
 import type { CalculatorProps, CalculatorResult } from '../types';
 import { calculateGFR } from '@/lib/calculators';
 
@@ -163,6 +164,15 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="flex items-start gap-2 p-3 bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-lg">
+          <Info className="w-4 h-4 text-[var(--color-data-provisional)] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+            <strong className="text-[var(--color-text-primary)]">MDRD limitation:</strong> This equation includes a race coefficient that has known inaccuracies.
+            The <strong>CKD-EPI 2021</strong> (race-free) equation is now recommended by NKDEP for clinical use.
+            MDRD is provided here for study and exam preparation purposes.
+          </p>
         </div>
 
         <ClinicalInput

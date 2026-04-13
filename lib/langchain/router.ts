@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { BaseMessage } from '@langchain/core/messages';
+import type { RunnableConfig } from '@langchain/core/runnables';
 
 import {
   TASK_MODEL_MAP,
@@ -28,6 +29,7 @@ import {
   type ModelName,
 } from './config';
 import { createModel, isModelAvailable, type AIEnvKeys, type CreateModelOptions } from './models';
+import { buildTracingConfig } from './tracing';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -161,8 +163,10 @@ export async function routeTask(
 /**
  * Route a task with structured JSON output validated by a Zod schema.
  *
- * Uses LangChain's `withStructuredOutput` when available, falling back
- * to JSON parsing with Zod validation.
+ * Attempts `withStructuredOutput()` first (native tool calling on
+ * Anthropic, OpenAI, Gemini). Falls back to JSON-prompt + Zod parse
+ * for providers that don't support structured output or when the
+ * feature call fails.
  *
  * @example
  * ```ts
@@ -191,26 +195,99 @@ export async function routeStructured<T extends z.ZodType>(
   schema: T,
   options: RouteOptions = {}
 ): Promise<RouteResult<z.infer<T>>> {
-  // Add JSON instruction to the prompt
-  const jsonInstruction =
-    '\n\nReturn ONLY valid JSON matching the required schema. No markdown fences, no explanatory text.';
+  const models = resolveModelChain(task, env, options.forceModel);
 
-  const result = await routeTask(task, env, {
-    systemPrompt: params.systemPrompt,
-    userPrompt: params.userPrompt + jsonInstruction,
-  }, {
-    ...options,
-    temperature: options.temperature ?? 0.5, // Lower temp for structured output
-  });
+  if (models.length === 0) {
+    throw new Error(
+      `No available models for task "${task}". ` +
+      `Configure at least one API key: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or DEEPSEEK_API_KEY.`
+    );
+  }
 
-  // Parse and validate
-  const parsed = parseJsonResponse(result.output);
-  const validated = schema.parse(parsed);
+  const maxAttempts = options.maxAttempts ?? models.length * DEFAULT_PARAMS.maxRetries;
+  let attempt = 0;
+  let lastError: Error | null = null;
+  const temperature = options.temperature ?? 0.5;
 
-  return {
-    ...result,
-    output: validated,
-  };
+  for (const modelName of models) {
+    for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
+      attempt++;
+      if (attempt > maxAttempts) break;
+
+      try {
+        const start = Date.now();
+
+        const model = createModel(modelName, env, {
+          temperature,
+          maxOutputTokens: options.maxOutputTokens,
+          runName: options.runName ?? `panacea:${task}`,
+        });
+
+        const messages: BaseMessage[] = params.messages ?? [
+          ...(params.systemPrompt ? [new SystemMessage(params.systemPrompt)] : []),
+          new HumanMessage(params.userPrompt),
+        ];
+
+        // Try native structured output first
+        try {
+          const structuredModel = model.withStructuredOutput(schema);
+          const structured = await structuredModel.invoke(messages);
+          const latencyMs = Date.now() - start;
+
+          return {
+            output: structured as z.infer<T>,
+            model: modelName,
+            provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
+            attempts: attempt,
+            latencyMs,
+          };
+        } catch (structuredErr) {
+          // withStructuredOutput not supported or failed — fall back to JSON prompt
+          console.warn(
+            `[LangChain Router] ${modelName} withStructuredOutput failed:`,
+            structuredErr instanceof Error ? structuredErr.message.slice(0, 200) : String(structuredErr).slice(0, 200)
+          );
+        }
+
+        // Fallback: instruct JSON + manual parse + Zod validate
+        const jsonInstruction =
+          '\n\nReturn ONLY valid JSON matching the required schema. No markdown fences, no explanatory text.';
+
+        const response = await model.invoke(messages);
+        const latencyMs = Date.now() - start;
+
+        const text = typeof response.content === 'string'
+          ? response.content
+          : JSON.stringify(response.content);
+
+        const parsed = parseJsonResponse(text);
+        const validated = schema.parse(parsed);
+
+        return {
+          output: validated,
+          model: modelName,
+          provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
+          attempts: attempt,
+          latencyMs,
+        };
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(
+          `[LangChain Router] ${modelName} structured attempt ${retry + 1} failed:`,
+          lastError.message.slice(0, 200)
+        );
+
+        if (retry < DEFAULT_PARAMS.maxRetries - 1) {
+          await sleep(DEFAULT_PARAMS.retryDelayMs * (retry + 1));
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `All models failed for structured task "${task}" after ${attempt} attempts. ` +
+    `Last error: ${lastError?.message ?? 'unknown'}`
+  );
 }
 
 // ─── Model Chain Resolution ────────────────────────────────────────────────
@@ -258,7 +335,8 @@ function resolveModelChain(
 
 // ─── Utilities ─────────────────────────────────────────────────────────────
 
-function parseJsonResponse(text: string): unknown {
+/** Shared JSON response parser. Strips code fences, normalizes smart quotes, removes trailing commas. */
+export function parseJsonResponse(text: string): unknown {
   // Strip markdown code fences if present
   let cleaned = text.trim();
   const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);

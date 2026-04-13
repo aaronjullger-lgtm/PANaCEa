@@ -53,13 +53,13 @@ import {
   collectSessionAnalytics,
   syncSessionAnalytics,
 } from '@/services/analytics';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import type { PerformanceRecord, SessionSettings, SystemCode } from '../../types';
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
 import { callGeminiText } from '@/services/ai/geminiService';
-import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { fireStreakCelebration } from '@/lib/streakCelebration';
 import { saveLastSession } from '@/lib/utils/sessionStorage';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';

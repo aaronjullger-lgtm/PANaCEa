@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa FSRS Guardrails"
+  short_description: "Protect PANaCEa's scheduler and implicit-rating invariants"
+  default_prompt: "Review this PANaCEa FSRS-related task for scheduler invariants, binary-rating rules, and the correct files to inspect before changing behavior."

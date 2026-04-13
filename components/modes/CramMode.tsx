@@ -23,7 +23,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { geminiService } from '@/services/ai';
-import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { EmptyState } from '@/components/ui/EmptyState';
 
 /**

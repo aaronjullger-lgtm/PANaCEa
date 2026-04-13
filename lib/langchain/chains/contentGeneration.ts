@@ -12,7 +12,9 @@
  * Sprint: LangChain Integration — Sprint 2
  */
 
+import { z } from 'zod';
 import { routeTask } from '../router';
+import { parseJsonResponse } from '../router';
 import type { AIEnvKeys } from '../models';
 import type { RouteOptions } from '../router';
 
@@ -34,6 +36,50 @@ export interface ContentGenerationOptions {
   includeExtendedFields?: boolean;
   temperature?: number;
 }
+
+// ─── Zod Schemas ───────────────────────────────────────────────────────────
+
+const ConditionContentSchema = z.object({
+  overview: z.string(),
+  symptoms: z.array(z.string()),
+  riskFactors: z.array(z.string()).optional(),
+  diagnosis: z.string(),
+  treatment: z.string(),
+  clinicalPearls: z.array(z.string()),
+  etiologyPathophysiology: z.string().optional(),
+  epidemiology: z.string().optional(),
+  examFindings: z.array(z.string()).optional(),
+  complications: z.array(z.string()).optional(),
+  prognosis: z.string().optional(),
+  differentialDiagnosis: z.array(z.string()).optional(),
+});
+
+const LabContentSchema = z.object({
+  description: z.string(),
+  typicalNormalRange: z.string().nullable(),
+  commonAbnormalities: z.array(z.string()),
+  indications: z.array(z.string()),
+});
+
+const ImagingContentSchema = z.object({
+  description: z.string(),
+  bestFor: z.array(z.string()),
+  limitations: z.array(z.string()),
+  radiationRisk: z.boolean(),
+});
+
+const TreatmentContentSchema = z.object({
+  description: z.string(),
+  mechanismOfAction: z.string(),
+  commonIndications: z.array(z.string()),
+  seriousSideEffects: z.array(z.string()),
+});
+
+const PhysiologyContentSchema = z.object({
+  description: z.string(),
+  mechanism: z.string(),
+  clinicalSignificance: z.string(),
+});
 
 // ─── Condition Content ────────────────────────────────────────────────────
 
@@ -93,29 +139,19 @@ ${
     });
 
     const parsed = parseJsonSafe(result.output);
-    if (!parsed || !parsed.overview || !parsed.symptoms || !parsed.diagnosis || !parsed.treatment) {
-      return { success: false, error: 'Missing required fields in generated content' };
+    if (!parsed) {
+      return { success: false, error: 'Failed to parse generated content as JSON' };
     }
 
-    // Normalize arrays
-    const content = {
-      overview: parsed.overview,
-      symptoms: ensureArray(parsed.symptoms),
-      riskFactors: ensureArray(parsed.riskFactors),
-      diagnosis: parsed.diagnosis,
-      treatment: parsed.treatment,
-      clinicalPearls: ensureArray(parsed.clinicalPearls),
-      etiologyPathophysiology: parsed.etiologyPathophysiology,
-      epidemiology: parsed.epidemiology,
-      examFindings: ensureArray(parsed.examFindings),
-      complications: ensureArray(parsed.complications),
-      prognosis: parsed.prognosis,
-      differentialDiagnosis: ensureArray(parsed.differentialDiagnosis),
-    };
+    // Validate with Zod schema
+    const validated = ConditionContentSchema.safeParse(parsed);
+    if (!validated.success) {
+      return { success: false, error: `Content validation failed: ${validated.error.issues.map(i => i.path.join('.')).join(', ')}` };
+    }
 
     return {
       success: true,
-      content,
+      content: validated.data,
       modelUsed: result.model,
       provider: result.provider,
       latencyMs: result.latencyMs,
@@ -161,18 +197,18 @@ Return this exact JSON structure:
     });
 
     const parsed = parseJsonSafe(result.output);
-    if (!parsed || !parsed.description || !parsed.commonAbnormalities || !parsed.indications) {
-      return { success: false, error: 'Missing required fields' };
+    if (!parsed) {
+      return { success: false, error: 'Failed to parse lab content as JSON' };
+    }
+
+    const validated = LabContentSchema.safeParse(parsed);
+    if (!validated.success) {
+      return { success: false, error: `Lab validation failed: ${validated.error.issues.map(i => i.path.join('.')).join(', ')}` };
     }
 
     return {
       success: true,
-      content: {
-        description: parsed.description,
-        typicalNormalRange: parsed.typicalNormalRange || null,
-        commonAbnormalities: ensureArray(parsed.commonAbnormalities),
-        indications: ensureArray(parsed.indications),
-      },
+      content: validated.data,
       modelUsed: result.model,
       provider: result.provider,
       latencyMs: result.latencyMs,
@@ -214,18 +250,18 @@ Return ONLY a valid JSON object:
     });
 
     const parsed = parseJsonSafe(result.output);
-    if (!parsed || !parsed.description || !parsed.bestFor || !parsed.limitations) {
-      return { success: false, error: 'Missing required fields' };
+    if (!parsed) {
+      return { success: false, error: 'Failed to parse imaging content as JSON' };
+    }
+
+    const validated = ImagingContentSchema.safeParse(parsed);
+    if (!validated.success) {
+      return { success: false, error: `Imaging validation failed: ${validated.error.issues.map(i => i.path.join('.')).join(', ')}` };
     }
 
     return {
       success: true,
-      content: {
-        description: parsed.description,
-        bestFor: ensureArray(parsed.bestFor),
-        limitations: ensureArray(parsed.limitations),
-        radiationRisk: Boolean(parsed.radiationRisk),
-      },
+      content: validated.data,
       modelUsed: result.model,
       provider: result.provider,
       latencyMs: result.latencyMs,
@@ -267,18 +303,18 @@ Return ONLY a valid JSON object:
     });
 
     const parsed = parseJsonSafe(result.output);
-    if (!parsed || !parsed.description || !parsed.mechanismOfAction) {
-      return { success: false, error: 'Missing required fields' };
+    if (!parsed) {
+      return { success: false, error: 'Failed to parse treatment content as JSON' };
+    }
+
+    const validated = TreatmentContentSchema.safeParse(parsed);
+    if (!validated.success) {
+      return { success: false, error: `Treatment validation failed: ${validated.error.issues.map(i => i.path.join('.')).join(', ')}` };
     }
 
     return {
       success: true,
-      content: {
-        description: parsed.description,
-        mechanismOfAction: parsed.mechanismOfAction,
-        commonIndications: ensureArray(parsed.commonIndications),
-        seriousSideEffects: ensureArray(parsed.seriousSideEffects),
-      },
+      content: validated.data,
       modelUsed: result.model,
       provider: result.provider,
       latencyMs: result.latencyMs,
@@ -319,17 +355,18 @@ Return ONLY a valid JSON object:
     });
 
     const parsed = parseJsonSafe(result.output);
-    if (!parsed || !parsed.description || !parsed.mechanism || !parsed.clinicalSignificance) {
-      return { success: false, error: 'Missing required fields' };
+    if (!parsed) {
+      return { success: false, error: 'Failed to parse physiology content as JSON' };
+    }
+
+    const validated = PhysiologyContentSchema.safeParse(parsed);
+    if (!validated.success) {
+      return { success: false, error: `Physiology validation failed: ${validated.error.issues.map(i => i.path.join('.')).join(', ')}` };
     }
 
     return {
       success: true,
-      content: {
-        description: parsed.description,
-        mechanism: parsed.mechanism,
-        clinicalSignificance: parsed.clinicalSignificance,
-      },
+      content: validated.data,
       modelUsed: result.model,
       provider: result.provider,
       latencyMs: result.latencyMs,
@@ -344,25 +381,16 @@ Return ONLY a valid JSON object:
 
 // ─── Utilities ────────────────────────────────────────────────────────────
 
+/**
+ * Shared JSON parser: strips code fences, normalizes smart quotes,
+ * removes trailing commas, then attempts JSON.parse.
+ *
+ * Centralized here to avoid duplication across chain files.
+ */
 function parseJsonSafe(text: string): Record<string, unknown> | null {
   try {
-    let cleaned = text.trim();
-    const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) cleaned = fenceMatch[1]!.trim();
-
-    cleaned = cleaned
-      .replace(/[\u2018\u2019]/g, "'")
-      .replace(/[\u201C\u201D]/g, '"')
-      .replace(/,(\s*[}\]])/g, '$1');
-
-    return JSON.parse(cleaned) as Record<string, unknown>;
+    return parseJsonResponse(text) as Record<string, unknown>;
   } catch {
     return null;
   }
-}
-
-function ensureArray(value: unknown): unknown[] {
-  if (Array.isArray(value)) return value;
-  if (value == null) return [];
-  return [value];
 }

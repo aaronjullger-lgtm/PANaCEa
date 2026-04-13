@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { calculateWellsPE } from '@/lib/calculators';
 
@@ -123,21 +123,30 @@ export const WellsPECalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <CalculatorHeader
           title="Wells' PE Criteria"
           subtitle="Pulmonary Embolism Probability"
           onBack={onBack}
         />
-        <ResetButton onReset={() => {
-          setClinicalDVT(false);
-          setPeMoreLikely(false);
-          setTachycardia(false);
-          setImmobilization(false);
-          setPreviousPE(false);
-          setHemoptysis(false);
-          setMalignancy(false);
-        }} />
+        <div className="flex gap-2">
+          <ResetButton onReset={() => {
+            setClinicalDVT(false);
+            setPeMoreLikely(false);
+            setTachycardia(false);
+            setImmobilization(false);
+            setPreviousPE(false);
+            setHemoptysis(false);
+            setMalignancy(false);
+          }} />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `Wells' PE Criteria\nScore: ${result.score}\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">

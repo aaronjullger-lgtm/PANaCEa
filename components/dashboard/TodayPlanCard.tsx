@@ -20,11 +20,9 @@ import {
   BookOpen,
   Target,
   ArrowRight,
-  Brain,
   Sparkles,
   AlertTriangle,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
 import { ClinicalSkeleton } from '@/components/loading';
 import type { TodayPlanData, StudySplit } from '@/hooks/useTodayPlan';

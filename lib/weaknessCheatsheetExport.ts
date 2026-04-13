@@ -6,7 +6,7 @@
  */
 
 import type { Question, PerformanceRecord, SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 export interface CheatsheetOptions {
   days?: number; // Number of days to look back (default: 30)

@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { useLowPowerMode } from '@/hooks/useLowPowerMode';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
 import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 

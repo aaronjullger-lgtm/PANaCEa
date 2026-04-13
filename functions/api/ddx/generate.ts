@@ -11,7 +11,7 @@ import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { callGeminiText } from '../../../services/ai/geminiService';
-import { GEMINI_FLASH_MODEL } from '../../../src/constants';
+import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 
 export interface DdxProblem {
   vignette: string;

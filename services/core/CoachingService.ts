@@ -1,6 +1,6 @@
 import type { PerformanceRecord } from '@/types';
 import { callGeminiText } from '../ai/geminiService';
-import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 /**

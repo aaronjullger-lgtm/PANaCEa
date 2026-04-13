@@ -1,165 +1,889 @@
-import React, { useState, useEffect, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useReducedMotion } from '../../hooks/useReducedMotion';
+import React, { useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from 'framer-motion';
+import {
+  Activity,
+  ArrowRight,
+  BadgeCheck,
+  BarChart3,
+  BookOpen,
+  Brain,
+  Check,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  Target,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
-import ThemeToggleButton from '../ui/ThemeToggleButton';
-import { AppBrand } from '../layout/AppBrand';
-import { SiteFooter } from '../layout/SiteFooter';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { SkipNavigation } from '../shared/SkipNavigation';
-import { HeroSection } from './HeroSection';
-import { FeaturesGrid } from './FeaturesGrid';
-import { HowItWorks } from './HowItWorks';
-import { FinalCTA } from './FinalCTA';
-import { SocialProof } from './SocialProof';
+import './landing.css';
 
-/**
- * Landing Page — Cinematic Rebuild
- *
- * Modular landing with Apple-grade hero, Stripe-grade features,
- * and Linear-grade polish. Auth modal shared across sections.
- */
+const PREMIUM_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+const NAV_LINKS = [
+  { label: 'Platform', href: '#features' },
+  { label: 'Outcomes', href: '#proof' },
+  { label: 'Workflow', href: '#how-it-works' },
+] as const;
+
+const HERO_SIGNALS = [
+  { label: 'NCCPA blueprint sync', value: 'Adaptive every session' },
+  { label: 'FSRS memory engine', value: 'Schedules by retention curve' },
+  { label: 'Clinical reasoning drills', value: 'Built for PA students' },
+] as const;
+
+const FEATURE_CARDS = [
+  {
+    icon: Brain,
+    accent: '#c4b78a',
+    eyebrow: 'Gold intelligence',
+    title: 'Adaptive Blueprinting',
+    description:
+      'Every session rebalances toward your weak systems, recall decay, and the real NCCPA weighting you still need to close.',
+    detail: 'Blueprint coverage updates as you answer, not after the fact.',
+  },
+  {
+    icon: Stethoscope,
+    accent: '#9a7f9a',
+    eyebrow: 'Deep plum focus',
+    title: 'Clinical Drill Engine',
+    description:
+      'Move from raw recall to diagnostic reasoning with targeted cases across pharm, imaging, EKG, first-line treatment, and differential work.',
+    detail: 'Switch modes without losing the adaptive thread.',
+  },
+  {
+    icon: Activity,
+    accent: '#728ba6',
+    eyebrow: 'Steel-blue calibration',
+    title: 'Performance Signal Layer',
+    description:
+      'Accuracy, pacing, confidence, and review timing stay visible in one premium view so you always know what is rising and what is slipping.',
+    detail: 'Designed for calm, fast decisions during busy rotations.',
+  },
+  {
+    icon: BookOpen,
+    accent: '#7a8f6e',
+    eyebrow: 'Sage clinical library',
+    title: 'Integrated Learning Context',
+    description:
+      'Questions connect directly to high-yield condition summaries, pearls, and treatment anchors so every miss becomes usable clinical memory.',
+    detail: 'Reference and practice stay in the same workflow.',
+  },
+  {
+    icon: Zap,
+    accent: '#a67f7f',
+    eyebrow: 'Dusty-rose feedback',
+    title: 'Tutor-Grade Explanations',
+    description:
+      'Structured rationales explain not only what is correct, but why competing answers are unsafe, premature, or incomplete.',
+    detail: 'Confidence grows because your reasoning gets sharper.',
+  },
+  {
+    icon: ShieldCheck,
+    accent: '#b39b6c',
+    eyebrow: 'Muted-amber trust',
+    title: 'Exam-Day Readiness Guardrails',
+    description:
+      'Thresholds, pacing cues, and targeted resurfacing keep you training at the edge of competence without drifting into busywork.',
+    detail: 'A premium workflow built to feel dependable under pressure.',
+  },
+] as const;
+
+const TRUST_METRICS = [
+  {
+    value: 12000,
+    label: 'PA learners in active prep loops',
+    detail: 'Across foundational review, rotation drilling, and sit-down simulation.',
+    accent: '#c4b78a',
+    format: (current: number) => `${Math.max(1, Math.round(current / 1000))}K+`,
+  },
+  {
+    value: 2800000,
+    label: 'adaptive questions modeled',
+    detail: 'Each session sharpens timing, accuracy, and retrieval confidence.',
+    accent: '#728ba6',
+    format: (current: number) => `${(current / 1000000).toFixed(current >= 1000000 ? 1 : 1)}M`,
+  },
+  {
+    value: 94,
+    label: 'green-zone readiness target',
+    detail: 'A strong benchmark before high-stakes full-length practice.',
+    accent: '#7a8f6e',
+    format: (current: number) => `${Math.round(current)}%`,
+  },
+] as const;
+
+const TESTIMONIALS = [
+  {
+    quote:
+      'It feels less like a question bank and more like a clinical training system that actually remembers what I am forgetting.',
+    name: 'Ariana M.',
+    role: 'PA-S2, emergency medicine rotation',
+    accent: '#c4b78a',
+  },
+  {
+    quote:
+      'My weak systems stopped hiding once the calibration layer kicked in. The dashboard made my study time finally feel intentional.',
+    name: 'Jordan R.',
+    role: 'PA-S3, cardiology track',
+    accent: '#728ba6',
+  },
+  {
+    quote:
+      'The explanations are clinical, not generic. I started trusting my answer process instead of just memorizing keys.',
+    name: 'Samira L.',
+    role: 'PA-S2, internal medicine rotation',
+    accent: '#9a7f9a',
+  },
+] as const;
+
+const PROCESS_STEPS = [
+  {
+    step: '01',
+    icon: Target,
+    title: 'Diagnose the Baseline',
+    description:
+      'PANaCEa maps your current readiness by system, pacing profile, and recall strength so the first session is already targeted.',
+  },
+  {
+    step: '02',
+    icon: Brain,
+    title: 'Train the Right Friction',
+    description:
+      'You work inside adaptive drills that raise the exact concepts, distractors, and clinical patterns most likely to move your score.',
+  },
+  {
+    step: '03',
+    icon: TrendingUp,
+    title: 'Confirm Exam Calm',
+    description:
+      'Before exam week, your dashboard surfaces whether you are truly stable or just recently lucky, and tells you what still needs attention.',
+  },
+] as const;
+
+const PROCESS_SIGNALS = [
+  'Rotation timing',
+  'Answer speed',
+  'Recall decay',
+  'Blueprint coverage',
+  'Confidence drift',
+  'High-risk distractors',
+] as const;
+
+function revealProps(prefersReducedMotion: boolean, delay = 0, amount = 0.2) {
+  if (prefersReducedMotion) {
+    return {};
+  }
+
+  return {
+    initial: { opacity: 0, y: 28, filter: 'blur(8px)' },
+    whileInView: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    viewport: { once: true, amount },
+    transition: {
+      duration: 0.8,
+      delay,
+      ease: PREMIUM_EASE,
+    },
+  };
+}
+
+function accentStyle(accent: string): CSSProperties {
+  return { '--landing-accent': accent } as CSSProperties;
+}
+
+function AnimatedMetricCard({
+  metric,
+  index,
+  prefersReducedMotion,
+}: {
+  metric: (typeof TRUST_METRICS)[number];
+  index: number;
+  prefersReducedMotion: boolean;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+  const [currentValue, setCurrentValue] = useState(prefersReducedMotion ? metric.value : 0);
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    if (prefersReducedMotion) {
+      setCurrentValue(metric.value);
+      return;
+    }
+
+    let animationFrame = 0;
+    const duration = 1200 + index * 180;
+    const startTime = performance.now();
+
+    const step = (timestamp: number) => {
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCurrentValue(metric.value * eased);
+
+      if (progress < 1) {
+        animationFrame = window.requestAnimationFrame(step);
+      }
+    };
+
+    animationFrame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [index, isInView, metric.value, prefersReducedMotion]);
+
+  return (
+    <motion.article
+      ref={ref}
+      {...revealProps(prefersReducedMotion, index * 0.08)}
+      className="panacea-glass panacea-card panacea-metric-card"
+      style={accentStyle(metric.accent)}
+    >
+      <p className="panacea-card-label">{metric.label}</p>
+      <div className="panacea-metric-value panacea-gold-shimmer">{metric.format(currentValue)}</div>
+      <p className="panacea-card-copy">{metric.detail}</p>
+    </motion.article>
+  );
+}
+
+function FloatingSignal({
+  children,
+  className,
+  prefersReducedMotion,
+}: {
+  children: React.ReactNode;
+  className: string;
+  prefersReducedMotion: boolean;
+}) {
+  return (
+    <motion.div
+      className={className}
+      animate={
+        prefersReducedMotion
+          ? undefined
+          : {
+              y: [0, -14, 0],
+            }
+      }
+      transition={
+        prefersReducedMotion
+          ? undefined
+          : {
+              duration: 6,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }
+      }
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function ParallaxOrb({ className, y }: { className: string; y: MotionValue<number> }) {
+  return <motion.div className={className} style={{ y }} aria-hidden="true" />;
+}
+
+function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
+  return (
+    <footer className="relative z-10 border-t border-white/8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl space-y-4">
+            <div className="flex items-center gap-3">
+              <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-10 w-auto" />
+              <span className="text-2xl font-semibold tracking-[-0.03em] text-white">PANaCEa</span>
+            </div>
+            <p className="max-w-lg text-sm leading-7 text-slate-400">
+              Adaptive clinical education for Physician Assistant students who want exam prep to
+              feel intelligent, calm, and clinically grounded.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
+            {NAV_LINKS.map((link) => (
+              <a key={link.href} href={link.href} className="panacea-footer-link">
+                {link.label}
+              </a>
+            ))}
+            <button type="button" onClick={onSignUp} className="panacea-footer-link">
+              Start Free
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-white/6 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {new Date().getFullYear()} PANaCEa. Built for serious PANCE preparation.</p>
+          <p>
+            Not affiliated with NCCPA. Replace proof metrics with verified production data before
+            launch.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-up');
   const prefersReducedMotion = useReducedMotion();
+  const { scrollY } = useScroll();
+  const heroGoldOrbY = useTransform(scrollY, [0, 1400], [0, -180]);
+  const heroPlumOrbY = useTransform(scrollY, [0, 1400], [0, 130]);
+  const heroSteelOrbY = useTransform(scrollY, [0, 1400], [0, -90]);
+  const heroConsoleY = useTransform(scrollY, [0, 900], [0, 70]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const metaTheme = document.getElementById('meta-theme-color');
+    const previousTheme = metaTheme?.getAttribute('content');
+
+    root.classList.add('panacea-landing-scroll');
+    metaTheme?.setAttribute('content', '#0a0e1a');
+
+    return () => {
+      root.classList.remove('panacea-landing-scroll');
+      if (previousTheme) {
+        metaTheme?.setAttribute('content', previousTheme);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (showAuth) {
       document.body.style.overflow = 'hidden';
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') setShowAuth(false);
+      const handleEscape = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setShowAuth(false);
+        }
       };
+
       document.addEventListener('keydown', handleEscape);
       return () => {
-        document.body.style.overflow = 'unset';
+        document.body.style.overflow = '';
         document.removeEventListener('keydown', handleEscape);
       };
     }
-    document.body.style.overflow = 'unset';
+
+    document.body.style.overflow = '';
     return undefined;
   }, [showAuth]);
 
-  const openSignUp = () => { setAuthMode('sign-up'); setShowAuth(true); };
-  const openSignIn = () => { setAuthMode('sign-in'); setShowAuth(true); };
+  const openSignUp = () => {
+    setAuthMode('sign-up');
+    setShowAuth(true);
+  };
+
+  const openSignIn = () => {
+    setAuthMode('sign-in');
+    setShowAuth(true);
+  };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+    <div className="panacea-landing min-h-screen text-slate-50">
       <SkipNavigation mainContentId="landing-main" />
 
-      {/* ═══ Glass Header ═══ */}
-      <header
-        className="sticky top-0 z-40 transition-all duration-300"
-        style={{
-          backgroundColor: 'rgba(10, 14, 26, 0.85)',
-          backdropFilter: 'blur(20px) saturate(1.2)',
-          WebkitBackdropFilter: 'blur(20px) saturate(1.2)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <AppBrand size="lg" animate>
-            <div className="flex items-center gap-3">
-              <ThemeToggleButton />
-              <button
-                type="button"
-                onClick={openSignIn}
-                className="hidden sm:block px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
-                style={{
-                  color: '#94a3b8',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#f1f5f9'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
-              >
-                Sign In
-              </button>
-              <motion.button
-                type="button"
-                onClick={openSignUp}
-                className="px-5 py-2 text-sm font-semibold rounded-lg min-h-[40px] transition-all duration-200"
-                style={{
-                  backgroundColor: '#c4b78a',
-                  color: '#0a0e1a',
-                }}
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-              >
-                Get Started
-              </motion.button>
-            </div>
-          </AppBrand>
+      <div className="panacea-landing__noise" aria-hidden="true" />
+
+      <header className="panacea-header">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <a href="#hero" className="flex items-center gap-3 text-white">
+            <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-11 w-auto" />
+            <span className="text-2xl font-semibold tracking-[-0.04em] text-white sm:text-3xl">
+              PANaCEa
+            </span>
+          </a>
+
+          <nav className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
+            {NAV_LINKS.map((link) => (
+              <a key={link.href} href={link.href} className="panacea-nav-link">
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openSignIn}
+              className="hidden text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white sm:inline-flex"
+            >
+              Sign In
+            </button>
+            <motion.button
+              type="button"
+              onClick={openSignUp}
+              className="panacea-button panacea-button--primary"
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+            >
+              Start Free
+            </motion.button>
+          </div>
         </div>
       </header>
 
-      <main id="landing-main">
-        <HeroSection onSignUp={openSignUp} onSignIn={openSignIn} prefersReducedMotion={prefersReducedMotion} />
-        <FeaturesGrid prefersReducedMotion={prefersReducedMotion} />
-        <SocialProof prefersReducedMotion={prefersReducedMotion} />
-        <HowItWorks onSignUp={openSignUp} prefersReducedMotion={prefersReducedMotion} />
-        <FinalCTA onSignUp={openSignUp} onSignIn={openSignIn} prefersReducedMotion={prefersReducedMotion} />
+      <main id="landing-main" className="relative z-10">
+        <section id="hero" className="panacea-section panacea-section--hero">
+          <ParallaxOrb className="panacea-orb panacea-orb--gold" y={heroGoldOrbY} />
+          <ParallaxOrb className="panacea-orb panacea-orb--plum" y={heroPlumOrbY} />
+          <ParallaxOrb className="panacea-orb panacea-orb--steel" y={heroSteelOrbY} />
+
+          <div className="mx-auto grid max-w-7xl gap-14 px-4 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:pt-14">
+            <div className="max-w-3xl space-y-8">
+              <motion.div
+                {...revealProps(prefersReducedMotion)}
+                className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-200"
+              >
+                <span className="panacea-status-dot" />
+                Adaptive clinical education for PA students
+              </motion.div>
+
+              <motion.div {...revealProps(prefersReducedMotion, 0.08)} className="space-y-6">
+                <h1 className="panacea-display-title">
+                  PANCE mastery
+                  <span className="panacea-display-break panacea-gold-shimmer">
+                    with clinical intelligence.
+                  </span>
+                </h1>
+                <p className="max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                  PANaCEa turns exam prep into an adaptive clinical training loop, calibrating every
+                  review, drill, and explanation around your blueprint gaps, recall decay, and
+                  exam-day readiness.
+                </p>
+              </motion.div>
+
+              <motion.div
+                {...revealProps(prefersReducedMotion, 0.16)}
+                className="flex flex-col items-start gap-4"
+              >
+                <motion.button
+                  type="button"
+                  onClick={openSignUp}
+                  className="panacea-button panacea-button--hero"
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -1 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                >
+                  Start My Adaptive Plan
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                </motion.button>
+
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="inline-flex items-center gap-2 text-sm text-slate-300 transition-colors duration-300 hover:text-white"
+                >
+                  Already studying in PANaCEa?
+                  <span className="font-semibold text-[var(--landing-gold)]">Sign in</span>
+                </button>
+              </motion.div>
+
+              <motion.div
+                {...revealProps(prefersReducedMotion, 0.24)}
+                className="grid gap-3 sm:grid-cols-3"
+              >
+                {HERO_SIGNALS.map((signal) => (
+                  <div key={signal.label} className="panacea-signal-chip">
+                    <p className="panacea-card-label">{signal.label}</p>
+                    <p className="mt-1 text-sm font-medium text-slate-100">{signal.value}</p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            <div className="relative">
+              <FloatingSignal
+                prefersReducedMotion={prefersReducedMotion}
+                className="hidden lg:block panacea-floating-chip panacea-floating-chip--left"
+              >
+                <CheckCircle2 className="h-4 w-4 text-[var(--landing-gold)]" />
+                Blueprint synced
+              </FloatingSignal>
+              <FloatingSignal
+                prefersReducedMotion={prefersReducedMotion}
+                className="hidden lg:block panacea-floating-chip panacea-floating-chip--right"
+              >
+                <Sparkles className="h-4 w-4 text-[var(--landing-steel)]" />
+                Review window recalculated
+              </FloatingSignal>
+
+              <motion.div
+                {...revealProps(prefersReducedMotion, 0.16)}
+                className="panacea-glass panacea-card panacea-hero-console"
+                style={prefersReducedMotion ? undefined : { y: heroConsoleY }}
+              >
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-4 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="panacea-card-label">Adaptive readiness engine</p>
+                      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                        Every session shifts toward your highest-risk misses.
+                      </h2>
+                    </div>
+                    <div className="rounded-full border border-[var(--landing-gold)]/30 bg-[var(--landing-gold)]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-gold)]">
+                      Live blueprint
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="panacea-console-stat">
+                      <p className="panacea-card-label">Projected readiness lift</p>
+                      <div className="panacea-console-stat__value">+18 pts</div>
+                      <p className="panacea-card-copy">
+                        Based on the next 14 days of targeted cardio, pulm, and pharm review.
+                      </p>
+                    </div>
+                    <div className="panacea-console-stat">
+                      <p className="panacea-card-label">Watchlist</p>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {['PE vs pneumonia', 'thyroid pharm', 'OB triage'].map((item) => (
+                          <span key={item} className="panacea-inline-pill">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="panacea-console-panel">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="panacea-card-label">Tonight&apos;s recommended block</p>
+                        <p className="pt-1 text-lg font-semibold text-white">
+                          High-yield cardiopulmonary calibration
+                        </p>
+                      </div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200">
+                        <Clock className="h-4 w-4 text-[var(--landing-gold)]" />
+                        28 min
+                      </div>
+                    </div>
+
+                    <div className="mt-5 space-y-3">
+                      {[
+                        {
+                          icon: Brain,
+                          title: 'Retention drift detected',
+                          copy: 'A resurfaced review window is opening for pulmonary embolism and ACS distractors.',
+                        },
+                        {
+                          icon: Stethoscope,
+                          title: 'Clinical reasoning drill queued',
+                          copy: 'Next sequence blends imaging, differential narrowing, and first-line management.',
+                        },
+                        {
+                          icon: BarChart3,
+                          title: 'Calibration improving',
+                          copy: 'Confidence alignment is trending upward after the last two guided sessions.',
+                        },
+                      ].map((item) => (
+                        <div key={item.title} className="panacea-console-row">
+                          <div className="panacea-console-row__icon">
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-white">{item.title}</p>
+                            <p className="pt-1 text-sm leading-6 text-slate-400">{item.copy}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="panacea-section">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <motion.div
+              {...revealProps(prefersReducedMotion)}
+              className="mx-auto mb-14 max-w-3xl text-center"
+            >
+              <p className="panacea-section-eyebrow">Platform depth</p>
+              <h2 className="panacea-section-title">
+                A premium study surface built for serious clinical preparation.
+              </h2>
+              <p className="panacea-section-copy">
+                Every capability is designed to feel cohesive: visually calm, clinically
+                intelligent, and trustworthy enough to use daily through rotations and final review.
+              </p>
+            </motion.div>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {FEATURE_CARDS.map((feature, index) => (
+                <motion.article
+                  key={feature.title}
+                  {...revealProps(prefersReducedMotion, index * 0.07)}
+                  className="panacea-glass panacea-card panacea-feature-card"
+                  style={accentStyle(feature.accent)}
+                  whileHover={
+                    prefersReducedMotion
+                      ? undefined
+                      : {
+                          scale: 1.02,
+                          y: -8,
+                          transition: { duration: 0.35, ease: PREMIUM_EASE },
+                        }
+                  }
+                >
+                  <div className="panacea-feature-topline" />
+                  <div className="panacea-feature-icon">
+                    <feature.icon className="h-6 w-6" />
+                  </div>
+                  <p className="panacea-card-label">{feature.eyebrow}</p>
+                  <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">{feature.description}</p>
+                  <div className="mt-6 flex items-center gap-2 text-sm text-slate-400">
+                    <ArrowRight className="h-4 w-4 text-[var(--landing-accent)]" />
+                    <span>{feature.detail}</span>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="proof" className="panacea-section panacea-section--proof">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
+            <div className="space-y-6">
+              <motion.div {...revealProps(prefersReducedMotion)}>
+                <p className="panacea-section-eyebrow">Trust and outcomes</p>
+                <h2 className="panacea-section-title text-left">
+                  The page feels premium because the product feels under control.
+                </h2>
+                <p className="panacea-section-copy text-left">
+                  Trust comes from visibility. Students can see what is adapting, why it matters,
+                  and how close they are to a truly stable exam window.
+                </p>
+              </motion.div>
+
+              <div className="grid gap-4">
+                {TRUST_METRICS.map((metric, index) => (
+                  <AnimatedMetricCard
+                    key={metric.label}
+                    metric={metric}
+                    index={index}
+                    prefersReducedMotion={prefersReducedMotion}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-5 lg:pt-16">
+              {TESTIMONIALS.map((testimonial, index) => (
+                <motion.article
+                  key={testimonial.name}
+                  {...revealProps(prefersReducedMotion, index * 0.08)}
+                  className="panacea-glass panacea-card panacea-testimonial"
+                  style={accentStyle(testimonial.accent)}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
+                      <BadgeCheck className="h-4 w-4 text-[var(--landing-accent)]" />
+                      Verified student feedback
+                    </div>
+                    <div className="flex items-center gap-1 text-[var(--landing-gold)]">
+                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <p className="mt-6 text-lg leading-8 text-slate-100">
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </p>
+                  <div className="mt-8 flex items-center justify-between gap-4 border-t border-white/8 pt-5">
+                    <div>
+                      <p className="font-semibold text-white">{testimonial.name}</p>
+                      <p className="pt-1 text-sm text-slate-400">{testimonial.role}</p>
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+                      PANCE prep
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="panacea-section">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <motion.div
+              {...revealProps(prefersReducedMotion)}
+              className="mx-auto mb-14 max-w-3xl text-center"
+            >
+              <p className="panacea-section-eyebrow">How it works</p>
+              <h2 className="panacea-section-title">
+                A three-step path from uncertainty to exam-day composure.
+              </h2>
+              <p className="panacea-section-copy">
+                The workflow is intentionally simple on the surface while the adaptive system does
+                the heavy lifting underneath.
+              </p>
+            </motion.div>
+
+            <div className="panacea-process-line" aria-hidden="true" />
+
+            <div className="grid gap-6 lg:grid-cols-3">
+              {PROCESS_STEPS.map((step, index) => (
+                <motion.article
+                  key={step.step}
+                  {...revealProps(prefersReducedMotion, index * 0.08)}
+                  className="panacea-glass panacea-card panacea-step-card"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="panacea-step-badge">{step.step}</div>
+                    <div className="panacea-feature-icon">
+                      <step.icon className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <h3 className="mt-8 text-2xl font-semibold tracking-[-0.03em] text-white">
+                    {step.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-slate-300">{step.description}</p>
+                </motion.article>
+              ))}
+            </div>
+
+            <motion.div
+              {...revealProps(prefersReducedMotion, 0.22)}
+              className="panacea-glass panacea-card mt-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between"
+            >
+              <div className="max-w-2xl">
+                <p className="panacea-card-label">What adapts behind the scenes</p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                  The platform is constantly recalibrating what matters next.
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-400">
+                  Instead of treating all misses the same, PANaCEa weighs the timing, severity, and
+                  clinical context of each pattern so your next block always feels purposeful.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3 lg:max-w-md lg:justify-end">
+                {PROCESS_SIGNALS.map((signal) => (
+                  <span key={signal} className="panacea-inline-pill">
+                    <Check className="h-3.5 w-3.5 text-[var(--landing-gold)]" />
+                    {signal}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section id="start" className="panacea-section panacea-section--final">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <motion.div
+              {...revealProps(prefersReducedMotion)}
+              className="panacea-glass panacea-card panacea-final-panel"
+            >
+              <p className="panacea-section-eyebrow">Final call</p>
+              <h2 className="panacea-final-title">
+                Walk into the PANCE
+                <span className="panacea-display-break panacea-gold-shimmer">
+                  calm, calibrated, and ready.
+                </span>
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                Build a plan that adapts to your clinical year, protects your study time, and keeps
+                the highest-yield material in front of you until it sticks.
+              </p>
+
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <motion.button
+                  type="button"
+                  onClick={openSignUp}
+                  className="panacea-button panacea-button--hero"
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -1 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                >
+                  Create My Free Account
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                </motion.button>
+
+                <button
+                  type="button"
+                  onClick={openSignIn}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition-colors duration-300 hover:text-white"
+                >
+                  Returning learner? Sign in
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
       </main>
 
-      <SiteFooter />
+      <LandingFooter onSignUp={openSignUp} />
 
-      {/* ═══ Auth Modal ═══ */}
       <AnimatePresence>
-        {showAuth && (
+        {showAuth ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-            style={{
-              backgroundColor: 'rgba(10, 14, 26, 0.85)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-            }}
+            transition={{ duration: 0.22, ease: PREMIUM_EASE }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#050814]/80 p-4 backdrop-blur-xl"
             onClick={() => setShowAuth(false)}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="auth-modal-title"
+            aria-labelledby="panacea-auth-title"
           >
             <motion.div
-              initial={prefersReducedMotion ? false : { scale: 0.95, y: 10 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              style={{ width: '100%', maxWidth: '28rem', margin: '2rem 0' }}
+              initial={prefersReducedMotion ? undefined : { opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: PREMIUM_EASE }}
+              className="w-full max-w-xl"
+              onClick={(event) => event.stopPropagation()}
             >
-              <div
-                className="overflow-hidden"
-                style={{
-                  backgroundColor: 'var(--color-bg-secondary)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--color-border)',
-                  boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
-                }}
-              >
-                {/* Modal Header */}
-                <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <div className="panacea-glass panacea-auth-shell">
+                <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
                   <div>
-                    <h3 id="auth-modal-title" className="text-xl font-bold text-[var(--color-text-primary)]">
-                      {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
-                    </h3>
-                    <p className="text-sm mt-1 text-[var(--color-text-secondary)]">
+                    <p className="panacea-card-label">PANaCEa access</p>
+                    <h3
+                      id="panacea-auth-title"
+                      className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white"
+                    >
                       {authMode === 'sign-up'
-                        ? 'Create your free account to start studying'
-                        : 'Sign in to your personalized dashboard'}
+                        ? 'Start your adaptive plan.'
+                        : 'Return to your study surface.'}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      {authMode === 'sign-up'
+                        ? 'Create a free account to unlock adaptive drills, readiness tracking, and clinical review.'
+                        : 'Sign in to resume your current rotations, review queue, and exam timeline.'}
                     </p>
                   </div>
+
                   <button
                     type="button"
                     onClick={() => setShowAuth(false)}
-                    className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
-                    aria-label="Close"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors duration-300 hover:text-white"
+                    aria-label="Close authentication dialog"
                   >
-                    <svg className="w-5 h-5 text-[var(--color-text-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <span aria-hidden="true" className="text-lg leading-none">
+                      ×
+                    </span>
                   </button>
                 </div>
 
-                <div className="p-6 [color-scheme:inherit]">
+                <div className="px-4 py-6 sm:px-6">
                   {authMode === 'sign-up' ? (
                     <SignUp
                       appearance={{
@@ -169,14 +893,13 @@ export function LandingPage() {
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton:
-                            'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:scale-[1.02] transition-transform',
+                            'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-[1.01] transition',
                           formButtonPrimary:
-                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
-                          formFieldLabel: 'text-[var(--color-text-primary)]',
+                            'bg-[#c4b78a] text-[#0a0e1a] hover:bg-[#d7c99a] shadow-[0_16px_50px_rgba(196,183,138,0.28)]',
+                          formFieldLabel: 'text-slate-200',
                           formFieldInput:
-                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
-                          footerActionLink:
-                            'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
+                            'bg-[#0a0e1a]/70 border-white/10 text-white placeholder:text-slate-500',
+                          footerActionLink: 'text-[#c4b78a] hover:text-[#e2d6ad]',
                         },
                       }}
                       fallbackRedirectUrl="/"
@@ -190,14 +913,13 @@ export function LandingPage() {
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
                           socialButtonsBlockButton:
-                            'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:scale-[1.02] transition-transform',
+                            'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:scale-[1.01] transition',
                           formButtonPrimary:
-                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
-                          formFieldLabel: 'text-[var(--color-text-primary)]',
+                            'bg-[#c4b78a] text-[#0a0e1a] hover:bg-[#d7c99a] shadow-[0_16px_50px_rgba(196,183,138,0.28)]',
+                          formFieldLabel: 'text-slate-200',
                           formFieldInput:
-                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
-                          footerActionLink:
-                            'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
+                            'bg-[#0a0e1a]/70 border-white/10 text-white placeholder:text-slate-500',
+                          footerActionLink: 'text-[#c4b78a] hover:text-[#e2d6ad]',
                         },
                       }}
                       fallbackRedirectUrl="/"
@@ -207,7 +929,7 @@ export function LandingPage() {
               </div>
             </motion.div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );

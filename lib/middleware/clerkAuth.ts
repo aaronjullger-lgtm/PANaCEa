@@ -7,7 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 const LOG_SCOPE = 'Auth';
 

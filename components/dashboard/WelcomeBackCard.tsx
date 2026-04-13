@@ -9,7 +9,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, TrendingUp, TrendingDown, X, RotateCcw } from 'lucide-react';
 import { formatRelativeTime, type LastSessionData } from '@/lib/utils/sessionStorage';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface WelcomeBackCardProps {

@@ -5,7 +5,7 @@
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchLearningCurveData } from '@/services/analytics/learningCurveService';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 export interface UseLearningCurveDataOptions {
   days?: number;

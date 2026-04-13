@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Verify"
+  short_description: "Choose the right verification steps for PANaCEa changes"
+  default_prompt: "Choose and run the right PANaCEa verification steps for this change, starting narrow and widening only when needed."

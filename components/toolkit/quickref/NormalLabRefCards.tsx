@@ -52,7 +52,6 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
   const isVitals = variant === 'vitals';
   const endpoint = isVitals ? '/api/reference/vitals' : '/api/reference/normal-labs';
   const Icon = isVitals ? Activity : FlaskConical;
-  const accentColor = isVitals ? '#8b5cf6' : '#3b82f6';
 
   useEffect(() => {
     let cancelled = false;
@@ -158,7 +157,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
               background: 'var(--color-bg-primary, #fff)',
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                <Icon size={16} style={{ color: accentColor, flexShrink: 0, marginTop: 2 }} />
+                <Icon size={16} style={{ color: 'var(--color-accent)', flexShrink: 0, marginTop: 2 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: FONT_HEADING }}>{name}</div>
                   {item.category && (
@@ -173,9 +172,9 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
               {/* Range display */}
               <div style={{
                 padding: '8px 12px', borderRadius: 8, marginBottom: 6,
-                background: `${accentColor}0a`, border: `1px solid ${accentColor}20`,
+                background: 'color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-primary))', border: '1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-bg-primary))',
               }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: accentColor, fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>{range}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-accent)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as any }}>{range}</div>
                 {unit && <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{unit}</div>}
               </div>
 
@@ -184,10 +183,10 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px',
                   borderRadius: 6, marginBottom: 6,
-                  background: '#fef2f2', border: '1px solid #fecaca',
+                  background: 'color-mix(in srgb, var(--color-data-fail) 10%, var(--color-bg-primary))', border: '1px solid color-mix(in srgb, var(--color-data-fail) 20%, var(--color-bg-primary))',
                 }}>
                   <AlertTriangle size={12} style={{ color: 'var(--color-data-fail)', flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#991b1b' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-data-fail)' }}>
                     Critical: {item.criticalLow != null ? `< ${item.criticalLow}` : ''}
                     {item.criticalLow != null && item.criticalHigh != null ? ' or ' : ''}
                     {item.criticalHigh != null ? `> ${item.criticalHigh}` : ''}

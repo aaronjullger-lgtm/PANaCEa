@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { calculateWellsDVT } from '@/lib/calculators';
 
@@ -150,24 +150,33 @@ export const WellsDVTCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <CalculatorHeader
           title="Wells' DVT Criteria"
           subtitle="Deep Vein Thrombosis Probability"
           onBack={onBack}
         />
-        <ResetButton onReset={() => {
-          setActiveCA(false);
-          setParalysis(false);
-          setBedridden(false);
-          setTenderness(false);
-          setEntireLegSwollen(false);
-          setCalfSwelling(false);
-          setPittingEdema(false);
-          setCollateralVeins(false);
-          setPreviousDVT(false);
-          setAlternativeDiagnosis(false);
-        }} />
+        <div className="flex gap-2">
+          <ResetButton onReset={() => {
+            setActiveCA(false);
+            setParalysis(false);
+            setBedridden(false);
+            setTenderness(false);
+            setEntireLegSwollen(false);
+            setCalfSwelling(false);
+            setPittingEdema(false);
+            setCollateralVeins(false);
+            setPreviousDVT(false);
+            setAlternativeDiagnosis(false);
+          }} />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `Wells' DVT Criteria\nScore: ${result.score}\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">

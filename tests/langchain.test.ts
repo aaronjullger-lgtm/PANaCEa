@@ -218,9 +218,12 @@ describe('LangChain Tracing', () => {
     delete (globalThis as any).LANGCHAIN_ENDPOINT;
   });
 
-  it('buildTracingConfig returns empty object without key', async () => {
+  it('buildTracingConfig returns default config without key', async () => {
     const { buildTracingConfig } = await import('../lib/langchain/tracing');
-    expect(buildTracingConfig({})).toEqual({});
+    const config = buildTracingConfig({});
+    expect(config.callbacks).toEqual([]);
+    expect(config.metadata).toMatchObject({ app: 'panacea' });
+    expect(config.runName).toBeUndefined();
   });
 
   it('buildTracingConfig includes metadata when key is set', async () => {

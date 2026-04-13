@@ -25,7 +25,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useDatabaseStats, DatabaseStats } from '../../hooks/useDatabaseStats';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import ConditionPerformancePanel from './ConditionPerformancePanel';
 import PerformanceTrendChart from './PerformanceTrendChart';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';

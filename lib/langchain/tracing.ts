@@ -1,14 +1,19 @@
 /**
  * LangSmith Tracing Integration
  *
- * Configures LangSmith callback handlers for observability
+ * Creates per-request LangChain callback handlers for observability
  * across all LangChain calls. Tracing is opt-in: if no
- * LANGSMITH_API_KEY is present, calls proceed without tracing.
+ * LANGSMITH_API_KEY is present, returns empty config.
+ *
+ * Uses `LangChainTracer` callback handlers passed via `RunnableConfig`
+ * instead of mutating `globalThis` — safe for concurrent Edge requests.
  *
  * @module lib/langchain/tracing
- * Sprint: LangChain Integration — Sprint 1
+ * Sprint: LangChain Integration — Sprint 2
  */
 
+import { LangChainTracer } from '@langchain/core/tracers/tracer_langchain';
+import type { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { AIEnvKeys } from './models';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -22,23 +27,79 @@ export interface TracingOptions {
   metadata?: Record<string, unknown>;
 }
 
-// ─── Environment Setup ────────────────────────────────────────────────────
+/**
+ * Tracing config ready to be spread into a RunnableConfig.
+ * If tracing is disabled, all arrays are empty so spreading is safe.
+ */
+export interface TracingConfig {
+  callbacks: BaseCallbackHandler[];
+  tags: string[];
+  metadata: Record<string, unknown>;
+  runName?: string;
+}
+
+// ─── Environment Check ────────────────────────────────────────────────────
 
 /**
- * Configure LangSmith environment variables for tracing.
+ * Check if LangSmith tracing is available.
+ */
+export function isTracingEnabled(env: AIEnvKeys): boolean {
+  return !!env.LANGSMITH_API_KEY;
+}
+
+// ─── Tracer Factory ───────────────────────────────────────────────────────
+
+/**
+ * Build a per-request LangChainTracer callback handler.
  *
- * LangChain reads these from `process.env` (or globalThis in Edge).
- * Call this once at app startup or before the first LangChain call.
+ * Unlike `configureLangSmithEnv` (which mutates globalThis),
+ * this creates an isolated tracer instance safe for concurrent
+ * Edge requests.
  *
- * In Cloudflare Edge Functions, environment variables aren't in
- * `process.env` — they're on `context.env`. This function bridges
- * that gap by setting the globals LangChain expects.
+ * @example
+ * ```ts
+ * const config = buildTracingConfig(env, {
+ *   runName: 'panacea:question-gen',
+ *   tags: ['generation', 'cardiology'],
+ *   metadata: { userId: 'abc' },
+ * });
+ *
+ * await model.invoke(messages, config);
+ * ```
+ */
+export function buildTracingConfig(
+  env: AIEnvKeys,
+  options: TracingOptions = {}
+): TracingConfig {
+  const config: TracingConfig = {
+    callbacks: [],
+    tags: options.tags ?? [],
+    metadata: { app: 'panacea', ...options.metadata },
+    runName: options.runName,
+  };
+
+  if (!env.LANGSMITH_API_KEY) return config;
+
+  const tracer = new LangChainTracer({
+    projectName: env.LANGSMITH_PROJECT ?? 'panacea',
+  });
+  config.callbacks.push(tracer);
+
+  return config;
+}
+
+// ─── Legacy Compatibility ─────────────────────────────────────────────────
+// These are kept for backward compatibility with callers that still
+// use the old globalThis pattern. They will be removed in a future sprint.
+
+/**
+ * @deprecated Use `buildTracingConfig()` instead. This mutates globalThis,
+ * which is unsafe in concurrent Edge isolates.
  */
 export function configureLangSmithEnv(env: AIEnvKeys): boolean {
   const apiKey = env.LANGSMITH_API_KEY;
   if (!apiKey) return false;
 
-  // LangChain SDK reads these globals for tracing config
   const g = globalThis as Record<string, unknown>;
   g.LANGCHAIN_TRACING_V2 = 'true';
   g.LANGCHAIN_API_KEY = apiKey;
@@ -46,42 +107,4 @@ export function configureLangSmithEnv(env: AIEnvKeys): boolean {
   g.LANGCHAIN_ENDPOINT = 'https://api.smith.langchain.com';
 
   return true;
-}
-
-/**
- * Build the callbacks/config object for a LangChain invocation
- * that includes LangSmith tracing metadata.
- *
- * Returns an empty object if tracing is not configured,
- * so callers can always spread it safely.
- */
-export function buildTracingConfig(
-  env: AIEnvKeys,
-  options: TracingOptions = {}
-): Record<string, unknown> {
-  if (!env.LANGSMITH_API_KEY) return {};
-
-  const config: Record<string, unknown> = {};
-
-  if (options.runName) {
-    config.runName = options.runName;
-  }
-  if (options.tags?.length) {
-    config.tags = options.tags;
-  }
-  if (options.metadata) {
-    config.metadata = {
-      app: 'panacea',
-      ...options.metadata,
-    };
-  }
-
-  return config;
-}
-
-/**
- * Check if LangSmith tracing is available.
- */
-export function isTracingEnabled(env: AIEnvKeys): boolean {
-  return !!env.LANGSMITH_API_KEY;
 }

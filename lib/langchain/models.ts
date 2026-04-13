@@ -98,8 +98,8 @@ function createProviderModel(
       const apiKey = env.OPENAI_API_KEY;
       if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
       return new ChatOpenAI({
-        openAIApiKey: apiKey,
-        modelName: modelId,
+        apiKey,
+        model: modelId,
         temperature: opts.temperature,
         maxTokens: opts.maxTokens,
       });
@@ -109,8 +109,8 @@ function createProviderModel(
       const apiKey = env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
       return new ChatAnthropic({
-        anthropicApiKey: apiKey,
-        modelName: modelId,
+        apiKey,
+        model: modelId,
         temperature: opts.temperature,
         maxTokens: opts.maxTokens,
       });
@@ -121,8 +121,8 @@ function createProviderModel(
       const apiKey = env.DEEPSEEK_API_KEY;
       if (!apiKey) throw new Error('DEEPSEEK_API_KEY not configured');
       return new ChatOpenAI({
-        openAIApiKey: apiKey,
-        modelName: modelId,
+        apiKey,
+        model: modelId,
         temperature: opts.temperature,
         maxTokens: opts.maxTokens,
         configuration: {

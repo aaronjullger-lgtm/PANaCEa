@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Navigator"
+  short_description: "Navigate the PANaCEa architecture and choose the right files first"
+  default_prompt: "Map this PANaCEa task to the right files, layers, and integration points before making changes."

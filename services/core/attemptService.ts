@@ -6,7 +6,7 @@
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 interface AttemptData {
   questionId: string;

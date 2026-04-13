@@ -17,11 +17,8 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   ShieldCheck,
   AlertTriangle,
-  TrendingUp,
-  TrendingDown,
   Activity,
   RefreshCw,
-  Loader2,
 } from 'lucide-react';
 import { ClinicalSkeleton } from '@/components/loading';
 import type { RatingAuditData, AnomalyLevel, WeeklyTrend } from '@/hooks/useRatingAudit';

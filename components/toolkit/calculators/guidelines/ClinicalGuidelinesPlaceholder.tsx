@@ -113,6 +113,7 @@ export const ClinicalGuidelinesPlaceholder: React.FC<CalculatorProps> = ({ onBac
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
         <input
           type="text"
+          aria-label="Search clinical guidelines"
           placeholder="Search guidelines..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

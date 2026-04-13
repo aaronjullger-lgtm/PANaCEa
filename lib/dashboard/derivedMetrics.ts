@@ -9,7 +9,7 @@ import type { Rolling360Stats } from '@/hooks/useRolling360Stats';
 import type { DatabaseStats } from '@/hooks/useDatabaseStats';
 import type { LearningProfile } from '@/types/unified-stats';
 import type { UnifiedStats } from '@/types/unified-stats';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import { wilsonScoreBounds, MASTERY_THRESHOLD, GOLD_MASTERY_THRESHOLD, MIN_OBSERVATIONS } from '@/lib/services/wilsonMasteryService';
 
 // =============================================================================

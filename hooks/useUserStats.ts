@@ -15,7 +15,7 @@ import type { PerformanceRecord, Question } from '../types';
 import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
 import { createDebouncedFunction } from '../lib/utils/debounce';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 import { getSyncCircuitBreaker } from '../lib/utils/circuitBreaker';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';

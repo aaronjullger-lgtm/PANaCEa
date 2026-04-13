@@ -68,6 +68,8 @@ export const ParklandCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             type="number"
             unit="kg"
             placeholder="kg"
+            min={1}
+            max={200}
           />
           <ClinicalInput
             label="% TBSA burned"
@@ -76,6 +78,8 @@ export const ParklandCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             type="number"
             unit="%"
             placeholder="%"
+            min={1}
+            max={100}
           />
         </div>
         {total24 !== null && (

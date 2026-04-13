@@ -19,21 +19,19 @@ import {
   Target,
   Zap,
   BookOpen,
-  TrendingDown,
-  Clock,
   AlertCircle,
   ChevronRight,
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import type { SessionSettings, SystemCode } from '@/types';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface RecommendedAction {
   type: 'srs_review' | 'weak_system' | 'exam_cram' | 'time_optimized' | 'daily_session';
   title: string;
   description: string;
   icon: LucideIcon;
-  gradient: string;
   action: () => void;
   priority: number; // Higher = more urgent
 }
@@ -82,7 +80,6 @@ function getRecommendedAction(
       title: 'Review Due Cards',
       description: `${dueCount} cards need review to maintain retention`,
       icon: Brain,
-      gradient: 'from-purple-500/10 to-indigo-500/10',
       priority: 100,
       action: () => onStartSession({ focus: 'due', systems: [], difficulty: 'medium' }),
     };
@@ -103,7 +100,6 @@ function getRecommendedAction(
       title: `Focus: ${sys.name}`,
       description: `Your accuracy: ${Math.round(sys.accuracy * 100)}% (avg: ${avgAccuracy}%)`,
       icon: Target,
-      gradient: 'from-amber-500/10 to-orange-500/10',
       priority: 90,
       action: () => onStartSystemDrill(sys.system),
     };
@@ -116,7 +112,6 @@ function getRecommendedAction(
       title: 'Cram Mode',
       description: `${daysUntilExam} days until exam - high-yield review`,
       icon: Zap,
-      gradient: 'from-red-500/10 to-pink-500/10',
       priority: 85,
       action:
         onStartCramMode ||
@@ -135,7 +130,6 @@ function getRecommendedAction(
       title: 'New Material',
       description: 'Morning is optimal for learning new concepts',
       icon: BookOpen,
-      gradient: 'from-blue-500/10 to-cyan-500/10',
       priority: 70,
       action: () =>
         onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 20 }),
@@ -148,7 +142,6 @@ function getRecommendedAction(
       title: 'Review & Consolidate',
       description: 'Evening is great for reviewing what you learned',
       icon: Brain,
-      gradient: 'from-indigo-500/10 to-purple-500/10',
       priority: 70,
       action: () => onStartSession({ focus: 'review', systems: [], difficulty: 'medium' }),
     };
@@ -160,7 +153,6 @@ function getRecommendedAction(
     title: 'Daily Session',
     description: 'Answer 40 questions (recommended daily target)',
     icon: Brain,
-    gradient: 'from-[var(--color-accent)]/10 to-[var(--color-accent)]/5',
     priority: 50,
     action: () =>
       onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 40 }),
@@ -177,6 +169,8 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
   onStartCramMode,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+
   // Memoised: getRecommendedAction runs filter/sort/reduce over systemStats,
   // so we only recompute when the inputs actually change rather than on
   // every parent render (which is frequent on the dashboard).
@@ -198,9 +192,9 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       className={`
         relative overflow-hidden rounded-xl
         bg-[var(--color-bg-secondary)]

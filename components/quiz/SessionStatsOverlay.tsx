@@ -23,7 +23,7 @@ import {
   normalizeSystemCode,
   PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 interface SessionStatsOverlayProps {
   performanceData: Array<{ topic: string; correct: boolean }>;

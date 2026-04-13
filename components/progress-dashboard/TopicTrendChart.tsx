@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import ChartContainer from '../shared/ChartContainer';
-import { PANCE_TOPICS } from '@/src/constants';
+import { PANCE_TOPICS } from "@/config/topic-map";
 import chartTheme from '@/lib/chartTheme';
 
 // Mock data for demonstration purposes

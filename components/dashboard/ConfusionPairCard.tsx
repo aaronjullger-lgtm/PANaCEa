@@ -133,7 +133,7 @@ export function ConfusionPairCard({
             className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 ease-premium hover:-translate-y-0.5"
             style={{
               backgroundColor: 'var(--color-bg-primary)',
-              boxShadow: '0 0 0 1px rgba(59, 130, 246, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.04)',
+              boxShadow: '0 0 0 1px var(--color-border), 0 1px 3px -1px rgba(0, 0, 0, 0.04)',
             }}
           >
             {/* Frequency indicator */}

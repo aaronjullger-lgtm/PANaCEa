@@ -21,7 +21,7 @@ import type {
   FocusArea,
 } from '@/types/custom-session';
 import { CUSTOM_SESSION_STORAGE_KEY, DEFAULT_CUSTOM_SESSION_CONFIG } from '@/types/custom-session';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import type { SystemCode } from '@/types';
 
 // ============================================================================

@@ -139,7 +139,7 @@ import { computeScore } from '@/lib/scoring/computeScore';
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
 import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
 const STRIP_HTML_TAGS_REGEX = /<[^>]*>/g;

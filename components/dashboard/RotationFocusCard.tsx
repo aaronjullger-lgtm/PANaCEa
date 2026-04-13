@@ -34,7 +34,17 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
     [rotationName]
   );
 
-  if (!rotation) return null;
+  if (!rotation) {
+    return (
+      <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Stethoscope className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Rotation Focus</h3>
+        </div>
+        <p className="text-sm text-[var(--color-text-muted)]">Set your current rotation in Settings to see rotation-specific study guidance.</p>
+      </div>
+    );
+  }
 
   const highYield = getRotationHighYield(rotationName || '');
   const daysUntilEOR = eorDate
@@ -102,6 +112,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
               <button
                 key={sys}
                 onClick={() => onStartDrill?.(sys)}
+                aria-label={`Start drill on ${sys}${acc !== undefined ? ` — ${Math.round(acc * 100)}% accuracy` : ''}`}
                 className={`
                   px-2.5 py-1 rounded-md text-xs font-medium transition-colors duration-200
                   ${isWeak

@@ -42,7 +42,7 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
 import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
 import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';

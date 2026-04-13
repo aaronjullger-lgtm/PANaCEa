@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Stethoscope } from 'lucide-react';
 import type { ClinicalRotation } from '@/types';
 import { EOR_TARGET_QUESTIONS_DEFAULT } from '@/config/rotation-systems';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface EorCountdownCardProps {
   examDate: string;
@@ -34,6 +35,7 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
   className = '',
 }) => {
   const daysRemaining = getDaysRemaining(examDate);
+  const prefersReducedMotion = useReducedMotion();
 
   // Don't render if the exam date is in the past
   if (daysRemaining < 0) return null;
@@ -47,9 +49,9 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       className={`eor-accent relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-sm ${className}`}
     >
       {/* Primary: Title */}

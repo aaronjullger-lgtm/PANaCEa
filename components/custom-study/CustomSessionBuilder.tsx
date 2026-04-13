@@ -21,7 +21,7 @@ import {
   Filter,
   Layers,
 } from 'lucide-react';
-import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '../../src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from "@/config/topic-map";
 import type { SystemCode } from '../../types';
 import type {
   CustomSessionConfig,

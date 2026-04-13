@@ -125,14 +125,14 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
   // ---- Loading / Error ----
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
+      <div role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
         Loading scoring systems...
       </div>
     );
   }
   if (error) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-data-fail)' }}>
+      <div role="alert" style={{ padding: 40, textAlign: 'center', color: 'var(--color-data-fail)' }}>
         Failed to load scoring systems: {error}
       </div>
     );
@@ -199,13 +199,13 @@ export default function ScoringSystemBrowser({ onBack }: { onBack?: () => void }
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 14px', borderRadius: 10,
-            border: highYieldOnly ? '2px solid #eab308' : '1px solid var(--color-border)',
-            background: highYieldOnly ? '#fef9c3' : 'var(--color-bg-secondary)',
-            color: highYieldOnly ? '#854d0e' : 'var(--color-text-secondary)',
+            border: highYieldOnly ? '2px solid var(--color-category-knowledge)' : '1px solid var(--color-border)',
+            background: highYieldOnly ? 'color-mix(in srgb, var(--color-category-knowledge) 15%, var(--color-bg-primary))' : 'var(--color-bg-secondary)',
+            color: highYieldOnly ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
             cursor: 'pointer', fontSize: 13, fontWeight: 600,
           }}
         >
-          <Star size={14} fill={highYieldOnly ? '#eab308' : 'none'} />
+          <Star size={14} fill={highYieldOnly ? 'var(--color-category-knowledge)' : 'none'} />
           High Yield
         </button>
       </div>

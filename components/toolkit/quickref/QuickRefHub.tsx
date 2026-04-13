@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './quickref-print.css';
 import {
   ArrowLeft,
+  BookMarked,
   Bug,
   Heart,
   FlaskConical,
@@ -98,7 +99,7 @@ export default function QuickRefHub({ onBack }: { onBack?: () => void }) {
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 16px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <span style={{ fontSize: 28 }}>📋</span>
+        <BookMarked size={28} style={{ color: 'var(--color-accent)' }} />
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>
             Quick Reference

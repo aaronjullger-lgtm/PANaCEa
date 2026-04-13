@@ -8,6 +8,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface ExamCountdownCardProps {
   examDate: string; // ISO date string
@@ -110,6 +111,7 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
   className = '',
 }) => {
   const daysRemaining = getDaysRemaining(examDate);
+  const prefersReducedMotion = useReducedMotion();
 
   // Don't render if the exam date is in the past
   if (daysRemaining < 0) return null;
@@ -135,9 +137,9 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       className={`
         relative overflow-hidden rounded-xl
         bg-[var(--color-bg-secondary)]
@@ -148,13 +150,13 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-muted-amber-500/15 rounded-lg">
-            <Target className="w-5 h-5 text-muted-amber-500" />
+          <div className="p-2 bg-[var(--color-data-provisional)]/15 rounded-lg">
+            <Target className="w-5 h-5 text-[var(--color-data-provisional)]" />
           </div>
           <h3 className="font-bold text-[var(--color-text-primary)]">PANCE Countdown</h3>
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold text-muted-amber-500 leading-none">
+          <div className="text-3xl font-bold text-[var(--color-data-provisional)] leading-none">
             {daysRemaining}
           </div>
           <div className="text-xs text-[var(--color-text-muted)] mt-1">{daysLabel}</div>
@@ -174,7 +176,7 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
             initial={{ width: 0 }}
             animate={{ width: `${curriculumPercent}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 rounded-full"
+            className="h-full bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] rounded-full"
           />
         </div>
       </div>
@@ -208,7 +210,7 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
       {/* Urgency message for < 14 days */}
       {daysRemaining <= 14 && daysRemaining > 0 && (
         <motion.div
-          className="mt-4 p-3 bg-muted-amber-500/10 rounded-lg"
+          className="mt-4 p-3 bg-[var(--color-data-provisional)]/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
             <span className="font-semibold">Final sprint:</span> Review weak areas and high-yield

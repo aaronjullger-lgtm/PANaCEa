@@ -12,7 +12,9 @@
  * Sprint: LangChain Integration — Sprint 2
  */
 
+import { z } from 'zod';
 import { routeTask } from '../router';
+import { parseJsonResponse } from '../router';
 import type { AIEnvKeys } from '../models';
 import type { RouteOptions, RouteResult } from '../router';
 
@@ -33,6 +35,31 @@ export interface QuestionGenerationResult {
   latencyMs: number;
   usage?: RouteResult['usage'];
 }
+
+// ─── Zod Schema ────────────────────────────────────────────────────────────
+
+/** Schema for validating individual generated questions. */
+const QuestionItemSchema = z.object({
+  type: z.string(),
+  question: z.string(),
+  options: z.array(z.string()),
+  correctAnswer: z.string(),
+  explanation: z.object({
+    rationale: z.string().optional(),
+    incorrect: z.record(z.string()).optional(),
+  }).optional(),
+  difficulty: z.number().optional(),
+  sourceSections: z.array(z.string()).optional(),
+  sourceConditions: z.array(z.string()).optional(),
+  insufficient: z.boolean().optional(),
+});
+
+/** Schema for the full response (array of questions or single insufficient marker). */
+const QuestionResponseSchema = z.union([
+  z.array(QuestionItemSchema),
+  QuestionItemSchema,
+  z.object({ insufficient: z.literal(true) }),
+]);
 
 // ─── System Prompt ────────────────────────────────────────────────────────
 
@@ -154,6 +181,22 @@ function parseQuestionResponse(text: string): unknown[] {
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/,(\s*[}\]])/g, '$1');
 
-  const parsed = JSON.parse(cleaned);
-  return Array.isArray(parsed) ? parsed : [parsed];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    return [];
+  }
+
+  try {
+    const validated = QuestionResponseSchema.parse(parsed);
+    if ('insufficient' in validated && validated.insufficient) {
+      return [];
+    }
+    return Array.isArray(validated) ? validated : [validated];
+  } catch {
+    // If Zod validation fails, return the raw parsed JSON so upstream
+    // self-refine logic still has something to work with.
+    return Array.isArray(parsed) ? parsed : [parsed];
+  }
 }

@@ -54,7 +54,7 @@ import {
   CLINICAL_REASONING_TARGET_SEC,
   OVERALL_TARGET_SEC,
 } from '@/lib/speedBenchmarks';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 // Minimum reviews needed for confident predictions (FSRS calibration threshold)
 const CALIBRATION_THRESHOLD = 60;

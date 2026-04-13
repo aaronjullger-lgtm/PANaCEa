@@ -188,6 +188,7 @@ function CollapsibleSection({
     <div style={{ borderRadius: 12, border: '1px solid var(--color-border)', overflow: 'hidden', marginBottom: 12 }}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 8,
           padding: '12px 16px', background: 'var(--color-bg-secondary)',
@@ -337,7 +338,7 @@ export default function DynamicScoringCalculator({
   // ---- Loading / Error states ----
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
+      <div role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
         <RefreshCw size={20} className="animate-spin" style={{ marginRight: 8 }} />
         Loading scoring system...
       </div>

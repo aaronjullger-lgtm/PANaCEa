@@ -3,6 +3,7 @@ import { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 import { springs } from '@/config/appViews';
 import { PrimaryButton, type ButtonVariant } from '../ui/PrimaryButton';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface StatItem {
   label: string;
@@ -50,6 +51,8 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
     timerText,
     backgroundPattern = 'none',
   } = props;
+
+  const prefersReducedMotion = useReducedMotion();
 
   // Background pattern SVG
   const renderPattern = () => {
@@ -99,11 +102,11 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   };
   return (
     <motion.div
-      initial={{ y: 8, filter: 'blur(3px)' }}
+      initial={prefersReducedMotion ? false : { y: 8, filter: 'blur(3px)' }}
       animate={{ y: 0, filter: 'blur(0px)' }}
-      transition={springs.snappy}
-      whileHover={{ y: -3, transition: springs.snappy }}
-      whileTap={{ scale: 0.98, transition: { duration: 0.08 } }}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+      whileHover={prefersReducedMotion ? undefined : { y: -3, transition: springs.snappy }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98, transition: { duration: 0.08 } }}
       className="group relative overflow-hidden rounded-2xl cursor-pointer
                  border border-[var(--color-border)] 
                  bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 

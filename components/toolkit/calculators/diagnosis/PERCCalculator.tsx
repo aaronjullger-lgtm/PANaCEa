@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { isPERCNegative, percPositiveCount } from '@/lib/calculators';
 
@@ -117,22 +117,31 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <CalculatorHeader
           title="PERC Rule"
           subtitle="Pulmonary Embolism Rule-out Criteria"
           onBack={onBack}
         />
-        <ResetButton onReset={() => {
-          setAge50(false);
-          setHeartRate100(false);
-          setO2sat95(false);
-          setUnilateralLegSwelling(false);
-          setHemoptysis(false);
-          setRecentSurgery(false);
-          setPriorPE(false);
-          setHormoneUse(false);
-        }} />
+        <div className="flex gap-2">
+          <ResetButton onReset={() => {
+            setAge50(false);
+            setHeartRate100(false);
+            setO2sat95(false);
+            setUnilateralLegSwelling(false);
+            setHemoptysis(false);
+            setRecentSurgery(false);
+            setPriorPE(false);
+            setHormoneUse(false);
+          }} />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `PERC Rule\n${result.score}: ${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-4">

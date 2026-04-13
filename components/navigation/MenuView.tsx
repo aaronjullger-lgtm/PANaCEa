@@ -31,7 +31,7 @@ import TrainingMenu from '@/components/dashboard/TrainingMenu';
 import ProgressRing from '@/components/ui/ProgressRing';
 import TopicHeatmap from '@/components/analytics/TopicHeatmap';
 import SystemDrilldownModal from '@/components/modals/SystemDrilldownModal';
-import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from "@/config/topic-map";
 import type { SystemDrilldownSelection } from '@/components/modals/SystemDrilldownModal';
 import type { ConditionMeta } from '@/src/types/conditions';
 import ConditionDetailModal from '@/components/modals/ConditionDetailModal';

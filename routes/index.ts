@@ -48,15 +48,15 @@ export function registerRoutes(app: Express): void {
   // ─── Core data routes ─────────────────────────────────────────────────
   // [PORTED] → functions/api/conditions/index.ts
   app.use('/api/conditions', conditionsRouter);
-  // [NOT PORTED] — 4 endpoints need Edge migration (P0)
+  // [PORTED] → functions/api/content/ (all, [conditionId], search, systems, library, curated-passages, textbook-retrieve, context-widgets)
   app.use('/api/content', contentRouter);
-  // [PARTIAL] — anatomy, differentials, labs, guidelines ported; others missing
+  // [PORTED] → functions/api/reference/ (anatomy, differentials, labs, guidelines, findings, imaging, physiology, special-tests, treatments, vitals, procedures, scoring)
   app.use('/api/reference', referenceRouter);
 
   // ─── Lab and study material routes ────────────────────────────────────
-  // [NOT PORTED] — 3 endpoints need Edge migration (P1)
+  // [PORTED] → functions/api/labs/ (tests, cases, cases/random)
   app.use('/api/labs', labsRouter);
-  // [NOT PORTED] — lab-cases endpoints missing (P1)
+  // [PORTED] → functions/api/drills/ (lab-cases, contrastive, pharm, smart-review, antibiotics, fluids, code-blue, confusion-queue)
   app.use('/api/drills', drillsRouter);
   // [PORTED] → functions/api/drugs/index.ts
   app.use('/api/drugs', drugsRouter);
@@ -67,21 +67,21 @@ export function registerRoutes(app: Express): void {
   app.use('/api/games', gamesRouter);
 
   // ─── New modules ──────────────────────────────────────────────────────
-  // [NOT PORTED] — 5 analytics endpoints need Edge migration (P0)
+  // [PORTED] → functions/api/analytics/ (reactions, weakness, confusion-pairs, performance-deltas, soap-note, blueprint-coverage, calibration, error-patterns, learner-profile, knowledge-graph, etc.)
   app.use('/api/analytics', analyticsRouter);
-  // [PARTIAL] — POST /api/sync ported; GET missing
+  // [PORTED] → functions/api/sync.ts (GET + POST with 3-way merge)
   app.use('/api/sync', syncRouter);
-  // [PARTIAL] — flag + seeds ported; 8 other endpoints missing (P0)
+  // [PORTED] → functions/api/questions/ (32+ handlers: fetch, batch, no-repeat, flag, seeds, generate, pool, attempt, session, custom-session, staging, etc.)
   app.use('/api/questions', questionsRouter);
 
   // [DORMANT] Clinical pearls - not called by frontend
   app.use('/api/pearls', pearlsRouter);
-  // [NOT PORTED] — 5 OSCE endpoints need Edge migration (P0)
+  // [PORTED] → functions/api/osce/ (cases/random, session, chat, complete, stats, analytics, live-engine, state-machine, analysis)
   app.use('/api/osce', osceRouter);
-  // [PARTIAL] — Gemini proxy only
+  // [PORTED] → functions/api/ai/ (chat, learning, mnemonics, models, sessions, tutor, vision)
   app.use('', aiRouter);
 
-  // [NOT PORTED] — achievements, performance endpoints missing (P1)
+  // [PARTIAL] → functions/api/achievements/ (record, unlock, [userId]); functions/api/user/ (session, analytics, daily-performance). Some perf endpoints may still need Edge equivalents.
   app.use('/api', usersRouter);
 
   // [DORMANT] Adaptive learning - not called by frontend

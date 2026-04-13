@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface AlgorithmStatusWidgetProps {
   lastTuned: Date;
@@ -17,6 +18,7 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
   reason,
   adjustment,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const getNextOptimization = () => {
     const now = new Date();
     const nextOptimization = new Date(lastTuned.getTime() + 14 * 60 * 60 * 1000);
@@ -32,9 +34,9 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5 }}
       className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm h-full"
     >
       {/* Header */}
@@ -51,7 +53,7 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
           </p>
         </div>
         <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
+          animate={prefersReducedMotion ? undefined : { scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="w-2 h-2 bg-[var(--color-accent)] rounded-full"
         />

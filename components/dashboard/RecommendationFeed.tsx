@@ -4,7 +4,7 @@ import { PrimaryButton } from '../ui/PrimaryButton';
 import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Cache configuration: Only fetch fresh data if user returns after 6+ hours

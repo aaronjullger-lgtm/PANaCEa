@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { TopicStats, PerformanceRecord } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 interface TopicDetailModalProps {
   topicStats: TopicStats; // system-level stats from heatmap

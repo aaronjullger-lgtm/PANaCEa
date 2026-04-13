@@ -1,0 +1,644 @@
+.panacea-landing {
+  --landing-bg: #0a0e1a;
+  --landing-bg-deep: #050814;
+  --landing-panel: rgba(10, 16, 30, 0.62);
+  --landing-panel-strong: rgba(10, 16, 30, 0.82);
+  --landing-gold: #c4b78a;
+  --landing-plum: #9a7f9a;
+  --landing-steel: #728ba6;
+  --landing-sage: #7a8f6e;
+  --landing-rose: #a67f7f;
+  --landing-amber: #b39b6c;
+  --landing-success: #39b8a2;
+  --landing-critical: #c97d7d;
+  --landing-border: rgba(255, 255, 255, 0.08);
+  --landing-shadow:
+    0 32px 120px rgba(2, 8, 24, 0.6), 0 0 0 1px rgba(114, 139, 166, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(154, 127, 154, 0.18), transparent 25%),
+    radial-gradient(circle at 82% 20%, rgba(114, 139, 166, 0.15), transparent 28%),
+    radial-gradient(circle at 22% 82%, rgba(122, 143, 110, 0.12), transparent 28%),
+    linear-gradient(180deg, #050814 0%, #0a0e1a 42%, #060913 100%);
+}
+
+.panacea-landing::before,
+.panacea-landing::after {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: -20%;
+}
+
+.panacea-landing::before {
+  z-index: -2;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(154, 127, 154, 0.16), transparent 26%),
+    radial-gradient(circle at 78% 12%, rgba(114, 139, 166, 0.15), transparent 26%),
+    radial-gradient(circle at 52% 76%, rgba(196, 183, 138, 0.12), transparent 22%),
+    radial-gradient(circle at 16% 88%, rgba(122, 143, 110, 0.1), transparent 22%);
+  filter: blur(72px);
+  animation: panacea-aurora 22s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+}
+
+.panacea-landing::after {
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.03),
+      transparent 26%,
+      rgba(196, 183, 138, 0.04) 55%,
+      transparent 72%
+    ),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  animation: panacea-hue 26s linear infinite;
+}
+
+.panacea-landing__noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  background-size:
+    36px 36px,
+    36px 36px,
+    220px 220px;
+  background-position: center;
+  mix-blend-mode: soft-light;
+}
+
+.panacea-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(5, 8, 20, 0.72);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+}
+
+.panacea-nav-link {
+  position: relative;
+  transition: color 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.45rem;
+  width: 100%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, transparent, var(--landing-gold), transparent);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-nav-link:hover {
+  color: #fff;
+}
+
+.panacea-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.panacea-section {
+  position: relative;
+  padding: clamp(5rem, 9vw, 8rem) 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  scroll-margin-top: 6rem;
+}
+
+.panacea-section--hero {
+  min-height: calc(100vh - 5rem);
+  display: flex;
+  align-items: center;
+  overflow: clip;
+}
+
+.panacea-section--proof {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.015),
+    transparent 18%,
+    transparent 82%,
+    rgba(255, 255, 255, 0.015)
+  );
+}
+
+.panacea-section--final {
+  padding-top: clamp(4.5rem, 8vw, 7rem);
+}
+
+.panacea-display-title {
+  margin: 0;
+  font-family: 'Teko', sans-serif;
+  font-size: clamp(5rem, 11vw, 7.6rem);
+  line-height: 0.86;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.panacea-display-break {
+  display: block;
+}
+
+.panacea-gold-shimmer {
+  background-image: linear-gradient(
+    120deg,
+    #f9f5e9 0%,
+    #c4b78a 24%,
+    #efe3c0 48%,
+    #c4b78a 70%,
+    #fff9e8 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: panacea-shimmer 8s linear infinite;
+}
+
+.panacea-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-button--primary {
+  min-height: 2.9rem;
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panacea-button--primary:hover {
+  box-shadow: 0 18px 45px rgba(3, 8, 24, 0.28);
+}
+
+.panacea-button--hero {
+  min-height: 3.75rem;
+  padding: 0 1.7rem;
+  font-size: 1rem;
+  color: #0a0e1a;
+  background: linear-gradient(135deg, #efe3c0 0%, #c4b78a 44%, #b39b6c 100%);
+  box-shadow:
+    0 18px 60px rgba(196, 183, 138, 0.3),
+    0 0 0 1px rgba(255, 248, 227, 0.12) inset;
+}
+
+.panacea-button--hero:hover {
+  box-shadow:
+    0 26px 80px rgba(196, 183, 138, 0.38),
+    0 0 0 1px rgba(255, 248, 227, 0.16) inset;
+}
+
+.panacea-glass {
+  background: linear-gradient(180deg, rgba(13, 19, 36, 0.86), rgba(10, 16, 30, 0.56));
+  border: 1px solid var(--landing-border);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  box-shadow: var(--landing-shadow);
+}
+
+.panacea-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  transition:
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top left,
+    color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 22%, transparent),
+    transparent 42%
+  );
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.panacea-card:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--landing-accent, var(--landing-gold)) 44%,
+    rgba(255, 255, 255, 0.18)
+  );
+  box-shadow:
+    0 42px 140px rgba(2, 8, 24, 0.72),
+    0 0 0 1px color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.panacea-card:hover::after {
+  opacity: 1;
+}
+
+.panacea-card-label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 74%, #f8fafc 26%);
+}
+
+.panacea-card-copy {
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: #94a3b8;
+}
+
+.panacea-section-eyebrow {
+  margin: 0 0 0.85rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--landing-gold);
+}
+
+.panacea-section-title {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  color: #f8fafc;
+}
+
+.panacea-section-copy {
+  margin: 1.1rem auto 0;
+  max-width: 42rem;
+  font-size: 1rem;
+  line-height: 1.85;
+  color: #94a3b8;
+}
+
+.panacea-status-dot {
+  height: 0.55rem;
+  width: 0.55rem;
+  border-radius: 999px;
+  background: var(--landing-success);
+  box-shadow: 0 0 20px rgba(57, 184, 162, 0.65);
+  animation: panacea-pulse 2.8s ease-in-out infinite;
+}
+
+.panacea-signal-chip {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem 1rem 1.05rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 24px 70px rgba(2, 8, 24, 0.28);
+}
+
+.panacea-floating-chip {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 13, 24, 0.82);
+  padding: 0.85rem 1rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  box-shadow: 0 20px 50px rgba(2, 8, 24, 0.45);
+}
+
+.panacea-floating-chip--left {
+  left: -2.25rem;
+  top: 4rem;
+}
+
+.panacea-floating-chip--right {
+  right: -1.6rem;
+  bottom: 5.5rem;
+}
+
+.panacea-hero-console {
+  padding: 1.6rem;
+}
+
+.panacea-console-stat,
+.panacea-console-panel {
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 1.15rem;
+}
+
+.panacea-console-stat__value {
+  padding-top: 0.35rem;
+  font-family: 'Teko', sans-serif;
+  font-size: 3rem;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: #f8fafc;
+}
+
+.panacea-console-row {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.panacea-console-row__icon,
+.panacea-feature-icon,
+.panacea-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panacea-console-row__icon,
+.panacea-feature-icon {
+  height: 3rem;
+  width: 3rem;
+  border-radius: 1rem;
+  border: 1px solid
+    color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 34%, rgba(255, 255, 255, 0.08));
+  background: color-mix(
+    in srgb,
+    var(--landing-accent, var(--landing-gold)) 16%,
+    rgba(255, 255, 255, 0.02)
+  );
+  color: color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 74%, #fff 26%);
+}
+
+.panacea-inline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.58rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #dbe4ef;
+}
+
+.panacea-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(76px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: panacea-float 13s ease-in-out infinite;
+}
+
+.panacea-orb--gold {
+  top: 10%;
+  right: -10%;
+  height: 24rem;
+  width: 24rem;
+  background: radial-gradient(circle, rgba(196, 183, 138, 0.18), transparent 68%);
+}
+
+.panacea-orb--plum {
+  left: -8%;
+  bottom: 6%;
+  height: 21rem;
+  width: 21rem;
+  background: radial-gradient(circle, rgba(154, 127, 154, 0.18), transparent 68%);
+  animation-duration: 17s;
+}
+
+.panacea-orb--steel {
+  right: 22%;
+  top: 24%;
+  height: 17rem;
+  width: 17rem;
+  background: radial-gradient(circle, rgba(114, 139, 166, 0.18), transparent 68%);
+  animation-duration: 15s;
+}
+
+.panacea-feature-card,
+.panacea-metric-card,
+.panacea-testimonial,
+.panacea-step-card {
+  padding: 1.5rem;
+}
+
+.panacea-feature-topline {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--landing-accent, var(--landing-gold)),
+    transparent
+  );
+  opacity: 0.95;
+}
+
+.panacea-metric-value {
+  padding-top: 0.45rem;
+  font-family: 'Teko', sans-serif;
+  font-size: 4rem;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.panacea-process-line {
+  margin: 0 auto 2rem;
+  height: 1px;
+  max-width: 64rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(196, 183, 138, 0.42),
+    rgba(114, 139, 166, 0.42),
+    transparent
+  );
+  box-shadow: 0 0 22px rgba(196, 183, 138, 0.15);
+}
+
+.panacea-step-badge {
+  min-width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 183, 138, 0.22);
+  background: rgba(196, 183, 138, 0.12);
+  font-family: 'Teko', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: -0.04em;
+  color: var(--landing-gold);
+}
+
+.panacea-final-panel {
+  padding: clamp(2rem, 5vw, 3.25rem);
+  text-align: center;
+}
+
+.panacea-final-title {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2.25rem, 5vw, 4.4rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.96;
+  color: #f8fafc;
+}
+
+.panacea-auth-shell {
+  border-radius: 1.75rem;
+}
+
+.panacea-footer-link {
+  transition: color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-footer-link:hover {
+  color: #fff;
+}
+
+@media (min-width: 1024px) {
+  html.panacea-landing-scroll {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 6rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .panacea-section--hero {
+    min-height: auto;
+    padding-top: 4rem;
+  }
+
+  .panacea-process-line {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .panacea-header {
+    background: rgba(5, 8, 20, 0.8);
+  }
+
+  .panacea-display-title {
+    font-size: clamp(4rem, 20vw, 5.6rem);
+  }
+
+  .panacea-metric-value {
+    font-size: 3.2rem;
+  }
+
+  .panacea-console-stat__value {
+    font-size: 2.6rem;
+  }
+
+  .panacea-feature-card,
+  .panacea-metric-card,
+  .panacea-testimonial,
+  .panacea-step-card {
+    padding: 1.25rem;
+  }
+
+  .panacea-floating-chip {
+    display: none;
+  }
+
+  .panacea-orb--gold,
+  .panacea-orb--plum,
+  .panacea-orb--steel {
+    opacity: 0.6;
+  }
+}
+
+@keyframes panacea-aurora {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-2%, 2%, 0) scale(0.98);
+  }
+}
+
+@keyframes panacea-hue {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(12deg);
+  }
+  100% {
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes panacea-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes panacea-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes panacea-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+}

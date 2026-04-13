@@ -102,6 +102,7 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             onChange={setSodium}
             type="number"
             unit="mEq/L"
+            range="135-145"
             placeholder="Na"
           />
           <ClinicalInput
@@ -110,6 +111,7 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             onChange={setGlucose}
             type="number"
             unit="mg/dL"
+            range="70-110"
             placeholder="Glu"
           />
           <ClinicalInput
@@ -118,6 +120,7 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             onChange={setBun}
             type="number"
             unit="mg/dL"
+            range="7-20"
             placeholder="BUN"
           />
           <ClinicalInput
@@ -126,6 +129,7 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             onChange={setMeasuredOsm}
             type="number"
             unit="mOsm/kg"
+            range="275-295"
             placeholder="If available"
           />
         </div>

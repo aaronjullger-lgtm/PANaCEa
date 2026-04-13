@@ -18,6 +18,7 @@ import { ShimmerOverlay } from '@/components/loading';
 import { useNavigate } from 'react-router-dom';
 import { useDrillRecommendations } from '@/hooks/useDrillRecommendations';
 import type { DrillRecommendation } from '@/hooks/useDrillRecommendations';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // ── Impact badge colors ──────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ const RecommendationRow: React.FC<{
       whileHover={{ x: 4, transition: springs.snappy }}
       whileTap={{ scale: 0.98, transition: { duration: 0.08 } }}
       onClick={() => onStart(rec)}
+      aria-label={`${rec.label} — ${rec.reason}`}
       className="w-full text-left group rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors p-3.5"
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -109,6 +111,7 @@ interface Props {
 export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
   const { recommendations, isLoading, error, data } = useDrillRecommendations(days);
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
 
   const handleStart = (rec: DrillRecommendation) => {
     const basePath = DRILL_ROUTES[rec.drillType] ?? '/drills';
@@ -185,9 +188,9 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
 
   return (
     <motion.section
-      initial={{ y: 12, filter: 'blur(4px)' }}
+      initial={prefersReducedMotion ? false : { y: 12, filter: 'blur(4px)' }}
       animate={{ y: 0, filter: 'blur(0px)' }}
-      transition={springs.snappy}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5"
     >
       <div className="flex items-baseline justify-between mb-3">

@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { springs } from '@/config/appViews';
-import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from "@/config/topic-map";
 import { SkeletonLoader } from '@/components/loading';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { SystemCode } from '@/types';
@@ -99,7 +99,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
               transition-colors duration-300
               ${
                 isSelected
-                  ? 'border-l-4 border-l-muted-amber-500 bg-[var(--color-bg-tertiary)]'
+                  ? 'border-l-4 border-l-[var(--color-data-provisional)] bg-[var(--color-bg-tertiary)]'
                   : 'hover:bg-[var(--color-bg-tertiary)]'
               }
               ${isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}
@@ -116,7 +116,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={springs.snappy}
-                  className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-muted-amber-500 shadow-[0_0_6px_rgba(176,155,115,0.6)]"
+                  className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--color-data-provisional)] shadow-[0_0_6px_rgba(176,155,115,0.6)]"
                 />
               )}
             </div>
@@ -134,7 +134,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-                    className={`h-full rounded-full ${progress > 80 ? 'bg-[var(--color-data-pass)]' : 'bg-muted-amber-500'}`}
+                    className={`h-full rounded-full ${progress > 80 ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-provisional)]'}`}
                   />
                 </div>
               </div>

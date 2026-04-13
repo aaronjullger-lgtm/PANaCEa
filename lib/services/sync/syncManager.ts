@@ -10,7 +10,7 @@
  * - Supports background sync via Service Worker
  */
 
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 import { offlineStore, isIndexedDBAvailable } from './offlineStore';
 
 const SCOPE = 'SyncManager';

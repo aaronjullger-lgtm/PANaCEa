@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton } from '../shared';
+import { CalculatorHeader, CheckboxCriteria, ResultDisplay, ResetButton, CopyResultButton } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
 import { calculateCURB65 } from '@/lib/calculators';
 
@@ -111,7 +111,16 @@ export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
           subtitle="Pneumonia Severity Assessment"
           onBack={onBack}
         />
-        <ResetButton onReset={() => { setConfusion(false); setUrea(false); setRespiratory(false); setBloodPressure(false); setAge(false); }} />
+        <div className="flex gap-2">
+          <ResetButton onReset={() => { setConfusion(false); setUrea(false); setRespiratory(false); setBloodPressure(false); setAge(false); }} />
+          {result && (
+            <CopyResultButton
+              getText={() =>
+                `CURB-65 Score\nScore: ${result.score}\n${result.interpretation}\n${result.recommendation}`
+              }
+            />
+          )}
+        </div>
       </div>
 
       <div className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6">

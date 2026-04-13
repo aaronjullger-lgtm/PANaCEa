@@ -29,7 +29,7 @@ import {
   Settings,
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 // ============================================================
 // Types

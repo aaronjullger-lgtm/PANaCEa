@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { Brain, Target, Flag, TrendingUp, Zap, Clock, Award } from 'lucide-react';
 import type { SessionSettings, PerformanceRecord, Question, SystemCode } from '../types';
 import { useUserContext } from '../hooks/useUserContext';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 interface SimulationPageProps {
   onStartSession: (settings: SessionSettings) => void | Promise<void>;

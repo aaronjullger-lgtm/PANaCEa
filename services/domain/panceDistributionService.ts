@@ -6,7 +6,7 @@
  */
 
 import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
-import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 /** @deprecated Use BLUEPRINT_PERCENT_BY_ABBREVIATION from lib/constants/blueprint.ts */
 export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...BLUEPRINT_PERCENT_BY_ABBREVIATION };

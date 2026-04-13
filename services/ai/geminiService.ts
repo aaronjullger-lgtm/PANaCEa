@@ -8,7 +8,7 @@ import {
   TASK_DECK,
   GEMINI_FLASH_MODEL,
   GEMINI_PRO_MODEL,
-} from '@/src/constants';
+} from "@/config/topic-map";
 import type { Question, SessionSettings, SystemCode, ConditionDefinition } from '@/types';
 import type { PatientEncounterCase, PatientPersona } from '@/types/drill-modes';
 import type { ConditionMeta } from '@/src/types/conditions';

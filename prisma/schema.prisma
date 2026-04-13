@@ -4363,3 +4363,111 @@ model QuestionEmbedding {
   updatedAt   DateTime             @default(now()) @updatedAt
   question    PreGeneratedQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
+
+// ============================================================================
+// A/B TESTING
+// Manages experiments, user assignment, exposure tracking, and conversions.
+// ============================================================================
+
+enum ABExperimentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+/// An A/B experiment with one or more variants and optional targeting rules.
+model ABExperiment {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  description String?
+  status      ABExperimentStatus @default(DRAFT)
+  /// JSON array of { name: string, weight: number, config?: object }
+  variants    Json               @default("[]")
+  /// Percentage of traffic to include (0-100). 100 = all users.
+  trafficPercentage Int           @default(100)
+  /// JSON array of learner stage filters, e.g. ["DIDACTIC", "CLINICAL"]. Empty = all stages.
+  targetLearnerStages Json        @default("[]")
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  exposures   ABExposure[]
+  conversions ABConversion[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Records the first time a user sees a variant in an experiment.
+/// Deduped per (userId, experimentId) — subsequent exposures are ignored.
+model ABExposure {
+  id            String       @id @default(cuid())
+  userId        String
+  experimentId  String
+  variantName   String
+  createdAt     DateTime     @default(now())
+  experiment    ABExperiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, experimentId])
+  @@index([userId])
+  @@index([experimentId])
+  @@index([variantName])
+}
+
+/// Records a conversion event for a user in a specific experiment variant.
+/// One user may have multiple conversion events per experiment (e.g. multiple sessions).
+model ABConversion {
+  id            String       @id @default(cuid())
+  userId        String
+  experimentId  String
+  variantName   String
+  /// The event name, e.g. "question_answered", "review_completed"
+  eventName     String
+  /// Optional numeric value (e.g. accuracy, time spent)
+  value         Float?
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  experiment    ABExperiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([experimentId])
+  @@index([eventName])
+  @@index([experimentId, variantName])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// CONTENT QUALITY FEEDBACK LOOP
+// Flags questions failing psychometric thresholds, triggers AI self-refine,
+// and tracks the regeneration → human review pipeline.
+// ============================================================================
+
+/// Psychometric quality flag for a question. Created by the content quality
+/// feedback loop cron job when an item fails discrimination, point-biserial,
+/// or distractor analysis thresholds. Tracks status through regeneration.
+model ContentQualityFlag {
+  id                 String   @id @default(cuid())
+  questionId         String
+  /// Which quality criterion failed (matches ItemFlagType from itemAnalysisService)
+  flagType           String
+  /// Full ItemAnalysis metrics JSON (discrimination, pointBiserial, difficulty, flags, grade)
+  metrics            Json
+  /// Pipeline status: flagged → regenerating → reviewed → resolved
+  status             String   @default("flagged")
+  /// AI-generated improved question content (from selfRefineService), null until regeneration
+  regeneratedContent Json?
+  /// Critique feedback from the AI self-refine step
+  critiqueFeedback   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  resolvedAt         DateTime?
+  /// Clerk ID of the human who resolved this flag
+  resolvedBy         String?
+
+  @@index([questionId])
+  @@index([status])
+  @@index([flagType])
+  @@index([createdAt])
+  @@index([status, createdAt])
+}

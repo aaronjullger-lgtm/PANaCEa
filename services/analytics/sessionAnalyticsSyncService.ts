@@ -13,7 +13,7 @@ import {
 } from './behavioralConfidenceService';
 import { getMomentumInsights } from './sessionMomentumService';
 import { getPrediction, getConfidenceInterval } from './performancePredictionService';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 
 // Storage key for pending sync
 const PENDING_SYNC_KEY = 'panceai_pending_session_sync';

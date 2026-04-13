@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, AlertCircle, Trophy, Target, ArrowRight } from 'lucide-react';
 import ChartContainer from '../shared/ChartContainer';
 import { ErrorBoundary } from '../error/ErrorBoundary';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // ============================================================================
 // Chart Color Constants
@@ -110,7 +111,7 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
         {topSystems.map((system, index) => (
           <motion.div
             key={system.name}
-            initial={{ x: 20 }}
+            initial={prefersReducedMotion ? false : { x: 20 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
             className="p-4 bg-gradient-to-r from-[var(--color-data-provisional)]/10 to-[var(--color-data-provisional)]/5 rounded-xl border border-[var(--color-data-provisional)]/30"
@@ -202,6 +203,7 @@ export interface GapAnalysisDashboardProps {
 export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onStudySystem }) => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
 
   const [data, setData] = useState<PerformanceDeltasResponse['data'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -364,7 +366,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         )}
         {/* Header */}
         <motion.div
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
           transition={{ duration: 0.4 }}
         >
@@ -381,7 +383,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
@@ -396,7 +398,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           </motion.div>
 
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
@@ -411,7 +413,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           </motion.div>
 
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
@@ -435,7 +437,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Chart Section */}
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
             className="lg:col-span-2 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6"
@@ -534,7 +536,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
 
           {/* High Yield Sidebar */}
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.5 }}
           >

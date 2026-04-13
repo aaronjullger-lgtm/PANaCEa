@@ -77,13 +77,13 @@ describe('calculateRecommendedRetention', () => {
     const low = calculateRecommendedRetention(20, 10, defaultParameters);
     const high = calculateRecommendedRetention(90, 10, defaultParameters);
     expect(high.recommendedRetention).toBeGreaterThanOrEqual(low.recommendedRetention);
-  });
+  }, SIMULATION_TIMEOUT);
 
   it('returns explanation string', () => {
     const result = calculateRecommendedRetention(45, 15, defaultParameters);
     expect(result.explanation).toBeTruthy();
     expect(result.explanation.length).toBeGreaterThan(10);
-  });
+  }, SIMULATION_TIMEOUT);
 
   it('recommends at least 0.8 retention', () => {
     const result = calculateRecommendedRetention(5, 50, defaultParameters);

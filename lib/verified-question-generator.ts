@@ -20,10 +20,10 @@ import {
   type CoVeConfig,
 } from './cove-verification';
 import { callGeminiText, fetchNewQuestion } from '@/services/ai/geminiService';
-import { logger } from '@/src/lib/logger';
+import { logger } from "@/lib/simple-logger";
 // Note: Gemini response sanitization (strip ```json / ```) and JSON parse error handling
 // live in geminiService.fetchNewQuestion so fallback generation works when the main API returns 500.
-import { GEMINI_FLASH_MODEL } from '../src/constants';
+import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 
 // ============================================================================
 // Logger Scope
