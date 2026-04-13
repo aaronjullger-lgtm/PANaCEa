@@ -19,6 +19,7 @@ import CardGrid from './CardGrid';
 import DailyTriad from '../DailyTriad';
 import DailyLoadWidget from '../DailyLoadWidget';
 import ErrorPatternWidget from '../ErrorPatternWidget';
+import LearnerInsightsCard from '../LearnerInsightsCard';
 import DataView from './DataView';
 import {
   ExamReadinessCard,
@@ -96,6 +97,11 @@ const PilotView = () => {
       <div className="lg:col-span-1">
         <Card>
           <ErrorPatternWidget />
+        </Card>
+      </div>
+      <div className="lg:col-span-1">
+        <Card>
+          <LearnerInsightsCard />
         </Card>
       </div>
       <div className="lg:col-span-1">

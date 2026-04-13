@@ -39,7 +39,8 @@ export type WidgetId =
   | 'wellness_status'
   | 'readiness_projection'
   | 'daily_load'
-  | 'error_patterns';
+  | 'error_patterns'
+  | 'learner_insights';
 
 export interface DashboardConfig {
   stage: LearnerStage;
@@ -169,6 +170,7 @@ const CLINICAL_ROTATION_CONFIG: DashboardConfig = {
     'wellness_status',
   ],
   dataWidgets: [
+    'learner_insights',
     'system_performance',
     'error_patterns',
     'calibration_quadrant',
@@ -222,6 +224,7 @@ const PANCE_PREP_CONFIG: DashboardConfig = {
     'circadian_insight',
   ],
   dataWidgets: [
+    'learner_insights',
     'system_performance',
     'error_patterns',
     'calibration_quadrant',
