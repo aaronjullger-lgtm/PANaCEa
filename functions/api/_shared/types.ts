@@ -27,6 +27,13 @@ export interface CloudflareEnv {
   // AI/ML APIs
   GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  DEEPSEEK_API_KEY?: string;
+
+  // LangSmith Observability
+  LANGSMITH_API_KEY?: string;
+  LANGSMITH_PROJECT?: string;
 
   // Supabase (storage, media) — set in Dashboard
   SUPABASE_URL?: string;

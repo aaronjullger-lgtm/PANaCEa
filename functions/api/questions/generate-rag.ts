@@ -7,10 +7,13 @@
  * Pipeline:
  *   1. Retrieve relevant clinical content from MedicalContent via pgvector
  *   2. Build grounded prompt with retrieved context
- *   3. Generate questions via Gemini with strict grounding instructions
- *   4. Return questions with source citations and retrieval quality metrics
+ *   3. Generate questions via LangChain router (multi-provider fallback)
+ *   4. Self-refine loop (critique → rewrite) via LangChain
+ *   5. Return questions with source citations and retrieval quality metrics
  *
  * @see lib/services/ragContextService.ts — RAG retrieval layer
+ * @see lib/langchain/chains/questionGeneration.ts — LangChain generation chain
+ * Sprint: LangChain Integration — Sprint 3 (migrated from direct Gemini fetch)
  */
 
 import { z } from 'zod';
@@ -32,8 +35,13 @@ import {
   buildRefinementMetrics,
   type GeneratedQuestion,
 } from '../../../lib/services/selfRefineService';
-
-const GEMINI_MODEL = 'gemini-2.0-flash';
+import {
+  generateQuestions,
+  critiqueQuestion,
+  rewriteQuestion,
+} from '../../../lib/langchain/chains/questionGeneration';
+import { fromCloudflareEnv } from '../../../lib/langchain/envAdapter';
+import { configureLangSmithEnv } from '../../../lib/langchain/tracing';
 
 const BodySchema = z.object({
   conditionName: z.string().min(1).max(200),
@@ -65,6 +73,9 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const apiKey = env.GEMINI_API_KEY!;
+  const aiEnv = fromCloudflareEnv(env as unknown as Record<string, unknown>);
+  configureLangSmithEnv(aiEnv);
+
   const { conditionName, system, count, questionType } = validated;
 
   try {
@@ -107,142 +118,47 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
     const cautionBlock = refined.cautionPrefix ? `${refined.cautionPrefix}\n\n` : '';
     const formattedContext = cautionBlock + formatContextForPrompt(ragContext, 3000);
 
-    // 2. Build grounded generation prompt
-    const systemInstruction = `You are a board-certified physician and experienced NBME item-writer creating PANCE-style clinical questions for PA students.
-
-CRITICAL RULES:
-- Generate questions ONLY from the provided clinical reference context below.
-- NEVER hallucinate clinical details not present in the context.
-- NEVER state the diagnosis or condition name in the vignette stem. Use raw patient data only.
-- If the context is insufficient to create a clinically accurate question, return {"insufficient": true}.
-- Each wrong answer must be correct for a slightly different patient scenario.
-- Prefer third-order questions (mechanism, next step, complication management).
-- Include at least 2 pertinent negatives that rule out top differentials.`;
-
-    const prompt = `${formattedContext}
-
-TASK: Generate ${count} high-quality '${questionType}' question(s) about ${conditionName} (${system}) strictly based on the clinical reference context above.
-
-OUTPUT FORMAT (JSON array):
-[{
-  "type": "${questionType}",
-  "question": "Clinical vignette with raw patient data only...",
-  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-  "correctAnswer": "Matches one option exactly",
-  "explanation": {
-    "rationale": "Why the correct answer is correct, citing specific clinical evidence.",
-    "incorrect": {"A": "Why wrong for THIS patient; when correct", "B": "...", "C": "...", "D": "..."}
-  },
-  "difficulty": 0.5,
-  "sourceSections": ["pathophysiology", "treatment"],
-  "sourceConditions": ["${conditionName}"]
-}]
-
-Return ONLY valid JSON. No markdown fences.`;
-
-    // 3. Call Gemini for generation
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 4096,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
-
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('[generate-rag] Gemini error:', errText.slice(0, 300));
+    // 3. Generate questions via LangChain router (multi-provider fallback)
+    let genResult;
+    try {
+      genResult = await generateQuestions(aiEnv, {
+        conditionName,
+        system,
+        count,
+        questionType,
+        formattedContext,
+      });
+    } catch (err) {
+      console.error('[generate-rag] LangChain generation failed:', err);
       return { status: 502, error: 'Question generation failed' };
     }
 
-    const geminiData = (await geminiRes.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    let questions = genResult.questions;
 
-    if (!rawText) {
-      return { status: 502, error: 'Empty response from generation model' };
-    }
-
-    // 4. Parse response
-    let questions: unknown[];
-    try {
-      const cleaned = rawText.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      questions = Array.isArray(parsed) ? parsed : [parsed];
-    } catch {
-      console.error('[generate-rag] JSON parse error:', rawText.slice(0, 200));
-      return { status: 502, error: 'Invalid JSON from generation model' };
-    }
-
-    // 5. Self-refine loop (draft → critique → rewrite) for qualifying questions
+    // 4. Self-refine loop (draft → critique → rewrite) for qualifying questions
     let refinementMetrics = null;
     const refinedQuestions: unknown[] = [];
     for (const q of questions) {
       const gen = q as GeneratedQuestion;
       if (shouldRefine(gen)) {
         try {
-          // Critique
-          const critiquePrompt = buildCritiquePrompt(gen);
-          const critiqueRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: critiquePrompt }] }],
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 2048,
-                responseMimeType: 'application/json',
-              },
-            }),
-          });
+          // Critique via LangChain
+          const critiquePromptText = buildCritiquePrompt(gen);
+          const critiqueResult = await critiqueQuestion(aiEnv, critiquePromptText);
+          const critique = parseCritiqueResponse(critiqueResult.output);
 
-          if (critiqueRes.ok) {
-            const critiqueData = (await critiqueRes.json()) as {
-              candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-            };
-            const critiqueText = critiqueData.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (critiqueText) {
-              const critique = parseCritiqueResponse(critiqueText);
-              if (critique.overallScore < 0.8) {
-                // Rewrite needed
-                const rewritePrompt = buildRewritePrompt(gen, critique);
-                const rewriteRes = await fetch(geminiUrl, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: rewritePrompt }] }],
-                    generationConfig: {
-                      temperature: 0.5,
-                      maxOutputTokens: 4096,
-                      responseMimeType: 'application/json',
-                    },
-                  }),
-                });
+          if (critique.overallScore < 0.8) {
+            // Rewrite via LangChain
+            const rewritePromptText = buildRewritePrompt(gen, critique);
+            const rewriteResult = await rewriteQuestion(aiEnv, rewritePromptText);
 
-                if (rewriteRes.ok) {
-                  const rewriteData = (await rewriteRes.json()) as {
-                    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-                  };
-                  const rewriteText = rewriteData.candidates?.[0]?.content?.parts?.[0]?.text;
-                  if (rewriteText) {
-                    try {
-                      const rewritten = JSON.parse(rewriteText.replace(/```json|```/g, '').trim());
-                      refinedQuestions.push({ ...rewritten, _refined: true });
-                      refinementMetrics = buildRefinementMetrics(gen, critique);
-                      continue;
-                    } catch { /* fall through to original */ }
-                  }
-                }
-              }
-            }
+            try {
+              const cleaned = rewriteResult.output.replace(/```json|```/g, '').trim();
+              const rewritten = JSON.parse(cleaned);
+              refinedQuestions.push({ ...rewritten, _refined: true });
+              refinementMetrics = buildRefinementMetrics(gen, critique);
+              continue;
+            } catch { /* fall through to original */ }
           }
         } catch (e) {
           console.warn('[generate-rag] Self-refine failed, using original:', e);
@@ -254,7 +170,7 @@ Return ONLY valid JSON. No markdown fences.`;
     // Use refined questions
     questions = refinedQuestions;
 
-    // 6. Attach RAG metadata
+    // 5. Attach RAG metadata
     const sourceChunkIds = [...new Set(ragContext.chunks.map((c) => c.sourceId))];
 
     return {
@@ -274,6 +190,12 @@ Return ONLY valid JSON. No markdown fences.`;
           cragAction: refined.cragAction,
           pipelineMetrics: refined.pipelineMetrics,
           refinementMetrics,
+          langchainMetadata: {
+            model: genResult.model,
+            provider: genResult.provider,
+            latencyMs: genResult.latencyMs,
+            usage: genResult.usage,
+          },
         },
       },
     };

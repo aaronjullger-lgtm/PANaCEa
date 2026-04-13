@@ -10,6 +10,7 @@
 export * from './types';
 export * from './contentGenerator';
 export * from './databaseService';
+export * from './langchainContentGenerator';
 
 import { generateConditionContent, batchGenerateContent } from './contentGenerator';
 import {
