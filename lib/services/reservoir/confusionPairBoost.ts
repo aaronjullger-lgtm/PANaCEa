@@ -22,6 +22,10 @@
  * (priority 9) and due reviews (priority 7) rather than dominating.
  */
 
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'ConfusionPairBoost';
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ConfusionPairData {
@@ -99,7 +103,7 @@ export async function loadUserConfusionPairs(
     }));
   } catch (error) {
     // If ConfusionPair table doesn't exist yet or query fails, return empty
-    console.error('[confusionPairBoost] Failed to load pairs:', error instanceof Error ? error.message : error);
+    logger.error(LOG_SCOPE, 'Failed to load pairs', error instanceof Error ? error.message : error);
     return [];
   }
 }

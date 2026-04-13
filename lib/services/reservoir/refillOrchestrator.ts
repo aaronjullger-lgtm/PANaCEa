@@ -16,6 +16,9 @@
 import { createJob, type JobType } from '../queue/jobQueue';
 import { getQueueDepth } from './reservoirService';
 import { RESERVOIR_POLICY, type RefillReason } from './reservoirPolicy';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'RefillOrchestrator';
 
 type PrismaClientLike = {
   backgroundJob: any;
@@ -108,7 +111,7 @@ export async function requestRefill(
 
     return { jobId: job.id, skipped: false };
   } catch (err: any) {
-    console.error(`[reservoir] requestRefill failed for user=${userId}: ${err.message}`);
+    logger.error(LOG_SCOPE, `requestRefill failed for user=${userId}`, err);
     return { jobId: null, skipped: true, reason: `error: ${err.message}` };
   }
 }

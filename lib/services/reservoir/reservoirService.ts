@@ -23,6 +23,9 @@ import {
   type QuestionSource,
   type ReservoirItem,
 } from './reservoirPolicy';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'Reservoir';
 
 // ─── Generic Prisma type ────────────────────────────────────────────────────
 
@@ -181,7 +184,7 @@ export async function bulkInsertReservoirItems(
       inserted += batch.length; // Approximate — ON CONFLICT skips are not counted
     } catch (err: any) {
       // Log but don't fail the whole batch
-      console.error(`[reservoir] Batch insert error: ${err.message}`);
+      logger.error(LOG_SCOPE, `Batch insert error: ${err.message}`);
     }
   }
 

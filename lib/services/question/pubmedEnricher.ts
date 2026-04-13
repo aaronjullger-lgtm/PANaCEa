@@ -11,6 +11,10 @@
  * @see functions/api/_shared/question-generator.ts
  */
 
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'PubMed';
+
 export interface PubMedCitation {
   pmid: string;
   title: string;
@@ -80,7 +84,7 @@ export async function enrichWithPubMed(
     });
 
     if (!searchRes.ok) {
-      console.warn(`[PubMed] Search failed: ${searchRes.status}`);
+      logger.warn(LOG_SCOPE, `Search failed: ${searchRes.status}`);
       return [];
     }
 
@@ -128,7 +132,7 @@ export async function enrichWithPubMed(
     });
 
     if (!summaryRes.ok) {
-      console.warn(`[PubMed] Summary fetch failed: ${summaryRes.status}`);
+      logger.warn(LOG_SCOPE, `Summary fetch failed: ${summaryRes.status}`);
       return [];
     }
 
@@ -175,7 +179,7 @@ export async function enrichWithPubMed(
     return citations.slice(0, maxResults);
   } catch (err) {
     // Non-fatal — questions generate without PubMed if this fails
-    console.warn('[PubMed] Enrichment failed:', err instanceof Error ? err.message : err);
+    logger.warn(LOG_SCOPE, 'Enrichment failed', err instanceof Error ? err.message : err);
     return [];
   }
 }

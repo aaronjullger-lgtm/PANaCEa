@@ -1,5 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type MedicalContentData } from '../content/types';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'QuestionGenerationService';
 
 export interface GroundingSource {
   uri: string;
@@ -99,13 +102,13 @@ Return ONLY valid JSON (no markdown):
       return parsed;
     } catch (error) {
       // Fallback to ungrounded model if search grounding fails
-      console.warn('[QuestionGenerationService] Grounded generation failed, falling back to standard:', error);
+      logger.warn(LOG_SCOPE, 'Grounded generation failed, falling back to standard', error);
       try {
         const result = await this.model.generateContent(prompt);
         const text = result.response.text();
         return this.parseResponse(text);
       } catch (fallbackError) {
-        console.error('[QuestionGenerationService] Generation failed completely:', fallbackError);
+        logger.error(LOG_SCOPE, 'Generation failed completely', fallbackError);
         return null;
       }
     }
@@ -149,7 +152,7 @@ Return ONLY valid JSON (no markdown):
       jsonText = jsonText.trim();
       return JSON.parse(jsonText);
     } catch (error) {
-      console.error('[QuestionGenerationService] Failed to parse JSON:', error);
+      logger.error(LOG_SCOPE, 'Failed to parse JSON', error);
       return null;
     }
   }

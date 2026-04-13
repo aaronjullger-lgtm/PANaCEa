@@ -1,5 +1,8 @@
 import { createEdgePrismaClient, CACHE_STRATEGY } from '../../../functions/api/_shared/prisma-edge';
 import { MedicalContentSchema, type MedicalContentData, type ConditionMeta } from './types';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'ContentService';
 
 export class ContentService {
   private prisma: ReturnType<typeof createEdgePrismaClient>;
@@ -53,7 +56,7 @@ export class ContentService {
       // The database stores JSON, so we coerce it to our schema
       return MedicalContentSchema.parse(content.content);
     } catch (error) {
-      console.error(`[ContentService] Validation failed for condition ${conditionId}:`, error);
+      logger.error(LOG_SCOPE, `Validation failed for condition ${conditionId}`, error);
       return null;
     }
   }
@@ -75,10 +78,7 @@ export class ContentService {
           const parsed = MedicalContentSchema.parse(content.content);
           resultMap.set(content.conditionId, parsed);
         } catch (error) {
-          console.error(
-            `[ContentService] Validation failed for condition ${content.conditionId}:`,
-            error
-          );
+          logger.error(LOG_SCOPE, `Validation failed for condition ${content.conditionId}`, error);
         }
       }
     }

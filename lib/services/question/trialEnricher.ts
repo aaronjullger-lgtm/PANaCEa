@@ -12,6 +12,10 @@
  * @see components/panels/ExplanationPanel.tsx
  */
 
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'TrialEnricher';
+
 export interface ClinicalTrialSummary {
   nctId: string;
   title: string;
@@ -85,7 +89,7 @@ export async function fetchRelevantTrials(
     });
 
     if (!response.ok) {
-      console.warn(`[trialEnricher] ClinicalTrials.gov API returned ${response.status}`);
+      logger.warn(LOG_SCOPE, `ClinicalTrials.gov API returned ${response.status}`);
       return [];
     }
 
@@ -118,7 +122,7 @@ export async function fetchRelevantTrials(
     return trials;
   } catch (err) {
     // Non-critical: silently fail — don't disrupt the explanation panel
-    console.warn('[trialEnricher] Failed to fetch trials:', err);
+    logger.warn(LOG_SCOPE, 'Failed to fetch trials', err);
     return [];
   }
 }

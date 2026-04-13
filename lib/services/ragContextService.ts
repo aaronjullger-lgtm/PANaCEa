@@ -247,6 +247,9 @@ import { rerankPipeline } from './rerankService';
 import { evaluateRetrieval, formatGapForLogging } from './cragGuardrailService';
 import type { CRAGResult, ContentGapSignal } from './cragGuardrailService';
 import type { RerankResult, RerankOptions } from './rerankService';
+import { logger } from '../logger';
+
+const LOG_SCOPE = 'RAGContext';
 
 export interface RefinedRAGResult {
   /** Final context to use for generation (post-CRAG filtering) */
@@ -309,7 +312,7 @@ export function refineRetrievedContext(
 
   // Step 3: Log content gaps for knowledge base improvement
   if (cragResult.contentGap) {
-    console.warn(formatGapForLogging(cragResult.contentGap));
+    logger.warn(LOG_SCOPE, formatGapForLogging(cragResult.contentGap));
   }
 
   return {

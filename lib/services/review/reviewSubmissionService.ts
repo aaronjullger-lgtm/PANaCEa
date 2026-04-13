@@ -1,4 +1,7 @@
 import { offlineSyncService } from '../offline/offlineSyncService';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'ReviewSubmission';
 
 export interface ReviewSubmission {
   questionId: string;
@@ -26,7 +29,7 @@ export class ReviewSubmissionService {
           throw new Error('Failed to submit review');
         }
       } catch (error) {
-        console.error('Failed to submit review, queueing request:', error);
+        logger.error(LOG_SCOPE, 'Failed to submit review, queueing request', error);
         this.queueFailedRequest('/api/questions/review', options);
       }
     } else {

@@ -2,6 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { DRUG_REGISTRY } from '../../../src/registries/drugRegistry';
 import { prisma } from '../../prisma';
+import { logger } from '../../logger';
+
+const LOG_SCOPE = 'RegistrySync';
 
 export interface SyncStats {
   total: number;
@@ -72,7 +75,7 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
         stats.created += 1;
       }
     } catch (error) {
-      console.error(`❌ Condition sync failed for ${row.condition} (${row.system}):`, error);
+      logger.error(LOG_SCOPE, `Condition sync failed for ${row.condition} (${row.system})`, error);
       stats.errors += 1;
     }
   }
@@ -127,7 +130,7 @@ export async function syncDrugs(client: PrismaClient = prisma): Promise<SyncStat
         stats.updated += 1;
       }
     } catch (error) {
-      console.error(`❌ Drug sync failed for ${meta.genericName}:`, error);
+      logger.error(LOG_SCOPE, `Drug sync failed for ${meta.genericName}`, error);
       stats.errors += 1;
     }
   }
