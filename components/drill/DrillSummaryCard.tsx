@@ -20,7 +20,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { springs } from '@/config/appViews';
+import { springs, successVariants, buttonPressVariants } from '@/config/appViews';
 import { RotateCcw, LogOut, Target, Zap, Clock, CheckCircle, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -143,41 +143,96 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
     },
   ];
 
+  // Staggered stat card entrance
+  const statCardVariants = {
+    hidden: { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: 'blur(0px)',
+      transition: {
+        delay: 0.3 + i * 0.1,
+        ...springs.bouncy,
+        opacity: { delay: 0.3 + i * 0.1, duration: 0.25 },
+      },
+    }),
+  };
+
+  // Icon entrance with celebratory bounce
+  const iconVariants = {
+    hidden: { opacity: 0, scale: 0, rotate: -20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      rotate: 0,
+      transition: {
+        ...springs.bouncy,
+        opacity: { duration: 0.2 },
+      },
+    },
+  };
+
   return (
     <div className={`flex-1 flex items-center justify-center p-6 ${className}`}>
       <motion.div
-        initial={prefersReducedMotion ? false : { scale: 0.92, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={prefersReducedMotion ? false : { scale: 0.92, filter: 'blur(8px)' }}
+        animate={{ scale: 1, filter: 'blur(0px)' }}
         transition={
           prefersReducedMotion
             ? { duration: 0 }
-            : springs.snappy
+            : { ...springs.bouncy, filter: { duration: 0.3 } }
         }
         className="w-full max-w-md"
       >
-        <div className="p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] text-center">
-          {/* Header icon */}
+        <motion.div
+          className="p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] text-center"
+          variants={prefersReducedMotion ? undefined : successVariants}
+          initial="initial"
+          animate={prefersReducedMotion ? undefined : 'celebrate'}
+        >
+          {/* Header icon — bouncy entrance with rotation */}
           {Icon && (
-            <Icon
-              className="w-14 h-14 mx-auto mb-3"
-              style={{ color: accentColor || 'var(--color-accent)' }}
-              aria-hidden
-            />
+            <motion.div
+              variants={prefersReducedMotion ? undefined : iconVariants}
+              initial={prefersReducedMotion ? false : 'hidden'}
+              animate="visible"
+            >
+              <Icon
+                className="w-14 h-14 mx-auto mb-3"
+                style={{ color: accentColor || 'var(--color-accent)' }}
+                aria-hidden
+              />
+            </motion.div>
           )}
 
-          {/* Title */}
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">
+          {/* Title — fade up with blur */}
+          <motion.h2
+            className="text-2xl font-bold text-[var(--color-text-primary)] mb-1"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 8, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.15, ...springs.snappy, opacity: { delay: 0.15, duration: 0.25 } }}
+          >
             Session Complete
-          </h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">
+          </motion.h2>
+          <motion.p
+            className="text-[var(--color-text-secondary)] mb-6"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.22, ...springs.snappy, opacity: { delay: 0.22, duration: 0.25 } }}
+          >
             {message}
-          </p>
+          </motion.p>
 
-          {/* Stat Grid */}
+          {/* Stat Grid — staggered entrance */}
           <div className="grid grid-cols-2 gap-3 mb-8">
-            {statItems.map((item) => (
-              <div
+            {statItems.map((item, i) => (
+              <motion.div
                 key={item.label}
+                custom={i}
+                variants={prefersReducedMotion ? undefined : statCardVariants}
+                initial={prefersReducedMotion ? false : 'hidden'}
+                animate="visible"
                 className="p-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
               >
                 <div className="flex items-center justify-center gap-1.5 mb-1">
@@ -191,39 +246,54 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
                   </span>
                 </div>
                 <div
-                  className="text-2xl font-bold"
+                  className="text-2xl font-bold tabular-nums"
                   style={{ color: item.color }}
                 >
                   {item.value}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
-          {/* Actions */}
+          {/* Actions — staggered with button press physics */}
           <div className="flex flex-col gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              icon={<RotateCcw className="w-4 h-4" />}
-              onClick={onNewSession}
-              className="w-full justify-center"
-              aria-label={newSessionLabel}
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.7, ...springs.snappy }}
+              variants={prefersReducedMotion ? undefined : buttonPressVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
-              {newSessionLabel}
-            </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              icon={<LogOut className="w-4 h-4" />}
-              onClick={onExit}
-              className="w-full justify-center"
-              aria-label={exitLabel}
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<RotateCcw className="w-4 h-4" />}
+                onClick={onNewSession}
+                className="w-full justify-center"
+                aria-label={newSessionLabel}
+              >
+                {newSessionLabel}
+              </Button>
+            </motion.div>
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.8, ...springs.snappy }}
             >
-              {exitLabel}
-            </Button>
+              <Button
+                variant="ghost"
+                size="md"
+                icon={<LogOut className="w-4 h-4" />}
+                onClick={onExit}
+                className="w-full justify-center"
+                aria-label={exitLabel}
+              >
+                {exitLabel}
+              </Button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );
