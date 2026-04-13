@@ -121,3 +121,85 @@ import { prisma } from '../_shared/prisma-edge';
       distinct: ['system'],
       select: { system: true },
     });
+    const gapAnalysis = await Promise.all(
+      allSystems.map(async s => {
+        const authorQuestions = publishedQuestions.filter(q => q.system === s.system).length;
+        const totalQuestions = await prisma.question.count({
+          where: {
+            system: s.system,
+            lifecycleStatus: 'ACTIVE',
+            qaStatus: 'APPROVED',
+          },
+        });
+
+        const target = await prisma.examBlueprintSystem.findUnique({
+          where: {
+            examType_system: {
+              examType: 'PANCE',
+              system: s.system,
+            },
+          },
+        });
+
+        const targetPercentage = target?.targetPercentage || 10;
+        const currentPercentage = totalQuestions > 0 ? (authorQuestions / totalQuestions) * 100 : 0;
+
+        return {
+          system: s.system,
+          contributedQuestions: authorQuestions,
+          gap: targetPercentage - currentPercentage,
+          suggestionLevel: targetPercentage - currentPercentage > 5 ? 'critical' : targetPercentage - currentPercentage > 2 ? 'high' : 'medium',
+        };
+      })
+    );
+    // Filter to critical gaps
+    const suggestedGaps = gapAnalysis
+      .filter(g => g.gap > 2)
+      .sort((a, b) => b.gap - a.gap)
+      .slice(0, 5);
+
+    return {
+      status: 200,
+      data: {
+        author: {
+          id: author.id,
+          role: author.role,
+          specialty: author.specialty,
+          institution: author.institution,
+          bio: author.bio,
+        },
+
+        statistics: {
+          questionsCreated: author.questionsCreated,
+          questionsApproved: author.questionsApproved,
+          questionsActive: publishedQuestions.filter(
+            q => q.lifecycleStatus === 'ACTIVE' && q.qaStatus === 'APPROVED'
+          ).length,
+          averageHealthScore: avgHealthScore ? parseFloat(avgHealthScore.toFixed(2)) : null,
+          approvalRate: parseFloat(approvalRate.toFixed(1)),
+          questionsDemoted: author.questionsDemoted,
+        },
+        submissions: {
+          recent: recentSubmissions,
+          byStatus,
+          pendingReview: byStatus.submitted + byStatus.inReview,
+          rejectionRate: submissions.length > 0 ? (byStatus.rejected / submissions.length) * 100 : 0,
+        },
+
+        impact: {
+          usersStudied: 0, // Would need to calculate from ReviewLog
+          averageAccuracyOnYourQuestions: 0.72, // Placeholder
+          correlationWithExamSuccess: 0.64, // Placeholder
+        },
+
+        suggestedGaps,
+
+        metadata: {
+          memberSince: author.createdAt.toISOString(),
+          lastSubmission: recentSubmissions[0]?.createdAt || null,
+          nextReviewDeadline: null,
+        },
+      },
+    };
+  }
+);
