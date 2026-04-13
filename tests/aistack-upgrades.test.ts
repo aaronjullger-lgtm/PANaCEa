@@ -413,6 +413,178 @@ describe('OpenFDA Integration', () => {
   });
 });
 
+// ─── UMLS API ────────────────────────────────────────────────────────────
+
+describe('UMLS Service', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('searchUMLS returns concepts for valid term', async () => {
+    const { searchUMLS } = await import('@/lib/services/medical-apis/umls');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          results: [
+            {
+              ui: 'C0004238',
+              name: 'Atrial Fibrillation',
+              rootSource: 'SNOMEDCT_US',
+              semanticTypes: [{ name: 'Disease or Syndrome' }],
+            },
+          ],
+          recCount: 15,
+        },
+      }),
+    }));
+
+    const result = await searchUMLS('atrial fibrillation', 'test-key');
+    expect(result.concepts).toHaveLength(1);
+    expect(result.concepts[0].ui).toBe('C0004238');
+    expect(result.concepts[0].name).toBe('Atrial Fibrillation');
+    expect(result.totalCount).toBe(15);
+    vi.unstubAllGlobals();
+  });
+
+  it('searchUMLS returns empty for 401 (invalid key)', async () => {
+    const { searchUMLS } = await import('@/lib/services/medical-apis/umls');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+    }));
+
+    const result = await searchUMLS('test', 'bad-key');
+    expect(result.concepts).toEqual([]);
+    vi.unstubAllGlobals();
+  });
+
+  it('validateTerm returns valid for exact match', async () => {
+    const { validateTerm } = await import('@/lib/services/medical-apis/umls');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          results: [
+            {
+              ui: 'C0004238',
+              name: 'Atrial Fibrillation',
+              rootSource: 'SNOMEDCT_US',
+              semanticTypes: [{ name: 'Disease or Syndrome' }],
+            },
+          ],
+          recCount: 1,
+        },
+      }),
+    }));
+
+    const result = await validateTerm('atrial fibrillation', 'test-key');
+    expect(result.isValid).toBe(true);
+    if (result.isValid) {
+      expect(result.cui).toBe('C0004238');
+      expect(result.preferredName).toBe('Atrial Fibrillation');
+    }
+    vi.unstubAllGlobals();
+  });
+
+  it('validateTerm returns invalid for no results', async () => {
+    const { validateTerm } = await import('@/lib/services/medical-apis/umls');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: { results: [], recCount: 0 },
+      }),
+    }));
+
+    const result = await validateTerm('xyznonexistent', 'test-key');
+    expect(result.isValid).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it('mapToICD10 returns codes via crosswalk', async () => {
+    const { mapToICD10 } = await import('@/lib/services/medical-apis/umls');
+    vi.stubGlobal('fetch', vi.fn()
+      // First: searchUMLS
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          result: {
+            results: [{ ui: 'C0004238', name: 'Atrial Fibrillation', rootSource: 'MTH', semanticTypes: [] }],
+            recCount: 1,
+          },
+        }),
+      })
+      // Second: getConceptAtoms for ICD10CM
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          result: [
+            { ui: 'A123', name: 'Atrial fibrillation, unspecified', rootSource: 'ICD10CM', sourceConcept: 'I48.91', termType: 'PT' },
+          ],
+        }),
+      })
+      // Third: getConceptAtoms for SNOMEDCT_US (source name)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          result: [
+            { ui: 'B456', name: 'Atrial fibrillation', rootSource: 'SNOMEDCT_US', sourceConcept: '49436004', termType: 'PT' },
+          ],
+        }),
+      })
+    );
+
+    const codes = await mapToICD10('atrial fibrillation', 'test-key');
+    expect(codes.length).toBeGreaterThanOrEqual(1);
+    expect(codes[0].code).toBe('I48.91');
+    vi.unstubAllGlobals();
+  });
+
+  it('batchValidateTerms handles mixed results', async () => {
+    const { batchValidateTerms } = await import('@/lib/services/medical-apis/umls');
+    let callCount = 0;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) {
+        return {
+          ok: true,
+          json: async () => ({
+            result: {
+              results: [{ ui: 'C001', name: 'Heart Failure', rootSource: 'MTH', semanticTypes: [] }],
+              recCount: 1,
+            },
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          result: { results: [], recCount: 0 },
+        }),
+      };
+    }));
+
+    const results = await batchValidateTerms(['heart failure', 'xyznotreal'], 'test-key');
+    expect(results).toHaveLength(2);
+    expect(results[0].isValid).toBe(true);
+    expect(results[1].isValid).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});
+
+// ─── Medical APIs barrel ─────────────────────────────────────────────────
+
+describe('Medical APIs barrel exports UMLS', () => {
+  it('exports UMLS functions', async () => {
+    const apis = await import('@/lib/services/medical-apis');
+    expect(typeof apis.searchUMLS).toBe('function');
+    expect(typeof apis.mapToICD10).toBe('function');
+    expect(typeof apis.validateTerm).toBe('function');
+    expect(typeof apis.batchValidateTerms).toBe('function');
+    expect(typeof apis.crosswalk).toBe('function');
+  });
+});
+
 // ─── Barrel Exports ──────────────────────────────────────────────────────
 
 describe('Barrel Exports', () => {
