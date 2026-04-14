@@ -12,7 +12,7 @@ export * from './contentGenerator';
 export * from './databaseService';
 export * from './langchainContentGenerator';
 
-import { generateConditionContent, batchGenerateContent } from './contentGenerator';
+import { generateConditionContentMulti, batchGenerateContentMulti } from './langchainContentGenerator';
 import {
   findConditionsMissingContent,
   saveGeneratedContent,
@@ -114,7 +114,7 @@ export async function autoAuthorMissingContent(
       };
 
       // Generate content
-      const result = await generateConditionContent(apiKey, genOptions);
+      const result = await generateConditionContentMulti(apiKey, genOptions);
 
       if (result.success && result.content) {
         // Validate content quality before saving
