@@ -89,8 +89,16 @@ export function useQuizKeyboard({
   // Quiz-specific keyboard shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Don't capture keys when typing in a textarea
-      if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toLowerCase();
+      const isTypingTarget =
+        target?.isContentEditable ||
+        tagName === 'input' ||
+        tagName === 'textarea' ||
+        tagName === 'select';
+
+      // Don't capture quiz shortcuts while the user is typing.
+      if (isTypingTarget) return;
 
       // Escape key to go back to menu
       if (event.key === 'Escape') {
@@ -130,7 +138,16 @@ export function useQuizKeyboard({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, onSubmitAnswer, optionButtonsRef]);
+  }, [
+    currentQuestion,
+    eliminatedAnswers,
+    handleToggleEliminate,
+    isAnswered,
+    onShowMenu,
+    onSubmitAnswer,
+    optionButtonsRef,
+    selectedAnswerIndex,
+  ]);
 
   return {
     eliminatedAnswers,

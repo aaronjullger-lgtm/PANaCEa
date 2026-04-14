@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { logger } from '@/lib/simple-logger';
 import { getQuestionClient } from '@/services/client/questionApi';
 import { fetchSessionQuestions } from '@/services/core';
@@ -23,10 +23,10 @@ export interface UseQuizReplenishmentParams {
 export interface UseQuizReplenishmentReturn {
   isGeneratingQuestion: boolean;
   replenishAttempts: number;
-  setReplenishAttempts: React.Dispatch<React.SetStateAction<number>>;
   replenishmentError: string | null;
   shouldEndlesslyReplenish: boolean;
   replenishQueue: () => Promise<void>;
+  retryReplenishment: () => Promise<void>;
 }
 
 /**
@@ -50,9 +50,14 @@ export function useQuizReplenishment({
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
   const [replenishAttempts, setReplenishAttempts] = useState(0);
   const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
+  const replenishAttemptsRef = useRef(0);
 
   const shouldEndlesslyReplenish =
     sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
+
+  useEffect(() => {
+    replenishAttemptsRef.current = replenishAttempts;
+  }, [replenishAttempts]);
 
   const replenishQueue = useCallback(async () => {
     if (!shouldEndlesslyReplenish) return;
@@ -61,12 +66,15 @@ export function useQuizReplenishment({
     setIsGeneratingQuestion(true);
     setReplenishmentError(null);
 
-    if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+    if (replenishAttemptsRef.current >= MAX_REPLENISH_ATTEMPTS) {
       setReplenishmentError('Unable to load questions after several attempts. Please try again later.');
       setIsGeneratingQuestion(false);
       return;
     }
-    setReplenishAttempts((prev) => prev + 1);
+
+    const nextAttemptCount = replenishAttemptsRef.current + 1;
+    replenishAttemptsRef.current = nextAttemptCount;
+    setReplenishAttempts(nextAttemptCount);
 
     try {
       let newQuestions: Question[] = [];
@@ -95,6 +103,7 @@ export function useQuizReplenishment({
       if (newQuestions.length > 0) {
         setParentQueue((prev) => [...prev, ...newQuestions]);
         setQueue((prev) => [...prev, ...newQuestions]);
+        replenishAttemptsRef.current = 0;
         setReplenishAttempts(0);
       } else {
         logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
@@ -113,9 +122,16 @@ export function useQuizReplenishment({
     setError,
     getToken,
     isGeneratingQuestion,
-    replenishAttempts,
     setQueue,
   ]);
+
+  const retryReplenishment = useCallback(async () => {
+    replenishAttemptsRef.current = 0;
+    setReplenishAttempts(0);
+    setReplenishmentError(null);
+    setError(null);
+    await replenishQueue();
+  }, [replenishQueue, setError]);
 
   // Proactive replenishment — trigger when queue drops below threshold
   useEffect(() => {
@@ -127,9 +143,9 @@ export function useQuizReplenishment({
   return {
     isGeneratingQuestion,
     replenishAttempts,
-    setReplenishAttempts,
     replenishmentError,
     shouldEndlesslyReplenish,
     replenishQueue,
+    retryReplenishment,
   };
 }

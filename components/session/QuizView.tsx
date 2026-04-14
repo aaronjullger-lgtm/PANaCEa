@@ -440,10 +440,10 @@ const QuizView: React.FC<QuizViewProps> = ({
   const {
     isGeneratingQuestion,
     replenishAttempts,
-    setReplenishAttempts,
     replenishmentError,
     shouldEndlesslyReplenish,
     replenishQueue,
+    retryReplenishment,
   } = useQuizReplenishment({
     queue,
     setQueue,
@@ -1312,7 +1312,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   if (isDueMode || isVariantMode) {
                     onShowMenu();
                   } else {
-                    setReplenishAttempts(0);
+                    void retryReplenishment();
                   }
                 }}
                 className="btn-secondary px-6 py-2"
@@ -1399,9 +1399,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         onEndSession={handleEndSession}
         replenishmentError={replenishmentError}
         onRetryReplenish={() => {
-          setReplenishAttempts(0);
-          setError(null);
-          void replenishQueue();
+          void retryReplenishment();
         }}
         currentQuestion={currentQuestion}
       />
