@@ -62,6 +62,8 @@ export async function generateConditionContentMulti(
     content: result.content as GeneratedConditionContent | undefined,
     error: result.error,
     modelUsed: result.modelUsed,
+    provider: result.provider,
+    latencyMs: result.latencyMs,
   };
 }
 
@@ -79,6 +81,8 @@ export async function generateLabContentMulti(
     content: result.content as GeneratedLabContent | undefined,
     error: result.error,
     modelUsed: result.modelUsed,
+    provider: result.provider,
+    latencyMs: result.latencyMs,
   };
 }
 
@@ -96,6 +100,8 @@ export async function generateImagingContentMulti(
     content: result.content as GeneratedImagingContent | undefined,
     error: result.error,
     modelUsed: result.modelUsed,
+    provider: result.provider,
+    latencyMs: result.latencyMs,
   };
 }
 
@@ -113,6 +119,8 @@ export async function generateTreatmentContentMulti(
     content: result.content as GeneratedTreatmentContent | undefined,
     error: result.error,
     modelUsed: result.modelUsed,
+    provider: result.provider,
+    latencyMs: result.latencyMs,
   };
 }
 
@@ -130,6 +138,8 @@ export async function generatePhysiologyContentMulti(
     content: result.content as GeneratedPhysiologyContent | undefined,
     error: result.error,
     modelUsed: result.modelUsed,
+    provider: result.provider,
+    latencyMs: result.latencyMs,
   };
 }
 

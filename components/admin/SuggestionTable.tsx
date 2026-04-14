@@ -29,7 +29,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
-import type { SystemCode } from '@/src/types';
+import type { SystemCode } from '@/types';
 
 export interface MappingSuggestion {
   id: string;

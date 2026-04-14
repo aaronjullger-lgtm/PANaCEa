@@ -11,7 +11,7 @@ import {
 } from "@/config/topic-map";
 import type { Question, SessionSettings, SystemCode, ConditionDefinition } from '@/types';
 import type { PatientEncounterCase, PatientPersona } from '@/types/drill-modes';
-import type { ConditionMeta } from '@/src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 import {
   getConditionByIdSync,
   isMeaningfulContent,

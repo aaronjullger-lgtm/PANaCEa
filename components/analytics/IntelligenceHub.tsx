@@ -21,7 +21,7 @@ import {
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import { ConditionPreviewCard } from '../conditions/ConditionPreviewCard';
-import type { ConditionMeta } from '../../src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 import { useLowPowerMode } from '@/hooks/useLowPowerMode';
 
 interface IntelligenceHubProps {

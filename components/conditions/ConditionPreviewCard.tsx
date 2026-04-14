@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { getSystemAccent } from '../../lib/utils/textFormatting';
 import { RichText, stripMarkdown } from '@/components/ui/RichText';
-import type { ConditionMeta } from '../../src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 
 /**
  * Content structure from MedicalContent database

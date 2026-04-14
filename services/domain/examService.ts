@@ -10,7 +10,7 @@
  */
 
 // Use local Question type from src/types instead of @prisma/client
-import type { Question } from '@/src/types';
+import type { Question } from '@/types';
 
 // Client-safe Condition type definition (minimal fields needed)
 interface ConditionSummary {
