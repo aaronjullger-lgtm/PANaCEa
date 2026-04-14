@@ -85,7 +85,7 @@ export interface NavRailItem {
 export const NAV_RAIL_ITEMS: NavRailItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    label: 'Study',
     path: '/study',
     icon: Home,
     section: 'study',
@@ -109,7 +109,7 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
   },
   {
     id: 'knowledge',
-    label: 'Knowledge',
+    label: 'Reference',
     path: '/study/knowledge',
     icon: BookOpen,
     section: 'resources',
@@ -117,7 +117,7 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
   },
   {
     id: 'utilities',
-    label: 'Tools',
+    label: 'Toolkit',
     path: '/study/utilities',
     icon: Calculator,
     section: 'resources',

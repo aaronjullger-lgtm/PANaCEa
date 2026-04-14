@@ -1,9 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { MessageCircle, ChevronLeft, Sparkles, Loader2, User, Bot, RefreshCw } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Bot,
+  Brain,
+  Loader2,
+  MessageCircle,
+  RefreshCw,
+  Sparkles,
+  User,
+} from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 import { usePreferences } from '@/hooks/usePreferences';
 import { API_ENDPOINTS, buildApiUrl, getApiEndpoint } from '@/lib/utils/apiConfig';
 import { callGeminiTextStreaming } from '@/services/ai/geminiService';
@@ -22,6 +39,12 @@ interface ChatMessage {
 const TUTOR_SYSTEM_INSTRUCTION =
   'You are a clinical reasoning tutor for a PA student. Use Socratic dialogue and focus on high-yield PANCE reasoning. When citing library context use {{Page:N}} or {{Pages:N-M}}. Be concise and rigorous.';
 
+const STARTER_PROMPTS = [
+  'Quiz me on my weakest cardiology topics.',
+  'Walk me through the workup for chest pain.',
+  'Why is this answer unsafe compared with the best answer?',
+] as const;
+
 export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const { getToken } = useAuth();
   const { preferences } = usePreferences();
@@ -35,6 +58,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const streamStartTimeRef = useRef<number>(0);
   const thinkingTimeMsReportedRef = useRef(false);
+  const logRef = useRef<HTMLDivElement | null>(null);
 
   const customSettings = preferences.customSettings as Record<string, unknown> | undefined;
   const activeKnowledgeCacheName = customSettings?.activeKnowledgeCacheName as string | undefined;
@@ -54,19 +78,19 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
         setProfileLoadFailed(true);
         return;
       }
-      const res = await fetch(buildApiUrl(API_ENDPOINTS.INTELLIGENCE_PROFILE), {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.INTELLIGENCE_PROFILE), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!res.ok) {
+      if (!response.ok) {
         setTutorContext(
           'Student Weaknesses: Profile service unavailable. Proceed with standard Socratic dialogue.'
         );
         setProfileLoadFailed(true);
         return;
       }
-      const data = (await res.json()) as { data?: { tutorContext?: string } };
+      const data = (await response.json()) as { data?: { tutorContext?: string } };
       setTutorContext(
         data.data?.tutorContext ??
           'Student Weaknesses: None identified. Proceed with standard Socratic dialogue.'
@@ -85,18 +109,23 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
     void fetchProfile();
   }, [fetchProfile]);
 
+  useEffect(() => {
+    if (!logRef.current) return;
+    logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [messages, isStreaming]);
+
   const ensureSession = useCallback(async (): Promise<string | null> => {
     if (sessionId) return sessionId;
     const token = await getToken();
     if (!token) return null;
     try {
-      const res = await fetch(buildApiUrl(API_ENDPOINTS.USER_SESSION), {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.USER_SESSION), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ body: { sessionType: 'mixed', systemsTargeted: [] } }),
       });
-      if (!res.ok) return null;
-      const data = (await res.json()) as { data?: { session?: { id: string } } };
+      if (!response.ok) return null;
+      const data = (await response.json()) as { data?: { session?: { id: string } } };
       const id = data?.data?.session?.id ?? null;
       if (id) setSessionId(id);
       return id;
@@ -120,255 +149,362 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
           }),
         });
       } catch {
-        // non-blocking
+        /* telemetry is non-blocking */
       }
     },
     [getToken, sessionId]
   );
 
-  const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
-    if (!trimmed || isStreaming) return;
+  const handleSend = useCallback(
+    async (overrideText?: string) => {
+      const trimmed = (overrideText ?? input).trim();
+      if (!trimmed || isStreaming) return;
 
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text: trimmed,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsStreaming(true);
-    thinkingTimeMsReportedRef.current = false;
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        text: trimmed,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput('');
+      setIsStreaming(true);
+      thinkingTimeMsReportedRef.current = false;
 
-    const history: StreamHistoryTurn[] = messages.map((m) => ({
-      role: m.role === 'user' ? ('user' as const) : ('model' as const),
-      text: m.text,
-    }));
+      const history: StreamHistoryTurn[] = messages.map((message) => ({
+        role: message.role === 'user' ? ('user' as const) : ('model' as const),
+        text: message.text,
+      }));
 
-    const profilePart =
-      tutorContext && tutorContext.trim().length > 0
-        ? `${tutorContext}\n\nUse the weaknesses above to target your explanations and questions. `
-        : '';
-    const systemInstruction = `${profilePart}${TUTOR_SYSTEM_INSTRUCTION}`;
+      const profilePart =
+        tutorContext && tutorContext.trim().length > 0
+          ? `${tutorContext}\n\nUse the weaknesses above to target your explanations and questions. `
+          : '';
+      const systemInstruction = `${profilePart}${TUTOR_SYSTEM_INSTRUCTION}`;
 
-    await ensureSession();
-    streamStartTimeRef.current = Date.now();
+      await ensureSession();
+      streamStartTimeRef.current = Date.now();
 
-    try {
-      await callGeminiTextStreaming('gemini-3-flash-preview', trimmed, 0.8, {
-        getToken,
-        cachedContent: activeKnowledgeCacheName,
-        history: history.length > 0 ? history : undefined,
-        previousThoughtSignatures:
-          previousThoughtSignatures.length > 0 ? previousThoughtSignatures : undefined,
-        systemInstruction,
-        thinkingLevel: 'HIGH',
-        onThoughtSignatures(signatures) {
-          setPreviousThoughtSignatures(signatures);
-          const ms = Date.now() - streamStartTimeRef.current;
-          if (ms >= 0) void reportThinkingTimeMs(ms);
-        },
-        onChunk(chunk) {
-          const ms = Date.now() - streamStartTimeRef.current;
-          if (!thinkingTimeMsReportedRef.current && ms >= 0) {
-            void reportThinkingTimeMs(ms);
-          }
-          setMessages((prev) => {
-            const copy = [...prev];
-            const last = copy.at(-1);
-            if (last?.role === 'assistant') {
-              copy[copy.length - 1] = { ...last, text: last.text + chunk };
-            } else {
-              copy.push({
-                id: crypto.randomUUID(),
-                role: 'assistant',
-                text: chunk,
-              });
+      try {
+        await callGeminiTextStreaming('gemini-3-flash-preview', trimmed, 0.8, {
+          getToken,
+          cachedContent: activeKnowledgeCacheName,
+          history: history.length > 0 ? history : undefined,
+          previousThoughtSignatures:
+            previousThoughtSignatures.length > 0 ? previousThoughtSignatures : undefined,
+          systemInstruction,
+          thinkingLevel: 'HIGH',
+          onThoughtSignatures(signatures) {
+            setPreviousThoughtSignatures(signatures);
+            const ms = Date.now() - streamStartTimeRef.current;
+            if (ms >= 0) void reportThinkingTimeMs(ms);
+          },
+          onChunk(chunk) {
+            const ms = Date.now() - streamStartTimeRef.current;
+            if (!thinkingTimeMsReportedRef.current && ms >= 0) {
+              void reportThinkingTimeMs(ms);
             }
-            return copy;
-          });
-        },
-        onComplete: () => {
-          setIsStreaming(false);
-        },
-        onError: () => {
-          setIsStreaming(false);
-        },
-      });
-    } catch {
-      setIsStreaming(false);
-    }
-  }, [
-    input,
-    isStreaming,
-    messages,
-    tutorContext,
-    getToken,
-    activeKnowledgeCacheName,
-    previousThoughtSignatures,
-    ensureSession,
-    reportThinkingTimeMs,
-  ]);
-
-  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      void handleSend();
-    }
-  };
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy.at(-1);
+              if (last?.role === 'assistant') {
+                copy[copy.length - 1] = { ...last, text: last.text + chunk };
+              } else {
+                copy.push({
+                  id: crypto.randomUUID(),
+                  role: 'assistant',
+                  text: chunk,
+                });
+              }
+              return copy;
+            });
+          },
+          onComplete: () => {
+            setIsStreaming(false);
+          },
+          onError: () => {
+            setIsStreaming(false);
+          },
+        });
+      } catch {
+        setIsStreaming(false);
+      }
+    },
+    [
+      activeKnowledgeCacheName,
+      ensureSession,
+      getToken,
+      input,
+      isStreaming,
+      messages,
+      previousThoughtSignatures,
+      reportThinkingTimeMs,
+      tutorContext,
+    ]
+  );
 
   return (
-    <motion.div
-      initial={{ y: 8 }}
-      animate={{ y: 0 }}
-      className="max-w-2xl mx-auto"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          type="button"
-          onClick={onExit}
-          className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-          aria-label="Back"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
-            <MessageCircle className="w-5 h-5 text-[var(--color-accent)]" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              Reasoning Tutor
-            </h1>
-            <p className="text-xs text-[var(--color-text-secondary)]">
-              Profile-aware Gemini Tutor that targets your weak spots.
-            </p>
-          </div>
-        </div>
-      </div>
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Reasoning Tutor',
+            badgeTone: 'plum',
+            title: 'Interrogate your reasoning, not just the answer key.',
+            subtitle:
+              'The tutor uses your intelligence profile and, when selected, your active library document to keep explanations targeted, clinical, and high-yield.',
+            status: activeKnowledgeCacheName
+              ? `Grounded in ${activeKnowledgeCacheDisplayName || 'your active library'}`
+              : 'Profile-aware tutoring active',
+            backLabel: 'Back to Study',
+            onBack: onExit,
+            primaryAction: {
+              label: isStreaming ? 'Thinking…' : 'Send question',
+              onClick: () => void handleSend(),
+              disabled: !input.trim() || isStreaming,
+            },
+            secondaryActions: profileLoadFailed
+              ? [
+                  {
+                    label: 'Retry profile',
+                    onClick: () => void fetchProfile(),
+                  },
+                ]
+              : undefined,
+          }}
+        />
+      </WorkspaceReveal>
 
-      <div className="mb-4 p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/70 text-xs text-[var(--color-text-secondary)] flex items-start gap-2">
-        <Sparkles className="w-4 h-4 text-[var(--color-accent)] mt-0.5" />
-        <div>
-          <p className="mb-1">
-            This Tutor uses your <span className="font-semibold">Intelligence Profile</span>{' '}
-            (Concept Gaps and recent misses) and, when set, your{' '}
-            <span className="font-semibold">active Library document</span> to personalize answers.
-          </p>
-          {activeKnowledgeCacheName && (
-            <p className="text-[var(--color-text-muted)]">
-              Active Library:{' '}
-              <span className="font-semibold">
-                {activeKnowledgeCacheDisplayName || 'Unnamed cached document'}
-              </span>
-            </p>
-          )}
-          {!activeKnowledgeCacheName && (
-            <p className="text-[var(--color-text-muted)]">
-              Tip: Set an active document in <span className="font-semibold">My Library</span> to
-              ground answers in your textbook.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {profileLoadFailed && !isLoadingContext && (
-        <div
-          className="mb-4 px-3 py-2 rounded-lg border border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] flex items-center justify-between gap-3"
-          aria-live="polite"
-        >
-          <span className="text-xs">
-            Personalized weaknesses unavailable; using standard tutoring.
-          </span>
-          <button
-            type="button"
-            onClick={() => void fetchProfile()}
-            disabled={isLoadingContext}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--color-data-provisional)]/20 hover:bg-[var(--color-data-provisional)]/30 disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingContext ? 'animate-spin' : ''}`} aria-hidden />
-            Retry
-          </button>
-        </div>
-      )}
-
-      <div
-        className="mb-4 h-64 sm:h-80 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 overflow-hidden flex flex-col"
-        aria-busy={isStreaming}
-        aria-label="Tutor conversation area"
-      >
-        <div
-          className="flex-1 overflow-y-auto px-3 py-2 space-y-3"
-          role="log"
-          aria-live="polite"
-          aria-label="Tutor conversation"
-        >
-          {/* Live region so screen readers announce when the tutor is thinking */}
-          <div className="sr-only" aria-live="assertive" aria-atomic role="status">
-            {isStreaming ? 'Thinking…' : ''}
-          </div>
-          {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center text-xs text-[var(--color-text-muted)] text-center px-6">
-              {isLoadingContext ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading your Intelligence Profile…
-                </span>
-              ) : (
-                'Ask about a question you missed, a confusing topic, or have the Tutor quiz your weak systems.'
-              )}
-            </div>
-          )}
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex items-start gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {m.role === 'assistant' && (
-                <div className="mt-1 flex-shrink-0 rounded-full bg-[var(--color-bg-primary)] p-1.5">
-                  <Bot className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-                </div>
-              )}
-              <div
-                className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
-                  m.role === 'user'
-                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-br-sm'
-                    : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] rounded-bl-sm border border-[var(--color-border)]/60'
-                }`}
-              >
-                {m.text}
-              </div>
-              {m.role === 'user' && (
-                <div className="mt-1 flex-shrink-0 rounded-full bg-[var(--color-bg-primary)] p-1.5">
-                  <User className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3 py-2 flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask a follow-up, or say: Quiz me on my weakest cardiology topics…"
-            className="flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Profile context"
+            value={isLoadingContext ? 'Loading…' : profileLoadFailed ? 'Fallback' : 'Active'}
+            detail="Weak-system context from your intelligence profile."
+            icon={Brain}
           />
-          <button
-            type="button"
-            onClick={() => void handleSend()}
-            disabled={!input.trim() || isStreaming}
-            aria-busy={isStreaming}
-            aria-label={isStreaming ? 'Tutor is thinking' : 'Send message'}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/90 disabled:opacity-50"
-          >
-            {isStreaming && <Loader2 className="w-3 h-3 animate-spin" aria-hidden />}
-            <span>{isStreaming ? 'Thinking…' : 'Ask'}</span>
-          </button>
+          <WorkspaceMetricCard
+            label="Library grounding"
+            value={activeKnowledgeCacheName ? 'On' : 'Off'}
+            detail={
+              activeKnowledgeCacheName
+                ? 'Tutor can cite and ground answers in your selected document.'
+                : 'Set an active library document for grounded citations.'
+            }
+            accent="#7a8f6e"
+            icon={Sparkles}
+          />
+          <WorkspaceMetricCard
+            label="Messages"
+            value={messages.length}
+            detail="Conversation turns in this current workspace."
+            accent="#728ba6"
+            icon={MessageCircle}
+          />
+          <WorkspaceMetricCard
+            label="Mode"
+            value="Socratic"
+            detail="Bias toward targeted questioning and concise reasoning."
+            accent="#c4b78a"
+            icon={Bot}
+          />
         </div>
-      </div>
-    </motion.div>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceSplit>
+          <WorkspaceSurface accent="#9a7f9a">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                  Context layer
+                </p>
+                <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+                  What the tutor is seeing right now
+                </h2>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    Intelligence profile
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                    {isLoadingContext
+                      ? 'Loading your recent weakness profile…'
+                      : tutorContext ?? 'No profile context available.'}
+                  </p>
+                </div>
+                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    Active library
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                    {activeKnowledgeCacheName
+                      ? `Grounding answers in ${activeKnowledgeCacheDisplayName || 'your active document'}.`
+                      : 'No active document selected. The tutor will rely on your profile and general clinical reasoning.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </WorkspaceSurface>
+
+          <WorkspaceSurface accent="#c4b78a">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent)]">
+                  Suggested starts
+                </p>
+                <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+                  Use the tutor like a reasoning coach.
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {STARTER_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => void handleSend(prompt)}
+                    className="w-full rounded-[1.25rem] border border-white/8 bg-white/5 p-4 text-left transition-colors hover:bg-white/8"
+                  >
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {prompt}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {profileLoadFailed ? (
+                <div className="flex items-center justify-between gap-3 rounded-[1.25rem] border border-[var(--color-data-provisional)]/25 bg-[var(--color-data-provisional)]/8 p-4">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Personalized weakness context is unavailable right now. Standard tutoring is
+                    still active.
+                  </p>
+                  <Button type="button" size="sm" variant="warning" onClick={() => void fetchProfile()}>
+                    <RefreshCw className="h-4 w-4" />
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </WorkspaceSurface>
+        </WorkspaceSplit>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Conversation"
+          subtitle="Use this like a live clinical reasoning whiteboard. Ask for scaffolding, counterarguments, differentials, and safer next steps."
+        >
+          <WorkspaceSurface accent="#728ba6" padded={false}>
+            <div className="flex min-h-[34rem] flex-col">
+              <div
+                ref={logRef}
+                className="flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6"
+                role="log"
+                aria-live="polite"
+                aria-label="Tutor conversation"
+              >
+                <div className="sr-only" aria-live="assertive" aria-atomic role="status">
+                  {isStreaming ? 'Tutor is thinking.' : ''}
+                </div>
+
+                {messages.length === 0 ? (
+                  <div className="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 px-6 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
+                      {isLoadingContext ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-[var(--color-accent)]" />
+                      ) : (
+                        <MessageCircle className="h-6 w-6 text-[var(--color-accent)]" />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                        {isLoadingContext ? 'Loading your tutor context…' : 'Ask the first question'}
+                      </h3>
+                      <p className="max-w-xl text-sm leading-7 text-[var(--color-text-secondary)]">
+                        Start with a missed question, a system you keep forgetting, or a clinical
+                        scenario you want to reason through more carefully.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex items-start gap-3 ${
+                        message.role === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.role === 'assistant' ? (
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[var(--color-accent)]/12">
+                          <Bot className="h-4 w-4 text-[var(--color-accent)]" />
+                        </div>
+                      ) : null}
+
+                      <div
+                        className={`max-w-[82%] rounded-[1.35rem] px-4 py-3 text-sm leading-7 ${
+                          message.role === 'user'
+                            ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                            : 'border border-white/8 bg-white/5 text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        {message.text}
+                      </div>
+
+                      {message.role === 'user' ? (
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
+                          <User className="h-4 w-4 text-[var(--color-text-secondary)]" />
+                        </div>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="border-t border-white/8 bg-black/10 px-5 py-4 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label className="block flex-1">
+                    <span className="sr-only">Ask the reasoning tutor</span>
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          void handleSend();
+                        }
+                      }}
+                      placeholder="Ask for a differential, safer next step, or a quiz on your weak systems…"
+                      className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                    />
+                  </label>
+
+                  <Button
+                    type="button"
+                    size="md"
+                    variant="primary"
+                    onClick={() => void handleSend()}
+                    disabled={!input.trim() || isStreaming}
+                    className="sm:min-w-[156px]"
+                  >
+                    {isStreaming ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Thinking…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Ask tutor
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </WorkspaceSurface>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
 

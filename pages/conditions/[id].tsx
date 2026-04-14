@@ -33,7 +33,7 @@ import {
   DEFAULT_EXPANDED_SECTION_IDS,
   type ConditionSectionConfig,
 } from '../../lib/conditionSections';
-import type { ConditionMeta } from '../../src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 import { findConditionMetaById } from '../../src/lib/conditionSearch';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useAuth } from '../../hooks/useAuth';

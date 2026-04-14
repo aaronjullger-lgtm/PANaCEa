@@ -1,19 +1,16 @@
 // AppRoutes.tsx — All <Routes> / <Route> definitions extracted from App.tsx.
 // Imported and rendered by App.tsx inside the provider tree.
 import React, { Suspense, useRef, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
+import { X, HelpCircle } from 'lucide-react';
 import { ROUTES } from './routes';
 import { type View, pageVariants } from './appViews';
-import { NavRail } from '../components/layout/NavRail';
 import { AppLayout } from '../components/layout/AppLayout';
-import { AppBrand } from '../components/layout/AppBrand';
 import { DrillViewRouter } from '../components/layout/DrillViewRouter';
 import {
   QuizViewWithErrorBoundary,
   SessionRunner,
-  MenuView,
   SettingsStatsModal,
   KeyboardShortcutsModal,
   CommandPalette,
@@ -56,13 +53,10 @@ import {
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/loading';
 import { EnhancedErrorMessage } from '../components/shared/EnhancedErrorMessage';
+import { StudyTimerOverlay } from '../components/shared/StudyTimerOverlay';
 import { NotFoundPage } from '../components/error/NotFoundPage';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { AuthenticatedRoute } from '../components/auth/AuthenticatedRoute';
-import { useUser } from '@clerk/clerk-react';
-import ThemeToggleButton from '../components/ui/ThemeToggleButton';
-import { MasteryHeatmapToggle } from '../components/ui/MasteryHeatmapToggle';
-import { OfflineSyncIndicator } from '../components/offline/OfflineSyncIndicator';
 import { ProductTour } from '../components/onboarding/ProductTour';
 import { WithGeminiErrorBoundary, ErrorBoundary } from '../components/error/ErrorBoundary';
 import type {
@@ -269,9 +263,18 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
-  const isUserAdmin = user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin';
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const normalizedView = view === 'menu' ? 'command_center' : view;
+  const contentMaxWidth =
+    normalizedView === 'command_center' ||
+    normalizedView === 'my_library' ||
+    normalizedView === 'study_companion' ||
+    normalizedView === 'pearl_deck' ||
+    normalizedView === 'agent_chat'
+      ? '80rem'
+      : normalizedView === 'quiz' || normalizedView === 'session_runner'
+        ? '64rem'
+        : '56rem';
 
   // Scroll to top on route change (replaces ScrollRestoration which requires data router)
   useEffect(() => {
@@ -285,14 +288,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/practice"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading practice modes..." />}>
-              <ErrorBoundary variant="page">
-                <PracticePage
-                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                  onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
-                />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="80rem">
+              <Suspense fallback={<Loader message="Loading practice modes..." />}>
+                <ErrorBoundary variant="page">
+                  <PracticePage
+                    onNavigateToDrillMode={handleNavigateToDrillMode}
+                    onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -300,14 +305,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/progress"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading analytics..." />}>
-              <ErrorBoundary variant="page">
-                <ProgressPage
-                  performanceData={heatmapPerformance}
-                  dueCount={dueQuestionsCount}
-                />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="80rem">
+              <Suspense fallback={<Loader message="Loading analytics..." />}>
+                <ErrorBoundary variant="page">
+                  <ProgressPage
+                    performanceData={heatmapPerformance}
+                    dueCount={dueQuestionsCount}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -592,61 +599,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </React.Fragment>
             ) : (
               <React.Fragment key="main">
-                {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
-                <a
-                  href="#main-content"
-                  className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
-                >
-                  Skip to main content
-                </a>
-                {/* Header - fixed height so NavRail (sidebar) starts below it; z-50 above rail */}
-                <header
-                  className="sticky top-0 z-50 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
-                  style={{ height: 'var(--header-height, 4rem)' }}
-                >
-                  <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
-                    <AppBrand
-                      size="sm"
-                      asLink
-                      onClick={() => {
-                        navigate(ROUTES.STUDY);
-                        setView('command_center');
-                      }}
-                    >
-                      <OfflineSyncIndicator />
-                      {isUserAdmin && (
-                        <Link
-                          to={ROUTES.ADMIN}
-                          className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
-                          aria-label="Admin Dashboard"
-                        >
-                          <Shield className="w-5 h-5" />
-                        </Link>
-                      )}
-                      <motion.button
-                        ref={settingsButtonRef}
-                        onClick={() => setIsSettingsModalOpen(true)}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
-                        aria-label="Settings and Stats"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Settings className="w-5 h-5" />
-                      </motion.button>
-                      <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
-                      <button
-                        type="button"
-                        onClick={() => setIsHelpModalOpen(true)}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
-                        aria-label="Help and getting started"
-                      >
-                        <HelpCircle className="w-5 h-5" />
-                      </button>
-                      <ThemeToggleButton />
-                    </AppBrand>
-                  </div>
-                </header>
-
                 {/* Settings/Stats Modal */}
                 <Suspense fallback={null}>
                   <SettingsStatsModal
@@ -739,194 +691,136 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                   </div>
                 )}
 
-                {/* Full-screen views that break out of max-w-4xl constraint */}
-                {view === 'my_library' && (
-                  <div
-                    className="w-full min-w-0 overflow-hidden flex-1"
-                    style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                  >
-                    <Suspense fallback={<Loader message="Loading library…" />}>
-                      <ErrorBoundary variant="inline">
-                        <MyLibraryPage onExit={() => setView('command_center')} />
-                      </ErrorBoundary>
-                    </Suspense>
-                  </div>
-                )}
+                <AppLayout
+                  onSettingsClick={() => setIsSettingsModalOpen(true)}
+                  onHelpClick={() => setIsHelpModalOpen(true)}
+                  contentMaxWidth={contentMaxWidth}
+                >
+                  {isLoading &&
+                    (sessionSettings ? (
+                      <DrillLoadingState
+                        message="Loading questions…"
+                        variant="question"
+                        showTimer={false}
+                      />
+                    ) : (
+                      <Loader
+                        message="Loading questions…"
+                        forceDark={view === 'imaging_drill'}
+                      />
+                    ))}
+                  {error && (
+                    <EnhancedErrorMessage
+                      title="Session Error"
+                      description={error}
+                      severity="error"
+                      category="system"
+                      dismissible
+                      onDismiss={() => setError(null)}
+                      showRetry={false}
+                      className="mb-4"
+                    />
+                  )}
 
-                {view === 'pearl_deck' && (
-                  <div
-                    className="w-full min-w-0 overflow-hidden flex-1"
-                    style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                  >
-                    <Suspense fallback={<Loader message="Loading pearl deck…" />}>
-                      <ErrorBoundary variant="inline">
-                        <MyPearlsPanel
-                          onClose={() => setView('command_center')}
-                          initialFilter="saved"
-                        />
-                      </ErrorBoundary>
-                    </Suspense>
-                  </div>
-                )}
-
-                {/* Glassmorphism quick-actions rail (persists across study views) */}
-                <NavRail />
-
-                {/* Standard views with max-w-4xl constraint */}
-                {view !== 'reference_library' &&
-                  view !== 'my_library' &&
-                  view !== 'pearl_deck' && (
-                    <main
-                      id="main-content"
-                      className="main-content-area min-h-screen min-w-0 max-w-full overflow-visible transition-all duration-300"
-                      style={{
-                        marginLeft: 'var(--nav-rail-width, 56px)',
-                        paddingTop: 'var(--header-height, 4rem)',
-                      }}
-                    >
-                      <div
-                        className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
+                  <AnimatePresence mode="popLayout">
+                    {normalizedView === 'my_library' && (
+                      <motion.div
+                        key="my_library"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
                       >
-                        {isLoading &&
-                          (sessionSettings ? (
-                            <DrillLoadingState
-                              message="Loading questions…"
-                              variant="question"
-                              showTimer={false}
-                            />
-                          ) : (
-                            <Loader
-                              message="Loading questions…"
-                              forceDark={view === 'imaging_drill'}
-                            />
-                          ))}
-                        {error && (
-                          <EnhancedErrorMessage
-                            title="Session Error"
-                            description={error}
-                            severity="error"
-                            category="system"
-                            dismissible
-                            onDismiss={() => setError(null)}
-                            showRetry={false}
-                            className="mb-4"
-                          />
-                        )}
+                        <Suspense fallback={<Loader message="Loading library…" />}>
+                          <ErrorBoundary variant="inline">
+                            <MyLibraryPage onExit={() => setView('command_center')} />
+                          </ErrorBoundary>
+                        </Suspense>
+                      </motion.div>
+                    )}
 
-                        {/* popLayout: exiting view is removed from layout flow immediately
-                            (position: absolute) while still animating out. Gives the "fast"
-                            feel without overlapping content or broken alignment.
-                            See AUDIT_DASHBOARD_SHELL Finding 4. */}
-                        <AnimatePresence mode="popLayout">
-                          {view === 'command_center' && (
-                            <motion.div
-                              key="command_center"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <Suspense fallback={<CommandCenterSkeleton />}>
-                                <ErrorBoundary variant="page">
-                                <CommandCenterHub
-                                  performanceData={heatmapPerformance}
-                                  missedQuestions={missedQuestions}
-                                  flaggedQuestions={flaggedQuestions}
-                                  dueCount={dueQuestionsCount}
-                                  isLoadingStats={isStatsLoading}
-                                  initialStudyToolsTab={commandCenterInitialTab}
-                                  onOpenSettings={() => setIsSettingsModalOpen(true)}
-                                  onStartSession={handleStartSession}
-                                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                                  onNavigateToDrillWithSystem={
-                                    _handleNavigateToDrillWithSystem
-                                  }
-                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_UTILITIES)}
-                                  onNavigateToGapAnalysis={() =>
-                                    startViewTransition(() => setView('gap_analysis'))
-                                  }
-                                  onNavigateToClinicalProfile={() =>
-                                    setView('clinical_profile')
-                                  }
-                                  onNavigateToIntegrations={() => setView('integrations')}
-                                  onNavigateToSimulation={handleNavigateToSimulation}
-                                  onNavigateToReference={() =>
-                                    navigate(ROUTES.STUDY_KNOWLEDGE)
-                                  }
-                                  onNavigateToMyLibrary={() => setView('my_library')}
-                                  onNavigateToCustomStudy={handleNavigateToCustomStudy}
-                                  onNavigateToTutorChat={() => setView('tutor_chat')}
-                                  onNavigateToStudyCompanion={() =>
-                                    setView('study_companion')
-                                  }
-                                  // FSRS variant review: presents due variant PANCE MCQ questions; rating is fully implicit.
-                                  onNavigateToSrsReview={() => setView('srs_review')}
-                                  onNavigateToPearlDeck={() => setView('pearl_deck')}
-                                  onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
-                                  growthAreas={growthAreas}
-                                  examLabel={examLabel ?? 'PANCE'}
-                                  hasActiveSession={hasActiveSession}
-                                  onResumeSession={handleBackToQuiz}
-                                  resumeContext={
-                                    hasActiveSession &&
-                                    sessionSettings?.count != null &&
-                                    sessionSettings.count > 0 &&
-                                    questionQueue.length > 0
-                                      ? {
-                                          remaining: questionQueue.length,
-                                          total: sessionSettings.count,
-                                          current: Math.max(
-                                            1,
-                                            sessionSettings.count - questionQueue.length + 1
-                                          ),
-                                        }
-                                      : undefined
-                                  }
-                                />
-                                </ErrorBoundary>
-                              </Suspense>
-                            </motion.div>
-                          )}
+                    {normalizedView === 'pearl_deck' && (
+                      <motion.div
+                        key="pearl_deck"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                      >
+                        <Suspense fallback={<Loader message="Loading pearl deck…" />}>
+                          <ErrorBoundary variant="inline">
+                            <MyPearlsPanel
+                              onClose={() => setView('command_center')}
+                              initialFilter="saved"
+                            />
+                          </ErrorBoundary>
+                        </Suspense>
+                      </motion.div>
+                    )}
 
-                          {view === 'menu' && (
-                            <motion.div
-                              key="menu"
-                              variants={pageVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={pageTransition}
-                            >
-                              <Suspense fallback={<Loader message="Loading menu…" />}>
-                                <MenuView
-                                  performanceData={heatmapPerformance}
-                                  missedQuestions={missedQuestions}
-                                  flaggedQuestions={flaggedQuestions}
-                                  onBackToQuiz={handleBackToQuiz}
-                                  hasActiveSession={hasActiveSession}
-                                  setIsLoading={setIsLoading}
-                                  setError={setError}
-                                  onStartSession={handleStartSession}
-                                  onConfirmSession={handleConfirmSession}
-                                  onRemoveBookmark={handleRemoveBookmark}
-                                  growthAreas={growthAreas}
-                                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                                  onNavigateToIntegrations={() => setView('integrations')}
-                                  // HIDDEN: Social feature disabled until API implemented
-                                  // onNavigateToSocial={() => setView('social_dashboard')}
-                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_UTILITIES)}
-                                  onNavigateToGapAnalysis={() =>
-                                    startViewTransition(() => setView('gap_analysis'))
-                                  }
-                                  onNavigateToSimulation={handleNavigateToSimulation}
-                                  isSyncing={isSyncing}
-                                  lastSyncTime={lastSyncTime}
-                                  syncError={syncError}
-                                />
-                              </Suspense>
-                            </motion.div>
-                          )}
+                    {normalizedView === 'command_center' && (
+                      <motion.div
+                        key="command_center"
+                        variants={pageVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={pageTransition}
+                      >
+                        <Suspense fallback={<CommandCenterSkeleton />}>
+                          <ErrorBoundary variant="page">
+                            <CommandCenterHub
+                              performanceData={heatmapPerformance}
+                              missedQuestions={missedQuestions}
+                              flaggedQuestions={flaggedQuestions}
+                              dueCount={dueQuestionsCount}
+                              isLoadingStats={isStatsLoading}
+                              initialStudyToolsTab={commandCenterInitialTab}
+                              onOpenSettings={() => setIsSettingsModalOpen(true)}
+                              onStartSession={handleStartSession}
+                              onNavigateToDrillMode={handleNavigateToDrillMode}
+                              onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
+                              onNavigateToToolkit={() => navigate(ROUTES.STUDY_UTILITIES)}
+                              onNavigateToGapAnalysis={() =>
+                                startViewTransition(() => setView('gap_analysis'))
+                              }
+                              onNavigateToClinicalProfile={() => setView('clinical_profile')}
+                              onNavigateToIntegrations={() => setView('integrations')}
+                              onNavigateToSimulation={handleNavigateToSimulation}
+                              onNavigateToReference={() => navigate(ROUTES.STUDY_KNOWLEDGE)}
+                              onNavigateToMyLibrary={() => setView('my_library')}
+                              onNavigateToCustomStudy={handleNavigateToCustomStudy}
+                              onNavigateToTutorChat={() => setView('tutor_chat')}
+                              onNavigateToStudyCompanion={() => setView('study_companion')}
+                              onNavigateToSrsReview={() => setView('srs_review')}
+                              onNavigateToPearlDeck={() => setView('pearl_deck')}
+                              onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
+                              growthAreas={growthAreas}
+                              examLabel={examLabel ?? 'PANCE'}
+                              hasActiveSession={hasActiveSession}
+                              onResumeSession={handleBackToQuiz}
+                              resumeContext={
+                                hasActiveSession &&
+                                sessionSettings?.count != null &&
+                                sessionSettings.count > 0 &&
+                                questionQueue.length > 0
+                                  ? {
+                                      remaining: questionQueue.length,
+                                      total: sessionSettings.count,
+                                      current: Math.max(
+                                        1,
+                                        sessionSettings.count - questionQueue.length + 1
+                                      ),
+                                    }
+                                  : undefined
+                              }
+                            />
+                          </ErrorBoundary>
+                        </Suspense>
+                      </motion.div>
+                    )}
 
                           {view === 'quiz' && sessionSettings && (
                             <motion.div
@@ -1002,6 +896,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                 />
                               </Suspense>
                             </WithGeminiErrorBoundary>
+                          )}
+
+                          {/* Study timer overlay for session and drill views */}
+                          {(view === 'session_runner' || view === 'quiz' || view === 'srs_review') && (
+                            <StudyTimerOverlay />
                           )}
 
                           <DrillViewRouter
@@ -1225,10 +1124,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               </Suspense>
                             </motion.div>
                           )}
-                        </AnimatePresence>
-                      </div>
-                    </main>
-                  )}
+                  </AnimatePresence>
+                </AppLayout>
 
                 {/* Command Palette */}
                 <Suspense fallback={null}>

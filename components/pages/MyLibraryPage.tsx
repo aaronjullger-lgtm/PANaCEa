@@ -7,21 +7,31 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   BookOpen,
-  ChevronLeft,
   Check,
+  Info,
+  Library,
+  Loader2,
+  MessageSquare,
+  Sparkles,
   Trash2,
   Upload,
-  Loader2,
-  Library,
-  Sparkles,
-  Info,
   Video,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 import { API_ENDPOINTS, buildApiUrl, getApiBaseUrl } from '@/lib/utils/apiConfig';
 import { usePreferences } from '@/hooks/usePreferences';
 
@@ -58,6 +68,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
 
   const activeCacheName = (preferences.customSettings as Record<string, unknown> | undefined)
     ?.activeKnowledgeCacheName as string | undefined;
+  const activeCacheDisplayName = (preferences.customSettings as Record<string, unknown> | undefined)
+    ?.activeKnowledgeCacheDisplayName as string | undefined;
 
   const fetchCaches = useCallback(async () => {
     const token = await getToken();
@@ -66,26 +78,28 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
       setLoading(false);
       return;
     }
+
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHES), {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHES), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${res.status}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${response.status}`);
       }
-      const data = (await res.json()) as { caches: KnowledgeCacheItem[] };
+
+      const data = (await response.json()) as { caches: KnowledgeCacheItem[] };
       const list = data.caches ?? [];
       setCaches(list);
-      // Clear active if it's no longer in the non-expired list (expired or deleted)
-      const activeName = (preferences.customSettings as Record<string, unknown> | undefined)
+
+      const currentActive = (preferences.customSettings as Record<string, unknown> | undefined)
         ?.activeKnowledgeCacheName;
       if (
-        activeName &&
-        typeof activeName === 'string' &&
-        !list.some((c) => c.geminiCacheName === activeName)
+        currentActive &&
+        typeof currentActive === 'string' &&
+        !list.some((cache) => cache.geminiCacheName === currentActive)
       ) {
         const custom = (preferences.customSettings as Record<string, unknown>) ?? {};
         const next = { ...custom };
@@ -93,13 +107,13 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         delete next.activeKnowledgeCacheDisplayName;
         await updatePreferences({ customSettings: next });
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load caches');
+    } catch (issue) {
+      setError(issue instanceof Error ? issue.message : 'Failed to load caches');
       setCaches([]);
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, preferences.customSettings, updatePreferences]);
 
   useEffect(() => {
     void fetchCaches();
@@ -134,23 +148,23 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
       setDeletingName(geminiCacheName);
       try {
         const url = getApiBaseUrl() + API_ENDPOINTS.KNOWLEDGE_CACHE_DELETE(geminiCacheName);
-        const res = await fetch(url, {
+        const response = await fetch(url, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${res.status}`);
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${response.status}`);
         }
         if (activeCacheName === geminiCacheName) clearActive();
         await fetchCaches();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Delete failed');
+      } catch (issue) {
+        setError(issue instanceof Error ? issue.message : 'Delete failed');
       } finally {
         setDeletingName(null);
       }
     },
-    [getToken, activeCacheName, clearActive, fetchCaches]
+    [activeCacheName, clearActive, fetchCaches, getToken]
   );
 
   const handleUpload = useCallback(
@@ -163,17 +177,17 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         const formData = new FormData();
         formData.append('file', file);
         const displayName = uploadDisplayName.trim() || file.name.replace(/\.[^.]+$/, '');
-        const uploadRes = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_UPLOAD), {
+        const uploadResponse = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_UPLOAD), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
-        if (!uploadRes.ok) {
-          const data = await uploadRes.json().catch(() => ({}));
-          throw new Error(data.error || `Upload failed: ${uploadRes.status}`);
+        if (!uploadResponse.ok) {
+          const data = await uploadResponse.json().catch(() => ({}));
+          throw new Error(data.error || `Upload failed: ${uploadResponse.status}`);
         }
-        const uploadData = (await uploadRes.json()) as { fileUri: string; mimeType?: string };
-        const cacheRes = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHE), {
+        const uploadData = (await uploadResponse.json()) as { fileUri: string; mimeType?: string };
+        const cacheResponse = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHE), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,25 +200,25 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
             mimeType: uploadData.mimeType,
           }),
         });
-        if (!cacheRes.ok) {
-          const data = await cacheRes.json().catch(() => ({}));
-          throw new Error(data.error || `Create cache failed: ${cacheRes.status}`);
+        if (!cacheResponse.ok) {
+          const data = await cacheResponse.json().catch(() => ({}));
+          throw new Error(data.error || `Create cache failed: ${cacheResponse.status}`);
         }
         setUploadDisplayName('');
         await fetchCaches();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Upload failed');
+      } catch (issue) {
+        setError(issue instanceof Error ? issue.message : 'Upload failed');
       } finally {
         setUploading(false);
       }
     },
-    [getToken, uploadDisplayName, fetchCaches]
+    [fetchCaches, getToken, uploadDisplayName]
   );
 
-  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const onFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) void handleUpload(file);
-    e.target.value = '';
+    event.target.value = '';
   };
 
   const veoPresets = [
@@ -216,13 +230,14 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
   const handleVeoGenerate = useCallback(async () => {
     const prompt = veoPrompt.trim() || veoPresets[0];
     if (!prompt) return;
+
     const token = await getToken();
     if (!token) return;
     setVeoLoading(true);
     setVeoError(null);
     setVeoResult(null);
     try {
-      const res = await fetch(buildApiUrl('/api/veo/generate'), {
+      const response = await fetch(buildApiUrl('/api/veo/generate'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,9 +245,14 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         },
         body: JSON.stringify({ prompt, durationSeconds: 5 }),
       });
-      const data = (await res.json()) as { videoUrl?: string; jobId?: string; error?: string; hint?: string };
-      if (!res.ok) {
-        if (res.status === 501) {
+      const data = (await response.json()) as {
+        videoUrl?: string;
+        jobId?: string;
+        error?: string;
+        hint?: string;
+      };
+      if (!response.ok) {
+        if (response.status === 501) {
           setVeoError('Video generation is not currently available. Please try again later.');
         } else {
           setVeoError(data.error || data.hint || 'Generation failed');
@@ -240,278 +260,366 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         return;
       }
       setVeoResult(data);
-    } catch (e) {
-      setVeoError(e instanceof Error ? e.message : 'Request failed');
+    } catch (issue) {
+      setVeoError(issue instanceof Error ? issue.message : 'Request failed');
     } finally {
       setVeoLoading(false);
     }
-  }, [veoPrompt, getToken]);
+  }, [getToken, veoPrompt, veoPresets]);
 
   const formatExpiry = (iso: string) => {
-    const d = new Date(iso);
+    const expiry = new Date(iso);
     const now = new Date();
-    const min = Math.round((d.getTime() - now.getTime()) / 60000);
-    if (min < 60) return `Expires in ${min} min`;
-    return `Expires ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const minutes = Math.round((expiry.getTime() - now.getTime()) / 60000);
+    if (minutes < 60) return `Expires in ${minutes} min`;
+    return `Expires ${expiry.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
-    <motion.div
-      initial={{ y: 8 }}
-      animate={{ y: 0 }}
-      className="max-w-2xl mx-auto"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          type="button"
-          onClick={onExit}
-          className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-          aria-label="Back"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          <Library className="w-8 h-8 text-[var(--color-accent)]" />
-          <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">My Library</h1>
-        </div>
-      </div>
-
-      <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-        Upload PDFs to create a cached knowledge base. Set one as active to have the Tutor use it
-        when answering your questions.
-      </p>
-
-      <details className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50">
-        <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer list-none text-sm font-medium text-[var(--color-text-primary)] [&::-webkit-details-marker]:hidden">
-          <Info className="w-4 h-4 text-[var(--color-accent)] flex-shrink-0" />
-          What&apos;s My Library?
-        </summary>
-        <div className="px-4 pb-3 pt-0 text-sm text-[var(--color-text-secondary)] space-y-2">
-          <p>
-            My Library uses <strong>context caching</strong> so the AI Tutor can answer from your
-            own materials (e.g. a textbook PDF). Upload a PDF, set it as active, then use &quot;Ask
-            Tutor&quot; in quiz explanations—answers will be grounded in that document. Caches
-            expire after about an hour; you can re-upload or create a new cache anytime.
-          </p>
-          <p className="text-xs text-[var(--color-text-muted)]">
-            PDF only, max 50MB. Your active choice is saved in your preferences.
-          </p>
-        </div>
-      </details>
-
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-data-fail/10 text-data-fail text-sm border border-data-fail/30">
-          {error}
-        </div>
-      )}
-
-      {/* Active cache indicator */}
-      {activeCacheName && (
-        <div className="mb-4 p-3 rounded-xl bg-data-pass/10 border border-data-pass/30 flex items-center justify-between gap-2">
-          <span className="text-sm text-[var(--color-text-primary)] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-data-pass" />
-            Tutor is using your active library.
-          </span>
-          <button
-            type="button"
-            onClick={clearActive}
-            className="text-xs px-2 py-1 rounded-md border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]"
-          >
-            Clear active
-          </button>
-        </div>
-      )}
-
-      {/* Upload */}
-      <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-        <label
-          htmlFor="my-library-display-name"
-          className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
-        >
-          Add a document
-        </label>
-        <input
-          id="my-library-display-name"
-          type="text"
-          placeholder="Display name (optional)"
-          value={uploadDisplayName}
-          onChange={(e) => setUploadDisplayName(e.target.value)}
-          className="w-full mb-2 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]"
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Study Companion',
+            badgeTone: 'sage',
+            title: 'Ground the tutor in your own documents.',
+            subtitle:
+              'Upload PDFs, choose the active source for tutoring, and keep document-grounded chat inside the same premium workspace as the rest of your study flow.',
+            status: activeCacheName
+              ? `Active source: ${activeCacheDisplayName || 'Selected document'}`
+              : 'No active source selected',
+            backLabel: 'Back to Study',
+            onBack: onExit,
+          }}
         />
-        <div className="flex items-center gap-2">
-          <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-accent)]/20 text-[var(--color-accent)] cursor-pointer hover:bg-[var(--color-accent)]/30 transition-colors">
-            <Upload className="w-4 h-4" />
-            <span className="text-sm font-medium">{uploading ? 'Uploading…' : 'Choose PDF'}</span>
-            <input
-              type="file"
-              accept="application/pdf"
-              disabled={uploading}
-              onChange={onFileSelect}
-              className="sr-only"
-              aria-label="Choose PDF file to upload"
-            />
-          </label>
-          {uploading && <Loader2 className="w-5 h-5 animate-spin text-[var(--color-accent)]" />}
-        </div>
-      </div>
+      </WorkspaceReveal>
 
-      {/* Clinical motion clips (Gait & Movement) */}
-      <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-        <h2 className="text-sm font-medium text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
-          <Video className="w-4 h-4 text-[var(--color-accent)]" />
-          Clinical motion clips
-        </h2>
-        <p className="text-xs text-[var(--color-text-muted)] mb-3">
-          Generate short clinical videos (e.g. gait, movement) for neurology and musculoskeletal review.
-        </p>
-        <div className="space-y-2 mb-3">
-          {veoPresets.map((preset, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setVeoPrompt(preset)}
-              className="block w-full text-left px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50 truncate"
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Cached documents"
+            value={caches.length}
+            detail="Grounded context caches currently available in this workspace."
+            icon={Library}
+          />
+          <WorkspaceMetricCard
+            label="Tutor grounding"
+            value={activeCacheName ? 'On' : 'Off'}
+            detail={
+              activeCacheName
+                ? 'Tutor answers can reference your selected document.'
+                : 'Select an active document to enable grounded answers.'
+            }
+            accent="#7a8f6e"
+            icon={Sparkles}
+          />
+          <WorkspaceMetricCard
+            label="Upload state"
+            value={uploading ? 'Busy' : 'Ready'}
+            detail="PDF uploads create a one-hour context cache for the tutor."
+            accent="#728ba6"
+            icon={Upload}
+          />
+          <WorkspaceMetricCard
+            label="Library chat"
+            value={activeCacheName ? 'Available' : 'Waiting'}
+            detail="Ask targeted questions against the active document below."
+            accent="#9a7f9a"
+            icon={MessageSquare}
+          />
+        </div>
+      </WorkspaceReveal>
+
+      {error ? (
+        <WorkspaceReveal delay={0.08}>
+          <WorkspaceSurface accent="#a67f7f">
+            <p className="text-sm text-[var(--color-text-primary)]">{error}</p>
+          </WorkspaceSurface>
+        </WorkspaceReveal>
+      ) : null}
+
+      <WorkspaceReveal delay={0.1}>
+        <WorkspaceSplit className="items-start">
+          <div className="space-y-6">
+            <WorkspaceSection
+              title="Document workspace"
+              subtitle="Upload a PDF, assign a display name, and choose which source the tutor should use right now."
             >
-              {preset.slice(0, 60)}…
-            </button>
-          ))}
-        </div>
-        <input
-          type="text"
-          placeholder="Or enter your own prompt"
-          value={veoPrompt}
-          onChange={(e) => setVeoPrompt(e.target.value)}
-          className="w-full mb-2 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-        />
-        <button
-          type="button"
-          onClick={handleVeoGenerate}
-          disabled={veoLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-sm font-medium text-[var(--color-text-inverse)] disabled:opacity-50"
-        >
-          {veoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
-          Generate clip
-        </button>
-        {veoError && (
-          <p className="mt-2 text-sm text-data-fail" role="alert">
-            {veoError}
-          </p>
-        )}
-        {veoResult?.videoUrl && (
-          <div className="mt-3">
-            <video src={veoResult.videoUrl} controls className="w-full rounded-lg border border-[var(--color-border)]" />
-          </div>
-        )}
-        {veoResult?.jobId && !veoResult.videoUrl && (
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            Generation started (job: {veoResult.jobId}). Poll for completion when async endpoint is wired.
-          </p>
-        )}
-      </div>
-
-      {/* List */}
-      <div>
-        <h2 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
-          Your cached documents
-        </h2>
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
-          </div>
-        )}
-        {!loading && caches.length === 0 && (
-          <div className="py-12 rounded-xl border border-dashed border-[var(--color-border)] text-center text-[var(--color-text-secondary)]">
-            <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No documents yet. Upload a PDF above to create your first cache.</p>
-          </div>
-        )}
-        {!loading && caches.length > 0 && (
-          <ul className="space-y-2">
-            {caches.map((c) => (
-              <li
-                key={c.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-[var(--color-text-primary)] truncate">
-                    {c.displayName}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-secondary)]">
-                    {formatExpiry(c.expiresAt)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {activeCacheName === c.geminiCacheName ? (
-                    <span className="flex items-center gap-1 text-xs text-data-pass font-medium">
-                      <Check className="w-4 h-4" /> Active
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setActiveCache(c.geminiCacheName, c.displayName)}
-                      className="text-xs px-2 py-1 rounded-md border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]"
-                    >
-                      Set active
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(c.geminiCacheName)}
-                    disabled={deletingName === c.geminiCacheName}
-                    className="p-2 rounded-md text-[var(--color-text-secondary)] hover:bg-data-fail/10 hover:text-data-fail disabled:opacity-50"
-                    aria-label={`Delete ${c.displayName}`}
+              <WorkspaceSurface accent="#c4b78a" className="space-y-5">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="my-library-display-name"
+                    className="block text-sm font-medium text-[var(--color-text-primary)]"
                   >
-                    {deletingName === c.geminiCacheName && (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    )}
-                    {deletingName !== c.geminiCacheName && <Trash2 className="w-4 h-4" />}
-                  </button>
+                    Display name
+                  </label>
+                  <input
+                    id="my-library-display-name"
+                    type="text"
+                    placeholder="Optional display name"
+                    value={uploadDisplayName}
+                    onChange={(event) => setUploadDisplayName(event.target.value)}
+                    className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                  />
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
-      {/* Chat with your Library */}
-      <div className="mt-8 pt-6 border-t border-[var(--color-border)]/60">
-        <h2 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
-          Chat with your Library
-        </h2>
-        {!activeCacheName ? (
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            Set an active document above to start chatting. The Tutor will answer using that
-            document as its primary source.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {libraryError && (
-              <div className="p-3 rounded-lg bg-data-fail/10 text-data-fail text-xs border border-data-fail/30">
-                {libraryError}
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <input
-                type="text"
-                value={libraryQuestion}
-                onChange={(e) => setLibraryQuestion(e.target.value)}
-                placeholder="Ask a question about your active document..."
-                className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
-              <button
-                type="button"
-                onClick={async () => {
-                  const question = libraryQuestion.trim();
-                  if (!question) return;
-                  if (!activeCacheName) {
-                    setLibraryError('Set an active library first.');
-                    return;
-                  }
-                  setLibraryLoading(true);
-                  setLibraryAnswer('');
-                  setLibraryError(null);
-                  try {
-                    const prompt = `You are a clinical tutor helping a PA student study from their uploaded document.
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl">
+                    <span className="inline-flex min-h-[36px] items-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-inverse)] shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)]">
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      Choose PDF
+                    </span>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      disabled={uploading}
+                      onChange={onFileSelect}
+                      className="sr-only"
+                      aria-label="Choose PDF file to upload"
+                    />
+                  </label>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    PDF only, max 50MB. Cache expires after about one hour.
+                  </p>
+                </div>
+              </WorkspaceSurface>
+            </WorkspaceSection>
+
+            <WorkspaceSection
+              title="Cached documents"
+              subtitle="Switch the active source, review expiry, or remove stale documents."
+              action={
+                activeCacheName ? (
+                  <Button type="button" size="sm" variant="outline" onClick={clearActive}>
+                    Clear active
+                  </Button>
+                ) : null
+              }
+            >
+              {loading ? (
+                <WorkspaceSurface accent="#728ba6">
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
+                  </div>
+                </WorkspaceSurface>
+              ) : caches.length === 0 ? (
+                <WorkspaceEmptyState
+                  icon={BookOpen}
+                  title="No cached documents yet"
+                  description="Upload your first PDF above to create a tutor-ready source."
+                />
+              ) : (
+                <div className="space-y-3">
+                  {caches.map((cache) => (
+                    <WorkspaceSurface
+                      key={cache.id}
+                      accent={
+                        activeCacheName === cache.geminiCacheName ? '#7a8f6e' : '#728ba6'
+                      }
+                    >
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-lg font-semibold text-[var(--color-text-primary)]">
+                            {cache.displayName}
+                          </p>
+                          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                            {formatExpiry(cache.expiresAt)}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {activeCacheName === cache.geminiCacheName ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-data-pass)]">
+                              <Check className="h-3.5 w-3.5" />
+                              Active
+                            </span>
+                          ) : (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => setActiveCache(cache.geminiCacheName, cache.displayName)}
+                            >
+                              Set active
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(cache.geminiCacheName)}
+                            disabled={deletingName === cache.geminiCacheName}
+                          >
+                            {deletingName === cache.geminiCacheName ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    </WorkspaceSurface>
+                  ))}
+                </div>
+              )}
+            </WorkspaceSection>
+          </div>
+
+          <div className="space-y-6">
+            <WorkspaceSection
+              title="How this works"
+              subtitle="Use this space as a document-grounded companion for tutoring, review, and multimodal study tools."
+            >
+              <WorkspaceSurface accent="#9a7f9a" className="space-y-4">
+                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Info className="h-4 w-4 text-[var(--color-accent)]" />
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Context caching
+                    </p>
+                  </div>
+                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                    Upload a PDF, set it active, and the tutor can answer from that material rather
+                    than relying only on generic clinical knowledge.
+                  </p>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[var(--color-data-pass)]" />
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Active source
+                    </p>
+                  </div>
+                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                    {activeCacheName
+                      ? `The tutor is currently grounded in ${activeCacheDisplayName || 'your selected document'}.`
+                      : 'No active source selected yet. Pick one from the document list when you are ready.'}
+                  </p>
+                </div>
+              </WorkspaceSurface>
+            </WorkspaceSection>
+
+            <WorkspaceSection
+              title="Clinical motion clips"
+              subtitle="Generate short movement-oriented videos for neurology and MSK review."
+            >
+              <WorkspaceSurface accent="#b39b6c" className="space-y-4">
+                <div className="space-y-2">
+                  {veoPresets.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setVeoPrompt(preset)}
+                      className="w-full rounded-[1.1rem] border border-white/8 bg-white/5 px-4 py-3 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/8"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Or enter your own motion clip prompt"
+                  value={veoPrompt}
+                  onChange={(event) => setVeoPrompt(event.target.value)}
+                  className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                />
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  onClick={handleVeoGenerate}
+                  disabled={veoLoading}
+                >
+                  {veoLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Video className="h-4 w-4" />
+                  )}
+                  Generate clip
+                </Button>
+
+                {veoError ? (
+                  <p className="text-sm text-[var(--color-data-fail)]" role="alert">
+                    {veoError}
+                  </p>
+                ) : null}
+
+                {veoResult?.videoUrl ? (
+                  <video
+                    src={veoResult.videoUrl}
+                    controls
+                    className="w-full rounded-[1.25rem] border border-white/8"
+                  />
+                ) : null}
+
+                {veoResult?.jobId && !veoResult.videoUrl ? (
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    Generation started (job: {veoResult.jobId}). Poll for completion once the async
+                    endpoint is wired.
+                  </p>
+                ) : null}
+              </WorkspaceSurface>
+            </WorkspaceSection>
+          </div>
+        </WorkspaceSplit>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.14}>
+        <WorkspaceSection
+          title="Chat with your active library"
+          subtitle="Ask targeted questions against the currently selected document and keep the answer grounded in that source."
+        >
+          {!activeCacheName ? (
+            <WorkspaceEmptyState
+              icon={MessageSquare}
+              title="Choose an active document first"
+              description="Set an active source above, then ask focused questions against that document here."
+            />
+          ) : (
+            <WorkspaceSurface accent="#728ba6" className="space-y-4">
+              {libraryError ? (
+                <div className="rounded-[1.1rem] border border-[var(--color-data-fail)]/25 bg-[var(--color-data-fail)]/10 p-4 text-sm text-[var(--color-data-fail)]">
+                  {libraryError}
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+                <label className="block">
+                  <span className="sr-only">Ask a question about your active library document</span>
+                  <input
+                    type="text"
+                    value={libraryQuestion}
+                    onChange={(event) => setLibraryQuestion(event.target.value)}
+                    placeholder="Ask a question about your active document…"
+                    className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                  />
+                </label>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  disabled={!libraryQuestion.trim() || libraryLoading}
+                  onClick={async () => {
+                    const question = libraryQuestion.trim();
+                    if (!question) return;
+                    if (!activeCacheName) {
+                      setLibraryError('Set an active library first.');
+                      return;
+                    }
+                    setLibraryLoading(true);
+                    setLibraryAnswer('');
+                    setLibraryError(null);
+                    try {
+                      const prompt = `You are a clinical tutor helping a PA student study from their uploaded document.
 
 Use ONLY the content of the cached document as your primary source. If the question cannot be answered from that document, say so briefly.
 
@@ -519,54 +627,57 @@ Student's question:
 ${question}
 
 Provide a concise, clinically focused answer (3-6 sentences).`;
-                    const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
-                    await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
-                      getToken,
-                      cachedContent: activeCacheName,
-                      onChunk: (chunk) => {
-                        setLibraryAnswer((prev) => prev + chunk);
-                      },
-                      onComplete: () => {
-                        setLibraryLoading(false);
-                      },
-                      onError: (err) => {
-                        console.error('Library chat error:', err);
-                        setLibraryError(
-                          "Sorry, I couldn't answer that right now. Please try again in a moment."
-                        );
-                        setLibraryLoading(false);
-                      },
-                    });
-                  } catch (err) {
-                    console.error('Library chat error:', err);
-                    setLibraryError(
-                      "Sorry, I couldn't answer that right now. Please try again in a moment."
-                    );
-                    setLibraryLoading(false);
-                  }
-                }}
-                disabled={!libraryQuestion.trim() || libraryLoading}
-                className="self-start px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-semibold hover:bg-[var(--color-accent)]/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {libraryLoading ? 'Thinking…' : 'Ask'}
-              </button>
-            </div>
-            {(libraryLoading || libraryAnswer) && (
-              <div className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-                {libraryLoading && !libraryAnswer && (
-                  <p className="text-xs text-[var(--color-text-secondary)]">Thinking…</p>
-                )}
-                {libraryAnswer && (
-                  <p className="text-sm text-[var(--color-text-primary)] whitespace-pre-wrap leading-relaxed">
-                    {libraryAnswer}
-                  </p>
-                )}
+                      const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
+                      await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
+                        getToken,
+                        cachedContent: activeCacheName,
+                        onChunk: (chunk) => {
+                          setLibraryAnswer((previous) => previous + chunk);
+                        },
+                        onComplete: () => {
+                          setLibraryLoading(false);
+                        },
+                        onError: () => {
+                          setLibraryError(
+                            "Sorry, I couldn't answer that right now. Please try again in a moment."
+                          );
+                          setLibraryLoading(false);
+                        },
+                      });
+                    } catch {
+                      setLibraryError(
+                        "Sorry, I couldn't answer that right now. Please try again in a moment."
+                      );
+                      setLibraryLoading(false);
+                    }
+                  }}
+                >
+                  {libraryLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageSquare className="h-4 w-4" />
+                  )}
+                  Ask library
+                </Button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
-    </motion.div>
+
+              {libraryLoading || libraryAnswer ? (
+                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                  {libraryLoading && !libraryAnswer ? (
+                    <p className="text-sm text-[var(--color-text-secondary)]">Thinking…</p>
+                  ) : null}
+                  {libraryAnswer ? (
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
+                      {libraryAnswer}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </WorkspaceSurface>
+          )}
+        </WorkspaceSection>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 }
 
