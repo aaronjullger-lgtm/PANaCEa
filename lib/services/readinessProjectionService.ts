@@ -19,6 +19,10 @@
  */
 
 import { NCCPA_2025_BLUEPRINT } from '@/lib/constants/blueprint';
+import {
+  detectConfidenceTrend,
+  type ConfidenceTrendResult,
+} from '@/lib/confidence/trendDetector';
 
 // ─── FSRS v6 Forgetting Curve Constants ───────────────────────────
 /** FSRS v6 decay parameter (w[20] default) */
@@ -57,9 +61,26 @@ export interface SystemReadinessProjection {
   projectedCI: [number, number];
   weakTopics: string[];
   topicCount: number;
+  /** Confidence trend analysis for this system */
+  trend?: ConfidenceTrendResult;
+  /** Whether this system needs intervention (plateauing or declining) */
+  needsIntervention: boolean;
 }
 
 export type RiskLevel = 'low' | 'moderate' | 'high' | 'critical';
+
+export interface EarlyWarning {
+  /** System experiencing the concerning trend */
+  system: string;
+  /** Type of early warning */
+  type: 'declining_confidence' | 'plateauing' | 'accelerating';
+  /** Trend slope */
+  slope: number;
+  /** R² of the trend fit */
+  rSquared: number;
+  /** Recommended action */
+  recommendation: string;
+}
 
 export interface ExamReadinessProjection {
   overallReadiness: number;
@@ -71,6 +92,14 @@ export interface ExamReadinessProjection {
   criticalSystems: string[];
   daysUntilExam: number | null;
   projectedAt: string;
+  /** Early warnings based on trend analysis */
+  earlyWarnings: EarlyWarning[];
+  /** Systems with declining confidence trends */
+  decliningSystems: string[];
+  /** Systems with plateauing trends */
+  plateauingSystems: string[];
+  /** Systems with accelerating improvement */
+  acceleratingSystems: string[];
 }
 
 // ─── Statistical Primitives ───────────────────────────────────────
@@ -202,7 +231,8 @@ export function aggregateTopicReadiness(
 export function aggregateSystemReadiness(
   system: string,
   topics: TopicReadiness[],
-  daysForward: number = 0
+  daysForward: number = 0,
+  trend?: ConfidenceTrendResult
 ): SystemReadinessProjection {
   const blueprintEntry = Object.entries(NCCPA_2025_BLUEPRINT).find(
     ([key]) => key.toLowerCase() === system.toLowerCase()
@@ -249,9 +279,34 @@ export function aggregateSystemReadiness(
 
   // Projected CI accounts for decay uncertainty
   const decayUncertainty = daysForward > 0 ? 0.05 * Math.sqrt(daysForward / 30) : 0;
+
+  // Adjust CI width based on trend analysis
+  let trendCIAdjustment = 0;
+  let needsIntervention = false;
+
+  if (trend && trend.rSquared >= 0.3) {
+    if (trend.category === 'improving') {
+      // Improving → narrower CI (more confidence in projection)
+      trendCIAdjustment = -0.03 * Math.min(1, trend.rSquared);
+    } else if (trend.category === 'concerning') {
+      // Declining → wider CI (less confidence in projection)
+      trendCIAdjustment = 0.08 * Math.min(1, trend.rSquared);
+      needsIntervention = true;
+    } else if (trend.category === 'declining') {
+      // Mild decline → moderate CI widening
+      trendCIAdjustment = 0.04 * Math.min(1, trend.rSquared);
+      needsIntervention = true;
+    } else if (trend.category === 'stable') {
+      // Plateauing → flag for intervention if not at mastery
+      if (currentReadiness < 0.75) {
+        needsIntervention = true;
+      }
+    }
+  }
+
   const projectedCI: [number, number] = [
-    Math.max(0, ci[0] * (projectedR / Math.max(currentReadiness, 0.01)) - decayUncertainty),
-    Math.min(1, ci[1] * (projectedR / Math.max(currentReadiness, 0.01)) + decayUncertainty),
+    Math.max(0, ci[0] * (projectedR / Math.max(currentReadiness, 0.01)) - decayUncertainty - trendCIAdjustment),
+    Math.min(1, ci[1] * (projectedR / Math.max(currentReadiness, 0.01)) + decayUncertainty + trendCIAdjustment),
   ];
 
   const WEAK_THRESHOLD = 0.60;
@@ -267,15 +322,22 @@ export function aggregateSystemReadiness(
     projectedCI,
     weakTopics,
     topicCount: topics.length,
+    trend,
+    needsIntervention,
   };
 }
 
 /**
  * Compute full exam readiness projection from card-level data.
+ *
+ * @param cards - Card-level FSRS data
+ * @param daysUntilExam - Days until exam (null if no exam date set)
+ * @param systemTrends - Optional map of system name → confidence trend result
  */
 export function computeExamReadiness(
   cards: CardState[],
-  daysUntilExam: number | null = null
+  daysUntilExam: number | null = null,
+  systemTrends?: Map<string, ConfidenceTrendResult>
 ): ExamReadinessProjection {
   // Group cards by system → condition
   const systemMap = new Map<string, Map<string, CardState[]>>();
@@ -288,14 +350,46 @@ export function computeExamReadiness(
 
   // Aggregate per system
   const systemResults: SystemReadinessProjection[] = [];
+  const earlyWarnings: EarlyWarning[] = [];
+  const decliningSystems: string[] = [];
+  const plateauingSystems: string[] = [];
+  const acceleratingSystems: string[] = [];
+
   for (const [system, condMap] of systemMap) {
     const topics: TopicReadiness[] = [];
     for (const [condId, condCards] of condMap) {
       topics.push(aggregateTopicReadiness(condId, system, condCards));
     }
-    systemResults.push(
-      aggregateSystemReadiness(system, topics, daysUntilExam ?? 0)
-    );
+    const trend = systemTrends?.get(system);
+    const sysResult = aggregateSystemReadiness(system, topics, daysUntilExam ?? 0, trend);
+    systemResults.push(sysResult);
+
+    // Build early warnings from trend analysis
+    if (trend && trend.rSquared >= 0.3 && trend.dataPoints >= 3) {
+      if (trend.category === 'concerning' || trend.category === 'declining') {
+        decliningSystems.push(system);
+        earlyWarnings.push({
+          system,
+          type: 'declining_confidence',
+          slope: trend.slope,
+          rSquared: trend.rSquared,
+          recommendation: trend.category === 'concerning'
+            ? `Critical: ${system} confidence declining rapidly (slope=${trend.slope}). Schedule consolidation review and consider re-learning weak topics.`
+            : `Warning: ${system} confidence declining (slope=${trend.slope}). Increase review frequency for this system.`,
+        });
+      } else if (trend.category === 'stable' && sysResult.currentReadiness < 0.75) {
+        plateauingSystems.push(system);
+        earlyWarnings.push({
+          system,
+          type: 'plateauing',
+          slope: trend.slope,
+          rSquared: trend.rSquared,
+          recommendation: `${system} has plateaued below mastery. Try desirable difficulty: increase question difficulty or switch to active recall drills.`,
+        });
+      } else if (trend.category === 'improving') {
+        acceleratingSystems.push(system);
+      }
+    }
   }
 
   // Blueprint-weighted overall readiness
@@ -343,6 +437,10 @@ export function computeExamReadiness(
     criticalSystems,
     daysUntilExam,
     projectedAt: new Date().toISOString(),
+    earlyWarnings,
+    decliningSystems,
+    plateauingSystems,
+    acceleratingSystems,
   };
 }
 

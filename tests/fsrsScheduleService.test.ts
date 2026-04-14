@@ -150,6 +150,9 @@ vi.mock('../lib/confidence/interferenceDetector', () => ({
   })),
 }));
 
+// Store reference for per-test override
+const { detectInterference } = await import('../lib/confidence/interferenceDetector');
+
 vi.mock('../lib/confidence/trendDetector', () => ({
   detectConfidenceTrend: vi.fn(() => ({
     slope: 0,
@@ -309,5 +312,46 @@ describe('computeFSRSUpdate', () => {
     expect(result.clampedNextDue).not.toBeNull();
     expect(result.clampedNextDue.getTime()).toBeGreaterThan(0);
     expect(result.fsrsSchedule.nextDueDate).toBeTruthy();
+  });
+
+  // ── Interference interval adjustment ──
+
+  it('should not adjust interval when no interference detected', async () => {
+    const result = await computeFSRSUpdate(prisma, baseInput);
+    expect(result.confidenceTelemetry.interference_interval_multiplier).toBe(1.0);
+    expect(result.confidenceTelemetry.interference_adjusted_interval_days).toBe(3);
+  });
+
+  it('should increase interval when same-condition interference detected', async () => {
+    (detectInterference as any).mockReturnValueOnce({
+      discount: 0.88,
+      detected: true,
+      details: { interferingCount: 2, closestDistance: 2, type: 'same_condition' },
+    });
+
+    const result = await computeFSRSUpdate(prisma, baseInput);
+    expect(result.confidenceTelemetry.interference_interval_multiplier).toBeGreaterThan(1.0);
+    // Interval should be pushed out
+    expect(result.confidenceTelemetry.interference_adjusted_interval_days).toBeGreaterThan(3);
+  });
+
+  it('should moderately increase interval for confusion-pair interference', async () => {
+    (detectInterference as any).mockReturnValueOnce({
+      discount: 0.92,
+      detected: true,
+      details: { interferingCount: 1, closestDistance: 5, type: 'confusion_pair' },
+    });
+
+    const result = await computeFSRSUpdate(prisma, baseInput);
+    expect(result.confidenceTelemetry.interference_interval_multiplier).toBeGreaterThan(1.0);
+    // Same-condition gives bigger boost than confusion-pair at same distance
+    // (tested implicitly — we just verify it's less than the max 1.8 cap)
+    expect(result.confidenceTelemetry.interference_interval_multiplier).toBeLessThanOrEqual(1.8);
+  });
+
+  it('should include interference telemetry fields', async () => {
+    const result = await computeFSRSUpdate(prisma, baseInput);
+    expect(result.confidenceTelemetry).toHaveProperty('interference_interval_multiplier');
+    expect(result.confidenceTelemetry).toHaveProperty('interference_adjusted_interval_days');
   });
 });

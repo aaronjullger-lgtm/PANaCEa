@@ -1,4 +1,4 @@
-import type { SystemCode } from '../../types';
+import type { SystemCode } from '@/types';
 
 export interface ConditionSearchFilters {
   system?: SystemCode;

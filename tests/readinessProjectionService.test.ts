@@ -4,11 +4,13 @@ import {
   harmonicMeanStability,
   projectRetrievability,
   aggregateTopicReadiness,
+  aggregateSystemReadiness,
   computeExamReadiness,
   detectRisk,
   type CardState,
   type SystemReadinessProjection,
 } from '@/lib/services/readinessProjectionService';
+import type { ConfidenceTrendResult } from '@/lib/confidence/trendDetector';
 
 // ─── betaBinomialPosterior ────────────────────────────────────────
 
@@ -224,5 +226,205 @@ describe('detectRisk', () => {
   it('returns "critical" when any system below 40%', () => {
     const { level } = detectRisk(0.70, 1, [makeSys(0.35), makeSys(0.90)]);
     expect(level).toBe('critical');
+  });
+});
+
+// ─── aggregateSystemReadiness with trend ──────────────────────────
+
+describe('aggregateSystemReadiness - trend-aware', () => {
+  const makeTopic = (r: number) => ({
+    conditionId: 'cond-1',
+    system: 'CV',
+    meanRetrievability: r,
+    harmonicStability: 30,
+    masteryEstimate: r,
+    masteryCI: [r - 0.05, r + 0.05],
+    cardCount: 10,
+  });
+
+  it('returns needsIntervention=false when no trend provided', () => {
+    const result = aggregateSystemReadiness('CV', [makeTopic(0.8)]);
+    expect(result.needsIntervention).toBe(false);
+    expect(result.trend).toBeUndefined();
+  });
+
+  it('narrower CI for improving trend', () => {
+    const improvingTrend: ConfidenceTrendResult = {
+      slope: 0.08,
+      isConcerning: false,
+      trendMultiplier: 1.1,
+      dataPoints: 5,
+      rSquared: 0.7,
+      category: 'improving',
+    };
+
+    const resultNoTrend = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0);
+    const resultWithTrend = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0, improvingTrend);
+
+    // Improving trend should narrow the CI
+    const ciWidthNoTrend = resultNoTrend.projectedCI[1] - resultNoTrend.projectedCI[0];
+    const ciWidthWithTrend = resultWithTrend.projectedCI[1] - resultWithTrend.projectedCI[0];
+    expect(ciWidthWithTrend).toBeLessThan(ciWidthNoTrend);
+  });
+
+  it('wider CI for declining trend', () => {
+    const decliningTrend: ConfidenceTrendResult = {
+      slope: -0.1,
+      isConcerning: true,
+      trendMultiplier: 0.85,
+      dataPoints: 5,
+      rSquared: 0.6,
+      category: 'concerning',
+    };
+
+    const resultNoTrend = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0);
+    const resultWithTrend = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0, decliningTrend);
+
+    const ciWidthNoTrend = resultNoTrend.projectedCI[1] - resultNoTrend.projectedCI[0];
+    const ciWidthWithTrend = resultWithTrend.projectedCI[1] - resultWithTrend.projectedCI[0];
+    expect(ciWidthWithTrend).toBeGreaterThan(ciWidthNoTrend);
+  });
+
+  it('sets needsIntervention=true for declining trend', () => {
+    const decliningTrend: ConfidenceTrendResult = {
+      slope: -0.1,
+      isConcerning: true,
+      trendMultiplier: 0.85,
+      dataPoints: 5,
+      rSquared: 0.6,
+      category: 'concerning',
+    };
+    const result = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0, decliningTrend);
+    expect(result.needsIntervention).toBe(true);
+  });
+
+  it('sets needsIntervention=true for stable trend below mastery', () => {
+    const stableTrend: ConfidenceTrendResult = {
+      slope: 0.01,
+      isConcerning: false,
+      trendMultiplier: 1.0,
+      dataPoints: 5,
+      rSquared: 0.5,
+      category: 'stable',
+    };
+    const result = aggregateSystemReadiness('CV', [makeTopic(0.6)], 0, stableTrend);
+    expect(result.needsIntervention).toBe(true);
+  });
+
+  it('sets needsIntervention=false for stable trend at mastery', () => {
+    const stableTrend: ConfidenceTrendResult = {
+      slope: 0.01,
+      isConcerning: false,
+      trendMultiplier: 1.0,
+      dataPoints: 5,
+      rSquared: 0.5,
+      category: 'stable',
+    };
+    const result = aggregateSystemReadiness('CV', [makeTopic(0.85)], 0, stableTrend);
+    expect(result.needsIntervention).toBe(false);
+  });
+
+  it('ignores trend with low R²', () => {
+    const weakTrend: ConfidenceTrendResult = {
+      slope: -0.15,
+      isConcerning: false,
+      trendMultiplier: 1.0,
+      dataPoints: 5,
+      rSquared: 0.1, // Too low to trust
+      category: 'stable',
+    };
+    const result = aggregateSystemReadiness('CV', [makeTopic(0.8)], 0, weakTrend);
+    expect(result.needsIntervention).toBe(false);
+  });
+});
+
+// ─── computeExamReadiness with trend data ────────────────────────
+
+describe('computeExamReadiness - trend-aware', () => {
+  const makeCards = (system: string, count: number, r: number): CardState[] =>
+    Array.from({ length: count }, (_, i) => ({
+      conditionId: `${system}-cond-${i}`,
+      system,
+      stability: 30,
+      difficulty: 5,
+      retrievability: r,
+      lastReviewAt: new Date(),
+      totalAttempts: 20,
+      correctCount: Math.round(r * 20),
+    }));
+
+  it('includes empty earlyWarnings when no trends provided', () => {
+    const result = computeExamReadiness(makeCards('Cardiovascular', 10, 0.85));
+    expect(result.earlyWarnings).toEqual([]);
+    expect(result.decliningSystems).toEqual([]);
+    expect(result.plateauingSystems).toEqual([]);
+    expect(result.acceleratingSystems).toEqual([]);
+  });
+
+  it('populates decliningSystems when trend is declining', () => {
+    const trends = new Map<string, ConfidenceTrendResult>();
+    trends.set('Cardiovascular', {
+      slope: -0.12,
+      isConcerning: true,
+      trendMultiplier: 0.85,
+      dataPoints: 5,
+      rSquared: 0.6,
+      category: 'concerning',
+    });
+
+    const result = computeExamReadiness(makeCards('Cardiovascular', 10, 0.7), null, trends);
+    expect(result.decliningSystems).toContain('Cardiovascular');
+    expect(result.earlyWarnings.length).toBeGreaterThan(0);
+    expect(result.earlyWarnings[0]!.type).toBe('declining_confidence');
+    expect(result.earlyWarnings[0]!.system).toBe('Cardiovascular');
+  });
+
+  it('populates plateauingSystems when stable below mastery', () => {
+    const trends = new Map<string, ConfidenceTrendResult>();
+    trends.set('Pulmonary', {
+      slope: 0.01,
+      isConcerning: false,
+      trendMultiplier: 1.0,
+      dataPoints: 4,
+      rSquared: 0.5,
+      category: 'stable',
+    });
+
+    const result = computeExamReadiness(makeCards('Pulmonary', 10, 0.6), null, trends);
+    expect(result.plateauingSystems).toContain('Pulmonary');
+    expect(result.earlyWarnings.some(w => w.type === 'plateauing')).toBe(true);
+  });
+
+  it('populates acceleratingSystems for improving trends', () => {
+    const trends = new Map<string, ConfidenceTrendResult>();
+    trends.set('Cardiovascular', {
+      slope: 0.08,
+      isConcerning: false,
+      trendMultiplier: 1.1,
+      dataPoints: 5,
+      rSquared: 0.7,
+      category: 'improving',
+    });
+
+    const result = computeExamReadiness(makeCards('Cardiovascular', 10, 0.8), null, trends);
+    expect(result.acceleratingSystems).toContain('Cardiovascular');
+    expect(result.earlyWarnings.length).toBe(0); // No warnings for improving
+  });
+
+  it('includes trend data in system results', () => {
+    const trends = new Map<string, ConfidenceTrendResult>();
+    trends.set('Cardiovascular', {
+      slope: -0.05,
+      isConcerning: false,
+      trendMultiplier: 0.95,
+      dataPoints: 4,
+      rSquared: 0.5,
+      category: 'declining',
+    });
+
+    const result = computeExamReadiness(makeCards('Cardiovascular', 10, 0.8), null, trends);
+    const cvSystem = result.systems.find(s => s.system === 'Cardiovascular');
+    expect(cvSystem?.trend).toBeDefined();
+    expect(cvSystem?.needsIntervention).toBe(true);
   });
 });

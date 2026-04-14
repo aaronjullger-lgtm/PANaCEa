@@ -262,6 +262,7 @@ export async function computeFSRSUpdate(
     detected: false,
     details: { interferingCount: 0, closestDistance: null, type: 'none' },
   };
+  let interferenceIntervalMultiplier = 1.0;
   try {
     const confusionPairs = await prisma.confusionPair.findMany({
       where: {
@@ -296,6 +297,28 @@ export async function computeFSRSUpdate(
       .map((r, idx) => ({ conditionId: r.conditionId, position: idx }));
 
     interferenceResult = detectInterference(conditionId, confusionPairIds, sessionHistory);
+
+    // ── Interference-aware interval adjustment ──
+    // When interference is detected, increase the interval gap to prevent
+    // similar items from being reviewed too close together (proactive interference).
+    // This reduces recency priming effects and encourages genuine retrieval.
+    if (interferenceResult.detected) {
+      const { type, interferingCount, closestDistance } = interferenceResult.details;
+      if (type === 'same_condition') {
+        // Strongest interference: same item reviewed recently → push next review out more
+        // Scale: 1 interfering at distance 1 → +40%, max +80% for 2+ items very close
+        const distanceFactor = closestDistance != null ? Math.max(0, 1 - closestDistance / 10) : 0.5;
+        const countFactor = Math.min(1.0, interferingCount / 3);
+        interferenceIntervalMultiplier = 1.0 + 0.4 * distanceFactor + 0.4 * countFactor;
+      } else if (type === 'confusion_pair') {
+        // Weaker interference: confusable item reviewed recently → moderate push
+        const distanceFactor = closestDistance != null ? Math.max(0, 1 - closestDistance / 10) : 0.3;
+        interferenceIntervalMultiplier = 1.0 + 0.2 * distanceFactor * Math.min(1.0, interferingCount / 2);
+      }
+
+      // Cap the multiplier to prevent excessively long intervals
+      interferenceIntervalMultiplier = Math.min(interferenceIntervalMultiplier, 1.8);
+    }
   } catch {
     // Non-fatal
   }
@@ -410,14 +433,22 @@ export async function computeFSRSUpdate(
     difficulty: modulatedDifficulty,
   };
 
-  const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
+  // Apply interference interval multiplier to push similar items apart
+  // This increases the scheduled_days without affecting the underlying stability,
+  // so the FSRS model state stays clean but the next review is delayed.
+  let effectiveScheduledDays = updatedCard.scheduled_days;
+  if (interferenceIntervalMultiplier > 1.0) {
+    effectiveScheduledDays = updatedCard.scheduled_days * interferenceIntervalMultiplier;
+  }
+
+  const rawNextDue = new Date(Date.now() + effectiveScheduledDays * 86400000);
   const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
 
   const fsrsSchedule = {
     // Round for display/API consumers; raw float preserved in updatedCard.scheduled_days.
     // FSRS-7 migration: when fractional intervals land, this rounding ensures
     // downstream code (UI, notifications) still sees clean integers.
-    intervalDays: Math.max(1, Math.round(updatedCard.scheduled_days)),
+    intervalDays: Math.max(1, Math.round(effectiveScheduledDays)),
     nextDueDate: clampedNextDue.toISOString(),
     stability: updatedCard.stability,
     difficulty: updatedCard.difficulty,
@@ -437,6 +468,8 @@ export async function computeFSRSUpdate(
     fatigue_dampener: fatigueConfidenceDampener,
     interference_discount: interferenceResult.discount,
     interference_type: interferenceResult.details.type,
+    interference_interval_multiplier: interferenceIntervalMultiplier,
+    interference_adjusted_interval_days: effectiveScheduledDays,
     fluency_dampener: fluencyIllusionDampener(elapsedDays),
     adjusted_confidence: adjustedConfidence,
     stability_multiplier: confidenceStabilityMultiplier(adjustedConfidence),

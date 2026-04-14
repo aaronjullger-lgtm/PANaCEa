@@ -1,4 +1,4 @@
-import type { ConditionMeta } from '@/src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 
 /**
  * API response shape from /api/conditions (inner data object)

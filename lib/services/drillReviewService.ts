@@ -51,6 +51,14 @@ import { computeRelearningSpeed, getOriginalLearningRt, type RelearningSpeedResu
 // Behavioral analysis grade modulation coordinator (Phase 1 — Behavioral Analysis Audit)
 import { modulateGrade, type BehavioralContext, type GradeModulation } from './gradeModulationCoordinator';
 import { analyzeConfusionRecurrence, type ConfusionPairAction } from './confusionPairRecurrenceService';
+// A/B test integration
+import { resolveAssignments, logABConversion, type ABAssignmentMap } from '../middleware/abTestMiddleware';
+
+/** Active A/B test experiment IDs wired into the review pipeline */
+const AB_EXPERIMENTS = [
+  'scheduling_retention_target',   // Variant config overrides request_retention (0.85, 0.90, 0.95)
+  'explanation_format',            // Variant config controls explanation rendering style
+] as const;
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -338,6 +346,14 @@ export async function submitDrillReview(
     sessionType,
     telemetry,
   } = input;
+
+  // ── A/B Test: resolve active experiments for this user (non-blocking) ──
+  let abAssignments: ABAssignmentMap = {};
+  try {
+    abAssignments = await resolveAssignments(prisma as any, userId, [...AB_EXPERIMENTS]);
+  } catch {
+    // Non-fatal: A/B resolution failure must not block the review pipeline
+  }
 
   const normalizedSelectedAnswer =
     typeof selectedAnswer === 'string'
@@ -940,7 +956,22 @@ export async function submitDrillReview(
       try {
         // Sprint 5: Use per-user/system optimized parameters when available
         const optimizedParams = await getOptimizedParameters(prisma, userId, question.system).catch(() => undefined);
-        const fsrs = optimizedParams ? new FSRS(optimizedParams) : new FSRS();
+
+        // A/B Test: override request_retention from experiment variant config
+        const schedulingExp = abAssignments['scheduling_retention_target'];
+        let fsrsParams = optimizedParams;
+        if (schedulingExp && typeof schedulingExp.config.request_retention === 'number') {
+          const abRetention = schedulingExp.config.request_retention as number;
+          if (abRetention >= 0.7 && abRetention <= 0.99) {
+            fsrsParams = { ...(fsrsParams || { request_retention: 0.9, maximum_interval: 36500, w: [] }), request_retention: abRetention };
+            logger?.debug?.('AB: scheduling_retention_target override applied', {
+              variant: schedulingExp.variantName,
+              request_retention: abRetention,
+            });
+          }
+        }
+
+        const fsrs = fsrsParams ? new FSRS(fsrsParams) : new FSRS();
         const existingProgress = await prisma.userProgress.findUnique({
           where: {
             userId_conditionId: {
@@ -1710,6 +1741,22 @@ export async function submitDrillReview(
     // FIRe implicit review credits — stability multipliers for prerequisite concepts
     fireCredits,
   };
+
+  // ── A/B Test: log conversion events for completed reviews ──
+  // Fires non-blocking; failures are caught internally and do not block the response.
+  if (Object.keys(abAssignments).length > 0) {
+    for (const [expId, assignment] of Object.entries(abAssignments)) {
+      logABConversion(
+        prisma as any,
+        userId,
+        expId,
+        assignment.variantName,
+        'review_completed',
+        isCorrect ? 1 : 0,
+        { timeSpentMs: numericTime, questionId, sessionType: sessionType ?? 'drill' }
+      );
+    }
+  }
 }
 
 /**

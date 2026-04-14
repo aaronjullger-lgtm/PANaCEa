@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type MedicalContentData } from '../content/types';
 import { logger } from '../../logger';
+import type { ABAssignmentMap } from '../../middleware/abTestMiddleware';
 
 const LOG_SCOPE = 'QuestionGenerationService';
 
@@ -8,6 +9,9 @@ export interface GroundingSource {
   uri: string;
   title: string;
 }
+
+/** A/B-testable generation strategies */
+export type GenerationStrategy = 'single-pass' | 'self-refine' | 'rag-grounded';
 
 export class QuestionGenerationService {
   private genAI: GoogleGenerativeAI;
@@ -25,11 +29,30 @@ export class QuestionGenerationService {
   }
 
   /**
-   * Generate a review question based on medical content
+   * Resolve the generation strategy from A/B test assignments.
+   * Falls back to 'rag-grounded' (the default grounded-model approach).
+   */
+  resolveGenerationStrategy(abAssignments?: ABAssignmentMap): GenerationStrategy {
+    const genExp = abAssignments?.['question_generation_strategy'];
+    if (!genExp) return 'rag-grounded';
+    const strategy = genExp.config.strategy as string | undefined;
+    if (strategy === 'single-pass' || strategy === 'self-refine' || strategy === 'rag-grounded') {
+      return strategy;
+    }
+    return 'rag-grounded';
+  }
+
+  /**
+   * Generate a review question based on medical content.
+   *
+   * @param abAssignments - Optional A/B test assignments. If the
+   *   'question_generation_strategy' experiment is active, uses the
+   *   variant's config.strategy to select the generation approach.
    */
   async generateReviewQuestion(
     content: MedicalContentData,
-    difficulty: string = 'medium'
+    difficulty: string = 'medium',
+    abAssignments?: ABAssignmentMap
   ): Promise<any> {
     // Pass findings-only for vignette-building; withhold condition/overview from vignette text
     const findingsContext = [
@@ -84,13 +107,35 @@ Return ONLY valid JSON (no markdown):
 }`;
 
     try {
-      // Use grounded model for evidence-backed generation
-      const result = await this.groundedModel.generateContent(prompt);
-      const response = result.response;
+      const strategy = this.resolveGenerationStrategy(abAssignments);
+      logger.debug(LOG_SCOPE, 'Generation strategy selected', { strategy });
+
+      let result: any;
+      let response: any;
+
+      if (strategy === 'single-pass') {
+        // Direct generation without grounding — fastest path
+        result = await this.model.generateContent(prompt);
+        response = result.response;
+      } else if (strategy === 'self-refine') {
+        // Two-pass: generate then self-critique and refine
+        result = await this.model.generateContent(prompt);
+        response = result.response;
+        let parsed = this.parseResponse(response.text());
+        if (parsed) {
+          parsed = await this.selfRefine(parsed, prompt);
+        }
+        return parsed;
+      } else {
+        // rag-grounded (default): use grounded model for evidence-backed generation
+        result = await this.groundedModel.generateContent(prompt);
+        response = result.response;
+      }
+
       const text = response.text();
       const parsed = this.parseResponse(text);
 
-      if (parsed) {
+      if (parsed && strategy === 'rag-grounded') {
         // Extract grounding sources from response metadata
         const groundingSources = this.extractGroundingSources(response);
         if (groundingSources.length > 0) {
@@ -111,6 +156,42 @@ Return ONLY valid JSON (no markdown):
         logger.error(LOG_SCOPE, 'Generation failed completely', fallbackError);
         return null;
       }
+    }
+  }
+
+  /**
+   * Self-refine strategy: critique and improve a generated question.
+   * Uses a second LLM call to identify weaknesses and produce a refined version.
+   */
+  private async selfRefine(draft: any, originalPrompt: string): Promise<any> {
+    const critiquePrompt = `You are a PANCE question quality reviewer. Critique this generated question and improve it.
+
+ORIGINAL PROMPT CONTEXT:
+${originalPrompt.slice(0, 500)}
+
+GENERATED QUESTION:
+${JSON.stringify(draft, null, 2)}
+
+Evaluate for:
+1. Clinical accuracy — are the findings, diagnosis, and treatment correct?
+2. Distractor quality — are incorrect options plausible but clearly wrong?
+3. Rationale completeness — does it explain why each option is correct/incorrect?
+4. PANCE appropriateness — does it match the style and difficulty of PANCE questions?
+
+If the question is already high quality, return the original JSON unchanged.
+If improvements are needed, return ONLY the improved JSON (no markdown).
+
+Return ONLY valid JSON with the same structure as the input.`;
+
+    try {
+      const result = await this.model.generateContent(critiquePrompt);
+      const refined = this.parseResponse(result.response.text());
+      if (refined && refined.vignette && refined.options) {
+        return refined;
+      }
+      return draft;
+    } catch {
+      return draft; // Fallback to draft if self-refine fails
     }
   }
 
