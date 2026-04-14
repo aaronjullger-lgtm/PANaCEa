@@ -1,6 +1,4 @@
 # Pass-through: serve static assets with correct MIME types
 /assets/*  /assets/:splat  200
-# Explicit /index.html match first (avoids infinite loop when /* rewrites to index.html)
-/index.html  /index.html  200
-# SPA fallback: serve index.html for client routes. Order matters - /index.html must be above /*
+# SPA fallback: serve index.html for client routes
 /*  /index.html  200
