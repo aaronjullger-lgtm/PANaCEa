@@ -40,9 +40,9 @@ import {
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
-  CrossSystemExplorer,
-  MedicalDatabaseSearch,
-  LiveStudySession,
+  MedicalDatabaseWorkspacePage,
+  ExplorerWorkspacePage,
+  LiveCollaborationWorkspacePage,
   PracticePage,
   ProgressPage,
   DailyChallengesHub,
@@ -322,11 +322,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/daily-challenges"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading daily challenges..." />}>
-              <ErrorBoundary variant="page">
-                <DailyChallengesHub />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="88rem">
+              <Suspense fallback={<Loader message="Loading daily challenges..." />}>
+                <ErrorBoundary variant="page">
+                  <DailyChallengesHub />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -335,7 +337,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/study/knowledge"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading knowledge base…" />}>
                 <ErrorBoundary variant="page">
                   <KnowledgeBaseHub
@@ -351,7 +353,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/study/utilities"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading toolkit…" />}>
                 <ErrorBoundary variant="page">
                   <ToolkitHub
@@ -368,7 +370,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/study/path"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading study path…" />}>
                 <ErrorBoundary variant="page">
                   <StudyPathDashboard />
@@ -382,7 +384,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/gap-analysis"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader />}>
                 <ErrorBoundary variant="page">
                   <GapAnalysisDashboard
@@ -405,7 +407,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/clinical-profile"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader />}>
                 <ErrorBoundary variant="page">
                   <ClinicalProfileDashboard />
@@ -419,12 +421,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/medical-database"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading medical database search..." />}>
                 <ErrorBoundary variant="page">
-                  <MedicalDatabaseSearch
-                    onClose={() => navigate(ROUTES.STUDY)}
-                  />
+                  <MedicalDatabaseWorkspacePage />
                 </ErrorBoundary>
               </Suspense>
             </AppLayout>
@@ -435,12 +435,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/live-collaboration"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading live study session..." />}>
                 <ErrorBoundary variant="page">
-                  <LiveStudySession
-                    onClose={() => navigate(ROUTES.STUDY)}
-                  />
+                  <LiveCollaborationWorkspacePage />
                 </ErrorBoundary>
               </Suspense>
             </AppLayout>
@@ -451,12 +449,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/explorer"
         element={
           <AuthenticatedRoute>
-            <AppLayout>
+            <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading cross‑system explorer..." />}>
                 <ErrorBoundary variant="page">
-                  <CrossSystemExplorer
-                    onClose={() => navigate(ROUTES.STUDY)}
-                  />
+                  <ExplorerWorkspacePage />
                 </ErrorBoundary>
               </Suspense>
             </AppLayout>
@@ -540,11 +536,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/clinical-eye"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
-              <ErrorBoundary variant="page">
-                <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="88rem">
+              <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
+                <ErrorBoundary variant="page">
+                  <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -552,11 +550,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/visualizer"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading visualizer…" />}>
-              <ErrorBoundary variant="page">
-                <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="88rem">
+              <Suspense fallback={<Loader message="Loading visualizer…" />}>
+                <ErrorBoundary variant="page">
+                  <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -564,11 +564,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/lecture-converter"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading lecture converter…" />}>
-              <ErrorBoundary variant="page">
-                <LectureConverterPage onClose={() => navigate(ROUTES.STUDY)} />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="88rem">
+              <Suspense fallback={<Loader message="Loading lecture converter…" />}>
+                <ErrorBoundary variant="page">
+                  <LectureConverterPage onBack={() => navigate(ROUTES.STUDY)} />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />
@@ -576,11 +578,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/technique-check"
         element={
           <AuthenticatedRoute>
-            <Suspense fallback={<Loader message="Loading technique check…" />}>
-              <ErrorBoundary variant="page">
-                <TechniqueCheckPage onClose={() => navigate(ROUTES.STUDY)} />
-              </ErrorBoundary>
-            </Suspense>
+            <AppLayout contentMaxWidth="88rem">
+              <Suspense fallback={<Loader message="Loading technique check…" />}>
+                <ErrorBoundary variant="page">
+                  <TechniqueCheckPage onBack={() => navigate(ROUTES.STUDY)} />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
           </AuthenticatedRoute>
         }
       />

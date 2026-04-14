@@ -107,6 +107,21 @@ export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingM
 export const DailyChallengesHub = lazy(() =>
   import('@/components/pages/DailyChallengesHub').then((m) => ({ default: m.DailyChallengesHub }))
 );
+export const MedicalDatabaseWorkspacePage = lazy(() =>
+  import('../pages/MedicalDatabaseWorkspacePage').then((m) => ({
+    default: m.MedicalDatabaseWorkspacePage,
+  }))
+);
+export const ExplorerWorkspacePage = lazy(() =>
+  import('../pages/ExplorerWorkspacePage').then((m) => ({
+    default: m.ExplorerWorkspacePage,
+  }))
+);
+export const LiveCollaborationWorkspacePage = lazy(() =>
+  import('../pages/LiveCollaborationWorkspacePage').then((m) => ({
+    default: m.LiveCollaborationWorkspacePage,
+  }))
+);
 export const SimulationPage = lazy(() =>
   import('../pages/SimulationPage').then((m) => ({ default: m.SimulationPage }))
 );
