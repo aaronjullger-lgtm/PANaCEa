@@ -10,6 +10,7 @@ import { enhancedHaptics } from '@/lib/enhancedHaptics';
 import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
 import { debounce } from '@/lib/utils/debounce';
 import { useQuizTimer } from '@/hooks/useQuizTimer';
+import { useQuizKeyboard } from './hooks/useQuizKeyboard';
 
 // Core services - using client-safe API wrappers
 import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
@@ -420,9 +421,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   const [localNote, setLocalNote] = useState<string>('');
 
-  // Track eliminated answers (by index) for the current question
-  const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
-  const eliminationTimestampsRef = useRef<number[]>([]);
+  // eliminatedAnswers + eliminationTimestampsRef owned by useQuizKeyboard hook (below)
 
   // Track answer changes for analytics (using refs to avoid re-renders)
   const answerChangeCountRef = useRef<number>(0);
@@ -602,6 +601,29 @@ const QuizView: React.FC<QuizViewProps> = ({
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Ref-based callback to break circular dependency: the keyboard hook needs
+  // onSubmitAnswer, but handleSubmitAnswer (defined later) needs the hook's
+  // eliminationTimestampsRef. We bridge with a ref updated after definition.
+  const handleSubmitAnswerRef = useRef<() => void>(() => {});
+
+  // ---- KEYBOARD SHORTCUTS & ELIMINATION (extracted hook) ----
+  const {
+    eliminatedAnswers,
+    setEliminatedAnswers,
+    handleToggleEliminate,
+    eliminationTimestampsRef,
+    resetElimination,
+  } = useQuizKeyboard({
+    isAnswered,
+    selectedAnswerIndex,
+    currentQuestion,
+    onShowMenu,
+    onSubmitAnswer: () => handleSubmitAnswerRef.current(),
+    onToggleRationale: () => setShowRationale((prev) => !prev),
+    optionButtonsRef,
+    nextButtonRef,
+  });
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -794,8 +816,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setAnswerDistribution(null); // Reset peer selection stats for next question
       setIsExplainerLoading(false);
       setQuestionNumber((prev) => prev + 1);
-      setEliminatedAnswers(new Set());
-      eliminationTimestampsRef.current = [];
+      resetElimination();
       setSrsResult(null); // Reset SRS result for new question
       setQuestionStartTime(Date.now()); // Track time for new question
       answerChangeCountRef.current = 0; // Reset answer change tracking
@@ -870,8 +891,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setCurrentQuestion(initialQueue[0] ?? null);
     }
     setLocalNote(initialQueue[0]?.userNote || '');
-    setEliminatedAnswers(new Set());
-    eliminationTimestampsRef.current = [];
+    resetElimination();
 
     // Start tracking implicit metrics, behavioral tracker, and micro-kinetics for the first question
     if (initialQueue.length > 0) {
@@ -883,23 +903,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQueue, currentQuestion]);
 
-  // Handler for toggling elimination state
-  const handleToggleEliminate = useCallback(
-    (index: number) => {
-      if (isAnswered) return;
-      setEliminatedAnswers((prev) => {
-        const next = new Set(prev);
-        if (next.has(index)) {
-          next.delete(index);
-        } else {
-          next.add(index);
-          eliminationTimestampsRef.current.push(Date.now());
-        }
-        return next;
-      });
-    },
-    [isAnswered]
-  );
+  // handleToggleEliminate provided by useQuizKeyboard hook
 
   // Ref-based guard: synchronous, immune to React batching delays.
   // State-based guards (isAnswered, isSubmitting) can have a window where
@@ -1189,88 +1193,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     implicitMetrics,
   ]);
 
-  // Keyboard shortcuts using centralized shortcut context
-  // FLIP_CARD: Toggle showing the explanation/rationale after answering
-  useShortcut(
-    'FLIP_CARD',
-    () => {
-      if (isAnswered) {
-        setShowRationale((prev) => !prev);
-      }
-    },
-    { enabled: isAnswered }
-  );
+  // Keep the ref current so the keyboard hook's onSubmitAnswer always calls the latest version
+  handleSubmitAnswerRef.current = handleSubmitAnswer;
 
-  // NEXT_QUESTION: Go to next question after answering
-  useShortcut(
-    'NEXT_QUESTION',
-    () => {
-      if (isAnswered) {
-        nextButtonRef.current?.click();
-      }
-    },
-    { enabled: isAnswered }
-  );
-
-  // Keep the legacy keyboard handler for quiz-specific shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape)
-  // These are quiz-specific and don't map to global actions
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
-        return;
-      }
-
-      // Escape key to go back to menu
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onShowMenu();
-        return;
-      }
-
-      // Map letter keys to indices (A=0, B=1, C=2, D=3, E=4)
-      const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, e: 4 };
-
-      // Shift + A/B/C/D to toggle elimination
-      if (!isAnswered && event.shiftKey) {
-        const eliminateIndex = letterToIndex[event.key.toLowerCase()];
-
-        if (eliminateIndex !== undefined && currentQuestion?.options[eliminateIndex]) {
-          event.preventDefault();
-          handleToggleEliminate(eliminateIndex);
-          return;
-        }
-      }
-
-      // Regular A/B/C/D to select (only if not eliminated)
-      if (!isAnswered && !event.shiftKey) {
-        const index = letterToIndex[event.key.toLowerCase()];
-        if (index !== undefined && !eliminatedAnswers.has(index)) {
-          event.preventDefault();
-          optionButtonsRef.current[index]?.click();
-        }
-      }
-
-      // Enter to submit selected answer (if not yet submitted)
-      if (!isAnswered && selectedAnswerIndex !== null && event.key === 'Enter') {
-        event.preventDefault();
-        handleSubmitAnswer();
-        return;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [
-    isAnswered,
-    selectedAnswerIndex,
-    handleToggleEliminate,
-    eliminatedAnswers,
-    currentQuestion,
-    onShowMenu,
-    handleSubmitAnswer,
-  ]);
+  // Keyboard shortcuts (FLIP_CARD, NEXT_QUESTION, A/B/C/D, Shift+A/B/C/D, Enter, Escape)
+  // are now handled by the useQuizKeyboard hook above.
 
   const handleOptionClick = useCallback((index: number) => {
     // Guard against selecting eliminated answers or already answered questions

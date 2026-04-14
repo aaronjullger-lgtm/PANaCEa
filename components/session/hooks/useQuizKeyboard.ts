@@ -6,38 +6,44 @@ export interface UseQuizKeyboardParams {
   isAnswered: boolean;
   selectedAnswerIndex: number | null;
   currentQuestion: Question | null;
-  eliminatedAnswers: Set<number>;
-  questionNumber: number;
-  queueLength: number;
-  onToggleEliminate: (index: number) => void;
   onShowMenu: () => void;
   onSubmitAnswer: () => void;
-  onShowRationale: (show: boolean) => void;
-  onNextQuestion: () => void;
+  onToggleRationale: () => void;
   optionButtonsRef: React.MutableRefObject<(HTMLButtonElement | null)[]>;
   nextButtonRef: React.MutableRefObject<HTMLButtonElement | null>;
 }
 
+export interface UseQuizKeyboardReturn {
+  eliminatedAnswers: Set<number>;
+  setEliminatedAnswers: React.Dispatch<React.SetStateAction<Set<number>>>;
+  handleToggleEliminate: (index: number) => void;
+  eliminationTimestampsRef: React.MutableRefObject<number[]>;
+  resetElimination: () => void;
+}
+
 /**
  * Keyboard shortcuts and answer elimination logic for the quiz session.
+ *
+ * Owns elimination state and provides keyboard shortcuts:
+ * - A/B/C/D: Select answer option
+ * - Shift+A/B/C/D: Toggle answer elimination
+ * - Enter: Submit selected answer
+ * - Escape: Return to menu
+ * - FLIP_CARD shortcut: Toggle rationale
+ * - NEXT_QUESTION shortcut: Advance to next question
  */
 export function useQuizKeyboard({
   isAnswered,
   selectedAnswerIndex,
   currentQuestion,
-  eliminatedAnswers,
-  questionNumber,
-  queueLength,
-  onToggleEliminate,
   onShowMenu,
   onSubmitAnswer,
-  onShowRationale,
-  onNextQuestion,
+  onToggleRationale,
   optionButtonsRef,
   nextButtonRef,
-}: UseQuizKeyboardParams) {
+}: UseQuizKeyboardParams): UseQuizKeyboardReturn {
   // ---- ELIMINATION STATE ----
-  const [eliminatedAnswersState, setEliminatedAnswers] = useState<Set<number>>(new Set());
+  const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
   const eliminationTimestampsRef = useRef<number[]>([]);
 
   const handleToggleEliminate = useCallback(
@@ -57,25 +63,36 @@ export function useQuizKeyboard({
     [isAnswered]
   );
 
-  // Keyboard shortcuts: FLIP_CARD
+  const resetElimination = useCallback(() => {
+    setEliminatedAnswers(new Set());
+    eliminationTimestampsRef.current = [];
+  }, []);
+
+  // Global shortcut: FLIP_CARD — toggle rationale visibility
   useShortcut(
     'FLIP_CARD',
-    () => { if (isAnswered) onShowRationale(true); },
+    () => {
+      if (isAnswered) onToggleRationale();
+    },
     { enabled: isAnswered }
   );
 
-  // Keyboard shortcuts: NEXT_QUESTION
+  // Global shortcut: NEXT_QUESTION — click the next button
   useShortcut(
     'NEXT_QUESTION',
-    () => { if (isAnswered) nextButtonRef.current?.click(); },
+    () => {
+      if (isAnswered) nextButtonRef.current?.click();
+    },
     { enabled: isAnswered }
   );
 
   // Quiz-specific keyboard shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't capture keys when typing in a textarea
       if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') return;
 
+      // Escape key to go back to menu
       if (event.key === 'Escape') {
         event.preventDefault();
         onShowMenu();
@@ -103,7 +120,7 @@ export function useQuizKeyboard({
         }
       }
 
-      // Enter to submit
+      // Enter to submit selected answer
       if (!isAnswered && selectedAnswerIndex !== null && event.key === 'Enter') {
         event.preventDefault();
         onSubmitAnswer();
@@ -113,12 +130,13 @@ export function useQuizKeyboard({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, onSubmitAnswer]);
+  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, onSubmitAnswer, optionButtonsRef]);
 
   return {
-    eliminatedAnswers: eliminatedAnswersState,
+    eliminatedAnswers,
     setEliminatedAnswers,
     handleToggleEliminate,
     eliminationTimestampsRef,
+    resetElimination,
   };
 }

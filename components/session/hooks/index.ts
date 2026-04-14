@@ -5,4 +5,4 @@ export { useQuizTimer } from './useQuizTimer';
 export type { UseQuizTimerParams, UseQuizTimerReturn } from './useQuizTimer';
 
 export { useQuizKeyboard } from './useQuizKeyboard';
-export type { UseQuizKeyboardParams } from './useQuizKeyboard';
+export type { UseQuizKeyboardParams, UseQuizKeyboardReturn } from './useQuizKeyboard';
