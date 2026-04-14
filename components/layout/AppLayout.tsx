@@ -3,14 +3,13 @@
  * Provides header, NavRail, and main content area structure
  */
 
-import React, { Suspense, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, X, Shield, HelpCircle } from 'lucide-react';
+import { Settings, Shield, HelpCircle } from 'lucide-react';
 import { AppBrand } from './AppBrand';
 import { NavRail } from './NavRail';
 import { ROUTES } from '@/config/routes';
-import { Loader } from '@/components/loading';
 import { useUser } from '@clerk/clerk-react';
 import ThemeToggleButton from '@/components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '@/components/ui/MasteryHeatmapToggle';
@@ -40,6 +39,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const navigate = useNavigate();
   const { user } = useUser();
   const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
+  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 82%, transparent)';
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
+  const chromeShadow =
+    '0 10px 32px rgba(15, 23, 42, 0.14), inset 0 -1px 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
+  const appCanvasBackground =
+    'radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 26%), radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--color-accent-secondary) 12%, transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 96%, transparent) 0%, color-mix(in srgb, var(--color-bg-primary) 90%, var(--color-accent) 10%) 56%, color-mix(in srgb, var(--color-bg-primary) 97%, transparent) 100%)';
+  const headerActionClass =
+    'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[12px] border p-2 text-[var(--color-text-muted)] transition-all duration-200 ease-premium hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
 
   // Auto-apply streak freezes on app mount (non-blocking)
   const autoFreezeResult = useStreakAutoFreeze();
@@ -73,11 +80,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             top: 0,
             zIndex: 50,
             height: 'var(--header-height, 4rem)',
-            background: 'rgba(10, 14, 26, 0.88)',
+            background: chromeSurface,
             backdropFilter: 'blur(24px) saturate(160%)',
             WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.04)',
+            borderBottom: `1px solid ${chromeBorder}`,
+            boxShadow: chromeShadow,
           }}
         >
           <div className="h-full w-full flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -92,18 +99,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
                   to={ROUTES.ADMIN}
-                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
-                  style={{
-                    color: '#64748b',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = '#64748b';
-                  }}
+                  className={headerActionClass}
+                  style={{ borderColor: chromeBorder }}
                   aria-label="Admin Dashboard"
                 >
                   <Shield className="w-5 h-5" />
@@ -113,18 +110,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <motion.button
                   ref={settingsButtonRef}
                   onClick={onSettingsClick}
-                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
-                  style={{
-                    color: '#64748b',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = '#64748b';
-                  }}
+                  className={headerActionClass}
+                  style={{ borderColor: chromeBorder }}
                   aria-label="Settings and Stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -137,18 +124,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="p-2 rounded-[12px] min-w-[44px] min-h-[44px] flex items-center justify-center transition-all duration-200 ease-premium"
-                  style={{
-                    color: '#64748b',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                    (e.currentTarget as HTMLElement).style.color = '#f1f5f9';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = '#64748b';
-                  }}
+                  className={headerActionClass}
+                  style={{ borderColor: chromeBorder }}
                   aria-label="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />
@@ -169,8 +146,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         className="main-content-area min-h-screen min-w-0 max-w-full overflow-visible transition-[margin] duration-300 ease-premium"
         style={{
           marginLeft: showNavRail ? 'var(--nav-rail-width, 56px)' : '0',
-          paddingTop: showHeader ? 'var(--header-height, 4rem)' : '0',
-          background: 'linear-gradient(180deg, rgba(10, 14, 26, 1) 0%, rgba(15, 23, 42, 0.5) 50%, rgba(10, 14, 26, 1) 100%)',
+          background: appCanvasBackground,
         }}
       >
         <motion.div

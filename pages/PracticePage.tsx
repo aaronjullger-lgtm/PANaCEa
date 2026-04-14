@@ -143,13 +143,23 @@ function ModeCard({
         <div className="flex h-full flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-              style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+              style={{
+                background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+                borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+              }}
             >
               <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
             </div>
             {mode.isComingSoon ? (
-              <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+              <span
+                className="rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
                 Coming soon
               </span>
             ) : null}
@@ -166,7 +176,14 @@ function ModeCard({
 
           <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-[var(--color-text-muted)]">
             {mode.estimatedMinutes ? (
-              <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1">
+              <span
+                className="rounded-full border px-2.5 py-1"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
                 ~{mode.estimatedMinutes} min
               </span>
             ) : null}
@@ -197,7 +214,14 @@ function CategorySection({
       title={info.label}
       subtitle={info.description}
       action={
-        <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+        <span
+          className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+            background:
+              'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+          }}
+        >
           {modes.length} mode{modes.length === 1 ? '' : 's'}
         </span>
       }
@@ -205,8 +229,11 @@ function CategorySection({
       <WorkspaceSurface accent={accent} className="space-y-5">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-            style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+            style={{
+              background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+              borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+            }}
           >
             <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
           </div>
@@ -432,13 +459,18 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                 placeholder="Search for ECG, pharmacology, ventilator, stroke..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full rounded-2xl border border-white/8 bg-white/5 py-3.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                className="w-full rounded-2xl border py-3.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+                }}
               />
               {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--color-text-muted)] transition-colors hover:bg-white/6 hover:text-[var(--color-text-primary)]"
+                  className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]"
                   aria-label="Clear search"
                 >
                   <X className="h-4 w-4" />
@@ -524,14 +556,28 @@ export const PracticePage: React.FC<PracticePageProps> = ({
               </div>
 
               <div className="grid gap-3">
-                <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                  }}
+                >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">Quick wins</p>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     Use 10-minute recall or image drills when you need momentum between classes or
                     on rotation.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                  }}
+                >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     Deep reasoning
                   </p>
@@ -540,7 +586,14 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                     think through ambiguity.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
+                <div
+                  className="rounded-2xl border p-4"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                  }}
+                >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     System repair
                   </p>
@@ -597,8 +650,11 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                 <WorkspaceSurface key={category} accent={accent}>
                   <div className="space-y-4">
                     <div
-                      className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-                      style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+                      style={{
+                        background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+                        borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                      }}
                     >
                       <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
                     </div>
@@ -667,7 +723,10 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             <WorkspaceSurface accent="#7a8f6e">
               <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 {hasResidencyData && systemsWithData.length > 0 && rolling360Stats?.systemStats ? (
-                  <div className="overflow-hidden rounded-[1.25rem] border border-white/8">
+                  <div
+                    className="overflow-hidden rounded-[1.25rem] border"
+                    style={{ borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)' }}
+                  >
                     <BodyMapWidget
                       systemStats={rolling360Stats.systemStats}
                       weakestSystems={rolling360Stats.weakestSystems ?? []}

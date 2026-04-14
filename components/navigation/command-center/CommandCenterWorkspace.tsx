@@ -117,8 +117,11 @@ function QuickLaunchCard({
       >
         <div className="flex h-full flex-col gap-4">
           <div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-            style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+            style={{
+              background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+              borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+            }}
           >
             <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
           </div>
@@ -561,7 +564,14 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                   </span>
                 ))}
                 {weakestSystem ? (
-                  <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                  <span
+                    className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]"
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                      background:
+                        'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                    }}
+                  >
                     Weakest signal: {weakestSystem}
                   </span>
                 ) : null}
@@ -781,7 +791,12 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                             : ''
                         }
                         onChange={(event) => handleEorTestDateChange(event.target.value)}
-                        className="w-full max-w-xs rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                        className="w-full max-w-xs rounded-2xl border px-4 py-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                        style={{
+                          borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                          background:
+                            'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+                        }}
                       />
                     </div>
                   ) : null}

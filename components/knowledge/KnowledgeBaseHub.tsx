@@ -132,16 +132,21 @@ function KnowledgeTabButton({
       className="min-w-[13rem] rounded-[1.2rem] border px-4 py-3 text-left transition-all duration-300"
       style={{
         background: active
-          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 18%, transparent), rgba(255,255,255,0.04))`
-          : 'rgba(255,255,255,0.03)',
-        borderColor: active ? `color-mix(in srgb, ${accent} 60%, white)` : 'rgba(255,255,255,0.08)',
+          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 16%, var(--color-bg-secondary)), color-mix(in srgb, var(--color-bg-primary) 88%, ${accent} 12%))`
+          : 'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+        borderColor: active
+          ? `color-mix(in srgb, ${accent} 48%, var(--color-text-primary))`
+          : 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
         boxShadow: active ? `0 20px 40px -30px ${accent}` : 'none',
       }}
     >
       <div className="flex items-start gap-3">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
-          style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border"
+          style={{
+            background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+            borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+          }}
         >
           <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
         </div>
@@ -349,12 +354,20 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
                 return (
                   <div
                     key={tab.id}
-                    className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4"
+                    className="rounded-[1.25rem] border p-4"
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                      background:
+                        'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
-                        style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+                        className="flex h-10 w-10 items-center justify-center rounded-2xl border"
+                        style={{
+                          background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+                          borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                        }}
                       >
                         <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
                       </div>
@@ -388,7 +401,14 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
                   synced so deeper library views remain linkable.
                 </p>
               </div>
-              <div className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]">
+              <div
+                className="rounded-full border px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
                 {currentTab.label}
               </div>
             </div>
@@ -430,11 +450,25 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
           }
           action={
             activeTab === 'labs' ? (
-              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              <span
+                className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
                 {LAB_SUB_TABS.find((tab) => tab.id === labSubTab)?.label}
               </span>
             ) : (
-              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              <span
+                className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
                 Ready for deep review
               </span>
             )
@@ -521,7 +555,12 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
             <button
               type="button"
               onClick={() => handleTabChange('conditions')}
-              className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-white/8 bg-white/6 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-white/8"
+              className="inline-flex min-h-[42px] items-center justify-center rounded-full border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-bg-tertiary)]"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                background:
+                  'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+              }}
             >
               Reset to Condition Library
             </button>

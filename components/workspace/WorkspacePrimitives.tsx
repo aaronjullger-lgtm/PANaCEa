@@ -127,6 +127,9 @@ export function WorkspacePage({
 
 export function WorkspacePageHeader({ meta, className }: { meta: WorkspacePageMeta; className?: string }) {
   const tone = BADGE_STYLES[meta.badgeTone ?? 'gold'];
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
+  const chromeFill =
+    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)';
 
   return (
     <div className={cn('flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between', className)}>
@@ -136,7 +139,11 @@ export function WorkspacePageHeader({ meta, className }: { meta: WorkspacePageMe
             <button
               type="button"
               onClick={meta.onBack}
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              style={{
+                borderColor: chromeBorder,
+                background: chromeFill,
+              }}
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               {meta.backLabel}
@@ -155,7 +162,13 @@ export function WorkspacePageHeader({ meta, className }: { meta: WorkspacePageMe
             </span>
           ) : null}
           {meta.status ? (
-            <span className="inline-flex min-h-[34px] items-center rounded-full border border-white/8 bg-white/4 px-3.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)]">
+            <span
+              className="inline-flex min-h-[34px] items-center rounded-full border px-3.5 py-1.5 text-xs font-medium text-[var(--color-text-secondary)]"
+              style={{
+                borderColor: chromeBorder,
+                background: chromeFill,
+              }}
+            >
               {meta.status}
             </span>
           ) : null}
@@ -205,7 +218,7 @@ export function WorkspaceHeroStrip({
       )}
       style={{
         background:
-          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 84%, #0f172a 16%), color-mix(in srgb, var(--color-bg-secondary) 92%, var(--color-accent) 8%))',
+          'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 80%, var(--color-accent) 6%), color-mix(in srgb, var(--color-bg-primary) 88%, var(--color-accent-secondary) 12%))',
       }}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(196,183,138,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(114,139,166,0.12),transparent_30%)]" />
@@ -236,7 +249,7 @@ export function WorkspaceSurface({
         {
           '--workspace-accent': accent,
           background:
-            'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 94%, transparent), color-mix(in srgb, var(--color-bg-secondary) 88%, var(--workspace-accent) 12%))',
+            'linear-gradient(145deg, color-mix(in srgb, var(--color-bg-secondary) 82%, var(--workspace-accent) 6%), color-mix(in srgb, var(--color-bg-primary) 92%, var(--workspace-accent) 8%))',
         } as CSSProperties
       }
     >
@@ -317,8 +330,11 @@ export function WorkspaceMetricCard({
         </div>
         {Icon ? (
           <div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-            style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+            style={{
+              background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
+              borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+            }}
           >
             <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
           </div>
@@ -355,7 +371,14 @@ export function WorkspaceEmptyState({
   return (
     <WorkspaceSurface className={cn('border-dashed text-center', className)} accent="#9a7f9a">
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-8">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-2xl border"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+            background:
+              'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-accent-secondary) 8%)',
+          }}
+        >
           <Icon className="h-6 w-6 text-[var(--color-text-secondary)]" aria-hidden="true" />
         </div>
         <div className="space-y-2">

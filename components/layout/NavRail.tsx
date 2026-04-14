@@ -98,6 +98,8 @@ function BottomTabBar({
 }) {
   // Take max 5 for the bottom bar
   const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
+  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 88%, transparent)';
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
 
   // Light haptic tap for PWA standalone mode
   const hapticTap = () => {
@@ -121,10 +123,10 @@ function BottomTabBar({
       <div
         className="absolute inset-0"
         style={{
-          background: 'rgba(10, 14, 26, 0.92)',
+          background: chromeSurface,
           backdropFilter: 'blur(24px) saturate(160%)',
           WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          borderTop: `1px solid ${chromeBorder}`,
           boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.3)',
         }}
       />
@@ -211,6 +213,12 @@ export const NavRail: React.FC<NavRailProps> = ({
   const { pathname, search } = location;
   const showPwaInstall =
     pwaStatus.hasInstallPrompt && !pwaStatus.isInstalled && !pwaStatus.isStandalone;
+  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 82%, transparent)';
+  const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
+  const railShadow =
+    'inset -1px 0 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
+  const railControlClass =
+    'rounded-lg border p-1.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
 
   // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
@@ -319,7 +327,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         <li key={item.id}>
           <Link
             to={item.href}
-            className={`${baseClass} ${isActive ? '' : 'hover:bg-[rgba(255,255,255,0.04)]'}`}
+            className={`${baseClass} ${isActive ? '' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
             aria-current={isActive ? 'page' : undefined}
           >
             {isActive && (
@@ -368,8 +376,8 @@ export const NavRail: React.FC<NavRailProps> = ({
             style={{
               fontSize: '0.625rem',
               letterSpacing: '0.12em',
-              color: '#64748b',
-              borderLeft: '2px solid rgba(196, 183, 138, 0.15)',
+              color: 'var(--color-text-muted)',
+              borderLeft: '2px solid color-mix(in srgb, var(--color-accent) 26%, transparent)',
               paddingLeft: '8px',
             }}
           >
@@ -397,11 +405,11 @@ export const NavRail: React.FC<NavRailProps> = ({
         height: 'calc(100vh - var(--header-height, 4rem))',
         overflowY: 'auto',
         overflowX: 'hidden',
-        background: 'rgba(10, 14, 26, 0.85)',
+        background: chromeSurface,
         backdropFilter: 'blur(20px) saturate(140%)',
         WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-        boxShadow: 'inset -1px 0 0 rgba(255, 255, 255, 0.04)',
+        borderRight: `1px solid ${chromeBorder}`,
+        boxShadow: railShadow,
       }}
       aria-label="Main navigation"
     >
@@ -413,10 +421,8 @@ export const NavRail: React.FC<NavRailProps> = ({
           <button
             type="button"
             onClick={() => setHidden(true)}
-            className="p-1.5 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            style={{ color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.06)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#f1f5f9'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+            className={railControlClass}
+            style={{ borderColor: chromeBorder }}
             aria-label="Hide sidebar"
             title="Hide sidebar (press [)"
           >
@@ -426,10 +432,8 @@ export const NavRail: React.FC<NavRailProps> = ({
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-1.5 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-          style={{ color: '#64748b', border: '1px solid rgba(255, 255, 255, 0.06)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'; e.currentTarget.style.color = '#f1f5f9'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+          className={railControlClass}
+          style={{ borderColor: chromeBorder }}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
         >
