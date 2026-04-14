@@ -11,11 +11,12 @@ import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
 import { debounce } from '@/lib/utils/debounce';
 import { useQuizTimer } from '@/hooks/useQuizTimer';
 import { useQuizKeyboard } from './hooks/useQuizKeyboard';
+import { useQuizReplenishment } from './hooks/useQuizReplenishment';
 
 // Core services - using client-safe API wrappers
-import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
+import { fetchPearlsClient } from '@/services/client/questionApi';
 import {
-  fetchSessionQuestions,
+  // fetchSessionQuestions moved to useQuizReplenishment hook
   recordSessionAnswer,
   initializeSession,
   getPoolStatus,
@@ -435,12 +436,23 @@ const QuizView: React.FC<QuizViewProps> = ({
    *  session fragment so the score display isn't zeroed out. */
   const recoveredSessionScoreRef = useRef<{ correct: number; total: number } | null>(null);
 
-  // Track if we're actively generating a question in the background
-  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
-
-  // Track replenishment attempts to prevent infinite loops
-  const [replenishAttempts, setReplenishAttempts] = useState(0);
-  const MAX_REPLENISH_ATTEMPTS = 3;
+  // ---- QUEUE REPLENISHMENT (extracted hook) ----
+  const {
+    isGeneratingQuestion,
+    replenishAttempts,
+    setReplenishAttempts,
+    replenishmentError,
+    shouldEndlesslyReplenish,
+    replenishQueue,
+  } = useQuizReplenishment({
+    queue,
+    setQueue,
+    setParentQueue,
+    setError,
+    sessionSettings,
+    growthAreas,
+    getToken,
+  });
 
   // Report issue modal state
   const [showReportModal, setShowReportModal] = useState(false);
@@ -484,7 +496,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
   }, [commuter, currentQuestion]);
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
-  const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
 
   // Fix #6a: Overflow menu moved to QuizToolbar component
   // Fix #6b: Collapsible detailed explanation
@@ -550,11 +561,6 @@ const QuizView: React.FC<QuizViewProps> = ({
         total: performanceData.length,
       },
     });
-    // Finding 5 fix: Ref .current values don't trigger re-renders and shouldn't
-    // be in dependency arrays. They are read inside the effect body (above) where
-    // they'll be current at execution time. The effect fires when state deps
-    // (selectedAnswerIndex, isAnswered, etc.) change, which is when saves matter.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     queue,
     currentQuestion,
@@ -563,6 +569,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     questionNumber,
     eliminatedAnswers,
     localNote,
+    performanceData,
     debouncedSave,
   ]);
 
@@ -689,10 +696,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [queue]);
 
   // ---- SHOULD WE REPLENISH ENDLESSLY? ----
-  // 'review' and 'reviewFlagged' are finite (show specific questions)
-  // 'due' is continuous - generates variant questions for concepts needing SRS review
-  const shouldEndlesslyReplenish =
-    sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
+  // shouldEndlesslyReplenish is derived inside the useQuizReplenishment hook
 
   // Sprint 4: Handler to show session end summary before ending
   const handleEndSession = useCallback(() => {
@@ -723,85 +727,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
 
-  // ---- REPLENISH QUEUE (Commuter Mode: keep buffer so tunnel/bad WiFi doesn't run out) ----
-  const BATCH_SIZE = 25;
-  const LOW_QUEUE_THRESHOLD = 20; // Refill when 20 left so we keep a buffer
-
-  const replenishQueue = useCallback(async () => {
-    // Do NOT show the global loader here – this is background work
-    if (!shouldEndlesslyReplenish) return;
-    if (isGeneratingQuestion) return; // Prevent concurrent fetches
-
-    setIsGeneratingQuestion(true);
-    setReplenishmentError(null);
-    // If we've already exceeded max attempts, don't try again
-    if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
-      setReplenishmentError('Unable to load questions after several attempts. Please try again later.');
-      setIsGeneratingQuestion(false);
-      return;
-    }
-    // Increment attempt counter
-    setReplenishAttempts(prev => prev + 1);
-    try {
-      let newQuestions: Question[] = [];
-      const token = await getToken();
-
-      try {
-        if (token) {
-          const result = await fetchSessionQuestions(sessionSettings, token, BATCH_SIZE);
-          newQuestions = result.questions ?? [];
-        }
-      } catch (apiErr) {
-        logger.warn(LOG_SCOPE, 'Session API replenish failed, using fallback', apiErr);
-      }
-
-      if (newQuestions.length === 0) {
-        // Fallback: fetch questions one at a time
-        const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
-          getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
-            logger.warn(LOG_SCOPE, 'Single question fetch failed', err);
-            return null;
-          })
-        );
-        const results = await Promise.all(fetchPromises);
-        newQuestions = results.filter((q): q is Question => q !== null);
-      }
-
-      if (newQuestions.length > 0) {
-        // Keep both queues in sync with batch update
-        setParentQueue((prev) => [...prev, ...newQuestions]);
-        setQueue((prev) => [...prev, ...newQuestions]);
-        // Replenished questions successfully
-        setReplenishAttempts(0);
-      } else {
-        logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
-      }
-    } catch (err: unknown) {
-      logger.error(LOG_SCOPE, 'Failed to replenish queue', err);
-      // soft-fail: show a user-friendly error but don't kill the session
-      setError(
-        'Unable to load more questions right now. You can continue with your current questions.'
-      );
-    } finally {
-      setIsGeneratingQuestion(false);
-    }
-  }, [
-    shouldEndlesslyReplenish,
-    sessionSettings,
-    growthAreas,
-    setParentQueue,
-    setError,
-    getToken,
-    isGeneratingQuestion,
-  ]);
-
-  // Proactive replenishment - trigger when queue drops below threshold
-  useEffect(() => {
-    if (shouldEndlesslyReplenish && queue.length < LOW_QUEUE_THRESHOLD && !isGeneratingQuestion) {
-      // Queue low - triggering replenishment
-      void replenishQueue();
-    }
-  }, [queue.length, shouldEndlesslyReplenish, isGeneratingQuestion, replenishQueue]);
+  // replenishQueue + proactive replenishment effect handled by useQuizReplenishment hook
 
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
@@ -900,8 +826,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       const q = initialQueue[0];
       behavioralTracker.start(q ? inferQuestionType(questionToInferShape(q)) : 'unknown');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQueue, currentQuestion]);
+  }, [behavioralTracker, currentQuestion, implicitMetrics, initialQueue, microKinetics, resetElimination]);
 
   // handleToggleEliminate provided by useQuizKeyboard hook
 
@@ -1321,12 +1246,38 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     [currentQuestion]
   );
 
+  // Focus the question container when a new question loads
+  useEffect(() => {
+    if (!currentQuestion) return undefined;
+
+    // Small delay to let AnimatePresence finish its transition
+    const timer = setTimeout(() => {
+      const questionEl = document.getElementById('question-container');
+      questionEl?.focus();
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [currentQuestion?.id, questionNumber]);
+
+  // Announce correctness result to screen readers when answer is submitted
+  useEffect(() => {
+    if (!currentQuestion || !isAnswered || selectedAnswerIndex === null) return;
+
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+    const correctOption = ['A', 'B', 'C', 'D', 'E'][currentQuestion.correctAnswerIndex] ?? '';
+    const message = isCorrect
+      ? 'Correct!'
+      : `Incorrect. The correct answer is ${correctOption}: ${currentQuestion.options[currentQuestion.correctAnswerIndex]}.`;
+
+    announceToScreenReader(message, 'assertive');
+  }, [currentQuestion, isAnswered, selectedAnswerIndex]);
+
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
     // In continuous mode, show loading while waiting for questions
     if (shouldEndlesslyReplenish) {
       // If we've already exceeded max attempts, show error
-      if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+      if (replenishmentError || replenishAttempts >= 3) {
         // Determine the error type based on session settings
         const isDueMode = sessionSettings.mode === 'due';
         const isVariantMode = sessionSettings.mode === 'variant';
@@ -1406,31 +1357,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   // Note: Swipe gestures are available via swipeContainerRef
   // Apply to main quiz container if needed (currently disabled to avoid conflicts with text selection)
 
-  // Focus the question container when a new question loads
-  useEffect(() => {
-    if (currentQuestion) {
-      // Small delay to let AnimatePresence finish its transition
-      const timer = setTimeout(() => {
-        const questionEl = document.getElementById('question-container');
-        questionEl?.focus();
-      }, 350);
-      return () => clearTimeout(timer);
-    }
-  }, [currentQuestion?.id, questionNumber]);
-
-  // Announce correctness result to screen readers when answer is submitted
-  useEffect(() => {
-    if (isAnswered && selectedAnswerIndex !== null) {
-      const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
-      const correctOption = ['A', 'B', 'C', 'D', 'E'][currentQuestion.correctAnswerIndex] ?? '';
-      const message = isCorrect
-        ? 'Correct!'
-        : `Incorrect. The correct answer is ${correctOption}: ${currentQuestion.options[currentQuestion.correctAnswerIndex]}.`;
-      announceToScreenReader(message, 'assertive');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAnswered]);
-
   return (
     <div
       className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}
@@ -1473,7 +1399,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         onEndSession={handleEndSession}
         replenishmentError={replenishmentError}
         onRetryReplenish={() => {
-          setReplenishmentError(null);
+          setReplenishAttempts(0);
           setError(null);
           void replenishQueue();
         }}

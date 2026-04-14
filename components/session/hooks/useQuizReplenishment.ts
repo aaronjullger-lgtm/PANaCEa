@@ -1,0 +1,135 @@
+import { useState, useCallback, useEffect } from 'react';
+import { logger } from '@/lib/simple-logger';
+import { getQuestionClient } from '@/services/client/questionApi';
+import { fetchSessionQuestions } from '@/services/core';
+import type { Question, SessionSettings } from '@/types';
+
+const LOG_SCOPE = 'QuizView:replenish';
+
+const BATCH_SIZE = 25;
+const LOW_QUEUE_THRESHOLD = 20;
+const MAX_REPLENISH_ATTEMPTS = 3;
+
+export interface UseQuizReplenishmentParams {
+  queue: Question[];
+  setQueue: React.Dispatch<React.SetStateAction<Question[]>>;
+  setParentQueue: React.Dispatch<React.SetStateAction<Question[]>>;
+  setError: (error: string | null) => void;
+  sessionSettings: SessionSettings;
+  growthAreas: string[];
+  getToken: () => Promise<string | null>;
+}
+
+export interface UseQuizReplenishmentReturn {
+  isGeneratingQuestion: boolean;
+  replenishAttempts: number;
+  setReplenishAttempts: React.Dispatch<React.SetStateAction<number>>;
+  replenishmentError: string | null;
+  shouldEndlesslyReplenish: boolean;
+  replenishQueue: () => Promise<void>;
+}
+
+/**
+ * Background queue replenishment for the quiz session.
+ *
+ * Monitors queue length and proactively fetches new questions when the
+ * buffer drops below LOW_QUEUE_THRESHOLD. Uses a two-tier fetch strategy:
+ * batch via fetchSessionQuestions, then individual fallback via getQuestionClient.
+ *
+ * Skipped for review/reviewFlagged focus modes (finite question sets).
+ */
+export function useQuizReplenishment({
+  queue,
+  setQueue,
+  setParentQueue,
+  setError,
+  sessionSettings,
+  growthAreas,
+  getToken,
+}: UseQuizReplenishmentParams): UseQuizReplenishmentReturn {
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [replenishAttempts, setReplenishAttempts] = useState(0);
+  const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
+
+  const shouldEndlesslyReplenish =
+    sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
+
+  const replenishQueue = useCallback(async () => {
+    if (!shouldEndlesslyReplenish) return;
+    if (isGeneratingQuestion) return;
+
+    setIsGeneratingQuestion(true);
+    setReplenishmentError(null);
+
+    if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+      setReplenishmentError('Unable to load questions after several attempts. Please try again later.');
+      setIsGeneratingQuestion(false);
+      return;
+    }
+    setReplenishAttempts((prev) => prev + 1);
+
+    try {
+      let newQuestions: Question[] = [];
+      const token = await getToken();
+
+      try {
+        if (token) {
+          const result = await fetchSessionQuestions(sessionSettings, token, BATCH_SIZE);
+          newQuestions = result.questions ?? [];
+        }
+      } catch (apiErr) {
+        logger.warn(LOG_SCOPE, 'Session API replenish failed, using fallback', apiErr);
+      }
+
+      if (newQuestions.length === 0) {
+        const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
+          getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
+            logger.warn(LOG_SCOPE, 'Single question fetch failed', err);
+            return null;
+          })
+        );
+        const results = await Promise.all(fetchPromises);
+        newQuestions = results.filter((q): q is Question => q !== null);
+      }
+
+      if (newQuestions.length > 0) {
+        setParentQueue((prev) => [...prev, ...newQuestions]);
+        setQueue((prev) => [...prev, ...newQuestions]);
+        setReplenishAttempts(0);
+      } else {
+        logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
+      }
+    } catch (err: unknown) {
+      logger.error(LOG_SCOPE, 'Failed to replenish queue', err);
+      setError('Unable to load more questions right now. You can continue with your current questions.');
+    } finally {
+      setIsGeneratingQuestion(false);
+    }
+  }, [
+    shouldEndlesslyReplenish,
+    sessionSettings,
+    growthAreas,
+    setParentQueue,
+    setError,
+    getToken,
+    isGeneratingQuestion,
+    replenishAttempts,
+    setQueue,
+  ]);
+
+  // Proactive replenishment — trigger when queue drops below threshold
+  useEffect(() => {
+    if (shouldEndlesslyReplenish && queue.length < LOW_QUEUE_THRESHOLD && !isGeneratingQuestion) {
+      void replenishQueue();
+    }
+  }, [queue.length, shouldEndlesslyReplenish, isGeneratingQuestion, replenishQueue]);
+
+  return {
+    isGeneratingQuestion,
+    replenishAttempts,
+    setReplenishAttempts,
+    replenishmentError,
+    shouldEndlesslyReplenish,
+    replenishQueue,
+  };
+}

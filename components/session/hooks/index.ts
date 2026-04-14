@@ -6,3 +6,6 @@ export type { UseQuizTimerParams, UseQuizTimerReturn } from './useQuizTimer';
 
 export { useQuizKeyboard } from './useQuizKeyboard';
 export type { UseQuizKeyboardParams, UseQuizKeyboardReturn } from './useQuizKeyboard';
+
+export { useQuizReplenishment } from './useQuizReplenishment';
+export type { UseQuizReplenishmentParams, UseQuizReplenishmentReturn } from './useQuizReplenishment';
