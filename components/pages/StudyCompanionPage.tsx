@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, BookOpen, Loader2, MessageCircle, Send, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
   const { getToken } = useAuth();
 
   const [token, setToken] = useState<string | null>(null);
-  const documentSelectIdRef = useRef(`study-companion-doc-${crypto.randomUUID()}`);
+  const documentSelectId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [resources, setResources] = useState<StudyResource[]>([]);
@@ -76,12 +76,15 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
 
   const adobeClientId = import.meta.env.VITE_ADOBE_PDF_EMBED_CLIENT_ID;
 
-  const clearConversation = useCallback(() => {
+  const clearConversation = useCallback((options?: { clearInput?: boolean }) => {
     setAnswer(null);
     setCitations([]);
     setCitationsFallback(false);
     setSelectedTextContext(null);
     setAskError(null);
+    if (options?.clearInput) {
+      setInput('');
+    }
   }, []);
 
   const fetchResources = useCallback(async () => {
@@ -93,6 +96,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
       if (!nextToken) {
         setResourceError('Not signed in.');
         setResources([]);
+        setSelectedId(null);
         return;
       }
 
@@ -110,16 +114,20 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
       const data = (await response.json()) as { data?: { resources?: StudyResource[] } };
       const list = data.data?.resources ?? [];
       setResources(list);
-      if (!selectedId && list.length > 0) {
-        setSelectedId(list[0]!.id);
-      }
+      setSelectedId((previous) => {
+        if (previous && list.some((resource) => resource.id === previous)) {
+          return previous;
+        }
+        return list[0]?.id ?? null;
+      });
     } catch (error) {
       setResourceError(error instanceof Error ? error.message : 'Failed to load resources.');
       setResources([]);
+      setSelectedId(null);
     } finally {
       setLoadingResources(false);
     }
-  }, [getToken, selectedId]);
+  }, [getToken]);
 
   useEffect(() => {
     void fetchResources();
@@ -302,7 +310,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/8 px-5 py-5">
                 <div className="min-w-[16rem] flex-1 space-y-2">
                   <label
-                    htmlFor={documentSelectIdRef.current}
+                    htmlFor={documentSelectId}
                     className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
                   >
                     Document
@@ -315,12 +323,12 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                     </div>
                   ) : (
                     <select
-                      id={documentSelectIdRef.current}
+                      id={documentSelectId}
                       aria-label="Select study document"
                       value={selectedId ?? ''}
                       onChange={(event) => {
                         setSelectedId(event.target.value || null);
-                        clearConversation();
+                        clearConversation({ clearInput: true });
                       }}
                       className="w-full rounded-[1rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                     >
@@ -340,7 +348,11 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                   ) : null}
                 </div>
 
-                <Button type="button" variant="outline" onClick={clearConversation}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => clearConversation({ clearInput: true })}
+                >
                   Clear chat
                 </Button>
               </div>
@@ -391,9 +403,19 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                 {selectedTextContext ? (
                   <div className="rounded-[1rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-3 text-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                      Selected text context
-                    </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                        Selected text context
+                      </p>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => setSelectedTextContext(null)}
+                      >
+                        Clear
+                      </Button>
+                    </div>
                     <p className="mt-2 whitespace-pre-wrap text-[var(--color-text-secondary)]">
                       {selectedTextContext}
                     </p>

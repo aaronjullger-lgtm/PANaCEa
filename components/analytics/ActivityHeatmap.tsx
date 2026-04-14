@@ -15,12 +15,13 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
 import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
+import { ROUTES } from '@/config/routes';
 
 interface ActivityHeatmapProps {
   performanceData: PerformanceRecord[];
   /** Number of weeks to display (default: 13 for quarterly view) */
   weeks?: number;
-  /** Called when user clicks "Start First Session" in empty state. If not provided, falls back to /menu (parent should pass callback for in-app nav). */
+  /** Called when user clicks "Start First Session" in empty state. If not provided, falls back to /study. */
   onStartFirstSession?: () => void;
 }
 
@@ -145,7 +146,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     if (onStartFirstSession) {
       onStartFirstSession();
     } else {
-      navigate('/menu');
+      navigate(ROUTES.STUDY);
     }
   }, [onStartFirstSession, navigate]);
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | undefined>();

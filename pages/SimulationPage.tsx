@@ -75,8 +75,13 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   initialFocus = 'all',
 }) => {
   const [selectedFocus, setSelectedFocus] = useState<FocusOption>(initialFocus);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const { careerStage } = useUserContext();
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
+    if (typeof window === 'undefined') {
+      return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+    }
     try {
       const saved = localStorage.getItem('panceai_enabled_systems');
       if (saved) return new Set(JSON.parse(saved) as SystemCode[]);
@@ -179,7 +184,10 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
     }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (isStarting) return;
+    setStartError(null);
+
     let focus: SessionSettings['focus'];
     switch (selectedFocus) {
       case 'growth':
@@ -207,7 +215,16 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       settings.systems = Array.from(enabledSystems);
     }
 
-    void onStartSession(settings);
+    try {
+      setIsStarting(true);
+      await onStartSession(settings);
+    } catch (error) {
+      setStartError(
+        error instanceof Error ? error.message : 'Unable to start the simulation session.'
+      );
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const selectedFocusMeta = FOCUS_STYLES[selectedFocus];
@@ -231,8 +248,11 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             onBack,
             primaryAction: {
               label: examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`,
-              onClick: handleStart,
+              onClick: () => {
+                void handleStart();
+              },
               icon: Award,
+              disabled: isStarting,
             },
             status: `Current focus: ${selectedFocusMeta.label}`,
           }}
@@ -400,14 +420,28 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             </p>
           </div>
 
+          {startError ? (
+            <div className="rounded-[1rem] border border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-data-fail)]">
+              {startError}
+            </div>
+          ) : null}
+
           <Button
             type="button"
             size="lg"
-            onClick={handleStart}
+            onClick={() => {
+              void handleStart();
+            }}
             icon={Award}
+            loading={isStarting}
+            disabled={isStarting}
             className="w-full shadow-[0_24px_60px_-28px_rgba(196,183,138,0.55)] sm:w-auto"
           >
-            {examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`}
+            {isStarting
+              ? 'Starting session…'
+              : examLabel === 'PANRE'
+                ? 'Start Maintenance'
+                : `Start ${examLabel} Session`}
           </Button>
         </WorkspaceSurface>
       </WorkspaceReveal>

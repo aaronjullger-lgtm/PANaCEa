@@ -262,7 +262,11 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                     type="button"
                     size="xs"
                     variant={query === preset ? 'accent' : 'outline'}
-                    onClick={() => setQuery(preset)}
+                    onClick={() => {
+                      setQuery(preset);
+                      setResult(null);
+                      setError(null);
+                    }}
                   >
                     {preset}
                   </Button>
@@ -273,7 +277,11 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                 type="text"
                 placeholder="e.g. Is the otoscope held correctly for a pediatric exam?"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setResult(null);
+                  setError(null);
+                }}
                 className="w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
 

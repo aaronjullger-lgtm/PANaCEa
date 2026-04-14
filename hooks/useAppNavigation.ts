@@ -21,6 +21,10 @@ function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): Vie
   }
 
   // Handle legacy redirects
+  if (path === '/menu' || path === '/menu/') {
+    navigate('/study', { replace: true });
+    return 'redirect';
+  }
   if (path.startsWith('/study/reference')) {
     navigate('/study/knowledge', { replace: true });
     return 'redirect';

@@ -193,6 +193,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                     onChange={(event) => {
                       const nextFile = event.target.files?.[0] ?? null;
                       setFile(nextFile);
+                      setResult(null);
                       setError(null);
                     }}
                   />
@@ -210,14 +211,22 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                   <Button
                     type="button"
                     variant={mode === 'lecture' ? 'accent' : 'outline'}
-                    onClick={() => setMode('lecture')}
+                    onClick={() => {
+                      setMode('lecture');
+                      setResult(null);
+                      setError(null);
+                    }}
                   >
                     Lecture script
                   </Button>
                   <Button
                     type="button"
                     variant={mode === 'deep-dive' ? 'accent' : 'outline'}
-                    onClick={() => setMode('deep-dive')}
+                    onClick={() => {
+                      setMode('deep-dive');
+                      setResult(null);
+                      setError(null);
+                    }}
                   >
                     Deep dive
                   </Button>
@@ -233,7 +242,11 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                     type="text"
                     placeholder="e.g. Cardiovascular percentage allocation changes"
                     value={topic}
-                    onChange={(event) => setTopic(event.target.value)}
+                    onChange={(event) => {
+                      setTopic(event.target.value);
+                      setResult(null);
+                      setError(null);
+                    }}
                     className="w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                   />
                 </label>

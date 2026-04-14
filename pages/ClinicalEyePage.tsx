@@ -279,7 +279,11 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                     type="button"
                     size="xs"
                     variant={prompt === preset ? 'accent' : 'outline'}
-                    onClick={() => setPrompt(preset)}
+                    onClick={() => {
+                      setPrompt(preset);
+                      setResult(null);
+                      setError(null);
+                    }}
                   >
                     {preset}
                   </Button>
@@ -288,7 +292,11 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
               <textarea
                 value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
+                onChange={(event) => {
+                  setPrompt(event.target.value);
+                  setResult(null);
+                  setError(null);
+                }}
                 placeholder="e.g. Estimate the ST elevation in lead V2 and explain why it matters."
                 className="min-h-[12rem] w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                 maxLength={4096}
