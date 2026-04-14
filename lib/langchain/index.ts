@@ -45,6 +45,7 @@ export {
   buildTracingConfig,
   isTracingEnabled,
   type TracingOptions,
+  type TracingConfig as TracingConfigResult,
 } from './tracing';
 
 // ─── Environment Adapters ─────────────────────────────────────────────────

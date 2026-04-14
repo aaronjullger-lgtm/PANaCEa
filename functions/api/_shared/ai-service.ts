@@ -27,7 +27,6 @@
 import { trackTokenUsage, type TokenUsageMetadata } from './tokenTracking';
 import { routeTask, type RouteOptions, type RouteResult } from '@/lib/langchain/router';
 import { fromCloudflareEnv } from '@/lib/langchain/envAdapter';
-import { configureLangSmithEnv } from '@/lib/langchain/tracing';
 import type { TaskType } from '@/lib/langchain/config';
 import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 import { sanitizeEnvValue } from './env-validation';
@@ -571,9 +570,6 @@ export async function callAIMultiProvider(
   try {
     // Extract AI keys from Cloudflare env
     const aiEnv = fromCloudflareEnv(context.env);
-
-    // Configure LangSmith tracing if available
-    configureLangSmithEnv(context.env as Record<string, string | undefined>);
 
     // Build user prompt from either prompt or contents
     let userPrompt = '';

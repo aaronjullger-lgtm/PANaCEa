@@ -41,7 +41,6 @@ import {
   rewriteQuestion,
 } from '../../../lib/langchain/chains/questionGeneration';
 import { fromCloudflareEnv } from '../../../lib/langchain/envAdapter';
-import { configureLangSmithEnv } from '../../../lib/langchain/tracing';
 
 const BodySchema = z.object({
   conditionName: z.string().min(1).max(200),
@@ -74,7 +73,6 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const apiKey = env.GEMINI_API_KEY!;
   const aiEnv = fromCloudflareEnv(env as unknown as Record<string, unknown>);
-  configureLangSmithEnv(aiEnv);
 
   const { conditionName, system, count, questionType } = validated;
 

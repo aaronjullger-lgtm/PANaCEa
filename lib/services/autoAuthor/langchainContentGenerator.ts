@@ -21,7 +21,6 @@ import {
   generatePhysiologyContentLC,
 } from '../../langchain/chains/contentGeneration';
 import { fromProcessEnv } from '../../langchain/envAdapter';
-import { configureLangSmithEnv } from '../../langchain/tracing';
 import type { AIEnvKeys } from '../../langchain/models';
 import type {
   ContentGenerationOptions,
@@ -35,15 +34,8 @@ import type {
 
 // ─── Environment Setup ────────────────────────────────────────────────────
 
-let _envInitialized = false;
-
 function getAIEnv(): AIEnvKeys {
-  const env = fromProcessEnv();
-  if (!_envInitialized) {
-    configureLangSmithEnv(env);
-    _envInitialized = true;
-  }
-  return env;
+  return fromProcessEnv();
 }
 
 // ─── Condition Content ────────────────────────────────────────────────────

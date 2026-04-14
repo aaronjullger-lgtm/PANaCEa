@@ -17,7 +17,6 @@
 
 import { z } from 'zod';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { RunnableConfig } from '@langchain/core/runnables';
 
@@ -28,7 +27,7 @@ import {
   type TaskType,
   type ModelName,
 } from './config';
-import { createModel, isModelAvailable, type AIEnvKeys, type CreateModelOptions } from './models';
+import { createModel, isModelAvailable, type AIEnvKeys } from './models';
 import { buildTracingConfig } from './tracing';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -105,6 +104,12 @@ export async function routeTask(
   let attempt = 0;
   let lastError: Error | null = null;
 
+  // Build tracing config once (per-request, not per-retry)
+  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
+    runName: options.runName ?? `panacea:${task}`,
+    metadata: options.metadata,
+  });
+
   for (const modelName of models) {
     for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
       attempt++;
@@ -116,7 +121,6 @@ export async function routeTask(
         const model = createModel(modelName, env, {
           temperature: options.temperature,
           maxOutputTokens: options.maxOutputTokens,
-          runName: options.runName ?? `panacea:${task}`,
         });
 
         const messages: BaseMessage[] = params.messages ?? [
@@ -124,7 +128,7 @@ export async function routeTask(
           new HumanMessage(params.userPrompt),
         ];
 
-        const response = await model.invoke(messages);
+        const response = await model.invoke(messages, tracingConfig);
         const latencyMs = Date.now() - start;
 
         const text = typeof response.content === 'string'
@@ -209,6 +213,12 @@ export async function routeStructured<T extends z.ZodType>(
   let lastError: Error | null = null;
   const temperature = options.temperature ?? 0.5;
 
+  // Build tracing config once (per-request, not per-retry)
+  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
+    runName: options.runName ?? `panacea:${task}`,
+    metadata: options.metadata,
+  });
+
   for (const modelName of models) {
     for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
       attempt++;
@@ -220,7 +230,6 @@ export async function routeStructured<T extends z.ZodType>(
         const model = createModel(modelName, env, {
           temperature,
           maxOutputTokens: options.maxOutputTokens,
-          runName: options.runName ?? `panacea:${task}`,
         });
 
         const messages: BaseMessage[] = params.messages ?? [
@@ -231,7 +240,7 @@ export async function routeStructured<T extends z.ZodType>(
         // Try native structured output first
         try {
           const structuredModel = model.withStructuredOutput(schema);
-          const structured = await structuredModel.invoke(messages);
+          const structured = await structuredModel.invoke(messages, tracingConfig);
           const latencyMs = Date.now() - start;
 
           return {
@@ -253,7 +262,7 @@ export async function routeStructured<T extends z.ZodType>(
         const jsonInstruction =
           '\n\nReturn ONLY valid JSON matching the required schema. No markdown fences, no explanatory text.';
 
-        const response = await model.invoke(messages);
+        const response = await model.invoke(messages, tracingConfig);
         const latencyMs = Date.now() - start;
 
         const text = typeof response.content === 'string'
