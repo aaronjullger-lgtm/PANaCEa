@@ -24,6 +24,8 @@ interface AppLayoutProps {
   showNavRail?: boolean;
   onSettingsClick?: () => void;
   onHelpClick?: () => void;
+  contentMaxWidth?: string;
+  contentClassName?: string;
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
@@ -32,6 +34,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   showNavRail = true,
   onSettingsClick,
   onHelpClick,
+  contentMaxWidth = '72rem',
+  contentClassName,
 }) => {
   const navigate = useNavigate();
   const { user } = useUser();
@@ -170,8 +174,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         }}
       >
         <motion.div
-          className="mx-auto min-w-0 max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-8 py-6"
-          style={{ maxWidth: 'var(--content-max-width, 72rem)' }}
+          className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8 ${contentClassName ?? ''}`}
+          style={{ maxWidth: `var(--content-max-width, ${contentMaxWidth})` }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
