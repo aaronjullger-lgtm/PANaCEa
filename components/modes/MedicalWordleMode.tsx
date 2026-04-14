@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, HelpCircle, Share2, RotateCcw, Trophy, Calendar } from 'lucide-react';
-import { useWordleGame, type WordleStatus } from '../../src/hooks/useWordleGame';
+import { useWordleGame, type WordleStatus } from '@/hooks/useWordleGame';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { MedicalWordleGame } from '@/types';
 

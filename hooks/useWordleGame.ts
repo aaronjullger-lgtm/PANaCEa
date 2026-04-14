@@ -1,7 +1,7 @@
-/**
- * Re-export shim — import from @/hooks/useWordleGame instead.
- */
-export { useWordleGame, type WordleStatus } from '../../hooks/useWordleGame';
+import { useCallback, useEffect, useState } from 'react';
+import type { MedicalWordleGame } from '@/types';
+
+export type WordleStatus = 'playing' | 'won' | 'lost';
 
 interface WordleApiWord {
   id: string;

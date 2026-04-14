@@ -1,12 +1,22 @@
 /**
- * Re-export shim — import from @/types/conditions instead.
- * This file exists for backward compatibility with scripts.
+ * Condition Type Definitions
+ *
+ * Core type definitions for medical conditions in the PANaCEa platform.
+ * These types are used throughout the application for type safety and consistency.
+ *
+ * IMPORTANT: This file replaces type exports from conditionRegistry.ts.
+ * Use these types instead of importing from the registry.
  */
-export * from '../../types/conditions';
 
-// Preserve original type re-export for consumers that import SystemCode from here
 import type { SystemCode } from './index';
-export type { SystemCode };
+
+/**
+ * ConditionMeta - Metadata for a medical condition
+ *
+ * This interface defines the structure of condition metadata used throughout
+ * the application. It includes system classification, subcategory, aliases,
+ * and optional enrichment fields.
+ */
 export interface ConditionMeta {
   /** Primary PANCE system code (CV, PULM, GI, etc.) */
   system: SystemCode;

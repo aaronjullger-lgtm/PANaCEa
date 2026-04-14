@@ -11,7 +11,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { useDiagnosticPuzzle } from '@/hooks/useDiagnosticPuzzle';
-import { useWordleGame } from '@/src/hooks/useWordleGame';
+import { useWordleGame } from '@/hooks/useWordleGame';
 import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
 
