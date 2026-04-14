@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { X, Beaker, Droplet, Flame } from 'lucide-react';
 import {
   AnionGapCalculator,
@@ -28,6 +29,7 @@ const TABS: { id: CalcTab; label: string; icon: React.ElementType }[] = [
 ];
 
 export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedTab, setSelectedTab] = useState<CalcTab | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +49,7 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
   return (
     <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm">
       <motion.div
-        initial={{ scale: 0.95 }}
+        initial={prefersReducedMotion ? false : { scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         role="dialog"
@@ -95,7 +97,7 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
           ) : (
             <motion.div
               key={selectedTab}
-              initial={{ x: 8 }}
+              initial={prefersReducedMotion ? false : { x: 8 }}
               animate={{ x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               className="flex-1 overflow-y-auto p-4"

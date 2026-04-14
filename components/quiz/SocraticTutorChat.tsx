@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -36,6 +37,7 @@ export function SocraticTutorChat({
   onClose,
 }: SocraticTutorChatProps) {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -137,7 +139,7 @@ export function SocraticTutorChat({
 
   return (
     <motion.div
-      initial={{ y: '100%' }}
+      initial={prefersReducedMotion ? false : { y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={springs.gentle}
@@ -185,7 +187,7 @@ export function SocraticTutorChat({
           {messages.map((m, i) => (
             <motion.div
               key={`msg-${m.role}-${i}-${m.text.slice(0, 30)}`}
-              initial={{ y: 8 }}
+              initial={prefersReducedMotion ? false : { y: 8 }}
               animate={{ y: 0 }}
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
@@ -206,7 +208,7 @@ export function SocraticTutorChat({
           <motion.div
             initial={false}
             animate={{}}
-            className="rounded-xl border border-[var(--color-border)] bg-sage-50 dark:bg-sage-900/20 p-4 text-sm text-[var(--color-text-secondary)]"
+            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-sm text-[var(--color-text-secondary)]"
           >
             <strong className="text-[var(--color-text-primary)]">Full explanation:</strong>
             <p className="mt-2 leading-relaxed">{fullExplanation}</p>

@@ -7,6 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Target, TrendingUp, Clock, Zap } from 'lucide-react';
 import type { PerformanceRecord } from '../../types';
 
@@ -23,6 +24,7 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
   sessionStartTime,
   isVisible = true,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const stats = useMemo(() => {
     const total = performanceData.length;
     const correct = performanceData.filter((p) => p.isCorrect).length;
@@ -50,7 +52,7 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
       className="flex items-center justify-center gap-4 py-2 px-4 bg-data-neutral border-t border-data-neutral text-xs"
     >

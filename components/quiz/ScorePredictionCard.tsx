@@ -30,6 +30,7 @@ const GAUGE_ARC_LENGTH = 141.37;
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Award,
   TrendingUp,
@@ -60,6 +61,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
   maxStreak,
   avgStreak,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const prediction = useMemo(() => {
     if (performanceData.length < MIN_RECORDS_FOR_PREDICTION) return null;
 
@@ -194,7 +196,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           {/* Score display */}
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
             <motion.span
-              initial={{ scale: 0.5 }}
+              initial={prefersReducedMotion ? false : { scale: 0.5 }}
               animate={{ scale: 1 }}
               className={`text-3xl font-bold ${scoreColor}`}
             >

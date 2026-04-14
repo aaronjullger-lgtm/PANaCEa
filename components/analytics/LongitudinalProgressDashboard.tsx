@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Calendar, Award, Target, Info } from 'lucide-react';
 import type { PerformanceRecord, YearInProgram } from '@/types';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface LongitudinalProgressDashboardProps {
   performanceData: PerformanceRecord[];
@@ -240,6 +241,7 @@ export default function LongitudinalProgressDashboard({
   userYearInProgram,
   theme = 'light',
 }: LongitudinalProgressDashboardProps): React.ReactElement {
+  const prefersReducedMotion = useReducedMotion();
   const phases = useMemo(() => calculateTimelinePhases(performanceData), [performanceData]);
 
   // Extract phase elements with guards for TypeScript
@@ -367,9 +369,9 @@ export default function LongitudinalProgressDashboard({
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        initial={{ pathLength: 0 }}
+                        initial={prefersReducedMotion ? false : { pathLength: 0 }}
                         animate={{ pathLength: 1 }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
                         aria-hidden
                       />
                     )}
@@ -380,9 +382,9 @@ export default function LongitudinalProgressDashboard({
                         cy={y}
                         r={4}
                         fill="var(--color-accent)"
-                        initial={{ scale: 0 }}
+                        initial={prefersReducedMotion ? false : { scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 + i * 0.05 }}
+                        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.5 + i * 0.05 }}
                         aria-hidden
                       />
                     ))}

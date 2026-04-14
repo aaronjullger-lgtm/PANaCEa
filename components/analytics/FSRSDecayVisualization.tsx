@@ -11,6 +11,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import {
   Brain,
@@ -160,6 +161,7 @@ const CardDecayCard: React.FC<{
   card: FSRSCardData;
   onReviewNow?: () => void;
 }> = ({ card, onReviewNow }) => {
+  const prefersReducedMotion = useReducedMotion();
   const daysSinceReview =
     (Date.now() - new Date(card.lastReview).getTime()) / (1000 * 60 * 60 * 24);
   const currentRetrievability = calculateRetrievability(card.stability, daysSinceReview);
@@ -192,7 +194,7 @@ const CardDecayCard: React.FC<{
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-xl border ${urgencyColors[urgency]} transition-all`}
     >

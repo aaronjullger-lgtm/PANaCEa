@@ -9,6 +9,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { springs } from '@/config/appViews';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Target,
   TrendingUp,
@@ -105,6 +106,7 @@ export function PredictedScoreCard({
 }: PredictedScoreCardProps) {
   const readinessConfig = READINESS_CONFIG[prediction.readinessLevel];
   const ReadinessIcon = readinessConfig.icon;
+  const prefersReducedMotion = useReducedMotion();
 
   // Calculate score bar position (0-100%)
   const scorePosition = useMemo(() => {
@@ -194,7 +196,7 @@ export function PredictedScoreCard({
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ y: 0 }}
       className={`
         rounded-2xl border-2 ${readinessConfig.borderColor}
@@ -247,7 +249,7 @@ export function PredictedScoreCard({
         <div>
           <motion.p
             key={prediction.scaledScore}
-            initial={{ scale: 0.8 }}
+            initial={prefersReducedMotion ? false : { scale: 0.8 }}
             animate={{ scale: 1 }}
             className="text-5xl font-bold text-[var(--color-text-primary)]"
           >
@@ -325,9 +327,9 @@ export function PredictedScoreCard({
 
             {/* Current score indicator */}
             <motion.div
-              initial={{ left: '0%' }}
+              initial={prefersReducedMotion ? false : { left: '0%' }}
               animate={{ left: `${scorePosition}%` }}
-              transition={springs.gentle}
+              transition={prefersReducedMotion ? { duration: 0 } : springs.gentle}
               className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
             >
               <div

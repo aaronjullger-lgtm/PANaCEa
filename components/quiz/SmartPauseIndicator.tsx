@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Coffee, Sparkles, Heart, X } from 'lucide-react';
 import {
   analyzePauseNeed,
@@ -21,6 +22,7 @@ interface SmartPauseIndicatorProps {
 }
 
 export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refreshKey }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [showBanner, setShowBanner] = useState(false);
   const [pauseAnalysis, setPauseAnalysis] = useState<{
     recommendation: PauseRecommendation;
@@ -77,7 +79,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ y: -10 }}
+        initial={prefersReducedMotion ? false : { y: -10 }}
         animate={{ y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         className={`rounded-xl border p-3 mb-4 ${getBannerStyle()}`}
@@ -113,6 +115,7 @@ interface EncouragementToastProps {
 }
 
 export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshKey }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [message, setMessage] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
 
@@ -136,7 +139,7 @@ export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshK
     <AnimatePresence>
       {showToast && message && (
         <motion.div
-          initial={{ scale: 0.8, y: 10 }}
+          initial={prefersReducedMotion ? false : { scale: 0.8, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"

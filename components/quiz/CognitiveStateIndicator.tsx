@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Brain, Zap, Coffee, Target } from 'lucide-react';
 import type { CognitiveState } from '@/services/analytics';
 
@@ -19,6 +20,7 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   cognitiveState,
   compact = true,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   if (!cognitiveState) return null;
 
   const { cognitiveLoad, fatigueLevel, flowState, attentionLevel } = cognitiveState;
@@ -75,7 +77,7 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   if (compact) {
     return (
       <motion.div
-        initial={{ scale: 0.9 }}
+        initial={prefersReducedMotion ? false : { scale: 0.9 }}
         animate={{ scale: 1 }}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${state.bg} ${state.color} text-xs font-medium`}
       >
@@ -88,7 +90,7 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   // Expanded view with all metrics
   return (
     <motion.div
-      initial={{ y: -10 }}
+      initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ y: 0 }}
       className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 space-y-3"
     >
@@ -123,6 +125,7 @@ interface MetricBarProps {
 }
 
 const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) => {
+  const prefersReducedMotion = useReducedMotion();
   // For inverted metrics, lower is better
   const displayValue = inverted ? 100 - value : value;
 
@@ -150,7 +153,7 @@ const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) 
       </div>
       <div className="h-1.5 bg-[var(--color-surface)] rounded-full overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${Math.min(100, displayValue)}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className={`h-full rounded-full ${barColor}`}

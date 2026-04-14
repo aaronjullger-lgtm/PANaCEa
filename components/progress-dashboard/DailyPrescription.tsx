@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { Zap, Target, Calendar, ChevronRight, Award } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '../../types';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface DailyPrescriptionProps {
   performanceData: PerformanceRecord[];
@@ -31,6 +32,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
   performanceData,
   onStartFocusSession,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const prescription = useMemo(() => {
     if (performanceData.length < 5) {
       return null; // Not enough data
@@ -95,7 +97,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
   if (!prescription) {
     return (
       <motion.div
-        initial={{ y: 10 }}
+        initial={prefersReducedMotion ? false : { y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-2xl bg-[var(--color-bg-secondary)] p-6 shadow-xl border border-data-neutral"
       >
@@ -137,14 +139,14 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-2xl bg-[var(--color-bg-secondary)] p-6 shadow-xl cursor-pointer group border border-data-neutral"
       onClick={() => onStartFocusSession(focusSystem.system)}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
     >
       {/* Noise texture overlay */}
       <div className="absolute inset-0 noise-texture opacity-[0.03]" />
 
       {/* Gradient accent */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/20 to-transparent rounded-bl-full" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--color-data-provisional)]/20 to-transparent rounded-bl-full" />
 
       <div className="relative z-10">
         {/* Header */}

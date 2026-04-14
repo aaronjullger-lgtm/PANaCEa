@@ -6,6 +6,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface ScheduleBlock {
   id: string;
@@ -53,6 +54,7 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
   onBlockClick,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { dayLabels, dayStart } = useMemo(() => {
     const start = parseDate(startDate);
     const labels: string[] = [];
@@ -102,7 +104,7 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
                   <motion.button
                     key={block.id}
                     type="button"
-                    initial={{ scale: 0.9 }}
+                    initial={prefersReducedMotion ? false : { scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors line-clamp-2 break-words"
                     onClick={() => onBlockClick?.(block)}

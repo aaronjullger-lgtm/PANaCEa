@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
 import { formatPercentForDisplay } from '@/lib/utils/textFormatting';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   TrendingUp,
   TrendingDown,
@@ -138,6 +139,7 @@ const StatCard: React.FC<StatCardProps> = ({
   trendValue,
   color = 'blue',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const colorClasses = {
     blue: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] border-[var(--color-accent)]/20',
     green: 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/20',
@@ -148,9 +150,8 @@ const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
     >
       <div className="flex items-start justify-between">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>{icon}</div>
@@ -222,13 +223,14 @@ const InsightCard: React.FC<{
   index: number;
   onPracticeSystem?: (system: string) => void;
 }> = ({ insight, index, onPracticeSystem }) => {
+  const prefersReducedMotion = useReducedMotion();
   const cta = onPracticeSystem ? extractInsightCTA(insight) : null;
 
   return (
     <motion.div
-      initial={{ x: -10 }}
+      initial={prefersReducedMotion ? false : { x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }}
       className="flex flex-col gap-2 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
     >
       <div className="flex items-start gap-3">
@@ -255,6 +257,7 @@ const ReadinessGauge: React.FC<{
   passProbability: number;
   hasData?: boolean;
 }> = ({ score, passProbability, hasData = true }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [showInfo, setShowInfo] = useState(false);
   const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
   const safePassProb =
@@ -327,9 +330,9 @@ const ReadinessGauge: React.FC<{
               strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={251.2}
-              initial={{ strokeDashoffset: 251.2 }}
+              initial={prefersReducedMotion ? false : { strokeDashoffset: 251.2 }}
               animate={{ strokeDashoffset: 251.2 - (251.2 * safeScore) / 100 }}
-              transition={{ duration: 1, ease: 'easeOut' }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 1, ease: 'easeOut' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -368,9 +371,9 @@ const ReadinessGauge: React.FC<{
               </div>
               <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden border border-[var(--color-border)]">
                 <motion.div
-                  initial={{ width: 0 }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{ width: `${safePassProb}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
                   className="h-full rounded-full min-w-[4px]"
                   style={{ backgroundColor: getColor(safePassProb) }}
                 />
@@ -389,6 +392,7 @@ const SystemStrengthBar: React.FC<{
   trend: 'improving' | 'declining' | 'neutral';
   isStrength: boolean;
 }> = ({ system, mastery, trend, isStrength }) => {
+  const prefersReducedMotion = useReducedMotion();
   const getBarColor = (m: number) => {
     if (m >= 80) return 'bg-[var(--color-data-pass)]';
     if (m >= 60) return 'bg-[var(--color-accent)]';
@@ -403,9 +407,9 @@ const SystemStrengthBar: React.FC<{
       </div>
       <div className="flex-1 h-2 bg-[var(--color-border)] rounded-full overflow-hidden border border-[var(--color-border)]">
         <motion.div
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${mastery}%` }}
-          transition={{ duration: 0.5 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5 }}
           className={`h-full rounded-full min-w-[4px] ${getBarColor(mastery)}`}
         />
       </div>
@@ -437,11 +441,12 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
   recommendation,
   index,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }}
       className="border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
       <div className="flex items-start gap-3">
@@ -463,6 +468,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
   onPracticeSystem,
 }) => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -729,7 +735,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             key="overview"
             role="tabpanel"
             aria-label="Overview"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -964,7 +970,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             key="insights"
             role="tabpanel"
             aria-label="Insights"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -1066,7 +1072,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             key="systems"
             role="tabpanel"
             aria-label="Systems"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"

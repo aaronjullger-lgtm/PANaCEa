@@ -10,6 +10,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   TrendingUp,
   TrendingDown,
@@ -43,6 +44,7 @@ export const ConfidenceBadge: React.FC<{
   score: number;
   size?: 'sm' | 'md';
 }> = ({ confidence, score, size = 'sm' }) => {
+  const prefersReducedMotion = useReducedMotion();
   const config = {
     high: {
       label: 'Confident',
@@ -73,7 +75,7 @@ export const ConfidenceBadge: React.FC<{
 
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
+      initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       className={`inline-flex items-center gap-1.5 rounded-full border ${sizeClasses} ${config.bg} ${config.text} ${config.border}`}
     >
@@ -89,6 +91,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
   onToggle,
   refreshKey = 0,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const stats = useMemo(() => {
     const calibration = calculateBehavioralCalibration();
     const records = getBehavioralRecords();
@@ -142,7 +145,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
@@ -219,6 +222,7 @@ const BehaviorRow: React.FC<{
   color: 'emerald' | 'amber' | 'slate';
   description: string;
 }> = ({ label, icon: Icon, accuracy, count, expected, color, description }) => {
+  const prefersReducedMotion = useReducedMotion();
   const colorClasses = {
     emerald: 'bg-[var(--color-data-pass)]',
     amber: 'bg-[var(--color-data-provisional)]',
@@ -272,7 +276,7 @@ const BehaviorRow: React.FC<{
         <div className="flex items-center gap-2">
           <div className="flex-1 h-1.5 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
-              initial={{ width: 0 }}
+              initial={prefersReducedMotion ? false : { width: 0 }}
               animate={{ width: `${accuracy}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className={`h-full ${colorClasses[color]} rounded-full`}

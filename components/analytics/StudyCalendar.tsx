@@ -15,6 +15,7 @@
 
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Calendar,
   Activity,
@@ -272,6 +273,7 @@ const DayCell: React.FC<DayCellProps> = ({
   isFuture,
   onClick,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const config = VIEW_MODES[viewMode];
 
   if (!date) {
@@ -284,8 +286,8 @@ const DayCell: React.FC<DayCellProps> = ({
 
   return (
     <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.1 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
       onClick={onClick}
       disabled={!data && !isFuture}
       className={`
@@ -417,6 +419,7 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
   compact = false,
   onDayClick,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [viewMode, setViewMode] = useState<CalendarViewMode>(defaultView);
   const [monthOffset, setMonthOffset] = useState(0);
   const [showViewSelector, setShowViewSelector] = useState(false);
@@ -563,7 +566,7 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({
           <AnimatePresence>
             {showViewSelector && (
               <motion.div
-                initial={{ y: -10 }}
+                initial={prefersReducedMotion ? false : { y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute right-0 top-full mt-2 w-48 z-50

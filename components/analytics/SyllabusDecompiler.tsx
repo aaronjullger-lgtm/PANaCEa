@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import {
   Upload,
@@ -37,6 +38,7 @@ export default function SyllabusDecompiler({
   theme = 'light',
   onTagsGenerated,
 }: SyllabusDecompilerProps): React.ReactElement {
+  const prefersReducedMotion = useReducedMotion();
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [fileName, setFileName] = useState<string>('');
   const [extractedTags, setExtractedTags] = useState<SyllabusTag[]>([]);
@@ -185,7 +187,7 @@ export default function SyllabusDecompiler({
 
           {uploadState === 'error' && (
             <motion.div
-              initial={{ y: 10 }}
+              initial={prefersReducedMotion ? false : { y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 p-3 rounded-lg bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]"
             >
@@ -205,7 +207,7 @@ export default function SyllabusDecompiler({
           <p className="text-xs text-[var(--color-text-muted)]">{fileName}</p>
         </div>
       ) : (
-        <motion.div initial={{ y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={prefersReducedMotion ? false : { y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Success State */}
           <div className="rounded-lg p-6 mb-4 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
             <div className="flex items-center gap-2 mb-2">
@@ -224,9 +226,9 @@ export default function SyllabusDecompiler({
             {extractedTags.map((tag, index) => (
               <motion.div
                 key={index}
-                initial={{ x: -20 }}
+                initial={prefersReducedMotion ? false : { x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
                 className="rounded-lg p-4 bg-[var(--color-bg-secondary)]"
               >
                 <div className="flex items-start justify-between mb-2">

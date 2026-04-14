@@ -12,6 +12,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { springs } from '@/config/appViews';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   ComposedChart,
   Line,
@@ -109,6 +110,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   showTimeAxis = true,
   height = 400,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { chartData, recommended, isLoading, error } = useWorkloadProjection({
     dailyNewCards,
     availableTimeMinutes,
@@ -119,9 +121,9 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   if (isLoading) {
     return (
       <motion.div
-        initial={{ opacity: 0, filter: 'blur(6px)' }}
+        initial={prefersReducedMotion ? false : { opacity: 0, filter: 'blur(6px)' }}
         animate={{ opacity: 1, filter: 'blur(0px)' }}
-        transition={springs.gentle}
+        transition={prefersReducedMotion ? { duration: 0 } : springs.gentle}
         className="flex items-center justify-center"
         style={{ height }}
       >
@@ -129,25 +131,25 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
           {/* Cinematic orbital spinner */}
           <div className="relative h-12 w-12 mx-auto mb-4">
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+              animate={prefersReducedMotion ? undefined : { rotate: 360 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 1.2, repeat: Infinity, ease: 'linear' }}
               className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--color-accent)] border-r-[var(--color-accent)]/30"
             />
             <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              animate={prefersReducedMotion ? undefined : { rotate: -360 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 2, repeat: Infinity, ease: 'linear' }}
               className="absolute inset-1 rounded-full border-2 border-transparent border-b-[var(--color-accent)]/50"
             />
             <motion.div
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              animate={prefersReducedMotion ? undefined : { scale: [1, 1.15, 1] }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute inset-3 rounded-full bg-[var(--color-accent)]/10"
             />
           </div>
           <motion.p
-            initial={{ opacity: 0, y: 6 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, ...springs.snappy }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2, ...springs.snappy }}
             className="text-sm text-[var(--color-text-secondary)]"
           >
             Simulating workload over 365 days...
@@ -160,9 +162,9 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   if (error) {
     return (
       <motion.div
-        initial={{ opacity: 0, filter: 'blur(4px)' }}
+        initial={prefersReducedMotion ? false : { opacity: 0, filter: 'blur(4px)' }}
         animate={{ opacity: 1, filter: 'blur(0px)' }}
-        transition={springs.snappy}
+        transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
         className="flex items-center justify-center"
         style={{ height }}
       >
@@ -177,9 +179,9 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
   if (chartData.length === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={springs.gentle}
+        transition={prefersReducedMotion ? { duration: 0 } : springs.gentle}
         className="flex items-center justify-center"
         style={{ height }}
       >

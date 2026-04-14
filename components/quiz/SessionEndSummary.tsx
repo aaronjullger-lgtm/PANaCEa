@@ -8,6 +8,7 @@
 
 import React, { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
@@ -133,6 +134,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   sessionSettings,
 }) => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const syncAttempted = useRef(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -463,7 +465,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      initial={prefersReducedMotion ? false : { opacity: 0, backdropFilter: 'blur(0px)' }}
       animate={{ opacity: 1, backdropFilter: 'blur(8px)' }}
       exit={{ opacity: 0, backdropFilter: 'blur(0px)', transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] } }}
       transition={{ duration: 0.3, ease: [0.0, 0.0, 0.2, 1] }}
@@ -475,7 +477,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="session-summary-title"
-        initial={{ scale: 0.92, opacity: 0, y: 12, filter: 'blur(8px)' }}
+        initial={prefersReducedMotion ? false : { scale: 0.92, opacity: 0, y: 12, filter: 'blur(8px)' }}
         animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
         exit={{ scale: 0.95, opacity: 0, y: 8, filter: 'blur(4px)', transition: { duration: 0.18, ease: [0.32, 0, 0.67, 0] } }}
         transition={{ ...springs.bouncy, opacity: { duration: 0.25 }, filter: { duration: 0.3 } }}
@@ -484,7 +486,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         {/* Header with Grade */}
         <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>
           <motion.div
-            initial={{ scale: 0, rotate: -15 }}
+            initial={prefersReducedMotion ? false : { scale: 0, rotate: -15 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ ...springs.bouncy, delay: 0.2 }}
             className="mb-4"
@@ -537,7 +539,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               transition={{ delay: 0.3, ...springs.bouncy, opacity: { delay: 0.3, duration: 0.25 } }}
               className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
@@ -550,7 +552,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               transition={{ delay: 0.4, ...springs.bouncy, opacity: { delay: 0.4, duration: 0.25 } }}
               className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
@@ -563,7 +565,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               transition={{ delay: 0.5, ...springs.bouncy, opacity: { delay: 0.5, duration: 0.25 } }}
               className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
@@ -576,7 +578,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               transition={{ delay: 0.6, ...springs.bouncy, opacity: { delay: 0.6, duration: 0.25 } }}
               className="bg-[var(--color-bg-secondary)] rounded-xl p-4 text-center border border-[var(--color-border)]"
@@ -606,7 +608,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </div>
             <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
               <motion.div
-                initial={{ width: 0, filter: 'blur(2px)' }}
+                initial={prefersReducedMotion ? false : { width: 0, filter: 'blur(2px)' }}
                 animate={{ width: `${summary.distributionScore}%`, filter: 'blur(0px)' }}
                 transition={{ duration: 1, delay: 0.7, ease: [0.22, 1, 0.36, 1], filter: { duration: 0.4, delay: 0.9 } }}
                 className={`h-full rounded-full ${getDistributionBarClass(summary.distributionScore)}`}

@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { Clock, TrendingUp, AlertCircle, Brain } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface DecisionTimeAnalysisProps {
   performanceData: PerformanceRecord[];
@@ -125,6 +126,7 @@ export default function DecisionTimeAnalysis({
   performanceData,
   theme = 'light',
 }: DecisionTimeAnalysisProps): React.ReactElement {
+  const prefersReducedMotion = useReducedMotion();
   const stats = useMemo(() => calculateCategoryTimeStats(performanceData), [performanceData]);
 
   const medianTime = useMemo(() => {
@@ -165,9 +167,9 @@ export default function DecisionTimeAnalysis({
         {stats.map((stat, index) => (
           <motion.div
             key={stat.system}
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
             className="rounded-lg p-4 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
           >
             <div className="flex items-start justify-between mb-2">

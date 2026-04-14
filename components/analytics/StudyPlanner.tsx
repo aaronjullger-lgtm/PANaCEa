@@ -17,6 +17,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   calculateOptimalRetention,
   retentionToLabel,
@@ -181,6 +182,7 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
   showAdvanced = false,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // State
   const [selectedRetention, setSelectedRetention] = useState(currentRetention);
   const [showPresets, setShowPresets] = useState(false);
@@ -381,10 +383,10 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
         <AnimatePresence>
           {showPresets && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
+              initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="overflow-hidden"
             >
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">

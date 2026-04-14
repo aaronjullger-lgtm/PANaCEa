@@ -8,6 +8,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { TrendingUp, TrendingDown, Minus, Info, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 
 // Confidence levels
@@ -88,6 +89,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
   isExpanded = false,
   onToggle,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const stats = useMemo(() => {
     if (records.length === 0) return null;
 
@@ -212,7 +214,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}

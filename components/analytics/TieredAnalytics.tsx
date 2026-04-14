@@ -29,6 +29,7 @@ import {
 import type { PerformanceRecord } from '@/types';
 import { SkeletonLoader, SkeletonCard } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 type AnalyticsTier = 'quick' | 'dashboard' | 'deep';
 
@@ -307,6 +308,7 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
   onTierChange,
 }) => {
   const [currentTier, setCurrentTier] = useState<AnalyticsTier>(defaultTier);
+  const prefersReducedMotion = useReducedMotion();
 
   const handleTierChange = (tier: AnalyticsTier) => {
     setCurrentTier(tier);
@@ -441,7 +443,7 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={currentTier}
-          initial={{ y: 10 }}
+          initial={prefersReducedMotion ? false : { y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}

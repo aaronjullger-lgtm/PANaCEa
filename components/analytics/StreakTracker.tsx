@@ -7,6 +7,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, TrendingUp, Calendar, Award, CheckCircle } from 'lucide-react';
 import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface StreakTrackerProps {
   currentStreak: number;
@@ -22,6 +23,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   streakHistory = [],
 }) => {
   // Handle loading/null states gracefully
+  const prefersReducedMotion = useReducedMotion();
   const safeStreak = currentStreak ?? 0;
   const safeBestStreak = bestStreak ?? 0;
 
@@ -72,7 +74,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         </h3>
         {safeStreak >= safeBestStreak && safeStreak > 0 && (
           <motion.div
-            initial={{ scale: 0 }}
+            initial={prefersReducedMotion ? false : { scale: 0 }}
             animate={{ scale: 1 }}
             className="flex items-center gap-1 text-sm text-[var(--color-accent)]"
           >
@@ -87,7 +89,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         <div>
           <motion.div
             key={safeStreak}
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-baseline gap-2"
           >
@@ -126,14 +128,14 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
             return (
               <motion.div
                 key={date}
-                initial={{ y: 10 }}
+                initial={prefersReducedMotion ? false : { y: 10 }}
                 animate={{ y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
                 className="flex flex-col items-center"
               >
                 <div className="text-xs text-[var(--color-text-muted)] mb-1">{dayName}</div>
                 <motion.div
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.1 }}
                   className={`
                     w-8 h-8 rounded-lg flex items-center justify-center
                     transition-colors duration-200
@@ -158,7 +160,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       {/* Study Today CTA */}
       {!studiedToday && (
         <motion.div
-          initial={{ y: 10 }}
+          initial={prefersReducedMotion ? false : { y: 10 }}
           animate={{ y: 0 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
@@ -173,7 +175,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       {/* Studied Today Badge */}
       {studiedToday && (
         <motion.div
-          initial={{ scale: 0.9 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >

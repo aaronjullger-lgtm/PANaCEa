@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Eye, HelpCircle, PieChart, Award } from 'lucide-react';
 import type { ErrorTag } from '../../types';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface ErrorTagCount {
   tag: ErrorTag;
@@ -107,6 +108,7 @@ const DonutChart: React.FC<{
 };
 
 const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, totalIncorrect }) => {
+  const prefersReducedMotion = useReducedMotion();
   const processedData = useMemo(() => {
     if (totalIncorrect === 0) return [];
 
@@ -143,7 +145,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="widget-premium-glass widget-noise-texture p-4"
     >

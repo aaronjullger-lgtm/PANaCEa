@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   TrendingDown,
   TrendingUp,
@@ -44,6 +45,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
   weakConditions,
   onSelectCondition,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Sort conditions by accuracy for display
   const sortedByAccuracy = useMemo(
     () => [...conditionStats].sort((a, b) => a.accuracy - b.accuracy),
@@ -108,9 +110,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
             {lowestAccuracy.map((c, i) => (
               <motion.button
                 key={c.conditionId}
-                initial={{ x: -10 }}
+                initial={prefersReducedMotion ? false : { x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: i * 0.05 }}
                 onClick={() => onSelectCondition?.(c.conditionId)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-secondary)] transition-colors text-left"
               >
@@ -147,9 +149,9 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
             {highestAccuracy.map((c, i) => (
               <motion.button
                 key={c.conditionId}
-                initial={{ x: 10 }}
+                initial={prefersReducedMotion ? false : { x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: i * 0.05 }}
                 onClick={() => onSelectCondition?.(c.conditionId)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-secondary)] transition-colors text-left"
               >

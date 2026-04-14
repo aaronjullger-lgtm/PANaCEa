@@ -8,6 +8,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, TrendingUp, Clock, AlertCircle } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface DayActivityData {
   date: string; // ISO format
@@ -51,6 +52,7 @@ function formatDate(dateStr: string): string {
 }
 
 const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose }) => {
+  const prefersReducedMotion = useReducedMotion();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -63,7 +65,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ scale: 0.9, y: 10 }}
+        initial={prefersReducedMotion ? false : { scale: 0.9, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 10 }}
         transition={{ duration: 0.2 }}

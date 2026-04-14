@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import type { TopicStats } from '@/types';
 import { PANCE_TOPIC_ABBREVIATIONS, ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface TopicHeatmapProps {
   topicScores: TopicStats[];
@@ -9,6 +10,7 @@ interface TopicHeatmapProps {
 }
 
 const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }) => {
+  const prefersReducedMotion = useReducedMotion();
   const topicStatsMap = new Map<string, TopicStats>(topicScores.map((item) => [item.topic, item]));
 
   const getTileStyle = (topicAbbr: string): { bg: string; border: string; text: string } => {
@@ -56,15 +58,15 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
         return (
           <motion.button
             key={abbr}
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.02 }}
+            transition={{ delay: prefersReducedMotion ? 0 : index * 0.02 }}
             onClick={() => {
               if (stats) onTopicClick(stats);
             }}
             disabled={!hasData}
-            whileHover={hasData ? { scale: 1.03, y: -1 } : {}}
-            whileTap={hasData ? { scale: 0.98 } : {}}
+            whileHover={prefersReducedMotion ? undefined : hasData ? { scale: 1.03, y: -1 } : {}}
+            whileTap={prefersReducedMotion ? undefined : hasData ? { scale: 0.98 } : {}}
             className={`
               p-2 rounded-lg text-center transition-all duration-200  shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] border
               aspect-[3/2] flex flex-col items-center justify-center

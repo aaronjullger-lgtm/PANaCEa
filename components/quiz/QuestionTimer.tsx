@@ -8,6 +8,7 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Clock, AlertCircle } from 'lucide-react';
 
 interface QuestionTimerProps {
@@ -40,6 +41,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
   isVisible = true,
   compact = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [elapsed, setElapsed] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const announcedRef = useRef<Set<string>>(new Set());
@@ -145,7 +147,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
 
         {status === 'overtime' && !isAnswered && (
           <motion.div
-            initial={{ scale: 0.9 }}
+            initial={prefersReducedMotion ? false : { scale: 0.9 }}
             animate={{ scale: 1 }}
             className="flex items-center gap-1 text-xs text-[var(--color-data-fail)]"
           >
@@ -162,7 +164,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
       {/* Progress bar */}
       <div className="h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${progressPercent}%` }}
           transition={{ duration: 0.1 }}
           className={`h-full rounded-full ${statusColor.split(' ')[1]}`}

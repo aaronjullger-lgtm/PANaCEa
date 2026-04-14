@@ -12,6 +12,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Brain, ChevronDown, ChevronUp, BarChart3, Zap, Target } from 'lucide-react';
 import { MomentumIndicator } from './MomentumIndicator';
 import { BehavioralCalibration } from './BehavioralCalibration';
@@ -28,6 +29,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
   refreshKey = 0,
   defaultExpanded = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [activeTab, setActiveTab] = useState<'momentum' | 'calibration' | 'distribution'>(
     'momentum'
@@ -75,7 +77,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
@@ -109,7 +111,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'momentum' && (
                     <motion.div
                       key="momentum"
-                      initial={{ x: -10 }}
+                      initial={prefersReducedMotion ? false : { x: -10 }}
                       animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
@@ -120,7 +122,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'calibration' && (
                     <motion.div
                       key="calibration"
-                      initial={{ x: -10 }}
+                      initial={prefersReducedMotion ? false : { x: -10 }}
                       animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
@@ -131,7 +133,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'distribution' && (
                     <motion.div
                       key="distribution"
-                      initial={{ x: -10 }}
+                      initial={prefersReducedMotion ? false : { x: -10 }}
                       animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >

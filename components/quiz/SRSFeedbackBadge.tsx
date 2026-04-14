@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { CheckCircle, Calendar, Zap, TrendingUp, Award, Target, Brain } from 'lucide-react';
 import type { SRSScheduleResult } from '../../lib/services/srsService';
 
@@ -17,6 +18,7 @@ interface SRSFeedbackBadgeProps {
 }
 
 export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
+  const prefersReducedMotion = useReducedMotion();
   const getIntervalText = (interval: number): string => {
     // Round fractional intervals for display (FSRS-7 will produce fractional days)
     const rounded = Math.round(interval);
@@ -95,7 +97,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
 
   return (
     <motion.div
-      initial={{ y: -10 }}
+      initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="flex flex-wrap items-center gap-2"
@@ -124,7 +126,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
 
       {/* Quality indicator - shows complexity-aware performance */}
       <motion.div
-        initial={{ scale: 0.8 }}
+        initial={prefersReducedMotion ? false : { scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.1 }}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${qualityInfo.badgeClass}`}
@@ -136,7 +138,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       {/* Streak bonus indicator */}
       {hasStreakBonus && (
         <motion.div
-          initial={{ scale: 0.8 }}
+          initial={prefersReducedMotion ? false : { scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.15 }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
@@ -149,7 +151,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       {/* Gold mastery indicator */}
       {hasGoldMastery && (
         <motion.div
-          initial={{ scale: 0.8 }}
+          initial={prefersReducedMotion ? false : { scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2 }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30"
@@ -162,7 +164,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       {/* Red zone warning */}
       {hasRedZone && (
         <motion.div
-          initial={{ scale: 0.8 }}
+          initial={prefersReducedMotion ? false : { scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.25 }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30"
@@ -174,7 +176,7 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
       {/* FSRS adaptive indicator */}
       {hasFSRS && (
         <motion.div
-          initial={{ scale: 0.8 }}
+          initial={prefersReducedMotion ? false : { scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.3 }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30"

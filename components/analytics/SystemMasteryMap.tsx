@@ -8,6 +8,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Heart,
   Wind,
@@ -135,6 +136,7 @@ export function SystemMasteryMap({
   compact = false,
   isLoading = false,
 }: SystemMasteryMapProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedSystem, setSelectedSystem] = useState<SystemMasteryData | null>(null);
   const [hoveredSystem, setHoveredSystem] = useState<string | null>(null);
 
@@ -206,9 +208,9 @@ export function SystemMasteryMap({
           return (
             <motion.div
               key={system.system}
-              initial={{ scale: 0.9 }}
+              initial={prefersReducedMotion ? false : { scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.02 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.02 }}
               onHoverStart={() => setHoveredSystem(system.system)}
               onHoverEnd={() => setHoveredSystem(null)}
               onClick={() => {
@@ -329,7 +331,7 @@ export function SystemMasteryMap({
             onClick={() => setSelectedSystem(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={prefersReducedMotion ? false : { scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}

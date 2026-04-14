@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard, Eye, EyeOff, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import type { WidgetId, WidgetConfig } from './WidgetGrid';
 import { DEFAULT_WIDGET_CONFIG, WIDGET_PREVIEW_INFO } from './WidgetGrid';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface StatisticsPreferencesProps {
   enabledWidgets: WidgetId[];
@@ -26,6 +27,7 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
   onToggleWidget,
   onResetToDefaults,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [advancedExpanded, setAdvancedExpanded] = useState(false);
   const [hoveredWidgetId, setHoveredWidgetId] = useState<WidgetId | null>(null);
   const standardWidgets = DEFAULT_WIDGET_CONFIG.filter((w) => !DEEP_INSIGHT_WIDGETS.includes(w.id));
@@ -46,8 +48,8 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
         onMouseLeave={() => setHoveredWidgetId(null)}
       >
         <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
           onClick={() => onToggleWidget(widget.id)}
           className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
             isEnabled

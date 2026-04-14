@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   ChevronRight,
   ChevronLeft,
@@ -524,6 +525,7 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
   onClick,
   size = 'md',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const sizeClasses = {
     sm: 'p-3',
     md: 'p-4',
@@ -534,8 +536,8 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
 
   return (
     <motion.button
-      whileHover={{ scale: 1.02, y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -2 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
       onClick={onClick}
       className={`${sizeClasses[size]} rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:shadow-lg transition-all text-left group relative overflow-hidden`}
     >
@@ -605,13 +607,14 @@ interface ConditionRowProps {
 }
 
 const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) => {
+  const prefersReducedMotion = useReducedMotion();
   const daysAgo = condition.lastPracticed
     ? Math.floor((Date.now() - condition.lastPracticed.getTime()) / (1000 * 60 * 60 * 24))
     : null;
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
       className="flex items-center justify-between p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all"
     >
@@ -681,6 +684,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
   onPractice,
   showDetailedMetrics = true,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [drilldownLevel, setDrilldownLevel] = useState<DrilldownLevel>('system');
   const [selectedSystem, setSelectedSystem] = useState<SystemMetrics | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryMetrics | null>(null);
@@ -779,7 +783,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'system' && (
           <motion.div
             key="system-grid"
-            initial={{ x: -20 }}
+            initial={prefersReducedMotion ? false : { x: -20 }}
             animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
@@ -803,7 +807,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'category' && selectedSystem && (
           <motion.div
             key="category-grid"
-            initial={{ x: -20 }}
+            initial={prefersReducedMotion ? false : { x: -20 }}
             animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
@@ -841,7 +845,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'condition' && selectedCategory && (
           <motion.div
             key="condition-list"
-            initial={{ x: -20 }}
+            initial={prefersReducedMotion ? false : { x: -20 }}
             animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             className="space-y-3"

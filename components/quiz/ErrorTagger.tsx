@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Brain, Eye, HelpCircle } from 'lucide-react';
 import type { ErrorTag } from '../../types';
 
@@ -43,6 +44,7 @@ const ERROR_TAG_OPTIONS: { tag: ErrorTag; label: string; icon: React.ReactNode; 
   ];
 
 const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedTag, setSelectedTag] = useState<ErrorTag | null>(null);
 
   const handleTagClick = (tag: ErrorTag) => {
@@ -55,7 +57,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
     const selected = ERROR_TAG_OPTIONS.find((o) => o.tag === selectedTag);
     return (
       <motion.div
-        initial={{ y: -5 }}
+        initial={prefersReducedMotion ? false : { y: -5 }}
         animate={{ y: 0 }}
         className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]"
       >
@@ -72,7 +74,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
 
   return (
     <motion.div
-      initial={{ y: -5 }}
+      initial={prefersReducedMotion ? false : { y: -5 }}
       animate={{ y: 0 }}
       className="flex flex-wrap items-center gap-2"
     >

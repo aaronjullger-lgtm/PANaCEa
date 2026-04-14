@@ -17,6 +17,7 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs } from '@/config/appViews';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   TrendingUp,
   TrendingDown,
@@ -77,6 +78,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   sublabel,
   animated = true,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const normalizedValue = Math.min(Math.max(value, 0), max);
@@ -112,9 +114,9 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           stroke={color}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
-          initial={animated ? { strokeDashoffset: circumference } : undefined}
+          initial={animated && !prefersReducedMotion ? { strokeDashoffset: circumference } : undefined}
           animate={{ strokeDashoffset }}
-          transition={{ duration: 1.5, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 1.5, ease: 'easeOut' }}
           style={{
             strokeDasharray: circumference,
           }}
@@ -124,9 +126,9 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
           className="text-3xl font-bold text-[var(--color-text-primary)]"
-          initial={animated ? { opacity: 0, scale: 0.5 } : undefined}
+          initial={animated && !prefersReducedMotion ? { opacity: 0, scale: 0.5 } : undefined}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.5, duration: 0.5 }}
         >
           {label || `${Math.round(percentage)}%`}
         </motion.span>
@@ -139,6 +141,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
 };
 
 const TrendIndicator: React.FC<{ trend: TrendAnalysis }> = ({ trend }) => {
+  const prefersReducedMotion = useReducedMotion();
   const getIcon = () => {
     switch (trend.direction) {
       case 'improving':
@@ -172,9 +175,8 @@ const TrendIndicator: React.FC<{ trend: TrendAnalysis }> = ({ trend }) => {
 
   return (
     <motion.div
-      initial={{ x: -10 }}
+      initial={prefersReducedMotion ? false : { x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getColor()}`}
     >
       {getIcon()}
       <span>{getMessage()}</span>
@@ -186,6 +188,7 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
   ci,
   accuracy,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const rangeWidth = ci.upper - ci.lower;
   const markerPosition = ((accuracy - ci.lower) / rangeWidth) * 100;
 
@@ -204,9 +207,9 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-accent)]/40 via-[var(--color-success)]/40 to-[var(--color-accent)]/40 opacity-30" />
         {/* Marker for current accuracy */}
         <motion.div
-          initial={{ left: '0%' }}
+          initial={prefersReducedMotion ? false : { left: '0%' }}
           animate={{ left: `${Math.min(100, Math.max(0, markerPosition))}%` }}
-          transition={{ delay: 0.8, duration: 0.5 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.8, duration: 0.5 }}
           className="absolute top-0 bottom-0 w-1 bg-[var(--color-text-inverse)] rounded-full shadow-md"
           style={{ transform: 'translateX(-50%)' }}
         />
@@ -218,6 +221,7 @@ const ConfidenceDisplay: React.FC<{ ci: ConfidenceInterval; accuracy: number }> 
 const PANCEPredictionBadge: React.FC<{
   prediction: ReturnType<typeof predictPANCEScore>;
 }> = ({ prediction }) => {
+  const prefersReducedMotion = useReducedMotion();
   const getStatusColor = () => {
     if (prediction.predictedScore >= 450)
       return 'from-[var(--color-success)] to-[var(--color-accent)]';
@@ -230,9 +234,9 @@ const PANCEPredictionBadge: React.FC<{
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: 1 }}
       className="mt-4 p-4 bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)]"
     >
       <div className="flex items-center justify-between mb-3">
@@ -251,9 +255,9 @@ const PANCEPredictionBadge: React.FC<{
 
       <div className="flex items-center gap-4">
         <motion.div
-          initial={{ scale: 0 }}
+          initial={prefersReducedMotion ? false : { scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ ...springs.gentle, delay: 1.2 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: 1.2 }}
           className={`text-4xl font-bold bg-gradient-to-r ${getStatusColor()} bg-clip-text text-transparent`}
         >
           {prediction.predictedScore}
@@ -270,6 +274,7 @@ const PANCEPredictionBadge: React.FC<{
 };
 
 const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
+  const prefersReducedMotion = useReducedMotion();
   if (insights.length === 0) return null;
 
   return (
@@ -287,9 +292,9 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
         {insights.map((insight, i) => (
           <motion.li
             key={i}
-            initial={{ x: -10 }}
+            initial={prefersReducedMotion ? false : { x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.4 + i * 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 1.4 + i * 0.1 }}
             className="flex items-start gap-2 text-sm text-[var(--color-text-muted)]"
           >
             <ChevronRight className="w-4 h-4 mt-0.5 text-[var(--color-accent)] flex-shrink-0" />
@@ -312,6 +317,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
   className = '',
 }) => {
   // Calculate statistics
+  const prefersReducedMotion = useReducedMotion();
   const stats = useMemo(() => {
     const ci = calculateConfidenceInterval(
       Math.round((accuracy * totalQuestions) / 100),
@@ -343,9 +349,8 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
   if (compact) {
     return (
       <motion.div
-        initial={{ y: 10 }}
+        initial={prefersReducedMotion ? false : { y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] ${className}`}
       >
         <div className="flex items-center gap-4">
           <CircularProgress value={accuracy} size={80} strokeWidth={8} label={totalQuestions === 0 ? '—' : undefined} />
@@ -365,9 +370,8 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-6 bg-[var(--color-bg-primary)] rounded-2xl shadow-lg border border-[var(--color-border)] ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -391,9 +395,9 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
         {/* Grade badge */}
         <motion.div
-          initial={{ scale: 0 }}
+          initial={prefersReducedMotion ? false : { scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ ...springs.gentle, delay: 0.8 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: 0.8 }}
           className="mt-4 flex items-center gap-2"
         >
           <span className="text-sm text-[var(--color-text-muted)]">Grade:</span>

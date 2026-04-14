@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   BarChart3,
   Clock,
@@ -48,6 +49,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
   isVisible = false,
   onToggle,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [isExpanded, setIsExpanded] = useState(false);
   const [summary, setSummary] = useState<ReturnType<typeof getSessionSummary> | null>(null);
 
@@ -145,7 +147,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
   return (
     <motion.div
-      initial={{ y: -20 }}
+      initial={prefersReducedMotion ? false : { y: -20 }}
       animate={{ y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className="fixed top-4 right-4 z-50 w-80"
@@ -202,7 +204,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
         <AnimatePresence>
           {isExpanded && summary && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
+              initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}

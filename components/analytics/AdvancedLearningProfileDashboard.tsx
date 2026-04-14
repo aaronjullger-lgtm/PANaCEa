@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Brain,
   Target,
@@ -112,6 +113,7 @@ interface AggregateStats {
 
 export const AdvancedLearningProfileDashboard: React.FC = () => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [profile, setProfile] = useState<LearningProfile | null>(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [aggregateStats, setAggregateStats] = useState<AggregateStats | null>(null);
@@ -274,7 +276,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
       <AnimatePresence>
         {breakSuggestion.suggest && (
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
@@ -322,7 +324,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'overview' && (
           <motion.div
             key="overview"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -522,7 +524,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'cognitive' && (
           <motion.div
             key="cognitive"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -710,7 +712,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'systems' && (
           <motion.div
             key="systems"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -809,7 +811,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'insights' && (
           <motion.div
             key="insights"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"

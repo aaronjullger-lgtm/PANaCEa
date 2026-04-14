@@ -19,7 +19,7 @@ import { ChartContainer } from '@/components/shared/ChartContainer';
 import { useLearningCurveData } from '@/hooks/useLearningCurveData';
 import { SkeletonLoader } from '@/components/loading';
 import { EmptyChartState } from '@/components/analytics/EmptyChartState';
-import { Calendar, TrendingUp, Brain, Clock } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 
 interface TimeRangeOption {
   label: string;

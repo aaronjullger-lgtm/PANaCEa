@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, Calendar, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface DailyPerformance {
   date: string;
@@ -29,6 +30,7 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
   dailyData,
   period = '14d',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const chartData = useMemo(() => {
     // Fill in missing days with zeros
     const days = period === '7d' ? 7 : period === '14d' ? 14 : 30;
@@ -166,9 +168,9 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
             return (
               <motion.div
                 key={day.date}
-                initial={{ height: 0 }}
+                initial={prefersReducedMotion ? false : { height: 0 }}
                 animate={{ height: `${height}%` }}
-                transition={{ delay: i * 0.02, duration: 0.3 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: i * 0.02, duration: 0.3 }}
                 className={`flex-1 rounded-t ${accuracyColor} min-h-[4px] relative group cursor-pointer`}
                 title={`${day.date}: ${day.attempts} questions, ${day.accuracy}% accuracy`}
               >

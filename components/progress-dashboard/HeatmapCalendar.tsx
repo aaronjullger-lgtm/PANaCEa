@@ -330,7 +330,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
                     key={rowIdx}
                     className={`w-3 h-3 rounded-sm transition-all duration-200 ${
                       isFuture ? 'bg-data-neutral' : colorClass
-                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-slate-900 hover:scale-110' : ''}`}
+                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)] hover:scale-110' : ''}`}
                     title={tooltip}
                   />
                 );

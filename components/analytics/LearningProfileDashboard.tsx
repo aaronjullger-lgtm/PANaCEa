@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Brain,
   Target,
@@ -76,6 +77,7 @@ interface AggregateStats {
 
 export const LearningProfileDashboard: React.FC = () => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [profile, setProfile] = useState<LearningProfile | null>(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [aggregateStats, setAggregateStats] = useState<AggregateStats | null>(null);
@@ -212,7 +214,7 @@ export const LearningProfileDashboard: React.FC = () => {
       {/* PANCE Readiness Score */}
       {profile.estimatedScore && (
         <motion.div
-          initial={{ y: 20 }}
+          initial={prefersReducedMotion ? false : { y: 20 }}
           animate={{ y: 0 }}
           className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-2xl p-6 border border-[var(--color-border)]"
         >

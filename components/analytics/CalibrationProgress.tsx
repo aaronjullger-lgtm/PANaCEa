@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles, AlertTriangle } from 'lucide-react';
 import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface CalibrationProgressProps {
   current: number;
@@ -31,6 +32,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
   showDetails = true,
   compact = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const progress = Math.min((current / target) * 100, 100);
   const isCalibrated = current >= target;
 
@@ -77,9 +79,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       <div className="inline-flex items-center gap-2">
         <div className="relative w-24 h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
             className={`absolute inset-y-0 left-0 rounded-full ${
               isCalibrated
                 ? 'bg-[var(--color-data-pass)]'
@@ -162,9 +164,9 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           {/* Progress bar */}
           <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden mb-2">
             <motion.div
-              initial={{ width: 0 }}
+              initial={prefersReducedMotion ? false : { width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
               className={`absolute inset-y-0 left-0 rounded-full ${
                 isCalibrated
                   ? 'bg-[var(--color-data-pass)]'

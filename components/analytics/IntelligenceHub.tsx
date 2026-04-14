@@ -23,6 +23,7 @@ import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 import { ConditionPreviewCard } from '../conditions/ConditionPreviewCard';
 import type { ConditionMeta } from "@/types/conditions";
 import { useLowPowerMode } from '@/hooks/useLowPowerMode';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface IntelligenceHubProps {
   performanceData: PerformanceRecord[];
@@ -79,6 +80,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   theme = 'dark',
 }) => {
   const lowPower = useLowPowerMode();
+  const prefersReducedMotion = useReducedMotion();
   const [viewLevel, setViewLevel] = useState<ViewLevel>('dashboard');
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -389,7 +391,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'dashboard' && (
           <motion.div
             key="dashboard"
-            initial={{ y: 20 }}
+            initial={lowPower || prefersReducedMotion ? false : { y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
@@ -560,7 +562,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'system' && currentSystemStats && (
           <motion.div
             key="system"
-            initial={{ x: 20 }}
+            initial={lowPower || prefersReducedMotion ? false : { x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
@@ -699,7 +701,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'subcategory' && currentSubcategoryStats && (
           <motion.div
             key="subcategory"
-            initial={{ x: 20 }}
+            initial={lowPower || prefersReducedMotion ? false : { x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
@@ -817,7 +819,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 {selectedCondition && (
                   <motion.div
                     key="detail"
-                    initial={{ x: 20 }}
+                    initial={lowPower || prefersReducedMotion ? false : { x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -950,7 +952,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         </div>
                         <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                           <motion.div
-                            initial={{ width: 0 }}
+                            initial={lowPower || prefersReducedMotion ? false : { width: 0 }}
                             animate={{ width: `${selectedCondition.accuracy}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut' }}
                             className={`absolute inset-y-0 left-0 rounded-full ${
@@ -980,7 +982,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         </div>
                         <div className="relative w-full h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                           <motion.div
-                            initial={{ width: 0 }}
+                            initial={lowPower || prefersReducedMotion ? false : { width: 0 }}
                             animate={{ width: `${selectedCondition.retentionScore}%` }}
                             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
                             className="absolute inset-y-0 left-0 bg-[var(--color-accent)] rounded-full"

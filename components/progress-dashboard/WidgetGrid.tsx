@@ -20,6 +20,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { calculateAccuracy } from '../../lib/dashboardUtils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // ============================================================================
 // Constants - Gold Achievement Thresholds
@@ -203,15 +204,16 @@ const StatCard: React.FC<StatCardProps> = ({
   isGoldAchievement = false,
   isClinicalAchievement = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const isHighlight = isGoldAchievement || isClinicalAchievement;
   const highlightClass = isClinicalAchievement ? 'clinical-achievement' : 'gold-achievement';
   const highlightTextClass = isClinicalAchievement ? 'text-[var(--color-accent)]' : 'text-data-provisional';
   const highlightIconClass = isClinicalAchievement ? 'text-[var(--color-accent)]' : 'text-data-provisional';
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
+      transition={prefersReducedMotion ? { duration: 0, delay: 0 } : { delay }}
       className={`${
         isHighlight ? `${highlightClass} rounded-2xl` : 'widget-premium-glass widget-noise-texture'
       } p-4 hover:shadow-lg transition-all duration-300 relative`}

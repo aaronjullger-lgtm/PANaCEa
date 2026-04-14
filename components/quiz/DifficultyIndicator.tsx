@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Brain, Gauge, Zap } from 'lucide-react';
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard' | 'expert';
@@ -209,6 +210,7 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
   compact = false,
   showBreakdown = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const factors = analyzeQuestion(questionText);
   const { level, score, reasoning } = calculateDifficulty(factors, topicAccuracy);
   const config = difficultyConfig[level];
@@ -241,7 +243,7 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
           {[1, 2, 3, 4].map((dot) => (
             <motion.div
               key={dot}
-              initial={{ scale: 0.8, opacity: 0.5 }}
+              initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0.5 }}
               animate={{
                 scale:
                   dot <= (level === 'easy' ? 1 : level === 'medium' ? 2 : level === 'hard' ? 3 : 4)
@@ -264,7 +266,7 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
 
       {showBreakdown && reasoning.length > 0 && (
         <motion.div
-          initial={{ height: 0 }}
+          initial={prefersReducedMotion ? false : { height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="text-xs text-[var(--color-text-muted)] space-y-1"
         >
