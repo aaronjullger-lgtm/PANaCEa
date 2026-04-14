@@ -1,6 +1,11 @@
 export { LandingPage } from './LandingPage';
-export { HeroSection } from './HeroSection';
-export { FeaturesGrid } from './FeaturesGrid';
-export { HowItWorks } from './HowItWorks';
-export { FinalCTA } from './FinalCTA';
-export { SocialProof } from './SocialProof';
+export {
+  FEATURE_CARDS,
+  HERO_SIGNALS,
+  LANDING_PROOF_NOTE,
+  NAV_LINKS,
+  PROCESS_SIGNALS,
+  PROCESS_STEPS,
+  TESTIMONIALS,
+  TRUST_METRICS,
+} from './content';
