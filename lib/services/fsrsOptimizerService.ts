@@ -292,6 +292,7 @@ export async function getOptimizedParameters(
     if (globalResult) return globalResult.parameters;
   } catch (err) {
     // Non-fatal: return defaults
+    console.error('[FSRS Optimizer] Personalization failed, using defaults', err);
   }
 
   return defaultParameters;

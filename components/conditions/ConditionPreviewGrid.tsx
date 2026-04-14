@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { ConditionPreviewCard } from './ConditionPreviewCard';
-import type { ConditionMeta } from '../../src/types/conditions';
+import type { ConditionMeta } from "@/types/conditions";
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 
 interface ConditionPreviewGridProps {

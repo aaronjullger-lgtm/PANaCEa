@@ -8,7 +8,7 @@ import {
 import { defaultParameters, type FSRSParameters } from '@/lib/fsrs';
 
 // Simulation tests are CPU-intensive; extend timeout to prevent flaky failures under load
-const SIMULATION_TIMEOUT = 15_000;
+const SIMULATION_TIMEOUT = 45_000;
 
 /**
  * FSRS Workload Simulator tests

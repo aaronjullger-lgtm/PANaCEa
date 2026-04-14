@@ -105,7 +105,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           where: {
             questionId,
             flagType,
-            status: { in: ['flagged', 'regenerating', 'reviewed'] },
+            status: { in: ['FLAGGED', 'REGENERATING', 'REVIEWED'] },
           },
         });
         return flag ? mapToFlagRecord(flag) : null;
@@ -118,7 +118,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
             status: data.status,
             regeneratedContent: data.regeneratedContent ?? undefined,
             critiqueFeedback: data.critiqueFeedback ?? undefined,
-            resolvedAt: data.status === 'resolved' ? new Date() : undefined,
+            resolvedAt: data.status === 'RESOLVED' ? new Date() : undefined,
           },
         });
         return mapToFlagRecord(flag);
@@ -169,10 +169,131 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
       attemptRegeneration: true,
     });
 
+    // Post-loop: attempt regeneration for previously flagged items without regenerated content
+    let requeueAttempted = 0;
+    let requeueSucceeded = 0;
+    let requeueFailed = 0;
+
+    const staleFlags = await prisma.contentQualityFlag.findMany({
+      where: {
+        status: 'flagged',
+        regeneratedContent: null,
+      },
+      select: {
+        id: true,
+        questionId: true,
+        flagType: true,
+      },
+      take: 20,
+    });
+
+    for (const staleFlag of staleFlags) {
+      if (!deps.callGemini || requeueAttempted >= 10) break;
+      requeueAttempted++;
+
+      try {
+        // Fetch the question with attempts for this flag
+        const question = await prisma.question.findUnique({
+          where: { id: staleFlag.questionId },
+          select: {
+            id: true,
+            question: true,
+            options: true,
+            correctAnswer: true,
+            explanation: true,
+            difficulty: true,
+            source: true,
+            system: true,
+            attempts: {
+              where: { createdAt: { gte: lookbackDate } },
+              select: {
+                userId: true,
+                wasCorrect: true,
+                selectedAnswer: true,
+                timeSpentMs: true,
+              },
+              take: 500,
+            },
+          },
+        });
+
+        if (!question || question.attempts.length < DEFAULT_CONTENT_QUALITY_CONFIG.minAttempts) continue;
+
+        // Build a minimal analysis from existing metrics for regeneration
+        const existingFlag = await prisma.contentQualityFlag.findUnique({
+          where: { id: staleFlag.id },
+          select: { metrics: true },
+        });
+        const metrics = (existingFlag?.metrics ?? {}) as Record<string, unknown>;
+
+        // Mark as regenerating
+        await prisma.contentQualityFlag.update({
+          where: { id: staleFlag.id },
+          data: { status: 'regenerating' },
+        });
+
+        // Attempt regeneration
+        const { attemptRegeneration, toGeneratedQuestion } = await import(
+          '../../../lib/services/contentQualityLoop'
+        );
+        const questionWithAttempts = question as unknown as import('../../../lib/services/contentQualityLoop').QuestionWithAttempts;
+        const analysis = metrics as import('../../../lib/services/itemAnalysisService').ItemAnalysis;
+
+        const regenResult = await attemptRegeneration(
+          questionWithAttempts,
+          analysis,
+          deps.callGemini,
+          deps.log
+        );
+
+        if (regenResult.regeneratedContent) {
+          const regenerated = regenResult.regeneratedContent as unknown as Record<string, unknown>;
+          await prisma.contentQualityFlag.update({
+            where: { id: staleFlag.id },
+            data: {
+              status: 'reviewed',
+              regeneratedContent: regenerated,
+              critiqueFeedback: regenResult.critiqueResult?.feedbackForRewrite ?? null,
+            },
+          });
+          requeueSucceeded++;
+          result.regenerated++;
+        } else {
+          // Put back to flagged with a note
+          await prisma.contentQualityFlag.update({
+            where: { id: staleFlag.id },
+            data: { status: 'flagged' },
+          });
+          requeueFailed++;
+        }
+      } catch (err) {
+        requeueFailed++;
+        console.warn('[contentQualityLoop] Requeue regeneration failed', {
+          flagId: staleFlag.id,
+          questionId: staleFlag.questionId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        // Reset status on failure
+        await prisma.contentQualityFlag.update({
+          where: { id: staleFlag.id },
+          data: { status: 'flagged' },
+        }).catch(() => {});
+      }
+    }
+
+    const summary = {
+      ...result,
+      requeueAttempted,
+      requeueSucceeded,
+      requeueFailed,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log('[contentQualityLoop] Summary', summary);
+
     return Response.json({
       success: true,
-      ...result,
-      timestamp: new Date().toISOString(),
+      ...summary,
     });
   } catch (error) {
     console.error('[contentQualityLoop] Cron failed:', error);

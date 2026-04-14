@@ -99,6 +99,7 @@ export async function updateUserProgressWithHistory(
       if (updated > 0) return;
     } catch (e) {
       // Fallback to read-modify-write if raw not supported or DB type differs
+      console.error('[UserProgress] Raw update failed, falling back to read-modify-write', e);
     }
   }
 

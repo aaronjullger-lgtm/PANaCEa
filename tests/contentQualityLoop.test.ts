@@ -712,7 +712,7 @@ describe('runContentQualityLoop', () => {
       id: 'existing-flag',
       questionId: 'q-bad',
       flagType: 'NON_FUNCTIONING_DISTRACTOR',
-      status: 'flagged' as FlagStatus,
+      status: 'FLAGGED' as FlagStatus,
       metrics: {},
       regeneratedContent: null,
       critiqueFeedback: null,
@@ -761,7 +761,7 @@ describe('runContentQualityLoop', () => {
     const createCall = mockCreateFlag.mock.calls.find(
       (call: Array<Record<string, unknown>>) => call[0]!.regeneratedContent
     )?.[0] as Record<string, unknown> | undefined;
-    expect(createCall?.status).toBe('reviewed');
+    expect(createCall?.status).toBe('REVIEWED');
     expect(createCall?.regeneratedContent).not.toBeNull();
     expect(createCall?.critiqueFeedback).toBe('Fix the clinical accuracy.');
   });
@@ -776,7 +776,7 @@ describe('runContentQualityLoop', () => {
     expect(result.regenerated).toBe(0);
     expect(result.newlyFlagged).toBeGreaterThanOrEqual(1);
     const createCall = mockCreateFlag.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(createCall?.status).toBe('flagged');
+    expect(createCall?.status).toBe('FLAGGED');
     expect(createCall?.regeneratedContent).toBeUndefined();
   });
 
@@ -792,7 +792,7 @@ describe('runContentQualityLoop', () => {
     expect(mockCallGemini).not.toHaveBeenCalled();
     expect(mockCreateFlag.mock.calls.length).toBeGreaterThanOrEqual(1);
     const createCall = mockCreateFlag.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(createCall?.status).toBe('flagged');
+    expect(createCall?.status).toBe('FLAGGED');
   });
 
   it('caps regeneration at 10 items per run', async () => {

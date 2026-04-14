@@ -4413,6 +4413,7 @@ model ABExposure {
   @@index([userId])
   @@index([experimentId])
   @@index([variantName])
+  @@index([createdAt])
 }
 
 /// Records a conversion event for a user in a specific experiment variant.
@@ -4443,18 +4444,35 @@ model ABConversion {
 // and tracks the regeneration → human review pipeline.
 // ============================================================================
 
+enum ContentQualityFlagType {
+  NON_DISCRIMINATING
+  NEGATIVE_DISCRIMINATION
+  NEGATIVE_RPB
+  TOO_EASY
+  TOO_HARD
+  NON_FUNCTIONING_DISTRACTOR
+  INSUFFICIENT_DATA
+}
+
+enum ContentQualityFlagStatus {
+  FLAGGED
+  REGENERATING
+  REVIEWED
+  RESOLVED
+}
+
 /// Psychometric quality flag for a question. Created by the content quality
 /// feedback loop cron job when an item fails discrimination, point-biserial,
 /// or distractor analysis thresholds. Tracks status through regeneration.
 model ContentQualityFlag {
-  id                 String   @id @default(cuid())
+  id                 String                   @id @default(cuid())
   questionId         String
   /// Which quality criterion failed (matches ItemFlagType from itemAnalysisService)
-  flagType           String
+  flagType           ContentQualityFlagType
   /// Full ItemAnalysis metrics JSON (discrimination, pointBiserial, difficulty, flags, grade)
   metrics            Json
   /// Pipeline status: flagged → regenerating → reviewed → resolved
-  status             String   @default("flagged")
+  status             ContentQualityFlagStatus @default(FLAGGED)
   /// AI-generated improved question content (from selfRefineService), null until regeneration
   regeneratedContent Json?
   /// Critique feedback from the AI self-refine step

@@ -19,6 +19,14 @@
  * @see PANaCEa_Behavioral_Analysis_Audit.md — Parts 1–3
  */
 
+import {
+  fitExGaussian,
+  classifyRT,
+  type ExGaussianParams,
+  type RTClassification,
+  MIN_SAMPLES_FOR_FIT,
+} from '../confidence/exGaussianRT';
+
 // ─── Types ──────────────────────────────────────────────────
 
 /**
@@ -46,6 +54,8 @@ export interface BehavioralContext {
   rollingWindowMeanRtMs: number | null;
   /** Running mean accuracy for entire session, null if first question */
   sessionMeanAccuracy: number | null;
+  /** Historical RT values for ex-Gaussian fitting (optional — enables richer RT analysis) */
+  userRtHistory?: number[];
 }
 
 /** Extracted behavioral signals from raw context. */
@@ -64,6 +74,12 @@ export interface BehavioralSignals {
   isImpulsiveError: boolean;
   /** Slow RT + correct answer → effortful retrieval, unstable memory */
   isEffortfulRetrieval: boolean;
+  /** Ex-Gaussian RT classification when history available */
+  exGaussianClassification?: RTClassification;
+  /** Fitted ex-Gaussian parameters (null if insufficient history) */
+  exGaussianParams?: ExGaussianParams;
+  /** Whether RT signal quality was reduced due to attentional lapse */
+  isRTLapse: boolean;
 }
 
 /** Complete grade modulation result with full traceability. */
@@ -80,6 +96,7 @@ export interface GradeModulation {
     confidenceDelta: number;
     streakDelta: number;
     fatigueDelta: number;
+    exGaussianDelta: number;
     total: number;
   };
   /** The extracted signals that produced these deltas */
@@ -147,6 +164,15 @@ export const BEHAVIORAL_CONSTANTS = {
 
   /** Effective grade is clamped to this range */
   GRADE_BOUNDS: { MIN: 1.0, MAX: 4.0 },
+
+  /** Ex-Gaussian noise dampener: tau/mu ratio above this threshold activates dampening.
+   *  High tau relative to mu means the student has a heavy slow-tail — their RT is
+   *  inconsistent, so the RT delta should be dampened. */
+  EXGAUSSIAN_TAU_MU_NOISE_THRESHOLD: 0.4,
+
+  /** Maximum dampening applied to RT delta when ex-Gaussian noise is high (default: 0.5).
+   *  At threshold → 1.0 (no dampening). At 2× threshold → 0.5 (50% dampening). */
+  EXGAUSSIAN_NOISE_DAMPENER_MIN: 0.5,
 
   /** Wilson score mastery threshold (lower bound must exceed) */
   WILSON_MASTERY_THRESHOLD: 0.80,
@@ -412,6 +438,36 @@ export function modulateGrade(context: BehavioralContext): GradeModulation {
       ? 1.05
       : 1.08;
 
+  // ── Step 1b: Ex-Gaussian RT analysis (when history available) ──
+  let exGaussianParams: ExGaussianParams | null = null;
+  let exGaussianClassification: RTClassification | undefined;
+  let isRTLapse = false;
+  let exGaussianNoiseDampener = 1.0;
+
+  if (context.userRtHistory && context.userRtHistory.length >= MIN_SAMPLES_FOR_FIT) {
+    exGaussianParams = fitExGaussian(context.userRtHistory);
+    if (exGaussianParams) {
+      const rtResult = classifyRT(context.responseTimeMs, exGaussianParams);
+      exGaussianClassification = rtResult.classification;
+      isRTLapse = rtResult.classification === 'lapse';
+
+      // Compute noise dampener from tau/mu ratio
+      // High tau = heavy slow-tail = inconsistent RT = dampen the RT delta
+      if (exGaussianParams.mu > 0) {
+        const tauMuRatio = exGaussianParams.tau / exGaussianParams.mu;
+        if (tauMuRatio > BEHAVIORAL_CONSTANTS.EXGAUSSIAN_TAU_MU_NOISE_THRESHOLD) {
+          const normalized = Math.min(
+            1.0,
+            (tauMuRatio - BEHAVIORAL_CONSTANTS.EXGAUSSIAN_TAU_MU_NOISE_THRESHOLD) /
+              BEHAVIORAL_CONSTANTS.EXGAUSSIAN_TAU_MU_NOISE_THRESHOLD
+          );
+          exGaussianNoiseDampener =
+            1.0 - normalized * (1.0 - BEHAVIORAL_CONSTANTS.EXGAUSSIAN_NOISE_DAMPENER_MIN);
+        }
+      }
+    }
+  }
+
   const signals: BehavioralSignals = {
     rtRatio,
     rtZone,
@@ -420,20 +476,39 @@ export function modulateGrade(context: BehavioralContext): GradeModulation {
     confidenceCategory,
     isImpulsiveError,
     isEffortfulRetrieval,
+    exGaussianClassification,
+    exGaussianParams: exGaussianParams ?? undefined,
+    isRTLapse,
   };
 
   // Step 2: Calculate deltas
   // Zero RT delta during cold-start grace period
   const hasReliableBaseline = context.userMedianRtMs !== null;
-  const rtDelta = hasReliableBaseline
+  let rtDelta = hasReliableBaseline
     ? calculateRtDelta(rtZone, context.isCorrect)
     : 0.0;
+
+  // Apply ex-Gaussian noise dampener to RT delta
+  rtDelta *= exGaussianNoiseDampener;
+
+  // Compute ex-Gaussian delta: lapse detection overrides RT zone classification
+  // A lapse-classified RT should reduce confidence signal even if zone says "fast"
+  let exGaussianDelta = 0.0;
+  if (isRTLapse && exGaussianParams) {
+    // Lapse = attentional lapse → RT is noise, not signal
+    // Zero out the RT delta and apply a small negative adjustment
+    rtDelta = 0.0;
+    exGaussianDelta = -0.1;
+  } else if (exGaussianClassification === 'automatic' && context.isCorrect && exGaussianParams) {
+    // Ex-Gaussian confirms automatic (well below mu) → stronger confidence
+    exGaussianDelta = 0.1;
+  }
 
   const confidenceDelta = calculateConfidenceDelta(confidenceCategory, context.isCorrect);
   const streakDelta = calculateStreakDelta(context.streakCount, context.isCorrect);
   const fatigueDelta = calculateFatigueDelta(fatigueScore);
 
-  const totalDelta = rtDelta + confidenceDelta + streakDelta + fatigueDelta;
+  const totalDelta = rtDelta + confidenceDelta + streakDelta + fatigueDelta + exGaussianDelta;
 
   // Step 3: Clamp effective grade
   const effectiveGrade = Math.max(
@@ -465,6 +540,7 @@ export function modulateGrade(context: BehavioralContext): GradeModulation {
       confidenceDelta,
       streakDelta,
       fatigueDelta,
+      exGaussianDelta,
       total: totalDelta,
     },
     signals,

@@ -362,8 +362,8 @@ async function getQuestionDetails(
     },
     flags: {
       count: flags.length,
-      pending: flags.filter((f: { status: string }) => f.status === 'pending').length,
-      resolved: flags.filter((f: { status: string }) => f.status === 'resolved').length,
+      pending: flags.filter((f: { status: string }) => f.status === 'FLAGGED').length,
+      resolved: flags.filter((f: { status: string }) => f.status === 'RESOLVED').length,
       types: [...new Set(flags.map((f: { flagType: string }) => f.flagType))],
     },
     recentAttempts: attempts

@@ -60,8 +60,8 @@ export const DEFAULT_CONTENT_QUALITY_CONFIG: ContentQualityLoopConfig = {
   attemptRegeneration: true,
 };
 
-/** Pipeline status for a content quality flag */
-export type FlagStatus = 'flagged' | 'regenerating' | 'reviewed' | 'resolved';
+/** Pipeline status for a content quality flag (matches Prisma enum) */
+export type FlagStatus = 'FLAGGED' | 'REGENERATING' | 'REVIEWED' | 'RESOLVED';
 
 /** Result of a single content quality loop run */
 export interface ContentQualityLoopResult {
@@ -418,7 +418,7 @@ export async function runContentQualityLoop(
           }
         }
 
-        const status: FlagStatus = regeneratedContent ? 'reviewed' : 'flagged';
+        const status: FlagStatus = regeneratedContent ? 'REVIEWED' : 'FLAGGED';
 
         await deps.createFlag({
           questionId: question.id,

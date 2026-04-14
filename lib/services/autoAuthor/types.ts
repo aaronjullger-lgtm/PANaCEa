@@ -61,6 +61,8 @@ export interface ContentGenerationResult<T = any> {
   error?: string;
   tokensUsed?: number;
   modelUsed?: string;
+  provider?: string;
+  latencyMs?: number;
 }
 
 export interface AutoAuthorStats {

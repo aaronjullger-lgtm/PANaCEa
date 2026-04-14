@@ -69,6 +69,100 @@ export interface RouteResult<T = string> {
 // ─── Core Router ───────────────────────────────────────────────────────────
 
 /**
+ * Context passed to the per-model handler inside the retry loop.
+ * Separates retry/backoff orchestration from response handling.
+ */
+interface InvokeContext {
+  model: ReturnType<typeof createModel>;
+  modelName: ModelName;
+  messages: BaseMessage[];
+  tracingConfig: RunnableConfig;
+}
+
+/**
+ * Shared retry-with-fallback loop. Iterates over the model chain with
+ * exponential backoff, delegating the actual LLM call to `handler`.
+ */
+async function executeWithFallback<T>(
+  task: string,
+  env: AIEnvKeys,
+  params: {
+    systemPrompt?: string;
+    userPrompt: string;
+    messages?: BaseMessage[];
+  },
+  options: RouteOptions,
+  handler: (ctx: InvokeContext) => Promise<{ output: T; usage?: RouteResult['usage'] }>,
+): Promise<RouteResult<T>> {
+  const models = resolveModelChain(task, env, options.forceModel);
+
+  if (models.length === 0) {
+    throw new Error(
+      `No available models for task "${task}". ` +
+      `Configure at least one API key: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or DEEPSEEK_API_KEY.`
+    );
+  }
+
+  const maxAttempts = options.maxAttempts ?? models.length * DEFAULT_PARAMS.maxRetries;
+  let attempt = 0;
+  let lastError: Error | null = null;
+  const temperature = options.temperature;
+
+  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
+    runName: options.runName ?? `panacea:${task}`,
+    metadata: options.metadata,
+  });
+
+  for (const modelName of models) {
+    for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
+      attempt++;
+      if (attempt > maxAttempts) break;
+
+      try {
+        const start = Date.now();
+
+        const model = createModel(modelName, env, {
+          temperature,
+          maxOutputTokens: options.maxOutputTokens,
+        });
+
+        const messages: BaseMessage[] = params.messages ?? [
+          ...(params.systemPrompt ? [new SystemMessage(params.systemPrompt)] : []),
+          new HumanMessage(params.userPrompt),
+        ];
+
+        const result = await handler({ model, modelName, messages, tracingConfig });
+        const latencyMs = Date.now() - start;
+
+        return {
+          output: result.output,
+          model: modelName,
+          provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
+          attempts: attempt,
+          latencyMs,
+          usage: result.usage,
+        };
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(
+          `[LangChain Router] ${modelName} attempt ${retry + 1} failed:`,
+          lastError.message.slice(0, 200)
+        );
+
+        if (retry < DEFAULT_PARAMS.maxRetries - 1) {
+          await sleep(DEFAULT_PARAMS.retryDelayMs * (retry + 1));
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `All models failed for task "${task}" after ${attempt} attempts. ` +
+    `Last error: ${lastError?.message ?? 'unknown'}`
+  );
+}
+
+/**
  * Route a text prompt to the best available model for a given task.
  *
  * @example
@@ -91,77 +185,15 @@ export async function routeTask(
   },
   options: RouteOptions = {}
 ): Promise<RouteResult<string>> {
-  const models = resolveModelChain(task, env, options.forceModel);
+  return executeWithFallback(task, env, params, options, async ({ model, messages, tracingConfig }) => {
+    const response = await model.invoke(messages, tracingConfig);
 
-  if (models.length === 0) {
-    throw new Error(
-      `No available models for task "${task}". ` +
-      `Configure at least one API key: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or DEEPSEEK_API_KEY.`
-    );
-  }
+    const text = typeof response.content === 'string'
+      ? response.content
+      : JSON.stringify(response.content);
 
-  const maxAttempts = options.maxAttempts ?? models.length * DEFAULT_PARAMS.maxRetries;
-  let attempt = 0;
-  let lastError: Error | null = null;
-
-  // Build tracing config once (per-request, not per-retry)
-  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
-    runName: options.runName ?? `panacea:${task}`,
-    metadata: options.metadata,
+    return { output: text, usage: extractUsage(response) };
   });
-
-  for (const modelName of models) {
-    for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
-      attempt++;
-      if (attempt > maxAttempts) break;
-
-      try {
-        const start = Date.now();
-
-        const model = createModel(modelName, env, {
-          temperature: options.temperature,
-          maxOutputTokens: options.maxOutputTokens,
-        });
-
-        const messages: BaseMessage[] = params.messages ?? [
-          ...(params.systemPrompt ? [new SystemMessage(params.systemPrompt)] : []),
-          new HumanMessage(params.userPrompt),
-        ];
-
-        const response = await model.invoke(messages, tracingConfig);
-        const latencyMs = Date.now() - start;
-
-        const text = typeof response.content === 'string'
-          ? response.content
-          : JSON.stringify(response.content);
-
-        return {
-          output: text,
-          model: modelName,
-          provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
-          attempts: attempt,
-          latencyMs,
-          usage: extractUsage(response),
-        };
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.warn(
-          `[LangChain Router] ${modelName} attempt ${retry + 1} failed:`,
-          lastError.message.slice(0, 200)
-        );
-
-        // Backoff before retry (not before fallback to next model)
-        if (retry < DEFAULT_PARAMS.maxRetries - 1) {
-          await sleep(DEFAULT_PARAMS.retryDelayMs * (retry + 1));
-        }
-      }
-    }
-  }
-
-  throw new Error(
-    `All models failed for task "${task}" after ${attempt} attempts. ` +
-    `Last error: ${lastError?.message ?? 'unknown'}`
-  );
 }
 
 /**
@@ -195,108 +227,39 @@ export async function routeStructured<T extends z.ZodType>(
   params: {
     systemPrompt?: string;
     userPrompt: string;
+    messages?: BaseMessage[];
   },
   schema: T,
   options: RouteOptions = {}
 ): Promise<RouteResult<z.infer<T>>> {
-  const models = resolveModelChain(task, env, options.forceModel);
+  // Structured output benefits from lower temperature for deterministic JSON
+  const structuredOptions = { ...options, temperature: options.temperature ?? 0.5 };
 
-  if (models.length === 0) {
-    throw new Error(
-      `No available models for task "${task}". ` +
-      `Configure at least one API key: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, or DEEPSEEK_API_KEY.`
-    );
-  }
-
-  const maxAttempts = options.maxAttempts ?? models.length * DEFAULT_PARAMS.maxRetries;
-  let attempt = 0;
-  let lastError: Error | null = null;
-  const temperature = options.temperature ?? 0.5;
-
-  // Build tracing config once (per-request, not per-retry)
-  const tracingConfig: RunnableConfig = buildTracingConfig(env, {
-    runName: options.runName ?? `panacea:${task}`,
-    metadata: options.metadata,
-  });
-
-  for (const modelName of models) {
-    for (let retry = 0; retry < DEFAULT_PARAMS.maxRetries; retry++) {
-      attempt++;
-      if (attempt > maxAttempts) break;
-
-      try {
-        const start = Date.now();
-
-        const model = createModel(modelName, env, {
-          temperature,
-          maxOutputTokens: options.maxOutputTokens,
-        });
-
-        const messages: BaseMessage[] = params.messages ?? [
-          ...(params.systemPrompt ? [new SystemMessage(params.systemPrompt)] : []),
-          new HumanMessage(params.userPrompt),
-        ];
-
-        // Try native structured output first
-        try {
-          const structuredModel = model.withStructuredOutput(schema);
-          const structured = await structuredModel.invoke(messages, tracingConfig);
-          const latencyMs = Date.now() - start;
-
-          return {
-            output: structured as z.infer<T>,
-            model: modelName,
-            provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
-            attempts: attempt,
-            latencyMs,
-          };
-        } catch (structuredErr) {
-          // withStructuredOutput not supported or failed — fall back to JSON prompt
-          console.warn(
-            `[LangChain Router] ${modelName} withStructuredOutput failed:`,
-            structuredErr instanceof Error ? structuredErr.message.slice(0, 200) : String(structuredErr).slice(0, 200)
-          );
-        }
-
-        // Fallback: instruct JSON + manual parse + Zod validate
-        const jsonInstruction =
-          '\n\nReturn ONLY valid JSON matching the required schema. No markdown fences, no explanatory text.';
-
-        const response = await model.invoke(messages, tracingConfig);
-        const latencyMs = Date.now() - start;
-
-        const text = typeof response.content === 'string'
-          ? response.content
-          : JSON.stringify(response.content);
-
-        const parsed = parseJsonResponse(text);
-        const validated = schema.parse(parsed);
-
-        return {
-          output: validated,
-          model: modelName,
-          provider: MODEL_REGISTRY[modelName]?.provider ?? 'unknown',
-          attempts: attempt,
-          latencyMs,
-        };
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.warn(
-          `[LangChain Router] ${modelName} structured attempt ${retry + 1} failed:`,
-          lastError.message.slice(0, 200)
-        );
-
-        if (retry < DEFAULT_PARAMS.maxRetries - 1) {
-          await sleep(DEFAULT_PARAMS.retryDelayMs * (retry + 1));
-        }
-      }
+  return executeWithFallback(task, env, params, structuredOptions, async ({ model, messages, tracingConfig }) => {
+    // Try native structured output first
+    try {
+      const structuredModel = model.withStructuredOutput(schema);
+      const structured = await structuredModel.invoke(messages, tracingConfig);
+      return { output: structured as z.infer<T> };
+    } catch (structuredErr) {
+      console.warn(
+        `[LangChain Router] withStructuredOutput failed:`,
+        structuredErr instanceof Error ? structuredErr.message.slice(0, 200) : String(structuredErr).slice(0, 200)
+      );
     }
-  }
 
-  throw new Error(
-    `All models failed for structured task "${task}" after ${attempt} attempts. ` +
-    `Last error: ${lastError?.message ?? 'unknown'}`
-  );
+    // Fallback: instruct JSON + manual parse + Zod validate
+    const response = await model.invoke(messages, tracingConfig);
+
+    const text = typeof response.content === 'string'
+      ? response.content
+      : JSON.stringify(response.content);
+
+    const parsed = parseJsonResponse(text);
+    const validated = schema.parse(parsed);
+
+    return { output: validated };
+  });
 }
 
 // ─── Model Chain Resolution ────────────────────────────────────────────────

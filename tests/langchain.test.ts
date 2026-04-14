@@ -32,6 +32,20 @@ vi.mock('@langchain/anthropic', () => ({
   ChatAnthropic: MockChatAnthropic,
 }));
 
+vi.mock('@langchain/core/prompts', () => {
+  // Real implementation for ChatPromptTemplate — needed for LCEL chain tests
+  return vi.importActual('@langchain/core/prompts');
+});
+
+vi.mock('@langchain/core/tracers/tracer_langchain', () => ({
+  LangChainTracer: vi.fn().mockImplementation(() => ({
+    name: 'mock_tracer',
+    projectName: 'panacea',
+    client: {},
+    usesRunTreeMap: false,
+  })),
+}));
+
 function setupDefaultMocks() {
   mockInvoke.mockResolvedValue({
     content: '{"test": true}',

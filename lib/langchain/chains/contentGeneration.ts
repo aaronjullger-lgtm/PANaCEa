@@ -25,6 +25,7 @@ export interface ContentGenerationResult<T = unknown> {
   success: boolean;
   content?: T;
   error?: string;
+  tokensUsed?: number;
   modelUsed?: string;
   provider?: string;
   latencyMs?: number;

@@ -211,9 +211,57 @@ export async function autoAuthorMissingContent(
 
     console.log('━'.repeat(60) + '\n');
 
+    // 5. Report on content quality flags from the quality loop
+    await reportQualityFlags(stats);
+
     return stats;
   } catch (error: any) {
     console.error('\n❌ Fatal error during auto-author run:', error);
     throw error;
+  }
+}
+
+/**
+ * After a batch generation run, check if the content quality loop has
+ * flagged items in "reviewed" state that should be surfaced in the report.
+ * This keeps the autoAuthor aware of quality issues found by psychometric analysis.
+ */
+async function reportQualityFlags(stats: AutoAuthorStats): Promise<void> {
+  try {
+    // Dynamic import to avoid circular dependency — autoAuthor scripts
+    // may not always have Prisma available at module level
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+
+    try {
+      const reviewedFlags = await prisma.contentQualityFlag.count({
+        where: { status: 'reviewed' },
+      });
+
+      const flaggedNoRegen = await prisma.contentQualityFlag.count({
+        where: {
+          status: 'flagged',
+          regeneratedContent: null,
+        },
+      });
+
+      if (reviewedFlags > 0 || flaggedNoRegen > 0) {
+        console.log('\n📋 Content Quality Loop Status:');
+        if (reviewedFlags > 0) {
+          console.log(`   ${reviewedFlags} flag(s) in "reviewed" state — awaiting admin approval`);
+          console.log('   Review at: /api/admin/content-quality-flags?status=reviewed');
+        }
+        if (flaggedNoRegen > 0) {
+          console.log(`   ${flaggedNoRegen} flag(s) pending regeneration — will be retried on next cron run`);
+        }
+        console.log('');
+      }
+
+      await prisma.$disconnect();
+    } catch {
+      // Silently skip if DB not available (e.g., dry run without DB)
+    }
+  } catch {
+    // Skip quality flags reporting if Prisma not available
   }
 }
