@@ -8,13 +8,15 @@
  * The RAG retrieval + CRAG guardrail logic stays in generate-rag.ts;
  * this module handles ONLY the LLM generation and self-refine calls.
  *
+ * Uses ChatPromptTemplate for type-safe prompt construction.
+ *
  * @module lib/langchain/chains/questionGeneration
  * Sprint: LangChain Integration — Sprint 2
  */
 
 import { z } from 'zod';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { routeTask } from '../router';
-import { parseJsonResponse } from '../router';
 import type { AIEnvKeys } from '../models';
 import type { RouteOptions, RouteResult } from '../router';
 
@@ -38,7 +40,6 @@ export interface QuestionGenerationResult {
 
 // ─── Zod Schema ────────────────────────────────────────────────────────────
 
-/** Schema for validating individual generated questions. */
 const QuestionItemSchema = z.object({
   type: z.string(),
   question: z.string(),
@@ -54,16 +55,15 @@ const QuestionItemSchema = z.object({
   insufficient: z.boolean().optional(),
 });
 
-/** Schema for the full response (array of questions or single insufficient marker). */
 const QuestionResponseSchema = z.union([
   z.array(QuestionItemSchema),
   QuestionItemSchema,
   z.object({ insufficient: z.literal(true) }),
 ]);
 
-// ─── System Prompt ────────────────────────────────────────────────────────
+// ─── Prompt Template ────────────────────────────────────────────────────────
 
-const QUESTION_GEN_SYSTEM_PROMPT = `You are a board-certified physician and experienced NBME item-writer creating PANCE-style clinical questions for PA students.
+const questionSystemPrompt = `You are a board-certified physician and experienced NBME item-writer creating PANCE-style clinical questions for PA students.
 
 CRITICAL RULES:
 - Generate questions ONLY from the provided clinical reference context below.
@@ -73,6 +73,30 @@ CRITICAL RULES:
 - Each wrong answer must be correct for a slightly different patient scenario.
 - Prefer third-order questions (mechanism, next step, complication management).
 - Include at least 2 pertinent negatives that rule out top differentials.`;
+
+const questionPromptTemplate = ChatPromptTemplate.fromMessages([
+  ['system', questionSystemPrompt],
+  ['human', `{formattedContext}
+
+TASK: Generate {count} high-quality '{questionType}' question(s) about {conditionName} ({system}) strictly based on the clinical reference context above.
+
+OUTPUT FORMAT (JSON array):
+[{
+  "type": "{questionType}",
+  "question": "Clinical vignette with raw patient data only...",
+  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+  "correctAnswer": "Matches one option exactly",
+  "explanation": {{
+    "rationale": "Why the correct answer is correct, citing specific clinical evidence.",
+    "incorrect": {{"A": "Why wrong for THIS patient; when correct", "B": "...", "C": "...", "D": "..."}}
+  }},
+  "difficulty": 0.5,
+  "sourceSections": ["pathophysiology", "treatment"],
+  "sourceConditions": ["{conditionName}"]
+}}]
+
+Return ONLY valid JSON. No markdown fences.`],
+]);
 
 // ─── Chain Functions ──────────────────────────────────────────────────────
 
@@ -86,48 +110,50 @@ export async function generateQuestions(
 ): Promise<QuestionGenerationResult> {
   const { conditionName, system, count, questionType, formattedContext } = params;
 
-  const userPrompt = `${formattedContext}
+  try {
+    // Step 1: Format prompt via ChatPromptTemplate (type-safe)
+    const { messages } = await questionPromptTemplate.invoke({
+      formattedContext,
+      count: String(count),
+      questionType,
+      conditionName,
+      system,
+    });
 
-TASK: Generate ${count} high-quality '${questionType}' question(s) about ${conditionName} (${system}) strictly based on the clinical reference context above.
+    const systemMsg = messages[0]?.content as string ?? questionSystemPrompt;
+    const userMsg = messages[1]?.content as string ?? '';
 
-OUTPUT FORMAT (JSON array):
-[{
-  "type": "${questionType}",
-  "question": "Clinical vignette with raw patient data only...",
-  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-  "correctAnswer": "Matches one option exactly",
-  "explanation": {
-    "rationale": "Why the correct answer is correct, citing specific clinical evidence.",
-    "incorrect": {"A": "Why wrong for THIS patient; when correct", "B": "...", "C": "...", "D": "..."}
-  },
-  "difficulty": 0.5,
-  "sourceSections": ["pathophysiology", "treatment"],
-  "sourceConditions": ["${conditionName}"]
-}]
+    // Step 2: Route through multi-provider fallback
+    const result = await routeTask('question-generation', env, {
+      systemPrompt: systemMsg,
+      userPrompt: userMsg,
+    }, {
+      temperature: 0.7,
+      maxOutputTokens: 4096,
+      runName: `panacea:question-gen:${conditionName}`,
+      metadata: { conditionName, system, count, questionType },
+      ...options,
+    });
 
-Return ONLY valid JSON. No markdown fences.`;
+    // Step 3: Parse + validate
+    const questions = parseQuestionResponse(result.output);
 
-  const result = await routeTask('question-generation', env, {
-    systemPrompt: QUESTION_GEN_SYSTEM_PROMPT,
-    userPrompt,
-  }, {
-    temperature: 0.7,
-    maxOutputTokens: 4096,
-    runName: `panacea:question-gen:${conditionName}`,
-    metadata: { conditionName, system, count, questionType },
-    ...options,
-  });
-
-  // Parse the JSON response
-  const questions = parseQuestionResponse(result.output);
-
-  return {
-    questions,
-    model: result.model,
-    provider: result.provider,
-    latencyMs: result.latencyMs,
-    usage: result.usage,
-  };
+    return {
+      questions,
+      model: result.model,
+      provider: result.provider,
+      latencyMs: result.latencyMs,
+      usage: result.usage,
+    };
+  } catch (error) {
+    return {
+      questions: [],
+      model: 'unknown',
+      provider: 'unknown',
+      latencyMs: 0,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 /**
