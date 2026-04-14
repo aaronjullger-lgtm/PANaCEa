@@ -125,36 +125,19 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
       },
 
       async callGemini(prompt) {
-        const apiKey = context.env.GEMINI_API_KEY;
-        if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+        const { routeTask } = await import('../../../lib/langchain/router');
+        const { fromCloudflareEnv } = await import('../../../lib/langchain/envAdapter');
+        const aiEnv = fromCloudflareEnv(context.env as Record<string, string>);
 
-        const model = 'gemini-2.5-flash';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 4096,
-              responseMimeType: 'application/json',
-            },
-          }),
+        const result = await routeTask('content-generation', aiEnv, {
+          systemPrompt: 'You are a medical education expert specializing in question quality improvement.',
+          userPrompt: prompt,
+        }, {
+          temperature: 0.3,
+          runName: 'panacea:content-quality-loop',
         });
 
-        if (!response.ok) {
-          const body = await response.text();
-          throw new Error(`Gemini API error ${response.status}: ${body}`);
-        }
-
-        const json = (await response.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error('Empty response from Gemini');
-        return text;
+        return result.output;
       },
 
       log: {
