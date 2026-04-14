@@ -36,6 +36,7 @@ export interface QuestionGenerationResult {
   provider: string;
   latencyMs: number;
   usage?: RouteResult['usage'];
+  error?: string;
 }
 
 // ─── Zod Schema ────────────────────────────────────────────────────────────
@@ -47,7 +48,7 @@ const QuestionItemSchema = z.object({
   correctAnswer: z.string(),
   explanation: z.object({
     rationale: z.string().optional(),
-    incorrect: z.record(z.string()).optional(),
+    incorrect: z.record(z.string(), z.string()).optional(),
   }).optional(),
   difficulty: z.number().optional(),
   sourceSections: z.array(z.string()).optional(),
@@ -69,7 +70,7 @@ CRITICAL RULES:
 - Generate questions ONLY from the provided clinical reference context below.
 - NEVER hallucinate clinical details not present in the context.
 - NEVER state the diagnosis or condition name in the vignette stem. Use raw patient data only.
-- If the context is insufficient to create a clinically accurate question, return {"insufficient": true}.
+- If the context is insufficient to create a clinically accurate question, return {{"insufficient": true}}.
 - Each wrong answer must be correct for a slightly different patient scenario.
 - Prefer third-order questions (mechanism, next step, complication management).
 - Include at least 2 pertinent negatives that rule out top differentials.`;
@@ -81,7 +82,7 @@ const questionPromptTemplate = ChatPromptTemplate.fromMessages([
 TASK: Generate {count} high-quality '{questionType}' question(s) about {conditionName} ({system}) strictly based on the clinical reference context above.
 
 OUTPUT FORMAT (JSON array):
-[{
+[{{
   "type": "{questionType}",
   "question": "Clinical vignette with raw patient data only...",
   "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
@@ -111,8 +112,8 @@ export async function generateQuestions(
   const { conditionName, system, count, questionType, formattedContext } = params;
 
   try {
-    // Step 1: Format prompt via ChatPromptTemplate (type-safe)
-    const { messages } = await questionPromptTemplate.invoke({
+    // Step 1: Format prompt via ChatPromptTemplate (type-safe, synchronous)
+    const messages = questionPromptTemplate.formatMessages({
       formattedContext,
       count: String(count),
       questionType,
