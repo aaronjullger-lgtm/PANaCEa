@@ -213,25 +213,6 @@ describe('LangChain Env Adapter', () => {
 // ─── Tracing Tests ────────────────────────────────────────────────────────
 
 describe('LangChain Tracing', () => {
-  it('configureLangSmithEnv returns false without API key', async () => {
-    const { configureLangSmithEnv } = await import('../lib/langchain/tracing');
-    expect(configureLangSmithEnv({})).toBe(false);
-  });
-
-  it('configureLangSmithEnv returns true and sets globals with key', async () => {
-    const { configureLangSmithEnv } = await import('../lib/langchain/tracing');
-    const result = configureLangSmithEnv({ LANGSMITH_API_KEY: 'test-key' });
-    expect(result).toBe(true);
-    expect((globalThis as any).LANGCHAIN_TRACING_V2).toBe('true');
-    expect((globalThis as any).LANGCHAIN_API_KEY).toBe('test-key');
-
-    // Clean up globals
-    delete (globalThis as any).LANGCHAIN_TRACING_V2;
-    delete (globalThis as any).LANGCHAIN_API_KEY;
-    delete (globalThis as any).LANGCHAIN_PROJECT;
-    delete (globalThis as any).LANGCHAIN_ENDPOINT;
-  });
-
   it('buildTracingConfig returns default config without key', async () => {
     const { buildTracingConfig } = await import('../lib/langchain/tracing');
     const config = buildTracingConfig({});
@@ -461,5 +442,163 @@ describe('LangChain Question Generation Chain', () => {
     );
 
     expect(result.output).toContain('overallScore');
+  });
+});
+
+// ─── Content Generation Chain Tests ─────────────────────────────────────
+
+describe('LangChain Content Generation Chains', () => {
+  it('generateConditionContentLC returns validated condition content', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        overview: 'CHF is a syndrome...',
+        symptoms: ['Dyspnea', 'Edema'],
+        riskFactors: ['HTN', 'CAD'],
+        diagnosis: 'Echo is gold standard',
+        treatment: 'ACE inhibitors, diuretics',
+        clinicalPearls: ['S3 gallop is classic'],
+      }),
+      response_metadata: {},
+    });
+
+    const { generateConditionContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateConditionContentLC(
+      { GEMINI_API_KEY: 'k' },
+      { conditionName: 'CHF', system: 'Cardiovascular' }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.content).toBeDefined();
+    expect((result.content as any).overview).toBe('CHF is a syndrome...');
+    expect((result.content as any).symptoms).toHaveLength(2);
+    expect(result.modelUsed).toBe('gemini-2.0-flash');
+  });
+
+  it('generateConditionContentLC returns error on invalid JSON', async () => {
+    mockInvoke.mockResolvedValue({
+      content: 'not valid json at all',
+      response_metadata: {},
+    });
+
+    const { generateConditionContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateConditionContentLC(
+      { GEMINI_API_KEY: 'k' },
+      { conditionName: 'CHF', system: 'Cardiovascular' }
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('parse');
+  });
+
+  it('generateConditionContentLC returns error on schema validation failure', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({ wrongField: 'missing required fields' }),
+      response_metadata: {},
+    });
+
+    const { generateConditionContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateConditionContentLC(
+      { GEMINI_API_KEY: 'k' },
+      { conditionName: 'CHF', system: 'Cardiovascular' }
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('validation failed');
+  });
+
+  it('generateLabContentLC returns validated lab content', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        description: 'Measures serum troponin',
+        typicalNormalRange: '< 0.04 ng/mL',
+        commonAbnormalities: ['Elevated in MI'],
+        indications: ['Chest pain evaluation'],
+      }),
+      response_metadata: {},
+    });
+
+    const { generateLabContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateLabContentLC({ GEMINI_API_KEY: 'k' }, 'Troponin');
+
+    expect(result.success).toBe(true);
+    expect((result.content as any).description).toContain('troponin');
+    expect((result.content as any).commonAbnormalities).toHaveLength(1);
+  });
+
+  it('generateImagingContentLC returns validated imaging content', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        description: 'Chest X-ray visualization',
+        bestFor: ['Pneumonia evaluation'],
+        limitations: ['Cannot detect PE'],
+        radiationRisk: true,
+      }),
+      response_metadata: {},
+    });
+
+    const { generateImagingContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateImagingContentLC({ GEMINI_API_KEY: 'k' }, 'Chest X-ray');
+
+    expect(result.success).toBe(true);
+    expect((result.content as any).radiationRisk).toBe(true);
+  });
+
+  it('generateTreatmentContentLC returns validated treatment content', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        description: 'ACE inhibitor',
+        mechanismOfAction: 'Blocks ACE conversion',
+        commonIndications: ['Hypertension', 'CHF'],
+        seriousSideEffects: ['Angioedema', 'Hyperkalemia'],
+      }),
+      response_metadata: {},
+    });
+
+    const { generateTreatmentContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateTreatmentContentLC({ GEMINI_API_KEY: 'k' }, 'Lisinopril');
+
+    expect(result.success).toBe(true);
+    expect((result.content as any).mechanismOfAction).toBeDefined();
+    expect((result.content as any).seriousSideEffects).toHaveLength(2);
+  });
+
+  it('generatePhysiologyContentLC returns validated physiology content', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        description: 'Frank-Starling mechanism',
+        mechanism: 'Increased preload stretches ventricular walls',
+        clinicalSignificance: 'Explains why volume resuscitation helps in hypovolemic shock',
+      }),
+      response_metadata: {},
+    });
+
+    const { generatePhysiologyContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generatePhysiologyContentLC({ GEMINI_API_KEY: 'k' }, 'Frank-Starling Law');
+
+    expect(result.success).toBe(true);
+    expect((result.content as any).clinicalSignificance).toBeDefined();
+  });
+
+  it('generateConditionContentLC passes through provider and latencyMs', async () => {
+    mockInvoke.mockResolvedValue({
+      content: JSON.stringify({
+        overview: 'Test',
+        symptoms: ['S1'],
+        diagnosis: 'D1',
+        treatment: 'T1',
+        clinicalPearls: ['P1'],
+      }),
+      response_metadata: {},
+    });
+
+    const { generateConditionContentLC } = await import('../lib/langchain/chains/contentGeneration');
+    const result = await generateConditionContentLC(
+      { GEMINI_API_KEY: 'k' },
+      { conditionName: 'Test', system: 'Test' }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.provider).toBe('gemini');
+    expect(result.latencyMs).toBeGreaterThanOrEqual(0);
   });
 });

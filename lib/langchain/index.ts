@@ -41,7 +41,6 @@ export {
 
 // ─── Tracing ──────────────────────────────────────────────────────────────
 export {
-  configureLangSmithEnv,
   buildTracingConfig,
   isTracingEnabled,
   type TracingOptions,

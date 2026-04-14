@@ -52,7 +52,7 @@ export function isTracingEnabled(env: AIEnvKeys): boolean {
 /**
  * Build a per-request LangChainTracer callback handler.
  *
- * Unlike `configureLangSmithEnv` (which mutates globalThis),
+ * Unlike globalThis mutation patterns (unsafe in Edge isolates),
  * this creates an isolated tracer instance safe for concurrent
  * Edge requests.
  *
@@ -86,25 +86,4 @@ export function buildTracingConfig(
   config.callbacks.push(tracer);
 
   return config;
-}
-
-// ─── Legacy Compatibility ─────────────────────────────────────────────────
-// These are kept for backward compatibility with callers that still
-// use the old globalThis pattern. They will be removed in a future sprint.
-
-/**
- * @deprecated Use `buildTracingConfig()` instead. This mutates globalThis,
- * which is unsafe in concurrent Edge isolates.
- */
-export function configureLangSmithEnv(env: AIEnvKeys): boolean {
-  const apiKey = env.LANGSMITH_API_KEY;
-  if (!apiKey) return false;
-
-  const g = globalThis as Record<string, unknown>;
-  g.LANGCHAIN_TRACING_V2 = 'true';
-  g.LANGCHAIN_API_KEY = apiKey;
-  g.LANGCHAIN_PROJECT = env.LANGSMITH_PROJECT ?? 'panacea';
-  g.LANGCHAIN_ENDPOINT = 'https://api.smith.langchain.com';
-
-  return true;
 }
