@@ -1,83 +1,187 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search,
-  Calculator as CalculatorIcon,
-  BookOpen,
-  Pill,
   Activity,
-  Video,
-  Headphones,
+  BookMarked,
+  Calculator as CalculatorIcon,
   ChevronRight,
-  X,
-  Menu,
+  ClipboardCheck,
+  Clock,
+  FileText,
+  Headphones,
+  Lightbulb,
+  Search,
+  Sparkles,
   Star,
   StarOff,
-  Clock,
-  Sparkles,
-  Lightbulb,
-  FileText,
-  FileImage,
-  ClipboardCheck,
-  BookMarked,
+  Video,
+  type LucideIcon,
 } from 'lucide-react';
-import { BackLink } from '@/components/navigation/BackLink';
-import { ROUTES } from '@/config/routes';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceFilterBar,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 import { CalculatorHub } from './calculators/CalculatorHub';
 import { CALCULATORS as REGISTRY_CALCULATORS } from './calculators/calculatorRegistry';
-import { StorageKeys } from '@/lib/storage/storageRegistry';
+import { ScoringSystemBrowser } from './calculators/scoring';
 import { MnemonicGenerator } from './MnemonicGenerator';
 import { StudyGuideGenerator } from './StudyGuideGenerator';
 import { ClinicalMotionFlashcards } from './ClinicalMotionFlashcards';
 import { LectureConverter } from './LectureConverter';
 import { ABGInterpreter, EKGInterpreter } from './interpreters';
-import { ScoringSystemBrowser } from './calculators/scoring';
 import { QuickRefHub } from './quickref';
-
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 interface ToolkitHubProps {
   onNavigateToItem?: (mode: string) => void;
   onClose: () => void;
 }
 
-type TabId = 'calculators' | 'generators' | 'interpreters' | 'imaging' | 'scoring' | 'quickref';
+type TabId = 'calculators' | 'generators' | 'interpreters' | 'scoring' | 'quickref';
+type GeneratorId = 'mnemonic' | 'study_guide' | 'clinical_motion' | 'lecture_script';
+type InterpreterId = 'abg' | 'ekg';
 
-/** Calculator card type (registry entries used in ToolkitHub grid) */
 type Calculator = (typeof REGISTRY_CALCULATORS)[number];
 
 interface NavTab {
   id: TabId;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
+interface ToolCardConfig<TId extends string> {
+  id: TId;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  accent: string;
+  tags: string[];
+  searchTerms: string[];
+}
 
-/** Navigation tabs - Clinical Utilities only (calculators, generators, interpreters) */
 const NAV_TABS: NavTab[] = [
   { id: 'calculators', label: 'Calculators', icon: CalculatorIcon },
   { id: 'generators', label: 'Generators', icon: Lightbulb },
-  { id: 'interpreters', label: 'Interpretation Assistants', icon: Activity },
+  { id: 'interpreters', label: 'Interpretation', icon: Activity },
   { id: 'scoring', label: 'Scoring Systems', icon: ClipboardCheck },
   { id: 'quickref', label: 'Quick Reference', icon: BookMarked },
 ];
 
-/** Single source of truth: use shared registry */
-const CALCULATORS = REGISTRY_CALCULATORS;
+const TAB_META: Record<
+  TabId,
+  { title: string; description: string; accent: string; searchPlaceholder?: string }
+> = {
+  calculators: {
+    title: 'Clinical Calculators',
+    description: 'Risk scores, dosing support, diagnostic criteria, and fast decision tools.',
+    accent: '#c4b78a',
+    searchPlaceholder: "Search calculators (e.g. 'afib', 'pneumonia', 'pe')",
+  },
+  generators: {
+    title: 'Generators & Study Aids',
+    description: 'Mnemonic builders, study-guide exports, motion flashcards, and lecture tools.',
+    accent: '#b39b6c',
+    searchPlaceholder: 'Search generators, prompts, and study aids',
+  },
+  interpreters: {
+    title: 'Interpretation Assistants',
+    description: 'Translate raw clinical values into a more legible first-pass interpretation.',
+    accent: '#7a8f6e',
+    searchPlaceholder: 'Search interpreters and diagnostic helpers',
+  },
+  scoring: {
+    title: 'Scoring Systems',
+    description: 'Structured bedside scores and decision thresholds from the shared registry.',
+    accent: '#728ba6',
+  },
+  quickref: {
+    title: 'Quick Reference Cards',
+    description: 'High-yield algorithms, ranges, and bedside summaries for fast recall.',
+    accent: '#9a7f9a',
+  },
+};
 
-/** Local alias for storage key (avoids undefined if chunk loads before StorageKeys) */
+const GENERATOR_TOOLS: ToolCardConfig<GeneratorId>[] = [
+  {
+    id: 'mnemonic',
+    title: 'Mnemonic Generator',
+    description: 'Generate acronyms, stories, or rhymes for medical concepts.',
+    icon: Lightbulb,
+    accent: '#c4b78a',
+    tags: ['Memory aids', 'Acronyms'],
+    searchTerms: ['mnemonic', 'acronym', 'memory', 'story', 'rhyme'],
+  },
+  {
+    id: 'study_guide',
+    title: 'Study Guide Generator',
+    description: 'Turn selected content into a cleaner printable study guide.',
+    icon: FileText,
+    accent: '#728ba6',
+    tags: ['Export', 'Review packets'],
+    searchTerms: ['study guide', 'export', 'print', 'packet', 'summary'],
+  },
+  {
+    id: 'clinical_motion',
+    title: 'Clinical Motion Flashcards',
+    description: 'Use AI-generated movement pathology clips as a study aid.',
+    icon: Video,
+    accent: '#9a7f9a',
+    tags: ['Video', 'Movement'],
+    searchTerms: ['motion', 'video', 'gait', 'movement', 'flashcards'],
+  },
+  {
+    id: 'lecture_script',
+    title: 'Lecture Converter',
+    description: 'Turn lecture text into a Host A / Host B podcast-style script.',
+    icon: Headphones,
+    accent: '#a67f7f',
+    tags: ['Audio', 'Lecture prep'],
+    searchTerms: ['lecture', 'podcast', 'audio', 'script', 'converter'],
+  },
+];
+
+const INTERPRETER_TOOLS: ToolCardConfig<InterpreterId>[] = [
+  {
+    id: 'abg',
+    title: 'ABG Interpreter',
+    description:
+      'Translate pH, pCO2, HCO3, and oxygenation into acid-base interpretation and compensation.',
+    icon: Activity,
+    accent: '#7a8f6e',
+    tags: ['Rule-based', "Winter's formula"],
+    searchTerms: ['abg', 'acid base', 'compensation', 'winter', 'arterial blood gas'],
+  },
+  {
+    id: 'ekg',
+    title: 'EKG Interpreter',
+    description: 'Walk rhythm, rate, intervals, ST/T changes, and diagnostic patterns more clearly.',
+    icon: Activity,
+    accent: '#a67f7f',
+    tags: ['Interactive', 'ECG patterns'],
+    searchTerms: ['ekg', 'ecg', 'rhythm', 'stemi', 'arrhythmia'],
+  },
+];
+
+const CALCULATORS = REGISTRY_CALCULATORS;
 const PINNED_CALCULATORS_KEY = StorageKeys.PINNED_CALCULATORS;
 const RECENT_CALCULATORS_KEY = StorageKeys.RECENT_CALCULATORS;
-
-// ============================================================================
-// Custom Hook: useCalculatorPreferences
-// ============================================================================
+const VALID_UTILITY_TAB_IDS: TabId[] = [
+  'calculators',
+  'generators',
+  'interpreters',
+  'scoring',
+  'quickref',
+];
 
 interface CalculatorPreferences {
   pinnedCalcs: string[];
@@ -86,10 +190,6 @@ interface CalculatorPreferences {
   recordUsage: (calcId: string) => void;
 }
 
-/**
- * Custom hook for managing calculator preferences (pinned & recent) in localStorage.
- * Encapsulates all localStorage read/write logic for better testability and reuse.
- */
 function useCalculatorPreferences(): CalculatorPreferences {
   const getStoredArray = (key: string): string[] => {
     if (typeof window === 'undefined') return [];
@@ -101,47 +201,36 @@ function useCalculatorPreferences(): CalculatorPreferences {
     }
   };
 
-  const [pinnedCalcs, setPinnedCalcs] = useState<string[]>(() =>
-    getStoredArray(PINNED_CALCULATORS_KEY)
-  );
-  const [recentCalcs, setRecentCalcs] = useState<string[]>(() =>
-    getStoredArray(RECENT_CALCULATORS_KEY)
-  );
+  const [pinnedCalcs, setPinnedCalcs] = useState<string[]>(() => getStoredArray(PINNED_CALCULATORS_KEY));
+  const [recentCalcs, setRecentCalcs] = useState<string[]>(() => getStoredArray(RECENT_CALCULATORS_KEY));
 
   const togglePin = useCallback((calcId: string) => {
     setPinnedCalcs((prev) => {
-      const newPinned = prev.includes(calcId)
-        ? prev.filter((id) => id !== calcId)
-        : [...prev, calcId];
+      const next = prev.includes(calcId) ? prev.filter((id) => id !== calcId) : [...prev, calcId];
       try {
-        localStorage.setItem(PINNED_CALCULATORS_KEY, JSON.stringify(newPinned));
+        localStorage.setItem(PINNED_CALCULATORS_KEY, JSON.stringify(next));
       } catch {
-        // Ignore storage errors
+        /* ignore storage errors */
       }
-      return newPinned;
+      return next;
     });
   }, []);
 
   const recordUsage = useCallback((calcId: string) => {
     setRecentCalcs((prev) => {
-      const updated = [calcId, ...prev.filter((id) => id !== calcId)].slice(0, 5);
+      const next = [calcId, ...prev.filter((id) => id !== calcId)].slice(0, 5);
       try {
-        localStorage.setItem(RECENT_CALCULATORS_KEY, JSON.stringify(updated));
+        localStorage.setItem(RECENT_CALCULATORS_KEY, JSON.stringify(next));
       } catch {
-        // Ignore storage errors
+        /* ignore storage errors */
       }
-      return updated;
+      return next;
     });
   }, []);
 
   return { pinnedCalcs, recentCalcs, togglePin, recordUsage };
 }
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/** Get calculator category color classes */
 const getCategoryColor = (category: Calculator['category']): string => {
   switch (category) {
     case 'risk':
@@ -157,11 +246,74 @@ const getCategoryColor = (category: Calculator['category']): string => {
   }
 };
 
-// ============================================================================
-// Subcomponents
-// ============================================================================
+const getCategoryAccent = (category: Calculator['category']): string => {
+  switch (category) {
+    case 'risk':
+      return '#b39b6c';
+    case 'diagnosis':
+      return '#728ba6';
+    case 'dosing':
+      return '#c4b78a';
+    case 'lab':
+      return '#7a8f6e';
+    case 'guidelines':
+      return '#9a7f9a';
+  }
+};
 
-/** Calculator Card Component with enhanced hover states and pin functionality */
+function matchesSearch(query: string, values: string[]) {
+  const lowered = query.toLowerCase();
+  return values.some((value) => value.toLowerCase().includes(lowered));
+}
+
+function ToolkitTabButton({
+  tab,
+  active,
+  onClick,
+}: {
+  tab: NavTab;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = tab.icon;
+  const accent = TAB_META[tab.id].accent;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="min-w-[12rem] rounded-[1.2rem] border px-4 py-3 text-left transition-all duration-300"
+      style={{
+        background: active
+          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 18%, transparent), rgba(255,255,255,0.04))`
+          : 'rgba(255,255,255,0.03)',
+        borderColor: active ? `color-mix(in srgb, ${accent} 60%, white)` : 'rgba(255,255,255,0.08)',
+        boxShadow: active ? `0 20px 40px -30px ${accent}` : 'none',
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
+          style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+        >
+          <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <div
+            className="text-sm font-semibold tracking-[-0.02em]"
+            style={{ color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
+          >
+            {tab.label}
+          </div>
+          <p className="text-xs leading-5 text-[var(--color-text-muted)]">
+            {TAB_META[tab.id].description}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 interface CalculatorCardProps {
   calc: Calculator;
   isPinned: boolean;
@@ -170,126 +322,155 @@ interface CalculatorCardProps {
   showFormula?: boolean;
 }
 
-const CalculatorCard: React.FC<CalculatorCardProps> = ({
+function CalculatorCard({
   calc,
   isPinned,
   onSelect,
   onTogglePin,
   showFormula = false,
-}) => (
-  <motion.button
-    whileHover={{ y: -2, scale: 1.01 }}
-    whileTap={{ scale: 0.99 }}
-    onClick={onSelect}
-    className={`group text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border transition-all duration-200 relative overflow-hidden ${
-      isPinned
-        ? 'border-[var(--color-data-provisional)]/50 ring-1 ring-[var(--color-data-provisional)]/20'
-        : 'border-[var(--color-border)] hover:border-[var(--color-accent)]'
-    } hover:shadow-lg hover:shadow-[var(--color-accent)]/5`}
-  >
-    {/* Hover gradient overlay */}
-    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent)]/0 to-[var(--color-accent)]/0 group-hover:from-[var(--color-accent)]/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
+}: CalculatorCardProps) {
+  const accent = getCategoryAccent(calc.category);
 
-    <div className="relative">
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className={`p-2.5 rounded-xl ${getCategoryColor(calc.category)} transition-transform group-hover:scale-110 duration-200`}
-        >
-          <calc.icon className="w-5 h-5" />
-        </div>
-        <div className="flex items-center gap-1">
-          {/* Pin button */}
-          <button
-            onClick={onTogglePin}
-            className={`p-1.5 rounded-lg transition-all ${
-              isPinned
-                ? 'text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10 opacity-0 group-hover:opacity-100 focus:opacity-100'
-            }`}
-            title={isPinned ? 'Unpin calculator' : 'Pin calculator'}
-            aria-label={isPinned ? 'Unpin calculator' : 'Pin calculator'}
-          >
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ y: -2, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onSelect}
+      className="group h-full w-full text-left"
+    >
+      <WorkspaceSurface accent={accent} className="h-full">
+        <div className="flex h-full flex-col gap-4">
+          <div className="flex items-start justify-between gap-3">
+            <div
+              className={`rounded-xl p-2.5 ${getCategoryColor(calc.category)} transition-transform duration-200 group-hover:scale-105`}
+            >
+              <calc.icon className="h-5 w-5" />
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={onTogglePin}
+                className={`rounded-lg p-1.5 transition-all ${
+                  isPinned
+                    ? 'text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10'
+                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-data-provisional)]/10 hover:text-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 focus:opacity-100'
+                }`}
+                title={isPinned ? 'Unpin calculator' : 'Pin calculator'}
+                aria-label={isPinned ? 'Unpin calculator' : 'Pin calculator'}
+              >
+                {isPinned ? (
+                  <Star className="h-4 w-4 fill-[var(--color-data-provisional)]" />
+                ) : (
+                  <StarOff className="h-4 w-4" />
+                )}
+              </button>
+              <ChevronRight className="h-5 w-5 text-[var(--color-text-muted)] transition-all group-hover:translate-x-1 group-hover:text-[var(--color-accent)]" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
+              {calc.name}
+            </h3>
+            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+              {calc.description}
+            </p>
+          </div>
+
+          {showFormula && calc.formula ? (
+            <div className="rounded-xl bg-[var(--color-bg-tertiary)] px-3 py-2 text-xs font-mono text-[var(--color-accent)]">
+              {calc.formula}
+            </div>
+          ) : null}
+
+          <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+            <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-xs font-medium capitalize text-[var(--color-text-muted)]">
+              {calc.category}
+            </span>
             {isPinned ? (
-              <Star className="w-4 h-4 fill-[var(--color-data-provisional)]" />
-            ) : (
-              <StarOff className="w-4 h-4" />
-            )}
-          </button>
-          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" aria-hidden="true" />
+              <span className="text-xs font-medium text-[var(--color-data-provisional)]">
+                Pinned
+              </span>
+            ) : null}
+          </div>
         </div>
-      </div>
-
-      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1 group-hover:text-[var(--color-accent)] transition-colors">
-        {calc.name}
-      </h3>
-      <p className="text-sm text-[var(--color-text-muted)] line-clamp-2">{calc.description}</p>
-
-      {/* Formula preview (shown when searching) */}
-      {showFormula && calc.formula && (
-        <div className="mt-2 px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-xs font-mono text-[var(--color-accent)] truncate">
-          {calc.formula}
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center justify-between">
-        <span className="text-xs font-medium text-[var(--color-text-muted)] capitalize px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded-full">
-          {calc.category}
-        </span>
-        {isPinned && (
-          <span className="text-xs text-[var(--color-data-provisional)] font-medium">Pinned</span>
-        )}
-      </div>
-    </div>
-  </motion.button>
-);
-
-/** Sidebar navigation button */
-interface SidebarNavButtonProps {
-  tab: NavTab;
-  isActive: boolean;
-  onClick: () => void;
-  variant?: 'desktop' | 'mobile';
+      </WorkspaceSurface>
+    </motion.button>
+  );
 }
 
-const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({
-  tab,
-  isActive,
-  onClick,
-  variant = 'desktop',
-}) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all mb-1 ${
-      isActive
-        ? `bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] ${variant === 'desktop' ? 'shadow-md' : ''}`
-        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
-    }`}
-  >
-    <tab.icon className="w-5 h-5" />
-    <span className={variant === 'desktop' ? 'font-medium' : ''}>{tab.label}</span>
-  </button>
-);
+function ToolSelectionCard<TId extends string>({
+  tool,
+  onSelect,
+}: {
+  tool: ToolCardConfig<TId>;
+  onSelect: () => void;
+}) {
+  const Icon = tool.icon;
 
-// ============================================================================
-// Main Component
-// ============================================================================
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ y: -2, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onSelect}
+      className="h-full w-full text-left"
+    >
+      <WorkspaceSurface accent={tool.accent} className="h-full">
+        <div className="flex h-full flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
+              style={{ background: `color-mix(in srgb, ${tool.accent} 16%, transparent)` }}
+            >
+              <Icon className="h-5 w-5" style={{ color: tool.accent }} aria-hidden="true" />
+            </div>
+            <ChevronRight className="ml-auto h-5 w-5 text-[var(--color-text-muted)] transition-all group-hover:translate-x-1 group-hover:text-[var(--color-accent)]" />
+          </div>
 
-const VALID_UTILITY_TAB_IDS: TabId[] = ['calculators', 'generators', 'interpreters', 'scoring', 'quickref'];
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
+              {tool.title}
+            </h3>
+            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+              {tool.description}
+            </p>
+          </div>
 
-const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) => {
-  const [searchParams] = useSearchParams();
+          <div className="mt-auto flex flex-wrap gap-2 pt-2">
+            {tool.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </WorkspaceSurface>
+    </motion.button>
+  );
+}
+
+const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
     tabFromUrl && VALID_UTILITY_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'calculators'
   );
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    try {
+      return localStorage.getItem('toolkit.searchQuery') || '';
+    } catch {
+      return '';
+    }
+  });
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
-  const [selectedGenerator, setSelectedGenerator] = useState<
-    'mnemonic' | 'study_guide' | 'clinical_motion' | 'lecture_script' | null
-  >(null);
-  const [selectedInterpreter, setSelectedInterpreter] = useState<'abg' | 'ekg' | null>(null);
+  const [selectedGenerator, setSelectedGenerator] = useState<GeneratorId | null>(null);
+  const [selectedInterpreter, setSelectedInterpreter] = useState<InterpreterId | null>(null);
   const [mnemonicConcept, setMnemonicConcept] = useState('');
 
   const { pinnedCalcs, recentCalcs, togglePin, recordUsage } = useCalculatorPreferences();
@@ -300,300 +481,389 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
     }
   }, [tabFromUrl]);
 
-  // Enhanced search with synonyms, keywords, and formula matching
+  useEffect(() => {
+    try {
+      localStorage.setItem('toolkit.searchQuery', searchQuery);
+    } catch {
+      /* ignore storage errors */
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (selectedCalculator) {
+        setSelectedCalculator(null);
+        return;
+      }
+      if (selectedGenerator) {
+        setSelectedGenerator(null);
+        return;
+      }
+      if (selectedInterpreter) {
+        setSelectedInterpreter(null);
+        return;
+      }
+      onClose();
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose, selectedCalculator, selectedGenerator, selectedInterpreter]);
+
   const filteredCalculators = useMemo(() => {
     if (!searchQuery) return CALCULATORS;
     const query = searchQuery.toLowerCase();
     return CALCULATORS.filter((calc) => {
       if (calc.name.toLowerCase().includes(query)) return true;
       if (calc.description.toLowerCase().includes(query)) return true;
-      if (calc.synonyms?.some((s) => s.toLowerCase().includes(query))) return true;
-      if (calc.keywords?.some((k) => k.toLowerCase().includes(query))) return true;
+      if (calc.synonyms?.some((value) => value.toLowerCase().includes(query))) return true;
+      if (calc.keywords?.some((value) => value.toLowerCase().includes(query))) return true;
       if (calc.formula?.toLowerCase().includes(query)) return true;
       return false;
     });
   }, [searchQuery]);
 
-  // Get search suggestions (top 4 matches with formula preview)
-  const searchSuggestions = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2) return [];
-    return filteredCalculators.slice(0, 4);
-  }, [searchQuery, filteredCalculators]);
+  const filteredGenerators = useMemo(() => {
+    if (!searchQuery) return GENERATOR_TOOLS;
+    return GENERATOR_TOOLS.filter((tool) =>
+      matchesSearch(searchQuery, [tool.title, tool.description, ...tool.searchTerms, ...tool.tags])
+    );
+  }, [searchQuery]);
 
-  // Get pinned calculators data
+  const filteredInterpreters = useMemo(() => {
+    if (!searchQuery) return INTERPRETER_TOOLS;
+    return INTERPRETER_TOOLS.filter((tool) =>
+      matchesSearch(searchQuery, [tool.title, tool.description, ...tool.searchTerms, ...tool.tags])
+    );
+  }, [searchQuery]);
+
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2 || activeTab !== 'calculators') return [];
+    return filteredCalculators.slice(0, 4);
+  }, [activeTab, filteredCalculators, searchQuery]);
+
   const pinnedCalculatorData = useMemo(
     () => CALCULATORS.filter((calc) => pinnedCalcs.includes(calc.id)),
     [pinnedCalcs]
   );
 
-  // Get recently used calculators data (excluding pinned)
   const recentCalculatorData = useMemo(
     () =>
       recentCalcs
         .filter((id) => !pinnedCalcs.includes(id))
-        .map((id) => CALCULATORS.find((c) => c.id === id))
+        .map((id) => CALCULATORS.find((calc) => calc.id === id))
         .filter((calc): calc is Calculator => calc !== undefined)
         .slice(0, 3),
     [recentCalcs, pinnedCalcs]
   );
 
-  // Handle calculator selection (tracks recent usage)
+  const activeMeta = TAB_META[activeTab];
+  const searchable = activeTab === 'calculators' || activeTab === 'generators' || activeTab === 'interpreters';
+  const quickActions = NAV_TABS.filter((tab) => tab.id !== activeTab).slice(0, 2);
+
   const handleSelectCalculator = useCallback(
     (calcId: string) => {
       setSelectedCalculator(calcId);
       recordUsage(calcId);
       setShowSearchSuggestions(false);
-      setSearchQuery('');
     },
     [recordUsage]
   );
 
-  // Handle pin toggle
   const handleTogglePin = useCallback(
-    (calcId: string, e: React.MouseEvent) => {
-      e.stopPropagation();
+    (calcId: string, event: React.MouseEvent) => {
+      event.stopPropagation();
       togglePin(calcId);
     },
     [togglePin]
   );
 
-  // Handle tab change
-  const handleTabChange = useCallback((tabId: TabId, closeSidebar = false) => {
-    setActiveTab(tabId);
-    setSelectedCalculator(null);
-    setSelectedGenerator(null);
-    setSelectedInterpreter(null);
-    if (closeSidebar) {
-      setSidebarOpen(false);
-    }
-  }, []);
+  const handleTabChange = useCallback(
+    (tabId: TabId) => {
+      setActiveTab(tabId);
+      setSelectedCalculator(null);
+      setSelectedGenerator(null);
+      setSelectedInterpreter(null);
+      setShowSearchSuggestions(false);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (tabId === 'calculators') {
+            next.delete('tab');
+          } else {
+            next.set('tab', tabId);
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
-  // Close mobile sidebar on Escape
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSidebarOpen(false);
-    };
-    if (sidebarOpen) {
-      document.addEventListener('keydown', onKeyDown);
-      return () => document.removeEventListener('keydown', onKeyDown);
-    }
-    return undefined;
-  }, [sidebarOpen]);
-
-  // Tab titles and descriptions
-  const tabMeta: Record<TabId, { title: string; description: string }> = {
-    calculators: {
-      title: 'Clinical Calculators',
-      description: 'Risk scores, diagnostic criteria, and clinical decision tools',
-    },
-    generators: {
-      title: 'Generators & Study Aids',
-      description: 'Mnemonics, study guides, clinical motion, and lecture scripts',
-    },
-    interpreters: {
-      title: 'Interpretation Assistants',
-      description: 'Input clinical data → Get diagnostic interpretation (ABG, EKG, etc.)',
-    },
-    imaging: {
-      title: 'Radiology Scroll',
-      description: 'Classic imaging findings and diagnostic radiology atlas',
-    },
-    scoring: {
-      title: 'Scoring Systems',
-      description: 'All 56 clinical scoring calculators — data-driven from your database',
-    },
-    quickref: {
-      title: 'Quick Reference Cards',
-      description: 'Antibiotic guides, ACLS algorithms, lab values, and vital sign ranges',
-    },
-  };
+  const selectedGeneratorConfig = selectedGenerator
+    ? GENERATOR_TOOLS.find((tool) => tool.id === selectedGenerator) ?? null
+    : null;
+  const selectedInterpreterConfig = selectedInterpreter
+    ? INTERPRETER_TOOLS.find((tool) => tool.id === selectedInterpreter) ?? null
+    : null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex min-w-0 flex-1 overflow-hidden">
-      {/* Sidebar Navigation - Desktop */}
-      <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
-          <div className="p-4 border-b border-[var(--color-border)]">
-            <BackLink to={ROUTES.STUDY} className="mb-4 w-full justify-start" />
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-              Clinical Utilities
-            </h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">Tools & Calculators</p>
-          </div>
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Toolkit Workspace',
+            badgeTone: 'gold',
+            title: 'Reach for the right aid before the guesswork starts.',
+            subtitle:
+              'This workspace keeps calculators, generators, interpreters, and fast-reference utilities in one restrained daily-use surface.',
+            status: activeMeta.title,
+            backLabel: 'Back to Study',
+            onBack: onClose,
+            primaryAction: quickActions[0]
+              ? {
+                  label: `Open ${quickActions[0].label}`,
+                  onClick: () => handleTabChange(quickActions[0].id),
+                }
+              : undefined,
+            secondaryActions: quickActions[1]
+              ? [
+                  {
+                    label: quickActions[1].label,
+                    onClick: () => handleTabChange(quickActions[1].id),
+                  },
+                ]
+              : undefined,
+          }}
+        />
+      </WorkspaceReveal>
 
-          <nav className="p-2">
-            {NAV_TABS.map((tab) => (
-              <SidebarNavButton
-                key={tab.id}
-                tab={tab}
-                isActive={activeTab === tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                variant="desktop"
-              />
-            ))}
-          </nav>
-      </div>
-
-      {/* Mobile Sidebar Toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-lg"
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Sidebar Backdrop */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={false}
-            animate={{}}
-            exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-overlay)] backdrop-blur-sm"
-            aria-hidden="true"
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Toolkit lanes"
+            value={NAV_TABS.length}
+            detail="Calculators, generators, interpreters, scoring systems, and quick references."
+            icon={Sparkles}
           />
-        )}
-      </AnimatePresence>
+          <WorkspaceMetricCard
+            label="Calculator library"
+            value={CALCULATORS.length}
+            detail="Shared registry-backed clinical calculators ready for fast launch."
+            accent="#c4b78a"
+            icon={CalculatorIcon}
+          />
+          <WorkspaceMetricCard
+            label="Pinned tools"
+            value={pinnedCalculatorData.length}
+            detail="Personal shortcuts for the tools you reach for repeatedly."
+            accent="#b39b6c"
+            icon={Star}
+          />
+          <WorkspaceMetricCard
+            label="Recent launches"
+            value={recentCalculatorData.length}
+            detail="Your recent calculator starts, kept visible for quick re-entry."
+            accent="#728ba6"
+            icon={Clock}
+          />
+        </div>
+      </WorkspaceReveal>
 
-      {/* Mobile Sidebar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            exit={{ x: -300 }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Clinical Toolkit navigation"
-            className="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)]"
-          >
-            <div className="p-4 border-b border-[var(--color-border)]">
-              <h2 className="text-lg font-bold text-[var(--color-category-toolkit)]">
-                Clinical Toolkit
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Workflow philosophy
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Open a tool because it clarifies the decision, not because the interface slows you down.
               </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                The toolkit now behaves like a true companion workspace: one place to launch a fast
+                calculator, generate memory aids, interpret inputs, or pull up bedside reference
+                structure without dropping out of your study flow.
+              </p>
             </div>
-            <nav className="p-2">
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Calculators
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                  {CALCULATORS.length} registry-backed tools with pinning and recent history.
+                </p>
+              </div>
+              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Generators
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                  {GENERATOR_TOOLS.length} study-aid builders for recall, export, and replay.
+                </p>
+              </div>
+              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Interpreters
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                  {INTERPRETER_TOOLS.length} rule-based helpers for structured clinical reads.
+                </p>
+              </div>
+              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Active lane
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                  {activeMeta.description}
+                </p>
+              </div>
+            </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceFilterBar>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+                  Lane selector
+                </p>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Switch lanes without leaving the page. Search stays focused on calculators,
+                  generators, and interpreters where it adds the most value.
+                </p>
+              </div>
+              <div className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]">
+                {activeMeta.title}
+              </div>
+            </div>
+
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
               {NAV_TABS.map((tab) => (
-                <SidebarNavButton
+                <ToolkitTabButton
                   key={tab.id}
                   tab={tab}
-                  isActive={activeTab === tab.id}
-                  onClick={() => handleTabChange(tab.id, true)}
-                  variant="mobile"
+                  active={activeTab === tab.id}
+                  onClick={() => handleTabChange(tab.id)}
                 />
               ))}
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-          {/* Header with Search */}
-          <div className="mb-6">
-            <div className="lg:hidden mb-4">
-              <BackLink to={ROUTES.STUDY} />
             </div>
 
-            <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
-              <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
-                {tabMeta[activeTab].title}
-              </h1>
-              <p className="text-[var(--color-text-muted)] mb-4">
-                {tabMeta[activeTab].description}
-              </p>
-            </motion.div>
-
-            {/* Global Search with Auto-Suggest */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
-              <input
-                type="text"
-                placeholder={
-                  activeTab === 'calculators'
-                    ? "Search calculators (e.g. 'afib', 'pneumonia', 'pe')"
-                    : activeTab === 'generators'
-                      ? 'Search generators'
-                      : 'Search interpretation assistants'
-                }
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSearchSuggestions(e.target.value.length >= 2);
-                }}
-                onFocus={() => searchQuery.length >= 2 && setShowSearchSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all font-sans"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSearchSuggestions(false);
+            {searchable ? (
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                <input
+                  type="text"
+                  placeholder={activeMeta.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setShowSearchSuggestions(event.target.value.length >= 2);
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                >
-                  Clear
-                </button>
-              )}
+                  onFocus={() => searchQuery.length >= 2 && setShowSearchSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+                  className="w-full rounded-[1.15rem] border border-white/8 bg-white/5 py-3 pl-12 pr-20 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchSuggestions(false);
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
+                  >
+                    Clear
+                  </button>
+                ) : null}
 
-              {/* Auto-Suggest Dropdown */}
-              <AnimatePresence>
-                {showSearchSuggestions &&
-                  searchSuggestions.length > 0 &&
-                  activeTab === 'calculators' && (
+                <AnimatePresence>
+                  {showSearchSuggestions && searchSuggestions.length > 0 ? (
                     <motion.div
-                      initial={{ y: -10 }}
-                      animate={{ y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-xl z-50 overflow-hidden"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[1.1rem] border border-white/10 bg-[color:var(--color-bg-secondary)] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.7)]"
                     >
-                      {searchSuggestions.map((calc, idx) => (
+                      {searchSuggestions.map((calc, index) => (
                         <button
                           key={calc.id}
+                          type="button"
                           onClick={() => handleSelectCalculator(calc.id)}
-                          className={`w-full text-left p-3 hover:bg-[var(--color-bg-tertiary)] transition-colors flex items-center gap-3 ${
-                            idx !== searchSuggestions.length - 1
-                              ? 'border-b border-[var(--color-border)]'
-                              : ''
+                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
+                            index < searchSuggestions.length - 1 ? 'border-b border-white/8' : ''
                           }`}
                         >
-                          <div
-                            className={`p-2 rounded-lg ${getCategoryColor(calc.category)} flex-shrink-0`}
-                          >
-                            <calc.icon className="w-4 h-4" />
+                          <div className={`rounded-xl p-2 ${getCategoryColor(calc.category)}`}>
+                            <calc.icon className="h-4 w-4" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-[var(--color-text-primary)] truncate">
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium text-[var(--color-text-primary)]">
                               {calc.name}
                             </div>
-                            {calc.formula && (
-                              <div className="text-xs text-[var(--color-accent)] font-mono truncate mt-0.5">
+                            {calc.formula ? (
+                              <div className="truncate text-xs text-[var(--color-accent)]">
                                 {calc.formula}
                               </div>
-                            )}
+                            ) : null}
                           </div>
-                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
+                          <ChevronRight className="h-4 w-4 text-[var(--color-text-muted)]" />
                         </button>
                       ))}
                     </motion.div>
-                  )}
-              </AnimatePresence>
-            </div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <div className="rounded-[1.15rem] border border-white/8 bg-white/4 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+                Search is intentionally simplified here. Scoring systems and quick reference keep
+                their own internal browsing flows inside the content area.
+              </div>
+            )}
           </div>
+        </WorkspaceFilterBar>
+      </WorkspaceReveal>
 
-          {/* Tab Content */}
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSection
+          title={activeMeta.title}
+          subtitle={activeMeta.description}
+          action={
+            selectedCalculator || selectedGenerator || selectedInterpreter ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedCalculator(null);
+                  setSelectedGenerator(null);
+                  setSelectedInterpreter(null);
+                }}
+              >
+                Back to lane overview
+              </Button>
+            ) : activeTab === 'calculators' ? (
+              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+                {pinnedCalculatorData.length} pinned
+              </span>
+            ) : null
+          }
+        >
           <AnimatePresence mode="wait">
-            {/* CALCULATORS TAB */}
-            {activeTab === 'calculators' && (
+            {activeTab === 'calculators' ? (
               <motion.div
                 key="calculators"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
                 {selectedCalculator ? (
                   <CalculatorHub
@@ -602,364 +872,295 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                   />
                 ) : (
                   <div className="space-y-6">
-                    {/* Search Results */}
-                    {searchQuery && (
-                      <div className="text-sm text-[var(--color-text-muted)] mb-4">
+                    {searchQuery ? (
+                      <div className="text-sm text-[var(--color-text-muted)]">
                         Found {filteredCalculators.length} calculator
-                        {filteredCalculators.length !== 1 ? 's' : ''}
+                        {filteredCalculators.length === 1 ? '' : 's'} matching &ldquo;{searchQuery}
+                        &rdquo;.
                       </div>
-                    )}
+                    ) : null}
 
-                    {/* Pinned Calculators Section */}
-                    {!searchQuery && pinnedCalculatorData.length > 0 && (
-                      <section>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Star className="w-4 h-4 text-[var(--color-data-provisional)] fill-[var(--color-data-provisional)]" />
-                          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+                    {!searchQuery && pinnedCalculatorData.length > 0 ? (
+                      <section className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-[var(--color-data-provisional)] fill-[var(--color-data-provisional)]" />
+                          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)]">
                             Pinned
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                           {pinnedCalculatorData.map((calc) => (
                             <CalculatorCard
                               key={calc.id}
                               calc={calc}
                               isPinned={true}
                               onSelect={() => handleSelectCalculator(calc.id)}
-                              onTogglePin={(e) => handleTogglePin(calc.id, e)}
+                              onTogglePin={(event) => handleTogglePin(calc.id, event)}
                             />
                           ))}
                         </div>
                       </section>
-                    )}
+                    ) : null}
 
-                    {/* Recently Used Section */}
-                    {!searchQuery && recentCalculatorData.length > 0 && (
-                      <section>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-                            Recently Used
+                    {!searchQuery && recentCalculatorData.length > 0 ? (
+                      <section className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-[var(--color-text-muted)]" />
+                          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)]">
+                            Recently used
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                           {recentCalculatorData.map((calc) => (
                             <CalculatorCard
                               key={calc.id}
                               calc={calc}
                               isPinned={pinnedCalcs.includes(calc.id)}
                               onSelect={() => handleSelectCalculator(calc.id)}
-                              onTogglePin={(e) => handleTogglePin(calc.id, e)}
+                              onTogglePin={(event) => handleTogglePin(calc.id, event)}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+
+                    {(searchQuery ? filteredCalculators : CALCULATORS).length === 0 ? (
+                      <WorkspaceEmptyState
+                        icon={Search}
+                        title="No calculators match this search yet."
+                        description="Try a diagnosis name, syndrome, medication class, or common abbreviation instead."
+                        action={
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSearchQuery('')}
+                          >
+                            Clear search
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <section className="space-y-3">
+                        {!searchQuery && (pinnedCalculatorData.length > 0 || recentCalculatorData.length > 0) ? (
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-[var(--color-text-muted)]" />
+                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)]">
+                              All calculators
+                            </h3>
+                          </div>
+                        ) : null}
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                          {(searchQuery ? filteredCalculators : CALCULATORS).map((calc) => (
+                            <CalculatorCard
+                              key={calc.id}
+                              calc={calc}
+                              isPinned={pinnedCalcs.includes(calc.id)}
+                              onSelect={() => handleSelectCalculator(calc.id)}
+                              onTogglePin={(event) => handleTogglePin(calc.id, event)}
+                              showFormula={Boolean(searchQuery)}
                             />
                           ))}
                         </div>
                       </section>
                     )}
-
-                    {/* All Calculators Section */}
-                    <section>
-                      {!searchQuery &&
-                        (pinnedCalculatorData.length > 0 || recentCalculatorData.length > 0) && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className="w-4 h-4 text-[var(--color-text-muted)]" />
-                            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-                              All Calculators
-                            </h3>
-                          </div>
-                        )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {(searchQuery ? filteredCalculators : CALCULATORS).map((calc) => (
-                          <CalculatorCard
-                            key={calc.id}
-                            calc={calc}
-                            isPinned={pinnedCalcs.includes(calc.id)}
-                            onSelect={() => handleSelectCalculator(calc.id)}
-                            onTogglePin={(e) => handleTogglePin(calc.id, e)}
-                            showFormula={!!searchQuery}
-                          />
-                        ))}
-                      </div>
-                    </section>
                   </div>
                 )}
               </motion.div>
-            )}
+            ) : null}
 
-            {/* INTERPRETATION ASSISTANTS TAB */}
-            {activeTab === 'interpreters' && (
-              <motion.div
-                key="interpreters"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                {selectedInterpreter ? (
-                  <div className="space-y-4">
-                    <BackLink
-                      asButton
-                      onClick={() => setSelectedInterpreter(null)}
-                      label="Back to Interpretation Assistants"
-                    />
-                    {selectedInterpreter === 'abg' && <ABGInterpreter />}
-                    {selectedInterpreter === 'ekg' && <EKGInterpreter />}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedInterpreter('abg')}
-                      className="text-left p-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10">
-                          <Activity className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
-                        ABG Interpreter
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)] mb-3">
-                        pH, pCO₂, HCO₃, O₂ → Acidosis/alkalosis, metabolic/respiratory, compensation
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
-                          Rule-based
-                        </span>
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
-                          Winter&apos;s Formula
-                        </span>
-                      </div>
-                    </motion.button>
-
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedInterpreter('ekg')}
-                      className="text-left p-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10">
-                          <Activity className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
-                        EKG Interpreter
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)] mb-3">
-                        Rhythm, rate, PR, QRS, QT, ST, T-wave → Diagnostic interpretation & DDx
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
-                          Interactive
-                        </span>
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
-                          ECGPattern
-                        </span>
-                      </div>
-                    </motion.button>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* IMAGING ATLAS TAB */}
-            {activeTab === 'imaging' && (
-              <motion.div
-                key="imaging"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <FileImage className="w-8 h-8 text-[var(--color-text-muted)]" />
-                    <div>
-                      <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                        Radiology Scroll
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        X-ray, CT, MRI findings library
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className="w-full p-3 bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] rounded-lg flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
-                  >
-                    <span>Imaging Library — Coming Soon</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* SCORING SYSTEMS TAB */}
-            {activeTab === 'scoring' && (
-              <motion.div
-                key="scoring"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <ScoringSystemBrowser />
-              </motion.div>
-            )}
-
-            {/* QUICK REFERENCE TAB */}
-            {activeTab === 'quickref' && (
-              <motion.div
-                key="quickref"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <QuickRefHub />
-              </motion.div>
-            )}
-
-            {/* GENERATORS TAB */}
-            {activeTab === 'generators' && (
+            {activeTab === 'generators' ? (
               <motion.div
                 key="generators"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
                 {selectedGenerator ? (
                   <div className="space-y-4">
-                    <BackLink
-                      asButton
-                      onClick={() => setSelectedGenerator(null)}
-                      label="Back to Generators"
-                    />
-                    {selectedGenerator === 'mnemonic' && (
-                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <div className="mb-4">
-                          <label
-                            htmlFor="toolkit-mnemonic-concept"
-                            className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
-                          >
-                            Medical concept
-                          </label>
-                          <input
-                            id="toolkit-mnemonic-concept"
-                            type="text"
-                            value={mnemonicConcept}
-                            onChange={(e) => setMnemonicConcept(e.target.value)}
-                            placeholder="e.g. MUDPILES, causes of DKA"
-                            className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                          />
+                    {selectedGeneratorConfig ? (
+                      <WorkspaceSurface accent={selectedGeneratorConfig.accent}>
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                              {selectedGeneratorConfig.title}
+                            </p>
+                            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                              {selectedGeneratorConfig.description}
+                            </p>
+                          </div>
+
+                          {selectedGenerator === 'mnemonic' ? (
+                            <div className="space-y-4">
+                              <div>
+                                <label
+                                  htmlFor="toolkit-mnemonic-concept"
+                                  className="mb-2 block text-sm font-medium text-[var(--color-text-primary)]"
+                                >
+                                  Medical concept
+                                </label>
+                                <input
+                                  id="toolkit-mnemonic-concept"
+                                  type="text"
+                                  value={mnemonicConcept}
+                                  onChange={(event) => setMnemonicConcept(event.target.value)}
+                                  placeholder="e.g. MUDPILES, causes of DKA"
+                                  className="w-full rounded-[1rem] border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                                />
+                              </div>
+                              <MnemonicGenerator concept={mnemonicConcept || 'Medical concept'} />
+                            </div>
+                          ) : null}
+
+                          {selectedGenerator === 'study_guide' ? (
+                            <StudyGuideGenerator
+                              questions={[]}
+                              onClose={() => setSelectedGenerator(null)}
+                              title="Study Guide"
+                            />
+                          ) : null}
+
+                          {selectedGenerator === 'clinical_motion' ? (
+                            <ClinicalMotionFlashcards
+                              onClose={() => setSelectedGenerator(null)}
+                              showBackButton={false}
+                            />
+                          ) : null}
+
+                          {selectedGenerator === 'lecture_script' ? (
+                            <LectureConverter
+                              onClose={() => setSelectedGenerator(null)}
+                              showBackButton={false}
+                            />
+                          ) : null}
                         </div>
-                        <MnemonicGenerator concept={mnemonicConcept || 'Medical concept'} />
-                      </div>
-                    )}
-                    {selectedGenerator === 'study_guide' && (
-                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <StudyGuideGenerator
-                          questions={[]}
-                          onClose={() => setSelectedGenerator(null)}
-                          title="Study Guide"
-                        />
-                      </div>
-                    )}
-                    {selectedGenerator === 'clinical_motion' && (
-                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <ClinicalMotionFlashcards
-                          onClose={() => setSelectedGenerator(null)}
-                          showBackButton={false}
-                        />
-                      </div>
-                    )}
-                    {selectedGenerator === 'lecture_script' && (
-                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <LectureConverter
-                          onClose={() => setSelectedGenerator(null)}
-                          showBackButton={false}
-                        />
-                      </div>
-                    )}
+                      </WorkspaceSurface>
+                    ) : null}
                   </div>
+                ) : filteredGenerators.length === 0 ? (
+                  <WorkspaceEmptyState
+                    icon={Search}
+                    title="No generators match this search."
+                    description="Try terms like mnemonic, study guide, audio, lecture, or motion."
+                    action={
+                      <Button type="button" size="sm" variant="outline" onClick={() => setSearchQuery('')}>
+                        Clear search
+                      </Button>
+                    }
+                  />
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedGenerator('mnemonic')}
-                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
-                          <Lightbulb className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
-                        Mnemonic Generator
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        Generate acronyms, stories, or rhymes for medical concepts
-                      </p>
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedGenerator('study_guide')}
-                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
-                        Study Guide Generator
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        Export questions to a printable study guide
-                      </p>
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedGenerator('clinical_motion')}
-                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
-                          <Video className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
-                        Clinical Motion Flashcards
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        AI-generated video clips of gait and movement pathologies
-                      </p>
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={() => setSelectedGenerator('lecture_script')}
-                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
-                    >
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
-                          <Headphones className="w-5 h-5" />
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
-                      </div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
-                        Lecture Converter
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)]">
-                        Turn lecture text into a Host A / Host B podcast script
-                      </p>
-                    </motion.button>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {filteredGenerators.map((tool) => (
+                      <ToolSelectionCard
+                        key={tool.id}
+                        tool={tool}
+                        onSelect={() => setSelectedGenerator(tool.id)}
+                      />
+                    ))}
                   </div>
                 )}
               </motion.div>
-            )}
+            ) : null}
+
+            {activeTab === 'interpreters' ? (
+              <motion.div
+                key="interpreters"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {selectedInterpreter ? (
+                  <div className="space-y-4">
+                    {selectedInterpreterConfig ? (
+                      <WorkspaceSurface accent={selectedInterpreterConfig.accent}>
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                              {selectedInterpreterConfig.title}
+                            </p>
+                            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                              {selectedInterpreterConfig.description}
+                            </p>
+                          </div>
+                          {selectedInterpreter === 'abg' ? <ABGInterpreter /> : null}
+                          {selectedInterpreter === 'ekg' ? <EKGInterpreter /> : null}
+                        </div>
+                      </WorkspaceSurface>
+                    ) : null}
+                  </div>
+                ) : filteredInterpreters.length === 0 ? (
+                  <WorkspaceEmptyState
+                    icon={Search}
+                    title="No interpreters match this search."
+                    description="Try ABG, EKG, rhythm, acid-base, or compensation."
+                    action={
+                      <Button type="button" size="sm" variant="outline" onClick={() => setSearchQuery('')}>
+                        Clear search
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {filteredInterpreters.map((tool) => (
+                      <ToolSelectionCard
+                        key={tool.id}
+                        tool={tool}
+                        onSelect={() => setSelectedInterpreter(tool.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ) : null}
+
+            {activeTab === 'scoring' ? (
+              <motion.div
+                key="scoring"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <ScoringSystemBrowser />
+              </motion.div>
+            ) : null}
+
+            {activeTab === 'quickref' ? (
+              <motion.div
+                key="quickref"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <QuickRefHub />
+              </motion.div>
+            ) : null}
           </AnimatePresence>
-        </div>
-      </div>
-    </div>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.2}>
+        <WorkspaceSurface accent="#728ba6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Daily rhythm
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                Use this page before question blocks, during missed-question review, or when you
+                need fast structured support without losing focus.
+              </p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => handleTabChange('calculators')}>
+              Reset to calculators
+            </Button>
+          </div>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
 

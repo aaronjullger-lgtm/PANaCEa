@@ -1,111 +1,173 @@
 /**
  * Daily Challenges Hub
  *
- * Consolidates Grand Rounds, Diagnostic Puzzle, and Medical Wordle
- * into a dedicated section with prominent accessibility and daily engagement.
+ * Premium workspace wrapper for daily engagement surfaces:
+ * Grand Rounds, Diagnostic Puzzle, and Medical Wordle.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Calendar, Trophy, Puzzle, SpellCheck } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Calendar,
+  Clock3,
+  Puzzle,
+  Sparkles,
+  SpellCheck,
+  Target,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { useDiagnosticPuzzle } from '@/hooks/useDiagnosticPuzzle';
 import { useWordleGame } from '@/hooks/useWordleGame';
-import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
 
-interface ChallengeCardProps {
+interface ChallengeCardConfig {
+  key: string;
   title: string;
   subtitle: string;
   description: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
+  accent: string;
   completed: boolean;
   streak?: number;
-  resetTime?: string; // formatted time until reset
   loading: boolean;
-  error?: string;
+  error?: string | null;
   buttonText: string;
   onAction: () => void;
 }
 
-const ChallengeCard: React.FC<ChallengeCardProps> = ({
-  title,
-  subtitle,
-  description,
-  icon,
-  completed,
-  streak,
+function formatTimeUntilReset(now: Date) {
+  const next = new Date(now);
+  next.setHours(24, 0, 0, 0);
+  const diffMs = Math.max(next.getTime() - now.getTime(), 0);
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
+function ChallengeCard({
+  challenge,
   resetTime,
-  loading,
-  error,
-  buttonText,
-  onAction,
-}) => {
+}: {
+  challenge: ChallengeCardConfig;
+  resetTime: string;
+}) {
+  const Icon = challenge.icon;
+
   return (
-    <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg text-[var(--color-accent)]">
-            {icon}
+    <WorkspaceSurface accent={challenge.accent} className="h-full">
+      <div className="flex h-full flex-col gap-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
+              style={{ background: `color-mix(in srgb, ${challenge.accent} 16%, transparent)` }}
+            >
+              <Icon className="h-5 w-5" style={{ color: challenge.accent }} aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
+                {challenge.title}
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)]">{challenge.subtitle}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--color-accent)]">{title}</h3>
-            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
-          </div>
-        </div>
-        {completed && (
-          <span className="px-3 py-1 text-xs font-semibold bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] rounded-full border border-[var(--color-data-pass)]/30">
-            Completed
+
+          <span
+            className="rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]"
+            style={{
+              borderColor: challenge.completed ? 'rgba(56, 161, 105, 0.28)' : 'rgba(255,255,255,0.08)',
+              background: challenge.completed ? 'rgba(56, 161, 105, 0.12)' : 'rgba(255,255,255,0.04)',
+              color: challenge.completed ? 'var(--color-data-pass)' : 'var(--color-text-muted)',
+            }}
+          >
+            {challenge.completed ? 'Completed' : 'Open'}
           </span>
-        )}
-      </div>
-
-      <p className="text-[var(--color-text-secondary)] mb-4">{description}</p>
-
-      <div className="flex items-center justify-between mb-6">
-        <div className="space-y-1">
-          {streak !== undefined && (
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-[var(--color-text-muted)]" />
-              <span className="text-sm font-medium text-[var(--color-accent)]">{streak} day streak</span>
-            </div>
-          )}
-          {resetTime && (
-            <div className="text-xs text-[var(--color-text-muted)]">
-              Resets in {resetTime}
-            </div>
-          )}
         </div>
-        {loading && (
-          <div className="text-xs text-[var(--color-text-muted)]">Loading...</div>
-        )}
-        {error && (
-          <div className="text-xs text-[var(--color-data-fail)]">Unable to load — try again later</div>
-        )}
-      </div>
 
-      <button
-        onClick={onAction}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={loading}
-      >
-        {buttonText}
-      </button>
-    </div>
+        <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
+          {challenge.description}
+        </p>
+
+        <div className="space-y-2 rounded-[1.1rem] border border-white/8 bg-white/4 p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-[var(--color-text-secondary)]">Daily reset</span>
+            <span className="font-medium text-[var(--color-text-primary)]">{resetTime}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-[var(--color-text-secondary)]">Streak</span>
+            <span className="font-medium text-[var(--color-text-primary)]">
+              {challenge.streak !== undefined ? `${challenge.streak} days` : 'Track starts here'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-[var(--color-text-secondary)]">Status</span>
+            <span
+              className={
+                challenge.error
+                  ? 'text-[var(--color-data-fail)]'
+                  : challenge.loading
+                    ? 'text-[var(--color-text-muted)]'
+                    : 'text-[var(--color-text-primary)]'
+              }
+            >
+              {challenge.error
+                ? 'Needs refresh'
+                : challenge.loading
+                  ? 'Loading...'
+                  : challenge.completed
+                    ? 'Completed today'
+                    : 'Ready to start'}
+            </span>
+          </div>
+        </div>
+
+        {challenge.error ? (
+          <p className="text-xs text-[var(--color-data-fail)]">
+            Unable to load current state right now. You can still open the challenge.
+          </p>
+        ) : null}
+
+        <div className="mt-auto">
+          <Button
+            type="button"
+            className="w-full"
+            size="md"
+            onClick={challenge.onAction}
+            disabled={challenge.loading}
+          >
+            {challenge.buttonText}
+          </Button>
+        </div>
+      </div>
+    </WorkspaceSurface>
   );
-};
+}
 
 export function DailyChallengesHub() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
-  const [grandRoundsCompleted, setGrandRoundsCompleted] = useState<boolean>(false);
+  const [grandRoundsCompleted, setGrandRoundsCompleted] = useState(false);
   const [grandRoundsLoading, setGrandRoundsLoading] = useState(true);
   const [grandRoundsError, setGrandRoundsError] = useState<string | null>(null);
   const [grandRoundsStreak, setGrandRoundsStreak] = useState<number | undefined>();
+  const [resetTime, setResetTime] = useState(() => formatTimeUntilReset(new Date()));
 
   const {
-    puzzle: diagnosticPuzzle,
     userState: diagnosticUserState,
     isLoading: diagnosticLoading,
     error: diagnosticError,
@@ -113,13 +175,18 @@ export function DailyChallengesHub() {
   } = useDiagnosticPuzzle();
 
   const {
-    game: wordleGame,
     status: wordleStatus,
     loading: wordleLoading,
     error: wordleError,
   } = useWordleGame();
 
-  // Fetch Grand Rounds completion status
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setResetTime(formatTimeUntilReset(new Date()));
+    }, 60000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const fetchGrandRoundsCompletion = async () => {
       setGrandRoundsLoading(true);
@@ -129,112 +196,233 @@ export function DailyChallengesHub() {
         const response = await fetch(buildApiUrl(API_ENDPOINTS.GRAND_ROUNDS_COMPLETED), {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         setGrandRoundsCompleted(data.data?.completed ?? false);
         setGrandRoundsStreak(data.data?.streak ?? undefined);
-      } catch (err) {
-        setGrandRoundsError(err instanceof Error ? err.message : 'Failed to load');
+      } catch (error) {
+        setGrandRoundsError(error instanceof Error ? error.message : 'Failed to load');
       } finally {
         setGrandRoundsLoading(false);
       }
     };
+
     fetchGrandRoundsCompletion();
   }, [getToken]);
 
-  // Fetch diagnostic puzzle on mount (hook already does)
   useEffect(() => {
     fetchDailyPuzzle();
   }, [fetchDailyPuzzle]);
 
-  // Determine completion for diagnostic puzzle
-  const diagnosticCompleted = diagnosticUserState?.status === 'won' || diagnosticUserState?.status === 'lost';
-  const diagnosticStreak: number | undefined = undefined;
-
-  // Determine completion for wordle
+  const diagnosticCompleted =
+    diagnosticUserState?.status === 'won' || diagnosticUserState?.status === 'lost';
   const wordleCompleted = wordleStatus === 'won' || wordleStatus === 'lost';
-  const wordleStreak: number | undefined = undefined;
 
-  // Reset times (calculated from session start)
-  const resetTime = '6 hours';
+  const challenges = useMemo<ChallengeCardConfig[]>(
+    () => [
+      {
+        key: 'grand-rounds',
+        title: 'Grand Rounds',
+        subtitle: 'Daily competitive challenge',
+        description:
+          'Five speed-weighted questions designed to feel like a focused warmup, not another full study block.',
+        icon: Trophy,
+        accent: '#c4b78a',
+        completed: grandRoundsCompleted,
+        streak: grandRoundsStreak,
+        loading: grandRoundsLoading,
+        error: grandRoundsError,
+        buttonText: grandRoundsCompleted ? 'Review challenge' : 'Start challenge',
+        onAction: () => navigate(ROUTES.STUDY),
+      },
+      {
+        key: 'diagnostic-puzzle',
+        title: 'Diagnostic Puzzle',
+        subtitle: 'Daily mystery case',
+        description:
+          'Work through progressive clues and lock in the diagnosis before the case reveals itself.',
+        icon: Puzzle,
+        accent: '#728ba6',
+        completed: diagnosticCompleted,
+        loading: diagnosticLoading,
+        error: diagnosticError,
+        buttonText: diagnosticCompleted ? 'Review puzzle' : 'Start puzzle',
+        onAction: () => navigate(ROUTES.STUDY),
+      },
+      {
+        key: 'medical-wordle',
+        title: 'Medical Wordle',
+        subtitle: 'Daily term recall',
+        description:
+          'A short vocabulary sprint to keep medical language, terminology, and pattern recall sharp.',
+        icon: SpellCheck,
+        accent: '#9a7f9a',
+        completed: wordleCompleted,
+        loading: wordleLoading,
+        error: wordleError,
+        buttonText: wordleCompleted ? 'Review wordle' : 'Start wordle',
+        onAction: () => navigate(ROUTES.PRACTICE),
+      },
+    ],
+    [
+      diagnosticCompleted,
+      diagnosticError,
+      diagnosticLoading,
+      grandRoundsCompleted,
+      grandRoundsError,
+      grandRoundsLoading,
+      grandRoundsStreak,
+      navigate,
+      wordleCompleted,
+      wordleError,
+      wordleLoading,
+    ]
+  );
 
-  const handleStartGrandRounds = () => {
-    navigate(ROUTES.STUDY);
-  };
-
-  const handleStartDiagnosticPuzzle = () => {
-    navigate(ROUTES.STUDY);
-  };
-
-  const handleStartWordle = () => {
-    // Navigate to practice for now
-    navigate(ROUTES.PRACTICE);
-  };
+  const completedCount = challenges.filter((challenge) => challenge.completed).length;
+  const loadingCount = challenges.filter((challenge) => challenge.loading).length;
+  const errorCount = challenges.filter((challenge) => Boolean(challenge.error)).length;
+  const overallProgress = (completedCount / challenges.length) * 100;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-10">
-        <BackLink to={ROUTES.STUDY} className="mb-4" />
-        <h1 className="text-3xl font-bold text-[var(--color-accent)] mb-2">Daily Challenges</h1>
-        <p className="text-[var(--color-text-secondary)]">
-          Engage with daily challenges to test your knowledge, compete with peers, and maintain your streak.
-        </p>
-      </div>
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Daily Momentum',
+            badgeTone: 'amber',
+            title: 'Small daily wins that keep the study rhythm alive.',
+            subtitle:
+              'Use daily challenges as a focused warmup, a break between heavier sessions, or a quick consistency check when your day gets crowded.',
+            status:
+              completedCount === challenges.length
+                ? 'All daily challenges completed'
+                : `${completedCount} of ${challenges.length} complete today`,
+            backLabel: 'Back to Study',
+            onBack: () => navigate(ROUTES.STUDY),
+            primaryAction: {
+              label: completedCount === challenges.length ? 'Open Practice' : 'Resume challenges',
+              onClick: () => navigate(completedCount === challenges.length ? ROUTES.PRACTICE : ROUTES.STUDY),
+            },
+          }}
+        />
+      </WorkspaceReveal>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ChallengeCard
-          title="Grand Rounds"
-          subtitle="Daily Competitive Challenge"
-          description="5 questions daily, speed-weighted scoring, global leaderboard."
-          icon={<Trophy className="w-5 h-5" />}
-          completed={grandRoundsCompleted}
-          streak={grandRoundsStreak}
-          resetTime={resetTime}
-          loading={grandRoundsLoading}
-          error={grandRoundsError}
-          buttonText={grandRoundsCompleted ? 'Review' : 'Start Challenge'}
-          onAction={handleStartGrandRounds}
-        />
-        <ChallengeCard
-          title="Diagnostic Puzzle"
-          subtitle="Daily Diagnostic Challenge"
-          description="Solve a medical mystery with progressive clues."
-          icon={<Puzzle className="w-5 h-5" />}
-          completed={diagnosticCompleted}
-          streak={diagnosticStreak}
-          resetTime={resetTime}
-          loading={diagnosticLoading}
-          error={diagnosticError}
-          buttonText={diagnosticCompleted ? 'Review' : 'Start Puzzle'}
-          onAction={handleStartDiagnosticPuzzle}
-        />
-        <ChallengeCard
-          title="Medical Wordle"
-          subtitle="Daily Medical Term Guessing"
-          description="Guess the medical buzzword in 6 attempts."
-          icon={<SpellCheck className="w-5 h-5" />}
-          completed={wordleCompleted}
-          streak={wordleStreak}
-          resetTime={resetTime}
-          loading={wordleLoading}
-          error={wordleError}
-          buttonText={wordleCompleted ? 'Review' : 'Start Wordle'}
-          onAction={handleStartWordle}
-        />
-      </div>
-
-      {/* Optional aggregated streak */}
-      <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
-        <h2 className="text-xl font-semibold text-[var(--color-accent)] mb-2">Daily Completion Streak</h2>
-        <p className="text-[var(--color-text-secondary)] mb-4">
-          Complete all three challenges each day to maximize your streak.
-        </p>
-        <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-          <div className="h-full bg-[var(--color-data-pass)]" style={{ width: '0%' }} />
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Completed today"
+            value={`${completedCount}/${challenges.length}`}
+            detail="A simple consistency score for the current daily cycle."
+            icon={Target}
+          />
+          <WorkspaceMetricCard
+            label="Time until reset"
+            value={resetTime}
+            detail="Challenges refresh at midnight local time."
+            accent="#b39b6c"
+            icon={Clock3}
+          />
+          <WorkspaceMetricCard
+            label="Loading lanes"
+            value={loadingCount}
+            detail="Challenge states still syncing from the server or local game state."
+            accent="#728ba6"
+            icon={Sparkles}
+          />
+          <WorkspaceMetricCard
+            label="Needs attention"
+            value={errorCount}
+            detail="Challenges that had trouble loading their latest completion state."
+            accent="#a67f7f"
+            icon={Calendar}
+          />
         </div>
-      </div>
-    </div>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Daily loop
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Challenge mode works best when it feels effortless to start and obvious when to stop.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                Each challenge is meant to be short, memorable, and habit-forming. Use them to
+                prime clinical reasoning before a deeper block or to keep your streak alive on
+                lighter days.
+              </p>
+            </div>
+
+            <div className="space-y-4 rounded-[1.4rem] border border-white/8 bg-white/5 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Daily completion
+                </p>
+                <span className="text-sm font-medium text-[var(--color-accent)]">
+                  {Math.round(overallProgress)}%
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/8">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#c4b78a,#728ba6,#9a7f9a)] transition-all duration-500"
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {challenges.map((challenge) => (
+                  <div
+                    key={challenge.key}
+                    className="rounded-[1rem] border border-white/8 bg-white/4 px-3 py-3"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                      {challenge.title}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-text-primary)]">
+                      {challenge.completed ? 'Done today' : 'Still open'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Challenge lanes"
+          subtitle="Three different kinds of daily engagement, each designed to feel like a small high-signal win."
+        >
+          <div className="grid gap-4 xl:grid-cols-3">
+            {challenges.map((challenge) => (
+              <ChallengeCard key={challenge.key} challenge={challenge} resetTime={resetTime} />
+            ))}
+          </div>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSurface accent="#728ba6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Habit guidance
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                If you only have ten minutes, do one challenge. If you have more, use them as the
+                first rep before moving into practice or your command center recommendations.
+              </p>
+            </div>
+            <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.PRACTICE)}>
+              Open Practice
+            </Button>
+          </div>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 }

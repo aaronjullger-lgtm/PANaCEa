@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/config/routes';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import {
   ComposedChart,
   XAxis,
@@ -14,28 +12,38 @@ import {
   Cell,
   ReferenceLine,
 } from 'recharts';
-import { motion } from 'framer-motion';
-import { TrendingUp, AlertCircle, Trophy, Target, ArrowRight } from 'lucide-react';
-import ChartContainer from '../shared/ChartContainer';
-import { ErrorBoundary } from '../error/ErrorBoundary';
+import {
+  AlertCircle,
+  ArrowRight,
+  Target,
+  TrendingUp,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
+import { ROUTES } from '@/config/routes';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import ChartContainer from '@/components/shared/ChartContainer';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-// ============================================================================
-// Chart Color Constants
-// ============================================================================
-// Recharts requires actual color strings, not CSS var() at runtime.
-// These semantic constants map to the design system's color tokens.
 const CHART_COLORS = {
-  weakness: '#f59e0b',   // Amber-500 — matches var(--color-data-provisional)
-  average: '#3b82f6',    // Blue-500 — matches var(--color-accent)
-  strength: '#10b981',   // Emerald-500 — matches var(--color-data-pass)
-  muted: '#6b7280',      // Gray-500 — matches var(--color-text-muted)
-  chartMuted: '#9ca3af', // Gray-400 — for chart annotations
+  weakness: '#f59e0b',
+  average: '#3b82f6',
+  strength: '#10b981',
+  muted: '#6b7280',
+  chartMuted: '#9ca3af',
 } as const;
-
-// ============================================================================
-// Types
-// ============================================================================
 
 interface SystemData {
   name: string;
@@ -58,23 +66,22 @@ interface PerformanceDeltasResponse {
   };
 }
 
-// ============================================================================
-// Custom Shapes for Recharts
-// ============================================================================
-
 const StarShape = (props: any) => {
   const { cx, cy, fill } = props;
   const size = 8;
   const points = [];
-  for (let i = 0; i < 5; i++) {
-    const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+  for (let index = 0; index < 5; index++) {
+    const angle = (Math.PI * 2 * index) / 5 - Math.PI / 2;
     points.push([cx + size * Math.cos(angle), cy + size * Math.sin(angle)]);
     const innerAngle = angle + Math.PI / 5;
-    points.push([cx + size * 0.4 * Math.cos(innerAngle), cy + size * 0.4 * Math.sin(innerAngle)]);
+    points.push([
+      cx + size * 0.4 * Math.cos(innerAngle),
+      cy + size * 0.4 * Math.sin(innerAngle),
+    ]);
   }
   return (
     <polygon
-      points={points.map((p) => p.join(',')).join(' ')}
+      points={points.map((point) => point.join(',')).join(' ')}
       fill="none"
       stroke={fill}
       strokeWidth={2}
@@ -87,100 +94,147 @@ const TickShape = (props: any) => {
   return <line x1={cx} y1={cy - 5} x2={cx} y2={cy + 5} stroke={fill} strokeWidth={2} />;
 };
 
-// ============================================================================
-// High Yield Sidebar Component
-// ============================================================================
-
-interface HighYieldSidebarProps {
-  topSystems: SystemData[];
-  onStudyClick: (systemName: string) => void;
+function getRangeColor(status: SystemData['status']) {
+  switch (status) {
+    case 'critical':
+    case 'weakness':
+      return CHART_COLORS.weakness;
+    case 'average':
+      return CHART_COLORS.average;
+    case 'strength':
+      return CHART_COLORS.strength;
+    default:
+      return CHART_COLORS.muted;
+  }
 }
 
-const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudyClick }) => {
+function systemAccent(status: SystemData['status']) {
+  switch (status) {
+    case 'critical':
+    case 'weakness':
+      return '#b39b6c';
+    case 'strength':
+      return '#7a8f6e';
+    case 'average':
+      return '#728ba6';
+    default:
+      return '#9a7f9a';
+  }
+}
+
+function systemLabel(status: SystemData['status']) {
+  switch (status) {
+    case 'critical':
+      return 'Critical';
+    case 'weakness':
+      return 'Gap';
+    case 'strength':
+      return 'Strength';
+    default:
+      return 'Monitor';
+  }
+}
+
+function HighYieldFocus({
+  systems,
+  onStudyClick,
+}: {
+  systems: SystemData[];
+  onStudyClick: (systemName: string) => void;
+}) {
   return (
-    <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-[var(--color-data-provisional)]" />
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">High Yield Focus</h3>
-      </div>
-      <p className="text-sm text-[var(--color-text-secondary)] mb-6">
-        Top priorities based on gap size and question volume
-      </p>
-
+    <WorkspaceSurface accent="#b39b6c" className="h-full">
       <div className="space-y-4">
-        {topSystems.map((system, index) => (
-          <motion.div
-            key={system.name}
-            initial={prefersReducedMotion ? false : { x: 20 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="p-4 bg-gradient-to-r from-[var(--color-data-provisional)]/10 to-[var(--color-data-provisional)]/5 rounded-xl border border-[var(--color-data-provisional)]/30"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold text-[var(--color-data-provisional)]">
-                    #{index + 1}
-                  </span>
-                  <h4 className="font-semibold text-[var(--color-text-primary)]">{system.name}</h4>
+        <div className="space-y-1.5">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            High-yield focus
+          </p>
+          <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+            These are the widest gaps to the top performers, adjusted to keep the biggest opportunities visible first.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {systems.map((system, index) => (
+            <div
+              key={system.name}
+              className="rounded-[1.15rem] border border-white/8 bg-white/4 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-[var(--color-accent)]">
+                      #{index + 1}
+                    </span>
+                    <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                      {system.name}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    +{Math.round(system.topPerformerGap)}% to reach the top 10%
+                  </p>
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                  +{Math.round(system.topPerformerGap)}% to reach Top 10%
-                </p>
+                <span
+                  className="rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${systemAccent(system.status)} 40%, white)`,
+                    background: `color-mix(in srgb, ${systemAccent(system.status)} 14%, transparent)`,
+                    color: systemAccent(system.status),
+                  }}
+                >
+                  {systemLabel(system.status)}
+                </span>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-4 text-xs text-[var(--color-text-secondary)]">
-                <span>Your: {system.accuracy}%</span>
-                <span>Goal: {system.cohortP90}%</span>
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]">
+                <span>Your score: {system.accuracy}%</span>
+                <span>Top 10%: {system.cohortP90}%</span>
               </div>
-              <button
+
+              <Button
+                type="button"
+                size="sm"
+                className="mt-4 w-full"
                 onClick={() => onStudyClick(system.name)}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 text-[var(--color-text-inverse)] text-sm font-semibold rounded-lg transition-colors"
+                iconRight={ArrowRight}
               >
-                Study Now
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                Study this system
+              </Button>
             </div>
-          </motion.div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </WorkspaceSurface>
   );
-};
-
-// ============================================================================
-// Custom Tooltip
-// ============================================================================
+}
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload;
+  const data = payload[0].payload as SystemData;
   return (
-    <div className="bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border border-[var(--color-border)] rounded-lg px-4 py-3 shadow-lg">
-      <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">{data.name}</h4>
+    <div className="rounded-[1rem] border border-white/8 bg-[var(--color-bg-primary)]/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+      <h4 className="mb-2 font-semibold text-[var(--color-text-primary)]">{data.name}</h4>
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-[var(--color-text-secondary)]">Your Accuracy:</span>
+          <span className="text-[var(--color-text-secondary)]">Your accuracy</span>
           <span className="font-semibold text-[var(--color-accent)] tabular-nums">{data.accuracy}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-[var(--color-text-secondary)]">Cohort Average:</span>
+          <span className="text-[var(--color-text-secondary)]">Cohort average</span>
           <span className="font-semibold text-[var(--color-text-primary)] tabular-nums">
             {data.cohortAverage}%
           </span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-[var(--color-text-secondary)]">Top 10%:</span>
+          <span className="text-[var(--color-text-secondary)]">Top 10%</span>
           <span className="font-semibold text-[var(--color-data-provisional)] tabular-nums">
             {data.cohortP90}%
           </span>
         </div>
-        <div className="border-t border-[var(--color-border)] pt-2 mt-2">
+        <div className="mt-2 border-t border-white/8 pt-2">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-[var(--color-text-secondary)]">Gap to Close:</span>
+            <span className="text-[var(--color-text-secondary)]">Gap to close</span>
             <span className="font-semibold text-[var(--color-data-provisional)] tabular-nums">
               +{Math.round(data.topPerformerGap)}%
             </span>
@@ -191,12 +245,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-// ============================================================================
-// Main Dashboard Component
-// ============================================================================
-
 export interface GapAnalysisDashboardProps {
-  /** When provided, "Study Now" uses this instead of navigating to /quiz (which has no route). */
   onStudySystem?: (systemName: string) => void;
 }
 
@@ -210,349 +259,365 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const token = await getToken();
-      if (!token) {
-        setError('Please sign in to view your analytics.');
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('No performance data found. Complete some questions to see your analytics!');
-        } else if (response.status === 500) {
-          setError('Server error loading your data. Please try again in a moment.');
-        } else {
-          setError(`Failed to load data (${response.status}). Please try refreshing.`);
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      const result: PerformanceDeltasResponse = await response.json();
-
-      if (!result || typeof result !== 'object') {
-        throw new Error('Invalid response format');
-      }
-
-      if (result.success && result.data) {
-        setData(result.data);
-      } else if (!result.success && result.data) {
-        // Server returned safe defaults (500 error with fallback data)
-        setData(result.data);
-        setError('Some data may be unavailable. Showing cached results.');
-      } else {
-        throw new Error('Invalid response structure');
-      }
-    } catch (err) {
-      console.error('Error fetching performance deltas:', err);
-      // Prevent unhandled promise rejection - always set error state
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Unable to load analytics: ${errorMessage}. Please try again.`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const token = await getToken();
+        if (!token) {
+          setError('Please sign in to view your analytics.');
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await fetch(getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('No performance data found. Complete some questions to see your analytics.');
+          } else if (response.status === 500) {
+            setError('Server error loading your data. Please try again in a moment.');
+          } else {
+            setError(`Failed to load data (${response.status}). Please try refreshing.`);
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        const result: PerformanceDeltasResponse = await response.json();
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid response format');
+        }
+
+        if (result.success && result.data) {
+          setData(result.data);
+        } else if (!result.success && result.data) {
+          setData(result.data);
+          setError('Some data may be unavailable. Showing cached results.');
+        } else {
+          throw new Error('Invalid response structure');
+        }
+      } catch (err) {
+        console.error('Error fetching performance deltas:', err);
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(`Unable to load analytics: ${message}. Please try again.`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchData();
   }, [getToken, retryCount]);
 
   const handleStudyClick = (systemName: string) => {
     if (onStudySystem) {
       onStudySystem(systemName);
-    } else {
-      navigate(ROUTES.STUDY);
+      return;
     }
+    navigate(ROUTES.STUDY);
   };
 
-  // Loading state
+  const systemsSorted = useMemo(
+    () =>
+      [...(data?.systems ?? [])].sort((left, right) => {
+        if (right.topPerformerGap !== left.topPerformerGap) {
+          return right.topPerformerGap - left.topPerformerGap;
+        }
+        return right.yieldScore - left.yieldScore;
+      }),
+    [data?.systems]
+  );
+
+  const topSystems = useMemo(
+    () => systemsSorted.filter((system) => !system.isInsufficientData).slice(0, 3),
+    [systemsSorted]
+  );
+
+  const criticalCount = systemsSorted.filter(
+    (system) => system.status === 'critical' || system.status === 'weakness'
+  ).length;
+  const strengthCount = systemsSorted.filter((system) => system.status === 'strength').length;
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="h-8 bg-[var(--color-bg-tertiary)] rounded w-1/3 animate-pulse mb-8" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 h-96 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
-            <div className="h-96 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] animate-pulse" />
-          </div>
-        </div>
-      </div>
+      <WorkspacePage density="wide">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Gap Analysis',
+              badgeTone: 'steel',
+              title: 'Mapping your biggest performance gaps.',
+              subtitle:
+                'The analytics workspace is comparing your system-level performance against cohort anchors and top-performer thresholds.',
+              backLabel: 'Back to Progress',
+              onBack: () => navigate(ROUTES.PROGRESS),
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceSurface accent="#728ba6">
+            <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-b-transparent" />
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Loading your gap analysis...
+              </p>
+            </div>
+          </WorkspaceSurface>
+        </WorkspaceReveal>
+      </WorkspacePage>
     );
   }
 
-  // Error state (no data to show)
   if (error && !data) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-secondary)] flex items-center justify-center p-6">
-        <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-data-fail)]/30 p-8 max-w-md">
-          <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-              Unable to Load Analysis
-            </h3>
-            <p className="text-[var(--color-text-secondary)] mb-6">{error}</p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setRetryCount(retryCount + 1)}
-                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-semibold rounded-lg transition-colors"
-              >
-                Retry
-              </button>
-              <button
-                onClick={() => navigate(ROUTES.STUDY)}
-                className="px-4 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-primary)] font-semibold rounded-lg transition-colors"
-              >
-                Go Home
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <WorkspacePage density="wide">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Gap Analysis',
+              badgeTone: 'steel',
+              title: 'Gap analysis is unavailable right now.',
+              subtitle:
+                'We could not safely load the analytics needed to compare your current performance against cohort benchmarks.',
+              backLabel: 'Back to Progress',
+              onBack: () => navigate(ROUTES.PROGRESS),
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceEmptyState
+            icon={AlertCircle}
+            title="Unable to load analysis"
+            description={error}
+            action={
+              <div className="flex gap-3">
+                <Button type="button" size="sm" onClick={() => setRetryCount((value) => value + 1)}>
+                  Retry
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.PROGRESS)}>
+                  Back to Progress
+                </Button>
+              </div>
+            }
+          />
+        </WorkspaceReveal>
+      </WorkspacePage>
     );
   }
 
-  // No data to render chart (satisfies type narrowing)
-  if (!data) {
-    return null;
-  }
-
-  // Prepare chart data
-  const chartData = data.systems.map((system) => ({
-    ...system,
-    // For the dumbbell line
-    rangeStart: Math.min(system.accuracy, system.cohortP90),
-    rangeEnd: Math.max(system.accuracy, system.cohortP90),
-  }));
-
-  // Get top 3 systems for sidebar
-  const topSystems = data.systems.slice(0, 3);
-
-  // Determine range color based on status
-  const getRangeColor = (status: string) => {
-    switch (status) {
-      case 'critical':
-      case 'weakness':
-        return CHART_COLORS.weakness;
-      case 'average':
-        return CHART_COLORS.average;
-      case 'strength':
-        return CHART_COLORS.strength;
-      default:
-        return CHART_COLORS.muted;
-    }
-  };
+  if (!data) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-secondary)] p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Partial data warning */}
-        {error && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 text-sm text-[var(--color-data-provisional)]">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-        {/* Header */}
-        <motion.div
-          initial={prefersReducedMotion ? false : { y: -20 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
-            <h1 className="text-3xl font-semibold text-[var(--color-text-primary)]">Gap Analysis</h1>
-          </div>
-          <p className="text-[var(--color-text-secondary)]">
-            Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total
-            attempts
-          </p>
-        </motion.div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={prefersReducedMotion ? false : { y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Trophy className="w-5 h-5 text-[var(--color-data-provisional)]" />
-              <span className="text-sm text-[var(--color-text-secondary)]">Overall Percentile</span>
-            </div>
-            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              {data.overallPercentile}%
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={prefersReducedMotion ? false : { y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="w-5 h-5 text-[var(--color-accent)]" />
-              <span className="text-sm text-[var(--color-text-secondary)]">Systems Analyzed</span>
-            </div>
-            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-              {data.systems.length}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={prefersReducedMotion ? false : { y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)]" />
-              <span className="text-sm text-[var(--color-text-secondary)]">
-                High Priority Areas
-              </span>
-            </div>
-            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Gap Analysis',
+            badgeTone: 'steel',
+            title: 'See where the real performance distance still lives.',
+            subtitle:
+              'This view compares your system performance against the cohort and top-decile anchors so you can study where the climb is still worth it.',
+            status: `${data.userTotalAttempts} recorded attempts`,
+            backLabel: 'Back to Progress',
+            onBack: () => navigate(ROUTES.PROGRESS),
+            primaryAction: topSystems[0]
+              ? {
+                  label: `Study ${topSystems[0].name}`,
+                  onClick: () => handleStudyClick(topSystems[0].name),
+                }
+              : undefined,
+            secondaryActions: [
               {
-                data.systems.filter((s) => s.status === 'critical' || s.status === 'weakness')
-                  .length
-              }
-            </p>
-          </motion.div>
-        </div>
+                label: 'Refresh analysis',
+                onClick: () => setRetryCount((value) => value + 1),
+              },
+            ],
+          }}
+        />
+      </WorkspaceReveal>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chart Section */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="lg:col-span-2 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6"
-          >
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
-                Performance vs. Top 10%
-              </h3>
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                Sorted by improvement opportunity (highest yield first)
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Overall percentile"
+            value={`${data.overallPercentile}%`}
+            detail="Your approximate standing relative to the current cohort comparison set."
+            icon={Trophy}
+          />
+          <WorkspaceMetricCard
+            label="Systems analyzed"
+            value={systemsSorted.length}
+            detail="Distinct systems with enough question history to compare."
+            accent="#728ba6"
+            icon={Target}
+          />
+          <WorkspaceMetricCard
+            label="High-priority gaps"
+            value={criticalCount}
+            detail="Systems marked critical or weak based on top-performer distance."
+            accent="#b39b6c"
+            icon={AlertCircle}
+          />
+          <WorkspaceMetricCard
+            label="Current strengths"
+            value={strengthCount}
+            detail="Systems already tracking above the cohort with stronger performance."
+            accent="#7a8f6e"
+            icon={TrendingUp}
+          />
+        </div>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                How to read this
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Focus on the distance to top performance, not just whether a system feels weak.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                The chart shows your current score, the cohort average, and the top-decile benchmark.
+                The most valuable study targets are the systems with wide remaining gaps and enough
+                volume to matter.
               </p>
             </div>
 
-            <ChartContainer minHeight={500} className="min-h-[200px] w-full">
-              <ResponsiveContainer width="100%" height={500} minHeight={200} minWidth={0}>
-                <ComposedChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ top: 20, right: 30, bottom: 32, left: 100 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--chart-grid-stroke)"
-                    horizontal={false}
-                  />
-
-                  <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    stroke="var(--color-border)"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    label={{
-                      value: 'Accuracy (%)',
-                      position: 'bottom',
-                      fill: 'var(--color-text-muted)',
-                      fontSize: 12,
-                    }}
-                  />
-
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    stroke="var(--color-border)"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    width={90}
-                  />
-
-                  <Tooltip content={<CustomTooltip />} />
-
-                  {/* The Dumbbell Lines (Ranges) */}
-                  {chartData.map((entry) => (
-                    <ReferenceLine
-                      key={`line-${entry.name}`}
-                      segment={[
-                        { x: entry.accuracy, y: entry.name },
-                        { x: entry.cohortP90, y: entry.name },
-                      ]}
-                      stroke={getRangeColor(entry.status)}
-                      strokeWidth={3}
-                      ifOverflow="extendDomain"
-                    />
-                  ))}
-
-                  {/* Cohort Average Markers (Small Tick) */}
-                  <Scatter dataKey="cohortAverage" shape={<TickShape />} fill={CHART_COLORS.chartMuted} />
-
-                  {/* User Accuracy Markers (Large Circle) */}
-                  <Scatter dataKey="accuracy" fill={CHART_COLORS.average}>
-                    {chartData.map((entry) => (
-                      <Cell key={`cell-user-${entry.name}`} fill={CHART_COLORS.average} />
-                    ))}
-                  </Scatter>
-
-                  {/* Top 10% Markers (Star) */}
-                  <Scatter dataKey="cohortP90" shape={<StarShape />} fill={CHART_COLORS.weakness} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-6 mt-4 text-xs text-[var(--color-text-secondary)]">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[var(--color-accent)]" />
-                <span>Your Score</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-[var(--color-bg-secondary)]" />
-                <span>Average</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <StarShape cx={6} cy={6} fill={CHART_COLORS.weakness} />
-                <span className="ml-2">Top 10%</span>
-              </div>
+            <div className="space-y-3 rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Priority rule of thumb
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                Study the systems with both a large top-performer gap and meaningful question
+                volume first. Low-volume noise is less urgent than a consistent miss pattern.
+              </p>
+              {error ? (
+                <div className="rounded-[1rem] border border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/10 px-3 py-2 text-sm text-[var(--color-data-provisional)]">
+                  {error}
+                </div>
+              ) : null}
             </div>
-          </motion.div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
 
-          {/* High Yield Sidebar */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { y: 20 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-          >
-            <HighYieldSidebar topSystems={topSystems} onStudyClick={handleStudyClick} />
-          </motion.div>
-        </div>
-      </div>
-    </div>
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Performance vs top decile"
+          subtitle="Sorted by improvement opportunity so the biggest remaining lifts stay near the top."
+        >
+          <WorkspaceSplit className="items-start">
+            <WorkspaceSurface accent="#728ba6" className="xl:col-span-1">
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    Performance vs. top 10%
+                  </h3>
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    Compare your current accuracy, cohort average, and top-decile target system by
+                    system.
+                  </p>
+                </div>
+
+                <ChartContainer minHeight={500} className="min-h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height={500} minHeight={200} minWidth={0}>
+                    <ComposedChart
+                      data={systemsSorted}
+                      layout="vertical"
+                      margin={{ top: 20, right: 30, bottom: 32, left: 100 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--chart-grid-stroke)"
+                        horizontal={false}
+                      />
+
+                      <XAxis
+                        type="number"
+                        domain={[0, 100]}
+                        stroke="var(--color-border)"
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        label={{
+                          value: 'Accuracy (%)',
+                          position: 'bottom',
+                          fill: 'var(--color-text-muted)',
+                          fontSize: 12,
+                        }}
+                      />
+
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="var(--color-border)"
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                        width={90}
+                      />
+
+                      <Tooltip content={<CustomTooltip />} />
+
+                      {systemsSorted.map((entry) => (
+                        <ReferenceLine
+                          key={`line-${entry.name}`}
+                          segment={[
+                            { x: entry.accuracy, y: entry.name },
+                            { x: entry.cohortP90, y: entry.name },
+                          ]}
+                          stroke={getRangeColor(entry.status)}
+                          strokeWidth={3}
+                          ifOverflow="extendDomain"
+                        />
+                      ))}
+
+                      <Scatter
+                        dataKey="cohortAverage"
+                        shape={<TickShape />}
+                        fill={CHART_COLORS.chartMuted}
+                      />
+
+                      <Scatter dataKey="accuracy" fill={CHART_COLORS.average}>
+                        {systemsSorted.map((entry) => (
+                          <Cell key={`cell-user-${entry.name}`} fill={CHART_COLORS.average} />
+                        ))}
+                      </Scatter>
+
+                      <Scatter
+                        dataKey="cohortP90"
+                        shape={<StarShape />}
+                        fill={CHART_COLORS.weakness}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+
+                <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-[var(--color-text-secondary)]">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-[var(--color-accent)]" />
+                    <span>Your score</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-0.5 w-4 bg-[var(--color-bg-secondary)]" />
+                    <span>Cohort average</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StarShape cx={6} cy={6} fill={CHART_COLORS.weakness} />
+                    <span className="ml-2">Top 10%</span>
+                  </div>
+                </div>
+              </div>
+            </WorkspaceSurface>
+
+            <HighYieldFocus systems={topSystems} onStudyClick={handleStudyClick} />
+          </WorkspaceSplit>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
 
-// Wrap with ErrorBoundary to prevent full-page crashes
-export default function GapAnalysisDashboardWithErrorBoundary() {
-  return (
-    <ErrorBoundary>
-      <GapAnalysisDashboard />
-    </ErrorBoundary>
-  );
-}
+export default GapAnalysisDashboard;

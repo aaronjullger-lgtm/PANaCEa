@@ -1,46 +1,92 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
-import { Calendar, Clock, Target, TrendingUp, Zap, AlertTriangle, ChevronRight, Check, RefreshCw } from 'lucide-react';
+import {
+  AlertTriangle,
+  Calendar,
+  Check,
+  ChevronRight,
+  Clock,
+  RefreshCw,
+  Target,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { RecommendationResponse, StudyPlan } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
-import { CARD_RING_SHADOW } from '@/components/ui/card';
+import { ROUTES } from '@/config/routes';
 import ProgressProjectionChart from './ProgressProjectionChart';
 import PlanAlternativesModal from './PlanAlternativesModal';
 import FatigueAlertBanner from './FatigueAlertBanner';
-
-// ============================================================================
-// Authenticated Fetcher
-// ============================================================================
 
 function createStudyPathFetcher(getToken: () => Promise<string | null>) {
   return async (url: string): Promise<RecommendationResponse> => {
     const token = await getToken();
     if (!token) throw new Error('Not authenticated');
-    const res = await fetch(url, {
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) {
+    if (!response.ok) {
       const safeMessages: Record<number, string> = {
         401: 'Your session has expired. Please sign in again.',
         403: 'You do not have permission to access this study plan.',
         404: 'No study plan found. Try regenerating one.',
         429: 'Too many requests. Please wait a moment and try again.',
       };
-      throw new Error(safeMessages[res.status] ?? 'Unable to load your study plan. Please try again.');
+      throw new Error(
+        safeMessages[response.status] ?? 'Unable to load your study plan. Please try again.'
+      );
     }
-    const data = await res.json();
-    return data as RecommendationResponse;
+    return (await response.json()) as RecommendationResponse;
   };
 }
 
-// ============================================================================
-// Study Path Dashboard Component
-// ============================================================================
+function toDate(value: Date | string | null | undefined) {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+}
+
+function normalizePlan(plan: StudyPlan): StudyPlan {
+  return {
+    ...plan,
+    generatedAt: toDate(plan.generatedAt) ?? new Date(),
+    validUntil: toDate(plan.validUntil) ?? new Date(),
+    sessions: (plan.sessions ?? []).map((session) => ({
+      ...session,
+      date: toDate(session.date) ?? new Date(),
+      topics: session.topics ?? [],
+    })),
+  };
+}
+
+function formatFatigueLabel(level: StudyPlan['metadata']['fatigueRisk']) {
+  switch (level) {
+    case 'HIGH':
+      return 'High fatigue risk';
+    case 'MEDIUM':
+      return 'Moderate fatigue risk';
+    default:
+      return 'Low fatigue risk';
+  }
+}
 
 const StudyPathDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useUser();
   const { getToken } = useAuth();
   const { showToast } = useToast();
@@ -58,30 +104,66 @@ const StudyPathDashboard = () => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
 
+  const plan = useMemo(() => (data?.plan ? normalizePlan(data.plan) : null), [data?.plan]);
+  const alternatives = useMemo(
+    () => (data?.alternatives ?? []).map((candidate) => normalizePlan(candidate)),
+    [data?.alternatives]
+  );
+  const rationale = data?.rationale || '';
+  const confidence = data?.confidence ?? 0;
+
+  const sortedSessions = useMemo(() => {
+    if (!plan) return [];
+    return [...plan.sessions].sort((left, right) => left.date.getTime() - right.date.getTime());
+  }, [plan]);
+
+  const totalMinutes = plan?.totalEstimatedMinutes ?? 0;
+  const totalSessions = sortedSessions.length;
+  const blueprintCoverage = plan?.metadata.blueprintCoverage ?? {};
+  const fatigueRisk = plan?.metadata.fatigueRisk ?? 'LOW';
+  const projectedRetentionIncrease = plan?.metadata.projectedRetentionIncrease ?? 0;
+  const coverageTotal = useMemo(
+    () => (Object.values(blueprintCoverage) as number[]).reduce((sum, value) => sum + value, 0),
+    [blueprintCoverage]
+  );
+
+  const startDate = sortedSessions[0]?.date ?? null;
+  const endDate = sortedSessions[sortedSessions.length - 1]?.date ?? null;
+  const daysCount =
+    startDate && endDate
+      ? Math.max(
+          1,
+          Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+        )
+      : 0;
+
+  const topicCount = useMemo(
+    () => sortedSessions.reduce((sum, session) => sum + session.topics.length, 0),
+    [sortedSessions]
+  );
+
   const handleAcceptPlan = async () => {
-    if (!data?.plan) return;
+    if (!plan) return;
     setIsAccepting(true);
     try {
       const token = await getToken();
-      const res = await fetch(getApiEndpoint(API_ENDPOINTS.STUDY_PATH_ACCEPT), {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.STUDY_PATH_ACCEPT), {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          planId: data.plan.id,
-          // feedback optional, can be added later via UI
-        }),
+        body: JSON.stringify({ planId: plan.id }),
       });
-      if (!res.ok) {
-        throw new Error(`Failed to accept plan: ${res.status}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to accept plan: ${response.status}`);
       }
+
       showToast({
         type: 'success',
         message: 'Study plan accepted! You can now start following it.',
       });
-      // Optionally refresh data
       mutate();
     } catch (err) {
       console.error('Accept plan error:', err);
@@ -98,7 +180,7 @@ const StudyPathDashboard = () => {
     setIsRegenerating(true);
     try {
       const token = await getToken();
-      const res = await fetch(getApiEndpoint(API_ENDPOINTS.STUDY_PATH_REGENERATE), {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.STUDY_PATH_REGENERATE), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -106,15 +188,16 @@ const StudyPathDashboard = () => {
         },
         body: JSON.stringify({}),
       });
-      if (res.ok) {
-        mutate(); // refetch recommendation
-        showToast({
-          type: 'success',
-          message: 'Study plan regenerated successfully!',
-        });
-      } else {
+
+      if (!response.ok) {
         throw new Error('Unable to regenerate study plan. Please try again.');
       }
+
+      await mutate();
+      showToast({
+        type: 'success',
+        message: 'Study plan regenerated successfully!',
+      });
     } catch (err) {
       console.error('Regeneration error:', err);
       showToast({
@@ -128,12 +211,31 @@ const StudyPathDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
-          <p className="mt-4 text-[var(--color-text-secondary)]">Loading your personalized study plan...</p>
-        </div>
-      </div>
+      <WorkspacePage density="wide">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Study Path',
+              badgeTone: 'amber',
+              title: 'Building your next study route.',
+              subtitle:
+                'The optimizer is assembling a plan around retention, blueprint coverage, and fatigue load.',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceSurface accent="#b39b6c">
+            <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-b-transparent" />
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Loading your personalized study path...
+              </p>
+            </div>
+          </WorkspaceSurface>
+        </WorkspaceReveal>
+      </WorkspacePage>
     );
   }
 
@@ -146,257 +248,351 @@ const StudyPathDashboard = () => {
       error.message.length < 200
         ? error.message
         : 'Unable to load your study plan. Please try again.';
+
     return (
-      <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[var(--color-warning)]" />
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-          Study plan unavailable
-        </h3>
-        <p className="text-[var(--color-text-secondary)] mb-4">
-          {safeMessage}
-        </p>
-        <button
-          onClick={() => mutate()}
-          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90"
-        >
-          Try Again
-        </button>
-      </div>
+      <WorkspacePage density="wide">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Study Path',
+              badgeTone: 'amber',
+              title: 'Your study route is unavailable right now.',
+              subtitle:
+                'The optimizer could not return a safe study recommendation from the current request.',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
+              primaryAction: {
+                label: 'Try again',
+                onClick: () => mutate(),
+              },
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceEmptyState
+            icon={AlertTriangle}
+            title="Study plan unavailable"
+            description={safeMessage}
+            action={
+              <Button type="button" size="sm" onClick={() => mutate()}>
+                Reload plan
+              </Button>
+            }
+          />
+        </WorkspaceReveal>
+      </WorkspacePage>
     );
   }
-
-  const plan = data?.plan;
-  const alternatives = data?.alternatives || [];
-  const confidence = data?.confidence ?? 0;
-  const rationale = data?.rationale || '';
 
   if (!plan) {
     return (
-      <div className="rounded-xl bg-[var(--color-bg-secondary)] p-6 text-center">
-        <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-          No study plan generated
-        </h3>
-        <p className="text-[var(--color-text-secondary)] mb-4">
-          We couldn't generate a study plan. Please try again later.
-        </p>
-        <button
-          onClick={() => mutate()}
-          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90"
-        >
-          Generate Plan
-        </button>
-      </div>
+      <WorkspacePage density="wide">
+        <WorkspaceReveal>
+          <WorkspacePageHeader
+            meta={{
+              badge: 'Study Path',
+              badgeTone: 'amber',
+              title: 'No study path has been generated yet.',
+              subtitle:
+                'The optimizer needs another pass before it can turn your current signals into a plan.',
+              backLabel: 'Back to Study',
+              onBack: () => navigate(ROUTES.STUDY),
+              primaryAction: {
+                label: 'Generate plan',
+                onClick: () => mutate(),
+              },
+            }}
+          />
+        </WorkspaceReveal>
+        <WorkspaceReveal delay={0.05}>
+          <WorkspaceEmptyState
+            icon={Target}
+            title="No study plan generated"
+            description="We couldn't generate a study plan from the current data. Try again in a moment."
+            action={
+              <Button type="button" size="sm" onClick={() => mutate()}>
+                Generate plan
+              </Button>
+            }
+          />
+        </WorkspaceReveal>
+      </WorkspacePage>
     );
   }
 
-  const totalSessions = plan.sessions.length;
-  const totalMinutes = plan.totalEstimatedMinutes;
-  const fatigueRisk = plan.metadata.fatigueRisk;
-  const blueprintCoverage = plan.metadata.blueprintCoverage;
-  const projectedRetentionIncrease = plan.metadata.projectedRetentionIncrease;
-
-  // Calculate days until plan completion
-  const sortedSessions = [...plan.sessions].sort((a, b) => a.date.getTime() - b.date.getTime());
-  const startDate = sortedSessions[0]?.date;
-  const endDate = sortedSessions[sortedSessions.length - 1]?.date;
-  const daysCount = startDate && endDate
-    ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="pt-2"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
-              <Target className="w-6 h-6 text-[var(--color-text-inverse)]" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[var(--color-text-primary)] truncate max-w-full">
-                Dynamic Study Path Optimizer
-              </h1>
-              <p className="text-sm md:text-base text-[var(--color-text-secondary)]">
-                Your personalized plan to maximize retention and blueprint coverage.
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Study Path',
+            badgeTone: 'amber',
+            title: 'A study route that shows its tradeoffs.',
+            subtitle:
+              'Review the recommended path, see how hard it pushes, and compare alternatives before you commit your next week of study time.',
+            status: formatFatigueLabel(fatigueRisk),
+            backLabel: 'Back to Study',
+            onBack: () => navigate(ROUTES.STUDY),
+            primaryAction: {
+              label: isAccepting ? 'Accepting...' : 'Accept plan',
+              onClick: handleAcceptPlan,
+              disabled: isAccepting,
+            },
+            secondaryActions: [
+              {
+                label: `Alternatives (${alternatives.length})`,
+                onClick: () => setShowAlternativesModal(true),
+                disabled: alternatives.length === 0,
+              },
+              {
+                label: isRegenerating ? 'Regenerating...' : 'Regenerate',
+                onClick: handleRegeneratePlan,
+                disabled: isRegenerating,
+              },
+            ],
+          }}
+        />
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Total study time"
+            value={`${Math.round(totalMinutes / 60)}h`}
+            detail={`${totalSessions} sessions across ${daysCount} day${daysCount === 1 ? '' : 's'}.`}
+            icon={Clock}
+          />
+          <WorkspaceMetricCard
+            label="Projected retention"
+            value={`+${(projectedRetentionIncrease * 100).toFixed(1)}%`}
+            detail="Expected lift from this optimized plan."
+            accent="#7a8f6e"
+            icon={TrendingUp}
+          />
+          <WorkspaceMetricCard
+            label="Confidence"
+            value={`${(confidence * 100).toFixed(0)}%`}
+            detail={
+              confidence > 0.7
+                ? 'High confidence recommendation.'
+                : confidence > 0.4
+                  ? 'Moderate confidence recommendation.'
+                  : 'Lower confidence because the data is thinner.'
+            }
+            accent="#b39b6c"
+            icon={Zap}
+          />
+          <WorkspaceMetricCard
+            label="Blueprint coverage"
+            value={`${coverageTotal.toFixed(1)}%`}
+            detail={`${topicCount} scheduled topic block${topicCount === 1 ? '' : 's'} across the plan.`}
+            accent="#728ba6"
+            icon={Calendar}
+          />
+        </div>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Plan summary
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                This route balances coverage, retention, and fatigue instead of optimizing for only one.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                {rationale ||
+                  'Your current recommendation weighs how much needs review, how much blueprint ground is left to cover, and how aggressive the schedule can be before it stops being sustainable.'}
               </p>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Fatigue Alert Banner */}
-        <FatigueAlertBanner riskLevel={fatigueRisk} />
-
-        {/* Plan Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-[var(--color-accent)]/10">
-                <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)]">Total Study Time</p>
-                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                  {Math.round(totalMinutes / 60)} hours
+            <div className="space-y-4">
+              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Plan window
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  {startDate
+                    ? `${startDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })} to ${endDate?.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })}`
+                    : 'Dates unavailable'}
+                </p>
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                  Generated {plan.generatedAt.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
                 </p>
               </div>
+              <FatigueAlertBanner riskLevel={fatigueRisk} compact />
             </div>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {totalSessions} sessions over {daysCount} days
-            </p>
-          </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-[var(--color-success)]/10">
-                <TrendingUp className="w-5 h-5 text-[var(--color-success)]" />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)]">Projected Retention Increase</p>
-                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                  +{(projectedRetentionIncrease * 100).toFixed(1)}%
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Based on FSRS v6 optimization
-            </p>
-          </div>
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSurface accent="#a67f7f">
+          <FatigueAlertBanner riskLevel={fatigueRisk} />
+        </WorkspaceSurface>
+      </WorkspaceReveal>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-[var(--color-warning)]/10">
-                <Zap className="w-5 h-5 text-[var(--color-warning)]" />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)]">Confidence</p>
-                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                  {(confidence * 100).toFixed(0)}%
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {confidence > 0.7 ? 'High confidence' : confidence > 0.4 ? 'Moderate confidence' : 'Low confidence'}
-            </p>
-          </div>
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSection
+          title="Progress projection"
+          subtitle="Use the projection chart to see what this plan expects to change if you actually follow it."
+        >
+          <WorkspaceSurface accent="#728ba6">
+            <ProgressProjectionChart planId={plan.id} />
+          </WorkspaceSurface>
+        </WorkspaceSection>
+      </WorkspaceReveal>
 
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-5" style={{ boxShadow: CARD_RING_SHADOW }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-[var(--color-info)]/10">
-                <Calendar className="w-5 h-5 text-[var(--color-info)]" />
-              </div>
-              <div>
-                <p className="text-sm text-[var(--color-text-secondary)]">Blueprint Coverage</p>
-                <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
-                  {(Object.values(blueprintCoverage) as number[]).reduce((sum, val) => sum + val, 0).toFixed(1)}%
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Weighted across all organ systems
-            </p>
-          </div>
-        </div>
-
-        {/* Progress Projection Chart */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
-          <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-6">
-            Progress Projection
-          </h2>
-          <ProgressProjectionChart planId={plan.id} />
-        </div>
-
-        {/* Sessions List */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Study Sessions</h2>
-            <span className="text-sm text-[var(--color-text-secondary)]">
-              {totalSessions} sessions • {Math.round(totalMinutes / 60)} total hours
+      <WorkspaceReveal delay={0.2}>
+        <WorkspaceSection
+          title="Session map"
+          subtitle="A day-by-day view of the work this plan is actually asking you to do."
+          action={
+            <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              {totalSessions} sessions
             </span>
-          </div>
+          }
+        >
           <div className="space-y-4">
-            {sortedSessions.map((session, idx) => (
-              <div
+            {sortedSessions.map((session, index) => (
+              <motion.div
                 key={session.id}
-                className="p-4 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold">
-                      <span className="text-xs">Day</span>
-                      <span>{idx + 1}</span>
+                <WorkspaceSurface accent={index % 2 === 0 ? '#c4b78a' : '#728ba6'}>
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-[var(--color-text-primary)]">
+                        <span className="text-[0.65rem] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                          Day
+                        </span>
+                        <span className="text-sm font-semibold">{index + 1}</span>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold tracking-[-0.02em] text-[var(--color-text-primary)]">
+                          {session.date.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </h3>
+                        <p className="text-sm text-[var(--color-text-secondary)]">
+                          {session.topics.length} topic block{session.topics.length === 1 ? '' : 's'} •{' '}
+                          {session.topics.reduce((sum, topic) => sum + topic.estimatedMinutes, 0)} minutes
+                        </p>
+                        {session.notes ? (
+                          <p className="text-sm italic text-[var(--color-text-muted)]">
+                            {session.notes}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)]">
-                        {session.date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-secondary)]">
-                        {session.topics.length} topics • {session.topics.reduce((sum, t) => sum + t.estimatedMinutes, 0)} min
-                      </p>
-                    </div>
+
+                    <ChevronRight className="hidden h-5 w-5 text-[var(--color-text-muted)] lg:block" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
-                </div>
-                {session.notes && (
-                  <p className="mt-3 text-sm text-[var(--color-text-secondary)] italic">{session.notes}</p>
-                )}
-              </div>
+
+                  <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {session.topics.map((topic, topicIndex) => (
+                      <div
+                        key={`${session.id}-${topic.taxonomyCode}-${topicIndex}`}
+                        className="rounded-[1.05rem] border border-white/8 bg-white/4 p-4"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                            {topic.taxonomyCode}
+                          </p>
+                          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                            {topic.recommendedAction}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                          {topic.subcategory || 'General focus area'}
+                        </p>
+                        <div className="mt-3 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                          <span>{topic.estimatedMinutes} min</span>
+                          <span>Urgency {topic.urgencyScore.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </WorkspaceSurface>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </WorkspaceSection>
+      </WorkspaceReveal>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={handleAcceptPlan}
-            disabled={isAccepting}
-            className="px-6 py-3 bg-[var(--color-success)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      {rationale ? (
+        <WorkspaceReveal delay={0.24}>
+          <WorkspaceSection
+            title="Why this plan was chosen"
+            subtitle="A plain-language explanation of the optimizer’s current recommendation."
           >
-            <Check className={`w-5 h-5 ${isAccepting ? 'animate-spin' : ''}`} />
-            {isAccepting ? 'Accepting...' : 'Accept Plan'}
-          </button>
-          <button
-            onClick={() => setShowAlternativesModal(true)}
-            className="px-6 py-3 bg-[var(--color-bg-card)] text-[var(--color-text-primary)] rounded-xl font-semibold hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex items-center justify-center gap-2"
-            disabled={alternatives.length === 0}
-          >
-            <Target className="w-5 h-5" />
-            View Alternatives ({alternatives.length})
-          </button>
-          <button
-            onClick={handleRegeneratePlan}
-            disabled={isRegenerating}
-            className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:opacity-90 flex items-center justify-center gap-2"
-          >
-            <RefreshCw className={`w-5 h-5 ${isRegenerating ? 'animate-spin' : ''}`} />
-            {isRegenerating ? 'Regenerating...' : 'Regenerate Plan'}
-          </button>
-        </div>
+            <WorkspaceSurface accent="#9a7f9a">
+              <p className="whitespace-pre-line text-sm leading-7 text-[var(--color-text-secondary)]">
+                {rationale}
+              </p>
+            </WorkspaceSurface>
+          </WorkspaceSection>
+        </WorkspaceReveal>
+      ) : null}
 
-        {/* Rationale */}
-        {rationale && (
-          <div className="bg-[var(--color-bg-card)] rounded-xl p-6" style={{ boxShadow: CARD_RING_SHADOW }}>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
-              Plan Rationale
-            </h3>
-            <p className="text-[var(--color-text-secondary)] whitespace-pre-line">{rationale}</p>
+      <WorkspaceReveal delay={0.28}>
+        <WorkspaceSurface accent="#728ba6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Decision check
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                Accept when the workload feels sustainable. If it feels too heavy or oddly focused,
+                compare alternatives before committing the week.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={alternatives.length === 0}
+                onClick={() => setShowAlternativesModal(true)}
+              >
+                View alternatives
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAcceptPlan}
+                disabled={isAccepting}
+                icon={Check}
+              >
+                {isAccepting ? 'Accepting...' : 'Accept plan'}
+              </Button>
+            </div>
           </div>
-        )}
-      </div>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
 
-      {/* Alternatives Modal */}
       <PlanAlternativesModal
         isOpen={showAlternativesModal}
         onClose={() => setShowAlternativesModal(false)}
         alternatives={alternatives}
         currentPlan={plan}
       />
-    </div>
+    </WorkspacePage>
   );
 };
 

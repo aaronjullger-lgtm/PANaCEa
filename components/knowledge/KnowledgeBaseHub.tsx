@@ -1,25 +1,37 @@
 /**
- * Knowledge Base Hub - "The What"
+ * Knowledge Base Hub - premium workspace wrapper for PANaCEa reference tools.
  *
- * Consolidated medical reference: Condition Library, Pharmacopeia, Lab Reference.
- * Separates static knowledge from clinical utilities (calculators, generators).
- *
- * Architecture: 3-tab hub with persistent sidebar navigation (desktop) and mobile menu.
+ * Keeps the underlying clinical reference views intact while aligning this
+ * surface with the shared authenticated workspace design language.
  */
 
-import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { springs } from '@/config/appViews';
-import { BookOpen, Pill, Beaker, Library, Menu, X } from 'lucide-react';
-import { BackLink } from '@/components/navigation/BackLink';
-import { ROUTES } from '@/config/routes';
-import { NavRailProvider } from '@/contexts/NavRailContext';
-import { ContextNavRail } from '@/components/layout/ContextNavRail';
-import { PharmacopeiaView } from './PharmacopeiaView';
+import {
+  Beaker,
+  BookOpen,
+  Library,
+  Pill,
+  Sparkles,
+  Stethoscope,
+  type LucideIcon,
+} from 'lucide-react';
 import { LabReferenceView } from './LabReferenceView';
 import { NormalLabsLibraryView } from './NormalLabsLibraryView';
+import { PharmacopeiaView } from './PharmacopeiaView';
 import ReferenceHub from '@/components/library/ReferenceHub';
+import {
+  WorkspaceFilterBar,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 
 // Lazy-load ClinicalReferenceLibrary to break circular chunk initialization (TDZ crash)
 const ClinicalReferenceLibrary = lazy(() =>
@@ -33,12 +45,14 @@ interface KnowledgeBaseHubProps {
 }
 
 type TabId = 'conditions' | 'pharmacopeia' | 'labs' | 'reference';
+type LabSubTab = 'tests' | 'normal-ranges';
 
 interface NavTab {
   id: TabId;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   description: string;
+  usage: string;
 }
 
 const NAV_TABS: NavTab[] = [
@@ -46,85 +60,131 @@ const NAV_TABS: NavTab[] = [
     id: 'conditions',
     label: 'Condition Library',
     icon: BookOpen,
-    description: 'Diseases and conditions organized by organ system',
+    description: 'Diseases and conditions organized by organ system.',
+    usage: 'Best when you need differential structure, illness scripts, or targeted review.',
   },
   {
     id: 'pharmacopeia',
     label: 'Pharmacopeia',
     icon: Pill,
-    description: 'Drug reference with mechanisms, indications, and interactions',
+    description: 'Drug reference with mechanisms, indications, and interactions.',
+    usage: 'Use this lane to anchor therapeutics, class effects, and medication recall.',
   },
   {
     id: 'labs',
     label: 'Lab Reference',
     icon: Beaker,
-    description: 'Normal values, clinical differentials, and interpretation',
+    description: 'Normal values, clinical differentials, and interpretation support.',
+    usage: 'Reach here when a lab question needs range context or pattern recognition.',
   },
   {
     id: 'reference',
     label: 'Reference Library',
     icon: Library,
-    description: 'Procedures, imaging, ECG, anatomy, special tests, and more',
+    description: 'Procedures, imaging, ECG, anatomy, special tests, and more.',
+    usage: 'Use the broader library for modalities, maneuvers, and clinical frameworks.',
   },
 ];
 
-interface SidebarNavButtonProps {
-  tab: NavTab;
-  isActive: boolean;
-  onClick: () => void;
-  variant: 'desktop' | 'mobile';
-}
+const TAB_ACCENTS: Record<TabId, string> = {
+  conditions: '#728ba6',
+  pharmacopeia: '#c4b78a',
+  labs: '#7a8f6e',
+  reference: '#9a7f9a',
+};
 
-const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onClick, variant }) => {
+const LAB_SUB_TABS: Array<{
+  id: LabSubTab;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: 'tests',
+    label: 'Lab Tests',
+    description: 'Clinical differentials and board-yield interpretation.',
+  },
+  {
+    id: 'normal-ranges',
+    label: 'Normal Ranges',
+    description: 'Reference intervals and quick range lookup.',
+  },
+];
+
+const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs', 'reference'];
+const VALID_LAB_SUB: LabSubTab[] = ['tests', 'normal-ranges'];
+
+function KnowledgeTabButton({
+  tab,
+  active,
+  onClick,
+}: {
+  tab: NavTab;
+  active: boolean;
+  onClick: () => void;
+}) {
   const Icon = tab.icon;
+  const accent = TAB_ACCENTS[tab.id];
+
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
-        variant === 'mobile' ? 'text-base' : 'text-sm'
-      }`}
+      className="min-w-[13rem] rounded-[1.2rem] border px-4 py-3 text-left transition-all duration-300"
       style={{
-        background: isActive ? 'rgba(196, 183, 138, 0.08)' : 'transparent',
-        border: isActive ? '1px solid rgba(196, 183, 138, 0.15)' : '1px solid transparent',
-        color: isActive ? '#c4b78a' : '#94a3b8',
-        boxShadow: isActive ? '0 0 12px rgba(196, 183, 138, 0.08), inset 0 1px 0 rgba(255,255,255,0.04)' : 'none',
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-          e.currentTarget.style.color = '#f1f5f9';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = '#94a3b8';
-        }
+        background: active
+          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 18%, transparent), rgba(255,255,255,0.04))`
+          : 'rgba(255,255,255,0.03)',
+        borderColor: active ? `color-mix(in srgb, ${accent} 60%, white)` : 'rgba(255,255,255,0.08)',
+        boxShadow: active ? `0 20px 40px -30px ${accent}` : 'none',
       }}
     >
-      <Icon
-        className="w-5 h-5 flex-shrink-0"
-        style={{ color: isActive ? '#c4b78a' : undefined }}
-      />
-      <div className="flex-1 min-w-0">
-        <div className={`font-medium truncate ${isActive ? 'font-semibold' : ''}`}>{tab.label}</div>
-        {variant === 'mobile' && (
-          <div className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
-            {tab.description}
+      <div className="flex items-start gap-3">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
+          style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+        >
+          <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <div
+            className="text-sm font-semibold tracking-[-0.02em]"
+            style={{ color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
+          >
+            {tab.label}
           </div>
-        )}
+          <p className="text-xs leading-5 text-[var(--color-text-muted)]">{tab.description}</p>
+        </div>
       </div>
     </button>
   );
-};
+}
 
-const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs', 'reference'];
+function LabSubButton({
+  tab,
+  active,
+  onClick,
+}: {
+  tab: (typeof LAB_SUB_TABS)[number];
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-full border px-3.5 py-2 text-sm font-medium transition-all duration-300"
+      style={{
+        background: active ? 'rgba(122, 143, 110, 0.16)' : 'rgba(255,255,255,0.03)',
+        borderColor: active ? 'rgba(122, 143, 110, 0.36)' : 'rgba(255,255,255,0.08)',
+        color: active ? '#bfd0b2' : 'var(--color-text-secondary)',
+      }}
+    >
+      {tab.label}
+    </button>
+  );
+}
 
-type LabSubTab = 'tests' | 'normal-ranges';
-
-const VALID_LAB_SUB: LabSubTab[] = ['tests', 'normal-ranges'];
-
-const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
+export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const labSubFromUrl = searchParams.get('labSub') as LabSubTab | null;
@@ -136,7 +196,6 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       ? labSubFromUrl
       : 'tests'
   );
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (tabFromUrl && VALID_TAB_IDS.includes(tabFromUrl)) {
@@ -150,278 +209,325 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
     }
   }, [activeTab, labSubFromUrl]);
 
-  const handleTabChange = useCallback((tabId: TabId) => {
-    setActiveTab(tabId);
-    setSidebarOpen(false);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (tabId === 'conditions') {
-        next.delete('tab');
-      } else {
-        next.set('tab', tabId);
-      }
-      // Clear lab sub-tab when switching away from labs
-      if (tabId !== 'labs') {
-        next.delete('labSub');
-      }
-      return next;
-    }, { replace: true });
-  }, [setSearchParams]);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
-  const handleLabSubTabChange = useCallback(
-    (sub: LabSubTab) => {
-      setLabSubTab(sub);
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (sub === 'tests') {
-          next.delete('labSub');
-        } else {
-          next.set('labSub', sub);
-        }
-        return next;
-      }, { replace: true });
+  const handleTabChange = useCallback(
+    (tabId: TabId) => {
+      setActiveTab(tabId);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (tabId === 'conditions') {
+            next.delete('tab');
+          } else {
+            next.set('tab', tabId);
+          }
+          if (tabId !== 'labs') {
+            next.delete('labSub');
+          }
+          return next;
+        },
+        { replace: true }
+      );
     },
     [setSearchParams]
   );
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (sidebarOpen) {
-          setSidebarOpen(false);
-        } else {
-          onClose();
-        }
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [sidebarOpen, onClose]);
+  const handleLabSubTabChange = useCallback(
+    (sub: LabSubTab) => {
+      setLabSubTab(sub);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (sub === 'tests') {
+            next.delete('labSub');
+          } else {
+            next.set('labSub', sub);
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
-  const currentTab = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0]!;
+  const currentTab = NAV_TABS.find((tab) => tab.id === activeTab) ?? NAV_TABS[0];
+  const currentAccent = TAB_ACCENTS[activeTab];
+  const quickSwitchTabs = NAV_TABS.filter((tab) => tab.id !== activeTab).slice(0, 2);
 
   return (
-    <div
-      className="min-h-screen flex min-w-0 flex-1 overflow-hidden"
-      style={{
-        background: 'linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(15,23,42,0.5) 50%, rgba(10,14,26,1) 100%)',
-      }}
-    >
-      {/* Desktop Sidebar — dark cinematic glassmorphism */}
-      <div
-        className="hidden lg:block w-64 flex-shrink-0 overflow-y-auto overflow-x-hidden"
-        style={{
-          background: 'rgba(10, 14, 26, 0.85)',
-          backdropFilter: 'blur(20px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-        }}
-      >
-          <div
-            className="p-4"
-            style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}
-          >
-            <BackLink to={ROUTES.STUDY} className="mb-4 w-full justify-start" />
-            <h2
-              className="text-lg font-bold"
-              style={{
-                background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Knowledge Base
-            </h2>
-            <p className="text-xs mt-1" style={{ color: '#64748b' }}>Medical Reference</p>
-          </div>
-
-          <nav className="p-2 space-y-1">
-            {NAV_TABS.map((tab) => (
-              <SidebarNavButton
-                key={tab.id}
-                tab={tab}
-                isActive={activeTab === tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                variant="desktop"
-              />
-            ))}
-          </nav>
-      </div>
-
-      {/* Mobile Sidebar Toggle — glass button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2.5 rounded-xl shadow-lg transition-all duration-200"
-          style={{
-            background: 'rgba(10, 14, 26, 0.9)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            color: '#94a3b8',
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Reference Workspace',
+            badgeTone: 'steel',
+            title: 'Keep the right clinical context on deck.',
+            subtitle:
+              'This workspace brings conditions, therapeutics, lab interpretation, and procedural reference into one calmer daily-study flow.',
+            status: currentTab.label,
+            backLabel: 'Back to Study',
+            onBack: onClose,
+            primaryAction: quickSwitchTabs[0]
+              ? {
+                  label: `Open ${quickSwitchTabs[0].label}`,
+                  onClick: () => handleTabChange(quickSwitchTabs[0].id),
+                }
+              : undefined,
+            secondaryActions: quickSwitchTabs[1]
+              ? [
+                  {
+                    label: quickSwitchTabs[1].label,
+                    onClick: () => handleTabChange(quickSwitchTabs[1].id),
+                  },
+                ]
+              : undefined,
           }}
-          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
+        />
+      </WorkspaceReveal>
 
-      {/* Mobile Sidebar Backdrop */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={false}
-            animate={{}}
-            exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-[var(--color-overlay)] z-40"
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Reference lanes"
+            value={NAV_TABS.length}
+            detail="Conditions, drug reference, labs, and broad clinical reference in one place."
+            icon={Library}
           />
-        )}
-      </AnimatePresence>
+          <WorkspaceMetricCard
+            label="Active lane"
+            value={currentTab.label}
+            detail={currentTab.usage}
+            accent={currentAccent}
+            icon={currentTab.icon}
+          />
+          <WorkspaceMetricCard
+            label="Lab modes"
+            value={LAB_SUB_TABS.length}
+            detail="Switch between interpretation-focused lab study and pure range lookup."
+            accent="#7a8f6e"
+            icon={Beaker}
+          />
+          <WorkspaceMetricCard
+            label="Study posture"
+            value="Reference-first"
+            detail="Built for context, comparison, and decision support before another blind question set."
+            accent="#b39b6c"
+            icon={Sparkles}
+          />
+        </div>
+      </WorkspaceReveal>
 
-      {/* Mobile Sidebar Panel */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            exit={{ x: -300 }}
-            transition={springs.snappy}
-            className="lg:hidden fixed left-0 top-0 bottom-0 w-64 z-50 overflow-y-auto"
-            style={{
-              background: 'rgba(10, 14, 26, 0.95)',
-              backdropFilter: 'blur(24px) saturate(160%)',
-              borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-              boxShadow: '4px 0 24px rgba(0, 0, 0, 0.4)',
-            }}
-          >
-            <div className="p-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-              <BackLink to={ROUTES.STUDY} className="mb-4" />
-              <h2
-                className="text-lg font-bold"
-                style={{
-                  background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Knowledge Base
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Reference strategy
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Use the knowledge base to tighten pattern recognition, not just to look something up.
               </h2>
-              <p className="text-xs mt-1" style={{ color: '#64748b' }}>Medical Reference</p>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                Move between disease review, medication anchors, lab interpretation, and broader
+                reference patterns without leaving the same study surface. The goal is faster
+                clinical recall with less context switching.
+              </p>
             </div>
-            <nav className="p-2">
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {NAV_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const accent = TAB_ACCENTS[tab.id];
+                return (
+                  <div
+                    key={tab.id}
+                    className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
+                        style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+                      >
+                        <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          {tab.label}
+                        </p>
+                        <p className="text-xs leading-5 text-[var(--color-text-muted)]">
+                          {tab.usage}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceFilterBar>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+                  Lane selector
+                </p>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Choose the reference lane that matches your current study question. The URL stays
+                  synced so deeper library views remain linkable.
+                </p>
+              </div>
+              <div className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]">
+                {currentTab.label}
+              </div>
+            </div>
+
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
               {NAV_TABS.map((tab) => (
-                <SidebarNavButton
+                <KnowledgeTabButton
                   key={tab.id}
                   tab={tab}
-                  isActive={activeTab === tab.id}
+                  active={activeTab === tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  variant="mobile"
                 />
               ))}
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
 
-      {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden relative">
-        <div className="p-6 max-w-7xl mx-auto">
-          <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
-            <h1
-              className="text-3xl font-bold mb-2"
-              style={{
-                background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              {currentTab.label}
-            </h1>
-            <p className="text-[var(--color-text-muted)] mb-6">{currentTab.description}</p>
-          </motion.div>
+            {activeTab === 'labs' ? (
+              <div className="flex flex-wrap gap-2">
+                {LAB_SUB_TABS.map((tab) => (
+                  <LabSubButton
+                    key={tab.id}
+                    tab={tab}
+                    active={labSubTab === tab.id}
+                    onClick={() => handleLabSubTabChange(tab.id)}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </WorkspaceFilterBar>
+      </WorkspaceReveal>
 
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSection
+          title={currentTab.label}
+          subtitle={
+            activeTab === 'labs'
+              ? `${currentTab.description} ${LAB_SUB_TABS.find((tab) => tab.id === labSubTab)?.description ?? ''}`
+              : currentTab.description
+          }
+          action={
+            activeTab === 'labs' ? (
+              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+                {LAB_SUB_TABS.find((tab) => tab.id === labSubTab)?.label}
+              </span>
+            ) : (
+              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+                Ready for deep review
+              </span>
+            )
+          }
+        >
           <AnimatePresence mode="wait">
-            {activeTab === 'conditions' && (
+            {activeTab === 'conditions' ? (
               <motion.div
                 key="conditions"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Suspense fallback={<div className="flex items-center justify-center p-12"><div className="text-[var(--color-text-muted)]">Loading clinical library…</div></div>}>
+                <Suspense
+                  fallback={
+                    <WorkspaceSurface accent={currentAccent}>
+                      <div className="flex items-center justify-center py-14 text-sm text-[var(--color-text-muted)]">
+                        Loading clinical library...
+                      </div>
+                    </WorkspaceSurface>
+                  }
+                >
                   <ClinicalReferenceLibrary onExit={onClose} />
                 </Suspense>
               </motion.div>
-            )}
+            ) : null}
 
-            {activeTab === 'pharmacopeia' && (
+            {activeTab === 'pharmacopeia' ? (
               <motion.div
                 key="pharmacopeia"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <PharmacopeiaView />
+                <WorkspaceSurface accent={currentAccent}>
+                  <PharmacopeiaView />
+                </WorkspaceSurface>
               </motion.div>
-            )}
+            ) : null}
 
-            {activeTab === 'labs' && (
+            {activeTab === 'labs' ? (
               <motion.div
-                key="labs"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
+                key={`labs-${labSubTab}`}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="flex gap-2 border-b border-[var(--color-border)] pb-4">
-                  <button
-                    onClick={() => handleLabSubTabChange('tests')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      labSubTab === 'tests'
-                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    Lab Tests
-                  </button>
-                  <button
-                    onClick={() => handleLabSubTabChange('normal-ranges')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      labSubTab === 'normal-ranges'
-                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    Normal Ranges
-                  </button>
-                </div>
-                {labSubTab === 'tests' ? <LabReferenceView /> : <NormalLabsLibraryView />}
+                <WorkspaceSurface accent={currentAccent}>
+                  {labSubTab === 'tests' ? <LabReferenceView /> : <NormalLabsLibraryView />}
+                </WorkspaceSurface>
               </motion.div>
-            )}
+            ) : null}
 
-            {activeTab === 'reference' && (
+            {activeTab === 'reference' ? (
               <motion.div
                 key="reference"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               >
                 <ReferenceHub />
               </motion.div>
-            )}
+            ) : null}
           </AnimatePresence>
-        </div>
-      </div>
-      <ContextNavRail />
-    </div>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.2}>
+        <WorkspaceSurface accent="#728ba6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                Daily use
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                Keep this page open during question review, missed-question analysis, and pre-block
+                warmups so reference work feels like part of the workflow instead of a detour.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleTabChange('conditions')}
+              className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-white/8 bg-white/6 px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-all duration-300 hover:border-[var(--color-accent)]/30 hover:bg-white/8"
+            >
+              Reset to Condition Library
+            </button>
+          </div>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
-
-export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = (props) => (
-  <NavRailProvider>
-    <KnowledgeBaseHubInternal {...props} />
-  </NavRailProvider>
-);

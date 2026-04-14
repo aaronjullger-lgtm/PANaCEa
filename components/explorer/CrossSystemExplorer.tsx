@@ -11,6 +11,7 @@ import { GraphSearchBar } from './GraphSearchBar';
 import { GraphFilter } from '@/lib/types/graph';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { createDebouncedFunction } from '@/lib/utils/debounce';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const DEFAULT_FILTER: GraphFilter = {
@@ -23,9 +24,13 @@ const DEFAULT_FILTER: GraphFilter = {
 
 interface CrossSystemExplorerProps {
   onClose?: () => void;
+  embedded?: boolean;
 }
 
-export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClose }) => {
+export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({
+  onClose,
+  embedded = false,
+}) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [filter, setFilter] = useState<GraphFilter>(DEFAULT_FILTER);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -118,7 +123,14 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
   }, []);
 
   return (
-    <div className="flex h-screen bg-[var(--color-bg-primary)] overflow-hidden">
+    <div
+      className={cn(
+        'flex overflow-hidden bg-[var(--color-bg-primary)]',
+        embedded
+          ? 'h-full rounded-[1.5rem] border border-[var(--color-border)]'
+          : 'h-screen'
+      )}
+    >
       {/* Left Sidebar – Filters */}
       <FilterSidebar
         filter={filter}

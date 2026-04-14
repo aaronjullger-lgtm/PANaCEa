@@ -1,17 +1,22 @@
 /**
- * SimulationPage - Core PANCE Simulation Dedicated Page
- *
- * Displays the adaptive quiz engine with focus options (All Topics / Growth Areas / Flagged)
- * Replaces the modal flow with a dedicated route at /simulation/core-pance
- * For Didactic users, passes enabled systems so Core PANCE only serves questions from current curriculum.
+ * SimulationPage - Core PANCE / PANRE simulation workspace.
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Brain, Target, Flag, TrendingUp, Zap, Clock, Award } from 'lucide-react';
-import type { SessionSettings, PerformanceRecord, Question, SystemCode } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Award, Brain, Clock, Flag, Target, TrendingUp } from 'lucide-react';
+import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '../types';
 import { useUserContext } from '../hooks/useUserContext';
-import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSurface,
+} from '@/components/workspace';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/config/topic-map';
 
 interface SimulationPageProps {
   onStartSession: (settings: SessionSettings) => void | Promise<void>;
@@ -25,9 +30,44 @@ interface SimulationPageProps {
 
 type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
 
+const FOCUS_STYLES: Record<
+  FocusOption,
+  {
+    accent: string;
+    label: string;
+    subtitle: string;
+    icon: React.ElementType;
+  }
+> = {
+  all: {
+    accent: '#728ba6',
+    label: 'All Topics',
+    subtitle: 'Strict blueprint-weighted mix',
+    icon: Brain,
+  },
+  growth: {
+    accent: '#b39b6c',
+    label: 'Growth Areas',
+    subtitle: 'Target weaker systems',
+    icon: TrendingUp,
+  },
+  flagged: {
+    accent: '#a67f7f',
+    label: 'Flagged',
+    subtitle: 'Return to marked questions',
+    icon: Flag,
+  },
+  due: {
+    accent: '#7a8f6e',
+    label: 'Due for Review',
+    subtitle: 'Spaced repetition maintenance',
+    icon: Clock,
+  },
+};
+
 export const SimulationPage: React.FC<SimulationPageProps> = ({
   onStartSession,
-  onBack: _onBack,
+  onBack,
   performanceData,
   flaggedQuestions,
   growthAreas,
@@ -55,19 +95,18 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         /* ignore */
       }
     };
+
     globalThis.addEventListener('panceai_enabled_systems_changed', handler);
     return () => globalThis.removeEventListener('panceai_enabled_systems_changed', handler);
   }, []);
 
-  // Calculate real stats from performance data
   const stats = useMemo(() => {
     const recent = performanceData.slice(-100);
-    const correct = recent.filter((r) => r.isCorrect).length;
+    const correct = recent.filter((record) => record.isCorrect).length;
     const accuracy = recent.length > 0 ? Math.round((correct / recent.length) * 100) : 0;
-
     const today = new Date().toDateString();
     const todayQuestions = performanceData.filter(
-      (r) => new Date(r.timestamp).toDateString() === today
+      (record) => new Date(record.timestamp).toDateString() === today
     ).length;
 
     return {
@@ -77,7 +116,68 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       flaggedCount: flaggedQuestions.length,
       growthAreasCount: growthAreas.length,
     };
-  }, [performanceData, flaggedQuestions, growthAreas]);
+  }, [flaggedQuestions, growthAreas, performanceData]);
+
+  const focusOptions = useMemo<
+    Array<{
+      id: FocusOption;
+      label: string;
+      subtitle: string;
+      icon: React.ElementType;
+      accent: string;
+      stat?: number;
+    }>
+  >(
+    () => [
+      {
+        id: 'all',
+        label: 'All Topics',
+        subtitle: 'Strict NCCPA blueprint weighting',
+        icon: Brain,
+        accent: '#728ba6',
+        stat: stats.totalQuestions,
+      },
+      {
+        id: 'growth',
+        label: 'Growth Areas',
+        subtitle: 'Target your weakest systems',
+        icon: TrendingUp,
+        accent: '#b39b6c',
+        stat: stats.growthAreasCount,
+      },
+      {
+        id: 'flagged',
+        label: 'Flagged',
+        subtitle: 'Questions you marked for later',
+        icon: Flag,
+        accent: '#a67f7f',
+        stat: stats.flaggedCount,
+      },
+      {
+        id: 'due',
+        label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review',
+        subtitle: 'Spaced repetition reviews',
+        icon: Clock,
+        accent: '#7a8f6e',
+      },
+    ],
+    [examLabel, stats.flaggedCount, stats.growthAreasCount, stats.totalQuestions]
+  );
+
+  const getFocusDescription = () => {
+    switch (selectedFocus) {
+      case 'all':
+        return 'Strict NCCPA blueprint weighting. No weak-area bias, just exam-representative distribution.';
+      case 'growth':
+        return `Target your ${stats.growthAreasCount} weakest areas when you want the biggest return on a shorter session.`;
+      case 'flagged':
+        return `Return to ${stats.flaggedCount} questions you intentionally marked for a second pass.`;
+      case 'due':
+        return 'Use spaced-repetition due items when you want maintenance without losing retention momentum.';
+      default:
+        return '';
+    }
+  };
 
   const handleStart = () => {
     let focus: SessionSettings['focus'];
@@ -100,275 +200,219 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       careerStage === 'student' && enabledSystems.size > 0 && enabledSystems.size < allSystems;
 
     const settings: SessionSettings = { focus };
-    // Core PANCE Simulation "All Topics": strict NCCPA blueprint, no adaptive/weak-area bias
     if (selectedFocus === 'all') {
       settings.simulationStrict = true;
     }
     if (isDidacticWithCurriculum) {
       settings.systems = Array.from(enabledSystems);
     }
-    onStartSession(settings);
+
+    void onStartSession(settings);
   };
 
-  const getFocusDescription = () => {
-    switch (selectedFocus) {
-      case 'all':
-        return 'Strict NCCPA blueprint weighting. No weak-area bias — exam-representative mix only.';
-      case 'growth':
-        return `Target your ${stats.growthAreasCount} weakest areas for maximum improvement`;
-      case 'flagged':
-        return `Review ${stats.flaggedCount} questions you've marked for later`;
-      case 'due':
-        return 'Focus on questions due for spaced repetition review';
-      default:
-        return '';
-    }
-  };
-
-  const focusOptions: Array<{
-    id: FocusOption;
-    label: string;
-    subtitle: string;
-    icon: React.ElementType;
-    color: string;
-    stat?: number;
-  }> = [
-    { id: 'all', label: 'All Topics', subtitle: 'Strict NCCPA blueprint weighting', icon: Brain, color: 'blue', stat: stats.totalQuestions },
-    {
-      id: 'growth',
-      label: 'Growth Areas',
-      subtitle: 'Target your weakest systems',
-      icon: TrendingUp,
-      color: 'amber',
-      stat: stats.growthAreasCount,
-    },
-    { id: 'flagged', label: 'Flagged', subtitle: 'Questions you marked for later', icon: Flag, color: 'purple', stat: stats.flaggedCount },
-    {
-      id: 'due',
-      label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review',
-      subtitle: 'Spaced repetition reviews',
-      icon: Clock,
-      color: 'emerald',
-    },
-  ];
-
-  const getFocusTone = (tone: string) => {
-    switch (tone) {
-      case 'amber':
-        return {
-          border: 'border-[var(--color-data-provisional)]',
-          bg: 'bg-[var(--color-data-provisional)]/10',
-          badge: 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]',
-          icon: 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]',
-          check: 'bg-[var(--color-data-provisional)]',
-        };
-      case 'emerald':
-        return {
-          border: 'border-[var(--color-data-pass)]',
-          bg: 'bg-[var(--color-data-pass)]/10',
-          badge: 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)]',
-          icon: 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)]',
-          check: 'bg-[var(--color-data-pass)]',
-        };
-      case 'purple':
-        return {
-          border: 'border-[var(--color-data-fail)]',
-          bg: 'bg-[var(--color-data-fail)]/10',
-          badge: 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)]',
-          icon: 'bg-[var(--color-data-fail)] text-[var(--color-text-inverse)]',
-          check: 'bg-[var(--color-data-fail)]',
-        };
-      default:
-        return {
-          border: 'border-[var(--color-accent)]',
-          bg: 'bg-[var(--color-accent)]/10',
-          badge: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]',
-          icon: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]',
-          check: 'bg-[var(--color-accent)]',
-        };
-    }
-  };
+  const selectedFocusMeta = FOCUS_STYLES[selectedFocus];
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
-      <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 border border-[var(--color-accent)]/30">
-              <Brain className="w-10 h-10 text-[var(--color-accent)]" />
-            </div>
-            <div>
-              <h1 className="text-display-sm font-bold text-[var(--color-text-primary)]" style={{ letterSpacing: '-0.025em' }}>
-                {examLabel === 'PANRE' ? 'Knowledge Maintenance' : `Core ${examLabel} Simulation`}
-              </h1>
-              <p className="text-[var(--color-text-muted)] mt-1">
-                {examLabel === 'PANRE'
-                  ? 'PANRE-LA check-in — maintain your certification knowledge'
-                  : 'Strict blueprint-weighted exam simulation. No adaptive bias.'}
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: examLabel === 'PANRE' ? 'Maintenance Mode' : 'Exam Simulation',
+            badgeTone: examLabel === 'PANRE' ? 'sage' : 'steel',
+            title:
+              examLabel === 'PANRE'
+                ? 'Run focused maintenance sessions without losing exam-day discipline.'
+                : `Run a high-fidelity ${examLabel} simulation without leaving the workspace.`,
+            subtitle:
+              examLabel === 'PANRE'
+                ? 'Use this surface for PANRE-LA check-ins, due-item maintenance, and blueprint-respecting refresh work.'
+                : 'Choose how strict or targeted the session should be, then launch directly into a blueprint-weighted simulation flow.',
+            backLabel: 'Back to Study',
+            onBack,
+            primaryAction: {
+              label: examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`,
+              onClick: handleStart,
+              icon: Award,
+            },
+            status: `Current focus: ${selectedFocusMeta.label}`,
+          }}
+        />
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Recent Accuracy"
+            value={`${stats.accuracy}%`}
+            detail="Based on the latest 100 question outcomes."
+            icon={Target}
+          />
+          <WorkspaceMetricCard
+            label="Questions Today"
+            value={stats.todayQuestions}
+            detail="Tracks how much exam-style work you have already done today."
+            accent="#728ba6"
+            icon={Brain}
+          />
+          <WorkspaceMetricCard
+            label="Growth Areas"
+            value={stats.growthAreasCount}
+            detail="Weak systems or categories worth targeting when time is limited."
+            accent="#b39b6c"
+            icon={TrendingUp}
+          />
+          <WorkspaceMetricCard
+            label="Flagged Questions"
+            value={stats.flaggedCount}
+            detail="Marked items ready for a deliberate second pass."
+            accent="#a67f7f"
+            icon={Flag}
+          />
+        </div>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Simulation focus
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Start from the right kind of pressure: strict exam realism when you want signal,
+                targeted focus when you need recovery.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                {getFocusDescription()}
               </p>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Stats Bar */}
-        <motion.div
-          initial={{ y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                When to use each focus
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
+                <li>Choose `All Topics` for the most exam-representative signal.</li>
+                <li>Choose `Growth Areas` when you need targeted recovery before testing again.</li>
+                <li>Choose `Flagged` or `Due` for deliberate review without rebuilding a custom mode.</li>
+              </ul>
+            </div>
+          </div>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Choose your simulation focus"
+          subtitle="Each mode changes how the session is assembled, so pick the one that matches the learning job you need done."
         >
-          <div className="card-stat p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-[var(--color-data-pass)]" />
-              <span className="text-label text-[var(--color-text-muted)]">Accuracy</span>
-            </div>
-            <div className="kpi-metric text-[var(--color-text-primary)]">
-              {stats.accuracy}%
-            </div>
-          </div>
-
-          <div className="card-stat p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="w-4 h-4 text-[var(--color-accent)]" />
-              <span className="text-label text-[var(--color-text-muted)]">Today</span>
-            </div>
-            <div className="kpi-metric text-[var(--color-text-primary)]">
-              {stats.todayQuestions}
-            </div>
-          </div>
-
-          <div className="card-stat p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-[var(--color-data-provisional)]" />
-              <span className="text-label text-[var(--color-text-muted)]">Growth Areas</span>
-            </div>
-            <div className="kpi-metric text-[var(--color-text-primary)]">
-              {stats.growthAreasCount}
-            </div>
-          </div>
-
-          <div className="card-stat p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Flag className="w-4 h-4 text-[var(--color-data-fail)]" />
-              <span className="text-label text-[var(--color-text-muted)]">Flagged</span>
-            </div>
-            <div className="kpi-metric text-[var(--color-text-primary)]">
-              {stats.flaggedCount}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Focus Selection */}
-        <motion.div
-          initial={{ y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 mb-6"
-        >
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
-            Choose Your Focus
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid gap-4 md:grid-cols-2">
             {focusOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = selectedFocus === option.id;
-              const tone = getFocusTone(option.color);
 
               return (
                 <button
-                  type="button"
                   key={option.id}
+                  type="button"
                   onClick={() => setSelectedFocus(option.id)}
                   aria-pressed={isSelected}
-                  className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:outline-none ${
-                    isSelected
-                      ? `${tone.border} ${tone.bg}`
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'
-                  }`}
+                  className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                 >
-                  <div className="flex w-full items-center gap-4">
+                  <WorkspaceSurface
+                    accent={option.accent}
+                    className="h-full transition-transform duration-300 hover:translate-y-[-2px]"
+                  >
                     <div
-                      className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isSelected
-                          ? tone.icon
-                          : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
-                      }`}
+                      className="flex h-full items-start gap-4 rounded-[1.1rem] border p-5 transition-all"
+                      style={{
+                        borderColor: isSelected
+                          ? `color-mix(in srgb, ${option.accent} 72%, white 6%)`
+                          : 'rgba(255,255,255,0.08)',
+                        background: isSelected
+                          ? `color-mix(in srgb, ${option.accent} 14%, rgba(255,255,255,0.03))`
+                          : 'rgba(255,255,255,0.02)',
+                      }}
                     >
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-semibold text-[var(--color-text-primary)]">
-                          {option.label}
-                        </span>
-                        {option.stat !== undefined && (
-                          <span
-                            className={`text-sm px-2 py-0.5 rounded-full shrink-0 ${
-                              isSelected
-                                ? tone.badge
-                                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
-                            }`}
-                          >
-                            {option.stat}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-[var(--color-text-muted)] leading-snug">
-                        {option.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <div
-                      className={`absolute top-3 right-3 w-6 h-6 rounded-full ${tone.check} flex items-center justify-center`}
-                    >
-                      <svg
-                        className="w-4 h-4 text-[var(--color-text-inverse)]"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+                      <div
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/8"
+                        style={{
+                          background: isSelected
+                            ? `color-mix(in srgb, ${option.accent} 85%, white 5%)`
+                            : 'rgba(255,255,255,0.05)',
+                          color: isSelected ? '#0b1020' : 'var(--color-text-secondary)',
+                        }}
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-semibold text-[var(--color-text-primary)]">
+                            {option.label}
+                          </span>
+                          {option.stat !== undefined ? (
+                            <span
+                              className="rounded-full border px-2.5 py-1 text-xs font-semibold"
+                              style={{
+                                borderColor: `color-mix(in srgb, ${option.accent} 42%, transparent)`,
+                                color: option.accent,
+                                background: `color-mix(in srgb, ${option.accent} 14%, transparent)`,
+                              }}
+                            >
+                              {option.stat}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                          {option.subtitle}
+                        </p>
+                      </div>
+
+                      {isSelected ? (
+                        <span
+                          className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[#0b1020]"
+                          style={{ background: option.accent }}
+                        >
+                          ✓
+                        </span>
+                      ) : null}
                     </div>
-                  )}
+                  </WorkspaceSurface>
                 </button>
               );
             })}
           </div>
+        </WorkspaceSection>
+      </WorkspaceReveal>
 
-          <div className="p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-            <p className="text-sm text-[var(--color-text-muted)]">{getFocusDescription()}</p>
+      <WorkspaceReveal delay={0.16}>
+        <WorkspaceSurface accent={selectedFocusMeta.accent} className="space-y-5">
+          <div className="space-y-2">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Ready state
+            </p>
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+              {selectedFocusMeta.label}
+            </h3>
+            <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+              {getFocusDescription()}
+            </p>
           </div>
-        </motion.div>
 
-        {/* Start Button */}
-        <motion.button
-          type="button"
-          initial={{ y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onClick={handleStart}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full py-5 px-8 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 min-h-[48px]"
-          aria-label={
-            examLabel === 'PANRE' ? 'Start maintenance session' : `Start ${examLabel} session`
-          }
-        >
-          <Award className="w-6 h-6" aria-hidden />
-          {examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`}
-        </motion.button>
-      </div>
-    </div>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleStart}
+            icon={Award}
+            className="w-full shadow-[0_24px_60px_-28px_rgba(196,183,138,0.55)] sm:w-auto"
+          >
+            {examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`}
+          </Button>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
+
+export default SimulationPage;

@@ -1,13 +1,22 @@
 /**
- * Visualizer Page - Generate anatomy image (Firefly) and segment (Gemini); overlay clickable masks.
+ * Visualizer Page - Generate anatomy visuals and overlay segmentation masks.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Loader2, ImageIcon } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ImageIcon, Layers3, Network, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import { BackLink } from '@/components/navigation/BackLink';
-import { ROUTES } from '@/config/routes';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 
 interface MaskItem {
   mask?: string;
@@ -24,11 +33,16 @@ interface GenerateResponse {
 
 export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
-  useEffect(() => { document.title = 'Visualizer | PANaCEa'; }, []);
+
+  useEffect(() => {
+    document.title = 'Visualizer | PANaCEa';
+  }, []);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse['data'] | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -36,9 +50,10 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
     setLoading(true);
     setError(null);
     setResult(null);
+
     try {
       const token = await getToken();
-      const res = await fetch('/api/visualizer/generate', {
+      const response = await fetch('/api/visualizer/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,15 +61,18 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         },
         body: JSON.stringify({}),
       });
-      const json = (await res.json()) as {
+
+      const json = (await response.json()) as {
         error?: string;
         details?: string;
         data?: { imageBase64?: string; imageMime?: string; masks?: MaskItem[] };
       };
-      if (!res.ok) {
-        setError(json.error || json.details || 'Generation failed');
+
+      if (!response.ok) {
+        setError(json.error || json.details || 'Generation failed.');
         return;
       }
+
       const raw = json.data;
       setResult(
         raw
@@ -66,7 +84,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           : null
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : 'Request failed.');
     } finally {
       setLoading(false);
     }
@@ -74,124 +92,241 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
   useEffect(() => {
     if (!result?.imageBase64 || !canvasRef.current || !imgRef.current) return;
+
     const img = imgRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    img.onload = () => {
+
+    let disposed = false;
+
+    const drawMasks = () => {
+      if (disposed) return;
+
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      result.masks.forEach((m, i) => {
-        if (!m.mask) return;
-        try {
-          const maskImg = new Image();
-          maskImg.crossOrigin = 'anonymous';
-          maskImg.src = m.mask.startsWith('data:') ? m.mask : `data:image/png;base64,${m.mask}`;
-          maskImg.onload = () => {
-            ctx.globalAlpha = 0.4;
-            ctx.drawImage(maskImg, 0, 0);
-            ctx.globalAlpha = 1;
-          };
-        } catch {
-          // ignore invalid mask
-        }
+
+      result.masks.forEach((maskItem) => {
+        if (!maskItem.mask) return;
+
+        const maskImage = new Image();
+        maskImage.crossOrigin = 'anonymous';
+        maskImage.src = maskItem.mask.startsWith('data:')
+          ? maskItem.mask
+          : `data:image/png;base64,${maskItem.mask}`;
+        maskImage.onload = () => {
+          if (disposed) return;
+          ctx.globalAlpha = 0.4;
+          ctx.drawImage(maskImage, 0, 0);
+          ctx.globalAlpha = 1;
+        };
       });
+    };
+
+    if (img.complete) {
+      drawMasks();
+    } else {
+      img.onload = drawMasks;
+    }
+
+    return () => {
+      disposed = true;
+      img.onload = null;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
   }, [result]);
 
+  const imageSrc =
+    result?.imageBase64 && result.imageBase64.startsWith('data:')
+      ? result.imageBase64
+      : result?.imageBase64
+        ? `data:${result.imageMime};base64,${result.imageBase64}`
+        : null;
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
-      <div className="max-w-4xl mx-auto">
-        <BackLink to={ROUTES.STUDY} className="mb-6" />
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Anatomy Visualizer',
+            badgeTone: 'plum',
+            title: 'Generate anatomy visuals that feel study-ready, not stock-photo generic.',
+            subtitle:
+              'Create a fresh anatomy image, then review the segmented regions inside a workspace designed for learning and recall instead of one-off generation.',
+            backLabel: 'Back to Study',
+            onBack,
+          }}
+        />
+      </WorkspaceReveal>
 
-        <motion.div initial={{ y: 10 }} animate={{ y: 0 }} className="mb-8">
-          <h1 className="text-display-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2" style={{ letterSpacing: '-0.025em' }}>
-            <ImageIcon className="w-8 h-8" />
-            Anatomy Visualizer
-          </h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            Generate an anatomy image (Firefly) and segment regions (Gemini). Click regions for
-            labels.
-          </p>
-        </motion.div>
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Generation"
+            value="One click"
+            detail="Creates a new anatomy visual without leaving the study flow."
+            icon={Sparkles}
+          />
+          <WorkspaceMetricCard
+            label="Overlay"
+            value="Segmented"
+            detail="Applies region masks so structures can be reviewed visually."
+            accent="#728ba6"
+            icon={Layers3}
+          />
+          <WorkspaceMetricCard
+            label="Use case"
+            value="Spatial recall"
+            detail="Best when you need to reconnect a structure with where it lives."
+            accent="#9a7f9a"
+            icon={Network}
+          />
+          <WorkspaceMetricCard
+            label="Output"
+            value="Image + labels"
+            detail="The visual stays paired with a reviewable set of structure names."
+            accent="#b39b6c"
+            icon={ImageIcon}
+          />
+        </div>
+      </WorkspaceReveal>
 
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-          {!result && !loading && (
-            <button
-              type="button"
-              onClick={generate}
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90"
-            >
-              <ImageIcon className="w-5 h-5" />
-              Generate anatomy image
-            </button>
-          )}
-          {loading && (
-            <div className="flex items-center justify-center gap-2 py-8 text-[var(--color-text-muted)]">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              Generating…
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Spatial learning
+              </p>
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Use the visualizer when a concept is stuck because you can explain it verbally but
+                can’t place it anatomically.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                This tool works best as a reinforcement layer for anatomy-heavy topics, not as a
+                replacement for formal reference images.
+              </p>
             </div>
-          )}
-          {error && (
-            <p className="py-4 text-[var(--color-data-fail)]" role="alert">
-              {error}
-            </p>
-          )}
-          {result && (
-            <motion.div initial={false} animate={{}} className="mt-4">
-              <div className="relative inline-block max-w-full">
-                <img
-                  ref={imgRef}
-                  src={result.imageBase64}
-                  alt="Generated anatomy"
-                  className="max-h-[70vh] rounded-lg object-contain border border-[var(--color-border)]"
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 w-full h-full pointer-events-none rounded-lg"
-                  style={{ left: 0, top: 0 }}
-                />
-              </div>
-              {result.masks.length > 0 && (
-                <div className="mt-4">
-                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">
-                    Segments
+
+            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Strong use cases
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
+                <li>Refresh anatomy before a systems block or practical-style drill.</li>
+                <li>Reconnect structures you can name but can’t visually locate.</li>
+                <li>Use mask labels as a fast self-quiz after generation.</li>
+              </ul>
+            </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Generation workspace"
+          subtitle="Generate a visual, then review the output and structure labels inside the same study shell."
+        >
+          <WorkspaceSplit className="items-start">
+            <WorkspaceSurface accent="#728ba6" className="space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    Anatomy image
                   </h3>
-                  <ul className="flex flex-wrap gap-2">
-                    {result.masks.map((m, i) => (
-                      <li key={i}>
-                        <button
-                          type="button"
-                          className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                            hoveredLabel === m.label
-                              ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/20'
-                              : 'border-[var(--color-border)] hover:bg-[var(--color-bg-primary)]'
-                          }`}
-                          onMouseEnter={() => setHoveredLabel(m.label ?? null)}
-                          onMouseLeave={() => setHoveredLabel(null)}
-                        >
-                          {m.label ?? `Region ${i + 1}`}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  {hoveredLabel && (
-                    <p className="mt-2 text-sm text-[var(--color-text-muted)]">{hoveredLabel}</p>
-                  )}
+                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                    Generate a new visual whenever you need a fresh spatial anchor.
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  loading={loading}
+                  onClick={generate}
+                  icon={loading ? undefined : ImageIcon}
+                >
+                  {loading ? 'Generating…' : result ? 'Generate another' : 'Generate image'}
+                </Button>
+              </div>
+
+              {error ? (
+                <p className="text-sm text-[var(--color-data-fail)]" role="alert">
+                  {error}
+                </p>
+              ) : null}
+
+              {imageSrc ? (
+                <div className="relative inline-block max-w-full rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/80 p-3">
+                  <img
+                    ref={imgRef}
+                    src={imageSrc}
+                    alt="Generated anatomy"
+                    className="max-h-[34rem] rounded-xl object-contain"
+                  />
+                  <canvas
+                    ref={canvasRef}
+                    className="pointer-events-none absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] rounded-xl"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-8 text-sm text-[var(--color-text-secondary)]">
+                  The generated anatomy image will appear here.
                 </div>
               )}
-              <button
-                type="button"
-                onClick={generate}
-                className="mt-4 text-sm text-[var(--color-accent)] hover:underline"
-              >
-                Generate another
-              </button>
-            </motion.div>
-          )}
-        </div>
-      </div>
-    </div>
+            </WorkspaceSurface>
+
+            {result?.masks.length ? (
+              <WorkspaceSurface accent="#9a7f9a" className="space-y-5">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    Segmented regions
+                  </h3>
+                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                    Hover labels as a lightweight self-check after you inspect the image.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {result.masks.map((maskItem, index) => {
+                    const label = maskItem.label ?? `Region ${index + 1}`;
+                    return (
+                      <Button
+                        key={`${label}-${index}`}
+                        type="button"
+                        size="xs"
+                        variant={hoveredLabel === label ? 'accent' : 'outline'}
+                        onMouseEnter={() => setHoveredLabel(label)}
+                        onMouseLeave={() => setHoveredLabel(null)}
+                      >
+                        {label}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                    Active focus
+                  </p>
+                  <p className="mt-2 text-sm text-[var(--color-text-primary)]">
+                    {hoveredLabel ?? 'Hover a structure label to keep the current focus visible.'}
+                  </p>
+                </div>
+              </WorkspaceSurface>
+            ) : (
+              <WorkspaceEmptyState
+                icon={Layers3}
+                title="Generate a visual to unlock segmented labels"
+                description="When an image is created, its available region labels will appear here for quick anatomy review."
+              />
+            )}
+          </WorkspaceSplit>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
+
+export default VisualizerPage;

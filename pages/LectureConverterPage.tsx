@@ -1,12 +1,22 @@
 /**
  * Lecture Converter (Commuter Curriculum) – PDF to podcast.
- * Modes: Lecture script (Q&A Dr. Smith / Sarah) or Deep Dive conversation (Alex / Jordan).
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, Loader2, FileText, Headphones, Mic } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FileText, Headphones, Mic, Radio, Route, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import {
+  WorkspaceEmptyState,
+  WorkspaceHeroStrip,
+  WorkspaceMetricCard,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspaceReveal,
+  WorkspaceSection,
+  WorkspaceSplit,
+  WorkspaceSurface,
+} from '@/components/workspace';
 
 interface ScriptSegment {
   speaker: string;
@@ -23,7 +33,11 @@ interface GenerateResponse {
 
 export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
-  useEffect(() => { document.title = 'Lecture Converter | PANaCEa'; }, []);
+
+  useEffect(() => {
+    document.title = 'Lecture Converter | PANaCEa';
+  }, []);
+
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<'lecture' | 'deep-dive'>('lecture');
   const [topic, setTopic] = useState('');
@@ -33,179 +47,269 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
 
   const generate = useCallback(async () => {
     if (!file) {
-      setError('Please select a PDF file');
+      setError('Please select a PDF file.');
       return;
     }
+
     setLoading(true);
     setError(null);
     setResult(null);
+
     try {
       const token = await getToken();
       const formData = new FormData();
       formData.append('file', file);
       formData.append('mode', mode);
+
       if (mode === 'deep-dive' && topic.trim()) {
         formData.append('topic', topic.trim());
       }
-      const res = await fetch('/api/podcast/generate', {
+
+      const response = await fetch('/api/podcast/generate', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
-      const json: GenerateResponse = await res.json();
-      if (!res.ok) {
-        setError(json.error || json.message || 'Generation failed');
+
+      const json: GenerateResponse = await response.json();
+
+      if (!response.ok) {
+        setError(json.error || json.message || 'Generation failed.');
         return;
       }
+
       setResult(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Request failed');
+      setError(err instanceof Error ? err.message : 'Request failed.');
     } finally {
       setLoading(false);
     }
-  }, [file, mode, topic, getToken]);
+  }, [file, getToken, mode, topic]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
-      <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back
-        </button>
+    <WorkspacePage density="wide">
+      <WorkspaceReveal>
+        <WorkspacePageHeader
+          meta={{
+            badge: 'Commuter Curriculum',
+            badgeTone: 'amber',
+            title: 'Turn dense PDFs into audio-friendly study material.',
+            subtitle:
+              'Convert notes or lecture PDFs into either a guided Q&A script or a deeper discussion format so review can continue during walks, drives, or cleanup time.',
+            backLabel: 'Back to Study',
+            onBack,
+          }}
+        />
+      </WorkspaceReveal>
 
-        <motion.div
-          initial={{ y: 10 }}
-          animate={{ y: 0 }}
-          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
-        >
-          <h1 className="text-h2 font-bold text-[var(--color-text-primary)] mb-2" style={{ letterSpacing: '-0.015em' }}>
-            Lecture Converter
-          </h1>
-          <p className="text-sm text-[var(--color-text-muted)] mb-6">
-            Turn a PDF into a podcast: Q&A style (Dr. Smith / Sarah) or a Deep Dive conversation (Alex / Jordan).
-          </p>
+      <WorkspaceReveal delay={0.04}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <WorkspaceMetricCard
+            label="Input"
+            value="PDF lecture"
+            detail="Feed it a single PDF when you want to compress a block into audio review."
+            icon={FileText}
+          />
+          <WorkspaceMetricCard
+            label="Modes"
+            value="2 formats"
+            detail="Choose a guided lecture script or a more conversational deep dive."
+            accent="#728ba6"
+            icon={Radio}
+          />
+          <WorkspaceMetricCard
+            label="Output"
+            value="Script + audio"
+            detail="Review the script directly and play audio whenever it is returned."
+            accent="#b39b6c"
+            icon={Headphones}
+          />
+          <WorkspaceMetricCard
+            label="Best for"
+            value="Commute blocks"
+            detail="Ideal when you need passive review without fully leaving the curriculum."
+            accent="#9a7f9a"
+            icon={Route}
+          />
+        </div>
+      </WorkspaceReveal>
 
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">PDF file</span>
-              <input
-                type="file"
-                accept=".pdf,application/pdf"
-                className="mt-1 block w-full text-sm text-[var(--color-text-primary)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--color-accent)] file:text-[var(--color-text-inverse)]"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  setFile(f || null);
-                  setError(null);
-                }}
-              />
-            </label>
-
-            <div>
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">Mode</span>
-              <div className="mt-2 flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="mode"
-                    checked={mode === 'lecture'}
-                    onChange={() => setMode('lecture')}
-                    className="text-[var(--color-accent)]"
-                  />
-                  <span className="text-sm text-[var(--color-text-primary)]">Lecture script (Q&A)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="mode"
-                    checked={mode === 'deep-dive'}
-                    onChange={() => setMode('deep-dive')}
-                    className="text-[var(--color-accent)]"
-                  />
-                  <span className="text-sm text-[var(--color-text-primary)]">Deep Dive conversation</span>
-                </label>
-              </div>
-            </div>
-
-            {mode === 'deep-dive' && (
-              <label className="block">
-                <span className="text-sm font-medium text-[var(--color-text-primary)]">Topic (optional)</span>
-                <input
-                  type="text"
-                  placeholder="e.g. Cardiovascular percentage allocation changes"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]"
-                />
-              </label>
-            )}
-
-            {error && (
-              <p className="text-sm text-[var(--color-data-fail)]" role="alert">
-                {error}
+      <WorkspaceReveal delay={0.08}>
+        <WorkspaceHeroStrip>
+          <WorkspaceSplit className="items-start">
+            <div className="space-y-4">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+                Audio transformation
               </p>
-            )}
-
-            <button
-              onClick={generate}
-              disabled={loading || !file}
-              className="flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating…
-                </>
-              ) : (
-                <>
-                  <Mic className="w-4 h-4" />
-                  Generate podcast
-                </>
-              )}
-            </button>
-          </div>
-        </motion.div>
-
-        {result?.script && result.script.length > 0 && (
-          <motion.div
-            initial={{ y: 10 }}
-            animate={{ y: 0 }}
-            className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
-          >
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Script
-            </h2>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {result.script.map((seg, i) => (
-                <div key={`${seg.speaker}-${i}`} className="text-sm">
-                  <span className="font-medium text-[var(--color-accent)]">{seg.speaker}:</span>{' '}
-                  <span className="text-[var(--color-text-primary)]">{seg.text}</span>
-                </div>
-              ))}
+              <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
+                Use this when a topic needs repetition in a lower-friction format, not when you
+                need precise note-taking.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+                The lecture mode is tighter and more structured; the deep-dive mode is better when
+                a topic deserves more context or a conversational walk-through.
+              </p>
             </div>
-            {result.audioBase64 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
-                  <Headphones className="w-4 h-4" />
-                  Play
+
+            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Choose the right mode
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-secondary)]">
+                <li>Use `Lecture script` for a concise review before quizzes.</li>
+                <li>Use `Deep dive` when the topic still feels conceptually thin.</li>
+                <li>Add an optional topic to steer the conversation toward what matters most.</li>
+              </ul>
+            </div>
+          </WorkspaceSplit>
+        </WorkspaceHeroStrip>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <WorkspaceSection
+          title="Conversion workspace"
+          subtitle="Upload a PDF, choose the listening format, and review the generated study output in the same workspace."
+        >
+          <WorkspaceSplit className="items-start">
+            <WorkspaceSurface accent="#b39b6c" className="space-y-5">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Source and mode
                 </h3>
-                <audio
-                  controls
-                  className="w-full"
-                  src={`data:audio/mpeg;base64,${result.audioBase64}`}
-                  aria-label="Generated podcast audio"
-                />
+                <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Keep the input narrow so the output stays teachable and easy to replay.
+                </p>
               </div>
+
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                  PDF source
+                </span>
+                <div className="rounded-[1.25rem] border border-dashed border-white/12 bg-white/[0.03] p-4">
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="block w-full text-sm text-[var(--color-text-primary)] file:mr-4 file:rounded-lg file:border-0 file:bg-[var(--color-accent)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--color-text-inverse)]"
+                    onChange={(event) => {
+                      const nextFile = event.target.files?.[0] ?? null;
+                      setFile(nextFile);
+                      setError(null);
+                    }}
+                  />
+                  {file ? (
+                    <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
+                      Selected: <span className="text-[var(--color-text-primary)]">{file.name}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </label>
+
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">Listening mode</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={mode === 'lecture' ? 'accent' : 'outline'}
+                    onClick={() => setMode('lecture')}
+                  >
+                    Lecture script
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={mode === 'deep-dive' ? 'accent' : 'outline'}
+                    onClick={() => setMode('deep-dive')}
+                  >
+                    Deep dive
+                  </Button>
+                </div>
+              </div>
+
+              {mode === 'deep-dive' ? (
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                    Topic focus (optional)
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="e.g. Cardiovascular percentage allocation changes"
+                    value={topic}
+                    onChange={(event) => setTopic(event.target.value)}
+                    className="w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                  />
+                </label>
+              ) : null}
+
+              {error ? (
+                <p className="text-sm text-[var(--color-data-fail)]" role="alert">
+                  {error}
+                </p>
+              ) : null}
+
+              <Button
+                type="button"
+                size="lg"
+                loading={loading}
+                disabled={!file}
+                onClick={generate}
+                icon={loading ? undefined : Mic}
+                className="w-full shadow-[0_20px_50px_-24px_rgba(196,183,138,0.55)]"
+              >
+                {loading ? 'Generating podcast…' : 'Generate podcast'}
+              </Button>
+            </WorkspaceSurface>
+
+            {result?.script?.length ? (
+              <WorkspaceSurface accent="#728ba6" className="space-y-5">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    Generated output
+                  </h3>
+                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                    Review the script, then play the audio when it is available.
+                  </p>
+                </div>
+
+                <div className="max-h-[24rem] space-y-3 overflow-auto rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4">
+                  {result.script.map((segment, index) => (
+                    <div key={`${segment.speaker}-${index}`} className="text-sm leading-7">
+                      <span className="font-semibold text-[var(--color-accent)]">
+                        {segment.speaker}:
+                      </span>{' '}
+                      <span className="text-[var(--color-text-primary)]">{segment.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {result.audioBase64 ? (
+                  <div className="space-y-3 rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Audio playback
+                    </p>
+                    <audio
+                      controls
+                      className="w-full"
+                      src={`data:audio/mpeg;base64,${result.audioBase64}`}
+                      aria-label="Generated podcast audio"
+                    />
+                  </div>
+                ) : result.message ? (
+                  <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-[var(--color-text-secondary)]">
+                    {result.message}
+                  </div>
+                ) : null}
+              </WorkspaceSurface>
+            ) : (
+              <WorkspaceEmptyState
+                icon={Sparkles}
+                title="Generate a podcast-ready script to fill this pane"
+                description="Once the PDF is converted, the script and any returned audio will appear here for review."
+              />
             )}
-            {result.mode === 'deep-dive' && !result.audioBase64 && result.message && (
-              <p className="mt-2 text-sm text-[var(--color-text-muted)]">{result.message}</p>
-            )}
-          </motion.div>
-        )}
-      </div>
-    </div>
+          </WorkspaceSplit>
+        </WorkspaceSection>
+      </WorkspaceReveal>
+    </WorkspacePage>
   );
 };
+
+export default LectureConverterPage;
