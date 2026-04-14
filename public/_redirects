@@ -1,4 +1,2 @@
 # Pass-through: serve static assets with correct MIME types
 /assets/*  /assets/:splat  200
-# SPA fallback: serve index.html for client routes
-/*  /index.html  200
