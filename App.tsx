@@ -10,14 +10,11 @@ import { useAppNavigation } from './hooks/useAppNavigation';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
 import { useUser, useAuth } from '@clerk/clerk-react';
-import { setGeminiAuthProvider } from '@/services/ai/geminiService';
 import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { useEnhancedAuth } from './hooks/useEnhancedAuth';
 import { Loader, LoadingProgress } from './components/loading';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './components/landing/LandingPage';
-import { getQuestionBatch } from './services/questionService';
-import { initializeSession, fetchSessionQuestions, prefetchQuestions } from './services/core';
 import { inferTaskType } from './lib/taskTypes';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
@@ -100,12 +97,22 @@ const App: React.FC = () => {
   // Register Clerk auth provider for Gemini API calls so all callGeminiText
   // requests automatically include the Authorization header
   useEffect(() => {
-    if (getToken && !isGuestMode) {
-      setGeminiAuthProvider(getToken);
-    } else if (isGuestMode) {
-      // Set a mock auth provider for guest mode
-      setGeminiAuthProvider(async () => 'guest-mode-token');
-    }
+    let cancelled = false;
+
+    void import('@/services/ai/geminiService').then(({ setGeminiAuthProvider }) => {
+      if (cancelled) return;
+
+      if (getToken && !isGuestMode) {
+        setGeminiAuthProvider(getToken);
+      } else if (isGuestMode) {
+        // Set a mock auth provider for guest mode
+        setGeminiAuthProvider(async () => 'guest-mode-token');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [getToken, isGuestMode]);
 
   // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
@@ -502,6 +509,7 @@ const App: React.FC = () => {
       setIsModalOpen(false);
       setSessionSettings(settings);
       setError(null);
+      const { initializeSession, fetchSessionQuestions, prefetchQuestions } = await import('./services/core');
       initializeSession();
       if (preloadedQueue && preloadedQueue.length > 0) {
         setQuestionQueue(preloadedQueue);
@@ -698,6 +706,7 @@ const App: React.FC = () => {
               const result = await fetchSessionQuestions(settings, token, INITIAL_QUEUE_SIZE);
               initialQuestions = result.questions as QuizQuestion[];
             } else {
+              const { getQuestionBatch } = await import('./services/questionService');
               initialQuestions = await getQuestionBatch(
                 settings,
                 growthAreas,
@@ -706,6 +715,7 @@ const App: React.FC = () => {
               );
             }
           } catch {
+            const { getQuestionBatch } = await import('./services/questionService');
             initialQuestions = await getQuestionBatch(
               settings,
               growthAreas,
@@ -966,8 +976,7 @@ const App: React.FC = () => {
     } catch {
       /* ignore storage errors */
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setView]);
 
   const handleNavigateToSimulation = useCallback(
     (settings?: { initialFocus?: SimulationFocus }) => {

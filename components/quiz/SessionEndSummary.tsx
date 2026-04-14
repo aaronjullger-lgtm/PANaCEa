@@ -59,7 +59,6 @@ import type { PerformanceRecord, SessionSettings, SystemCode } from '../../types
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
-import { callGeminiText } from '@/services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { fireStreakCelebration } from '@/lib/streakCelebration';
 import { saveLastSession } from '@/lib/utils/sessionStorage';
@@ -379,6 +378,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       const weakNames = weakAreas.map((w) => w.name).join(', ') || 'none';
       const strongNames = strongAreas.map((s) => s.name).join(', ') || 'none';
       const prompt = `You are a study coach. Based on this session summary, write exactly 1-2 short, encouraging sentences. Format: "Today you improved on X; consider focusing on Y next." Session: total questions ${overallStats.total}, correct ${overallStats.correct}, accuracy ${overallStats.accuracy}%. Systems practiced: ${systemsPracticed}. Weak areas this session: ${weakNames}. Strong areas: ${strongNames}. Reply with only the 1-2 sentences, no preamble.`;
+      const { callGeminiText } = await import('@/services/ai/geminiService');
       const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
       setAiSummary((text || '').trim());
     } catch {

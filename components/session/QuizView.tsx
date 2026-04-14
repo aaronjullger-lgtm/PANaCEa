@@ -62,10 +62,10 @@ const FatigueBreakPrompt = lazy(() =>
   import('@/components/session/FatigueBreakPrompt').then((m) => ({ default: m.FatigueBreakPrompt }))
 );
 const SessionEndSummary = lazy(() =>
-  import('@/components/quiz').then((m) => ({ default: m.SessionEndSummary }))
+  import('@/components/quiz/SessionEndSummary').then((m) => ({ default: m.SessionEndSummary }))
 );
 const SocraticTutorChat = lazy(() =>
-  import('@/components/quiz').then((m) => ({ default: m.SocraticTutorChat }))
+  import('@/components/quiz/SocraticTutorChat').then((m) => ({ default: m.SocraticTutorChat }))
 );
 
 import AnswerChoice from '@/components/quiz/AnswerChoice';
@@ -81,7 +81,7 @@ import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { DrillLoadingState } from '@/components/loading';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
-import { SessionStatsOverlay } from '@/components/quiz';
+import { SessionStatsOverlay } from '@/components/quiz/SessionStatsOverlay';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 
 // Sprint 10: Trust badges for question source indication

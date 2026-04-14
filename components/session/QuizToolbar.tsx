@@ -16,11 +16,9 @@ import { ROUTES } from '@/config/routes';
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
-import {
-  MomentumBadge,
-  StreakBadge,
-  QuestionTimer,
-} from '@/components/quiz';
+import { MomentumBadge } from '@/components/quiz/MomentumIndicator';
+import { StreakBadge } from '@/components/quiz/StreakVisualization';
+import { QuestionTimer } from '@/components/quiz/QuestionTimer';
 import { Progress } from '@/components/ui/progress';
 import {
   AlertTriangle,

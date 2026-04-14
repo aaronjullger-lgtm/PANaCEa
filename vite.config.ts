@@ -475,7 +475,6 @@ export default defineConfig(({ mode }) => {
                   // Navigation & shell (existing)
                   'CommandCenterHub',
                   'EnhancedSettingsTab',
-                  'MenuView',
                   'ToolkitHub',
                   // Session / quiz (existing)
                   'QuizView',

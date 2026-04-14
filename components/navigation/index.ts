@@ -7,4 +7,3 @@
 export { default as BackLink } from './BackLink';
 export { CommandCenterHub } from './CommandCenterHub';
 export { default as CommandPalette } from './CommandPalette';
-export { default as MenuView } from './MenuView';
