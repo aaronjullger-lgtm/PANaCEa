@@ -1,19 +1,13 @@
 import {
   Activity,
-  BadgeCheck,
-  BarChart3,
   BookOpen,
   Brain,
   ShieldCheck,
-  Sparkles,
   Stethoscope,
   Target,
   TrendingUp,
   Zap,
 } from 'lucide-react';
-
-export const LANDING_PROOF_NOTE =
-  'Placeholder proof content. Replace with verified production metrics and reviewed testimonials before launch.';
 
 export const NAV_LINKS = [
   { label: 'Platform', href: '#features' },
@@ -163,10 +157,4 @@ export const PROCESS_SIGNALS = [
   'Blueprint coverage',
   'Confidence drift',
   'High-risk distractors',
-] as const;
-
-export const HERO_BADGES = [
-  { icon: BadgeCheck, label: 'Blueprint synced' },
-  { icon: Sparkles, label: 'Review window recalculated' },
-  { icon: BarChart3, label: LANDING_PROOF_NOTE },
 ] as const;

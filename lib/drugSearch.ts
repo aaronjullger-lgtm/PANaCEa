@@ -2,7 +2,7 @@
 // Search functionality for pharmacological agents and treatments
 
 import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from '@/types/pharm';
-import { BRAND_NAME_MAP } from '../../lib/drugBrandNames';
+import { BRAND_NAME_MAP } from '@/lib/drugBrandNames';
 import { drugService } from '@/services/domain';
 
 // ============================================================================

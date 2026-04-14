@@ -24,7 +24,6 @@ import { SkipNavigation } from '../shared/SkipNavigation';
 import {
   FEATURE_CARDS,
   HERO_SIGNALS,
-  LANDING_PROOF_NOTE,
   NAV_LINKS,
   PROCESS_SIGNALS,
   PROCESS_STEPS,
@@ -177,9 +176,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
 
         <div className="flex flex-col gap-3 border-t border-white/6 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} PANaCEa. Built for serious PANCE preparation.</p>
-          <p>
-            Not affiliated with NCCPA. {LANDING_PROOF_NOTE}
-          </p>
+          <p>Not affiliated with NCCPA.</p>
         </div>
       </div>
     </footer>
