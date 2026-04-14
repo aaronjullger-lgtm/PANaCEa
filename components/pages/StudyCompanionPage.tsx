@@ -267,7 +267,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Best habits in this view
               </p>
@@ -307,7 +307,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
         >
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-start">
             <WorkspaceSurface accent="#728ba6" padded={false} className="overflow-hidden">
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/8 px-5 py-5">
+              <div className="workspace-divider flex flex-wrap items-start justify-between gap-4 border-b px-5 py-5">
                 <div className="min-w-[16rem] flex-1 space-y-2">
                   <label
                     htmlFor={documentSelectId}
@@ -330,7 +330,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                         setSelectedId(event.target.value || null);
                         clearConversation({ clearInput: true });
                       }}
-                      className="w-full rounded-[1rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                      className="workspace-field w-full rounded-[1rem] px-4 py-3 text-sm outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                     >
                       {resources.length === 0 ? (
                         <option value="">No approved PDFs available</option>
@@ -370,7 +370,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                     minHeight="420px"
                   />
                 ) : (
-                  <div className="flex min-h-[420px] h-[72vh] items-center justify-center rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-8 text-sm text-[var(--color-text-secondary)]">
+                  <div className="workspace-dashed-state flex min-h-[420px] h-[72vh] items-center justify-center rounded-[1.25rem] p-8 text-sm text-[var(--color-text-secondary)]">
                     {loadingResources
                       ? 'Loading documents…'
                       : 'Select an approved document to begin.'}
@@ -384,9 +384,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               padded={false}
               className="flex min-h-[72vh] flex-col overflow-hidden"
             >
-              <div className="border-b border-white/8 px-5 py-4">
+              <div className="workspace-divider border-b px-5 py-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04]">
+                  <div className="workspace-icon-tile flex h-10 w-10 items-center justify-center rounded-2xl">
                     <MessageCircle className="h-5 w-5 text-[var(--color-accent)]" />
                   </div>
                   <div className="min-w-0">
@@ -402,7 +402,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
 
               <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                 {selectedTextContext ? (
-                  <div className="rounded-[1rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-3 text-sm">
+                  <div className="workspace-subsurface rounded-[1rem] p-3 text-sm">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                         Selected text context
@@ -439,11 +439,11 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                 ) : null}
 
                 {answer ? (
-                  <div className="rounded-[1rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4 text-sm leading-7 text-[var(--color-text-primary)] whitespace-pre-wrap">
+                  <div className="workspace-subsurface rounded-[1rem] p-4 text-sm leading-7 text-[var(--color-text-primary)] whitespace-pre-wrap">
                     {answer}
                   </div>
                 ) : !askError ? (
-                  <div className="rounded-[1rem] border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-[var(--color-text-secondary)]">
+                  <div className="workspace-dashed-state rounded-[1rem] p-4 text-sm text-[var(--color-text-secondary)]">
                     Ask a question and the answer will appear here with page-linked citation
                     highlights on the PDF.
                   </div>
@@ -456,7 +456,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                 ) : null}
               </div>
 
-              <div className="border-t border-white/8 px-5 py-4">
+              <div className="workspace-divider border-t px-5 py-4">
                 <div className="flex items-center gap-3">
                   <input
                     ref={inputRef}
@@ -464,7 +464,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder="Ask a question… (e.g. What are the diagnostic criteria?)"
-                    className="flex-1 rounded-[1rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                    className="workspace-field flex-1 rounded-[1rem] px-4 py-3 text-sm outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault();

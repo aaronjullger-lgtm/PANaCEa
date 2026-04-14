@@ -753,6 +753,77 @@ a,
     @apply bg-[var(--color-bg-tertiary)] dark:bg-[var(--color-bg-tertiary)];
   }
 
+  /* Workspace sub-surfaces — theme-safe inner panels used inside hero strips/cards */
+  .workspace-subsurface {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%);
+  }
+
+  .workspace-subsurface-soft {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 72%, var(--color-bg-primary) 28%);
+  }
+
+  .workspace-subsurface-interactive {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%);
+    transition:
+      background 180ms ease,
+      border-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .workspace-subsurface-interactive:hover {
+    background: color-mix(in srgb, var(--color-bg-secondary) 84%, var(--color-bg-primary) 16%);
+  }
+
+  .workspace-chip {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%);
+  }
+
+  .workspace-icon-tile {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%);
+  }
+
+  .workspace-field {
+    border: 1px solid color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%);
+    color: var(--color-text-primary);
+    transition:
+      background 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .workspace-field::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .workspace-field:hover {
+    background: color-mix(in srgb, var(--color-bg-secondary) 80%, var(--color-bg-primary) 20%);
+  }
+
+  .workspace-field:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  .workspace-dashed-state {
+    border: 1px dashed color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+    background: color-mix(in srgb, var(--color-bg-secondary) 68%, var(--color-bg-primary) 32%);
+  }
+
+  .workspace-divider {
+    border-color: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  }
+
+  .workspace-footer-surface {
+    background: color-mix(in srgb, var(--color-bg-secondary) 76%, transparent);
+  }
+
   /* Card shadow - no black; uses design token for theme-safe elevation */
   .shadow-card {
     box-shadow:

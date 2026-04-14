@@ -67,11 +67,11 @@ const BADGE_STYLES: Record<
 function resolveDensityClass(density: WorkspacePageMeta['density']) {
   switch (density) {
     case 'compact':
-      return 'space-y-6';
+      return 'space-y-5';
     case 'wide':
-      return 'space-y-10';
-    default:
       return 'space-y-8';
+    default:
+      return 'space-y-6';
   }
 }
 
@@ -132,8 +132,8 @@ export function WorkspacePageHeader({ meta, className }: { meta: WorkspacePageMe
     'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)';
 
   return (
-    <div className={cn('flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between', className)}>
-      <div className="max-w-3xl space-y-4">
+    <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between', className)}>
+      <div className="max-w-3xl space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           {meta.backLabel && meta.onBack ? (
             <button
@@ -174,11 +174,11 @@ export function WorkspacePageHeader({ meta, className }: { meta: WorkspacePageMe
           ) : null}
         </div>
         <div className="space-y-3">
-          <h1 className="text-4xl font-semibold tracking-[-0.045em] text-[var(--color-text-primary)] sm:text-5xl">
+          <h1 className="text-3xl font-semibold tracking-[-0.045em] text-[var(--color-text-primary)] sm:text-4xl">
             {meta.title}
           </h1>
           {meta.subtitle ? (
-            <p className="max-w-2xl text-base leading-8 text-[var(--color-text-secondary)] sm:text-lg">
+            <p className="max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
               {meta.subtitle}
             </p>
           ) : null}
@@ -213,7 +213,7 @@ export function WorkspaceHeroStrip({
   return (
     <div
       className={cn(
-        'card-cinematic relative overflow-hidden rounded-[1.75rem] p-6 sm:p-8',
+        'card-cinematic relative overflow-hidden rounded-[1.75rem] p-5 sm:p-6',
         className
       )}
       style={{

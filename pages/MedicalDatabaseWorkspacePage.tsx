@@ -81,7 +81,7 @@ export const MedicalDatabaseWorkspacePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Best moments to use it
               </p>
@@ -98,7 +98,7 @@ export const MedicalDatabaseWorkspacePage: React.FC = () => {
       <WorkspaceReveal delay={0.12}>
         <WorkspaceSection
           title="Medical database search"
-          subtitle="The existing search workflow stays intact inside the new workspace shell."
+          subtitle="The existing search workflow stays intact inside the shared workspace shell."
         >
           <MedicalDatabaseSearch onClose={() => navigate(ROUTES.STUDY)} />
         </WorkspaceSection>

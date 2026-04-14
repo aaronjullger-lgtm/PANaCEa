@@ -307,7 +307,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 When to use each focus
               </p>
@@ -348,18 +348,18 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                       style={{
                         borderColor: isSelected
                           ? `color-mix(in srgb, ${option.accent} 72%, white 6%)`
-                          : 'rgba(255,255,255,0.08)',
+                          : 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
                         background: isSelected
-                          ? `color-mix(in srgb, ${option.accent} 14%, rgba(255,255,255,0.03))`
-                          : 'rgba(255,255,255,0.02)',
+                          ? `color-mix(in srgb, ${option.accent} 14%, var(--color-bg-secondary))`
+                          : 'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
                       }}
                     >
                       <div
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/8"
+                        className="workspace-icon-tile flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
                         style={{
                           background: isSelected
                             ? `color-mix(in srgb, ${option.accent} 85%, white 5%)`
-                            : 'rgba(255,255,255,0.05)',
+                            : 'color-mix(in srgb, var(--color-bg-tertiary) 82%, var(--color-bg-primary) 18%)',
                           color: isSelected ? '#0b1020' : 'var(--color-text-secondary)',
                         }}
                       >

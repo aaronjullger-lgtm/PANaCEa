@@ -181,7 +181,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Prompt patterns that work well
               </p>
@@ -211,8 +211,8 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                 </p>
               </div>
 
-              <label className="flex min-h-[16rem] cursor-pointer flex-col items-center justify-center rounded-[1.25rem] border border-dashed border-white/12 bg-white/[0.03] p-6 text-center transition-all duration-300 hover:border-[var(--color-accent)]/35 hover:bg-white/[0.05]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+              <label className="workspace-dashed-state flex min-h-[16rem] cursor-pointer flex-col items-center justify-center rounded-[1.25rem] p-6 text-center transition-all duration-300 hover:border-[var(--color-accent)]/35 hover:bg-[var(--color-bg-tertiary)]">
+                <div className="workspace-icon-tile flex h-14 w-14 items-center justify-center rounded-2xl">
                   <Upload className="h-6 w-6 text-[var(--color-text-secondary)]" />
                 </div>
                 <p className="mt-4 text-sm font-medium text-[var(--color-text-primary)]">
@@ -234,7 +234,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     Preview
                   </p>
-                  <div className="relative inline-block max-w-full rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/80 p-3">
+                  <div className="workspace-subsurface relative inline-block max-w-full rounded-[1.25rem] p-3">
                     <img
                       src={imageSrc}
                       alt="Clinical image for analysis"
@@ -298,7 +298,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                   setError(null);
                 }}
                 placeholder="e.g. Estimate the ST elevation in lead V2 and explain why it matters."
-                className="min-h-[12rem] w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                className="workspace-field min-h-[12rem] w-full rounded-[1.25rem] px-4 py-3 text-sm outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                 maxLength={4096}
               />
 
@@ -343,12 +343,12 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
                 <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
                   {result.boundingBox?.label ? (
-                    <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
+                    <span className="workspace-chip rounded-full px-3 py-1.5">
                       Highlight: {result.boundingBox.label}
                     </span>
                   ) : null}
                   {result.usageMetadata?.totalTokenCount ? (
-                    <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
+                    <span className="workspace-chip rounded-full px-3 py-1.5">
                       Tokens: {result.usageMetadata.totalTokenCount}
                     </span>
                   ) : null}
@@ -367,11 +367,11 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                 </div>
 
                 {result.reasoning && result.reasoning.length > 0 ? (
-                  <pre className="max-h-[24rem] overflow-auto rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4 text-xs leading-6 text-[var(--color-text-primary)] whitespace-pre-wrap">
+                  <pre className="workspace-subsurface max-h-[24rem] overflow-auto rounded-[1.25rem] p-4 text-xs leading-6 text-[var(--color-text-primary)] whitespace-pre-wrap">
                     {result.reasoning.join('\n')}
                   </pre>
                 ) : (
-                  <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm text-[var(--color-text-secondary)]">
+                  <div className="workspace-dashed-state rounded-[1.25rem] p-5 text-sm text-[var(--color-text-secondary)]">
                     No step-by-step reasoning trace was returned for this analysis.
                   </div>
                 )}

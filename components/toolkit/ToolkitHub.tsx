@@ -285,16 +285,21 @@ function ToolkitTabButton({
       className="min-w-[12rem] rounded-[1.2rem] border px-4 py-3 text-left transition-all duration-300"
       style={{
         background: active
-          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 18%, transparent), rgba(255,255,255,0.04))`
-          : 'rgba(255,255,255,0.03)',
-        borderColor: active ? `color-mix(in srgb, ${accent} 60%, white)` : 'rgba(255,255,255,0.08)',
+          ? `linear-gradient(145deg, color-mix(in srgb, ${accent} 16%, var(--color-bg-secondary)), color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary) 18%))`
+          : 'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
+        borderColor: active
+          ? `color-mix(in srgb, ${accent} 44%, var(--color-text-primary))`
+          : 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
         boxShadow: active ? `0 20px 40px -30px ${accent}` : 'none',
       }}
     >
       <div className="flex items-start gap-3">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8"
-          style={{ background: `color-mix(in srgb, ${accent} 16%, transparent)` }}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border"
+          style={{
+            background: `color-mix(in srgb, ${accent} 16%, var(--color-bg-secondary))`,
+            borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+          }}
         >
           <Icon className="h-4.5 w-4.5" style={{ color: accent }} aria-hidden="true" />
         </div>
@@ -385,7 +390,7 @@ function CalculatorCard({
           ) : null}
 
           <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-            <span className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-xs font-medium capitalize text-[var(--color-text-muted)]">
+            <span className="workspace-chip rounded-full px-2.5 py-1 text-xs font-medium capitalize text-[var(--color-text-muted)]">
               {calc.category}
             </span>
             {isPinned ? (
@@ -421,8 +426,11 @@ function ToolSelectionCard<TId extends string>({
         <div className="flex h-full flex-col gap-4">
           <div className="flex items-start gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-              style={{ background: `color-mix(in srgb, ${tool.accent} 16%, transparent)` }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+              style={{
+                background: `color-mix(in srgb, ${tool.accent} 16%, var(--color-bg-secondary))`,
+                borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+              }}
             >
               <Icon className="h-5 w-5" style={{ color: tool.accent }} aria-hidden="true" />
             </div>
@@ -442,7 +450,7 @@ function ToolSelectionCard<TId extends string>({
             {tool.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-white/8 bg-white/4 px-2.5 py-1 text-xs font-medium text-[var(--color-text-muted)]"
+                className="workspace-chip rounded-full px-2.5 py-1 text-xs font-medium text-[var(--color-text-muted)]"
               >
                 {tag}
               </span>
@@ -690,7 +698,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Calculators
                 </p>
@@ -698,7 +706,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                   {CALCULATORS.length} registry-backed tools with pinning and recent history.
                 </p>
               </div>
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Generators
                 </p>
@@ -706,7 +714,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                   {GENERATOR_TOOLS.length} study-aid builders for recall, export, and replay.
                 </p>
               </div>
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Interpreters
                 </p>
@@ -714,7 +722,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                   {INTERPRETER_TOOLS.length} rule-based helpers for structured clinical reads.
                 </p>
               </div>
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Active lane
                 </p>
@@ -740,7 +748,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                   generators, and interpreters where it adds the most value.
                 </p>
               </div>
-              <div className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]">
+              <div className="workspace-chip rounded-full px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]">
                 {activeMeta.title}
               </div>
             </div>
@@ -769,7 +777,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                   }}
                   onFocus={() => searchQuery.length >= 2 && setShowSearchSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
-                  className="w-full rounded-[1.15rem] border border-white/8 bg-white/5 py-3 pl-12 pr-20 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                  className="workspace-field w-full rounded-[1.15rem] py-3 pl-12 pr-20 text-sm focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
                 />
                 {searchQuery ? (
                   <button
@@ -790,15 +798,15 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[1.1rem] border border-white/10 bg-[color:var(--color-bg-secondary)] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.7)]"
+                      className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[1.1rem] border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)] bg-[color:var(--color-bg-secondary)] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]"
                     >
                       {searchSuggestions.map((calc, index) => (
                         <button
                           key={calc.id}
                           type="button"
                           onClick={() => handleSelectCalculator(calc.id)}
-                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
-                            index < searchSuggestions.length - 1 ? 'border-b border-white/8' : ''
+                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-tertiary)] ${
+                            index < searchSuggestions.length - 1 ? 'border-b workspace-divider' : ''
                           }`}
                         >
                           <div className={`rounded-xl p-2 ${getCategoryColor(calc.category)}`}>
@@ -822,7 +830,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="rounded-[1.15rem] border border-white/8 bg-white/4 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+              <div className="workspace-subsurface-soft rounded-[1.15rem] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
                 Search is intentionally simplified here. Scoring systems and quick reference keep
                 their own internal browsing flows inside the content area.
               </div>
@@ -850,7 +858,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                 Back to lane overview
               </Button>
             ) : activeTab === 'calculators' ? (
-              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+              <span className="workspace-chip rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
                 {pinnedCalculatorData.length} pinned
               </span>
             ) : null
@@ -1006,7 +1014,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
                                   value={mnemonicConcept}
                                   onChange={(event) => setMnemonicConcept(event.target.value)}
                                   placeholder="e.g. MUDPILES, causes of DKA"
-                                  className="w-full rounded-[1rem] border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                                  className="workspace-field w-full rounded-[1rem] px-4 py-3 text-sm focus:border-[var(--color-accent)]/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/15"
                                 />
                               </div>
                               <MnemonicGenerator concept={mnemonicConcept || 'Medical concept'} />

@@ -336,8 +336,10 @@ export const NavRail: React.FC<NavRailProps> = ({
                   layoutId="active-nav-pill"
                   className="absolute inset-0 rounded-xl z-0"
                   style={{
-                    background: 'rgba(196, 183, 138, 0.08)',
-                    boxShadow: '0 0 12px rgba(196, 183, 138, 0.1), inset 0 1px 0 rgba(255,255,255,0.06)',
+                    background:
+                      'color-mix(in srgb, #c4b78a 12%, var(--color-bg-secondary))',
+                    boxShadow:
+                      '0 0 12px color-mix(in srgb, #c4b78a 18%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
                   }}
                   transition={springs.snappy}
                   aria-hidden

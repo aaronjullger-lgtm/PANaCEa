@@ -359,7 +359,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                     placeholder="Optional display name"
                     value={uploadDisplayName}
                     onChange={(event) => setUploadDisplayName(event.target.value)}
-                    className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                    className="workspace-field w-full rounded-2xl px-4 py-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                   />
                 </div>
 
@@ -476,7 +476,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
               subtitle="Use this space as a document-grounded companion for tutoring, review, and multimodal study tools."
             >
               <WorkspaceSurface accent="#9a7f9a" className="space-y-4">
-                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <Info className="h-4 w-4 text-[var(--color-accent)]" />
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -489,7 +489,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   </p>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-[var(--color-data-pass)]" />
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -516,7 +516,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                       key={preset}
                       type="button"
                       onClick={() => setVeoPrompt(preset)}
-                      className="w-full rounded-[1.1rem] border border-white/8 bg-white/5 px-4 py-3 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-white/8"
+                      className="workspace-subsurface-interactive w-full rounded-[1.1rem] px-4 py-3 text-left text-sm text-[var(--color-text-secondary)]"
                     >
                       {preset}
                     </button>
@@ -528,7 +528,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   placeholder="Or enter your own motion clip prompt"
                   value={veoPrompt}
                   onChange={(event) => setVeoPrompt(event.target.value)}
-                  className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                  className="workspace-field w-full rounded-2xl px-4 py-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                 />
 
                 <Button
@@ -556,7 +556,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   <video
                     src={veoResult.videoUrl}
                     controls
-                    className="w-full rounded-[1.25rem] border border-white/8"
+                    className="w-full rounded-[1.25rem] border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)]"
                   />
                 ) : null}
 
@@ -599,7 +599,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                     value={libraryQuestion}
                     onChange={(event) => setLibraryQuestion(event.target.value)}
                     placeholder="Ask a question about your active document…"
-                    className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                    className="workspace-field w-full rounded-2xl px-4 py-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                   />
                 </label>
 
@@ -662,7 +662,7 @@ Provide a concise, clinically focused answer (3-6 sentences).`;
               </div>
 
               {libraryLoading || libraryAnswer ? (
-                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   {libraryLoading && !libraryAnswer ? (
                     <p className="text-sm text-[var(--color-text-secondary)]">Thinking…</p>
                   ) : null}

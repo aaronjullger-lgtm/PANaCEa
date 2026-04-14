@@ -41,7 +41,7 @@ interface ProgressPageProps {
 
 function DashboardSkeleton({ height = 'h-64' }: { height?: string }) {
   return (
-    <div className={`rounded-[1.25rem] border border-white/8 bg-white/5 p-5 ${height}`}>
+    <div className={`workspace-subsurface rounded-[1.25rem] p-5 ${height}`}>
       <SkeletonLoader className="h-full w-full" />
     </div>
   );
@@ -159,7 +159,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             </div>
 
             <div className="space-y-3">
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-medium text-[var(--color-text-primary)]">
                   Reading mode
                 </p>
@@ -287,7 +287,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <button type="button" onClick={() => navigate('/clinical-profile')} className="text-left">
               <WorkspaceSurface accent="#728ba6" className="h-full transition-transform duration-300 hover:translate-y-[-2px]">
                 <div className="space-y-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-[var(--color-accent-secondary)]/12">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)] bg-[var(--color-accent-secondary)]/12">
                     <Layers className="h-5 w-5 text-[var(--color-accent-secondary)]" />
                   </div>
                   <div>
@@ -305,7 +305,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <button type="button" onClick={() => navigate('/gap-analysis')} className="text-left">
               <WorkspaceSurface accent="#c4b78a" className="h-full transition-transform duration-300 hover:translate-y-[-2px]">
                 <div className="space-y-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-[var(--color-accent)]/12">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)] bg-[var(--color-accent)]/12">
                     <Target className="h-5 w-5 text-[var(--color-accent)]" />
                   </div>
                   <div>
@@ -324,7 +324,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <button type="button" onClick={() => navigate('/clinical-profile')} className="text-left">
               <WorkspaceSurface accent="#7a8f6e" className="h-full transition-transform duration-300 hover:translate-y-[-2px]">
                 <div className="space-y-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-[var(--color-data-pass)]/12">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)] bg-[var(--color-data-pass)]/12">
                     <User className="h-5 w-5 text-[var(--color-data-pass)]" />
                   </div>
                   <div>

@@ -151,7 +151,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Choose the right mode
               </p>
@@ -185,7 +185,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                 <span className="text-sm font-medium text-[var(--color-text-primary)]">
                   PDF source
                 </span>
-                <div className="rounded-[1.25rem] border border-dashed border-white/12 bg-white/[0.03] p-4">
+                <div className="workspace-dashed-state rounded-[1.25rem] p-4">
                   <input
                     type="file"
                     accept=".pdf,application/pdf"
@@ -247,7 +247,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                       setResult(null);
                       setError(null);
                     }}
-                    className="w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                    className="workspace-field w-full rounded-[1.25rem] px-4 py-3 text-sm outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
                   />
                 </label>
               ) : null}
@@ -282,7 +282,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                   </p>
                 </div>
 
-                <div className="max-h-[24rem] space-y-3 overflow-auto rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4">
+                <div className="workspace-subsurface max-h-[24rem] space-y-3 overflow-auto rounded-[1.25rem] p-4">
                   {result.script.map((segment, index) => (
                     <div key={`${segment.speaker}-${index}`} className="text-sm leading-7">
                       <span className="font-semibold text-[var(--color-accent)]">
@@ -294,7 +294,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                 </div>
 
                 {result.audioBase64 ? (
-                  <div className="space-y-3 rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
+                  <div className="workspace-subsurface space-y-3 rounded-[1.25rem] p-4">
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">
                       Audio playback
                     </p>
@@ -306,7 +306,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                     />
                   </div>
                 ) : result.message ? (
-                  <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-[var(--color-text-secondary)]">
+                  <div className="workspace-dashed-state rounded-[1.25rem] p-4 text-sm text-[var(--color-text-secondary)]">
                     {result.message}
                   </div>
                 ) : null}

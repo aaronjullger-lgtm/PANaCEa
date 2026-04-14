@@ -409,7 +409,7 @@ const StudyPathDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+              <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Plan window
                 </p>
@@ -459,7 +459,7 @@ const StudyPathDashboard = () => {
           title="Session map"
           subtitle="A day-by-day view of the work this plan is actually asking you to do."
           action={
-            <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+            <span className="workspace-chip rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
               {totalSessions} sessions
             </span>
           }
@@ -475,7 +475,7 @@ const StudyPathDashboard = () => {
                 <WorkspaceSurface accent={index % 2 === 0 ? '#c4b78a' : '#728ba6'}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="flex h-12 w-12 flex-col items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-[var(--color-text-primary)]">
+                      <div className="workspace-icon-tile flex h-12 w-12 flex-col items-center justify-center rounded-2xl text-[var(--color-text-primary)]">
                         <span className="text-[0.65rem] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
                           Day
                         </span>
@@ -508,13 +508,13 @@ const StudyPathDashboard = () => {
                     {session.topics.map((topic, topicIndex) => (
                       <div
                         key={`${session.id}-${topic.taxonomyCode}-${topicIndex}`}
-                        className="rounded-[1.05rem] border border-white/8 bg-white/4 p-4"
+                        className="workspace-subsurface-soft rounded-[1.05rem] p-4"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                             {topic.taxonomyCode}
                           </p>
-                          <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                          <span className="workspace-chip rounded-full px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
                             {topic.recommendedAction}
                           </span>
                         </div>

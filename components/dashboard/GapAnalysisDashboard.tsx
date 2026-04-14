@@ -158,7 +158,7 @@ function HighYieldFocus({
           {systems.map((system, index) => (
             <div
               key={system.name}
-              className="rounded-[1.15rem] border border-white/8 bg-white/4 p-4"
+              className="workspace-subsurface-soft rounded-[1.15rem] p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -213,7 +213,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
   const data = payload[0].payload as SystemData;
   return (
-    <div className="rounded-[1rem] border border-white/8 bg-[var(--color-bg-primary)]/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+    <div className="workspace-subsurface rounded-[1rem] px-4 py-3 shadow-lg backdrop-blur-sm">
       <h4 className="mb-2 font-semibold text-[var(--color-text-primary)]">{data.name}</h4>
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
@@ -232,7 +232,7 @@ const CustomTooltip = ({ active, payload }: any) => {
             {data.cohortP90}%
           </span>
         </div>
-        <div className="mt-2 border-t border-white/8 pt-2">
+        <div className="workspace-divider mt-2 border-t pt-2">
           <div className="flex items-center justify-between gap-4">
             <span className="text-[var(--color-text-secondary)]">Gap to close</span>
             <span className="font-semibold text-[var(--color-data-provisional)] tabular-nums">
@@ -489,7 +489,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
               </p>
             </div>
 
-            <div className="space-y-3 rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface space-y-3 rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Priority rule of thumb
               </p>
@@ -498,7 +498,15 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                 volume first. Low-volume noise is less urgent than a consistent miss pattern.
               </p>
               {error ? (
-                <div className="rounded-[1rem] border border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/10 px-3 py-2 text-sm text-[var(--color-data-provisional)]">
+                <div
+                  className="rounded-[1rem] border px-3 py-2 text-sm text-[var(--color-data-provisional)]"
+                  style={{
+                    borderColor:
+                      'color-mix(in srgb, var(--color-data-provisional) 32%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-data-provisional) 12%, var(--color-bg-secondary))',
+                  }}
+                >
                   {error}
                 </div>
               ) : null}

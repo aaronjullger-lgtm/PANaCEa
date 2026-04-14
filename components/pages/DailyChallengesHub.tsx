@@ -74,8 +74,11 @@ function ChallengeCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8"
-              style={{ background: `color-mix(in srgb, ${challenge.accent} 16%, transparent)` }}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border"
+              style={{
+                background: `color-mix(in srgb, ${challenge.accent} 16%, var(--color-bg-secondary))`,
+                borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+              }}
             >
               <Icon className="h-5 w-5" style={{ color: challenge.accent }} aria-hidden="true" />
             </div>
@@ -90,8 +93,12 @@ function ChallengeCard({
           <span
             className="rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em]"
             style={{
-              borderColor: challenge.completed ? 'rgba(56, 161, 105, 0.28)' : 'rgba(255,255,255,0.08)',
-              background: challenge.completed ? 'rgba(56, 161, 105, 0.12)' : 'rgba(255,255,255,0.04)',
+              borderColor: challenge.completed
+                ? 'rgba(56, 161, 105, 0.28)'
+                : 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+              background: challenge.completed
+                ? 'rgba(56, 161, 105, 0.12)'
+                : 'color-mix(in srgb, var(--color-bg-tertiary) 78%, var(--color-bg-primary) 22%)',
               color: challenge.completed ? 'var(--color-data-pass)' : 'var(--color-text-muted)',
             }}
           >
@@ -103,7 +110,7 @@ function ChallengeCard({
           {challenge.description}
         </p>
 
-        <div className="space-y-2 rounded-[1.1rem] border border-white/8 bg-white/4 p-4">
+        <div className="workspace-subsurface-soft space-y-2 rounded-[1.1rem] p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="text-[var(--color-text-secondary)]">Daily reset</span>
             <span className="font-medium text-[var(--color-text-primary)]">{resetTime}</span>
@@ -357,7 +364,7 @@ export function DailyChallengesHub() {
               </p>
             </div>
 
-            <div className="space-y-4 rounded-[1.4rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface space-y-4 rounded-[1.4rem] p-5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Daily completion
@@ -366,7 +373,13 @@ export function DailyChallengesHub() {
                   {Math.round(overallProgress)}%
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/8">
+              <div
+                className="h-2 overflow-hidden rounded-full"
+                style={{
+                  background:
+                    'color-mix(in srgb, var(--color-bg-tertiary) 72%, var(--color-bg-primary) 28%)',
+                }}
+              >
                 <div
                   className="h-full rounded-full bg-[linear-gradient(90deg,#c4b78a,#728ba6,#9a7f9a)] transition-all duration-500"
                   style={{ width: `${overallProgress}%` }}
@@ -376,7 +389,7 @@ export function DailyChallengesHub() {
                 {challenges.map((challenge) => (
                   <div
                     key={challenge.key}
-                    className="rounded-[1rem] border border-white/8 bg-white/4 px-3 py-3"
+                    className="workspace-subsurface-soft rounded-[1rem] px-3 py-3"
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
                       {challenge.title}

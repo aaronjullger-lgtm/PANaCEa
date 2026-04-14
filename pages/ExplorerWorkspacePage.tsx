@@ -80,7 +80,7 @@ export const ExplorerWorkspacePage: React.FC = () => {
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Good uses
               </p>

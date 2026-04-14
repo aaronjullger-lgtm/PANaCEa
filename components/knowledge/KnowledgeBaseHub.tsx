@@ -179,9 +179,13 @@ function LabSubButton({
       onClick={onClick}
       className="rounded-full border px-3.5 py-2 text-sm font-medium transition-all duration-300"
       style={{
-        background: active ? 'rgba(122, 143, 110, 0.16)' : 'rgba(255,255,255,0.03)',
-        borderColor: active ? 'rgba(122, 143, 110, 0.36)' : 'rgba(255,255,255,0.08)',
-        color: active ? '#bfd0b2' : 'var(--color-text-secondary)',
+        background: active
+          ? 'color-mix(in srgb, var(--color-data-ready) 16%, var(--color-bg-secondary))'
+          : 'color-mix(in srgb, var(--color-bg-tertiary) 74%, var(--color-bg-primary) 26%)',
+        borderColor: active
+          ? 'color-mix(in srgb, var(--color-data-ready) 34%, transparent)'
+          : 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+        color: active ? 'var(--color-data-ready)' : 'var(--color-text-secondary)',
       }}
     >
       {tab.label}

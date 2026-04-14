@@ -323,7 +323,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                 </h2>
               </div>
               <div className="space-y-3">
-                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     Intelligence profile
                   </p>
@@ -333,7 +333,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                       : tutorContext ?? 'No profile context available.'}
                   </p>
                 </div>
-                <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     Active library
                   </p>
@@ -363,7 +363,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                     key={prompt}
                     type="button"
                     onClick={() => void handleSend(prompt)}
-                    className="w-full rounded-[1.25rem] border border-white/8 bg-white/5 p-4 text-left transition-colors hover:bg-white/8"
+                    className="workspace-subsurface-interactive w-full rounded-[1.25rem] p-4 text-left"
                   >
                     <p className="text-sm font-medium text-[var(--color-text-primary)]">
                       {prompt}
@@ -408,7 +408,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
 
                 {messages.length === 0 ? (
                   <div className="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 px-6 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
+                    <div className="workspace-icon-tile flex h-14 w-14 items-center justify-center rounded-2xl">
                       {isLoadingContext ? (
                         <Loader2 className="h-6 w-6 animate-spin text-[var(--color-accent)]" />
                       ) : (
@@ -434,7 +434,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                       }`}
                     >
                       {message.role === 'assistant' ? (
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[var(--color-accent)]/12">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--color-text-primary)_8%,transparent)] bg-[var(--color-accent)]/12">
                           <Bot className="h-4 w-4 text-[var(--color-accent)]" />
                         </div>
                       ) : null}
@@ -443,14 +443,14 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                         className={`max-w-[82%] rounded-[1.35rem] px-4 py-3 text-sm leading-7 ${
                           message.role === 'user'
                             ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                            : 'border border-white/8 bg-white/5 text-[var(--color-text-primary)]'
+                            : 'workspace-subsurface text-[var(--color-text-primary)]'
                         }`}
                       >
                         {message.text}
                       </div>
 
                       {message.role === 'user' ? (
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/5">
+                        <div className="workspace-icon-tile flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl">
                           <User className="h-4 w-4 text-[var(--color-text-secondary)]" />
                         </div>
                       ) : null}
@@ -459,7 +459,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                 )}
               </div>
 
-              <div className="border-t border-white/8 bg-black/10 px-5 py-4 sm:px-6">
+              <div className="workspace-divider workspace-footer-surface border-t px-5 py-4 sm:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <label className="block flex-1">
                     <span className="sr-only">Ask the reasoning tutor</span>
@@ -474,7 +474,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                         }
                       }}
                       placeholder="Ask for a differential, safer next step, or a quiz on your weak systems…"
-                      className="w-full rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                      className="workspace-field w-full rounded-2xl px-4 py-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
                     />
                   </label>
 

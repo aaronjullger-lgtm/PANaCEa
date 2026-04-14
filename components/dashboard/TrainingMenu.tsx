@@ -494,12 +494,21 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           ${featuredClasses}
           ${isDailyRecommended && !isDisabled ? 'ring-2 ring-[#c4b78a] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
         `}
-        style={isDisabled ? { background: 'rgba(17, 24, 39, 0.3)' } : {
-          background: 'rgba(17, 24, 39, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          backdropFilter: 'blur(12px) saturate(130%)',
-          WebkitBackdropFilter: 'blur(12px) saturate(130%)',
-        }}
+        style={
+          isDisabled
+            ? {
+                background:
+                  'color-mix(in srgb, var(--color-bg-secondary) 70%, var(--color-bg-primary) 30%)',
+              }
+            : {
+                background:
+                  'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                border:
+                  '1px solid color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                backdropFilter: 'blur(12px) saturate(130%)',
+                WebkitBackdropFilter: 'blur(12px) saturate(130%)',
+              }
+        }
       >
         {isDisabled && (
           <span className="absolute top-2 right-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 px-2 py-0.5 rounded-full z-10 border border-[var(--color-border)]/30">
@@ -615,13 +624,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       {/* Sticky Category Sidebar - Desktop only */}
       <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-0 h-fit">
         <div
-          className="rounded-2xl p-4 space-y-2"
+          className="workspace-subsurface rounded-2xl p-4 space-y-2"
           style={{
-            background: 'rgba(17, 24, 39, 0.6)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(12px) saturate(130%)',
             WebkitBackdropFilter: 'blur(12px) saturate(130%)',
-            boxShadow: '0 4px 16px -2px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 4px 16px -2px rgba(0, 0, 0, 0.18)',
           }}
         >
           <h3
@@ -640,9 +647,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
               style={activeSection === section.key ? {
-                background: 'rgba(196, 183, 138, 0.08)',
-                border: '1px solid rgba(196, 183, 138, 0.12)',
-                boxShadow: '0 0 8px rgba(196, 183, 138, 0.06)',
+                background: 'color-mix(in srgb, #c4b78a 12%, var(--color-bg-secondary))',
+                border: '1px solid color-mix(in srgb, #c4b78a 24%, transparent)',
+                boxShadow: '0 0 8px color-mix(in srgb, #c4b78a 16%, transparent)',
               } : {
                 border: '1px solid transparent',
               }}
@@ -664,10 +671,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             placeholder="Search modes (e.g., ECG, Antibiotics, Rapid)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#c4b78a]/30 focus:border-[#c4b78a]/50"
+            className="workspace-field w-full rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#c4b78a]/30 focus:border-[#c4b78a]/50"
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
             }}

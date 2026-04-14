@@ -150,7 +150,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         }}
       >
         <motion.div
-          className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8 ${contentClassName ?? ''}`}
+          className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 lg:px-8 ${contentClassName ?? ''}`}
           style={{ maxWidth: `var(--content-max-width, ${contentMaxWidth})` }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

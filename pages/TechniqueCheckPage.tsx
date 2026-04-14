@@ -170,7 +170,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Keep clips useful
               </p>
@@ -213,7 +213,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
               ) : null}
 
               {videoUrl ? (
-                <div className="relative inline-block overflow-hidden rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/80 p-3">
+                <div className="workspace-subsurface relative inline-block overflow-hidden rounded-[1.25rem] p-3">
                   <video
                     ref={videoRef}
                     src={videoUrl}
@@ -239,7 +239,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-8 text-sm text-[var(--color-text-secondary)]">
+                <div className="workspace-dashed-state rounded-[1.25rem] p-8 text-sm text-[var(--color-text-secondary)]">
                   Your maneuver preview will appear here after upload.
                 </div>
               )}
@@ -282,7 +282,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                   setResult(null);
                   setError(null);
                 }}
-                className="w-full rounded-[1.25rem] border border-white/10 bg-[var(--color-bg-primary)]/85 px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
+                className="workspace-field w-full rounded-[1.25rem] px-4 py-3 text-sm outline-none transition focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
 
               {error ? (
@@ -340,7 +340,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                     {result.boundingBoxes.map((box, index) => (
                       <div
                         key={`${box.label}-${index}`}
-                        className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-[var(--color-text-secondary)]"
+                        className="workspace-subsurface rounded-[1rem] px-4 py-3 text-sm text-[var(--color-text-secondary)]"
                       >
                         <span className="font-medium text-[var(--color-text-primary)]">
                           {box.label}
@@ -352,7 +352,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-[var(--color-text-secondary)]">
+                  <div className="workspace-dashed-state rounded-[1.25rem] p-4 text-sm text-[var(--color-text-secondary)]">
                     No bounding-box highlights were returned for this clip.
                   </div>
                 )}

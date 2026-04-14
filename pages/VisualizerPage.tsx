@@ -209,7 +209,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
               </p>
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/5 p-5">
+            <div className="workspace-subsurface rounded-[1.25rem] p-5">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Strong use cases
               </p>
@@ -258,7 +258,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
               ) : null}
 
               {imageSrc ? (
-                <div className="relative inline-block max-w-full rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/80 p-3">
+                <div className="workspace-subsurface relative inline-block max-w-full rounded-[1.25rem] p-3">
                   <img
                     ref={imgRef}
                     src={imageSrc}
@@ -271,7 +271,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                   />
                 </div>
               ) : (
-                <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] p-8 text-sm text-[var(--color-text-secondary)]">
+                <div className="workspace-dashed-state rounded-[1.25rem] p-8 text-sm text-[var(--color-text-secondary)]">
                   The generated anatomy image will appear here.
                 </div>
               )}
@@ -306,7 +306,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                   })}
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/8 bg-[var(--color-bg-primary)]/75 p-4">
+                <div className="workspace-subsurface rounded-[1.25rem] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                     Active focus
                   </p>
