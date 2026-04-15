@@ -153,7 +153,7 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
             {currentQuestion && !isCommuterMode && (
               <QuestionTimer
                 startTime={questionStartTime}
-                parTimeMs={parTimeMs}
+                parTimeMs={parTimeMs ?? undefined}
                 isAnswered={isAnswered}
                 isVisible={showTimerVisible}
                 compact

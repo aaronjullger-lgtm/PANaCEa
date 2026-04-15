@@ -9,6 +9,7 @@ import { fetchSessionQuestions } from '@/services/core';
 import type { Question, SessionSettings, PerformanceRecord } from '@/types';
 
 const LOG_SCOPE = 'QuizView:useQuizSession';
+const sessionLogger = logger.scope(LOG_SCOPE);
 
 const BATCH_SIZE = 25;
 const LOW_QUEUE_THRESHOLD = 20;
@@ -73,7 +74,7 @@ export function useQuizSession({
       if (restored.currentQuestionIndex !== undefined && restored.queue) {
         const idx = restored.currentQuestionIndex;
         if (idx >= 0 && idx < restored.queue.length) {
-          setCurrentQuestion(restored.queue[idx]);
+          setCurrentQuestion(restored.queue[idx] ?? null);
         }
       }
       if (restored.questionNumber !== undefined) setQuestionNumber(restored.questionNumber);
@@ -110,13 +111,13 @@ export function useQuizSession({
           newQuestions = result.questions ?? [];
         }
       } catch (apiErr) {
-        logger.warn(LOG_SCOPE, 'Session API replenish failed, using fallback', apiErr);
+        sessionLogger.warn('Session API replenish failed, using fallback', { error: apiErr });
       }
 
       if (newQuestions.length === 0) {
         const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
           getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
-            logger.warn(LOG_SCOPE, 'Single question fetch failed', err);
+            sessionLogger.warn('Single question fetch failed', { error: err });
             return null;
           })
         );
@@ -129,10 +130,10 @@ export function useQuizSession({
         setQueue((prev) => [...prev, ...newQuestions]);
         setReplenishAttempts(0);
       } else {
-        logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
+        sessionLogger.warn('No questions returned from batch fetch');
       }
     } catch (err: unknown) {
-      logger.error(LOG_SCOPE, 'Failed to replenish queue', err);
+      sessionLogger.error('Failed to replenish queue', { error: err });
       setError('Unable to load more questions right now. You can continue with your current questions.');
     } finally {
       setIsGeneratingQuestion(false);
@@ -148,7 +149,7 @@ export function useQuizSession({
 
   // Keep current question synced with queue[0]
   useEffect(() => {
-    setCurrentQuestion(queue[0] || null);
+    setCurrentQuestion(queue[0] ?? null);
   }, [queue]);
 
   // Initialize from incoming queue once
@@ -166,17 +167,21 @@ export function useQuizSession({
 
   // Auto-read question aloud when commuter mode is active
   useEffect(() => {
-    if (!commuter?.isCommuterMode || !commuter.settings.autoReadQuestions || !currentQuestion) return;
-    const vignette = currentQuestion.vignette ? currentQuestion.vignette + ' ' : '';
-    const stem = currentQuestion.stem || '';
-    const text = vignette + stem;
-    if (text.trim()) {
-      commuter.speak(text);
-      const timer = setTimeout(() => {
-        if (commuter.settings.voiceEnabled) commuter.startListening();
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (!commuter?.isCommuterMode || !commuter.settings.autoReadQuestions || !currentQuestion) {
+      return undefined;
     }
+    const vignette = currentQuestion.vignette ? currentQuestion.vignette + ' ' : '';
+    const stem = currentQuestion.question || currentQuestion.stem || '';
+    const text = vignette + stem;
+    if (!text.trim()) {
+      return undefined;
+    }
+
+    commuter.speak(text);
+    const timer = setTimeout(() => {
+      if (commuter.settings.voiceEnabled) commuter.startListening();
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [commuter, currentQuestion]);
 
   return {

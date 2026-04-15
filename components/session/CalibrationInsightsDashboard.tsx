@@ -234,8 +234,11 @@ export default function CalibrationInsightsDashboard() {
       try {
         const res = await fetch('/api/study/calibration-insights');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (!cancelled) setData(json);
+        const json = await res.json() as { data?: InsightsData } | InsightsData | null;
+        const normalized = json && typeof json === 'object' && 'data' in json
+          ? json.data ?? null
+          : json;
+        if (!cancelled) setData(normalized as InsightsData | null);
       } catch (err: any) {
         if (!cancelled) setError(err.message);
       } finally {

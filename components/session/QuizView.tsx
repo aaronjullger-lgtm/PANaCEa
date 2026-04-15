@@ -72,8 +72,6 @@ import AnswerChoice from '@/components/quiz/AnswerChoice';
 import {
   useBehavioralTracker,
   OptionHoverTracker,
-  behavioralPayloadToTelemetryData,
-  enrichTelemetryWithSessionPosition,
 } from '@/components/quiz/Tracker';
 import { useUnifiedKinetics } from '@/hooks/useUnifiedKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
@@ -140,7 +138,6 @@ import { computeScore } from '@/lib/scoring/computeScore';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
-import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { logger } from "@/lib/simple-logger";
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
@@ -149,6 +146,7 @@ const STRIP_HTML_TAGS_REGEX = /<[^>]*>/g;
 const BR_TAG_REGEX = /<br\s*\/?>/gi;
 
 const LOG_SCOPE = 'QuizView';
+const quizLogger = logger.scope(LOG_SCOPE);
 
 // Strip basic HTML tags from question text while preserving table HTML rendered separately
 function stripSimpleHtmlTags(text: string): string {
@@ -190,6 +188,8 @@ export interface QuizViewProps {
   totalQuestions?: number;
   /** Breadcrumb/context label (e.g. "Practice → Diagnostic Puzzle") shown beside BackLink */
   modeLabel?: string;
+  /** Optional external session identifier used by some parent modes */
+  sessionId?: string | null;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -266,7 +266,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         id="question-container"
         tabIndex={-1}
         className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6 space-y-4"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
       >
         {/* Text before the table */}
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
@@ -300,7 +300,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         id="question-container"
         tabIndex={-1}
         className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] rounded-xl p-6"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
       >
         {normalizedText}
       </div>
@@ -317,7 +317,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       id="question-container"
       tabIndex={-1}
       className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6"
-      style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
       <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
@@ -374,11 +374,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     for (const [name, callback] of Object.entries(requiredCallbacks)) {
       if (typeof callback !== 'function') {
-        logger.error(
-          LOG_SCOPE,
-          `Required callback prop "${name}" is not a function`,
-          typeof callback
-        );
+        quizLogger.error(`Required callback prop "${name}" is not a function`, {
+          callbackType: typeof callback,
+        });
       }
     }
   }, []);
@@ -479,21 +477,25 @@ const QuizView: React.FC<QuizViewProps> = ({
   const showTimerVisible = showTimer && !commuter?.isCommuterMode;
   // Auto‑read question aloud when commuter mode is active
   useEffect(() => {
-    if (!commuter?.isCommuterMode || !commuter.settings.autoReadQuestions || !currentQuestion) return;
+    if (!commuter?.isCommuterMode || !commuter.settings.autoReadQuestions || !currentQuestion) {
+      return undefined;
+    }
     // Build readable text from question vignette and stem
     const vignette = currentQuestion.vignette ? currentQuestion.vignette + ' ' : '';
-    const stem = currentQuestion.stem || '';
+    const stem = currentQuestion.question || '';
     const text = vignette + stem;
-    if (text.trim()) {
-      commuter.speak(text);
-      // Start listening for voice answers after a short delay
-      const timer = setTimeout(() => {
-        if (commuter.settings.voiceEnabled) {
-          commuter.startListening();
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (!text.trim()) {
+      return undefined;
     }
+
+    commuter.speak(text);
+    // Start listening for voice answers after a short delay
+    const timer = setTimeout(() => {
+      if (commuter.settings.voiceEnabled) {
+        commuter.startListening();
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
   }, [commuter, currentQuestion]);
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
 
@@ -503,6 +505,30 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showNotes, setShowNotes] = useState(false);
   // Normal Labs reference panel (slide-out from right)
   const [showNormalLabsPanel, setShowNormalLabsPanel] = useState(false);
+  const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const nextButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Ref-based callback to break the submit ↔ keyboard cycle:
+  // the keyboard hook needs a submit handler before the real callback is defined.
+  const handleSubmitAnswerRef = useRef<() => void>(() => {});
+
+  // ---- KEYBOARD SHORTCUTS & ELIMINATION (extracted hook) ----
+  const {
+    eliminatedAnswers,
+    setEliminatedAnswers,
+    handleToggleEliminate,
+    eliminationTimestampsRef,
+    resetElimination,
+  } = useQuizKeyboard({
+    isAnswered,
+    selectedAnswerIndex,
+    currentQuestion,
+    onShowMenu,
+    onSubmitAnswer: () => handleSubmitAnswerRef.current(),
+    onToggleRationale: () => setShowRationale((prev) => !prev),
+    optionButtonsRef,
+    nextButtonRef,
+  });
 
   // ---- SESSION RECOVERY ----
   const userId = user?.id;
@@ -519,7 +545,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       if (restored.currentQuestionIndex !== undefined && restored.queue) {
         const idx = restored.currentQuestionIndex;
         if (idx >= 0 && idx < restored.queue.length) {
-          setCurrentQuestion(restored.queue[idx]);
+          setCurrentQuestion(restored.queue[idx] ?? null);
         }
       }
       if (restored.selectedAnswerIndex !== undefined) setSelectedAnswerIndex(restored.selectedAnswerIndex);
@@ -581,9 +607,33 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [showSessionEndSummary, clearSavedState]);
 
   // Flush session state immediately on tab close to prevent data loss in the debounce window
-  const sessionStateRef = useRef({ currentQuestion, queue, selectedAnswerIndex, isAnswered, questionNumber, eliminatedAnswers, localNote });
+  const sessionStateRef = useRef({
+    currentQuestion,
+    queue,
+    selectedAnswerIndex,
+    isAnswered,
+    questionNumber,
+    eliminatedAnswers,
+    localNote,
+    sessionScore: {
+      correct: performanceData.filter((p) => p.isCorrect).length,
+      total: performanceData.length,
+    },
+  });
   useEffect(() => {
-    sessionStateRef.current = { currentQuestion, queue, selectedAnswerIndex, isAnswered, questionNumber, eliminatedAnswers, localNote };
+    sessionStateRef.current = {
+      currentQuestion,
+      queue,
+      selectedAnswerIndex,
+      isAnswered,
+      questionNumber,
+      eliminatedAnswers,
+      localNote,
+      sessionScore: {
+        correct: performanceData.filter((p) => p.isCorrect).length,
+        total: performanceData.length,
+      },
+    };
   });
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -599,6 +649,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         localNote: s.localNote,
         answerChangeCount: answerChangeCountRef.current,
         firstSelectedAnswer: firstSelectedAnswerRef.current,
+        sessionScore: s.sessionScore,
       });
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -606,31 +657,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [saveState]);
 
   const noteUpdateTimeout = useRef<number | null>(null);
-  const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
-  const nextButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  // Ref-based callback to break circular dependency: the keyboard hook needs
-  // onSubmitAnswer, but handleSubmitAnswer (defined later) needs the hook's
-  // eliminationTimestampsRef. We bridge with a ref updated after definition.
-  const handleSubmitAnswerRef = useRef<() => void>(() => {});
-
-  // ---- KEYBOARD SHORTCUTS & ELIMINATION (extracted hook) ----
-  const {
-    eliminatedAnswers,
-    setEliminatedAnswers,
-    handleToggleEliminate,
-    eliminationTimestampsRef,
-    resetElimination,
-  } = useQuizKeyboard({
-    isAnswered,
-    selectedAnswerIndex,
-    currentQuestion,
-    onShowMenu,
-    onSubmitAnswer: () => handleSubmitAnswerRef.current(),
-    onToggleRationale: () => setShowRationale((prev) => !prev),
-    optionButtonsRef,
-    nextButtonRef,
-  });
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -692,7 +718,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Keep current question synced with queue[0]
   useEffect(() => {
-    setCurrentQuestion(queue[0] || null);
+    setCurrentQuestion(queue[0] ?? null);
   }, [queue]);
 
   // ---- SHOULD WE REPLENISH ENDLESSLY? ----
@@ -790,7 +816,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       // Note: Replenishment is handled by the proactive effect when queue < LOW_QUEUE_THRESHOLD
     } catch (error) {
-      logger.error(LOG_SCOPE, 'Error advancing to next question', error);
+      quizLogger.error('Error advancing to next question', { error });
       setError('Failed to load next question. Please try again.');
     }
   }, [
@@ -851,7 +877,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Guard: correctAnswerIndex must be present — DB schema is Int (non-nullable) but TS type allows undefined
     if (currentQuestion.correctAnswerIndex == null) {
-      logger.error(LOG_SCOPE, 'Question missing correctAnswerIndex — cannot score answer', {
+      quizLogger.error('Question missing correctAnswerIndex — cannot score answer', {
         id: currentQuestion.id,
       });
       setIsSubmitting(false);
@@ -868,7 +894,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       question: currentQuestion,
       questionNumber,
       behavioralPayload,
-      microMetrics,
+      microMetrics: {
+        ...microMetrics,
+        inputMethod: microKinetics.inputMethod,
+      },
       eliminationTimestamps: eliminationTimestampsRef.current,
     });
 
@@ -905,7 +934,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           telemetry: telemetryWithPosition,
         });
       } catch (err) {
-        logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);
+        quizLogger.error('Failed to queue review for offline sync', { error: err });
       }
     }
 
@@ -922,7 +951,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           setCurrentQuestion((prev) => (prev ? { ...prev, pearls } : null));
         }
       } catch (error) {
-        logger.error(LOG_SCOPE, 'Failed to load clinical pearls', error);
+        quizLogger.error('Failed to load clinical pearls', { error });
       }
     }
 
@@ -991,7 +1020,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'updatePerformancePrediction failed', e);
+      quizLogger.warn('updatePerformancePrediction failed', { error: e });
     }
 
     // Sprint 4: Record for smart pause detection
@@ -1004,7 +1033,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordPauseResult failed', e);
+      quizLogger.warn('recordPauseResult failed', { error: e });
     }
 
     // Advanced analytics: Record comprehensive question result
@@ -1021,7 +1050,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordQuestionResult failed', e);
+      quizLogger.warn('recordQuestionResult failed', { error: e });
     }
 
     setBehavioralRefreshKey((k) => k + 1);
@@ -1187,7 +1216,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         });
         setIsExplainerLoading(false);
       } catch (err) {
-        logger.error(LOG_SCOPE, 'Error generating alternate rationale', err);
+        quizLogger.error('Error generating alternate rationale', { error: err });
         setAlternateRationale(
           "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
         );
@@ -1195,7 +1224,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       }
     } catch (err) {
       // User-friendly error message instead of technical details
-      logger.error(LOG_SCOPE, 'Error generating alternate rationale', err);
+      quizLogger.error('Error generating alternate rationale', { error: err });
       setAlternateRationale(
         "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
       );
@@ -1551,7 +1580,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <p className="mt-2 text-caption text-[var(--color-text-muted)] hidden md:block">
                 Press{' '}
                 <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] rounded-lg text-caption font-mono"
-                  style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px rgba(0,0,0,0.04)' }}
+                  style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
                 >
                   Enter
                 </kbd>{' '}
@@ -1619,7 +1648,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   try {
                     showNextQuestion();
                   } catch (error) {
-                    logger.error(LOG_SCOPE, 'Error in Next Question button click', error);
+                    quizLogger.error('Error in Next Question button click', { error });
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}

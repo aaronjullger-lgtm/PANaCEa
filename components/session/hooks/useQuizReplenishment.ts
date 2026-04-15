@@ -5,6 +5,7 @@ import { fetchSessionQuestions } from '@/services/core';
 import type { Question, SessionSettings } from '@/types';
 
 const LOG_SCOPE = 'QuizView:replenish';
+const replenishLogger = logger.scope(LOG_SCOPE);
 
 const BATCH_SIZE = 25;
 const LOW_QUEUE_THRESHOLD = 20;
@@ -86,13 +87,15 @@ export function useQuizReplenishment({
           newQuestions = result.questions ?? [];
         }
       } catch (apiErr) {
-        logger.warn(LOG_SCOPE, 'Session API replenish failed, using fallback', apiErr);
+        replenishLogger.warn('Session API replenish failed, using fallback', {
+          error: apiErr,
+        });
       }
 
       if (newQuestions.length === 0) {
         const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
           getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
-            logger.warn(LOG_SCOPE, 'Single question fetch failed', err);
+            replenishLogger.warn('Single question fetch failed', { error: err });
             return null;
           })
         );
@@ -106,10 +109,10 @@ export function useQuizReplenishment({
         replenishAttemptsRef.current = 0;
         setReplenishAttempts(0);
       } else {
-        logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
+        replenishLogger.warn('No questions returned from batch fetch');
       }
     } catch (err: unknown) {
-      logger.error(LOG_SCOPE, 'Failed to replenish queue', err);
+      replenishLogger.error('Failed to replenish queue', { error: err });
       setError('Unable to load more questions right now. You can continue with your current questions.');
     } finally {
       setIsGeneratingQuestion(false);

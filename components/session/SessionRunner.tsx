@@ -35,6 +35,18 @@ interface SessionRunnerProps {
   removeDueConcept?: (conditionId: string, taskType: string | null) => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractSessionQuestions(payload: unknown): Question[] {
+  if (!isRecord(payload)) return [];
+
+  const nestedData = isRecord(payload.data) ? payload.data : null;
+  const rawQuestions = nestedData?.questions ?? payload.questions;
+  return Array.isArray(rawQuestions) ? (rawQuestions as Question[]) : [];
+}
+
 /**
  * SessionRunner – resumes a previously generated study session by its ID.
  * Fetches the session's questions and renders the QuizView with the stored order.
@@ -87,9 +99,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
         throw new Error(`Failed to fetch session: ${response.status} ${text}`);
       }
       const json = await response.json();
-      const rawQuestions =
-        json?.data?.questions ?? json?.questions ?? [];
-      const questionList = Array.isArray(rawQuestions) ? rawQuestions : [];
+      const questionList = extractSessionQuestions(json);
       setQuestions(questionList);
       setGrowthAreas(deriveGrowthAreas(questionList));
 
@@ -128,12 +138,15 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
     return (
       <EnhancedErrorMessage
         title="Could not load session"
-        message={error}
-        action={{
-          label: 'Try again',
-          onClick: fetchSession,
-        }}
-        onBack={onExit}
+        description={error}
+        actions={[
+          {
+            label: 'Try again',
+            action: fetchSession,
+            variant: 'primary',
+          },
+        ]}
+        onDismiss={onExit}
       />
     );
   }
@@ -142,8 +155,8 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
     return (
       <EnhancedErrorMessage
         title="Session not found"
-        message="The session does not contain any questions."
-        onBack={onExit}
+        description="The session does not contain any questions."
+        onDismiss={onExit}
       />
     );
   }
@@ -163,7 +176,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       sessionSettings={sessionSettings}
       growthAreas={growthAreas}
       onEndSession={handleEndSession}
-      onShowMenu={onExit}
+      onShowMenu={onExit ?? (() => {})}
       performanceData={performanceData}
       fontSizeAdjustment={fontSizeAdjustment}
       setFontSizeAdjustment={setFontSizeAdjustment}

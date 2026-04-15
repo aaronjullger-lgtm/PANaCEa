@@ -67,6 +67,111 @@ interface ConditionOption {
   questionCount: number;
 }
 
+interface LegacySystemPayload {
+  system?: string;
+  count?: number;
+  mastery?: number;
+  subcategories?: Array<{ name?: string; count?: number } | string>;
+}
+
+interface PoolStatusSystemStats {
+  total?: number;
+}
+
+interface HighYieldConditionPayload {
+  id?: string;
+  condition?: string;
+  name?: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function parseSystemOptions(payload: unknown): SystemOption[] {
+  // New `/api/content/systems` shape: { data: [{ id, label, count }] } — or the bare array
+  const unwrapped = isRecord(payload) && 'data' in payload ? (payload as { data: unknown }).data : payload;
+  if (Array.isArray(unwrapped) && unwrapped.length > 0 && isRecord(unwrapped[0]) && 'label' in unwrapped[0]) {
+    const rows = unwrapped as Array<{ id?: string; label?: string; count?: number }>;
+    return rows
+      .map((row) => ({
+        name: row.label ?? row.id ?? '',
+        questionCount: typeof row.count === 'number' ? row.count : 0,
+        mastery: 0,
+        subcategories: [] as { name: string; questionCount: number }[],
+      }))
+      .filter((sys) => sys.name.length > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  if (!isRecord(payload)) return [];
+
+  const rootData = isRecord(payload.data) ? payload.data : payload;
+  const legacySystems = Array.isArray(rootData.systems) ? rootData.systems as LegacySystemPayload[] : null;
+
+  if (legacySystems) {
+    return legacySystems
+      .map((sys) => ({
+        name: sys.system ?? '',
+        questionCount: sys.count ?? 0,
+        mastery: sys.mastery ?? 0,
+        subcategories: Array.isArray(sys.subcategories)
+          ? sys.subcategories.map((subcategory) => (
+              typeof subcategory === 'string'
+                ? { name: subcategory, questionCount: 0 }
+                : {
+                    name: subcategory.name ?? '',
+                    questionCount: subcategory.count ?? 0,
+                  }
+            )).filter((subcategory) => subcategory.name.length > 0)
+          : [],
+      }))
+      .filter((sys) => sys.name.length > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const bySystem = isRecord(rootData.bySystem) ? rootData.bySystem : null;
+  if (!bySystem) return [];
+
+  return Object.entries(bySystem)
+    .map(([name, stats]) => ({
+      name,
+      questionCount: isRecord(stats) ? ((stats as PoolStatusSystemStats).total ?? 0) : 0,
+      mastery: 0,
+      subcategories: [],
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function parseConditionOptions(payload: unknown): ConditionOption[] {
+  if (!isRecord(payload)) return [];
+
+  const rootData = isRecord(payload.data) ? payload.data : payload;
+  const rawConditions = Array.isArray(rootData.conditions)
+    ? rootData.conditions
+    : Array.isArray(rootData.data)
+      ? rootData.data
+      : Array.isArray(payload)
+        ? payload
+        : [];
+
+  return rawConditions
+    .map((condition) => {
+      if (!isRecord(condition)) return null;
+      const typedCondition = condition as HighYieldConditionPayload;
+      const id = typedCondition.id ?? typedCondition.condition ?? typedCondition.name ?? '';
+      const name = typedCondition.condition ?? typedCondition.name ?? typedCondition.id ?? '';
+      if (!id || !name) return null;
+
+      return {
+        id,
+        name,
+        questionCount: 0,
+      };
+    })
+    .filter((condition): condition is ConditionOption => condition !== null);
+}
+
 // ─── Session Size Options ────────────────────────────────────────────────────
 
 const SESSION_SIZES = [
@@ -124,30 +229,27 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       const token = await getToken();
       if (!token) return;
 
-      const res = await fetch('/api/questions/pool-status', {
+      // Primary: content-backed system list (labels + published counts)
+      const res = await fetch('/api/content/systems', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
         const data = await res.json();
-        // Transform pool data into system options
-        const systemMap = new Map<string, SystemOption>();
-
-        if (data.systems && Array.isArray(data.systems)) {
-          for (const sys of data.systems) {
-            systemMap.set(sys.system, {
-              name: sys.system,
-              questionCount: sys.count ?? 0,
-              mastery: sys.mastery ?? 0,
-              subcategories: (sys.subcategories ?? []).map((sc: any) => ({
-                name: sc.name ?? sc,
-                questionCount: sc.count ?? 0,
-              })),
-            });
-          }
+        const parsed = parseSystemOptions(data);
+        if (parsed.length > 0) {
+          setSystems(parsed);
+          return;
         }
+      }
 
-        setSystems(Array.from(systemMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
+      // Fallback: legacy pool-status shape (bySystem dict)
+      const fallback = await fetch('/api/questions/pool-status', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (fallback.ok) {
+        const fallbackData = await fallback.json();
+        setSystems(parseSystemOptions(fallbackData));
       }
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load systems:', err);
@@ -172,11 +274,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
 
       if (res.ok) {
         const data = await res.json();
-        const items = Array.isArray(data) ? data : data?.conditions ?? data?.data ?? [];
-        setConditions(items.map((c: { id?: string; condition?: string; name?: string }) => ({
-          id: c.id ?? c.condition ?? c.name ?? '',
-          name: c.condition ?? c.name ?? c.id ?? '',
-        })));
+        setConditions(parseConditionOptions(data));
       } else {
         setConditions([]);
       }

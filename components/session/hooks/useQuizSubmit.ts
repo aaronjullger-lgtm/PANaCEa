@@ -8,10 +8,12 @@ import { fetchPearlsClient } from '@/services/client/questionApi';
 import {
   behavioralPayloadToTelemetryData,
   enrichTelemetryWithSessionPosition,
+  type BehavioralPayload,
 } from '@/components/quiz/Tracker';
 import type { Question } from '@/types';
 
 const LOG_SCOPE = 'useQuizSubmit';
+const quizSubmitLogger = logger.scope(LOG_SCOPE);
 const STRIP_HTML_TAGS_REGEX = /<[^>]*>/g;
 const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
 const LATE_NIGHT_START_HOUR = 22;
@@ -48,15 +50,15 @@ export interface UseQuizSubmitConfig {
   questionsAnsweredRef: React.RefObject<number>;
 
   // Behavioral tracker callbacks
-  behavioralFinalize: () => Record<string, unknown> | null;
+  behavioralFinalize: () => BehavioralPayload | null;
   getMicroMetrics: () => {
     oscillations: number;
     vignetteRegressions: number;
-    selectionDriftMs: number;
+    selectionDriftMs: number | null;
     tremorScore: number;
     cursorEntropy: number;
   };
-  microKineticsInputMethod: string;
+  microKineticsInputMethod: 'mouse' | 'touch';
   onMicroKineticsRecordSelection: () => void;
   onAnswersRevealed: () => void;
   onRecordFirstInteraction: () => void;
@@ -169,14 +171,14 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
       .filter(([, t]) => t !== 'function')
       .map(([name, t]) => `${name}: ${t}`);
     if (undefinedFns.length > 0) {
-      logger.error(LOG_SCOPE, 'CRITICAL: Undefined functions in submitAnswer', undefinedFns);
+      quizSubmitLogger.error('CRITICAL: Undefined functions in submitAnswer', { undefinedFns });
     }
 
     cfg.setIsAnswered(true);
     cfg.onAnswersRevealed();
 
     if (currentQuestion.correctAnswerIndex == null) {
-      logger.error(LOG_SCOPE, 'Question missing correctAnswerIndex', { id: currentQuestion.id });
+      quizSubmitLogger.error('Question missing correctAnswerIndex', { id: currentQuestion.id });
       setIsSubmitting(false);
       submittingRef.current = false;
       return;
@@ -264,7 +266,7 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
           telemetry: telemetryWithPosition,
         });
       } catch (err) {
-        logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);
+        quizSubmitLogger.error('Failed to queue review for offline sync', { error: err });
       }
     }
 
@@ -276,7 +278,7 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
         if (pearls.length > 0)
           cfg.setCurrentQuestion((prev) => (prev ? { ...prev, pearls } : prev));
       } catch (error) {
-        logger.error(LOG_SCOPE, 'Failed to load clinical pearls', error);
+        quizSubmitLogger.error('Failed to load clinical pearls', { error });
       }
     }
 
@@ -296,12 +298,12 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
     try {
       cfg.recordBehavioralConfidence(behaviorSignals, isCorrect);
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordBehavioralConfidence failed', e);
+      quizSubmitLogger.warn('recordBehavioralConfidence failed', { error: e });
     }
     try {
       cfg.recordMomentumResult(isCorrect, timeToAnswer, parTime);
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordMomentumResult failed', e);
+      quizSubmitLogger.warn('recordMomentumResult failed', { error: e });
     }
     try {
       cfg.recordAnswerPattern({
@@ -316,7 +318,7 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
         wasCorrect: isCorrect,
       });
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordAnswerPattern failed', e);
+      quizSubmitLogger.warn('recordAnswerPattern failed', { error: e });
     }
 
     try {
@@ -350,13 +352,13 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
         inferredConfidence: inferredConfidenceValue,
       });
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'confidence/prediction failed', e);
+      quizSubmitLogger.warn('confidence/prediction failed', { error: e });
     }
 
     try {
       cfg.recordPauseResult({ correct: isCorrect, timeSpentMs: timeToAnswer, parTimeMs: parTime });
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordPauseResult failed', e);
+      quizSubmitLogger.warn('recordPauseResult failed', { error: e });
     }
 
     try {
@@ -371,7 +373,7 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
         system: currentQuestion.system || 'Unknown',
       });
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordQuestionResult failed', e);
+      quizSubmitLogger.warn('recordQuestionResult failed', { error: e });
     }
 
     cfg.setBehavioralRefreshKey((k) => k + 1);

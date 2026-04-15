@@ -69,6 +69,54 @@ interface DistributionState {
   perSystemCaps: Record<string, number>;
 }
 
+interface ResolvedBlueprintResponse {
+  label: string;
+  stage: string;
+  examTypes: string[];
+  weights: Record<string, number>;
+  gatedSystems?: string[];
+  daysToExam: number | null;
+  urgencyMultiplier?: number;
+  rotationTransition?: string | null;
+}
+
+interface DistributionConstraints {
+  boostSystems?: string[];
+  suppressSystems?: string[];
+  perSystemCaps?: Record<string, number>;
+}
+
+interface DistributionCheckResponse {
+  isBalanced: boolean;
+  skewScore: number;
+  overRepresented?: string[];
+  constraints?: DistributionConstraints;
+}
+
+interface GeneratedStudySessionResponse {
+  sessionId?: string | null;
+  questions?: QuizQuestion[];
+}
+
+interface SessionBreakdownEntry {
+  count: number;
+  accuracy: number;
+}
+
+interface SessionRollingHealth {
+  isBalanced: boolean;
+  overRepresented?: string[];
+}
+
+interface SessionSummaryResponse {
+  blueprintLabel?: string | null;
+  correctAnswers?: number;
+  totalQuestions?: number;
+  sessionBreakdown?: Record<string, SessionBreakdownEntry>;
+  recommendations?: string[];
+  rollingHealth?: SessionRollingHealth | null;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
@@ -122,7 +170,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rotationNotice, setRotationNotice] = useState<string | null>(null);
@@ -150,7 +198,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Blueprint resolution failed: ${bpResponse.status}`);
         }
 
-        const bp = await bpResponse.json();
+        const bp = (await bpResponse.json()) as ResolvedBlueprintResponse;
         if (cancelled) return;
 
         setBlueprint({
@@ -171,7 +219,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         }
 
         // Step 2: Check distribution for anti-gaming constraints
-        let distData: any = null;
+        let distData: DistributionCheckResponse | null = null;
         const distResponse = await fetch('/api/study/check-distribution', {
           method: 'POST',
           headers: {
@@ -182,7 +230,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         });
 
         if (distResponse.ok) {
-          distData = await distResponse.json();
+          distData = (await distResponse.json()) as DistributionCheckResponse;
           if (!cancelled) {
             setDistribution({
               isBalanced: distData.isBalanced,
@@ -225,10 +273,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
           throw new Error(`Session generation failed: ${sessionResponse.status}`);
         }
 
-        const session = await sessionResponse.json();
+        const session = (await sessionResponse.json()) as GeneratedStudySessionResponse;
         if (cancelled) return;
 
-        setSessionId(session.sessionId);
+        setSessionId(session.sessionId ?? null);
         setQuestions(session.questions ?? []);
         setError(null);
       } catch (err: any) {
@@ -246,7 +294,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     return () => { cancelled = true; };
   }, [getToken, retryCount, sessionScope]);
   // ── Session end: fetch summary, then exit ──
-  const [sessionSummary, setSessionSummary] = useState<any>(null);
+  const [sessionSummary, setSessionSummary] = useState<SessionSummaryResponse | null>(null);
   const [showSummary, setShowSummary] = useState(false);
 
   const handleSessionEnd = useCallback(async () => {
@@ -269,7 +317,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       });
 
       if (res.ok) {
-        const summary = await res.json();
+        const summary = (await res.json()) as SessionSummaryResponse;
         setSessionSummary(summary);
         setShowSummary(true);
         return; // Don't exit yet — show summary overlay first
@@ -307,11 +355,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       s => !blueprint.gatedSystems.includes(s)
     ),
     difficulty: 'adaptive' as const,
-    count: 20,
+    count: sessionScope?.size ?? DEFAULT_SESSION_SIZE,
     blueprintLabel: blueprint.label,
     examTypes: blueprint.examTypes,
     stage: blueprint.stage,
-  }), [blueprint]);
+  }), [blueprint, sessionScope?.size]);
 
   // ── Render ──
 
@@ -530,6 +578,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             initialQueue={questions}
             setParentQueue={setQuestions}
             sessionSettings={sessionSettings}
+            setIsLoading={setIsLoading}
+            setError={setError}
+            growthAreas={[]}
             onEndSession={handleSessionEnd}
             onShowMenu={onExit}
             modeLabel={blueprint.label}

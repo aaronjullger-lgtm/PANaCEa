@@ -15,7 +15,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import type { TelemetryData, OptionInteractionTelemetry } from '@/types/telemetry';
-import { getMVRTThreshold, type TelemetryTelemetryQuestionType } from '@/types/telemetry';
+import { getMVRTThreshold, type TelemetryQuestionType } from '@/types/telemetry';
 
 // -----------------------------------------------------------------------------
 // Types
