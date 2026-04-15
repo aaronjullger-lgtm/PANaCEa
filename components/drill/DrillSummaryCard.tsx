@@ -115,6 +115,58 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
   const accuracy = useMemo(() => computeAccuracy(stats.correct, stats.total), [stats.correct, stats.total]);
   const message = useMemo(() => getMotivationalMessage(accuracy), [accuracy]);
   const accColor = accuracyColor(accuracy);
+  const isEmpty = stats.total <= 0;
+
+  // --- Empty state: user exited before answering any questions ---
+  if (isEmpty) {
+    return (
+      <div className={`flex-1 flex items-center justify-center p-6 ${className}`}>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { ...springs.snappy }}
+          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] text-center"
+        >
+          {Icon && (
+            <Icon
+              className="w-12 h-12 mx-auto mb-3 opacity-50"
+              style={{ color: accentColor || 'var(--color-text-muted)' }}
+              aria-hidden
+            />
+          )}
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            No questions attempted
+          </h2>
+          <p className="text-sm text-[var(--color-text-secondary)] mb-6">
+            You left this {drillName.toLowerCase()} session before answering any questions.
+            Start a new session to begin building your mastery.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<RotateCcw className="w-4 h-4" />}
+              onClick={onNewSession}
+              className="w-full justify-center"
+              aria-label={newSessionLabel}
+            >
+              {newSessionLabel}
+            </Button>
+            <Button
+              variant="ghost"
+              size="md"
+              icon={<LogOut className="w-4 h-4" />}
+              onClick={onExit}
+              className="w-full justify-center"
+              aria-label={exitLabel}
+            >
+              {exitLabel}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const statItems = [
     {

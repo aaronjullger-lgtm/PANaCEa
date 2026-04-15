@@ -229,7 +229,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
                     <div className="text-xs text-[var(--color-text-muted)] mb-1">Session</div>
                     <div
-                      className={`text-lg font-bold ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
+                      className={`text-lg font-bold tabular-nums ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {sessionAccuracy}%
                     </div>
@@ -237,7 +237,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
                     <div className="text-xs text-[var(--color-text-muted)] mb-1">Last 10</div>
                     <div
-                      className={`text-lg font-bold ${recentAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : recentAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
+                      className={`text-lg font-bold tabular-nums ${recentAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : recentAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {recentAccuracy}%
                     </div>

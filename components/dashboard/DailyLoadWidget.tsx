@@ -101,12 +101,7 @@ export default function DailyLoadWidget() {
   const utilizationPct = Math.round(rec.capacityUtilization * 100);
 
   return (
-    <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="p-5 space-y-4"
-    >
+    <div className="p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -150,9 +145,9 @@ export default function DailyLoadWidget() {
         <div className="h-2 rounded-full bg-[var(--color-bg-primary)] overflow-hidden">
           <motion.div
             className="h-full rounded-full bg-[var(--color-accent)]"
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${Math.min(utilizationPct, 100)}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: 'easeOut' }}
           />
         </div>
       </div>
@@ -166,6 +161,6 @@ export default function DailyLoadWidget() {
 
       {/* Message */}
       <p className="text-xs text-[var(--color-text-muted)] italic">{rec.message}</p>
-    </motion.div>
+    </div>
   );
 }

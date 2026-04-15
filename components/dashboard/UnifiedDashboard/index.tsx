@@ -171,7 +171,7 @@ const UnifiedDashboard = () => {
               <Target className="w-6 h-6 text-[var(--color-text-inverse)]" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
+              <h1 className="heading-fluid-lg font-bold text-[var(--color-text-primary)] truncate max-w-full">
                 {getGreeting()},{' '}
                 <span className="bg-[var(--color-accent)] bg-clip-text text-transparent">
                   {user?.firstName || 'Student'}

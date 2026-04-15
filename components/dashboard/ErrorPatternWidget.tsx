@@ -107,12 +107,7 @@ export default function ErrorPatternWidget() {
   const topRemediation = patterns.remediations[0];
 
   return (
-    <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="p-5 space-y-4"
-    >
+    <div className="p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Brain size={18} className="text-[var(--color-accent)]" />
@@ -143,9 +138,9 @@ export default function ErrorPatternWidget() {
                 <motion.div
                   className="h-full rounded-full"
                   style={{ backgroundColor: meta.color }}
-                  initial={{ width: 0 }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: 'easeOut' }}
                 />
               </div>
             </div>
@@ -164,6 +159,6 @@ export default function ErrorPatternWidget() {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

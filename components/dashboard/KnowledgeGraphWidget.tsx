@@ -187,12 +187,7 @@ export default function KnowledgeGraphWidget() {
   });
 
   return (
-    <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="p-5 space-y-4"
-    >
+    <div className="p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -265,6 +260,6 @@ export default function KnowledgeGraphWidget() {
         </div>
         <span>Avg: {Math.round(data.summary.avgMastery * 100)}%</span>
       </div>
-    </motion.div>
+    </div>
   );
 }

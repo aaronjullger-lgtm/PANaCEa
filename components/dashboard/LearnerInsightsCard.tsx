@@ -10,7 +10,6 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import {
@@ -26,7 +25,6 @@ import {
   Minus,
 } from 'lucide-react';
 import { ClinicalSkeleton } from '@/components/loading';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface LearnerProfileResponse {
   archetype: string;
@@ -130,7 +128,6 @@ function TrendIcon({ trend }: { trend: string }) {
 
 export default function LearnerInsightsCard() {
   const { getToken } = useAuth();
-  const prefersReducedMotion = useReducedMotion();
   const { data, error, isLoading, mutate } = useSWR(
     '/api/analytics/learner-profile',
     createFetcher(getToken),
@@ -173,12 +170,7 @@ export default function LearnerInsightsCard() {
     .slice(0, 3);
 
   return (
-    <motion.div
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="p-5 space-y-4"
-    >
+    <div className="p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Users size={18} className="text-[var(--color-accent)]" />
@@ -266,6 +258,6 @@ export default function LearnerInsightsCard() {
           <span>No active warnings — keep it up!</span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
