@@ -1,0 +1,332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.3">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">    &lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1">    &lt;title&gt;SWOB Campaign Prospectus&lt;/title&gt;</p>
+<p class="p1">    &lt;!-- Tailwind CSS --&gt;</p>
+<p class="p1">    &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1">    &lt;!-- FontAwesome for Icons --&gt;</p>
+<p class="p1">    &lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"&gt;</p>
+<p class="p1">    &lt;!-- html2pdf Library --&gt;</p>
+<p class="p1">    &lt;script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1">    </p>
+<p class="p1">    &lt;!-- Google Fonts --&gt;</p>
+<p class="p1">    &lt;style&gt;</p>
+<p class="p1">        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&amp;family=Inter:wght@400;600;700;800;900&amp;display=swap');</p>
+<p class="p1">        </p>
+<p class="p1">        :root {</p>
+<p class="p1">            --sbu-brown: #4E3227;</p>
+<p class="p1">            --sbu-gold: #FDB71A;</p>
+<p class="p1">            --sbu-gray: #F2F2F2;</p>
+<p class="p1">            --sbu-white: #FFFFFF;</p>
+<p class="p1">        }</p>
+<p class="p2"><br></p>
+<p class="p1">        body {</p>
+<p class="p1">            font-family: 'Inter', sans-serif;</p>
+<p class="p1">            background-color: #334155;</p>
+<p class="p1">            -webkit-font-smoothing: antialiased;</p>
+<p class="p1">            margin: 0;</p>
+<p class="p1">            padding: 0;</p>
+<p class="p1">            display: flex;</p>
+<p class="p1">            flex-direction: column;</p>
+<p class="p1">            align-items: center;</p>
+<p class="p1">        }</p>
+<p class="p1">        </p>
+<p class="p1">        .font-serif { font-family: 'Playfair Display', serif; }</p>
+<p class="p1">        .font-sans { font-family: 'Inter', sans-serif; }</p>
+<p class="p2"><br></p>
+<p class="p1">        /* FIXED CANVAS SIZE (8.5x11 inches @ 96 DPI) */</p>
+<p class="p1">        .pdf-page {</p>
+<p class="p1">            width: 816px;</p>
+<p class="p1">            height: 1056px;</p>
+<p class="p1">            background-color: var(--sbu-white);</p>
+<p class="p1">            position: relative;</p>
+<p class="p1">            box-sizing: border-box;</p>
+<p class="p1">            page-break-after: always;</p>
+<p class="p1">            overflow: hidden;</p>
+<p class="p1">            box-shadow: 0px 20px 40px rgba(0,0,0,0.4);</p>
+<p class="p1">            margin: 24px auto;</p>
+<p class="p1">            padding: 48px; /* Equalized top and bottom margins */</p>
+<p class="p1">            display: flex;</p>
+<p class="p1">            flex-direction: column;</p>
+<p class="p1">        }</p>
+<p class="p2"><br></p>
+<p class="p1">        .grid-12 {</p>
+<p class="p1">            display: grid;</p>
+<p class="p1">            grid-template-columns: repeat(12, 1fr);</p>
+<p class="p1">            gap: 24px;</p>
+<p class="p1">        }</p>
+<p class="p2"><br></p>
+<p class="p1">        .bona-tile {</p>
+<p class="p1">            background: white;</p>
+<p class="p1">            border: 1px solid var(--sbu-gold);</p>
+<p class="p1">            outline: 1px solid var(--sbu-brown);</p>
+<p class="p1">            outline-offset: 3px;</p>
+<p class="p1">            position: relative;</p>
+<p class="p1">            padding: 20px 24px;</p>
+<p class="p1">        }</p>
+<p class="p2"><br></p>
+<p class="p1">        .drop-cap {</p>
+<p class="p1">            float: left;</p>
+<p class="p1">            font-family: 'Playfair Display', serif;</p>
+<p class="p1">            font-size: 44px;</p>
+<p class="p1">            line-height: 0.75;</p>
+<p class="p1">            font-weight: 900;</p>
+<p class="p1">            color: var(--sbu-brown);</p>
+<p class="p1">            padding-right: 10px;</p>
+<p class="p1">            padding-top: 8px;</p>
+<p class="p1">        }</p>
+<p class="p2"><br></p>
+<p class="p1">        @media print {</p>
+<p class="p1">            body { background: white !important; }</p>
+<p class="p1">            .no-print { display: none !important; }</p>
+<p class="p1">            .pdf-page { margin: 0 !important; box-shadow: none !important; border: none !important; }</p>
+<p class="p1">            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }</p>
+<p class="p1">        }</p>
+<p class="p1">    &lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="py-8"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">    &lt;!-- Minimal PDF Export Button --&gt;</p>
+<p class="p1">    &lt;div class="no-print w-full max-w-[816px] flex justify-end mb-4"&gt;</p>
+<p class="p1">        &lt;button onclick="generatePDF()" class="bg-[#FDB71A] hover:bg-[#e5a617] text-[#4E3227] px-6 py-2 rounded-md font-black uppercase tracking-wide transition shadow-md flex items-center gap-2"&gt;</p>
+<p class="p1">            &lt;i class="fa-solid fa-file-pdf"&gt;&lt;/i&gt; Download PDF</p>
+<p class="p1">        &lt;/button&gt;</p>
+<p class="p1">    &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">    &lt;!-- WRAPPER --&gt;</p>
+<p class="p1">    &lt;div id="infographic-content" class="flex flex-col bg-transparent w-[816px]"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">        &lt;!-- ==========================================</p>
+<p class="p1">             PAGE 1: MISSION &amp; STORY</p>
+<p class="p1">             ========================================== --&gt;</p>
+<p class="p1">        &lt;div class="pdf-page"&gt;</p>
+<p class="p1">            </p>
+<p class="p1">            &lt;!-- HEADER STRIP --&gt;</p>
+<p class="p1">            &lt;header class="flex-none h-[80px] flex flex-col justify-end border-b border-[#FDB71A] pb-3 mb-6"&gt;</p>
+<p class="p1">                &lt;div class="flex justify-between items-end"&gt;</p>
+<p class="p1">                    &lt;div&gt;</p>
+<p class="p1">                        &lt;p class="uppercase tracking-[0.4em] text-[#4E3227] text-[9px] font-black mb-1 opacity-60"&gt;Dennis R. DePerro School of Health Professions&lt;/p&gt;</p>
+<p class="p1">                        &lt;h1 class="font-serif text-[40px] leading-[0.85] font-black tracking-tighter uppercase text-[#4E3227]"&gt;</p>
+<p class="p1">                            Students Without Borders</p>
+<p class="p1">                        &lt;/h1&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="text-right"&gt;</p>
+<p class="p1">                        &lt;p class="font-sans font-black text-gray-500 text-[10px] tracking-[0.25em] uppercase border-l-2 border-[#FDB71A] pl-4"&gt;Campaign Prospectus&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">            &lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">            &lt;!-- SECTION 1: MISSION OVERVIEW --&gt;</p>
+<p class="p1">            &lt;section class="flex-none mb-8"&gt;</p>
+<p class="p1">                &lt;h2 class="font-sans text-[12px] font-black text-[#4E3227] uppercase tracking-[0.2em] mb-3"&gt;Mission Overview&lt;/h2&gt;</p>
+<p class="p1">                &lt;p class="font-serif text-[15px] text-gray-800 leading-[1.8] mb-5"&gt;</p>
+<p class="p1">                    Students Without Borders (SWOB) is a student-run medical outreach organization dedicated to improving access to healthcare for underserved populations. Our mission is carried out through participation in Remote Area Medical clinics, service to the St. Bonaventure University campus and surrounding communities in Cattaraugus County, and our annual medical mission trip to the Dominican Republic.</p>
+<p class="p1">                &lt;/p&gt;</p>
+<p class="p1">                &lt;div class="grid-12 pt-4 border-t border-gray-100"&gt;</p>
+<p class="p1">                    &lt;div class="col-span-4 flex items-start gap-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-user-doctor text-[#FDB71A] text-2xl mt-1"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;div&gt;</p>
+<p class="p1">                            &lt;h3 class="font-sans text-[11px] font-black uppercase text-[#4E3227] mb-1"&gt;Direct Clinical Care&lt;/h3&gt;</p>
+<p class="p1">                            &lt;p class="font-serif text-[12px] text-gray-600 leading-snug"&gt;Supervised by licensed physicians and PAs.&lt;/p&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="col-span-4 flex items-start gap-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-pills text-[#FDB71A] text-2xl mt-1"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;div&gt;</p>
+<p class="p1">                            &lt;h3 class="font-sans text-[11px] font-black uppercase text-[#4E3227] mb-1"&gt;Essential Medications&lt;/h3&gt;</p>
+<p class="p1">                            &lt;p class="font-serif text-[12px] text-gray-600 leading-snug"&gt;Distributing essential medications to underserved patients.&lt;/p&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="col-span-4 flex items-start gap-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-chalkboard-user text-[#FDB71A] text-2xl mt-1"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;div&gt;</p>
+<p class="p1">                            &lt;h3 class="font-sans text-[11px] font-black uppercase text-[#4E3227] mb-1"&gt;Health Education&lt;/h3&gt;</p>
+<p class="p1">                            &lt;p class="font-serif text-[12px] text-gray-600 leading-snug"&gt;Providing vital wellness instruction.&lt;/p&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">            &lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">            &lt;!-- SECTION 2: PATIENT STORY --&gt;</p>
+<p class="p1">            &lt;section class="flex-none flex flex-col bg-[#F2F2F2] -mx-[48px] px-[48px] py-14 border-y border-gray-200 mt-12 mb-12"&gt;</p>
+<p class="p1">                &lt;h2 class="font-sans text-[12px] font-black text-[#4E3227] uppercase tracking-[0.2em] mb-6 text-center"&gt;A Patient Story from the Dominican Republic&lt;/h2&gt;</p>
+<p class="p1">                </p>
+<p class="p1">                &lt;!-- Hero Pull Quote --&gt;</p>
+<p class="p1">                &lt;div class="flex items-start justify-center gap-2 mb-6 px-8"&gt;</p>
+<p class="p1">                    &lt;span class="font-serif text-[48px] font-black text-[#FDB71A] leading-none mt-[-10px]"&gt;“&lt;/span&gt;</p>
+<p class="p1">                    &lt;h3 class="font-serif text-[22px] font-black text-[#4E3227] italic leading-tight text-center max-w-[650px]"&gt;</p>
+<p class="p1">                        Tears began to fall as she realized that she could finally see clearly again and that her blurry vision was no longer permanent.</p>
+<p class="p1">                    &lt;/h3&gt;</p>
+<p class="p1">                    &lt;span class="font-serif text-[48px] font-black text-[#FDB71A] leading-none mt-4"&gt;”&lt;/span&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                &lt;div class="grid-12"&gt;</p>
+<p class="p1">                    &lt;!-- Narrative Text --&gt;</p>
+<p class="p1">                    &lt;div class="col-span-7 flex flex-col gap-4 pr-4"&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[14.5px] text-gray-800 leading-[1.8] text-justify"&gt;</p>
+<p class="p1">                            &lt;span class="drop-cap"&gt;D&lt;/span&gt;uring our most recent mission trip, a patient came to our clinic reporting blurry vision that had progressively worsened over the past four years. She had never had access to proper eye care. After completing a thorough eye exam, she was brought to our vision clinic, made possible through donated glasses and supplies. The moment she was fitted for a pair and tried them on, everything changed.</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[14.5px] text-gray-800 leading-[1.8] text-justify"&gt;</p>
+<p class="p1">                            The letters on the wall, the trees outside, and the clear face of her youngest son standing beside her all became clear.</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p1">                        &lt;div class="mt-2 border-l-2 border-[#FDB71A] pl-4"&gt;</p>
+<p class="p1">                            &lt;p class="font-serif text-[14.5px] font-bold text-[#4E3227] italic leading-snug"&gt;</p>
+<p class="p1">                                I share this story because it reflects the reality for many of the patients we serve, where access to even the most basic care can be life changing.</p>
+<p class="p1">                            &lt;/p&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                    &lt;!-- Photo Placeholder --&gt;</p>
+<p class="p1">                    &lt;div class="col-span-5 flex flex-col"&gt;</p>
+<p class="p1">                        &lt;div class="flex-grow bg-white border border-gray-300 rounded-sm flex flex-col justify-center items-center text-gray-400 relative overflow-hidden shadow-sm"&gt;</p>
+<p class="p1">                            &lt;i class="fa-solid fa-camera-retro text-4xl mb-3"&gt;&lt;/i&gt;</p>
+<p class="p1">                            &lt;p class="font-sans text-[10px] font-black uppercase tracking-widest text-[#4E3227]"&gt;Patient Care Photo&lt;/p&gt;</p>
+<p class="p1">                            &lt;div class="absolute bottom-0 left-0 w-full bg-white/95 p-3 text-[10px] font-sans text-gray-500 italic border-t border-gray-100 text-center"&gt;</p>
+<p class="p1">                                SWOB volunteers providing vision care.</p>
+<p class="p1">                            &lt;/div&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">            &lt;/section&gt;</p>
+<p class="p1">        &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">        &lt;!-- ==========================================</p>
+<p class="p1">             PAGE 2: IMPACT, ASK, &amp; INVITATION</p>
+<p class="p1">             ========================================== --&gt;</p>
+<p class="p1">        &lt;div class="pdf-page"&gt;</p>
+<p class="p1">            </p>
+<p class="p1">            &lt;header class="flex-none h-[30px] mb-6 border-b border-gray-100 pb-2"&gt;</p>
+<p class="p1">                &lt;p class="font-sans uppercase tracking-[0.4em] text-[#4E3227] text-[9px] font-black opacity-40"&gt;St. Bonaventure University • Students Without Borders&lt;/p&gt;</p>
+<p class="p1">            &lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">            &lt;!-- SECTION 3: COMMUNITY ENGAGEMENT --&gt;</p>
+<p class="p1">            &lt;section class="flex-none mb-6"&gt;</p>
+<p class="p1">                &lt;h2 class="font-sans text-[12px] font-black text-[#4E3227] uppercase tracking-[0.2em] mb-4"&gt;Community Engagement&lt;/h2&gt;</p>
+<p class="p1">                &lt;p class="font-serif text-[15px] text-gray-800 leading-[1.8] mb-6"&gt;</p>
+<p class="p1">                    Our volunteer efforts extend beyond clinical care and into surrounding communities in Cattaraugus County to reflect our dedication to strengthening the communities we serve:</p>
+<p class="p1">                &lt;/p&gt;</p>
+<p class="p1">                &lt;div class="flex items-stretch bg-[#F4F4F4] rounded-sm border border-[#E2E8F0] py-6"&gt;</p>
+<p class="p1">                    &lt;div class="flex-1 flex flex-col items-center text-center px-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-hammer text-[#4E3227] text-2xl mb-4"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11px] font-black uppercase text-[#4E3227] leading-tight mb-2"&gt;Playground&lt;br&gt;Construction&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12.5px] text-gray-600 leading-snug"&gt;Cuba-Rushford Central&lt;br&gt;School District.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="w-[1px] bg-white self-stretch my-2"&gt;&lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="flex-1 flex flex-col items-center text-center px-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-person-running text-[#4E3227] text-2xl mb-4"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11px] font-black uppercase text-[#4E3227] leading-tight mb-2"&gt;Memorial 5K&lt;br&gt;Support&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12.5px] text-gray-600 leading-snug"&gt;Amy Drake-Jackie Starck&lt;br&gt;Memorial 5K.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="w-[1px] bg-white self-stretch my-2"&gt;&lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="flex-1 flex flex-col items-center text-center px-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-bowl-food text-[#4E3227] text-2xl mb-4"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11px] font-black uppercase text-[#4E3227] leading-tight mb-2"&gt;Soup Kitchens&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12.5px] text-gray-600 leading-snug"&gt;The Warming House in&lt;br&gt;Olean, NY.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="w-[1px] bg-white self-stretch my-2"&gt;&lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="flex-1 flex flex-col items-center text-center px-4"&gt;</p>
+<p class="p1">                        &lt;i class="fa-solid fa-stethoscope text-[#4E3227] text-2xl mb-4"&gt;&lt;/i&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11px] font-black uppercase text-[#4E3227] leading-tight mb-2"&gt;Remote Area&lt;br&gt;Medical Clinics&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12.5px] text-gray-600 leading-snug"&gt;RAM clinics in Olean and&lt;br&gt;Allegany, NY.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">            &lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">            &lt;!-- SECTION 4: SCALE OF IMPACT --&gt;</p>
+<p class="p1">            &lt;section class="flex-none mb-10"&gt;</p>
+<p class="p1">                &lt;h2 class="font-sans text-[12px] font-black text-[#4E3227] uppercase tracking-[0.2em] mb-4"&gt;Scale of Impact&lt;/h2&gt;</p>
+<p class="p1">                &lt;p class="font-serif text-[15px] text-gray-800 leading-[1.8] mb-6"&gt;</p>
+<p class="p1">                    Our greatest impact has been achieved through our international outreach in the Dominican Republic. These outcomes highlight the substantial unmet healthcare needs that exist within underserved populations.</p>
+<p class="p1">                &lt;/p&gt;</p>
+<p class="p1">                &lt;div class="grid-12"&gt;</p>
+<p class="p1">                    &lt;div class="col-span-6 bona-tile flex flex-col justify-center items-center text-center py-8"&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[65px] font-black text-[#4E3227] leading-none mb-2"&gt;887&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[13px] font-black uppercase tracking-widest text-[#4E3227]"&gt;Patients&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12px] text-gray-600 mt-2 italic"&gt;Across two clinic sites in 2025.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                    &lt;div class="col-span-6 bona-tile flex flex-col justify-center items-center text-center py-8"&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[65px] font-black text-[#4E3227] leading-none mb-2"&gt;545&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[13px] font-black uppercase tracking-widest text-[#4E3227]"&gt;Patients&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-serif text-[12px] text-gray-600 mt-2 italic"&gt;At a single clinic location in just five days, 2026.&lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">            &lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">            &lt;!-- SECTION 5: FUNDING NEED &amp; SIGNATURE BLOCK --&gt;</p>
+<p class="p1">            &lt;section class="flex-grow flex flex-col justify-center bg-[#F2F2F2] -mx-[48px] px-[48px] py-12 border-t border-gray-200 mt-auto"&gt;</p>
+<p class="p1">                </p>
+<p class="p1">                &lt;div class="my-auto w-full"&gt;</p>
+<p class="p1">                    &lt;!-- $150,000 Block --&gt;</p>
+<p class="p1">                    &lt;div class="flex flex-col items-center justify-center mb-10"&gt;</p>
+<p class="p1">                        &lt;h2 class="font-sans text-[12px] font-black text-[#4E3227] uppercase tracking-[0.2em] mb-4 text-center"&gt;Sustaining &amp; Expanding Our Efforts&lt;/h2&gt;</p>
+<p class="p1">                        </p>
+<p class="p1">                        &lt;p class="font-serif text-[16px] text-[#4E3227] text-center mb-8 max-w-[650px] mx-auto"&gt;</p>
+<p class="p1">                            To sustain and expand our efforts, we need your support to raise &lt;strong&gt;$150,000 by March 2027&lt;/strong&gt;.</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                        &lt;div class="flex items-start justify-center gap-1 mb-8"&gt;</p>
+<p class="p1">                            &lt;span class="font-sans text-[42px] font-bold text-[#FDB71A] mt-3 leading-none"&gt;$&lt;/span&gt;</p>
+<p class="p1">                            &lt;p class="font-serif text-[120px] font-black text-[#4E3227] tracking-tighter leading-none"&gt;150,000&lt;/p&gt;</p>
+<p class="p1">                        &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                        &lt;p class="font-sans text-[15px] text-gray-800 font-medium leading-[1.6] text-center max-w-[680px] mx-auto"&gt;</p>
+<p class="p1">                            Funds will support essential medical supplies and clinic materials, local transportation to and from clinic sites, and international travel logistics for mission participants.</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                    &lt;!-- Eric Signature Block --&gt;</p>
+<p class="p1">                    &lt;div class="flex flex-col items-center text-center max-w-[650px] mx-auto mt-6 mb-2"&gt;</p>
+<p class="p1">                        &lt;h4 class="font-serif text-[18px] font-black text-[#4E3227] leading-none mb-2"&gt;Eric J. Philippou, PA-S2&lt;/h4&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11.5px] uppercase font-black text-gray-500 tracking-[0.1em] mb-1"&gt;President, Students Without Borders&lt;/p&gt;</p>
+<p class="p1">                        &lt;p class="font-sans text-[11.5px] uppercase font-black text-gray-500 tracking-[0.1em] mb-6"&gt;St. Bonaventure University&lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                        &lt;p class="font-serif text-[16px] text-[#4E3227] italic leading-[1.6] mb-8 px-4"&gt;</p>
+<p class="p1">                            I invite you to be part of our mission and to help us continue delivering high-quality care to those who are underserved.</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">                        &lt;p class="font-sans text-[13px] font-bold text-[#4E3227]"&gt;</p>
+<p class="p1">                            (973) 997-2091 &amp;nbsp;|&amp;nbsp; philipej25@bonaventure.edu</p>
+<p class="p1">                        &lt;/p&gt;</p>
+<p class="p1">                    &lt;/div&gt;</p>
+<p class="p1">                &lt;/div&gt;</p>
+<p class="p1">                </p>
+<p class="p1">            &lt;/section&gt;</p>
+<p class="p1">        &lt;/div&gt;</p>
+<p class="p1">    &lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">    &lt;!-- PDF Generation Logic --&gt;</p>
+<p class="p1">    &lt;script&gt;</p>
+<p class="p1">        function generatePDF() {</p>
+<p class="p1">            const element = document.getElementById('infographic-content');</p>
+<p class="p1">            const opt = {</p>
+<p class="p1">                margin: 0,</p>
+<p class="p1">                filename: 'SWOB_Official_Campaign_Prospectus_Final.pdf',</p>
+<p class="p1">                image: { type: 'jpeg', quality: 1.0 },</p>
+<p class="p1">                html2canvas: { scale: 4, useCORS: true, letterRendering: true, scrollY: 0 },</p>
+<p class="p1">                jsPDF: { unit: 'px', format: [816, 1056], orientation: 'portrait', compress: true }</p>
+<p class="p1">            };</p>
+<p class="p1">            html2pdf().set(opt).from(element).save();</p>
+<p class="p1">        }</p>
+<p class="p1">    &lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">Make sure this exports as a pdf on two pages.</p>
+</body>
+</html>
