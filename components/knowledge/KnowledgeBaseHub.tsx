@@ -268,11 +268,16 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
   );
 
   const currentTab = NAV_TABS.find((tab) => tab.id === activeTab) ?? NAV_TABS[0];
-  const currentAccent = TAB_ACCENTS[activeTab];
-  const quickSwitchTabs = NAV_TABS.filter((tab) => tab.id !== activeTab).slice(0, 2);
+  if (!currentTab) {
+    return null;
+  }
+  const currentAccent = TAB_ACCENTS[currentTab.id];
+  const quickSwitchTabs = NAV_TABS.filter((tab) => tab.id !== currentTab.id).slice(0, 2);
+  const quickSwitchTabA = quickSwitchTabs[0];
+  const quickSwitchTabB = quickSwitchTabs[1];
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="reference">
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
@@ -280,21 +285,22 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
             badgeTone: 'steel',
             title: 'Keep the right clinical context on deck.',
             subtitle:
-              'This workspace brings conditions, therapeutics, lab interpretation, and procedural reference into one calmer daily-study flow.',
+              'Switch lanes quickly, keep clinical context visible, and move straight into the reference surface you actually need.',
             status: currentTab.label,
+            actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: onClose,
-            primaryAction: quickSwitchTabs[0]
+            primaryAction: quickSwitchTabA
               ? {
-                  label: `Open ${quickSwitchTabs[0].label}`,
-                  onClick: () => handleTabChange(quickSwitchTabs[0].id),
+                  label: `Open ${quickSwitchTabA.label}`,
+                  onClick: () => handleTabChange(quickSwitchTabA.id),
                 }
               : undefined,
-            secondaryActions: quickSwitchTabs[1]
+            secondaryActions: quickSwitchTabB
               ? [
                   {
-                    label: quickSwitchTabs[1].label,
-                    onClick: () => handleTabChange(quickSwitchTabs[1].id),
+                    label: quickSwitchTabB.label,
+                    onClick: () => handleTabChange(quickSwitchTabB.id),
                   },
                 ]
               : undefined,
@@ -303,51 +309,69 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.04}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <WorkspaceMetricCard
-            label="Reference lanes"
-            value={NAV_TABS.length}
-            detail="Conditions, drug reference, labs, and broad clinical reference in one place."
-            icon={Library}
-          />
-          <WorkspaceMetricCard
-            label="Active lane"
-            value={currentTab.label}
-            detail={currentTab.usage}
-            accent={currentAccent}
-            icon={currentTab.icon}
-          />
-          <WorkspaceMetricCard
-            label="Lab modes"
-            value={LAB_SUB_TABS.length}
-            detail="Switch between interpretation-focused lab study and pure range lookup."
-            accent="#7a8f6e"
-            icon={Beaker}
-          />
-          <WorkspaceMetricCard
-            label="Study posture"
-            value="Reference-first"
-            detail="Built for context, comparison, and decision support before another blind question set."
-            accent="#b39b6c"
-            icon={Sparkles}
-          />
-        </div>
+        <WorkspaceFilterBar>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  Lane selector
+                </p>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Choose the reference lane that matches the question in front of you. Keep the
+                  URL synced so deeper views stay linkable.
+                </p>
+              </div>
+              <div
+                className="rounded-full border px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+              >
+                {currentTab.label}
+              </div>
+            </div>
+
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              {NAV_TABS.map((tab) => (
+                <KnowledgeTabButton
+                  key={tab.id}
+                  tab={tab}
+                  active={activeTab === tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                />
+              ))}
+            </div>
+
+            {activeTab === 'labs' ? (
+              <div className="flex flex-wrap gap-2">
+                {LAB_SUB_TABS.map((tab) => (
+                  <LabSubButton
+                    key={tab.id}
+                    tab={tab}
+                    active={labSubTab === tab.id}
+                    onClick={() => handleLabSubTabChange(tab.id)}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </WorkspaceFilterBar>
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.08}>
-        <WorkspaceHeroStrip>
+        <WorkspaceHeroStrip tone="reference">
           <WorkspaceSplit className="items-start">
             <div className="space-y-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
-                Reference strategy
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
+                Active lane
               </p>
               <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                Use the knowledge base to tighten pattern recognition, not just to look something up.
+                {currentTab.label} is ready when you need context before another blind rep.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                Move between disease review, medication anchors, lab interpretation, and broader
-                reference patterns without leaving the same study surface. The goal is faster
-                clinical recall with less context switching.
+                {currentTab.usage}
               </p>
             </div>
 
@@ -393,58 +417,6 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.12}>
-        <WorkspaceFilterBar>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div className="space-y-1.5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                  Lane selector
-                </p>
-                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
-                  Choose the reference lane that matches your current study question. The URL stays
-                  synced so deeper library views remain linkable.
-                </p>
-              </div>
-              <div
-                className="rounded-full border px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)]"
-                style={{
-                  borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-                  background:
-                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
-                }}
-              >
-                {currentTab.label}
-              </div>
-            </div>
-
-            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
-              {NAV_TABS.map((tab) => (
-                <KnowledgeTabButton
-                  key={tab.id}
-                  tab={tab}
-                  active={activeTab === tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                />
-              ))}
-            </div>
-
-            {activeTab === 'labs' ? (
-              <div className="flex flex-wrap gap-2">
-                {LAB_SUB_TABS.map((tab) => (
-                  <LabSubButton
-                    key={tab.id}
-                    tab={tab}
-                    active={labSubTab === tab.id}
-                    onClick={() => handleLabSubTabChange(tab.id)}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </WorkspaceFilterBar>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.16}>
         <WorkspaceSection
           title={currentTab.label}
           subtitle={
@@ -544,16 +516,35 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
         </WorkspaceSection>
       </WorkspaceReveal>
 
+      <WorkspaceReveal delay={0.16}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <WorkspaceMetricCard
+            label="Active lane"
+            value={currentTab.label}
+            detail={currentTab.description}
+            accent={currentAccent}
+            icon={currentTab.icon}
+            variant="reference"
+          />
+          <WorkspaceMetricCard
+            label="Study posture"
+            value="Reference first"
+            detail="Use this surface to anchor context, compare options, and then return to practice with a cleaner mental model."
+            accent="#b39b6c"
+            icon={Sparkles}
+            variant="guidance"
+          />
+        </div>
+      </WorkspaceReveal>
+
       <WorkspaceReveal delay={0.2}>
-        <WorkspaceSurface accent="#728ba6">
+        <WorkspaceSurface accent="#728ba6" role="subtle">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1.5">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                Daily use
-              </p>
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily use</p>
               <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                Keep this page open during question review, missed-question analysis, and pre-block
-                warmups so reference work feels like part of the workflow instead of a detour.
+                Keep this workspace open during review and missed-question analysis so reference
+                work behaves like part of the workflow instead of a detour.
               </p>
             </div>
             <button

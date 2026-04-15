@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { FileText, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Sparkles, Lightbulb } from 'lucide-react';
-import type { SOAPComparison } from '@/types/smart-scribe-system';
+import type { SOAPComparison, SOAPNote } from '@/types/smart-scribe-system';
 
 interface SOAPComparisonViewProps {
   comparison: SOAPComparison;
@@ -241,7 +241,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
 }
 
 // Helper function to format SOAP note
-function formatSOAPNote(note: Record<string, unknown>): React.JSX.Element {
+function formatSOAPNote(note: SOAPNote): React.JSX.Element {
   return (
     <div className="space-y-4 text-sm">
       {/* Subjective */}

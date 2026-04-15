@@ -211,11 +211,11 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   );
 
   // Peer validation statistics for incorrect answers
-  const { data: peerData, loading: peerLoading } = usePeerValidation(questionId, isCorrect);
+  const { data: peerData, loading: peerLoading } = usePeerValidation(questionId ?? '', isCorrect);
 
   // Compute compressed content (only used for legacy string rationale)
   const coreRationale = useMemo(
-    () => (structured ? [] : compressExplanation(rationaleText)),
+    () => (structured ? [] : compressExplanation(rationaleText ?? '')),
     [structured, rationaleText]
   );
   const buzzwords = useMemo(() => extractBuzzwords(rationaleText), [rationaleText]);
@@ -309,7 +309,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       initial="hidden"
       animate="visible"
       className="bg-[var(--color-card-bg)] rounded-xl overflow-hidden"
-      style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`, boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       {/* Result Header */}
       <div

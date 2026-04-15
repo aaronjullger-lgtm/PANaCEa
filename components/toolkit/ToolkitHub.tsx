@@ -569,6 +569,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
   const activeMeta = TAB_META[activeTab];
   const searchable = activeTab === 'calculators' || activeTab === 'generators' || activeTab === 'interpreters';
   const quickActions = NAV_TABS.filter((tab) => tab.id !== activeTab).slice(0, 2);
+  const primaryQuickAction = quickActions[0];
+  const secondaryQuickAction = quickActions[1];
 
   const handleSelectCalculator = useCallback(
     (calcId: string) => {
@@ -618,7 +620,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
     : null;
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="toolkit">
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
@@ -626,21 +628,22 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
             badgeTone: 'gold',
             title: 'Reach for the right aid before the guesswork starts.',
             subtitle:
-              'This workspace keeps calculators, generators, interpreters, and fast-reference utilities in one restrained daily-use surface.',
+              'Search the right tool quickly, keep recents and pins close, and avoid scrolling through passive counts before you launch.',
             status: activeMeta.title,
+            actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: onClose,
-            primaryAction: quickActions[0]
+            primaryAction: primaryQuickAction
               ? {
-                  label: `Open ${quickActions[0].label}`,
-                  onClick: () => handleTabChange(quickActions[0].id),
+                  label: `Open ${primaryQuickAction.label}`,
+                  onClick: () => handleTabChange(primaryQuickAction.id),
                 }
               : undefined,
-            secondaryActions: quickActions[1]
+            secondaryActions: secondaryQuickAction
               ? [
                   {
-                    label: quickActions[1].label,
-                    onClick: () => handleTabChange(quickActions[1].id),
+                    label: secondaryQuickAction.label,
+                    onClick: () => handleTabChange(secondaryQuickAction.id),
                   },
                 ]
               : undefined,
@@ -649,77 +652,48 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.04}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <WorkspaceMetricCard
-            label="Toolkit lanes"
-            value={NAV_TABS.length}
-            detail="Calculators, generators, interpreters, scoring systems, and quick references."
-            icon={Sparkles}
-          />
-          <WorkspaceMetricCard
-            label="Calculator library"
-            value={CALCULATORS.length}
-            detail="Shared registry-backed clinical calculators ready for fast launch."
-            accent="#c4b78a"
-            icon={CalculatorIcon}
-          />
-          <WorkspaceMetricCard
-            label="Pinned tools"
-            value={pinnedCalculatorData.length}
-            detail="Personal shortcuts for the tools you reach for repeatedly."
-            accent="#b39b6c"
-            icon={Star}
-          />
-          <WorkspaceMetricCard
-            label="Recent launches"
-            value={recentCalculatorData.length}
-            detail="Your recent calculator starts, kept visible for quick re-entry."
-            accent="#728ba6"
-            icon={Clock}
-          />
-        </div>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.08}>
-        <WorkspaceHeroStrip>
+        <WorkspaceHeroStrip tone="toolkit">
           <WorkspaceSplit className="items-start">
             <div className="space-y-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
-                Workflow philosophy
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
+                Start with the launcher
               </p>
               <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                Open a tool because it clarifies the decision, not because the interface slows you down.
+                Search or reopen a tool first. Counts should never be the main event here.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                The toolkit now behaves like a true companion workspace: one place to launch a fast
-                calculator, generate memory aids, interpret inputs, or pull up bedside reference
-                structure without dropping out of your study flow.
+                Use search when you know what you need, recents when you are returning to a tool,
+                and pinned shortcuts when a calculator should stay one click away.
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Calculators
+                  Recent launches
                 </p>
                 <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
-                  {CALCULATORS.length} registry-backed tools with pinning and recent history.
+                  {recentCalculatorData.length > 0
+                    ? `${recentCalculatorData.length} tool${recentCalculatorData.length === 1 ? '' : 's'} ready to reopen quickly.`
+                    : 'Recent history will appear here after the first launch.'}
                 </p>
               </div>
               <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Generators
+                  Pinned tools
                 </p>
                 <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
-                  {GENERATOR_TOOLS.length} study-aid builders for recall, export, and replay.
+                  {pinnedCalculatorData.length > 0
+                    ? `${pinnedCalculatorData.length} shortcut${pinnedCalculatorData.length === 1 ? '' : 's'} stay visible for repeat use.`
+                    : 'Pin the calculators you reach for repeatedly.'}
                 </p>
               </div>
               <div className="workspace-subsurface rounded-[1.25rem] p-4">
                 <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Interpreters
+                  Calculator library
                 </p>
                 <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
-                  {INTERPRETER_TOOLS.length} rule-based helpers for structured clinical reads.
+                  {CALCULATORS.length} registry-backed calculators are ready for fast launch.
                 </p>
               </div>
               <div className="workspace-subsurface rounded-[1.25rem] p-4">
@@ -735,7 +709,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
         </WorkspaceHeroStrip>
       </WorkspaceReveal>
 
-      <WorkspaceReveal delay={0.12}>
+      <WorkspaceReveal delay={0.08}>
         <WorkspaceFilterBar>
           <div className="space-y-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -837,6 +811,27 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
             )}
           </div>
         </WorkspaceFilterBar>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.12}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <WorkspaceMetricCard
+            label="Pinned tools"
+            value={pinnedCalculatorData.length}
+            detail="Keep repeat-use calculators and shortcuts visible so the launcher does not reset your working memory."
+            accent="#b39b6c"
+            icon={Star}
+            variant={pinnedCalculatorData.length > 0 ? 'progress' : 'guidance'}
+          />
+          <WorkspaceMetricCard
+            label="Recent launches"
+            value={recentCalculatorData.length}
+            detail="Recent usage gives this page a faster re-entry path than a static registry list."
+            accent="#728ba6"
+            icon={Clock}
+            variant={recentCalculatorData.length > 0 ? 'progress' : 'reference'}
+          />
+        </div>
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.16}>

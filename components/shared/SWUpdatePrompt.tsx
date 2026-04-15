@@ -21,14 +21,14 @@ export function SWUpdatePrompt() {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
+    onRegisteredSW(_swUrl: string, registration: ServiceWorkerRegistration | undefined) {
       if (registration) {
         setInterval(() => {
           registration.update();
         }, UPDATE_CHECK_INTERVAL);
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.error('[SW] Registration error:', error);
     },
   });

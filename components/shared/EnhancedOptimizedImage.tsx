@@ -182,7 +182,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
   // Determine if we should load the image
   const shouldLoadImage = !optimizationOptions.lazy || isVisible;
 
-  const containerProps: React.HTMLAttributes<HTMLDivElement> = {
+  const containerProps: React.ComponentPropsWithRef<'div'> = {
     ref: containerRef,
     className: `relative overflow-hidden ${className} ${enableZoom ? 'cursor-zoom-in' : ''}`,
     style: {
@@ -347,7 +347,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
       </AnimatePresence>
 
       {/* CSS for shimmer animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmer {
           0% {
             background-position: -200% 0;

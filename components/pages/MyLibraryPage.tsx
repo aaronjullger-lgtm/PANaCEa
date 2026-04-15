@@ -48,6 +48,54 @@ interface MyLibraryPageProps {
   onExit: () => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getErrorMessage(payload: unknown, fallback: string): string {
+  if (!isRecord(payload)) return fallback;
+  if (typeof payload.error === 'string') return payload.error;
+  if (typeof payload.message === 'string') return payload.message;
+  return fallback;
+}
+
+function parseKnowledgeCaches(payload: unknown): KnowledgeCacheItem[] {
+  if (!isRecord(payload)) return [];
+  const root = isRecord(payload.data) ? payload.data : payload;
+  const caches = Array.isArray(root.caches) ? root.caches : [];
+
+  return caches.flatMap((cache) => {
+    if (!isRecord(cache)) return [];
+    if (
+      typeof cache.id !== 'string' ||
+      typeof cache.displayName !== 'string' ||
+      typeof cache.geminiCacheName !== 'string' ||
+      typeof cache.expiresAt !== 'string' ||
+      typeof cache.source !== 'string' ||
+      typeof cache.createdAt !== 'string'
+    ) {
+      return [];
+    }
+
+    return [{
+      id: cache.id,
+      displayName: cache.displayName,
+      geminiCacheName: cache.geminiCacheName,
+      expiresAt: cache.expiresAt,
+      source: cache.source,
+      createdAt: cache.createdAt,
+    }];
+  });
+}
+
+function parseUploadResult(payload: unknown): { fileUri: string; mimeType?: string } | null {
+  if (!isRecord(payload) || typeof payload.fileUri !== 'string') return null;
+  return {
+    fileUri: payload.fileUri,
+    mimeType: typeof payload.mimeType === 'string' ? payload.mimeType : undefined,
+  };
+}
+
 export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
   const { getToken } = useAuth();
   const { preferences, updatePreferences } = usePreferences();
@@ -86,12 +134,11 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${response.status}`);
+        const data = await response.json().catch(() => null);
+        throw new Error(getErrorMessage(data, `HTTP ${response.status}`));
       }
 
-      const data = (await response.json()) as { caches: KnowledgeCacheItem[] };
-      const list = data.caches ?? [];
+      const list = parseKnowledgeCaches(await response.json());
       setCaches(list);
 
       const currentActive = (preferences.customSettings as Record<string, unknown> | undefined)
@@ -153,8 +200,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${response.status}`);
+          const data = await response.json().catch(() => null);
+          throw new Error(getErrorMessage(data, `HTTP ${response.status}`));
         }
         if (activeCacheName === geminiCacheName) clearActive();
         await fetchCaches();
@@ -183,10 +230,13 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           body: formData,
         });
         if (!uploadResponse.ok) {
-          const data = await uploadResponse.json().catch(() => ({}));
-          throw new Error(data.error || `Upload failed: ${uploadResponse.status}`);
+          const data = await uploadResponse.json().catch(() => null);
+          throw new Error(getErrorMessage(data, `Upload failed: ${uploadResponse.status}`));
         }
-        const uploadData = (await uploadResponse.json()) as { fileUri: string; mimeType?: string };
+        const uploadData = parseUploadResult(await uploadResponse.json());
+        if (!uploadData) {
+          throw new Error('Upload response was missing file metadata');
+        }
         const cacheResponse = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHE), {
           method: 'POST',
           headers: {
@@ -201,8 +251,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           }),
         });
         if (!cacheResponse.ok) {
-          const data = await cacheResponse.json().catch(() => ({}));
-          throw new Error(data.error || `Create cache failed: ${cacheResponse.status}`);
+          const data = await cacheResponse.json().catch(() => null);
+          throw new Error(getErrorMessage(data, `Create cache failed: ${cacheResponse.status}`));
         }
         setUploadDisplayName('');
         await fetchCaches();

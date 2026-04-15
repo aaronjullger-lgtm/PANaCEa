@@ -202,7 +202,8 @@ function StrengthBadge({ strength }: { strength: string }) {
     weak: { bg: '#6b728020', text: '#9ca3af' },
     unknown: { bg: '#6b728015', text: '#6b7280' },
   };
-  const c = colors[strength] ?? colors.unknown;
+  const fallbackPalette = { bg: '#6b728015', text: '#6b7280' };
+  const palette = colors[strength as keyof typeof colors] ?? fallbackPalette;
   return (
     <span
       style={{
@@ -212,8 +213,8 @@ function StrengthBadge({ strength }: { strength: string }) {
         letterSpacing: '0.05em',
         padding: '2px 6px',
         borderRadius: 4,
-        background: c.bg,
-        color: c.text,
+        background: palette.bg,
+        color: palette.text,
       }}
     >
       {strength}

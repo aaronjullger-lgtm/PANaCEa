@@ -1396,7 +1396,11 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
   if (!conditionId) {
     return (
       <div className="p-6">
-        <EmptyState title="Error" description="No condition data or conditionId provided" action={{ label: 'Try Again', onClick: onClose }} />
+        <EmptyState
+          title="Error"
+          description="No condition data or conditionId provided"
+          action={{ label: 'Try Again', onClick: () => onClose?.() }}
+        />
       </div>
     );
   }
@@ -1430,7 +1434,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
   }
 
   // Merge summary and details into MedicalContent format
-  const mergedData: MedicalContent = {
+  const mergedData = {
     id: summary.id,
     conditionId: summary.conditionId,
     system: summary.system,
@@ -1481,7 +1485,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
           ECGConditionLink: details.ECGConditionLink,
         }
       : {}),
-  };
+  } as MedicalContent;
 
   return (
     <SmartConditionViewCore

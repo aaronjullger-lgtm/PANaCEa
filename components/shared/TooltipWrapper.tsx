@@ -6,7 +6,7 @@ export type TooltipVariant = 'info' | 'help' | 'warning' | 'success' | 'error' |
 
 export interface TooltipWrapperProps {
   /** The element to wrap with a tooltip */
-  children: React.ReactElement;
+  children: React.ReactElement<TooltipChildProps>;
   /** Tooltip text content */
   content: string;
   /** Tooltip variant (affects color and icon) */
@@ -30,6 +30,16 @@ export interface TooltipWrapperProps {
   /** Callback when tooltip is hidden */
   onHide?: () => void;
 }
+
+type TooltipChildProps = {
+  onMouseEnter?: React.MouseEventHandler;
+  onMouseLeave?: React.MouseEventHandler;
+  onFocus?: React.FocusEventHandler;
+  onBlur?: React.FocusEventHandler;
+  onKeyDown?: React.KeyboardEventHandler;
+  'aria-label'?: string;
+  tabIndex?: number;
+};
 
 const variantConfig = {
   info: {
@@ -210,34 +220,34 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   }, [isVisible, position]);
 
   // Clone the child element to add event handlers and ref
-  const childWithProps = React.cloneElement(children, {
-    ref: containerRef,
+  const childProps = children.props;
+  const childWithProps = React.cloneElement<TooltipChildProps>(children, {
     onMouseEnter: (e: React.MouseEvent) => {
-      children.props.onMouseEnter?.(e);
+      childProps.onMouseEnter?.(e);
       handleMouseEnter();
     },
     onMouseLeave: (e: React.MouseEvent) => {
-      children.props.onMouseLeave?.(e);
+      childProps.onMouseLeave?.(e);
       handleMouseLeave();
     },
     onFocus: (e: React.FocusEvent) => {
-      children.props.onFocus?.(e);
+      childProps.onFocus?.(e);
       handleFocus();
     },
     onBlur: (e: React.FocusEvent) => {
-      children.props.onBlur?.(e);
+      childProps.onBlur?.(e);
       handleBlur();
     },
     onKeyDown: (e: React.KeyboardEvent) => {
-      children.props.onKeyDown?.(e);
+      childProps.onKeyDown?.(e);
       handleKeyDown(e);
     },
-    'aria-label': ariaLabel || children.props['aria-label'] || content,
-    tabIndex: children.props.tabIndex ?? 0,
+    'aria-label': ariaLabel || childProps['aria-label'] || content,
+    tabIndex: childProps.tabIndex ?? 0,
   });
 
   return (
-    <div className={`relative inline-flex ${className}`}>
+    <div ref={containerRef} className={`relative inline-flex ${className}`}>
       {childWithProps}
 
       {/* Tooltip */}

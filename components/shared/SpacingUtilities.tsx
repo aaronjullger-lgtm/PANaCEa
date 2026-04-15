@@ -334,6 +334,7 @@ export const ButtonGroup: React.FC<ButtonGroupProps> = ({
         lg: 'space-y-4',
         xl: 'space-y-5',
         '2xl': 'space-y-6',
+        '3xl': 'space-y-8',
       }[spacing]
     : {
         xs: 'gap-1',
@@ -342,6 +343,7 @@ export const ButtonGroup: React.FC<ButtonGroupProps> = ({
         lg: 'gap-4',
         xl: 'gap-5',
         '2xl': 'gap-6',
+        '3xl': 'gap-8',
       }[spacing];
 
   const directionClass = vertical ? 'flex-col' : 'flex-row';

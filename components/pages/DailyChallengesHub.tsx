@@ -49,6 +49,20 @@ interface ChallengeCardConfig {
   onAction: () => void;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function parseGrandRoundsStatus(payload: unknown): { completed: boolean; streak?: number } {
+  if (!isRecord(payload)) return { completed: false };
+
+  const root = isRecord(payload.data) ? payload.data : payload;
+  return {
+    completed: root.completed === true,
+    streak: typeof root.streak === 'number' ? root.streak : undefined,
+  };
+}
+
 function formatTimeUntilReset(now: Date) {
   const next = new Date(now);
   next.setHours(24, 0, 0, 0);
@@ -69,7 +83,11 @@ function ChallengeCard({
   const Icon = challenge.icon;
 
   return (
-    <WorkspaceSurface accent={challenge.accent} className="h-full">
+    <WorkspaceSurface
+      accent={challenge.error ? '#a67f7f' : challenge.accent}
+      role={challenge.error ? 'alert' : 'action'}
+      className="h-full"
+    >
       <div className="flex h-full flex-col gap-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
@@ -204,9 +222,9 @@ export function DailyChallengesHub() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        setGrandRoundsCompleted(data.data?.completed ?? false);
-        setGrandRoundsStreak(data.data?.streak ?? undefined);
+        const data = parseGrandRoundsStatus(await response.json());
+        setGrandRoundsCompleted(data.completed);
+        setGrandRoundsStreak(data.streak);
       } catch (error) {
         setGrandRoundsError(error instanceof Error ? error.message : 'Failed to load');
       } finally {
@@ -292,7 +310,7 @@ export function DailyChallengesHub() {
   const overallProgress = (completedCount / challenges.length) * 100;
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="challenge">
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
@@ -300,11 +318,12 @@ export function DailyChallengesHub() {
             badgeTone: 'amber',
             title: 'Small daily wins that keep the study rhythm alive.',
             subtitle:
-              'Use daily challenges as a focused warmup, a break between heavier sessions, or a quick consistency check when your day gets crowded.',
+              'Open one fast challenge, keep the daily loop visible, and see interruptions immediately when a lane needs attention.',
             status:
               completedCount === challenges.length
                 ? 'All daily challenges completed'
                 : `${completedCount} of ${challenges.length} complete today`,
+            actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
             primaryAction: {
@@ -316,51 +335,42 @@ export function DailyChallengesHub() {
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.04}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <WorkspaceMetricCard
             label="Completed today"
             value={`${completedCount}/${challenges.length}`}
             detail="A simple consistency score for the current daily cycle."
             icon={Target}
-          />
-          <WorkspaceMetricCard
-            label="Time until reset"
-            value={resetTime}
-            detail="Challenges refresh at midnight local time."
-            accent="#b39b6c"
-            icon={Clock3}
-          />
-          <WorkspaceMetricCard
-            label="Loading lanes"
-            value={loadingCount}
-            detail="Challenge states still syncing from the server or local game state."
-            accent="#728ba6"
-            icon={Sparkles}
+            variant="progress"
           />
           <WorkspaceMetricCard
             label="Needs attention"
             value={errorCount}
-            detail="Challenges that had trouble loading their latest completion state."
+            detail={
+              errorCount > 0
+                ? 'One or more challenge states had trouble loading. Open the affected lane directly instead of waiting for a neutral refresh.'
+                : `Next reset in ${resetTime}. All challenge states are readable right now.`
+            }
             accent="#a67f7f"
             icon={Calendar}
+            variant={errorCount > 0 ? 'alert' : 'reference'}
           />
         </div>
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.08}>
-        <WorkspaceHeroStrip>
+        <WorkspaceHeroStrip tone="challenge">
           <WorkspaceSplit className="items-start">
             <div className="space-y-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
                 Daily loop
               </p>
               <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                Challenge mode works best when it feels effortless to start and obvious when to stop.
+                Start one challenge fast, then stop cleanly when the daily loop is done.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                Each challenge is meant to be short, memorable, and habit-forming. Use them to
-                prime clinical reasoning before a deeper block or to keep your streak alive on
-                lighter days.
+                These lanes should behave like a quick warmup or consistency check, not another
+                sprawling dashboard. Open one, finish it, and move on.
               </p>
             </div>
 

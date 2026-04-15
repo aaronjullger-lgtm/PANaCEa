@@ -160,9 +160,18 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       const data = await res.json();
       if (Array.isArray(data)) {
         setSystems(data);
-      } else if (data && typeof data === 'object' && data.error) {
-        // Server returned an error object that slipped through as 200
-        throw new Error(data.message || data.error || 'Unable to load organ systems');
+      } else if (data && typeof data === 'object') {
+        const responseBody = data as Record<string, unknown>;
+        if ('error' in responseBody) {
+          // Server returned an error object that slipped through as 200
+          const message =
+            typeof responseBody.message === 'string'
+              ? responseBody.message
+              : typeof responseBody.error === 'string'
+                ? responseBody.error
+                : 'Unable to load organ systems';
+          throw new Error(message);
+        }
       } else {
         console.error('[ClinicalReferenceLibrary] systems response is not an array:', data);
         setSystems([]);
@@ -246,7 +255,13 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         throw new Error('Invalid response from server');
       }
       const data = parsed as { content?: unknown[] };
-      setContent(Array.isArray(data?.content) ? data.content : []);
+      const contentItems = Array.isArray(data?.content)
+        ? data.content.filter(
+            (item): item is Partial<MedicalContentDisplay> =>
+              typeof item === 'object' && item !== null
+          )
+        : [];
+      setContent(contentItems);
     } catch (err) {
       console.error('[ClinicalReferenceLibrary] content fetch failed', err);
       const msg = err instanceof Error ? err.message : 'Failed to load clinical data';
@@ -277,7 +292,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       }
       const data = await res.json();
       if (data && typeof data === 'object') {
-        setProgressMap(data?.progressMap ?? {});
+        const responseBody = data as { progressMap?: typeof progressMap };
+        setProgressMap(responseBody.progressMap ?? {});
       }
     } catch (err) {
       console.error('[ClinicalReferenceLibrary] progress map fetch failed', err);
@@ -517,6 +533,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       return () => clearTimeout(t);
     }
     // When closing, search is focused from Escape handler; no extra effect needed
+    return undefined;
   }, [selected]);
 
   // Get active system label
@@ -692,7 +709,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 {semanticAnswer && askedForAnswer && !semanticLoading && (
                   <div
                     className="rounded-xl bg-[var(--color-bg-secondary)] p-4"
-                    style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+                    style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 w-7 h-7 rounded-md bg-[var(--color-bg-tertiary)] flex items-center justify-center">
@@ -728,20 +745,23 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                       columns={1}
                     />
                   ) : (
-                    displayContent.map((item, idx) => (
-                      <EnhancedConditionCard
-                        key={item.id}
-                        condition={item}
-                        isSelected={selected?.id === item.id}
-                        onClick={() => handleConditionSelect(item, idx)}
-                        retrievability={retrievabilityMap[item.id] ?? null}
-                        badge={
-                          'similarity' in item && typeof item.similarity === 'number'
-                            ? `${Math.round(item.similarity * 100)}% match`
-                            : undefined
-                        }
-                      />
-                    ))
+                    displayContent.map((item, idx) => {
+                      if (!item.id) return null;
+                      return (
+                        <EnhancedConditionCard
+                          key={item.id}
+                          condition={item}
+                          isSelected={selected?.id === item.id}
+                          onClick={() => handleConditionSelect(item, idx)}
+                          retrievability={retrievabilityMap[item.id] ?? null}
+                          badge={
+                            'similarity' in item && typeof item.similarity === 'number'
+                              ? `${Math.round(item.similarity * 100)}% match`
+                              : undefined
+                          }
+                        />
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -791,7 +811,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     className="rounded-xl p-5"
                     style={{
                       backgroundColor: 'var(--color-bg-secondary)',
-                      boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+                      boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
                     }}
                   >
                     {/* Subcategory Header */}
@@ -820,13 +840,14 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                     {/* Cards Grid */}
                     <div className="flex flex-col gap-3">
                       {displayItems.map((item) => {
-                        const globalIndex = content.indexOf(item);
+                        if (!item.id) return null;
+                        const globalIndex = content.findIndex((contentItem) => contentItem.id === item.id);
                         return (
                           <EnhancedConditionCard
                             key={item.id}
                             condition={item}
                             isSelected={selected?.id === item.id}
-                            onClick={() => handleConditionSelect(item, globalIndex)}
+                            onClick={() => handleConditionSelect(item, globalIndex >= 0 ? globalIndex : 0)}
                             retrievability={retrievabilityMap[item.id] ?? null}
                           />
                         );

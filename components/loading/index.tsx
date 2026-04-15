@@ -267,7 +267,7 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
   // Deterministic varied widths for natural text appearance
   const SKELETON_WIDTHS = [85, 92, 78, 88, 75, 90, 82, 95, 70, 87] as const;
   const lineWidths = Array.from({ length: lines }, (_, i) => {
-    const base = SKELETON_WIDTHS[i % SKELETON_WIDTHS.length];
+    const base = SKELETON_WIDTHS[i % SKELETON_WIDTHS.length] ?? SKELETON_WIDTHS[0];
     return i === lines - 1 ? Math.round(base * 0.65) : base;
   });
 

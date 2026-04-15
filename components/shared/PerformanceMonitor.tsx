@@ -374,7 +374,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               {/* Actions */}
               <div className="space-y-3">
                 <PrimaryButton
-                  fullWidth
+                  className="w-full"
                   onClick={() => optimize()}
                   icon={<Zap className="w-4 h-4" />}
                 >
@@ -382,7 +382,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                 </PrimaryButton>
                 <div className="flex gap-2">
                   <OutlineButton
-                    fullWidth
+                    className="flex-1"
                     onClick={() => {
                       console.log('Performance Report:', report);
                       alert('Performance report logged to console');
@@ -392,7 +392,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   </OutlineButton>
                   <StandardButton
                     variant="ghost"
-                    fullWidth
+                    className="flex-1"
                     onClick={() => {
                       location.reload();
                     }}

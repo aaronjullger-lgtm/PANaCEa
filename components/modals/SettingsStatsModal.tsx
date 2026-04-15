@@ -1192,7 +1192,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         className={`text-xl font-bold min-h-[1.75rem] flex items-center ${!hasNoStatsData && stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-[var(--color-accent)]' : !hasNoStatsData && stats.recentTrend >= 0 ? 'text-data-pass' : !hasNoStatsData ? 'text-data-provisional' : ''}`}
                       >
                         {hasNoStatsData ? (
-                          <Skeleton height={28} width={56} variant="wave" radius="md" />
+                        <Skeleton className="h-7 w-14 rounded-md" />
                         ) : (
                           <>
                             {stats.recentTrend >= 0 ? '+' : ''}
@@ -1245,7 +1245,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       className={`text-3xl font-bold min-h-[2.25rem] flex items-center justify-center ${!hasNoStatsData && stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-[var(--color-accent)]' : !hasNoStatsData ? 'text-[var(--color-accent)]' : ''}`}
                     >
                       {hasNoStatsData ? (
-                        <Skeleton height={36} width={40} variant="wave" radius="md" />
+                        <Skeleton className="h-9 w-10 rounded-md" />
                       ) : (
                         stats.currentStreak
                       )}
@@ -1272,21 +1272,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         aria-busy="true"
                         aria-label="Loading accuracy"
                       >
-                        <Skeleton
-                          height={100}
-                          width={100}
-                          variant="wave"
-                          radius="full"
-                          className="mb-2"
-                        />
-                        <Skeleton
-                          height={14}
-                          width={120}
-                          variant="wave"
-                          radius="sm"
-                          className="mb-1"
-                        />
-                        <Skeleton height={12} width={80} variant="wave" radius="sm" />
+                        <Skeleton className="mb-2 h-[100px] w-[100px] rounded-full" />
+                        <Skeleton className="mb-1 h-[14px] w-[120px] rounded-sm" />
+                        <Skeleton className="h-3 w-[80px] rounded-sm" />
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
@@ -1333,7 +1321,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xl font-bold text-[var(--color-text-primary)] min-h-[1.75rem] flex items-center">
                       {hasNoStatsData ? (
-                        <Skeleton height={24} width={48} variant="wave" radius="md" />
+                        <Skeleton className="h-6 w-12 rounded-md" />
                       ) : stats.todayQuestions === 0 ? (
                         '—'
                       ) : (
@@ -1342,7 +1330,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] min-h-[1rem] flex items-center mt-0.5">
                       {hasNoStatsData ? (
-                        <Skeleton height={12} width={72} variant="wave" radius="sm" />
+                        <Skeleton className="h-3 w-[72px] rounded-sm" />
                       ) : stats.todayQuestions > 0 ? (
                         `${Math.round((stats.todayCorrect / stats.todayQuestions) * 100)}% accuracy`
                       ) : (
@@ -1360,7 +1348,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xl font-bold text-[var(--color-text-primary)] min-h-[1.75rem] flex items-center">
                       {hasNoStatsData ? (
-                        <Skeleton height={24} width={48} variant="wave" radius="md" />
+                        <Skeleton className="h-6 w-12 rounded-md" />
                       ) : stats.weekQuestions === 0 ? (
                         '—'
                       ) : (
@@ -1369,7 +1357,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] min-h-[1rem] flex items-center mt-0.5">
                       {hasNoStatsData ? (
-                        <Skeleton height={12} width={72} variant="wave" radius="sm" />
+                        <Skeleton className="h-3 w-[72px] rounded-sm" />
                       ) : stats.weekQuestions > 0 ? (
                         `${Math.round((stats.weekCorrect / stats.weekQuestions) * 100)}% accuracy`
                       ) : (
@@ -1410,7 +1398,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 )}
 
                 {/* Decision Time Analysis */}
-                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
                   <DecisionTimeAnalysis performanceData={performanceData} theme={theme} />
                 </Suspense>
 
@@ -1437,7 +1425,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             ) : activeTab === 'activity' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Longitudinal Progress Dashboard */}
-                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
                   <LongitudinalProgressDashboard
                     performanceData={performanceData}
                     userYearInProgram={userProfile.yearInProgram}
@@ -1447,7 +1435,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
-                  <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
+                  <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
                     <ActivityHeatmap
                       performanceData={performanceData}
                       weeks={13}
@@ -1477,7 +1465,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 />
 
                 {/* Focus Areas Export */}
-                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
                   <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
                 </Suspense>
 
@@ -1541,7 +1529,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   Changes save automatically. You'll see a confirmation when you update a setting.
                 </p>
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
-                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
                   <EnhancedSettingsTab
                     theme={theme}
                     onToggleTheme={onToggleTheme}

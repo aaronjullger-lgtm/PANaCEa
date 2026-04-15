@@ -106,6 +106,8 @@ export const MobileGestureHandler: React.FC<MobileGestureHandlerProps> = ({
       }, 2000);
       return () => clearTimeout(timer);
     }
+
+    return undefined;
   }, [isMobile]);
 
   const hideGestureHint = useCallback(() => {

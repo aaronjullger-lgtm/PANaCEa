@@ -272,7 +272,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <div className="p-6">
               <div className="flex flex-col gap-3">
                 <PrimaryButton
-                  fullWidth
+                  className="w-full"
                   onClick={handleInstall}
                   icon={<Download className="w-5 h-5" />}
                 >
@@ -280,10 +280,10 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                 </PrimaryButton>
 
                 <div className="flex gap-2">
-                  <OutlineButton fullWidth onClick={handleLearnMore}>
+                  <OutlineButton className="flex-1" onClick={handleLearnMore}>
                     {showDetails ? 'Show Less' : 'Learn More'}
                   </OutlineButton>
-                  <StandardButton variant="ghost" fullWidth onClick={handleDismiss}>
+                  <StandardButton variant="ghost" className="flex-1" onClick={handleDismiss}>
                     Not Now
                   </StandardButton>
                 </div>

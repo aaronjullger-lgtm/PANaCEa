@@ -4,8 +4,6 @@ import {
   Keyboard,
   Command,
   Option,
-  Control,
-  Shift,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
@@ -83,7 +81,7 @@ function renderKey(key: string, isModifier: boolean) {
     case 'control':
       return (
         <kbd key={key} className={keyClass}>
-          <Control className="w-3 h-3" />
+          Ctrl
         </kbd>
       );
     case 'cmd':
@@ -106,7 +104,7 @@ function renderKey(key: string, isModifier: boolean) {
     case '⇧':
       return (
         <kbd key={key} className={keyClass}>
-          <Shift className="w-3 h-3" />
+          Shift
         </kbd>
       );
     case '↑':

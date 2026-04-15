@@ -98,7 +98,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
   return (
     <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Icon className={`w-5 h-5 text-${color}-600`} />
+        <Icon className="w-5 h-5" style={{ color: iconColor }} />
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
       </div>
 

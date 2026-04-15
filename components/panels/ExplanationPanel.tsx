@@ -23,6 +23,7 @@ import {
   HelpCircle,
   ExternalLink,
   MessageCircle,
+  FlaskConical,
 } from 'lucide-react';
 import { highYieldPackage } from '@/lib/services/explanationCompression';
 import { ErrorTagger } from '@/components/quiz';

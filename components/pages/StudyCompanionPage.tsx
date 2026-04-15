@@ -479,7 +479,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                     loading={isAsking}
                     disabled={!selectedId || !input.trim() || isAsking}
                     onClick={() => void handleAskTutor()}
-                    icon={isAsking ? undefined : Send}
+                    icon={isAsking ? undefined : <Send className="h-4 w-4" />}
                   >
                     {isAsking ? 'Asking…' : 'Ask'}
                   </Button>

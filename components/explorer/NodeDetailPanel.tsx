@@ -64,11 +64,14 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           if (!contentType?.includes('application/json')) {
             throw new Error(`Server returned ${response.status} ${response.statusText}`);
           }
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Failed to fetch node ${nodeId}`);
+          const errorData = (await response.json()) as { error?: string; message?: string };
+          throw new Error(errorData.error ?? errorData.message ?? `Failed to fetch node ${nodeId}`);
         }
-        const json = await response.json();
-        const data = json.data as GraphNodeDetailResponse;
+        const json = (await response.json()) as { data?: GraphNodeDetailResponse };
+        const data = json.data;
+        if (!data) {
+          throw new Error(`Failed to fetch node ${nodeId}`);
+        }
         setNodeData(data);
       } catch (err) {
         console.error('Failed to fetch node details:', err);
@@ -205,6 +208,9 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
   }
 
   const { label, nodeType, description, sourceType, sourceId, taxonomyCode, systemCodes, metadata, outgoingEdges, incomingEdges } = nodeData;
+  const taxonomyName = typeof metadata?.taxonomyName === 'string' ? metadata.taxonomyName : null;
+  const taxonomyDescription =
+    typeof metadata?.taxonomyDescription === 'string' ? metadata.taxonomyDescription : null;
 
   return (
     <div className="h-full overflow-y-auto p-6 bg-[var(--color-bg-primary)]">
@@ -250,13 +256,11 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
               <code className="font-mono text-sm bg-[var(--color-accent)]/15 px-2 py-1 rounded">
                 {taxonomyCode}
               </code>
-              {metadata?.taxonomyName && (
-                <p className="mt-2 text-foreground">{metadata.taxonomyName as string}</p>
+              {taxonomyName && (
+                <p className="mt-2 text-foreground">{taxonomyName}</p>
               )}
-              {metadata?.taxonomyDescription && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {metadata.taxonomyDescription as string}
-                </p>
+              {taxonomyDescription && (
+                <p className="mt-1 text-sm text-muted-foreground">{taxonomyDescription}</p>
               )}
             </div>
           </section>
