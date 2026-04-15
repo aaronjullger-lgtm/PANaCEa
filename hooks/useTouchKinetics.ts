@@ -84,7 +84,7 @@ function computeTouchConfidenceScore(
   if (tapTimestamps.length >= 2) {
     let rapidCount = 0;
     for (let i = 1; i < tapTimestamps.length; i++) {
-      if (tapTimestamps[i] - tapTimestamps[i - 1] < 500) rapidCount++;
+      if (tapTimestamps[i]! - tapTimestamps[i - 1]! < 500) rapidCount++;
     }
     const rapidFraction = rapidCount / (tapTimestamps.length - 1);
     score += rapidFraction * 0.4; // Weight: 40%
@@ -104,8 +104,8 @@ function computeTouchConfidenceScore(
     let totalDist = 0;
     for (let i = 1; i < tapPositions.length; i++) {
       totalDist += Math.hypot(
-        tapPositions[i].x - tapPositions[i - 1].x,
-        tapPositions[i].y - tapPositions[i - 1].y
+        tapPositions[i]!.x - tapPositions[i - 1]!.x,
+        tapPositions[i]!.y - tapPositions[i - 1]!.y
       );
     }
     const avgDist = totalDist / (tapPositions.length - 1);
@@ -123,14 +123,14 @@ function computeTouchConfidenceScore(
  */
 function computeTapEntropy(positions: Array<{ x: number; y: number }>): number {
   if (positions.length < 2) return 0;
-  const first = positions[0];
-  const last = positions[positions.length - 1];
+  const first = positions[0]!;
+  const last = positions[positions.length - 1]!;
   const idealDist = Math.hypot(last.x - first.x, last.y - first.y) || 1;
   let pathDist = 0;
   for (let i = 1; i < positions.length; i++) {
     pathDist += Math.hypot(
-      positions[i].x - positions[i - 1].x,
-      positions[i].y - positions[i - 1].y
+      positions[i]!.x - positions[i - 1]!.x,
+      positions[i]!.y - positions[i - 1]!.y
     );
   }
   return pathDist / idealDist;

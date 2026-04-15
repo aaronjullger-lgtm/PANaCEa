@@ -31,6 +31,7 @@ export interface UserProfileData {
   examDate: string | null;
   graduationDate: string | null;
   school: string | null;
+  specialty: string | null;
   currentRotation: string | null;
   yearInProgram: string | null;
   eorTestDate: string | null;
@@ -48,6 +49,7 @@ export interface UserProfileUpdateInput {
   examDate?: string | null;
   graduationDate?: string | null;
   school?: string | null;
+  specialty?: string | null;
   currentRotation?: string | null;
   yearInProgram?: string | null;
   eorTestDate?: string | null;

@@ -180,14 +180,14 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
           questionId,
           selectedAnswer,
           timeSpentMs,
-          timeToFirstClick: timeToFirstClickRef.current,
+          timeToFirstClick: timeToFirstClickRef.current ?? undefined,
           answerSwitches: answerSwitchesRef.current,
           totalDwellTime: totalDwellTimeRef.current,
           timezone,
           sessionType: 'drill', // Mark as drill submission
         });
 
-        const result = (submitted?.data ?? submitted) as unknown as DrillFSRSResponse;
+        const result = submitted as DrillFSRSResponse;
 
         // Store the response for access by session components
         setLastFSRSResponse(result);

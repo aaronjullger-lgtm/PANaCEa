@@ -147,6 +147,8 @@ export interface MedicalTerminology {
   zh?: string;
   /** Japanese translation */
   ja?: string;
+  /** Korean translation */
+  ko?: string;
   /** Category (anatomy, symptom, condition, etc.) */
   category: string;
   /** Medical system */
@@ -472,7 +474,7 @@ export function getBrowserLocale(): LocaleConfig {
   }
 
   // Fallback to US English
-  return SUPPORTED_LOCALES[0];
+  return SUPPORTED_LOCALES[0]!;
 }
 
 /**

@@ -1,4 +1,4 @@
-# SAFE-OVERRIDE: writing re-export file
+// SAFE-OVERRIDE: writing re-export file
 /**
  * Re-export — import from @/hooks/useWordleGame instead.
  */

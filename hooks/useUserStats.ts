@@ -22,6 +22,7 @@ const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
 const FLAGGED_KEY = 'panceai_flagged_v2';
 const DELETIONS_KEY = 'panceai_deletions_v2';
+const userStatsLogger = logger.scope('useUserStats');
 
 // Retry configuration
 const MAX_SYNC_RETRIES = 3;
@@ -213,7 +214,7 @@ export function useUserStats(): UseUserStatsResult {
    */
   const syncToCloud = useCallback(async () => {
     if (!isSignedIn || !user) {
-      logger.warn('useUserStats', 'Cannot sync: user not signed in');
+      userStatsLogger.warn('Cannot sync: user not signed in');
       return;
     }
 
@@ -273,7 +274,7 @@ export function useUserStats(): UseUserStatsResult {
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
-        logger.warn('useUserStats', '401 Unauthorized - stopping sync to prevent infinite loop');
+        userStatsLogger.warn('401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
@@ -352,9 +353,9 @@ export function useUserStats(): UseUserStatsResult {
 
       setLastSyncTime(Date.now());
       syncRetryCountRef.current = 0; // Reset retry counter on success
-      logger.info('useUserStats', 'Sync to cloud successful', { sessionId: result?.sessionId });
+      userStatsLogger.info('Sync to cloud successful', { sessionId: result?.sessionId });
     } catch (error) {
-      logger.warn('useUserStats', 'Sync to cloud failed', error);
+      userStatsLogger.warn('Sync to cloud failed', { error });
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setSyncError(errorMessage);
 
@@ -363,8 +364,7 @@ export function useUserStats(): UseUserStatsResult {
         syncRetryCountRef.current++;
         const delay = calculateBackoffDelay();
         
-        logger.warn(
-          'useUserStats',
+        userStatsLogger.warn(
           `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
         );
         
@@ -390,7 +390,7 @@ export function useUserStats(): UseUserStatsResult {
    */
   const syncFromCloud = useCallback(async () => {
     if (!isSignedIn || !user) {
-      logger.warn('useUserStats', 'Cannot sync: user not signed in');
+      userStatsLogger.warn('Cannot sync: user not signed in');
       return;
     }
 
@@ -416,7 +416,7 @@ export function useUserStats(): UseUserStatsResult {
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
-        logger.warn('useUserStats', '401 Unauthorized - stopping sync to prevent infinite loop');
+        userStatsLogger.warn('401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
@@ -470,7 +470,7 @@ export function useUserStats(): UseUserStatsResult {
         } catch (e) { syncErrors.push(`srsItems: ${e instanceof Error ? e.message : String(e)}`); }
 
         if (syncErrors.length > 0) {
-          logger.warn('useUserStats', 'Partial sync errors during download', syncErrors);
+          userStatsLogger.warn('Partial sync errors during download', { syncErrors });
         }
 
         // Merge saved questions with timestamp-based conflict resolution
@@ -497,10 +497,10 @@ export function useUserStats(): UseUserStatsResult {
 
         setLastSyncTime(Date.now());
         syncRetryCountRef.current = 0; // Reset retry counter on success
-        logger.debug('useUserStats', 'Sync from cloud successful');
+        userStatsLogger.debug('Sync from cloud successful');
       }
     } catch (error) {
-      logger.warn('useUserStats', 'Sync from cloud failed', error);
+      userStatsLogger.warn('Sync from cloud failed', { error });
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setSyncError(errorMessage);
 
@@ -509,8 +509,7 @@ export function useUserStats(): UseUserStatsResult {
         syncRetryCountRef.current++;
         const delay = calculateBackoffDelay();
         
-        logger.warn(
-          'useUserStats',
+        userStatsLogger.warn(
           `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
         );
         
@@ -601,7 +600,7 @@ export function useUserStats(): UseUserStatsResult {
     };
 
     performSync().catch((error) => {
-      logger.warn('useUserStats', 'Initial sync failed', error);
+      userStatsLogger.warn('Initial sync failed', { error });
       setIsLoading(false);
     });
   }, [isSignedIn, syncToCloud, syncFromCloud]); // Include sync functions in deps

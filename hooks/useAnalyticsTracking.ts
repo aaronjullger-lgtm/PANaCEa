@@ -12,6 +12,7 @@ import { recordQuestion } from '@/services/domain';
 import type { BehaviorSignals } from '@/services/analytics';
 
 const LOG_SCOPE = 'useAnalyticsTracking';
+const analyticsLogger = logger.scope(LOG_SCOPE);
 
 interface QuestionMeta {
   id?: string;
@@ -62,7 +63,7 @@ export function useAnalyticsTracking() {
         recordBehavioralConfidence(behaviorSignals, isCorrect);
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordBehavioralConfidence failed', e);
+      analyticsLogger.warn('recordBehavioralConfidence failed', { error: e });
     }
 
     // Record momentum data
@@ -71,7 +72,7 @@ export function useAnalyticsTracking() {
         recordMomentumResult(isCorrect, timeToAnswer, parTime);
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordMomentumResult failed', e);
+      analyticsLogger.warn('recordMomentumResult failed', { error: e });
     }
 
     // Record answer pattern for post-session analysis
@@ -90,7 +91,7 @@ export function useAnalyticsTracking() {
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordAnswerPattern failed', e);
+      analyticsLogger.warn('recordAnswerPattern failed', { error: e });
     }
 
     // Update performance prediction
@@ -100,13 +101,13 @@ export function useAnalyticsTracking() {
           correct: isCorrect,
           timeSpentMs: timeToAnswer,
           parTimeMs: parTime,
-          system: question.system,
+          system: question.system ?? undefined,
           questionNumber,
           inferredConfidence: 0.5, // Will be overridden by caller with actual inference
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'updatePerformancePrediction failed', e);
+      analyticsLogger.warn('updatePerformancePrediction failed', { error: e });
     }
 
     // Record for smart pause detection
@@ -119,7 +120,7 @@ export function useAnalyticsTracking() {
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordPauseResult failed', e);
+      analyticsLogger.warn('recordPauseResult failed', { error: e });
     }
 
     // Record comprehensive question result
@@ -136,7 +137,7 @@ export function useAnalyticsTracking() {
         });
       }
     } catch (e) {
-      logger.warn(LOG_SCOPE, 'recordQuestionResult failed', e);
+      analyticsLogger.warn('recordQuestionResult failed', { error: e });
     }
 
     // Record question for PANCE distribution tracking
@@ -148,7 +149,7 @@ export function useAnalyticsTracking() {
     recordCircadianPerformance({
       timestamp: Date.now(),
       isCorrect,
-      topic: question.topic,
+      topic: question.topic ?? question.system ?? 'Unknown',
     });
   }, []);
 

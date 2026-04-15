@@ -6,6 +6,7 @@ import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchLearningCurveData } from '@/services/analytics/learningCurveService';
 import { logger } from "@/lib/simple-logger";
+const learningCurveLogger = logger.scope('useLearningCurveData');
 
 export interface UseLearningCurveDataOptions {
   days?: number;
@@ -31,7 +32,7 @@ export function useLearningCurveData({ days = 30, enabled = true }: UseLearningC
       revalidateOnReconnect: true,
       shouldRetryOnError: true,
       onError: (err) => {
-        logger.error('useLearningCurveData', 'Failed to fetch learning curve data', err);
+        learningCurveLogger.error('Failed to fetch learning curve data', { error: err });
       },
     }
   );

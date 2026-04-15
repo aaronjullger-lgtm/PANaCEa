@@ -31,6 +31,8 @@ export interface Question {
   id?: string;
   /** Optional vignette text for long-form stems */
   vignette?: string;
+  /** Legacy alias for question text used by older generated content */
+  stem?: string;
   question: string;
   options: string[];
   /** Alias for options (for backwards compatibility) */
@@ -64,12 +66,20 @@ export interface Question {
   lastReviewedAt?: string; // ISO timestamp
   /** Timestamp when question data was last modified (for conflict resolution) */
   updatedAt?: string | Date; // ISO timestamp or Date object
+  /** Task category for Due Cards sibling lookup (e.g. diagnosis, workup, treatment) */
+  taskType?: string;
+  /** Set when question is a sibling for a Due item; used to remove concept from due queue on correct */
+  dueConceptKey?: { conditionId: string; taskType: string | null };
   /** Source of the question (pool, main table, generated) */
   source?: string;
   /** Content source attribution (e.g. 'openstax') */
   contentSource?: string;
   /** Content source title (e.g. book name) */
   contentSourceTitle?: string;
+  /** True when question is from staging lake (beta/peer review) */
+  fromStaging?: boolean;
+  /** Optional image/ECG/imaging URL for multi-modal questions */
+  imageUrl?: string;
 }
 
 /** Alias for Question used in quiz/session flows (preferred in new code). */
@@ -114,7 +124,23 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  mode?: 'drill' | 'session' | 'review' | 'exam' | 'rapid_recall';
+  mode?:
+    | 'standard'
+    | 'diagnostic'
+    | 'photo'
+    | 'anatomy'
+    | 'quick-review'
+    | 'custom'
+    | 'core_adaptive'
+    | 'drill'
+    | 'session'
+    | 'review'
+    | 'exam'
+    | 'rapid_recall'
+    | 'cram_mode'
+    | 'cram'
+    | 'variant'
+    | 'due';
   focus:
     | 'all'
     | 'growth'
@@ -130,10 +156,18 @@ export interface SessionSettings {
   systems?: string[];
   /** Optional difficulty filter for pool/API */
   difficulty?: string;
+  /** Core PANCE Simulation only: strict NCCPA blueprint, no weak-area bias, PANCE-level difficulty */
+  simulationStrict?: boolean;
 
   /** Optional: when present, Gemini should target this specific condition */
   conditionName?: string;
   subcategoryName?: string;
+  /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
+  timeLimit?: number;
+  /** Question count (legacy field name, kept for compatibility with 'count') */
+  questionCount?: number;
+  /** Optional study stage / blueprint stage metadata used by adaptive parents */
+  stage?: string;
   /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
   interleaveMode?: 'interleaved' | 'focused';
 }
@@ -210,6 +244,7 @@ export interface UserProfile {
   /** Rotation end date (ISO date string); for EOR time-blocked scheduling */
   rotationEndDate?: string;
   yearInProgram?: YearInProgram;
+  specialty?: string; // For practicing PAs - current specialty area
   hasCompletedOnboarding: boolean;
   isCertifiedPA?: boolean; // For PANRE-LA access
 }

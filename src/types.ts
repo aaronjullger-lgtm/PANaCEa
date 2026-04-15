@@ -10,6 +10,8 @@ export interface Question {
   id?: string; // Unique identifier for SRS tracking
   /** Optional vignette text for long-form stems */
   vignette?: string;
+  /** Legacy alias for question text used by older generated content */
+  stem?: string;
   question: string;
   options: string[];
   /** Alias for options (for backwards compatibility) */
@@ -104,9 +106,15 @@ export interface SessionSettings {
     | 'quick-review'
     | 'custom'
     | 'core_adaptive'
+    | 'drill'
+    | 'session'
+    | 'review'
+    | 'exam'
     | 'rapid_recall'
     | 'cram_mode'
-    | 'cram';
+    | 'cram'
+    | 'variant'
+    | 'due';
   focus:
     | 'all'
     | 'growth'
@@ -137,6 +145,8 @@ export interface SessionSettings {
 
   /** Question count (legacy field name, kept for compatibility with 'count') */
   questionCount?: number;
+  /** Optional study stage / blueprint stage metadata used by adaptive parents */
+  stage?: string;
 
   /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
   interleaveMode?: 'interleaved' | 'focused';

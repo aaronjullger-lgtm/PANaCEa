@@ -99,7 +99,7 @@ export interface AppRoutesProps {
   growthAreas: string[];
   isSyncing: boolean;
   isStatsLoading: boolean;
-  lastSyncTime: Date | null;
+  lastSyncTime: number | null;
   syncError: string | null;
 
   // Font size
@@ -166,8 +166,8 @@ export interface AppRoutesProps {
   handleYourPlanSkip: () => void;
 
   // Misc
-  theme: string;
-  setTheme: (t: string) => void;
+  theme: 'light' | 'dark';
+  setTheme: (t: 'light' | 'dark') => void;
   examLabel: string;
   commandCenterInitialTab: 'training' | 'resources' | 'analytics' | undefined;
   simulationInitialFocus: SimulationFocus;

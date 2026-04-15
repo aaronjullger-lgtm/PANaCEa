@@ -2,6 +2,7 @@
  * App view state type and shared animation config
  */
 
+import type { Variants } from 'framer-motion';
 import type { TrainingModeId } from './training-modes';
 
 export type View =
@@ -339,7 +340,7 @@ export const errorShakeVariants = {
  * Button press — anticipation (micro-dip) → action → follow-through
  * Staging principle: draws attention before the action happens
  */
-export const buttonPressVariants = {
+export const buttonPressVariants: Variants = {
   idle: { scale: 1, y: 0 },
   hover: {
     scale: 1.02,
@@ -349,7 +350,7 @@ export const buttonPressVariants = {
   tap: {
     scale: 0.96,
     y: 1,
-    transition: { duration: 0.08, ease: 'easeIn' },
+    transition: { duration: 0.08, ease: 'easeIn' as const },
   },
 };
 
@@ -357,14 +358,14 @@ export const buttonPressVariants = {
  * Skeleton shimmer — cinematic gold-tinted sweep
  * For loading states; the shimmer travels left-to-right with warm gold highlight
  */
-export const skeletonShimmer = {
+export const skeletonShimmer: Variants = {
   initial: { x: '-100%' },
   animate: {
     x: '100%',
     transition: {
       repeat: Infinity,
       duration: 1.6,
-      ease: [0.4, 0, 0.2, 1],
+      ease: [0.4, 0, 0.2, 1] as const,
       repeatDelay: 0.4,
     },
   },
@@ -392,13 +393,13 @@ export const skeletonLineVariants = {
  * Content reveal — skeleton-to-content morphing transition
  * Blur dissolves out as real content fades in
  */
-export const contentRevealVariants = {
+export const contentRevealVariants: Variants = {
   skeleton: { opacity: 1, filter: 'blur(0px)' },
   revealing: {
     opacity: 0,
     filter: 'blur(6px)',
     scale: 0.98,
-    transition: { duration: 0.25, ease: [0.32, 0, 0.67, 0] },
+    transition: { duration: 0.25, ease: [0.32, 0, 0.67, 0] as const },
   },
 };
 

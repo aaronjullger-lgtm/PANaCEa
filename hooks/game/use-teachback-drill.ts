@@ -25,6 +25,7 @@ import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { logger } from '@/lib/logger';
 
 const LOG_SCOPE = 'TeachBackDrill';
+const teachbackLogger = logger.scope(LOG_SCOPE);
 
 export interface TeachBackTopic {
   id: string;
@@ -139,7 +140,7 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
         drillFSRS.startQuestion();
       }
     } catch (err) {
-      logger.error(LOG_SCOPE, 'Failed to start session', err);
+      teachbackLogger.error('Failed to start session', { error: err });
       setError(err instanceof Error ? err.message : 'Failed to load topic');
     } finally {
       setIsLoading(false);
@@ -197,11 +198,11 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
 
         // Accumulate category scores for averaging
         for (const cat of result.categories) {
+          const scores = categoryAccumulator.current[cat.category] ?? [];
           if (!categoryAccumulator.current[cat.category]) {
-            categoryAccumulator.current[cat.category] = [];
+            categoryAccumulator.current[cat.category] = scores;
           }
-          categoryAccumulator.current[cat.category].push(cat.score);
-          const scores = categoryAccumulator.current[cat.category];
+          scores.push(cat.score);
           newStats.averageCategoryScores[cat.category] =
             scores.reduce((a, b) => a + b, 0) / scores.length;
         }
@@ -211,7 +212,7 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
 
       setStatus('feedback');
     } catch (err) {
-      logger.error(LOG_SCOPE, 'Failed to grade explanation', err);
+      teachbackLogger.error('Failed to grade explanation', { error: err });
       setError(err instanceof Error ? err.message : 'Grading failed');
       setStatus('topic_presented');
     } finally {
@@ -241,7 +242,7 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
         drillFSRS.startQuestion();
       }
     } catch (err) {
-      logger.error(LOG_SCOPE, 'Failed to fetch next topic', err);
+      teachbackLogger.error('Failed to fetch next topic', { error: err });
       setError(err instanceof Error ? err.message : 'Failed to load topic');
     } finally {
       setIsLoading(false);

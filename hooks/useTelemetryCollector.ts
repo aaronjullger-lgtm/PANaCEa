@@ -47,7 +47,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import {
   createTelemetryCollector,
-  type QuestionType,
+  type TelemetryQuestionType as QuestionType,
   type TelemetryData,
   type InteractionEvent,
   type SerializedTrajectoryMetrics,

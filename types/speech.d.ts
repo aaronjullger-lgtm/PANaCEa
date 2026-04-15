@@ -80,17 +80,15 @@ interface SpeechGrammar {
   weight: number;
 }
 
-declare const SpeechRecognition: {
-  prototype: SpeechRecognition;
+interface SpeechRecognitionConstructor {
   new (): SpeechRecognition;
-};
+  readonly prototype: SpeechRecognition;
+}
 
-declare let webkitSpeechRecognition: {
-  prototype: SpeechRecognition;
-  new (): SpeechRecognition;
-};
+declare const SpeechRecognition: SpeechRecognitionConstructor;
+declare const webkitSpeechRecognition: SpeechRecognitionConstructor;
 
 interface Window {
-  SpeechRecognition: typeof SpeechRecognition;
-  webkitSpeechRecognition: typeof webkitSpeechRecognition;
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
 }
