@@ -119,7 +119,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         sessionType: 'drill',
       });
 
-      const result = (submitted?.data ?? submitted) as { implicitMetrics?: unknown };
+      const result = submitted as { implicitMetrics?: unknown };
 
       // Record JOL calibration observation for metacognitive tracking
       if (recordCalibrationObservation && result?.implicitMetrics) {

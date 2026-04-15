@@ -51,7 +51,12 @@ export const GrandRoundsBanner: React.FC<{
           </div>
         </div>
 
-        <PrimaryButton variant="warning" size="md" icon={Play} onClick={handleStart}>
+        <PrimaryButton
+          variant="warning"
+          size="md"
+          icon={<Play className="h-4 w-4" aria-hidden="true" />}
+          onClick={handleStart}
+        >
           Start
         </PrimaryButton>
       </div>

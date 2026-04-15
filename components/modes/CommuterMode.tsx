@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Volume2 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useSessionGenerator } from '@/hooks/useSessionGenerator';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
@@ -22,6 +23,7 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
   const sessionGenerator = useSessionGenerator();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const title = 'Commuter Mode';
 
   // Enable commuter mode when component mounts
   useEffect(() => {
@@ -56,10 +58,15 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
 
   if (isLoading) {
     return (
-      <MiniModeLayout>
+      <MiniModeLayout
+        title={title}
+        subtitle="Loading your hands-free session..."
+        icon={Volume2}
+      >
         <MiniModeHeader
-          title="Commuter Mode"
-          description="Loading your hands‑free session…"
+          title={title}
+          subtitle="Loading your hands-free session..."
+          icon={Volume2}
           onExit={onExit}
         />
         <MiniModeCard>
@@ -74,10 +81,15 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
 
   // Error or fallback: show retry (on success, useSessionGenerator navigates away)
   return (
-    <MiniModeLayout>
+    <MiniModeLayout
+      title={title}
+      subtitle={error ? 'Unable to start session' : 'Start session'}
+      icon={Volume2}
+    >
       <MiniModeHeader
-        title="Commuter Mode"
-        description={error ? 'Unable to start session' : 'Start session'}
+        title={title}
+        subtitle={error ? 'Unable to start session' : 'Start session'}
+        icon={Volume2}
         onExit={onExit}
       />
       <MiniModeCard>

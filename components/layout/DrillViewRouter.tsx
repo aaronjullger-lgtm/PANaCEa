@@ -63,7 +63,7 @@ interface DrillViewRouterProps {
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   performanceData: PerformanceRecord[];
   fontSizeAdjustment: number;
-  setFontSizeAdjustment: (n: number) => void;
+  setFontSizeAdjustment: React.Dispatch<React.SetStateAction<number>>;
   // Flagged questions
   flaggedQuestions: QuizQuestion[];
   addFlaggedQuestion: (q: QuizQuestion) => void;
@@ -485,7 +485,7 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           onRetry={() => setView('teach_back_drill')}
         >
           <Suspense fallback={<Loader />}>
-            <TeachBackDrill onExit={exit} />
+            <TeachBackDrill onBackToHub={exit} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

@@ -98,6 +98,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       }, 50);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isOpen]);
 
   // Reset state when closed

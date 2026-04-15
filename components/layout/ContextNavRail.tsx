@@ -35,7 +35,7 @@ export const ContextNavRail = () => {
         <ul>
           {relatedModules.map((module) => (
             <li key={module.id} className="mb-2">
-              <Link to={module.href} className="flex items-center p-2 rounded-md hover:bg-[var(--color-bg-secondary)]">
+              <Link to={module.href ?? '/'} className="flex items-center p-2 rounded-md hover:bg-[var(--color-bg-secondary)]">
                 {module.type === 'drug' && <Pill size={16} className="mr-2" />}
                 {module.type === 'lab' && <Beaker size={16} className="mr-2" />}
                 {module.type === 'condition' && <BookOpen size={16} className="mr-2" />}

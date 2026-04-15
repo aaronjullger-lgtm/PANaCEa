@@ -95,7 +95,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
     const emojiRow = Array.from({ length: MAX_ATTEMPTS })
       .map((_, i) => i < userState.guesses.length ? '🟩' : '⬛')
       .join('');
-    const result = `PANaCEa Diagnostic Puzzle ${puzzle.date}\n${userState.status === 'won' ? userState.guesses.length : 'X'}/${MAX_ATTEMPTS}\n\n${emojiRow}`;
+    const result = `PANaCEa Diagnostic Puzzle\n${userState.status === 'won' ? userState.guesses.length : 'X'}/${MAX_ATTEMPTS}\n\n${emojiRow}`;
 
     if (navigator.share) {
       navigator.share({ text: result });
@@ -376,7 +376,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
           <h1 className="text-lg font-semibold text-data-neutral">Daily Diagnostic Puzzle</h1>
           <div className="flex items-center justify-center gap-1 text-xs text-data-neutral">
             <Calendar className="w-3 h-3" />
-            {new Date(puzzle.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            Today
           </div>
         </div>
 

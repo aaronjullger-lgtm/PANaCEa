@@ -5,7 +5,7 @@ import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import Loader from '../loading/Loader';
+import { Loader } from '../loading';
 
 const DdxTrainer = () => {
   const [problem, setProblem] = useState<DdxProblem | null>(null);
@@ -79,7 +79,7 @@ const DdxTrainer = () => {
         {problem.diagnoses.map((dx) => (
           <Button
             key={dx.name}
-            variant={selectedAnswer === dx.name ? 'default' : 'outline'}
+            variant={selectedAnswer === dx.name ? 'primary' : 'outline'}
             onClick={() => handleSelectAnswer(dx.name)}
             className={`h-auto text-wrap justify-start p-4 ${
               isRevealed && dx.isCorrect ? 'bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)]' : ''

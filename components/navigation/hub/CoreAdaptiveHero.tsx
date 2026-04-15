@@ -73,8 +73,8 @@ export const CoreAdaptiveHero: React.FC<{
           <PrimaryButton
             variant="secondary"
             size="lg"
-            icon={Play}
-            iconRight={ChevronRight}
+            icon={<Play className="h-5 w-5" aria-hidden="true" />}
+            iconRight={<ChevronRight className="h-5 w-5" aria-hidden="true" />}
             onClick={onStart}
           >
             Start Session

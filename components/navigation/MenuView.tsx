@@ -578,7 +578,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
               aria-label="Search conditions or medications"
               className="w-full px-5 py-3.5 bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
-              style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+              style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
               autoComplete="off"
             />
           </div>
@@ -645,7 +645,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 initial={{ y: 10 }}
                 animate={{ y: 0 }}
                 className="bg-[var(--color-bg-secondary)] rounded-2xl p-6"
-                style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+                style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
               >
                 <h2 className="text-3xl font-light tracking-tight text-[var(--color-text-primary)] mb-2">
                   {getTimeBasedGreeting()}.
@@ -979,7 +979,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               initial={{ y: 10 }}
               animate={{ y: 0 }}
               className="bg-[var(--color-bg-secondary)] rounded-2xl p-6"
-              style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+              style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
             >
               <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text-primary)] mb-6">
                 Settings & Profile

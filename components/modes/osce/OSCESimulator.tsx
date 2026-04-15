@@ -15,7 +15,7 @@ import { ScoreReport } from './ScoreReport';
 import { RapportMeter } from './RapportMeter';
 import { getRandomEncounterCase, startOSCESession, saveOSCEChat } from '@/services/domain/osceService';
 import { OSCEScoringEngine } from '@/services/domain/osceScoringEngine';
-import type { BodyRegion, ExamFinding, OSCEScoreReport, RapportMeterType } from '@/types/osce-enhanced';
+import type { BodyRegion, ExamFinding, OSCEScoreReport, RapportMeter as RapportMeterState } from '@/types/osce-enhanced';
 import type { PatientEncounterCase } from '@/types/drill-modes';
 
 interface OSCESimulatorProps {
@@ -42,7 +42,13 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showScore, setShowScore] = useState(false);
   const [scoreReport, setScoreReport] = useState<OSCEScoreReport | null>(null);
-  const [rapportMeter, setRapportMeter] = useState<RapportMeterType>({ score: 50, empathyPoints: 0, trustPoints: 0, frustrationPoints: 0, milestones: [] });
+  const [rapportMeter, setRapportMeter] = useState<RapportMeterState>({
+    score: 50,
+    empathyPoints: 0,
+    trustPoints: 0,
+    frustrationPoints: 0,
+    milestones: [],
+  });
   // Voice hooks
   const {
     startListening,
@@ -70,6 +76,19 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const scoringEngineRef = useRef<OSCEScoringEngine | null>(null);
+  const examPanelCaseData = caseData
+    ? {
+        physicalExamData: caseData.physicalExamData,
+        correctDiagnosis: caseData.correctDiagnosis,
+      }
+    : undefined;
+  const findingsMap = examFindings.reduce(
+    (acc, finding) => {
+      acc[finding.region] = finding.finding;
+      return acc;
+    },
+    {} as Partial<Record<BodyRegion, string>>
+  );
 
   // Load a random encounter case
   const loadCase = useCallback(async () => {
@@ -346,14 +365,14 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
                     recordInteraction('click', `body_region_${region}`);
                   }}
                   highlightedRegions={examFindings.map(f => f.region)}
-                  findingsMap={examFindings.reduce((acc, f) => ({ ...acc, [f.region]: f.finding }), {})}
+                  findingsMap={findingsMap as Record<BodyRegion, string>}
                 />
               </div>
               <div>
                 <ExamPanel
                   onExamPerformed={handleExamPerformed}
                   completedExams={examFindings}
-                  caseData={caseData}
+                  caseData={examPanelCaseData}
                 />
               </div>
             </div>

@@ -1,26 +1,44 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { QuizView } from '@/components/session/QuizView';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
-import type { SessionSettings, QuizQuestion } from '@/types/study';
+import type { ErrorTag, PerformanceRecord, Question, SessionSettings } from '@/types';
 
 interface FullSitDownTestModeProps {
   /** Callback to navigate back to the menu */
   onExit?: () => void;
   /** Performance tracking callbacks */
-  addPerformanceRecord?: (question: QuizQuestion, wasCorrect: boolean) => void;
-  addMissedQuestion?: (question: QuizQuestion) => void;
-  updateReviewQuestion?: (question: QuizQuestion, wasCorrect: boolean) => void;
+  addPerformanceRecord?: (record: PerformanceRecord) => void;
+  addMissedQuestion?: (question: Question) => void;
+  updateReviewQuestion?: (question: Question, wasCorrect: boolean) => void;
   removeDueConcept?: (conditionId: string, taskType: string | null) => void;
-  updateLastPerformanceErrorTag?: (tag: string) => void;
-  performanceData?: Array<{ isCorrect: boolean }>;
+  updateLastPerformanceErrorTag?: (tag: ErrorTag) => void;
+  performanceData?: PerformanceRecord[];
   fontSizeAdjustment?: number;
-  setFontSizeAdjustment?: (adjustment: number) => void;
-  flaggedQuestions?: QuizQuestion[];
-  addFlaggedQuestion?: (question: QuizQuestion) => void;
-  removeFlaggedQuestion?: (question: QuizQuestion) => void;
-  updateQuestionNote?: (question: QuizQuestion, note: string) => void;
+  setFontSizeAdjustment?: React.Dispatch<React.SetStateAction<number>>;
+  flaggedQuestions?: Question[];
+  addFlaggedQuestion?: (question: Question) => void;
+  removeFlaggedQuestion?: (question: Question) => void;
+  updateQuestionNote?: (question: Question, note: string) => void;
 }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractGeneratedSession(payload: unknown): { sessionId: string; questions: Question[] } | null {
+  if (!isRecord(payload)) return null;
+
+  const root = isRecord(payload.data) ? payload.data : payload;
+  if (typeof root.sessionId !== 'string') return null;
+
+  return {
+    sessionId: root.sessionId,
+    questions: Array.isArray(root.questions) ? (root.questions as Question[]) : [],
+  };
+}
+
+const NOOP = () => undefined;
+const NOOP_SET_FONT_SIZE: React.Dispatch<React.SetStateAction<number>> = () => undefined;
 
 /**
  * Full Sit-Down Test Mode
@@ -45,7 +63,8 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
 }) => {
   const { getToken } = useAuth();
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
-  const [questionQueue, setQuestionQueue] = useState<QuizQuestion[]>([]);
+  const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +74,7 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
       try {
         setIsLoading(true);
         const token = await getToken();
-        const response = await fetch(getApiEndpoint(API_ENDPOINTS.SESSION_GENERATE), {
+        const response = await fetch('/api/study/session/generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -71,29 +90,21 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
           throw new Error(`Failed to generate session: ${response.status}`);
         }
 
-        const data = await response.json();
-        if (!data.data?.questionIds) {
+        const data = extractGeneratedSession(await response.json());
+        if (!data) {
           throw new Error('Invalid session response');
         }
 
-        // Create session settings object
         const settings: SessionSettings = {
-          mode: 'mainSession',
+          mode: 'exam',
+          focus: 'all',
           count: 300,
-          systemFocus: undefined,
           difficulty: 'adaptive',
-          sessionId: data.data.sessionId,
         };
 
         setSessionSettings(settings);
-        // The API returns questions array; we can set as initial queue
-        if (data.data.questions && Array.isArray(data.data.questions)) {
-          setQuestionQueue(data.data.questions);
-        } else {
-          // If questions not included, we'll need to fetch them individually later
-          // For now, leave empty queue; QuizView will fetch via getQuestionClient
-          setQuestionQueue([]);
-        }
+        setSessionId(data.sessionId);
+        setQuestionQueue(data.questions);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
         console.error('Failed to generate full sit-down test session:', err);
@@ -158,25 +169,27 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
       modeLabel="Practice → Full Sit-Down Test"
       initialQueue={questionQueue}
       setParentQueue={setQuestionQueue}
-      addPerformanceRecord={addPerformanceRecord}
-      addMissedQuestion={addMissedQuestion}
-      updateReviewQuestion={updateReviewQuestion}
+      addPerformanceRecord={addPerformanceRecord ?? NOOP}
+      addMissedQuestion={addMissedQuestion ?? NOOP}
+      updateReviewQuestion={updateReviewQuestion ?? NOOP}
       removeDueConcept={removeDueConcept}
-      updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+      updateLastPerformanceErrorTag={updateLastPerformanceErrorTag ?? NOOP}
       setIsLoading={setIsLoading}
       setError={setError}
       sessionSettings={sessionSettings}
       growthAreas={[]} // Not used for full sit-down test
       onEndSession={handleEndSession}
-      onShowMenu={onExit}
+      onShowMenu={onExit ?? NOOP}
       performanceData={performanceData}
       fontSizeAdjustment={fontSizeAdjustment}
-      setFontSizeAdjustment={setFontSizeAdjustment}
+      setFontSizeAdjustment={setFontSizeAdjustment ?? NOOP_SET_FONT_SIZE}
       flaggedQuestions={flaggedQuestions}
-      addFlaggedQuestion={addFlaggedQuestion}
-      removeFlaggedQuestion={removeFlaggedQuestion}
-      updateQuestionNote={updateQuestionNote}
+      addFlaggedQuestion={addFlaggedQuestion ?? NOOP}
+      removeFlaggedQuestion={removeFlaggedQuestion ?? NOOP}
+      updateQuestionNote={updateQuestionNote ?? NOOP}
       isFullSitDownTest={true}
+      totalQuestions={300}
+      sessionId={sessionId}
     />
   );
 };

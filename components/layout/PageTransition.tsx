@@ -40,7 +40,7 @@ export const PageTransition: React.FC<PageTransitionProps> = ({
       exit={{ opacity: 0, y: -4 }}
       transition={{
         duration: 0.3,
-        ease: PREMIUM_EASE as unknown as number[],
+        ease: PREMIUM_EASE,
       }}
     >
       {children}

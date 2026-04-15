@@ -56,7 +56,7 @@ import {
 } from '@/config/rotation-systems';
 import { ROUTES } from '@/config/routes';
 import { TO_REVIEW_LABEL } from '@/config/labels';
-import type { ClinicalRotation } from '@/types';
+import type { ClinicalRotation, UserProfile, YearInProgram } from '@/types';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 
 export interface CommandCenterHubProps {
@@ -113,6 +113,7 @@ function QuickLaunchCard({
     <button type="button" onClick={onClick} className="h-full w-full text-left">
       <WorkspaceSurface
         accent={accent}
+        role="action"
         className="h-full transition-transform duration-300 hover:translate-y-[-2px]"
       >
         <div className="flex h-full flex-col gap-4">
@@ -126,7 +127,9 @@ function QuickLaunchCard({
             <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
+            <h3 className="text-[1.05rem] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+              {title}
+            </h3>
             <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{description}</p>
           </div>
           <div className="mt-auto inline-flex items-center gap-2 text-sm font-medium" style={{ color: accent }}>
@@ -176,7 +179,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   const { syncError } = useUserStats();
   const { profile: apiProfile, updateProfile } = useUserProfile();
 
-  const [userProfile, setUserProfile] = useState(
+  const [userProfile, setUserProfile] = useState<UserProfile>(
     () => loadUserProfile() || { hasCompletedOnboarding: false }
   );
   const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
@@ -191,8 +194,11 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       eorTestDate: apiProfile.eorTestDate ?? previous?.eorTestDate,
       rotationStartDate: apiProfile.rotationStartDate ?? previous?.rotationStartDate,
       rotationEndDate: apiProfile.rotationEndDate ?? previous?.rotationEndDate,
-      currentRotation: apiProfile.currentRotation ?? previous?.currentRotation,
-      yearInProgram: apiProfile.yearInProgram ?? previous?.yearInProgram,
+      specialty: apiProfile.specialty ?? previous?.specialty,
+      currentRotation:
+        (apiProfile.currentRotation as ClinicalRotation | null | undefined) ?? previous?.currentRotation,
+      yearInProgram:
+        (apiProfile.yearInProgram as YearInProgram | null | undefined) ?? previous?.yearInProgram,
     }));
   }, [
     apiProfile?.currentRotation,
@@ -200,6 +206,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
     apiProfile?.graduationDate,
     apiProfile?.rotationEndDate,
     apiProfile?.rotationStartDate,
+    apiProfile?.specialty,
     apiProfile?.yearInProgram,
   ]);
 
@@ -397,7 +404,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   };
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="launch">
       {syncError && dismissedSyncError !== syncError ? (
         <WorkspaceReveal>
           <WorkspaceSurface accent="#a67f7f">
@@ -437,11 +444,12 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
             badgeTone: 'gold',
             title: `${greeting}, ${user?.firstName || 'Student'}.`,
             subtitle:
-              'Your study workspace is organized around the next action that matters: launch the right session, review what is due, and keep your companion tools within reach.',
+              'Start the right session, clear what is due, and keep your reference tools close without scanning a full dashboard first.',
             status:
               dueCount > 0
                 ? `${dueCount} item${dueCount === 1 ? '' : 's'} ready for review`
-                : 'Adaptive session ready',
+                : 'Nothing due right now',
+            actionPosition: 'under-title',
             primaryAction: {
               label:
                 hasActiveSession && onResumeSession
@@ -455,10 +463,6 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               {
                 label: 'Practice',
                 onClick: () => navigate(ROUTES.PRACTICE),
-              },
-              {
-                label: 'Progress',
-                onClick: () => navigate(ROUTES.PROGRESS),
               },
             ],
           }}
@@ -505,52 +509,75 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       ) : null}
 
       <WorkspaceReveal delay={0.08}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <WorkspaceMetricCard
             label={careerStage === 'practicing' ? 'Maintenance due' : TO_REVIEW_LABEL}
             value={dueCount}
-            detail="Items that should be resurfaced now to protect retention."
+            detail={
+              dueCount > 0
+                ? 'Clear this queue first so recall pressure stops compounding.'
+                : 'No review debt is waiting right now. Start a fresh block instead.'
+            }
             icon={Target}
+            variant={dueCount > 0 ? 'summary' : 'guidance'}
+            action={
+              dueCount > 0 && onNavigateToSrsReview ? (
+                <Button type="button" size="sm" variant="outline" onClick={onNavigateToSrsReview}>
+                  Open review
+                </Button>
+              ) : undefined
+            }
           />
           <WorkspaceMetricCard
-            label="Recent accuracy"
-            value={stats.accuracy !== null ? `${stats.accuracy}%` : '—'}
-            detail={enabledSystemsLabel ?? 'Global performance across your recent question history.'}
-            accent="#728ba6"
-            icon={BarChart3}
-          />
-          <WorkspaceMetricCard
-            label="Streak"
-            value={stats.streak}
-            detail="Consecutive study days currently active."
-            accent="#7a8f6e"
-            icon={Flame}
-          />
-          <WorkspaceMetricCard
-            label="Questions today"
-            value={stats.questionsToday}
-            detail="Recorded answers logged in the current day."
-            accent="#9a7f9a"
-            icon={Sparkles}
+            label="Momentum today"
+            value={stats.questionsToday > 0 ? `${stats.questionsToday} answered` : 'Baseline not set'}
+            detail={
+              stats.questionsToday > 0
+                ? `Recent accuracy ${stats.accuracy !== null ? `${stats.accuracy}%` : 'is still calibrating'}${stats.streak > 0 ? ` and ${stats.streak} study day${stats.streak === 1 ? '' : 's'} active.` : '.'}`
+                : 'Answer 5 to 10 questions to create a real targeting signal for the next block.'
+            }
+            accent={stats.questionsToday > 0 ? '#728ba6' : '#9a7f9a'}
+            icon={stats.questionsToday > 0 ? BarChart3 : Sparkles}
+            variant={stats.questionsToday > 0 ? 'progress' : 'guidance'}
+            action={
+              stats.questionsToday === 0 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(ROUTES.PRACTICE)}
+                >
+                  Open practice
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(ROUTES.PROGRESS)}
+                >
+                  View progress
+                </Button>
+              )
+            }
           />
         </div>
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.12}>
-        <WorkspaceHeroStrip>
+        <WorkspaceHeroStrip tone="launch">
           <WorkspaceSplit className="items-start">
             <div className="space-y-6">
               <div className="space-y-3">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent)]">
-                  Home surface
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+                  Start here
                 </p>
                 <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] text-[var(--color-text-primary)] sm:text-4xl">
-                  One narrative, one launch point, and the tools you need beside it.
+                  Pick one strong next move, then keep the rest quiet.
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  Keep your next adaptive session, due review, recommendations, and companion
-                  resources in one workspace so you can decide quickly and start without context
-                  switching.
+                  Use due review if something is waiting. Otherwise launch a focused adaptive block
+                  or take the faster practice route when you only have a few minutes.
                 </p>
               </div>
 
@@ -579,36 +606,56 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <QuickLaunchCard
-                  title="Adaptive questions"
-                  description="Launch a mixed session tuned to current readiness and recall pressure."
-                  icon={Brain}
-                  accent="#c4b78a"
-                  onClick={() =>
-                    onNavigateToSimulation ? onNavigateToSimulation() : onStartSession({ focus: 'all' })
+                  title={dueCount > 0 ? 'Clear the review queue' : 'Launch adaptive questions'}
+                  description={
+                    dueCount > 0
+                      ? 'Protect recall first, then return to new material once the queue is under control.'
+                      : 'Run a mixed session tuned to current readiness and recall pressure.'
                   }
-                  cta="Start session"
+                  icon={dueCount > 0 ? Target : Brain}
+                  accent="#c4b78a"
+                  onClick={() => {
+                    if (dueCount > 0 && onNavigateToSrsReview) {
+                      onNavigateToSrsReview();
+                      return;
+                    }
+                    if (onNavigateToSimulation) {
+                      onNavigateToSimulation();
+                      return;
+                    }
+                    onStartSession({ focus: 'all' });
+                  }}
+                  cta={dueCount > 0 ? 'Start review' : 'Start session'}
                 />
                 <QuickLaunchCard
-                  title="Live OSCE"
-                  description="Practice clinical reasoning through interactive patient encounters."
-                  icon={Stethoscope}
-                  accent="#9a7f9a"
-                  onClick={() => onNavigateToDrillMode('patient_encounter')}
-                  cta="Start encounter"
+                  title="Fallback route"
+                  description={
+                    stats.questionsToday === 0
+                      ? 'Use the practice library to create a baseline fast when today has not started yet.'
+                      : 'Open practice mode when you want a tighter, searchable route instead of another dashboard.'
+                  }
+                  icon={stats.questionsToday === 0 ? Sparkles : Compass}
+                  accent="#728ba6"
+                  onClick={() => navigate(ROUTES.PRACTICE)}
+                  cta="Open practice"
                 />
               </div>
             </div>
 
             <div className="space-y-4">
-              <WorkspaceSurface accent="#728ba6">
+              <WorkspaceSurface accent="#728ba6" role="reference">
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
-                      Quick launch
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
+                      Decision support
                     </p>
                     <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                      Use the time you actually have.
+                      Choose based on time, not guilt.
                     </h3>
+                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                      Keep one fast start visible, watch the weakest signal, and avoid opening three
+                      competing routes before you begin.
+                    </p>
                   </div>
                   <TimeBoxButtons onStartSession={onStartSession} />
                 </div>
@@ -631,75 +678,67 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.16}>
-        <WorkspaceSplit>
-          <WorkspaceSection
-            title="Recommended next"
-            subtitle="Dynamic recommendations pulled into the same home surface so you can act without opening another dashboard."
-          >
-            <WorkspaceSurface accent="#c4b78a">
-              <RecommendationFeed
-                className="mb-0"
-                onNavigateToDrill={handleNavigateToRecommendation}
-              />
-            </WorkspaceSurface>
-          </WorkspaceSection>
+        <WorkspaceSection
+          title="Recommended next"
+          subtitle="Keep the high-signal recommendation in view so you can act without opening another analytics page."
+        >
+          <WorkspaceSurface accent="#c4b78a" role="action">
+            <RecommendationFeed
+              className="mb-0"
+              onNavigateToDrill={handleNavigateToRecommendation}
+            />
+          </WorkspaceSurface>
+        </WorkspaceSection>
+      </WorkspaceReveal>
 
-          <WorkspaceSection
-            title="Companion tools"
-            subtitle="Reference, tutoring, library context, and deeper analytics stay one click away."
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              <QuickLaunchCard
-                title="Knowledge"
-                description="Open high-yield reference content without leaving the authenticated workspace."
-                icon={BookOpen}
-                accent="#728ba6"
-                onClick={() => (onNavigateToReference ? onNavigateToReference() : navigate(ROUTES.STUDY_KNOWLEDGE))}
-                cta="Open knowledge"
-              />
-              <QuickLaunchCard
-                title="Tools"
-                description="Calculators, generators, and utilities for fast clinical study workflows."
-                icon={Calculator}
-                accent="#b39b6c"
-                onClick={onNavigateToToolkit}
-                cta="Open tools"
-              />
-              <QuickLaunchCard
-                title="Tutor"
-                description="Profile-aware reasoning help that can challenge your differential and next step."
-                icon={MessageSquare}
-                accent="#9a7f9a"
-                onClick={() => onNavigateToTutorChat?.()}
-                cta="Open tutor"
-              />
-              <QuickLaunchCard
-                title="My library"
-                description="Ground tutoring and study companion flows in your own uploaded documents."
-                icon={Library}
-                accent="#7a8f6e"
-                onClick={() => onNavigateToMyLibrary?.()}
-                cta="Manage library"
-              />
-              <QuickLaunchCard
-                title="Study path"
-                description="Review the adaptive plan that ties your readiness, fatigue, and exam horizon together."
-                icon={Compass}
-                accent="#c4b78a"
-                onClick={() => onNavigateToStudyPathDashboard?.()}
-                cta="Open study path"
-              />
-              <QuickLaunchCard
-                title="Companion"
-                description="Keep long-form textbook grounding and document chat in a dedicated surface."
-                icon={FolderOpen}
-                accent="#728ba6"
-                onClick={() => onNavigateToStudyCompanion?.()}
-                cta="Open companion"
-              />
-            </div>
-          </WorkspaceSection>
-        </WorkspaceSplit>
+      <WorkspaceReveal delay={0.18}>
+        <WorkspaceSection
+          title="Companion tools"
+          subtitle="Keep one reference route and a few supporting surfaces visible instead of a second full dashboard."
+        >
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
+            <QuickLaunchCard
+              title="Knowledge"
+              description="Open reference content first when you need context, differentials, or drug anchors before another question block."
+              icon={BookOpen}
+              accent="#728ba6"
+              onClick={() => (onNavigateToReference ? onNavigateToReference() : navigate(ROUTES.STUDY_KNOWLEDGE))}
+              cta="Open knowledge"
+            />
+            <QuickLaunchCard
+              title="Tools"
+              description="Reach calculators and generators without leaving the same study surface."
+              icon={Calculator}
+              accent="#b39b6c"
+              onClick={onNavigateToToolkit}
+              cta="Open tools"
+            />
+            <QuickLaunchCard
+              title="Tutor"
+              description="Use profile-aware reasoning help when you need a challenge, not more browsing."
+              icon={MessageSquare}
+              accent="#9a7f9a"
+              onClick={() => onNavigateToTutorChat?.()}
+              cta="Open tutor"
+            />
+            <QuickLaunchCard
+              title="My library"
+              description="Ground study chat and reference work in your uploaded material."
+              icon={Library}
+              accent="#7a8f6e"
+              onClick={() => onNavigateToMyLibrary?.()}
+              cta="Manage library"
+            />
+            <QuickLaunchCard
+              title="Study path"
+              description="Review the adaptive plan when you want a longer horizon than today."
+              icon={Compass}
+              accent="#c4b78a"
+              onClick={() => onNavigateToStudyPathDashboard?.()}
+              cta="Open study path"
+            />
+          </div>
+        </WorkspaceSection>
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.2}>
@@ -749,29 +788,29 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
           <WorkspaceSection
             title="Clinical-year focus"
             subtitle="Preset the systems that matter for your current rotation and keep EOR timing visible in the same home workspace."
-            action={
-              onOpenSettings ? (
-                <Button type="button" size="sm" variant="outline" onClick={onOpenSettings}>
-                  More options
-                </Button>
-              ) : null
-            }
           >
-            <WorkspaceSurface accent="#9a7f9a" className="space-y-6">
+            <WorkspaceSurface accent="#9a7f9a" className="space-y-6" role="reference">
               <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
-                <div className="space-y-5">
-                  <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent)]">
-                      Rotation
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                      Current curriculum focus
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                      {enabledSystems.size === Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-                        ? 'All systems are enabled.'
-                        : enabledSystemsLabel ?? 'Choose a rotation to preset the systems you need most right now.'}
-                    </p>
+                <WorkspaceSurface accent="#c4b78a" role="action" className="space-y-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+                        Rotation settings
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
+                        Current curriculum focus
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                        {enabledSystems.size === Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+                          ? 'All systems are enabled right now.'
+                          : enabledSystemsLabel ?? 'Choose a rotation to preset the systems that matter most right now.'}
+                      </p>
+                    </div>
+                    {onOpenSettings ? (
+                      <Button type="button" size="sm" variant="outline" onClick={onOpenSettings}>
+                        More options
+                      </Button>
+                    ) : null}
                   </div>
 
                   <RotationSelector value={currentRotation} onChange={handleRotationChange} label="" />
@@ -831,7 +870,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       Disable all
                     </Button>
                   </div>
-                </div>
+                </WorkspaceSurface>
 
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -841,6 +880,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       detail="Systems with solid recent performance and enough volume."
                       accent="#c4b78a"
                       icon={Target}
+                      variant="progress"
                     />
                     <WorkspaceMetricCard
                       label="Enabled systems"
@@ -848,6 +888,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       detail="Systems currently included in the study pool."
                       accent="#728ba6"
                       icon={BookOpen}
+                      variant="reference"
                     />
                     <WorkspaceMetricCard
                       label="Reference total"
@@ -855,14 +896,17 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       detail="Baseline total used to normalize progress by system."
                       accent="#7a8f6e"
                       icon={GraduationCap}
+                      variant="reference"
                     />
                   </div>
-                  <CurriculumGrid
-                    selectedSystems={enabledSystems}
-                    onSystemToggle={handleToggleSystem}
-                    growthAreas={growthAreas}
-                    progressData={curriculumProgressData}
-                  />
+                  <WorkspaceSurface accent="#728ba6" role="reference" className="p-4">
+                    <CurriculumGrid
+                      selectedSystems={enabledSystems}
+                      onSystemToggle={handleToggleSystem}
+                      growthAreas={growthAreas}
+                      progressData={curriculumProgressData}
+                    />
+                  </WorkspaceSurface>
                 </div>
               </div>
             </WorkspaceSurface>
