@@ -8,6 +8,8 @@
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { logger } from "@/lib/simple-logger";
 
+const attemptLogger = logger.scope('AttemptService');
+
 interface AttemptData {
   questionId: string;
   wasCorrect: boolean;
@@ -211,23 +213,23 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
 
     if (!response.ok) {
       if (response.status === 404) {
-        logger.warn('AttemptService', 'User stats not found (404) – user may not be synced yet');
+        attemptLogger.warn('User stats not found (404) – user may not be synced yet');
       } else {
-        logger.error('AttemptService', 'Failed to fetch user stats', response.status);
+        attemptLogger.error('Failed to fetch user stats', { status: response.status });
       }
       return null;
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
-      logger.warn('AttemptService', 'User stats response was not JSON', contentType);
+      attemptLogger.warn('User stats response was not JSON', { contentType });
       return null;
     }
 
     const result = await response.json();
     return result.stats;
   } catch (error) {
-    logger.error('AttemptService', 'Error fetching user stats', error);
+    attemptLogger.error('Error fetching user stats', { error });
     return null;
   }
 }

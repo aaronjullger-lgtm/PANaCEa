@@ -17,6 +17,7 @@ import type { LanguageModelV1 } from 'ai';
 
 export interface AIProviderEnv {
   GEMINI_API_KEY?: string;
+  GOOGLE_GENERATIVE_AI_API_KEY?: string;
   OPENAI_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
   /** Cloudflare AI Gateway — when set, routes Google AI calls through edge cache */

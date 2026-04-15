@@ -125,7 +125,7 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
   }
 
   // Build weighted array
-  const weights = availableSystems.map((sys) => PANCE_SYSTEM_PERCENTAGES[sys] || 1);
+  const weights = availableSystems.map((sys) => PANCE_SYSTEM_PERCENTAGES[sys] ?? 1);
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
   // Generate random value
@@ -134,9 +134,9 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
   // Select weighted system
   let cumulativeWeight = 0;
   for (let i = 0; i < availableSystems.length; i++) {
-    cumulativeWeight += weights[i];
+    cumulativeWeight += weights[i] ?? 0;
     if (random <= cumulativeWeight) {
-      return availableSystems[i];
+      return availableSystems[i] ?? 'Cardiovascular';
     }
   }
 
@@ -151,16 +151,16 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
  */
 export function getWeightedRandomTask(): string {
   const tasks = Object.keys(PANCE_TASK_PERCENTAGES);
-  const weights = tasks.map((task) => PANCE_TASK_PERCENTAGES[task]);
+  const weights = tasks.map((task) => PANCE_TASK_PERCENTAGES[task] ?? 0);
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
   const random = Math.random() * totalWeight;
 
   let cumulativeWeight = 0;
   for (let i = 0; i < tasks.length; i++) {
-    cumulativeWeight += weights[i];
+    cumulativeWeight += weights[i] ?? 0;
     if (random <= cumulativeWeight) {
-      return tasks[i];
+      return tasks[i] ?? 'Diagnosis';
     }
   }
 

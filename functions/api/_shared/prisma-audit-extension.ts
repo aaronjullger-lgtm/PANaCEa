@@ -49,20 +49,6 @@ export interface MutationAuditContext {
   requestId?: string;
 }
 
-interface AuditLogEntry {
-  event: 'data_mutation';
-  model: string;
-  operation: string;
-  userId: string | null;
-  endpoint: string;
-  requestId: string;
-  recordId: string | null;
-  timestamp: string;
-  durationMs: number;
-  /** Allow additional fields (failed, errorMessage) for LogContext compat */
-  [key: string]: unknown;
-}
-
 // ─── Configuration ──────────────────────────────────────────────────────────
 
 /** Operations that constitute a data mutation */
@@ -121,16 +107,16 @@ export function withMutationAudit(context: MutationAuditContext) {
                 recordId = String((result as any).id);
               }
 
-              const entry: AuditLogEntry = {
+              const entry = {
                 event: 'data_mutation',
                 model: model,
                 operation,
-                userId: context.userId ?? null,
+                userId: context.userId,
                 endpoint: context.endpoint ?? 'unknown',
                 requestId: context.requestId ?? 'no-request-id',
                 recordId,
                 timestamp: new Date().toISOString(),
-                durationMs,
+                duration: durationMs,
               };
 
               // Log via secure logger (console-based, non-blocking)
@@ -149,12 +135,12 @@ export function withMutationAudit(context: MutationAuditContext) {
                 event: 'data_mutation',
                 model: model,
                 operation,
-                userId: context.userId ?? null,
+                userId: context.userId,
                 endpoint: context.endpoint ?? 'unknown',
                 requestId: context.requestId ?? 'no-request-id',
                 recordId: null,
                 timestamp: new Date().toISOString(),
-                durationMs,
+                duration: durationMs,
                 failed: true,
                 errorMessage:
                   error instanceof Error ? error.message : 'Unknown error',

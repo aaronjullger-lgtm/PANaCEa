@@ -198,8 +198,10 @@ export function calculateUserMetrics(performanceData: PerformanceRecord[]): User
   });
 
   Object.keys(systemPerformance).forEach((system) => {
-    const early = systemPerformance[system].early;
-    const late = systemPerformance[system].late;
+    const systemBucket = systemPerformance[system];
+    if (!systemBucket) return;
+    const early = systemBucket.early;
+    const late = systemBucket.late;
 
     if (early.length > 0 && late.length > 0) {
       const earlyAvg = early.reduce((a, b) => a + b, 0) / early.length;
@@ -327,10 +329,12 @@ export function generateStudyPrescription(
     .sort((a, b) => b.accuracy - a.accuracy);
 
   if (hourlyPerformance.length > 0) {
-    const bestHour = hourlyPerformance[0].hour;
-    const timeRange = getTimeRange(bestHour);
-    optimalTimeSlot = timeRange;
-    recommendations.push(`You perform best during ${timeRange}`);
+    const bestHour = hourlyPerformance[0]?.hour;
+    if (bestHour != null) {
+      const timeRange = getTimeRange(bestHour);
+      optimalTimeSlot = timeRange;
+      recommendations.push(`You perform best during ${timeRange}`);
+    }
   }
 
   // Build final prescription

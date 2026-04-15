@@ -801,6 +801,7 @@ export const onRequestPost = authenticatedEndpoint(
                 ...new Set(attempts.map((a) => a.system).filter(Boolean)),
               ] as string[],
               mode,
+              updatedAt: new Date(),
             },
           });
           log.info('Session analytics saved', {

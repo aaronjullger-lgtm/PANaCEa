@@ -122,31 +122,18 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      // Get all question attempts with system data for this user
-      const attempts = await prisma.questionAttempt.groupBy({
-        by: ['systemNormalized'],
+      // Load the rows directly and aggregate in JS to stay aligned with the
+      // current Prisma type surface.
+      const attempts = await prisma.questionAttempt.findMany({
         where: {
           userId: context.auth.userId,
           systemNormalized: { not: null },
         },
-        _count: { _all: true },
-        _sum: { wasCorrect: undefined },
-      });
-
-      // Also get correct counts per system (groupBy can't sum booleans directly)
-      const correctCounts = await prisma.questionAttempt.groupBy({
-        by: ['systemNormalized'],
-        where: {
-          userId: context.auth.userId,
-          systemNormalized: { not: null },
+        select: {
+          systemNormalized: true,
           wasCorrect: true,
         },
-        _count: { _all: true },
       });
-
-      const correctMap = new Map(
-        correctCounts.map((c) => [c.systemNormalized, c._count._all])
-      );
 
       // Normalize and aggregate by canonical system name
       const systemAgg: Record<string, { total: number; correct: number }> = {};
@@ -156,55 +143,37 @@ export const onRequestGet = authenticatedEndpoint(
         const canonical = normalizeSystem(row.systemNormalized);
         if (!canonical || !(canonical in NCCPA_TARGET)) continue;
 
-        const count = row._count._all;
-        const correct = correctMap.get(row.systemNormalized) ?? 0;
-
         if (!systemAgg[canonical]) {
           systemAgg[canonical] = { total: 0, correct: 0 };
         }
-        systemAgg[canonical].total += count;
-        systemAgg[canonical].correct += correct;
-        totalAttempts += count;
+        systemAgg[canonical].total += 1;
+        systemAgg[canonical].correct += row.wasCorrect ? 1 : 0;
+        totalAttempts += 1;
       }
 
       // Also try PerformanceRecord as fallback (has 'system' field)
       if (totalAttempts === 0) {
-        const perfRecords = await prisma.performanceRecord.groupBy({
-          by: ['system'],
+        const perfRecords = await prisma.performanceRecord.findMany({
           where: {
             userId: context.auth.userId,
             system: { not: null },
           },
-          _count: { _all: true },
-        });
-
-        const perfCorrect = await prisma.performanceRecord.groupBy({
-          by: ['system'],
-          where: {
-            userId: context.auth.userId,
-            system: { not: null },
+          select: {
+            system: true,
             isCorrect: true,
           },
-          _count: { _all: true },
         });
-
-        const perfCorrectMap = new Map(
-          perfCorrect.map((c) => [c.system, c._count._all])
-        );
 
         for (const row of perfRecords) {
           const canonical = normalizeSystem(row.system);
           if (!canonical || !(canonical in NCCPA_TARGET)) continue;
 
-          const count = row._count._all;
-          const correct = perfCorrectMap.get(row.system) ?? 0;
-
           if (!systemAgg[canonical]) {
             systemAgg[canonical] = { total: 0, correct: 0 };
           }
-          systemAgg[canonical].total += count;
-          systemAgg[canonical].correct += correct;
-          totalAttempts += count;
+          systemAgg[canonical].total += 1;
+          systemAgg[canonical].correct += row.isCorrect ? 1 : 0;
+          totalAttempts += 1;
         }
       }
 

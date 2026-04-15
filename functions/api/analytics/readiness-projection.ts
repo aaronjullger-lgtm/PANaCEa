@@ -66,11 +66,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
         totalAttempts: true,
         correctCount: true,
         lastReviewAt: true,
-        condition: {
-          select: {
-            system: true,
-          },
-        },
+        system: true,
       },
     });
 
@@ -104,7 +100,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
 
         return {
           conditionId: p.conditionId,
-          system: p.condition?.system ?? 'unknown',
+          system: p.system ?? 'unknown',
           stability,
           difficulty: p.fsrsDifficulty ?? 5,
           retrievability: Math.max(0, Math.min(1, retrievability)),

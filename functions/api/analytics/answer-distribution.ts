@@ -35,12 +35,12 @@ export interface AnswerDistributionResponse {
 export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {
-    const { questionId } = context.data;
+    const { questionId } = context.validated;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
       // First try pre-aggregated data
-      const cached = await prisma.questionAnswerDistribution.findUnique({
+      const cached = await (prisma as any).questionAnswerDistribution.findUnique({
         where: { questionId },
       });
 
@@ -112,6 +112,6 @@ function normalizeToLetter(answer: string | null): string | null {
     return String.fromCharCode(65 + idx);
   }
   const match = trimmed.match(/^(?:OPTION|CHOICE)\s+([A-E])$/);
-  if (match) return match[1];
+  if (match) return match[1] ?? null;
   return null;
 }

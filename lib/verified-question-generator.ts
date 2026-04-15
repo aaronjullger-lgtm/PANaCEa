@@ -30,6 +30,7 @@ import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 // ============================================================================
 
 const LOG_SCOPE = 'VerifiedQuestionGen';
+const verifiedQuestionLogger = logger.scope(LOG_SCOPE);
 
 // ============================================================================
 // Types
@@ -177,8 +178,7 @@ export async function fetchVerifiedQuestion(
         }
 
         // Log why verification failed
-        logger.warn(
-          LOG_SCOPE,
+        verifiedQuestionLogger.warn(
           `Attempt ${attempts} failed verification: ${verification.recommendation} | ${verification.flags.map((f) => f.message).join('; ')}`
         );
       } else {
@@ -199,19 +199,17 @@ export async function fetchVerifiedQuestion(
           };
         }
 
-        logger.warn(
-          LOG_SCOPE,
+        verifiedQuestionLogger.warn(
           `Attempt ${attempts} failed quick verification: ${quickResult.criticalIssues.join('; ')}`
         );
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, `Attempt ${attempts} error:`, error);
+      verifiedQuestionLogger.error(`Attempt ${attempts} error`, { error });
     }
   }
 
   // All attempts exhausted - return last question with verification results
-  logger.warn(
-    LOG_SCOPE,
+  verifiedQuestionLogger.warn(
     `Max attempts (${maxAttempts}) reached, returning best available question`
   );
 
@@ -301,7 +299,9 @@ async function buildVerificationContext(question: Question): Promise<Verificatio
       };
     }
   } catch (error) {
-    logger.warn(LOG_SCOPE, `Could not load database content for ${conditionName}:`, error);
+    verifiedQuestionLogger.warn(`Could not load database content for ${conditionName}`, {
+      error,
+    });
   }
 
   return {
@@ -334,7 +334,7 @@ export async function verifyQuestionBatch(
 
     // Type guard: skip if question is undefined (shouldn't happen with valid array)
     if (!question) {
-      logger.warn(LOG_SCOPE, `Skipping undefined question at index ${i}`);
+      verifiedQuestionLogger.warn(`Skipping undefined question at index ${i}`);
       continue;
     }
 
@@ -378,7 +378,7 @@ export async function verifyQuestionBatch(
         onProgress?.(i + 1, questions.length, partialResult);
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, `Error verifying question ${i}:`, error);
+      verifiedQuestionLogger.error(`Error verifying question ${i}`, { error });
       results.push({ question, result: null, passed: false });
       onProgress?.(i + 1, questions.length, null);
     }

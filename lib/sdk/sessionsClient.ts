@@ -15,8 +15,11 @@ export interface SessionsClient {
 
 export function createSessionsClient(api: ApiClient): SessionsClient {
   return {
-    generate(opts = {}) {
-      return api.post<SessionGenerateResult>('/api/study/session/generate', opts);
+    generate(opts) {
+      return api.post<SessionGenerateResult>(
+        '/api/study/session/generate',
+        opts ?? ({} as SessionGeneratePayload)
+      );
     },
   };
 }

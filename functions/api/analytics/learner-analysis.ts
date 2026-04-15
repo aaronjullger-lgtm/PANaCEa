@@ -71,13 +71,13 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     // 3. Session records (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const sessions = await prisma.drillSessionRecord.findMany({
-      where: { userId, startedAt: { gte: thirtyDaysAgo } },
-      orderBy: { startedAt: 'asc' },
+      where: { userId, sessionStart: { gte: thirtyDaysAgo } },
+      orderBy: { sessionStart: 'asc' },
       select: {
-        startedAt: true,
-        completedAt: true,
-        questionsAnswered: true,
-        correctAnswers: true,
+        sessionStart: true,
+        sessionEnd: true,
+        totalQuestions: true,
+        accuracy: true,
       },
     });
 
@@ -86,13 +86,15 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       where: { userId },
       select: {
         system: true,
-        lastReviewedAt: true,
+        lastReviewAt: true,
         fsrsStability: true,
       },
     });
 
     // 5. Active blueprint systems
-    const allSystems = [...new Set(progressRecords.map(p => p.system).filter(Boolean))];
+    const allSystems = [
+      ...new Set(progressRecords.map((p) => p.system).filter((system): system is string => !!system)),
+    ];
 
     // ── Build LearnerFeatures ──
 
@@ -118,20 +120,23 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     const volumeVar = coefficientOfVariation(dailyValues);
 
     // Spacing regularity from session gaps
-    const sessionTimes = sessions.map(s => new Date(s.startedAt).getTime()).sort();
+    const sessionTimes = sessions
+      .map((s) => new Date(s.sessionStart).getTime())
+      .sort((a, b) => a - b);
     const gapHours: number[] = [];
     for (let i = 1; i < sessionTimes.length; i++) {
       gapHours.push(((sessionTimes[i] ?? 0) - (sessionTimes[i - 1] ?? 0)) / (1000 * 60 * 60));
     }
 
     // System breadth/depth
-    const systemsStudied = new Set(recentAttempts.map(a => a.system).filter(Boolean));
+    const systemsStudied = new Set(
+      recentAttempts.map((a) => a.system).filter((system): system is string => !!system)
+    );
     const totalSystems = Math.max(allSystems.length, 1);
 
     // Session completion rate
-    const completedSessions = sessions.filter(s => s.completedAt != null).length;
     const sessionCompletionRate = sessions.length > 0
-      ? completedSessions / sessions.length
+      ? sessions.filter((s) => s.totalQuestions > 0).length / sessions.length
       : 0.5;
 
     // Average dwell time relative to par (~90s)
@@ -143,9 +148,9 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     // Engagement trend (sessions last 7d vs prior 21d)
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const twentyEightDaysAgo = now - 28 * 24 * 60 * 60 * 1000;
-    const sessionsLast7 = sessions.filter(s => new Date(s.startedAt).getTime() >= sevenDaysAgo).length;
+    const sessionsLast7 = sessions.filter(s => new Date(s.sessionStart).getTime() >= sevenDaysAgo).length;
     const sessionsPrior21 = sessions.filter(s => {
-      const t = new Date(s.startedAt).getTime();
+      const t = new Date(s.sessionStart).getTime();
       return t >= twentyEightDaysAgo && t < sevenDaysAgo;
     }).length;
     const baselineWeekly = sessionsPrior21 / 3;
@@ -171,8 +176,8 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     // System last reviewed map
     const systemLastReviewed: Record<string, number> = {};
     for (const p of progressRecords) {
-      if (p.system && p.lastReviewedAt) {
-        const daysSince = Math.floor((now - new Date(p.lastReviewedAt).getTime()) / (1000 * 60 * 60 * 24));
+      if (p.system && p.lastReviewAt) {
+        const daysSince = Math.floor((now - new Date(p.lastReviewAt).getTime()) / (1000 * 60 * 60 * 24));
         const existing = systemLastReviewed[p.system];
         // Take minimum days across conditions in same system
         systemLastReviewed[p.system] = existing != null ? Math.min(existing, daysSince) : daysSince;

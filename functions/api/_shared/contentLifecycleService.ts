@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client/edge';
 import { prisma } from './prisma-edge';
 
 /**
@@ -79,7 +80,7 @@ export async function transitionQuestion(
 }> {
   const question = await prisma.question.findUnique({
     where: { id: questionId },
-    select: { id: true, lifecycleStatus: true },
+    select: { id: true, lifecycleStatus: true, conditionId: true },
   });
 
   if (!question) {
@@ -130,35 +131,75 @@ export async function transitionQuestion(
 
       // Migrate SRS state if a replacement question is referenced in the reason field
       // Format: "replaced:REPLACEMENT_QUESTION_ID"
-      if (reason?.startsWith('replaced:')) {
+      if (reason?.startsWith('replaced:') && question.conditionId) {
         const replacementId = reason.split(':')[1];
         if (replacementId) {
-          // Copy UserProgress entries to the replacement question
-          const progressRecords = await prisma.userProgress.findMany({
-            where: { questionId },
+          const replacementQuestion = await prisma.question.findUnique({
+            where: { id: replacementId },
+            select: { conditionId: true },
           });
-          for (const record of progressRecords) {
-            await prisma.userProgress.upsert({
-              where: { userId_questionId: { userId: record.userId, questionId: replacementId } },
-              update: {
-                stability: record.stability,
-                difficulty: record.difficulty,
-                state: record.state,
-                lastReviewDate: record.lastReviewDate,
-                nextReviewDate: record.nextReviewDate,
-              },
-              create: {
-                userId: record.userId,
-                questionId: replacementId,
-                stability: record.stability,
-                difficulty: record.difficulty,
-                state: record.state,
-                lastReviewDate: record.lastReviewDate,
-                nextReviewDate: record.nextReviewDate,
-                reps: record.reps,
-                lapses: record.lapses,
-              },
+
+          const replacementConditionId = replacementQuestion?.conditionId;
+          if (replacementConditionId) {
+            // Copy UserProgress entries to the replacement condition.
+            const progressRecords = await prisma.userProgress.findMany({
+              where: { conditionId: question.conditionId },
             });
+
+            for (const record of progressRecords) {
+              const fsrsCardJson =
+                record.fsrsCard === null
+                  ? Prisma.JsonNull
+                  : (record.fsrsCard as Prisma.InputJsonValue);
+              const reviewHistoryJson = (record.reviewHistory ?? [])
+                .filter((entry) => entry !== null)
+                .map((entry) => entry as Prisma.InputJsonValue);
+
+              await prisma.userProgress.upsert({
+                where: {
+                  userId_conditionId_progressContext: {
+                    userId: record.userId,
+                    conditionId: replacementConditionId,
+                    progressContext: record.progressContext,
+                  },
+                },
+                update: {
+                  fsrsCard: fsrsCardJson,
+                  fsrsStability: record.fsrsStability,
+                  fsrsDifficulty: record.fsrsDifficulty,
+                  fsrsState: record.fsrsState,
+                  fsrsReps: record.fsrsReps,
+                  reviewHistory: reviewHistoryJson,
+                  totalAttempts: record.totalAttempts,
+                  correctCount: record.correctCount,
+                  accuracy: record.accuracy,
+                  system: record.system,
+                  lastReviewAt: record.lastReviewAt,
+                  nextReviewAt: record.nextReviewAt,
+                  updatedAt: new Date(),
+                },
+                create: {
+                  id: crypto.randomUUID(),
+                  userId: record.userId,
+                  conditionId: replacementConditionId,
+                  progressContext: record.progressContext,
+                  fsrsCard: fsrsCardJson,
+                  fsrsStability: record.fsrsStability,
+                  fsrsDifficulty: record.fsrsDifficulty,
+                  fsrsState: record.fsrsState,
+                  fsrsReps: record.fsrsReps,
+                  reviewHistory: reviewHistoryJson,
+                  totalAttempts: record.totalAttempts,
+                  correctCount: record.correctCount,
+                  accuracy: record.accuracy,
+                  system: record.system,
+                  lastReviewAt: record.lastReviewAt,
+                  nextReviewAt: record.nextReviewAt,
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                },
+              });
+            }
           }
         }
       }

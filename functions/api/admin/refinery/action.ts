@@ -82,7 +82,7 @@ function buildMediaApproveUpdate(
 async function copyRawToPublic(
   env: RefineryEnv,
   rawPath: string
-): Promise<{ error?: ActionResult }> {
+): Promise<{ error?: Extract<ActionResult, { status: number; error: string }> }> {
   const supabase = createClient(env.SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { autoRefreshToken: false, persistSession: false },
   });

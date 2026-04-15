@@ -26,12 +26,12 @@ const MIN_ATTEMPTS = 10;
 export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {
-    const { questionId } = context.data;
+    const { questionId } = context.validated;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
       // Try pre-aggregated cache first
-      const cached = await prisma.questionAnswerDistribution.findUnique({
+      const cached = await (prisma as any).questionAnswerDistribution.findUnique({
         where: { questionId },
       }).catch(() => null); // Table might not exist yet — graceful fallback
 
@@ -114,6 +114,6 @@ function normalizeToLetter(answer: unknown): string | null {
   }
 
   const match = trimmed.match(/^(?:OPTION|CHOICE)\s+([A-E])$/);
-  if (match) return match[1];
+  if (match) return match[1] ?? null;
   return null;
 }

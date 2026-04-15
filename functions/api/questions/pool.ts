@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { Prisma } from '@prisma/client/edge';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { getSystemWeight, calculateTargetDistribution, getSystemAbbreviation } from '../../../lib/constants/blueprint';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
@@ -23,7 +24,7 @@ import {
 } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
 import { loadConditionData } from '../_shared/condition-loader';
-import { generateSingleQuestion } from '../_shared/question-generator';
+import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
 import { ANSWER_LETTERS, letterToIndex, indexToLetter } from '../../../lib/answerLetterMap';
 
 /**
@@ -77,6 +78,52 @@ interface PreGeneratedQuestionRecord {
   generatedAt: Date;
   usedAt: Date | null;
 }
+
+interface PreGeneratedQuestionDbRecord {
+  id: string;
+  questionType: string;
+  system: string | null;
+  conditionId: string | null;
+  medicalContentId: string | null;
+  difficulty: string | null;
+  questionData: unknown;
+  generatedAt: Date;
+  usedAt: Date | null;
+}
+
+interface QuestionContentJson {
+  overview?: string;
+  etiologyPathophysiology?: string;
+  etiology?: string;
+  clinicalPresentation?: string;
+  diagnostics?: { notes?: string } | string | null;
+  treatment?: string | string[];
+}
+
+function extractDiagnosticsNotes(diagnostics: QuestionContentJson['diagnostics']): string {
+  if (typeof diagnostics === 'string') return diagnostics;
+  if (diagnostics && typeof diagnostics === 'object' && 'notes' in diagnostics) {
+    return typeof diagnostics.notes === 'string' ? diagnostics.notes : '';
+  }
+  return '';
+}
+
+interface MedicalContentGenerationRecord {
+  id: string;
+  condition: string;
+  system: string;
+  subcategory: string | null;
+  content: QuestionContentJson | null;
+  classic_patient: string | null;
+  classic_triad: Prisma.JsonValue | null;
+  first_line_rx: string | null;
+  gold_standard_dx: string | null;
+  best_initial_test: string | null;
+}
+
+type PoolEnv = {
+  REQUIRE_APPROVED_QUESTIONS?: string;
+};
 
 interface PoolQuestionOutput {
   id: string;
@@ -301,7 +348,8 @@ export const onRequestGet = authenticatedEndpoint(
             userId,
             seenIds,
             { count: targetCount, system: abbrev, category, difficulty },
-            undefined
+            undefined,
+            env as PoolEnv
           );
           allBySystem.push(...result.questions);
           result.questions.forEach((q) => seenIds.add(q.id));
@@ -318,7 +366,8 @@ export const onRequestGet = authenticatedEndpoint(
           userId,
           seenIds,
           poolOptions,
-          cachedPool
+          cachedPool,
+          env as PoolEnv
         );
       }
 
@@ -507,7 +556,8 @@ async function getFromPreGeneratedPool(
     category?: string | null;
     difficulty?: string | null;
   },
-  cachedQuestions?: PreGeneratedQuestionRecord[] | null
+  cachedQuestions?: PreGeneratedQuestionRecord[] | null,
+  env?: PoolEnv
 ): Promise<{
   questions: PoolQuestionOutput[];
   remaining: number;
@@ -527,12 +577,13 @@ async function getFromPreGeneratedPool(
     preGenQuestions = cachedQuestions;
     remaining = cachedQuestions.length;
   } else {
+    const requireApprovedQuestions = env?.REQUIRE_APPROVED_QUESTIONS === 'true';
     const where: Record<string, unknown> = {
       // Phase 2: Require approved status (not just exclude rejected).
       // When REQUIRE_APPROVED_QUESTIONS env var is set, only approved
       // questions are served. Otherwise fall back to the legacy kill-switch
       // to avoid supply shock during rollout.
-      validationStatus: context.env?.REQUIRE_APPROVED_QUESTIONS === 'true'
+      validationStatus: requireApprovedQuestions
         ? 'approved'
         : { not: 'rejected' },
     };
@@ -546,13 +597,13 @@ async function getFromPreGeneratedPool(
     const findManyWithCache = prisma.preGeneratedQuestion.findMany as (args: Record<string, unknown>) => Promise<unknown[]>;
     const countWithCache = prisma.preGeneratedQuestion.count as (args: Record<string, unknown>) => Promise<number>;
 
-    const dbResults = await findManyWithCache({
+    const dbResults = (await findManyWithCache({
       where,
       take: fetchCount,
       orderBy: { generatedAt: 'asc' },
       ...CACHE_STRATEGY.QUESTIONS, // 5min cache for question pool
-    });
-    preGenQuestions = (dbResults as Array<Record<string, unknown>>).map(mapToPreGeneratedQuestion);
+    })) as PreGeneratedQuestionDbRecord[];
+    preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
     logger.info('Pre-generated pool fetched', { dbResultsCount: dbResults.length, preGenQuestionsCount: preGenQuestions.length });
     remaining = await countWithCache({
       where,
@@ -803,15 +854,15 @@ async function generateAndAddToPool(
   if (!targetSystem) {
     // If no system specified, pick a random system from NCCPA blueprint weights
     const systems = ['CV', 'PULM', 'GI', 'MSK', 'HEME', 'RENAL', 'ENDO', 'NEURO', 'PSYCH', 'DERM', 'OTHER'];
-    targetSystem = systems[Math.floor(Math.random() * systems.length)];
+    targetSystem = systems[Math.floor(Math.random() * systems.length)]!;
   }
 
   // Find a random condition for the target system
-  let conditionData = null;
+  let conditionData: MedicalContentGenerationRecord | null = null;
   try {
     // Query medicalContent for a random condition matching the system
     const conditions = await prisma.medicalContent.findMany({
-      where: { system: targetSystem },
+      where: { system: targetSystem ?? undefined },
       select: {
         id: true,
         condition: true,
@@ -826,19 +877,19 @@ async function generateAndAddToPool(
         best_initial_test: true,
       },
       take: 50, // limit to avoid heavy queries
-    });
+    }) as MedicalContentGenerationRecord[];
     if (conditions.length === 0) {
       logger.warn(`No conditions found for system ${targetSystem}`);
       return null;
     }
     const randomIndex = Math.floor(Math.random() * conditions.length);
-    const condition = conditions[randomIndex];
+    const condition = conditions[randomIndex]!;
     conditionData = {
       id: condition.id,
-      name: condition.condition,
+      condition: condition.condition,
       system: condition.system,
       subcategory: condition.subcategory,
-      content: condition.content as Record<string, unknown> | null,
+      content: condition.content,
       classic_patient: condition.classic_patient ?? null,
       classic_triad: condition.classic_triad ?? null,
       first_line_rx: condition.first_line_rx ?? null,
@@ -851,6 +902,10 @@ async function generateAndAddToPool(
   }
 
   // Transform condition data for generation — include PANCE anchor fields when available
+  if (!conditionData) {
+    return null;
+  }
+
   const classicTriadRaw = conditionData.classic_triad;
   const classicTriadArr: string[] | undefined =
     Array.isArray(classicTriadRaw)
@@ -859,16 +914,19 @@ async function generateAndAddToPool(
         ? [classicTriadRaw]
         : undefined;
 
-  const transformedCondition = {
-    condition: conditionData.name,
+  const content = (conditionData.content ?? {}) as QuestionContentJson;
+  const diagnosticsNotes = extractDiagnosticsNotes(content.diagnostics);
+
+  const transformedCondition: ConditionData = {
+    condition: conditionData.condition,
     sections: {
-      overview: conditionData.content?.overview || '',
-      etiology: conditionData.content?.etiologyPathophysiology || '',
-      clinicalPresentation: conditionData.content?.clinicalPresentation || '',
-      diagnostics: conditionData.content?.diagnostics?.notes || '',
-      treatment: Array.isArray(conditionData.content?.treatment)
-        ? conditionData.content.treatment.join('\n')
-        : conditionData.content?.treatment || '',
+      overview: content.overview || '',
+      etiology: content.etiologyPathophysiology || content.etiology || '',
+      clinicalPresentation: content.clinicalPresentation || '',
+      diagnostics: diagnosticsNotes,
+      treatment: Array.isArray(content.treatment)
+        ? content.treatment.join('\n')
+        : content.treatment || '',
     },
     // Pass PANCE-specific anchors to guide distractor quality
     panceAnchors: {
@@ -917,7 +975,7 @@ async function generateAndAddToPool(
       correctAnswer: correctAnswer,
       correctAnswerIndex: correctAnswerIndex ?? 0,
       explanation: generatedQ.explanation?.rationale || '',
-      conditionName: conditionData.name,
+      conditionName: conditionData.condition,
       system: conditionData.system,
       subcategory: conditionData.subcategory || undefined,
       tags: category ? [category] : undefined,
@@ -930,7 +988,7 @@ async function generateAndAddToPool(
         conditionId: conditionData.id,
         system: conditionData.system,
         difficulty: difficultyStr,
-        questionData: questionData as unknown as Record<string, unknown>,
+        questionData: questionData as unknown as Prisma.InputJsonValue,
         generatedAt: new Date(),
         usedAt: null,
         questionType: category || 'general',

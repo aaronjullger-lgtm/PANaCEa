@@ -29,51 +29,87 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+    const contentSelect = {
+      id: true,
+      conditionId: true,
+      condition: true,
+      system: true,
+      subcategory: true,
+      parent_category: true,
+      overview: true,
+      etiology: true,
+      pathophysiology: true,
+      epidemiology: true,
+      symptoms: true,
+      physicalExam: true,
+      diagnostics: true,
+      treatment: true,
+      prognosis: true,
+      differentialDiagnosis: true,
+      riskFactors: true,
+      complications: true,
+      pance_yield: true,
+      synonyms: true,
+      buzzwords: true,
+      classic_triad: true,
+      clinical_pearls: true,
+      differentials: true,
+      mnemonic: true,
+      relatedSystems: true,
+      best_initial_test: true,
+      gold_standard_dx: true,
+      first_line_rx: true,
+      age_demographic: true,
+      gender_bias: true,
+      classic_patient: true,
+      disposition: true,
+      patient_education: true,
+      prevention: true,
+      content: true,
+      DrugConditionLink: {
+        include: {
+          Drug: { select: { id: true, genericName: true, brandName: true, drugClass: true } },
+        },
+      },
+      FindingConditionLink: {
+        include: {
+          PhysicalExamFinding: {
+            select: { id: true, name: true, category: true, system: true },
+          },
+        },
+      },
+      LabConditionLink: {
+        include: {
+          LabTest: { select: { id: true, name: true, category: true } },
+        },
+      },
+      ImagingConditionLink: {
+        include: {
+          ImagingStudy: { select: { id: true, name: true, modality: true, bodyRegion: true } },
+        },
+      },
+      ECGConditionLink: {
+        include: {
+          ECGPattern: { select: { id: true, name: true, category: true } },
+        },
+      },
+      TreatmentConditionLink: {
+        include: {
+          Treatment: { select: { id: true, name: true, displayName: true, category: true } },
+        },
+      },
+      other_MedicalContent: {
+        where: { status: 'published' },
+        select: { id: true, conditionId: true, condition: true, system: true },
+      },
+    } as const;
+
     const content = await prisma.medicalContent.findFirst({
       where: {
         conditionId,
         status: 'published',
       },
-      include: {
-        DrugConditionLink: {
-          include: {
-            Drug: { select: { id: true, genericName: true, brandName: true, drugClass: true } },
-          },
-        },
-        FindingConditionLink: {
-          include: {
-            PhysicalExamFinding: {
-              select: { id: true, name: true, displayName: true, category: true, system: true },
-            },
-          },
-        },
-        LabConditionLink: {
-          include: {
-            LabTest: { select: { id: true, name: true, displayName: true, category: true } },
-          },
-        },
-        ImagingConditionLink: {
-          include: {
-            ImagingStudy: {
-              select: { id: true, name: true, displayName: true, modality: true, bodyRegion: true },
-            },
-          },
-        },
-        ECGConditionLink: {
-          include: {
-            ECGPattern: { select: { id: true, name: true, displayName: true, category: true } },
-          },
-        },
-        TreatmentConditionLink: {
-          include: {
-            Treatment: { select: { id: true, name: true, displayName: true, category: true } },
-          },
-        },
-        other_MedicalContent: {
-          where: { status: 'published' },
-          select: { id: true, conditionId: true, condition: true, system: true },
-        },
-      },
+      select: contentSelect,
     });
 
     if (!content) {

@@ -24,6 +24,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { computeConditionRetrievability } from '../../../lib/fsrs/retrievability';
 
 // ─── Inline types/constants (Edge can't import from lib/) ────────
 
@@ -36,6 +37,20 @@ const MAX_DIFFICULTY = 8.0;
 const APPROACHING_DUE_DAYS = 3;
 
 type ConsolidationReason = 'failed_today' | 'learned_today' | 'approaching_due' | 'threshold_review';
+
+interface ConsolidationProgressRow {
+  conditionId: string;
+  fsrsStability: number | null;
+  fsrsDifficulty: number | null;
+  lastReviewAt: Date | null;
+  nextReviewAt: Date | null;
+  system: string | null;
+}
+
+interface ConsolidationAttemptRow {
+  conditionId: string | null;
+  wasCorrect: boolean;
+}
 
 const PRIORITY_WEIGHTS: Record<ConsolidationReason, number> = {
   failed_today: 100,
@@ -77,40 +92,36 @@ export const onRequestPost = authenticatedEndpoint(
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
-      // Step 3: Fetch cards with FSRS state — due or recently reviewed
-      // We need UserProgress for retrievability + recent QuestionAttempts for today's activity
+      // Step 3: Fetch condition-level FSRS state plus today's attempts.
+      // UserProgress is condition-scoped in the current schema, so the
+      // consolidation session keys off conditionId rather than questionId.
       const [userProgressRows, todayAttempts] = await Promise.all([
-        // Cards with FSRS state (reviewed at least once)
         prisma.userProgress.findMany({
           where: {
             userId,
-            nextReview: { lte: new Date(Date.now() + APPROACHING_DUE_DAYS * 24 * 60 * 60 * 1000) },
+            nextReviewAt: { lte: new Date(Date.now() + APPROACHING_DUE_DAYS * 24 * 60 * 60 * 1000) },
           },
           select: {
-            questionId: true,
-            stability: true,
-            difficulty: true,
-            retrievability: true,
-            lastReviewed: true,
-            nextReview: true,
+            conditionId: true,
+            fsrsStability: true,
+            fsrsDifficulty: true,
+            lastReviewAt: true,
+            nextReviewAt: true,
             system: true,
           },
           take: 500, // Cap to avoid memory issues
-          orderBy: { nextReview: 'asc' },
-        }),
-        // Today's attempts (for failed_today / learned_today classification)
+          orderBy: { nextReviewAt: 'asc' },
+        }) as Promise<ConsolidationProgressRow[]>,
         prisma.questionAttempt.findMany({
           where: {
             userId,
             createdAt: { gte: todayStart },
           },
           select: {
-            questionId: true,
-            isCorrect: true,
-            createdAt: true,
+            conditionId: true,
+            wasCorrect: true,
           },
-          orderBy: { createdAt: 'desc' },
-        }),
+        }) as Promise<ConsolidationAttemptRow[]>,
       ]);
 
       if (userProgressRows.length === 0) {
@@ -130,16 +141,17 @@ export const onRequestPost = authenticatedEndpoint(
       const firstSeenToday = new Set<string>();
 
       for (const attempt of todayAttempts) {
-        reviewedTodaySet.add(attempt.questionId);
-        if (!attempt.isCorrect) failedTodaySet.add(attempt.questionId);
+        if (!attempt.conditionId) continue;
+        reviewedTodaySet.add(attempt.conditionId);
+        if (!attempt.wasCorrect) failedTodaySet.add(attempt.conditionId);
       }
 
-      // Cards where lastReviewed is today and they didn't exist before today → "learned today"
+      // Cards where lastReviewAt is today and they are still in the fresh FSRS zone.
       for (const row of userProgressRows) {
-        if (row.lastReviewed && row.lastReviewed >= todayStart) {
+        if (row.lastReviewAt && row.lastReviewAt >= todayStart) {
           // Rough heuristic: if stability is low (<2 days) and reviewed today, likely new learning
-          if ((row.stability ?? 0) < 2) {
-            firstSeenToday.add(row.questionId);
+          if ((row.fsrsStability ?? 0) < 2) {
+            firstSeenToday.add(row.conditionId);
           }
         }
       }
@@ -155,9 +167,9 @@ export const onRequestPost = authenticatedEndpoint(
       }> = [];
 
       for (const row of userProgressRows) {
-        const r = row.retrievability ?? 0;
-        const d = row.difficulty ?? 5;
-        const cardId = row.questionId;
+        const r = computeConditionRetrievability(row.fsrsStability, row.lastReviewAt) ?? 0;
+        const d = row.fsrsDifficulty ?? 5;
+        const cardId = row.conditionId;
 
         const isFailed = failedTodaySet.has(cardId);
         const isLearned = firstSeenToday.has(cardId);
@@ -177,8 +189,8 @@ export const onRequestPost = authenticatedEndpoint(
         if (isFailed) reason = 'failed_today';
         else if (isLearned) reason = 'learned_today';
         else {
-          const daysUntilDue = row.nextReview
-            ? (row.nextReview.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          const daysUntilDue = row.nextReviewAt
+            ? (row.nextReviewAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
             : Infinity;
           reason = daysUntilDue <= APPROACHING_DUE_DAYS ? 'approaching_due' : 'threshold_review';
         }
@@ -188,8 +200,8 @@ export const onRequestPost = authenticatedEndpoint(
         if (r >= 0.85 && r <= 0.95) priority += 10; // Sweet spot bonus
         if (isReviewed && reason !== 'failed_today') priority += 5;
 
-        const daysUntilDue = row.nextReview
-          ? (row.nextReview.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        const daysUntilDue = row.nextReviewAt
+          ? (row.nextReviewAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
           : Infinity;
         if (daysUntilDue <= 1) priority += 15;
         else if (daysUntilDue <= 2) priority += 8;

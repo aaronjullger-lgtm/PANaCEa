@@ -61,7 +61,7 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
           },
         }),
         prisma.userGoal.findFirst({
-          where: { userId, isActive: true },
+          where: { userId, status: 'active' },
           select: { targetDate: true },
         }),
         prisma.questionAttempt.findMany({
@@ -73,17 +73,17 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
             timeSpentMs: true,
             system: true,
             createdAt: true,
-            sessionId: true,
+            answerChangedCount: true,
           },
         }),
         prisma.dailyUserAnalytics.findMany({
           where: { userId },
-          orderBy: { date: 'desc' },
+          orderBy: { sessionDate: 'desc' },
           take: 30,
           select: {
             questionsAnswered: true,
             accuracy: true,
-            date: true,
+            sessionDate: true,
           },
         }),
       ]);
@@ -111,13 +111,11 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     const relativeSpeed = Math.min(1, avgTimeMs / (2 * parTimeMs));
 
     // Session gaps for spacing regularity
-    const sessionDates = [
-      ...new Set(
-        recentAttempts
-          .map((a) => a.createdAt?.toISOString().slice(0, 10))
-          .filter(Boolean)
-      ),
-    ].sort();
+    const sessionDates = [...new Set(
+      recentAttempts
+        .map((a) => a.createdAt?.toISOString().slice(0, 10))
+        .filter(Boolean)
+    )].sort();
     const gapHours: number[] = [];
     for (let i = 1; i < sessionDates.length; i++) {
       const diff =
@@ -175,8 +173,9 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
         : 0.5;
 
     // Session completion rate (approximate: unique sessions vs started)
-    const uniqueSessions = new Set(recentAttempts.map((a) => a.sessionId).filter(Boolean));
-    const sessionCompletionRate = uniqueSessions.size > 0 ? Math.min(1, 0.85) : 0.5; // Approximation
+    const sessionCompletionRate = dailyAnalytics.length > 0
+      ? Math.min(1, dailyAnalytics.filter((d) => d.questionsAnswered > 0).length / dailyAnalytics.length)
+      : 0.5;
 
     const features: LearnerFeatures = {
       dailyVolume: Math.min(1, avgDailyVolume / 50),

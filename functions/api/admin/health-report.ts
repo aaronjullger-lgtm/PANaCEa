@@ -12,7 +12,7 @@ const logger = createEndpointLogger('/api/admin/health-report');
 const HealthReportSchema = z.object({
   query: z.object({
     days: z.coerce.number().min(1).max(365).optional().default(7),
-  }).optional().default({}),
+  }).optional(),
 });
 
 export const onRequestOptions = withCors();

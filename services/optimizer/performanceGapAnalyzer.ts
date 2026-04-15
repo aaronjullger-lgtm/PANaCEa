@@ -149,13 +149,24 @@ export async function getUserTargetRetention(
   prisma: PrismaClient,
   userId: string
 ): Promise<number> {
-  const userProgress = await prisma.userProgress.findUnique({
+  const userProgress = await prisma.userProgress.findFirst({
     where: { userId },
     select: { fsrsParams: true },
+    orderBy: { updatedAt: 'desc' },
   });
 
-  if (userProgress?.fsrsParams?.request_retention) {
-    return userProgress.fsrsParams.request_retention as number;
+  const targetRetention = extractRequestRetention(userProgress?.fsrsParams);
+  if (targetRetention !== null) {
+    return targetRetention;
   }
   return 0.90;
+}
+
+function extractRequestRetention(fsrsParams: unknown): number | null {
+  if (!fsrsParams || typeof fsrsParams !== 'object') {
+    return null;
+  }
+
+  const requestRetention = (fsrsParams as Record<string, unknown>).request_retention;
+  return typeof requestRetention === 'number' ? requestRetention : null;
 }

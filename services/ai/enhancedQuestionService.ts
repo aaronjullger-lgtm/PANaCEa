@@ -66,7 +66,7 @@ async function fetchRandomConditionBySystem(system: string): Promise<DatabaseCon
 
     const data = (await response.json()) as { conditions?: DatabaseCondition[] };
     if (data.conditions && data.conditions.length > 0) {
-      return data.conditions[0];
+      return data.conditions[0] ?? null;
     }
     return null;
   } catch (error: unknown) {

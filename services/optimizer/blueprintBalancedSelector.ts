@@ -169,10 +169,9 @@ async function computeCurrentDistribution(
 
   const total = recentReviews.length || 1;
   for (const review of recentReviews) {
-    const key = includeSubcategories
-      ? `${review.system}|${review.subcategory ?? ''}`
-      : review.system;
-    distribution.set(key, (distribution.get(key) || 0) + 1);
+    if (!review.system) continue;
+    // ReviewLog does not expose subcategory, so recent distribution stays system-level.
+    distribution.set(review.system, (distribution.get(review.system) || 0) + 1);
   }
   for (const [key, count] of distribution) {
     distribution.set(key, count / total);
@@ -191,8 +190,9 @@ function computeTargetDistribution(includeSubcategories: boolean): DistributionM
     // This provides correct proportional distribution at the system level.
   }
   // System‑level weights from NCCPA_2025_BLUEPRINT
-  const totalWeight = Object.values(NCCPA_2025_BLUEPRINT).reduce((sum, w) => sum + w, 0);
-  for (const [system, weight] of Object.entries(NCCPA_2025_BLUEPRINT)) {
+  const blueprintEntries = Object.entries(NCCPA_2025_BLUEPRINT) as Array<[string, number]>;
+  const totalWeight = blueprintEntries.reduce((sum, [, weight]) => sum + weight, 0);
+  for (const [system, weight] of blueprintEntries) {
     target.set(system, weight / totalWeight);
   }
   return target;

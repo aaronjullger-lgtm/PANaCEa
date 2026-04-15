@@ -40,19 +40,15 @@ export async function recordExamOutcome(
     },
     select: {
       wasCorrect: true,
-      Condition: {
-        select: {
-          system: true,
-        },
-      },
+      system: true,
     },
   });
 
   // Calculate performance by system
   const systemPerformance: Record<string, { correct: number; total: number }> = {};
   reviewLogs.forEach(log => {
-    if (!log.Condition) return;
-    const sys = log.Condition.system;
+    if (!log.system) return;
+    const sys = log.system;
     if (!systemPerformance[sys]) {
       systemPerformance[sys] = { correct: 0, total: 0 };
     }
@@ -365,8 +361,10 @@ function calculatePearsonCorrelation(x: number[], y: number[]): number {
   let sumY2 = 0;
 
   for (let i = 0; i < n; i++) {
-    const xDiff = x[i] - meanX;
-    const yDiff = y[i] - meanY;
+    const xValue = x[i] ?? 0;
+    const yValue = y[i] ?? 0;
+    const xDiff = xValue - meanX;
+    const yDiff = yValue - meanY;
     numerator += xDiff * yDiff;
     sumX2 += xDiff * xDiff;
     sumY2 += yDiff * yDiff;

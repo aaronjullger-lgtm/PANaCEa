@@ -164,7 +164,7 @@ export class SocraticHintService {
 
     // Select a hint (rotate through based on some randomness for variety)
     const hintIndex = Math.floor(Math.random() * relevantHints.length);
-    const selectedHint = { ...relevantHints[hintIndex] };
+    const selectedHint = { ...(relevantHints[hintIndex] ?? GENERIC_PROMPTS[0]!) };
 
     // Customize the hint with context
     selectedHint.content = this.customizeHint(selectedHint.content, context);
@@ -203,7 +203,7 @@ export class SocraticHintService {
    * Check if two answers represent similar/confusable conditions
    */
   static areSimilarConditions(correct: string, selected: string): boolean {
-    const similarityPairs = [
+    const similarityPairs: Array<[string, string]> = [
       ['MI', 'angina'],
       ['type 1 diabetes', 'type 2 diabetes'],
       ['hyperthyroid', 'hypothyroid'],
@@ -336,7 +336,7 @@ export class SocraticHintService {
     ];
 
     const prompts = wasCorrect ? correctPrompts : incorrectPrompts;
-    return prompts[Math.floor(Math.random() * prompts.length)];
+    return prompts[Math.floor(Math.random() * prompts.length)] ?? prompts[0]!;
   }
 }
 

@@ -157,7 +157,7 @@ function generateCorrectFeedback(
   };
 
   const options = templates[persona];
-  return options[Math.floor(Math.random() * options.length)];
+  return options[Math.floor(Math.random() * options.length)] ?? options[0]!;
 }
 
 /**
@@ -203,7 +203,7 @@ function generateIncorrectFeedback(
   };
 
   const options = templates[persona];
-  return options[Math.floor(Math.random() * options.length)];
+  return options[Math.floor(Math.random() * options.length)] ?? options[0]!;
 }
 
 /**

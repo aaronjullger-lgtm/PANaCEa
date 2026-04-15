@@ -3,12 +3,14 @@ import { analyzePerformanceGaps } from './performanceGapAnalyzer';
 import type { PrismaClient } from '@prisma/client/edge';
 
 // Mock Prisma client
+const mockReviewLogFindMany = vi.fn();
+const mockUserProgressFindUnique = vi.fn();
 const mockPrisma = {
   reviewLog: {
-    findMany: vi.fn(),
+    findMany: mockReviewLogFindMany,
   },
   userProgress: {
-    findUnique: vi.fn(),
+    findUnique: mockUserProgressFindUnique,
   },
 } as any as PrismaClient;
 
@@ -18,7 +20,7 @@ describe('Performance Gap Analyzer', () => {
   });
 
   it('should return empty array when no reviews', async () => {
-    mockPrisma.reviewLog.findMany.mockResolvedValue([]);
+    mockReviewLogFindMany.mockResolvedValue([]);
 
     const gaps = await analyzePerformanceGaps(mockPrisma, 'user123');
     expect(gaps).toEqual([]);
@@ -40,7 +42,7 @@ describe('Performance Gap Analyzer', () => {
 
   it('should compute gaps correctly for single system', async () => {
     const now = new Date();
-    mockPrisma.reviewLog.findMany.mockResolvedValue([
+    mockReviewLogFindMany.mockResolvedValue([
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
       { system: 'Cardiovascular', subcategory: null, wasCorrect: false, reviewedAt: now },
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
@@ -52,16 +54,18 @@ describe('Performance Gap Analyzer', () => {
     });
 
     expect(gaps).toHaveLength(1);
-    expect(gaps[0].taxonomyCode).toBe('Cardiovascular');
-    expect(gaps[0].currentAccuracy).toBeCloseTo(2 / 3); // 2 correct out of 3
-    expect(gaps[0].targetAccuracy).toBe(0.9);
-    expect(gaps[0].gap).toBeCloseTo(0.9 - 2 / 3);
-    expect(gaps[0].reviewCount).toBe(3);
+    const [gap] = gaps;
+    expect(gap).toBeDefined();
+    expect(gap!.taxonomyCode).toBe('Cardiovascular');
+    expect(gap!.currentAccuracy).toBeCloseTo(2 / 3); // 2 correct out of 3
+    expect(gap!.targetAccuracy).toBe(0.9);
+    expect(gap!.gap).toBeCloseTo(0.9 - 2 / 3);
+    expect(gap!.reviewCount).toBe(3);
   });
 
   it('should group by subcategory when includeSubcategories=true', async () => {
     const now = new Date();
-    mockPrisma.reviewLog.findMany.mockResolvedValue([
+    mockReviewLogFindMany.mockResolvedValue([
       { system: 'Cardiovascular', subcategory: 'Heart Failure', wasCorrect: true, reviewedAt: now },
       { system: 'Cardiovascular', subcategory: 'Heart Failure', wasCorrect: false, reviewedAt: now },
       { system: 'Cardiovascular', subcategory: 'Arrhythmia', wasCorrect: true, reviewedAt: now },
@@ -74,14 +78,16 @@ describe('Performance Gap Analyzer', () => {
 
     // subcategory column not present; grouping ignores subcategory
     expect(gaps).toHaveLength(1);
-    expect(gaps[0].taxonomyCode).toBe('Cardiovascular');
-    expect(gaps[0].subcategory).toBeNull();
-    expect(gaps[0].currentAccuracy).toBeCloseTo(2 / 3); // 2 correct out of 3
+    const [gap] = gaps;
+    expect(gap).toBeDefined();
+    expect(gap!.taxonomyCode).toBe('Cardiovascular');
+    expect(gap!.subcategory).toBeNull();
+    expect(gap!.currentAccuracy).toBeCloseTo(2 / 3); // 2 correct out of 3
   });
 
   it('should respect minimumReviewCount', async () => {
     const now = new Date();
-    mockPrisma.reviewLog.findMany.mockResolvedValue([
+    mockReviewLogFindMany.mockResolvedValue([
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
       { system: 'Pulmonary', subcategory: null, wasCorrect: false, reviewedAt: now },
     ]);
@@ -97,7 +103,7 @@ describe('Performance Gap Analyzer', () => {
 
   it('should sort gaps by gap magnitude descending', async () => {
     const now = new Date();
-    mockPrisma.reviewLog.findMany.mockResolvedValue([
+    mockReviewLogFindMany.mockResolvedValue([
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
       { system: 'Pulmonary', subcategory: null, wasCorrect: false, reviewedAt: now },
@@ -108,18 +114,21 @@ describe('Performance Gap Analyzer', () => {
       minimumReviewCount: 1, // override default of 5 since test data has only 2 reviews per system
     });
     expect(gaps).toHaveLength(2);
+    const [firstGap, secondGap] = gaps;
+    expect(firstGap).toBeDefined();
+    expect(secondGap).toBeDefined();
     // Pulmonary accuracy 0.0 → gap 0.9 (largest)
     // Cardiovascular accuracy 1.0 → gap -0.1 (negative, meaning over‑performance)
-    expect(gaps[0].taxonomyCode).toBe('Pulmonary');
-    expect(gaps[1].taxonomyCode).toBe('Cardiovascular');
+    expect(firstGap!.taxonomyCode).toBe('Pulmonary');
+    expect(secondGap!.taxonomyCode).toBe('Cardiovascular');
   });
 
   it('should fetch target retention from UserProgress if available', async () => {
     const now = new Date();
-    mockPrisma.reviewLog.findMany.mockResolvedValue([
+    mockReviewLogFindMany.mockResolvedValue([
       { system: 'Cardiovascular', subcategory: null, wasCorrect: true, reviewedAt: now },
     ]);
-    mockPrisma.userProgress.findUnique.mockResolvedValue({
+    mockUserProgressFindUnique.mockResolvedValue({
       fsrsParams: { request_retention: 0.85 },
     });
 
@@ -128,7 +137,9 @@ describe('Performance Gap Analyzer', () => {
       minimumReviewCount: 1, // override default of 5 since test data has only 1 review
     });
 
-    expect(gaps[0].targetAccuracy).toBe(0.9); // targetRetention defaults to 0.9; DB fetch is separate helper
+    const [gap] = gaps;
+    expect(gap).toBeDefined();
+    expect(gap!.targetAccuracy).toBe(0.9); // targetRetention defaults to 0.9; DB fetch is separate helper
     // Note: analyzePerformanceGaps doesn't call userProgress.findUnique internally;
     // getUserTargetRetention is a separate exported helper
   });

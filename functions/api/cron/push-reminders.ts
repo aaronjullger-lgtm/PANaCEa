@@ -41,6 +41,18 @@ interface PushPayload {
   url: string;
 }
 
+type CronPagesFunction<E = Record<string, unknown>> = (
+  context: {
+    env: E;
+    request: Request;
+    params: Record<string, string>;
+    waitUntil: (promise: Promise<unknown>) => void;
+    passThroughOnException: () => void;
+    next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
+    data: Record<string, unknown>;
+  }
+) => Promise<Response>;
+
 /**
  * Check if current time is within quiet hours for a given timezone.
  * Quiet hours default to 22:00-07:00.
@@ -54,8 +66,12 @@ function isQuietHours(
   const minutes = now.getUTCMinutes();
   const currentMinutes = hours * 60 + minutes;
 
-  const [startH, startM] = quietStart.split(':').map(Number);
-  const [endH, endM] = quietEnd.split(':').map(Number);
+  const [startHRaw = '0', startMRaw = '0'] = quietStart.split(':');
+  const [endHRaw = '0', endMRaw = '0'] = quietEnd.split(':');
+  const startH = Number(startHRaw);
+  const startM = Number(startMRaw);
+  const endH = Number(endHRaw);
+  const endM = Number(endMRaw);
   const startMinutes = startH * 60 + startM;
   const endMinutes = endH * 60 + endM;
 
@@ -109,7 +125,7 @@ async function sendPushNotification(
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost: PagesFunction<any> = async (context) => {
+export const onRequestPost: CronPagesFunction<any> = async (context) => {
   const { env, request } = context;
 
   // Auth check — requires CRON_SECRET bearer token (same as other cron endpoints)
@@ -179,35 +195,45 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
 
         if (subscriptions.length === 0) continue;
 
-        // Study phenotype + stats for habit profile
-        const [phenotype, stats, todayAttempts, systemProgress] = await Promise.all([
+        // Study phenotype, streak profile, and stats for habit profile
+        const [phenotype, learningProfile, stats, todayAttempts, systemProgress] = await Promise.all([
           prisma.userStudyPhenotype.findUnique({
             where: { userId: userPref.userId },
-            select: { averageDailyLoad: true, currentStreak: true, longestStreak: true },
+            select: { averageDailyLoad: true },
+          }),
+          prisma.userLearningProfile.findUnique({
+            where: { userId: userPref.userId },
+            select: { currentStreak: true, bestEverStreak: true, longestDailyStreak: true },
           }),
           prisma.userStatistics.findUnique({
-            where: { id: userPref.userId },
-            select: { totalAnswered: true },
+            where: { userId: userPref.userId },
+            select: { totalQuestions: true },
           }),
           prisma.questionAttempt.count({
             where: { userId: userPref.userId, createdAt: { gte: todayStart } },
           }),
           prisma.userProgress.findMany({
             where: { userId: userPref.userId },
-            select: { system: true, lastReviewedAt: true },
+            select: { system: true, lastReviewAt: true },
           }),
         ]);
 
         // Last session timestamp
         const lastSession = await prisma.drillSessionRecord.findFirst({
           where: { userId: userPref.userId },
-          orderBy: { startedAt: 'desc' },
-          select: { startedAt: true },
+          orderBy: { sessionStart: 'desc' },
+          select: { sessionStart: true },
         });
 
         const hoursSinceLastSession = lastSession
-          ? (now.getTime() - new Date(lastSession.startedAt).getTime()) / (1000 * 60 * 60)
+          ? (now.getTime() - new Date(lastSession.sessionStart).getTime()) / (1000 * 60 * 60)
           : 999;
+
+        const currentStreak = learningProfile?.currentStreak ?? 0;
+        const longestStreak = Math.max(
+          learningProfile?.bestEverStreak ?? 0,
+          learningProfile?.longestDailyStreak ?? 0
+        );
 
         // Build system staleness map
         const systemStaleness: Record<string, number> = {};
@@ -215,8 +241,8 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
         for (const p of systemProgress) {
           if (p.system) {
             if (!activeSystems.includes(p.system)) activeSystems.push(p.system);
-            if (p.lastReviewedAt) {
-              const daysSince = Math.floor((now.getTime() - new Date(p.lastReviewedAt).getTime()) / (1000 * 60 * 60 * 24));
+            if (p.lastReviewAt) {
+              const daysSince = Math.floor((now.getTime() - new Date(p.lastReviewAt).getTime()) / (1000 * 60 * 60 * 24));
               const existing = systemStaleness[p.system];
               systemStaleness[p.system] = existing != null ? Math.min(existing, daysSince) : daysSince;
             }
@@ -226,8 +252,8 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
         const habitProfile: HabitProfile = {
           preferredHours: [9, 18, 21], // TODO: derive from circadian profile
           avgDailyQuestions: phenotype?.averageDailyLoad ?? 0,
-          currentStreak: phenotype?.currentStreak ?? 0,
-          longestStreak: phenotype?.longestStreak ?? 0,
+          currentStreak,
+          longestStreak,
           hoursSinceLastSession,
           cardsDueNow: dueNowCount,
           cardsDueNext24h: dueNext24hCount,
@@ -239,7 +265,7 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
           systemStaleness,
           activeSystems,
           accuracyTrend: 0, // TODO: compute from recent attempts
-          totalQuestionsAnswered: stats?.totalAnswered ?? 0,
+          totalQuestionsAnswered: stats?.totalQuestions ?? 0,
           notificationsEnabled: true,
         };
 

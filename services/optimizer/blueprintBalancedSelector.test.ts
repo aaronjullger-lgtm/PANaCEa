@@ -27,11 +27,17 @@ describe('Blueprint‑Balanced Selector', () => {
   });
 
   it('should return items sorted by priority score', async () => {
-    const gaps = [
+    const gaps: Array<{
+      taxonomyCode: string;
+      gap: number;
+    }> = [
       { taxonomyCode: 'Cardiovascular', gap: 0.3 },
       { taxonomyCode: 'Pulmonary', gap: 0.1 },
     ];
-    const scheduledReviews = [];
+    const scheduledReviews: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+    }> = [];
 
     const balanced = await balanceBlueprintPriorities(
       gaps,
@@ -42,17 +48,26 @@ describe('Blueprint‑Balanced Selector', () => {
     );
 
     expect(balanced).toHaveLength(2);
-    expect(balanced[0].priorityScore).toBeGreaterThanOrEqual(balanced[1].priorityScore);
-    expect(balanced.map(b => b.taxonomyCode)).toEqual(['Cardiovascular', 'Pulmonary']);
+    const [firstItem, secondItem] = balanced;
+    expect(firstItem).toBeDefined();
+    expect(secondItem).toBeDefined();
+    expect(firstItem!.priorityScore).toBeGreaterThanOrEqual(secondItem!.priorityScore);
+    expect(balanced.map((b) => b.taxonomyCode)).toEqual(['Cardiovascular', 'Pulmonary']);
   });
 
   it('should factor weight deviation when balanceStrength > 0', async () => {
     // Mock current distribution with over‑representation of Cardiovascular
-    const gaps = [
+    const gaps: Array<{
+      taxonomyCode: string;
+      gap: number;
+    }> = [
       { taxonomyCode: 'Cardiovascular', gap: 0.1 },
       { taxonomyCode: 'Pulmonary', gap: 0.1 },
     ];
-    const scheduledReviews = [
+    const scheduledReviews: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+    }> = [
       { taxonomyCode: 'Cardiovascular' },
       { taxonomyCode: 'Cardiovascular' },
       { taxonomyCode: 'Pulmonary' },
@@ -67,30 +82,45 @@ describe('Blueprint‑Balanced Selector', () => {
     );
 
     // Pulmonary should have higher priority because it's underrepresented
-    expect(balanced[0].taxonomyCode).toBe('Pulmonary');
-    expect(balanced[0].weightDeviation).toBeGreaterThan(balanced[1].weightDeviation);
+    const [firstItem, secondItem] = balanced;
+    expect(firstItem).toBeDefined();
+    expect(secondItem).toBeDefined();
+    expect(firstItem!.taxonomyCode).toBe('Pulmonary');
+    expect(firstItem!.weightDeviation).toBeGreaterThan(secondItem!.weightDeviation);
   });
 
   it('should handle missing gaps gracefully', async () => {
-    const gaps = [];
-    const scheduledReviews = [];
+    const gaps: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+      gap?: number;
+      urgencyScore?: number;
+    }> = [];
+    const scheduledReviews: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+    }> = [];
     const balanced = await balanceBlueprintPriorities(gaps, scheduledReviews);
     expect(balanced).toEqual([]);
   });
 
   it('should compute recent distribution when source=recent (requires Prisma)', async () => {
     // We'll mock Prisma's findMany
+    const mockReviewLogFindMany = vi.fn().mockResolvedValue([
+      { system: 'Cardiovascular', subcategory: null },
+      { system: 'Cardiovascular', subcategory: null },
+      { system: 'Pulmonary', subcategory: null },
+    ]);
     const mockPrisma = {
       reviewLog: {
-        findMany: vi.fn().mockResolvedValue([
-          { system: 'Cardiovascular', subcategory: null },
-          { system: 'Cardiovascular', subcategory: null },
-          { system: 'Pulmonary', subcategory: null },
-        ]),
+        findMany: mockReviewLogFindMany,
       },
     };
 
-    const gaps = [
+    const gaps: Array<{
+      taxonomyCode: string;
+      gap: number;
+    }> = [
       { taxonomyCode: 'Cardiovascular', gap: 0.2 },
       { taxonomyCode: 'Pulmonary', gap: 0.2 },
     ];
@@ -103,7 +133,7 @@ describe('Blueprint‑Balanced Selector', () => {
       { distributionSource: 'recent', recentReviewWindow: 100 }
     );
 
-    expect(mockPrisma.reviewLog.findMany).toHaveBeenCalled();
+    expect(mockReviewLogFindMany).toHaveBeenCalled();
     expect(balanced).toHaveLength(2);
   });
 
@@ -117,21 +147,34 @@ describe('Blueprint‑Balanced Selector', () => {
   });
 
   it('should normalize gap to 0‑1 range', async () => {
-    const gaps = [
+    const gaps: Array<{
+      taxonomyCode: string;
+      gap: number;
+    }> = [
       { taxonomyCode: 'Cardiovascular', gap: 0.9 }, // max gap
       { taxonomyCode: 'Pulmonary', gap: 0.45 },
     ];
     const balanced = await balanceBlueprintPriorities(gaps, []);
     // Normalized gap: 0.9/0.9 = 1, 0.45/0.9 = 0.5
-    expect(balanced[0].priorityScore).toBeGreaterThan(balanced[1].priorityScore);
+    const [firstItem, secondItem] = balanced;
+    expect(firstItem).toBeDefined();
+    expect(secondItem).toBeDefined();
+    expect(firstItem!.priorityScore).toBeGreaterThan(secondItem!.priorityScore);
   });
 
   it('should include subcategory keys when includeSubcategories=true', async () => {
-    const gaps = [
+    const gaps: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+      gap: number;
+    }> = [
       { taxonomyCode: 'Cardiovascular', subcategory: 'Heart Failure', gap: 0.3 },
       { taxonomyCode: 'Cardiovascular', subcategory: 'Arrhythmia', gap: 0.1 },
     ];
-    const scheduledReviews = [];
+    const scheduledReviews: Array<{
+      taxonomyCode: string;
+      subcategory?: string | null;
+    }> = [];
     const balanced = await balanceBlueprintPriorities(
       gaps,
       scheduledReviews,
@@ -139,7 +182,10 @@ describe('Blueprint‑Balanced Selector', () => {
       undefined,
       { includeSubcategories: true }
     );
-    expect(balanced[0].subcategory).toBe('Heart Failure');
-    expect(balanced[1].subcategory).toBe('Arrhythmia');
+    const [firstItem, secondItem] = balanced;
+    expect(firstItem).toBeDefined();
+    expect(secondItem).toBeDefined();
+    expect(firstItem!.subcategory).toBe('Heart Failure');
+    expect(secondItem!.subcategory).toBe('Arrhythmia');
   });
 });

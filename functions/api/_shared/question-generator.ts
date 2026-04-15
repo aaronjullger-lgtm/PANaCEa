@@ -60,7 +60,7 @@ export interface GeneratedQuestion {
 }
 
 // Re-export strict interface for type-safe usage
-export { GeneratedQuestionStrict };
+export type { GeneratedQuestionStrict };
 
 /**
  * Fetch current clinical evidence for a condition via Google Search grounding.
@@ -317,7 +317,7 @@ export async function generateSingleQuestion(
         responseSchema: QUESTION_RESPONSE_SCHEMA,
         temperature: 0.7
       }
-    });
+    } as any);
 
     const response = await result.response;
     const text = response.text();

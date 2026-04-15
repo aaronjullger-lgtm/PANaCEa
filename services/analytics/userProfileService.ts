@@ -3,7 +3,7 @@
  * Manages user profile data in localStorage
  */
 
-import type { UserProfile } from '@/types';
+import type { ClinicalRotation, UserProfile, YearInProgram } from '@/types';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 const PROFILE_KEY = StorageKeys.USER_PROFILE;
@@ -45,6 +45,8 @@ export function mergeEorFieldsFromApi(apiProfile: {
   yearInProgram?: string | null;
 }): void {
   const current = loadUserProfile() || { hasCompletedOnboarding: false };
+  const normalizedRotation = (apiProfile.currentRotation ?? undefined) as ClinicalRotation | undefined;
+  const normalizedYearInProgram = (apiProfile.yearInProgram ?? undefined) as YearInProgram | undefined;
   const updated: UserProfile = {
     ...current,
     ...(apiProfile.eorTestDate !== undefined && { eorTestDate: apiProfile.eorTestDate ?? undefined }),
@@ -55,10 +57,10 @@ export function mergeEorFieldsFromApi(apiProfile: {
       rotationEndDate: apiProfile.rotationEndDate ?? undefined,
     }),
     ...(apiProfile.currentRotation !== undefined && {
-      currentRotation: apiProfile.currentRotation ?? undefined,
+      currentRotation: normalizedRotation,
     }),
     ...(apiProfile.yearInProgram !== undefined && {
-      yearInProgram: apiProfile.yearInProgram ?? undefined,
+      yearInProgram: normalizedYearInProgram,
     }),
   };
   saveUserProfile(updated);

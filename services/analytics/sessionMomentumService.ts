@@ -84,7 +84,7 @@ export function calculateMomentum(): MomentumState {
   // Calculate current streak
   let streak = 0;
   for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].wasCorrect) {
+    if (history[i]!.wasCorrect) {
       streak++;
     } else {
       break;
@@ -241,7 +241,7 @@ export function getMomentumInsights(): {
     // Calculate streak at this point
     let streak = 0;
     for (let j = subHistory.length - 1; j >= 0; j--) {
-      if (subHistory[j].wasCorrect) streak++;
+      if (subHistory[j]!.wasCorrect) streak++;
       else break;
     }
 

@@ -25,6 +25,10 @@ import { auditLog } from '../_shared/auditLog';
 
 const logger = createEndpointLogger('/api/admin/ab-experiments');
 
+function getABExperimentDelegate(prisma: ReturnType<typeof createEdgePrismaClient>) {
+  return (prisma as unknown as { aBExperiment?: any }).aBExperiment ?? null;
+}
+
 // ============================================================================
 // Schemas
 // ============================================================================
@@ -32,7 +36,7 @@ const logger = createEndpointLogger('/api/admin/ab-experiments');
 const VariantSchema = z.object({
   name: z.string().min(1),
   weight: z.number().min(0),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
 });
 
 const CreateExperimentSchema = z.object({
@@ -101,6 +105,11 @@ export const onRequestGet = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
+      const experimentDelegate = getABExperimentDelegate(prisma);
+      if (!experimentDelegate) {
+        return { status: 501, error: 'A/B experiments are unavailable in the current edge client.' };
+      }
+
       const url = new URL(context.request.url);
       const status = url.searchParams.get('status');
 
@@ -109,7 +118,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
         where.status = status.toUpperCase();
       }
 
-      const experiments = await prisma.aBExperiment.findMany({
+      const experiments = await experimentDelegate.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: 100,
@@ -144,7 +153,12 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const experiment = await prisma.aBExperiment.create({
+      const experimentDelegate = getABExperimentDelegate(prisma);
+      if (!experimentDelegate) {
+        return { status: 501, error: 'A/B experiments are unavailable in the current edge client.' };
+      }
+
+      const experiment = await experimentDelegate.create({
         data: {
           name: body.name,
           description: body.description,
@@ -200,7 +214,12 @@ export const onRequestPut = adminAuthenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const experimentId = params?.id || new URL(request.url).pathname.split('/').pop();
+      const experimentDelegate = getABExperimentDelegate(prisma);
+      if (!experimentDelegate) {
+        return { status: 501, error: 'A/B experiments are unavailable in the current edge client.' };
+      }
+
+      const experimentId = params.id || new URL(request.url).pathname.split('/').pop();
 
       if (!experimentId) {
         return { status: 400, error: 'Experiment ID is required' };
@@ -221,7 +240,7 @@ export const onRequestPut = adminAuthenticatedEndpoint(
       if (body.endDate !== undefined)
         data.endDate = body.endDate ? new Date(body.endDate) : null;
 
-      const experiment = await prisma.aBExperiment.update({
+      const experiment = await experimentDelegate.update({
         where: { id: experimentId },
         data,
       });
@@ -257,18 +276,23 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
   IdParamSchema,
   async (context) => {
     const { env, auth, validated, request } = context;
-    const params = validated as { params: z.infer<typeof IdParamSchema>['params'] };
+    const { params } = validated as { params: z.infer<typeof IdParamSchema>['params'] };
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
+      const experimentDelegate = getABExperimentDelegate(prisma);
+      if (!experimentDelegate) {
+        return { status: 501, error: 'A/B experiments are unavailable in the current edge client.' };
+      }
+
       const experimentId =
-        params?.id || new URL(request.url).pathname.split('/').pop();
+        params.id || new URL(request.url).pathname.split('/').pop();
 
       if (!experimentId) {
         return { status: 400, error: 'Experiment ID is required' };
       }
 
-      await prisma.aBExperiment.delete({
+      await experimentDelegate.delete({
         where: { id: experimentId },
       });
 

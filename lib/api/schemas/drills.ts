@@ -129,7 +129,7 @@ export const DrillLogAttemptRequestSchema = z.object({
   drillType: z.enum(['photo_drill', 'contrastive_drill', 'rapid_recall', 'wordle']),
   wasCorrect: z.boolean(),
   responseTimeMs: z.number().int().min(0),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================

@@ -424,10 +424,9 @@ export function groupFieldsByCategory(
 ): Record<string, ComparisonField[]> {
   return fields.reduce(
     (acc, field) => {
-      if (!acc[field.category]) {
-        acc[field.category] = [];
-      }
-      acc[field.category].push(field);
+      const category = field.category;
+      const bucket = acc[category] ?? (acc[category] = []);
+      bucket.push(field);
       return acc;
     },
     {} as Record<string, ComparisonField[]>

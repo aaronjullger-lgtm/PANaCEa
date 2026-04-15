@@ -380,8 +380,8 @@ export class PANCEScorePredictorService {
     }
 
     const recent = history.slice(-5);
-    const first = recent[0].predictedScore;
-    const last = recent[recent.length - 1].predictedScore;
+    const first = recent[0]!.predictedScore;
+    const last = recent[recent.length - 1]!.predictedScore;
     const change = last - first;
 
     if (change > 10) return { trend: 'up', change };

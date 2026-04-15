@@ -36,6 +36,100 @@ const READINESS_DISCLAIMER =
   'This readiness indicator is based on your study patterns and is not a prediction of your PANCE score. ' +
   'Actual exam performance depends on many factors not captured here.';
 
+const FSRS_DECAY = -0.5;
+const FSRS_FACTOR = 19 / 81;
+
+interface AttemptRow {
+  system: string | null;
+  wasCorrect: boolean;
+}
+
+interface ProgressRow {
+  system: string | null;
+  fsrsStability: number | null;
+  fsrsDifficulty: number | null;
+  lastReviewAt: Date | null;
+}
+
+interface SystemAttemptAggregate {
+  total: number;
+  correct: number;
+}
+
+interface SystemProgressAggregate {
+  count: number;
+  meanStability: number;
+  meanDifficulty: number;
+  meanRetrievability: number;
+}
+
+function projectRetrievability(stability: number, lastReviewAt: Date | null, now: Date): number {
+  if (!lastReviewAt || stability <= 0) return 0;
+  const elapsedDays = (now.getTime() - lastReviewAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (elapsedDays <= 0) return 1;
+  return Math.pow(1 + FSRS_FACTOR * elapsedDays / stability, FSRS_DECAY);
+}
+
+function aggregateAttempts(rows: AttemptRow[]): Map<string, SystemAttemptAggregate> {
+  const map = new Map<string, SystemAttemptAggregate>();
+
+  for (const row of rows) {
+    if (!row.system) continue;
+    const current = map.get(row.system) ?? { total: 0, correct: 0 };
+    current.total += 1;
+    if (row.wasCorrect) current.correct += 1;
+    map.set(row.system, current);
+  }
+
+  return map;
+}
+
+function aggregateProgress(rows: ProgressRow[], now: Date): Map<string, SystemProgressAggregate> {
+  const map = new Map<string, { count: number; stabilitySum: number; difficultySum: number; retrievabilitySum: number }>();
+
+  for (const row of rows) {
+    if (!row.system) continue;
+    const current = map.get(row.system) ?? {
+      count: 0,
+      stabilitySum: 0,
+      difficultySum: 0,
+      retrievabilitySum: 0,
+    };
+
+    current.count += 1;
+    if (typeof row.fsrsStability === 'number' && row.fsrsStability > 0) {
+      current.stabilitySum += row.fsrsStability;
+      current.retrievabilitySum += projectRetrievability(row.fsrsStability, row.lastReviewAt, now);
+    }
+    if (typeof row.fsrsDifficulty === 'number') {
+      current.difficultySum += row.fsrsDifficulty;
+    }
+
+    map.set(row.system, current);
+  }
+
+  const result = new Map<string, SystemProgressAggregate>();
+  for (const [system, aggregate] of map.entries()) {
+    result.set(system, {
+      count: aggregate.count,
+      meanStability: aggregate.count > 0 ? aggregate.stabilitySum / aggregate.count : 0,
+      meanDifficulty: aggregate.count > 0 ? aggregate.difficultySum / aggregate.count : 0,
+      meanRetrievability: aggregate.count > 0 ? aggregate.retrievabilitySum / aggregate.count : 0,
+    });
+  }
+
+  return result;
+}
+
+function aggregateLapses(rows: Array<{ system: string | null }>): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    if (!row.system) continue;
+    map.set(row.system, (map.get(row.system) ?? 0) + 1);
+  }
+  return map;
+}
+
 // ─── Schema ──────────────────────────────────────────────────────
 
 const ReadinessSchema = z.object({});
@@ -54,6 +148,7 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      const now = new Date();
 
       // Step 1: Fetch all needed data in parallel
       const [
@@ -69,64 +164,84 @@ export const onRequestGet = authenticatedEndpoint(
         recentSessions,
       ] = await Promise.all([
         // All-time attempts by system
-        prisma.questionAttempt.groupBy({
-          by: ['system'],
-          where: { userId },
-          _count: { id: true },
-          _avg: { isCorrect: false },
+        prisma.questionAttempt.findMany({
+          where: { userId, system: { not: null } },
+          select: {
+            system: true,
+            wasCorrect: true,
+          },
         }),
         // Recent attempts (last 14 days)
-        prisma.questionAttempt.groupBy({
-          by: ['system'],
-          where: { userId, createdAt: { gte: fourteenDaysAgo } },
-          _count: { id: true },
-          _avg: { isCorrect: false },
+        prisma.questionAttempt.findMany({
+          where: {
+            userId,
+            createdAt: { gte: fourteenDaysAgo },
+            system: { not: null },
+          },
+          select: {
+            system: true,
+            wasCorrect: true,
+          },
         }),
         // FSRS state per system
-        prisma.userProgress.groupBy({
-          by: ['system'],
-          where: { userId },
-          _count: { questionId: true },
-          _avg: { stability: true, difficulty: true, retrievability: true },
+        prisma.userProgress.findMany({
+          where: {
+            userId,
+            progressContext: 'READINESS',
+            system: { not: null },
+          },
+          select: {
+            system: true,
+            fsrsStability: true,
+            fsrsDifficulty: true,
+            lastReviewAt: true,
+          },
         }),
         // Total available questions per system
         prisma.preGeneratedQuestion.groupBy({
           by: ['system'],
-          where: { status: 'active' },
+          where: {
+            system: { not: null },
+            validationStatus: { not: 'rejected' },
+          },
           _count: { id: true },
         }),
         // Session analytics for consistency
-        prisma.sessionAnalytics.findMany({
+        prisma.studySession.findMany({
           where: {
             userId,
             startedAt: { gte: fourteenDaysAgo },
           },
           select: {
             startedAt: true,
-            totalQuestions: true,
-            totalTimeSeconds: true,
+            totalTimeMs: true,
+            mode: true,
           },
           orderBy: { startedAt: 'desc' },
         }),
       ]);
 
       // Step 2: Build lookup maps
-      const attemptMap = new Map(systemAttempts.map(a => [a.system, a]));
-      const recentMap = new Map(recentAttempts.map(a => [a.system, a]));
-      const progressMap = new Map(userProgress.map(p => [p.system, p]));
-      const availableMap = new Map(availableBySystem.map(a => [a.system, a._count.id]));
+      const attemptMap = aggregateAttempts(systemAttempts);
+      const recentMap = aggregateAttempts(recentAttempts);
+      const progressMap = aggregateProgress(userProgress, now);
+      const availableMap = new Map(
+        availableBySystem
+          .filter((row) => row.system !== null)
+          .map((row) => [row.system, row._count.id] as const)
+      );
 
       // Step 3: Count recent lapses per system
-      const recentLapses = await prisma.questionAttempt.groupBy({
-        by: ['system'],
+      const recentLapses = await prisma.questionAttempt.findMany({
         where: {
           userId,
           createdAt: { gte: fourteenDaysAgo },
-          isCorrect: false,
+          system: { not: null },
+          wasCorrect: false,
         },
-        _count: { id: true },
+        select: { system: true },
       });
-      const lapseMap = new Map(recentLapses.map(l => [l.system, l._count.id]));
+      const lapseMap = aggregateLapses(recentLapses);
 
       // Step 4: Compute per-system scores
       const systemBreakdown: Array<{
@@ -152,12 +267,12 @@ export const onRequestGet = authenticatedEndpoint(
         const available = availableMap.get(system) ?? 0;
         const lapses = lapseMap.get(system) ?? 0;
 
-        const totalAttempts = attempts?._count?.id ?? 0;
-        const cardsReviewed = progress?._count?.questionId ?? 0;
-        const meanStability = progress?._avg?.stability ?? 0;
-        const meanR = progress?._avg?.retrievability ?? 0;
-        const recentAcc = recent?._count?.id && recent._count.id >= 5
-          ? (recent._avg as any)?.isCorrect ?? null
+        const totalAttempts = attempts?.total ?? 0;
+        const cardsReviewed = progress?.count ?? 0;
+        const meanStability = progress?.meanStability ?? 0;
+        const meanR = progress?.meanRetrievability ?? 0;
+        const recentAcc = recent && recent.total >= 5
+          ? recent.correct / recent.total
           : null;
 
         // Coverage
@@ -169,7 +284,7 @@ export const onRequestGet = authenticatedEndpoint(
         // Accuracy
         let accuracyScore: number;
         const allTimeAcc = totalAttempts > 0
-          ? ((attempts?._avg as any)?.isCorrect ?? 0)
+          ? (attempts?.correct ?? 0) / totalAttempts
           : 0;
         if (totalAttempts < MIN_ATTEMPTS) {
           accuracyScore = totalAttempts > 0 ? allTimeAcc * 100 * 0.8 : 0;
@@ -232,8 +347,8 @@ export const onRequestGet = authenticatedEndpoint(
       ).size;
 
       const avgSessionMin = recentSessions.length > 0
-        ? recentSessions.reduce((sum, s) => sum + (s.totalTimeSeconds ?? 0), 0)
-            / recentSessions.length / 60
+        ? recentSessions.reduce((sum, s) => sum + ((s.totalTimeMs ?? 0) / 60000), 0)
+            / recentSessions.length
         : 0;
 
       let consistencyMod = 0;

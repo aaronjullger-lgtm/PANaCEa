@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client/edge';
 import { prisma } from './prisma-edge';
 import { blueprintCoverageService } from './blueprintCoverageService';
 
@@ -31,11 +32,7 @@ export async function computeUserPhenotype(userId: string): Promise<void> {
     select: {
       reviewedAt: true,
       wasCorrect: true,
-      Condition: {
-        select: {
-          system: true,
-        },
-      },
+      system: true,
     },
   });
 
@@ -47,7 +44,7 @@ export async function computeUserPhenotype(userId: string): Promise<void> {
     },
     select: {
       startedAt: true,
-      durationSeconds: true,
+      totalTimeMs: true,
       mode: true,
     },
   });
@@ -55,7 +52,7 @@ export async function computeUserPhenotype(userId: string): Promise<void> {
   // Analyze patterns
   const sessionsByTimeOfDay = groupByTimeOfDay(studySessions);
   const avgSessionLength = studySessions.length > 0
-    ? Math.round(studySessions.reduce((sum, s) => sum + (s.durationSeconds || 0), 0) / studySessions.length / 60)
+    ? Math.round(studySessions.reduce((sum, s) => sum + ((s.totalTimeMs || 0) / 1000), 0) / studySessions.length / 60)
     : 45;
 
   const preferredTimeOfDay = getPreferredTimeOfDay(sessionsByTimeOfDay);
@@ -172,6 +169,7 @@ export async function generateDailyPlan(userId: string, forDate: Date): Promise<
 
   // Build recommended sessions based on phenotype
   const recommendedSessions = buildRecommendedSessions(phenotype, forDate);
+  const recommendedSessionsJson = recommendedSessions as unknown as Prisma.InputJsonValue;
 
   // Create or update plan
   const plan = await prisma.dailyStudyPlan.upsert({
@@ -184,7 +182,7 @@ export async function generateDailyPlan(userId: string, forDate: Date): Promise<
     create: {
       userId,
       planDate: forDate,
-      recommendedSessions,
+      recommendedSessions: recommendedSessionsJson,
       recommendedModes: phenotype.preferredModeSequence,
       targetQuestionsCount: phenotype.averageDailyLoad,
       targetSystemFocus: phenotype.weakSystems.slice(0, 3),
@@ -192,7 +190,7 @@ export async function generateDailyPlan(userId: string, forDate: Date): Promise<
       status: 'pending',
     },
     update: {
-      recommendedSessions,
+      recommendedSessions: recommendedSessionsJson,
       recommendedModes: phenotype.preferredModeSequence,
       targetQuestionsCount: phenotype.averageDailyLoad,
       targetSystemFocus: phenotype.weakSystems.slice(0, 3),
@@ -334,13 +332,13 @@ function getPreferredModes(
 }
 
 function calculateAccuracyBySystem(
-  logs: Array<{ wasCorrect: boolean; Condition: { system: string } | null }>
+  logs: Array<{ wasCorrect: boolean; system: string | null }>
 ): Record<string, number> {
   const bySystem: Record<string, { correct: number; total: number }> = {};
 
   logs.forEach(log => {
-    if (!log.Condition) return;
-    const sys = log.Condition.system;
+    if (!log.system) return;
+    const sys = log.system;
     if (!bySystem[sys]) bySystem[sys] = { correct: 0, total: 0 };
     bySystem[sys].total++;
     if (log.wasCorrect) bySystem[sys].correct++;
@@ -355,7 +353,7 @@ function calculateAccuracyBySystem(
 }
 
 function identifyImprovingAreas(
-  recentLogs: Array<{ wasCorrect: boolean; Condition: { system: string } | null }>,
+  recentLogs: Array<{ wasCorrect: boolean; system: string | null }>,
   allTimeAccuracy: Record<string, number>
 ): string[] {
   const recentAccuracy = calculateAccuracyBySystem(recentLogs);
@@ -378,10 +376,10 @@ function calculateEngagementScore(sessions: Array<{ startedAt: Date }>): number 
   return consistency;
 }
 
-function calculateConsistencyScore(sessions: Array<{ startedAt: Date; durationSeconds?: number }>): number {
+function calculateConsistencyScore(sessions: Array<{ startedAt: Date; totalTimeMs?: number }>): number {
   if (sessions.length < 3) return 0.5;
 
-  const durations = sessions.map(s => s.durationSeconds || 0).filter(d => d > 0);
+  const durations = sessions.map(s => (s.totalTimeMs || 0) / 1000).filter(d => d > 0);
   if (durations.length === 0) return 0.5;
 
   const mean = durations.reduce((a, b) => a + b) / durations.length;
@@ -394,8 +392,8 @@ function calculateConsistencyScore(sessions: Array<{ startedAt: Date; durationSe
 }
 
 function calculateBurnoutRisk(
-  sessions: Array<{ startedAt: Date; durationSeconds?: number }>,
-  reviewLogs: Array<{ wasCorrect: boolean; reviewedAt: Date }>
+  sessions: Array<{ startedAt: Date; totalTimeMs?: number }>,
+  reviewLogs: Array<{ wasCorrect: boolean; reviewedAt: Date; system: string | null }>
 ): number {
   let risk = 0;
 

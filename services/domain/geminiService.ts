@@ -135,7 +135,7 @@ export async function callGeminiJSON<T = any>(
     // Try to extract JSON from markdown code blocks
     const jsonMatch =
       text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
-    const cleanedText = jsonMatch ? jsonMatch[1].trim() : text.trim();
+    const cleanedText = jsonMatch?.[1]?.trim() ?? text.trim();
 
     return JSON.parse(cleanedText) as T;
   } catch (error) {

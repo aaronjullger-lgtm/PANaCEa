@@ -690,6 +690,7 @@ class ConceptDependencyService {
       const gapIndex = this.knowledgeGaps.findIndex((g) => g.conceptId === conceptId);
       if (gapIndex >= 0) {
         const gap = this.knowledgeGaps[gapIndex];
+        if (!gap) continue;
         // Need multiple correct answers to remove a gap
         if (gap.severity === 'minor') {
           this.knowledgeGaps.splice(gapIndex, 1);
@@ -836,7 +837,10 @@ class ConceptDependencyService {
     ];
     const currentIndex = severityOrder.indexOf(gap.severity);
     if (currentIndex < severityOrder.length - 1) {
-      gap.severity = severityOrder[currentIndex + 1];
+      const nextSeverity = severityOrder[currentIndex + 1];
+      if (nextSeverity) {
+        gap.severity = nextSeverity;
+      }
     }
   }
 
@@ -1255,8 +1259,9 @@ class ConceptDependencyService {
       if (!systemMastery[node.system]) {
         systemMastery[node.system] = { total: 0, count: 0 };
       }
-      systemMastery[node.system].total += mastery;
-      systemMastery[node.system].count++;
+      const bucket = systemMastery[node.system]!;
+      bucket.total += mastery;
+      bucket.count++;
     }
 
     const result: Record<string, number> = {};

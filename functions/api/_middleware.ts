@@ -17,7 +17,9 @@ import { handleCorsPreflightSecure } from './_shared/cors';
 
 // ─── Rate limit tiers ───────────────────────────────────────────────────────
 
-const RATE_LIMIT_TIERS: Record<string, { limit: number; windowSeconds: number }> = {
+type RateLimitTier = 'ai' | 'auth' | 'admin' | 'default';
+
+const RATE_LIMIT_TIERS: Record<RateLimitTier, { limit: number; windowSeconds: number }> = {
   ai: { limit: 10, windowSeconds: 60 },    // Gemini, vision, embeddings, agents
   auth: { limit: 20, windowSeconds: 60 },  // Authentication endpoints
   admin: { limit: 30, windowSeconds: 60 }, // Admin operations
@@ -25,7 +27,7 @@ const RATE_LIMIT_TIERS: Record<string, { limit: number; windowSeconds: number }>
 };
 
 // Path prefixes mapped to tiers
-const PATH_TIER_MAP: [string, string][] = [
+const PATH_TIER_MAP: Array<[string, RateLimitTier]> = [
   ['/api/gemini/', 'ai'],
   ['/api/vision/', 'ai'],
   ['/api/embeddings/', 'ai'],
@@ -38,7 +40,7 @@ const PATH_TIER_MAP: [string, string][] = [
   ['/api/admin/', 'admin'],
 ];
 
-function getTierForPath(pathname: string): string {
+function getTierForPath(pathname: string): RateLimitTier {
   const lower = pathname.toLowerCase();
   for (const [prefix, tier] of PATH_TIER_MAP) {
     if (lower.startsWith(prefix)) return tier;

@@ -257,26 +257,20 @@ export const onRequestGet = authenticatedEndpoint(
             systemNormalized: true,
             implicitConfidence: true,
             telemetryJson: true,
-            responseTimeMs: true,
-            conditionId: true,
-            selectedConditionId: true,
+            timeSpentMs: true,
           },
           orderBy: { createdAt: 'desc' },
           take: MAX_ATTEMPTS,
         }),
-        // Wrong answers for confusion pairs
-        prisma.questionAttempt.findMany({
+        // Canonical confusion pairs
+        prisma.confusionPair.findMany({
           where: {
             userId: user.id,
-            wasCorrect: false,
-            conditionId: { not: null },
-            selectedConditionId: { not: null },
-            createdAt: { gte: since },
           },
           select: {
-            conditionId: true,
-            selectedConditionId: true,
-            system: true,
+            realCondition: true,
+            mistakenFor: true,
+            count: true,
           },
           take: 2000,
         }),
@@ -303,31 +297,14 @@ export const onRequestGet = authenticatedEndpoint(
 
       // ── 2. Confusion Pairs ──
 
-      const pairCounts = new Map<string, { real: string; mistaken: string; system?: string; count: number }>();
-      for (const a of confusionAttempts) {
-        if (!a.conditionId || !a.selectedConditionId) continue;
-        const key = `${a.conditionId}|${a.selectedConditionId}`;
-        const existing = pairCounts.get(key);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          pairCounts.set(key, {
-            real: a.conditionId,
-            mistaken: a.selectedConditionId,
-            system: a.system ?? undefined,
-            count: 1,
-          });
-        }
-      }
-
-      const confusionPairs = Array.from(pairCounts.values())
+      const confusionPairs = confusionAttempts
         .sort((a, b) => b.count - a.count)
         .slice(0, 20)
         .map(p => ({
-          realCondition: p.real,
-          mistakenFor: p.mistaken,
+          realCondition: p.realCondition,
+          mistakenFor: p.mistakenFor,
           count: p.count,
-          system: p.system,
+          system: undefined as string | undefined,
         }));
 
       // ── 3. Calibration ──
@@ -362,8 +339,8 @@ export const onRequestGet = authenticatedEndpoint(
       // ── 5. Speed quartiles ──
 
       const rts = attempts
-        .filter(a => a.responseTimeMs != null && a.responseTimeMs > 0)
-        .map(a => ({ rt: a.responseTimeMs!, correct: a.wasCorrect }))
+        .filter(a => a.timeSpentMs != null && a.timeSpentMs > 0)
+        .map(a => ({ rt: a.timeSpentMs!, correct: a.wasCorrect }))
         .sort((a, b) => a.rt - b.rt);
 
       let avgRtMs = 0;
@@ -427,7 +404,9 @@ export const onRequestGet = authenticatedEndpoint(
           profile: {
             totalAttempts: attempts.length,
             days,
-            weakestSystem: systemEntries.length > 0 ? systemEntries[0]![0] : null,
+            weakestSystem: Object.entries(systemAccuracy)
+              .filter(([, stats]) => stats.attempts >= 10)
+              .sort(([, a], [, b]) => a.accuracy - b.accuracy)[0]?.[0] ?? null,
             topConfusionPair: confusionPairs.length > 0
               ? { real: confusionPairs[0]!.realCondition, mistaken: confusionPairs[0]!.mistakenFor }
               : null,

@@ -36,7 +36,9 @@ export const onRequestGet = adminAuthenticatedEndpoint(
     }),
   }),
   async (context) => {
-    const { env, auth, query } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const query = validated.query;
     const logger = createEndpointLogger('/api/admin/system-mappings');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -120,7 +122,9 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     body: SystemMappingSchema,
   }),
   async (context) => {
-    const { env, auth, body } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const body = validated.body;
     const logger = createEndpointLogger('/api/admin/system-mappings');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -153,12 +157,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         };
       }
 
-      const existing = await prisma.systemMapping.findUnique({
+      const existing = await prisma.systemMapping.findFirst({
         where: {
-          taxonomyCode_subcategory: {
-            taxonomyCode: body.taxonomyCode,
-            subcategory: body.subcategory,
-          },
+          taxonomyCode: body.taxonomyCode,
+          subcategory: body.subcategory,
         },
       });
 
@@ -175,6 +177,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
           aliases: body.aliases ?? [],
           searchKeywords: body.searchKeywords ?? [],
           blueprintTags: body.blueprintTags ?? [],
+          updatedAt: new Date(),
         },
       });
 
@@ -217,7 +220,10 @@ export const onRequestPut = adminAuthenticatedEndpoint(
     body: UpdateSystemMappingSchema,
   }),
   async (context) => {
-    const { env, auth, params, body } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const params = validated.params;
+    const body = validated.body;
     const logger = createEndpointLogger('/api/admin/system-mappings');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -238,12 +244,10 @@ export const onRequestPut = adminAuthenticatedEndpoint(
         };
       }
 
-      const mapping = await prisma.systemMapping.findUnique({
+      const mapping = await prisma.systemMapping.findFirst({
         where: {
-          taxonomyCode_subcategory: {
-            taxonomyCode: params.taxonomyCode,
-            subcategory: params.subcategory,
-          },
+          taxonomyCode: params.taxonomyCode,
+          subcategory: params.subcategory,
         },
       });
 
@@ -256,10 +260,7 @@ export const onRequestPut = adminAuthenticatedEndpoint(
 
       const updated = await prisma.systemMapping.update({
         where: {
-          taxonomyCode_subcategory: {
-            taxonomyCode: params.taxonomyCode,
-            subcategory: params.subcategory,
-          },
+          id: mapping.id,
         },
         data: body,
       });
@@ -302,7 +303,9 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
     }),
   }),
   async (context) => {
-    const { env, auth, params } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const params = validated.params;
     const logger = createEndpointLogger('/api/admin/system-mappings');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -323,12 +326,10 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
         };
       }
 
-      const mapping = await prisma.systemMapping.findUnique({
+      const mapping = await prisma.systemMapping.findFirst({
         where: {
-          taxonomyCode_subcategory: {
-            taxonomyCode: params.taxonomyCode,
-            subcategory: params.subcategory,
-          },
+          taxonomyCode: params.taxonomyCode,
+          subcategory: params.subcategory,
         },
       });
 
@@ -339,14 +340,7 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
         };
       }
 
-      await prisma.systemMapping.delete({
-        where: {
-          taxonomyCode_subcategory: {
-            taxonomyCode: params.taxonomyCode,
-            subcategory: params.subcategory,
-          },
-        },
-      });
+      await prisma.systemMapping.delete({ where: { id: mapping.id } });
 
       logger.info('System mapping deleted', {
         taxonomyCode: params.taxonomyCode,

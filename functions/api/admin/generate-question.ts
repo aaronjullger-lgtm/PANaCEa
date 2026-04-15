@@ -26,7 +26,8 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     body: GenerateQuestionSchema,
   }),
   async (context) => {
-    const { env, auth, body } = context;
+    const { env, auth, validated } = context;
+    const { body } = validated;
     const logger = createEndpointLogger('/api/admin/generate-question');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 

@@ -141,7 +141,7 @@ import { prisma } from '../_shared/prisma-edge';
           },
         });
 
-        const targetPercentage = target?.targetPercentage || 10;
+        const targetPercentage = target?.targetPercent || 10;
         const currentPercentage = totalQuestions > 0 ? (authorQuestions / totalQuestions) * 100 : 0;
 
         return {

@@ -50,7 +50,6 @@ export const onRequest = adminEndpoint(ListSchema, async () => {
  * Analyze blueprint coverage for a specific exam
  */
 export const onRequestGet = adminEndpoint(GetExamTypeSchema, async (context) => {
-  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
   const examType = (context.params?.examType ?? '').toString().toUpperCase();
 
   if (!examType) {
@@ -68,7 +67,6 @@ export const onRequestGet = adminEndpoint(GetExamTypeSchema, async (context) => 
  */
 export const onRequestPost = adminEndpoint(SetTargetsSchema, async (context) => {
   const { validated } = context;
-  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
   const examType = (context.params?.examType ?? '').toString().toUpperCase();
   const targets = (validated as any).body?.targets ?? (validated as any).targets ?? {};
 

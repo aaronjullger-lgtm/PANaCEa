@@ -42,14 +42,8 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
         questionId: true,
         system: true,
         timeSpentMs: true,
-        answerSwitches: true,
+        answerChangedCount: true,
         createdAt: true,
-        question: {
-          select: {
-            conditionTested: true,
-            questionText: true,
-          },
-        },
       },
     });
 
@@ -69,26 +63,37 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
 
     const phenotype = await prisma.userStudyPhenotype.findUnique({
       where: { userId },
-      select: { avgTimePerQuestion: true },
+      select: { preferredSessionLength: true },
     });
-    const parTimeMs = phenotype?.avgTimePerQuestion ?? 60000;
+    const parTimeMs = (phenotype?.preferredSessionLength ?? 45) * 60_000;
+    const questions = await prisma.question.findMany({
+      where: {
+        id: { in: [...new Set(incorrectAttempts.map((attempt) => attempt.questionId))] },
+      },
+      select: {
+        id: true,
+        question: true,
+        conditionId: true,
+      },
+    });
+    const questionMap = new Map(questions.map((question) => [question.id, question]));
 
     const telemetry: IncorrectAttemptTelemetry[] = incorrectAttempts.map(
       (attempt, index) => ({
         questionId: attempt.questionId,
         system: attempt.system ?? 'unknown',
-        conditionTested: (attempt.question as { conditionTested?: string })?.conditionTested ?? 'unknown',
+        conditionTested: questionMap.get(attempt.questionId)?.conditionId ?? 'unknown',
         selectedCondition: null,
         timeToFirstClickMs: (attempt.timeSpentMs ?? parTimeMs) * 0.3,
         totalDwellTimeMs: attempt.timeSpentMs ?? parTimeMs,
-        answerSwitches: attempt.answerSwitches ?? 0,
+        answerSwitches: attempt.answerChangedCount ?? 0,
         commitmentGapMs: (attempt.timeSpentMs ?? parTimeMs) * 0.2,
         hintViewed: false,
         parTimeMs,
         selectedConditionRecentlySeen: false,
         isConfusionPair: false,
         firstClickWasCorrect: false,
-        vignetteLengthChars: (attempt.question as { questionText?: string })?.questionText?.length ?? 500,
+        vignetteLengthChars: questionMap.get(attempt.questionId)?.question?.length ?? 500,
         sessionPosition: index,
         sessionLength: incorrectAttempts.length,
       })

@@ -491,7 +491,7 @@ export function generateId(): string {
  * Get today's date string
  */
 export function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0] ?? new Date().toISOString();
 }
 
 /**

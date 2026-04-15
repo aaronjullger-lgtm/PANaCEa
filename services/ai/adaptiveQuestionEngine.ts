@@ -48,7 +48,7 @@ export function calculateAdaptiveState(
   let consecutiveCorrect = 0;
   let consecutiveIncorrect = 0;
   for (let i = recentAttempts.length - 1; i >= 0; i--) {
-    if (recentAttempts[i].wasCorrect) {
+    if (recentAttempts[i]!.wasCorrect) {
       if (consecutiveIncorrect > 0) break;
       consecutiveCorrect++;
     } else {

@@ -30,8 +30,9 @@ export const onRequestPost = cmsEndpoint(
     try {
       const dbUserId = auth.metadata?.dbUserId;
       const dbRole = auth.metadata?.dbRole;
-      const { conditionId, system, subcategory, condition, content, description } =
+      const { conditionId, category, subcategory, condition, content, description } =
         validated?.body ?? validated;
+      const system = category;
 
       // Check if conditionId already exists
       const existing = await prisma.medicalContent.findUnique({

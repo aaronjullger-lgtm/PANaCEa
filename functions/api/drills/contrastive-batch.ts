@@ -28,8 +28,7 @@ const ContrastiveBatchSchema = z.object({
       count: z.coerce.number().int().min(1).max(50).optional().default(10),
       personalized: z.enum(['true', 'false']).optional().default('false'),
     })
-    .optional()
-    .default({}),
+    .optional(),
 });
 
 export const onRequestOptions = withCors();

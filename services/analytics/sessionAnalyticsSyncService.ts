@@ -17,6 +17,7 @@ import { logger } from "@/lib/simple-logger";
 
 // Storage key for pending sync
 const PENDING_SYNC_KEY = 'panceai_pending_session_sync';
+const sessionAnalyticsLogger = logger.scope('SessionAnalyticsSync');
 
 export interface SessionAnalyticsPayload {
   sessionId?: string;
@@ -217,7 +218,7 @@ export async function syncSessionAnalytics(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      logger.error('SessionAnalyticsSync', 'API error', error);
+      sessionAnalyticsLogger.error('API error', error);
 
       // Queue for retry if offline or server error
       if (response.status >= 500 || !navigator.onLine) {
@@ -228,11 +229,11 @@ export async function syncSessionAnalytics(
     }
 
     const result = await response.json();
-    logger.debug('SessionAnalyticsSync', 'Success', { sessionId: result.sessionId });
+    sessionAnalyticsLogger.debug('Success', { sessionId: result.sessionId });
 
     return { success: true, sessionId: result.sessionId };
   } catch (error: unknown) {
-    logger.error('SessionAnalyticsSync', 'Network error', error);
+    sessionAnalyticsLogger.error('Network error', { error });
 
     // Queue for retry on network failure
     queueForRetry(payload);
@@ -258,9 +259,9 @@ function queueForRetry(payload: SessionAnalyticsPayload): void {
     }
 
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pending));
-    logger.debug('SessionAnalyticsSync', 'Queued for retry', { pending: pending.length });
+    sessionAnalyticsLogger.debug('Queued for retry', { pending: pending.length });
   } catch (error: unknown) {
-    logger.error('SessionAnalyticsSync', 'Failed to queue', error);
+    sessionAnalyticsLogger.error('Failed to queue', { error });
   }
 }
 
@@ -272,7 +273,7 @@ function getPendingSync(): SessionAnalyticsPayload[] {
     const raw = sessionStorage.getItem(PENDING_SYNC_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (error: unknown) {
-    logger.error('SessionAnalyticsSync', 'Failed to retrieve pending sync', error);
+    sessionAnalyticsLogger.error('Failed to retrieve pending sync', { error });
     return [];
   }
 }
@@ -289,7 +290,7 @@ export async function processPendingSync(token?: string | null): Promise<{
     return { synced: 0, failed: 0 };
   }
 
-  logger.debug('SessionAnalyticsSync', 'Processing pending', { count: pending.length });
+  sessionAnalyticsLogger.debug('Processing pending', { count: pending.length });
 
   let synced = 0;
   let failed = 0;
@@ -309,7 +310,7 @@ export async function processPendingSync(token?: string | null): Promise<{
   try {
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(remaining));
   } catch (error: unknown) {
-    logger.error('SessionAnalyticsSync', 'Failed to update pending queue', error);
+    sessionAnalyticsLogger.error('Failed to update pending queue', { error });
   }
 
   return { synced, failed };
@@ -364,7 +365,7 @@ export async function fetchLearningProfile(token?: string | null): Promise<{
       aggregateStats: data.aggregateStats,
     };
   } catch (error: unknown) {
-    logger.error('SessionAnalyticsSync', 'Fetch profile error', error);
+    sessionAnalyticsLogger.error('Fetch profile error', { error });
     return {
       profile: null,
       sessions: [],

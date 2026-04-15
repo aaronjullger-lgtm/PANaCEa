@@ -23,6 +23,10 @@ import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+function getContentQualityFlagDelegate(prisma: ReturnType<typeof createEdgePrismaClient>) {
+  return (prisma as unknown as { contentQualityFlag?: any }).contentQualityFlag ?? null;
+}
+
 // ─── GET (list) Query Schema ───────────────────────────────────────────────
 
 const ListQuerySchema = z.object({
@@ -58,6 +62,13 @@ export const onRequestGet = adminAuthenticatedEndpoint(
 
     try {
       const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
+      const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+      if (!contentQualityFlag) {
+        return {
+          status: 501,
+          error: 'Content quality flags are unavailable in the current edge client.',
+        };
+      }
 
       // Check for :id param — if present, return single flag detail
       const flagId = context.params?.id as string | undefined;
@@ -74,7 +85,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
       if (validated.flagType) where.flagType = validated.flagType;
 
       const [flags, totalCount] = await Promise.all([
-        prisma.contentQualityFlag.findMany({
+        contentQualityFlag.findMany({
           where,
           select: {
             id: true,
@@ -102,7 +113,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
           take: limit,
           skip: offset,
         }),
-        prisma.contentQualityFlag.count({ where }),
+        contentQualityFlag.count({ where }),
       ]);
 
       const hasMore = totalCount > offset + limit;
@@ -146,10 +157,18 @@ export const onRequestPut = adminAuthenticatedEndpoint(
 
     try {
       const adminUserId = (auth.metadata as any)?.dbUserId ?? auth.userId;
+      const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+      if (!contentQualityFlag) {
+        return {
+          status: 501,
+          error: 'Content quality flags are unavailable in the current edge client.',
+        };
+      }
+
       const action = validated.action;
 
       // Fetch flag with question
-      const flag = await prisma.contentQualityFlag.findUnique({
+      const flag = await contentQualityFlag.findUnique({
         where: { id: flagId },
         include: {
           Question: {
@@ -206,7 +225,15 @@ async function getFlagDetail(
   adminUserId: string,
   logger: ReturnType<typeof createEndpointLogger>
 ) {
-  const flag = await prisma.contentQualityFlag.findUnique({
+  const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+  if (!contentQualityFlag) {
+    return {
+      data: { success: false, error: 'Content quality flags are unavailable in the current edge client.' },
+      status: 501,
+    };
+  }
+
+  const flag = await contentQualityFlag.findUnique({
     where: { id: flagId },
     include: {
       Question: {
@@ -245,6 +272,14 @@ async function approveFlag(
   adminUserId: string,
   logger: ReturnType<typeof createEndpointLogger>
 ) {
+  const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+  if (!contentQualityFlag) {
+    return {
+      data: { success: false, error: 'Content quality flags are unavailable in the current edge client.' },
+      status: 501,
+    };
+  }
+
   if (!flag.regeneratedContent) {
     logger.info('Approve rejected — no regenerated content', {
       flagId: flag.id,
@@ -276,7 +311,7 @@ async function approveFlag(
 
   // Update question and flag atomically via transaction
   const [updatedFlag] = await prisma.$transaction([
-    prisma.contentQualityFlag.update({
+    contentQualityFlag.update({
       where: { id: flag.id },
       data: {
         status: 'resolved',
@@ -311,7 +346,15 @@ async function rejectFlag(
   adminUserId: string,
   logger: ReturnType<typeof createEndpointLogger>
 ) {
-  const updatedFlag = await prisma.contentQualityFlag.update({
+  const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+  if (!contentQualityFlag) {
+    return {
+      data: { success: false, error: 'Content quality flags are unavailable in the current edge client.' },
+      status: 501,
+    };
+  }
+
+  const updatedFlag = await contentQualityFlag.update({
     where: { id: flag.id },
     data: {
       status: 'resolved',
@@ -341,6 +384,14 @@ async function requeueFlag(
   adminUserId: string,
   logger: ReturnType<typeof createEndpointLogger>
 ) {
+  const contentQualityFlag = getContentQualityFlagDelegate(prisma);
+  if (!contentQualityFlag) {
+    return {
+      data: { success: false, error: 'Content quality flags are unavailable in the current edge client.' },
+      status: 501,
+    };
+  }
+
   if (flag.status === 'FLAGGED') {
     return {
       data: { success: false, error: 'Flag is already in flagged state' },
@@ -348,7 +399,7 @@ async function requeueFlag(
     };
   }
 
-  const updatedFlag = await prisma.contentQualityFlag.update({
+  const updatedFlag = await contentQualityFlag.update({
     where: { id: flag.id },
     data: {
       status: 'flagged',

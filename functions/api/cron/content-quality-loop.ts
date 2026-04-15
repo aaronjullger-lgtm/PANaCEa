@@ -20,6 +20,7 @@
  */
 
 import { withCors } from '../_shared/middleware';
+import { Prisma } from '@prisma/client/edge';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type { CloudflareEnv } from '../_shared/types';
 import {
@@ -34,14 +35,203 @@ import type { ItemAnalysis } from '../../../lib/services/itemAnalysisService';
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
+type CronEnv = CloudflareEnv & {
+  CRON_SECRET?: string;
+};
+
+type CronPagesFunction<E> = (context: {
+  request: Request;
+  env: E;
+}) => Response | Promise<Response>;
+
+type ContentQualityLoopPrisma = ReturnType<typeof createEdgePrismaClient> & {
+  contentQualityFlag: {
+    create(args: unknown): Promise<PrismaContentQualityFlag>;
+    findFirst(args: unknown): Promise<PrismaContentQualityFlag | null>;
+    findMany(args: unknown): Promise<PrismaContentQualityFlag[]>;
+    findUnique(args: unknown): Promise<PrismaContentQualityFlag | null>;
+    update(args: unknown): Promise<PrismaContentQualityFlag>;
+  };
+};
+
+interface PrismaContentQualityFlag {
+  id: string;
+  questionId: string;
+  flagType: string;
+  metrics: Prisma.JsonValue;
+  status: string;
+  regeneratedContent: Prisma.JsonValue | null;
+  critiqueFeedback: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt: Date | null;
+  resolvedBy: string | null;
+}
+
+interface QuestionAttemptRecord {
+  questionId: string;
+  conditionId: string | null;
+  userId: string;
+  wasCorrect: boolean;
+  selectedAnswer: string | null;
+  timeSpentMs: number | null;
+  createdAt: Date;
+}
+
+interface QuestionRecord {
+  id: string;
+  question: string;
+  options: unknown;
+  correctAnswer: string;
+  explanation: string;
+  difficulty: string;
+  source: string;
+  system: string;
+}
+
+function groupAttemptsByQuestionId(attempts: QuestionAttemptRecord[]): Map<string, QuestionAttemptRecord[]> {
+  const grouped = new Map<string, QuestionAttemptRecord[]>();
+  for (const attempt of attempts) {
+    const bucket = grouped.get(attempt.questionId) ?? [];
+    bucket.push(attempt);
+    grouped.set(attempt.questionId, bucket);
+  }
+  return grouped;
+}
+
+async function loadQuestionsWithAttempts(
+  prisma: ContentQualityLoopPrisma,
+  lookbackDate: Date,
+  minAttempts: number,
+  batchSize: number
+): Promise<QuestionWithAttempts[]> {
+  const attemptCounts = await prisma.questionAttempt.groupBy({
+    by: ['questionId'],
+    where: {
+      createdAt: { gte: lookbackDate },
+    },
+    _count: {
+      questionId: true,
+    },
+  });
+
+  const questionIds = attemptCounts
+    .filter((row) => row._count.questionId >= minAttempts)
+    .sort((a, b) => b._count.questionId - a._count.questionId)
+    .slice(0, batchSize)
+    .map((row) => row.questionId);
+
+  if (questionIds.length === 0) {
+    return [];
+  }
+
+  const [questions, attempts] = await Promise.all([
+    prisma.question.findMany({
+      where: {
+        id: { in: questionIds },
+        lifecycleStatus: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        question: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        difficulty: true,
+        source: true,
+        system: true,
+      },
+    }) as Promise<QuestionRecord[]>,
+    prisma.questionAttempt.findMany({
+      where: {
+        questionId: { in: questionIds },
+        createdAt: { gte: lookbackDate },
+      },
+      select: {
+        questionId: true,
+        conditionId: true,
+        userId: true,
+        wasCorrect: true,
+        selectedAnswer: true,
+        timeSpentMs: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    }) as Promise<QuestionAttemptRecord[]>,
+  ]);
+
+  const attemptsByQuestionId = groupAttemptsByQuestionId(attempts);
+
+  return questions.map((question) => ({
+    ...question,
+    attempts: (attemptsByQuestionId.get(question.id) ?? []).slice(0, 500).map((attempt) => ({
+      userId: attempt.userId,
+      wasCorrect: attempt.wasCorrect,
+      selectedAnswer: attempt.selectedAnswer,
+      timeSpentMs: attempt.timeSpentMs,
+    })),
+  }));
+}
+
+async function loadQuestionWithAttempts(
+  prisma: ContentQualityLoopPrisma,
+  questionId: string,
+  lookbackDate: Date
+): Promise<QuestionWithAttempts | null> {
+  const [question, attempts] = await Promise.all([
+    prisma.question.findUnique({
+      where: { id: questionId },
+      select: {
+        id: true,
+        question: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        difficulty: true,
+        source: true,
+        system: true,
+      },
+    }) as Promise<QuestionRecord | null>,
+    prisma.questionAttempt.findMany({
+      where: {
+        questionId,
+        createdAt: { gte: lookbackDate },
+      },
+      select: {
+        questionId: true,
+        conditionId: true,
+        userId: true,
+        wasCorrect: true,
+        selectedAnswer: true,
+        timeSpentMs: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    }) as Promise<QuestionAttemptRecord[]>,
+  ]);
+
+  if (!question) return null;
+
+  return {
+    ...question,
+    attempts: attempts.slice(0, 500).map((attempt) => ({
+      userId: attempt.userId,
+      wasCorrect: attempt.wasCorrect,
+      selectedAnswer: attempt.selectedAnswer,
+      timeSpentMs: attempt.timeSpentMs,
+    })),
+  };
+}
+
+export const onRequestPost: CronPagesFunction<CronEnv> = async (context) => {
   const authHeader = context.request.headers.get('Authorization');
   const token = authHeader?.replace('Bearer ', '');
-  if (!token || token !== context.env.CRON_SECRET) {
+  const cronEnv = context.env as CronEnv;
+  if (!token || token !== cronEnv.CRON_SECRET) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL) as ContentQualityLoopPrisma;
   const startTime = Date.now();
 
   try {
@@ -51,39 +241,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
     // Build deps for the content quality loop
     const deps: ContentQualityLoopDeps = {
       async fetchQuestionsWithAttempts(config) {
-        return prisma.question.findMany({
-          where: {
-            lifecycleStatus: 'ACTIVE',
-            attempts: {
-              some: {
-                createdAt: { gte: lookbackDate },
-              },
-            },
-          },
-          select: {
-            id: true,
-            question: true,
-            options: true,
-            correctAnswer: true,
-            explanation: true,
-            difficulty: true,
-            source: true,
-            system: true,
-            attempts: {
-              where: {
-                createdAt: { gte: lookbackDate },
-              },
-              select: {
-                userId: true,
-                wasCorrect: true,
-                selectedAnswer: true,
-                timeSpentMs: true,
-              },
-              take: 500,
-            },
-          },
-          take: config.batchSize,
-        }) as Promise<QuestionWithAttempts[]>;
+        return loadQuestionsWithAttempts(prisma, lookbackDate, config.minAttempts, config.batchSize);
       },
 
       async createFlag(data) {
@@ -91,9 +249,11 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           data: {
             questionId: data.questionId,
             flagType: data.flagType,
-            metrics: data.metrics as Record<string, unknown>,
+            metrics: data.metrics as unknown as Prisma.InputJsonValue,
             status: data.status,
-            regeneratedContent: data.regeneratedContent ?? null,
+            regeneratedContent: data.regeneratedContent
+              ? (data.regeneratedContent as unknown as Prisma.InputJsonValue)
+              : null,
             critiqueFeedback: data.critiqueFeedback ?? null,
           },
         });
@@ -116,7 +276,9 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           where: { id },
           data: {
             status: data.status,
-            regeneratedContent: data.regeneratedContent ?? undefined,
+            regeneratedContent: data.regeneratedContent
+              ? (data.regeneratedContent as unknown as Prisma.InputJsonValue)
+              : undefined,
             critiqueFeedback: data.critiqueFeedback ?? undefined,
             resolvedAt: data.status === 'RESOLVED' ? new Date() : undefined,
           },
@@ -127,7 +289,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
       async callGemini(prompt) {
         const { routeTask } = await import('../../../lib/langchain/router');
         const { fromCloudflareEnv } = await import('../../../lib/langchain/envAdapter');
-        const aiEnv = fromCloudflareEnv(context.env as Record<string, string>);
+        const aiEnv = fromCloudflareEnv(context.env as unknown as Record<string, string>);
 
         const result = await routeTask('content-generation', aiEnv, {
           systemPrompt: 'You are a medical education expert specializing in question quality improvement.',
@@ -159,7 +321,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
 
     const staleFlags = await prisma.contentQualityFlag.findMany({
       where: {
-        status: 'flagged',
+        status: 'FLAGGED',
         regeneratedContent: null,
       },
       select: {
@@ -176,29 +338,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
 
       try {
         // Fetch the question with attempts for this flag
-        const question = await prisma.question.findUnique({
-          where: { id: staleFlag.questionId },
-          select: {
-            id: true,
-            question: true,
-            options: true,
-            correctAnswer: true,
-            explanation: true,
-            difficulty: true,
-            source: true,
-            system: true,
-            attempts: {
-              where: { createdAt: { gte: lookbackDate } },
-              select: {
-                userId: true,
-                wasCorrect: true,
-                selectedAnswer: true,
-                timeSpentMs: true,
-              },
-              take: 500,
-            },
-          },
-        });
+        const question = await loadQuestionWithAttempts(prisma, staleFlag.questionId, lookbackDate);
 
         if (!question || question.attempts.length < DEFAULT_CONTENT_QUALITY_CONFIG.minAttempts) continue;
 
@@ -207,12 +347,12 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           where: { id: staleFlag.id },
           select: { metrics: true },
         });
-        const metrics = (existingFlag?.metrics ?? {}) as Record<string, unknown>;
+        const metrics = (existingFlag?.metrics ?? {}) as unknown as Record<string, unknown>;
 
         // Mark as regenerating
         await prisma.contentQualityFlag.update({
           where: { id: staleFlag.id },
-          data: { status: 'regenerating' },
+          data: { status: 'REGENERATING' },
         });
 
         // Attempt regeneration
@@ -220,7 +360,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           '../../../lib/services/contentQualityLoop'
         );
         const questionWithAttempts = question as unknown as import('../../../lib/services/contentQualityLoop').QuestionWithAttempts;
-        const analysis = metrics as import('../../../lib/services/itemAnalysisService').ItemAnalysis;
+        const analysis = metrics as unknown as ItemAnalysis;
 
         const regenResult = await attemptRegeneration(
           questionWithAttempts,
@@ -234,8 +374,8 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           await prisma.contentQualityFlag.update({
             where: { id: staleFlag.id },
             data: {
-              status: 'reviewed',
-              regeneratedContent: regenerated,
+              status: 'REVIEWED',
+              regeneratedContent: regenerated as unknown as Prisma.InputJsonValue,
               critiqueFeedback: regenResult.critiqueResult?.feedbackForRewrite ?? null,
             },
           });
@@ -245,7 +385,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
           // Put back to flagged with a note
           await prisma.contentQualityFlag.update({
             where: { id: staleFlag.id },
-            data: { status: 'flagged' },
+            data: { status: 'FLAGGED' },
           });
           requeueFailed++;
         }
@@ -259,7 +399,7 @@ export const onRequestPost: PagesFunction<CloudflareEnv> = async (context) => {
         // Reset status on failure
         await prisma.contentQualityFlag.update({
           where: { id: staleFlag.id },
-          data: { status: 'flagged' },
+          data: { status: 'FLAGGED' },
         }).catch(() => {});
       }
     }
@@ -298,9 +438,9 @@ interface PrismaContentQualityFlag {
   id: string;
   questionId: string;
   flagType: string;
-  metrics: unknown;
+  metrics: Prisma.JsonValue;
   status: string;
-  regeneratedContent: unknown;
+  regeneratedContent: Prisma.JsonValue | null;
   critiqueFeedback: string | null;
   createdAt: Date;
   updatedAt: Date;

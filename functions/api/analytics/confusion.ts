@@ -30,19 +30,20 @@ export const onRequestPost = authenticatedEndpoint(ConfusionSchema, async (conte
     const { correctCondition, selectedCondition } = validated.body;
 
     const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return { data: { success: false, error: 'User not found' }, status: 404 };
+    }
 
     // Try to find existing confusion pair
-    const existingPair = userId
-      ? await prisma.confusionPair.findUnique({
-          where: {
-            userId_realCondition_mistakenFor: {
-              userId,
-              realCondition: correctCondition,
-              mistakenFor: selectedCondition,
-            },
-          },
-        })
-      : null;
+    const existingPair = await prisma.confusionPair.findUnique({
+      where: {
+        userId_realCondition_mistakenFor: {
+          userId,
+          realCondition: correctCondition,
+          mistakenFor: selectedCondition,
+        },
+      },
+    });
 
     if (existingPair) {
       await prisma.confusionPair.update({
@@ -56,7 +57,7 @@ export const onRequestPost = authenticatedEndpoint(ConfusionSchema, async (conte
       await prisma.confusionPair.create({
         data: {
           id: crypto.randomUUID(),
-          userId: userId || null,
+          userId,
           realCondition: correctCondition,
           mistakenFor: selectedCondition,
           count: 1,

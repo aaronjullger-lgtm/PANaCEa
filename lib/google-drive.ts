@@ -7,7 +7,7 @@
  * Env: GOOGLE_SERVICE_ACCOUNT_JSON (required) – base64-encoded service account key JSON.
  */
 
-import { google, drive_v3 } from 'googleapis';
+import { createRequire } from 'module';
 import type { Readable } from 'stream';
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
@@ -19,7 +19,63 @@ export interface DriveFileInfo {
   webViewLink: string | null;
 }
 
-let cachedClient: drive_v3.Drive | null = null;
+interface GoogleAuthOptions {
+  credentials: {
+    client_email: string;
+    private_key: string;
+  };
+  scopes: string[];
+}
+
+interface DriveFileRecord {
+  id?: string | null;
+  name?: string | null;
+  mimeType?: string | null;
+  webViewLink?: string | null;
+}
+
+interface DriveClient {
+  files: {
+    list(params: {
+      q: string;
+      fields: string;
+      pageSize: number;
+      orderBy: string;
+    }): Promise<{
+      data: {
+        files?: DriveFileRecord[];
+      };
+    }>;
+    get(
+      params: {
+        fileId: string;
+        alt: 'media';
+      },
+      options: {
+        responseType: 'stream';
+      }
+    ): Promise<{
+      data: unknown;
+    }>;
+  };
+}
+
+interface GoogleApisModule {
+  google: {
+    auth: {
+      GoogleAuth: new (options: GoogleAuthOptions) => unknown;
+    };
+    drive(options: {
+      version: 'v3';
+      auth: unknown;
+    }): DriveClient;
+  };
+}
+
+const require = createRequire(import.meta.url);
+const { google } = require('googleapis') as GoogleApisModule;
+
+let cachedClient: DriveClient | null = null;
 
 /**
  * Parse credentials from GOOGLE_SERVICE_ACCOUNT_JSON (base64).
@@ -51,7 +107,7 @@ function getCredentials(): Record<string, unknown> {
  * Returns an authenticated Drive API client (Service Account).
  * Uses GOOGLE_SERVICE_ACCOUNT_JSON for credentials; caches the client.
  */
-export function getDriveClient(): drive_v3.Drive {
+export function getDriveClient(): DriveClient {
   if (cachedClient) return cachedClient;
   const credentials = getCredentials();
   const auth = new google.auth.GoogleAuth({

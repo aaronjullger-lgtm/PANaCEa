@@ -215,8 +215,8 @@ export async function setBlueprintTargets(
  * Get available exam types
  */
 export async function getAvailableExamTypes(): Promise<string[]> {
-  const results = await prisma.examBlueprintSystem.groupBy({
-    by: ['examType'],
+  const results = await prisma.examBlueprintSystem.findMany({
+    select: { examType: true },
     distinct: ['examType'],
   });
 

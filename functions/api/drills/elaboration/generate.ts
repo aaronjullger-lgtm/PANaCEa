@@ -50,6 +50,12 @@ export const onRequestPost = authenticatedEndpoint(generateSchema, async (contex
 
   // Pick random fact
   const entry = pool[Math.floor(Math.random() * pool.length)];
+  if (!entry) {
+    return {
+      status: 500,
+      error: 'Failed to select elaboration drill fact',
+    };
+  }
 
   return {
     status: 200,

@@ -29,7 +29,7 @@ export async function generateQuestionFromGuideline(
     conditionId: string;
     estimatedDifficulty: number;
   };
-  duplicateCandidates: Array<{ id: string; question: string; conditionId: string }>;
+  duplicateCandidates: Array<{ id: string; question: string; conditionId: string | null }>;
   blueprintAnalysis: { coveredSystem: string; helpsGap: boolean };
 }> {
   // In a real implementation, this would call an LLM (Claude, GPT) API
@@ -60,7 +60,8 @@ export async function generateQuestionFromGuideline(
     where: {
       system,
       conditionId,
-      status: 'published',
+      lifecycleStatus: 'ACTIVE',
+      qaStatus: 'APPROVED',
     },
     select: {
       id: true,
@@ -75,7 +76,7 @@ export async function generateQuestionFromGuideline(
     where: { system },
   });
 
-  const helpsGap = blueprintGaps.length > 0 && blueprintGaps[0].targetPercentage > 10;
+  const helpsGap = (blueprintGaps[0]?.targetPercent ?? 0) > 10;
 
   return {
     draftQuestion,
@@ -109,10 +110,11 @@ export async function validateNewQuestion(submission: {
   const db = prismaClient ?? prisma;
 
   // Check for duplicates using text similarity
-  const existingQuestions = await db.question.findMany({
+  const existingQuestions: Array<{ id: string; question: string }> = await db.question.findMany({
     where: {
       system: submission.system,
-      status: 'published',
+      lifecycleStatus: 'ACTIVE',
+      qaStatus: 'APPROVED',
     },
     select: {
       id: true,

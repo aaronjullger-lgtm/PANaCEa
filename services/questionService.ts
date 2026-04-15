@@ -145,6 +145,26 @@ export function extractPearlsFromRationale(rationale: string): string[] {
   return Array.from(new Set(pearls)).slice(0, 5);
 }
 
+function rationaleToPearlText(rationale: Question['rationale']): string {
+  if (typeof rationale === 'string') {
+    return rationale;
+  }
+
+  return [
+    rationale.bottomLine,
+    rationale.whyCorrect,
+    rationale.whyIncorrectA,
+    rationale.whyIncorrectB,
+    rationale.whyIncorrectC,
+    rationale.whyIncorrectD,
+    rationale.whyIncorrectE,
+    rationale.clinicalPearl,
+    ...(rationale.commonPitfalls ?? []),
+  ]
+    .filter((section): section is string => Boolean(section))
+    .join('\n');
+}
+
 /**
  * Save extracted pearls to MedicalContent table
  */
@@ -457,7 +477,7 @@ export async function getQuestion(
 
   // Pearl Harvester: Extract and save clinical pearls from the rationale
   if (question.rationale && question.conditionId) {
-    const extractedPearls = extractPearlsFromRationale(question.rationale);
+    const extractedPearls = extractPearlsFromRationale(rationaleToPearlText(question.rationale));
     if (extractedPearls.length > 0) {
       const token = getToken ? await getToken() : null;
       savePearlsToDatabase(question.conditionId, extractedPearls, token);
@@ -744,7 +764,7 @@ export async function getQuestionBatch(
 
         // Pearl Harvester: Extract and save clinical pearls
         if (q.rationale && q.conditionId) {
-          const extractedPearls = extractPearlsFromRationale(q.rationale);
+          const extractedPearls = extractPearlsFromRationale(rationaleToPearlText(q.rationale));
           if (extractedPearls.length > 0) {
             savePearlsToDatabase(q.conditionId, extractedPearls, token);
           }

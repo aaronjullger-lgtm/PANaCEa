@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { getAchievementById } from '../../../config/achievements';
 
 const UnlockAchievementSchema = z.object({
   body: z.object({
@@ -32,10 +33,7 @@ export const onRequestPost = authenticatedEndpoint(UnlockAchievementSchema, asyn
 
     // Verify the achievement exists in the database before awarding it.
     // This prevents clients from self-awarding arbitrary UUIDs.
-    const achievementDef = await prisma.achievement.findUnique({
-      where: { id: achievementId },
-      select: { id: true },
-    });
+    const achievementDef = getAchievementById(achievementId);
     if (!achievementDef) {
       return { data: { error: 'Achievement not found' }, status: 404 };
     }

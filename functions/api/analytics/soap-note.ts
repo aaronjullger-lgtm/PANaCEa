@@ -15,7 +15,7 @@ const SoapNoteSchema = z.object({
   body: z.object({
     caseId: z.string().min(1),
     totalScore: z.number(),
-    breakdown: z.record(z.unknown()),
+    breakdown: z.record(z.string(), z.unknown()),
   }),
 });
 

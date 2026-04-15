@@ -70,11 +70,7 @@ export const onRequestGet = authenticatedEndpoint(
         },
         select: {
           nextReviewAt: true,
-          question: {
-            select: {
-              questionData: true,
-            },
-          },
+          system: true,
         },
       });
 
@@ -85,21 +81,19 @@ export const onRequestGet = authenticatedEndpoint(
       for (let i = 0; i < 7; i++) {
         const d = new Date(todayStart);
         d.setUTCDate(d.getUTCDate() + i);
-        const key = d.toISOString().split('T')[0];
+        const key = d.toISOString().split('T')[0]!;
         dayMap.set(key, { count: 0, systems: new Map() });
       }
 
       for (const card of upcomingCards) {
         if (!card.nextReviewAt) continue;
-        const dateKey = card.nextReviewAt.toISOString().split('T')[0];
+        const dateKey = card.nextReviewAt.toISOString().split('T')[0]!;
         const entry = dayMap.get(dateKey);
         if (!entry) continue;
 
         entry.count++;
 
-        // Extract system from questionData if available
-        const qData = card.question?.questionData as Record<string, unknown> | null;
-        const system = (qData?.system as string) || 'Unknown';
+        const system = card.system || 'Unknown';
         entry.systems.set(system, (entry.systems.get(system) || 0) + 1);
       }
 
@@ -126,7 +120,7 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
-      const todayKey = todayStart.toISOString().split('T')[0];
+      const todayKey = todayStart.toISOString().split('T')[0]!;
       const todayCount = dayMap.get(todayKey)?.count ?? 0;
 
       return Response.json({

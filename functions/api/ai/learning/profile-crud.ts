@@ -352,6 +352,7 @@ export async function scheduleConceptReview(
 
   const rec = await prisma.studyRecommendation.create({
     data: {
+      id: crypto.randomUUID(),
       userId,
       type: 'review',
       topic: conceptKey,

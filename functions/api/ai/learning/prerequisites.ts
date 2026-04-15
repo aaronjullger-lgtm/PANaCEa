@@ -7,7 +7,7 @@
  * to get up to 3 remediation cards targeting weak prerequisite concepts.
  *
  * Flow:
- *   1. Look up the failed card's conditionFamily and conceptId
+ *   1. Look up the failed card's conditionId and conceptId
  *   2. Traverse prerequisite graph via recursive CTE (max depth 5)
  *   3. Check mastery state for each prerequisite (MasteryProgress + QuestionAttempt)
  *   4. Rank weak prerequisites by depth and severity
@@ -56,6 +56,19 @@ const WEAKNESS_PRIORITY: Record<WeaknessType, number> = {
   stale_review: 50,
 };
 
+function getHierarchyLevel(questionOrder: string | null | undefined): number {
+  switch (questionOrder) {
+    case 'first':
+      return 1;
+    case 'second':
+      return 2;
+    case 'third':
+      return 3;
+    default:
+      return 2;
+  }
+}
+
 // ─── CORS ────────────────────────────────────────────────────────
 
 export const onRequestOptions = withCors();
@@ -71,18 +84,17 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL as string);
 
     try {
-      // Step 1: Get the failed card's condition family and graph node reference
+      // Step 1: Get the failed card's conditionId and graph node reference
       const failedCard = await prisma.preGeneratedQuestion.findUnique({
         where: { id: failedCardId },
         select: {
-          conditionFamily: true,
           conditionId: true,
-          hierarchyLevel: true,
+          questionOrder: true,
           system: true,
         },
       });
 
-      if (!failedCard?.conditionFamily && !failedCard?.conditionId) {
+      if (!failedCard?.conditionId) {
         return {
           data: {
             remediationCards: [],
@@ -94,7 +106,7 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
-      const conceptKey = failedCard.conditionFamily || failedCard.conditionId || '';
+      const conceptKey = failedCard.conditionId;
 
       // Step 2: Find the GraphNode for this concept
       const sourceNode = await prisma.graphNode.findFirst({
@@ -121,15 +133,16 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Step 3: Traverse prerequisite graph via recursive CTE
       const prerequisites: Array<{
-        conceptId: string;
+        conditionId: string;
         conceptName: string;
         systemCodes: string[];
         depth: number;
       }> = await prisma.$queryRaw`
         WITH RECURSIVE prereqs AS (
           SELECT
-            ge."targetId" AS "conceptId",
+            ge."targetId" AS "conditionId",
             gn."label" AS "conceptName",
+            gn."sourceId" AS "conditionIdSource",
             gn."systemCodes",
             1 AS depth
           FROM "GraphEdge" ge
@@ -138,22 +151,24 @@ export const onRequestPost = authenticatedEndpoint(
             AND ge."edgeType" IN ('HIERARCHICAL', 'SEMANTIC')
           UNION ALL
           SELECT
-            ge."targetId" AS "conceptId",
+            ge."targetId" AS "conditionId",
             gn."label" AS "conceptName",
+            gn."sourceId" AS "conditionIdSource",
             gn."systemCodes",
             p.depth + 1
           FROM "GraphEdge" ge
           JOIN "GraphNode" gn ON gn."id" = ge."targetId"
-          JOIN prereqs p ON ge."sourceId" = p."conceptId"
+          JOIN prereqs p ON ge."sourceId" = p."conditionId"
           WHERE p.depth < ${MAX_DEPTH}
         )
-        SELECT DISTINCT ON ("conceptId")
-          "conceptId",
+        SELECT DISTINCT ON ("conditionId")
+          "conditionId",
           "conceptName",
+          "conditionIdSource",
           "systemCodes",
           depth
         FROM prereqs
-        ORDER BY "conceptId", depth ASC
+        ORDER BY "conditionId", depth ASC
       `;
 
       if (prerequisites.length === 0) {
@@ -223,7 +238,7 @@ export const onRequestPost = authenticatedEndpoint(
         priority += Math.round((1 - (accuracy ?? 0)) * 20);
 
         weakPrereqs.push({
-          conceptId: prereq.conceptId,
+          conceptId: prereq.conditionId,
           conceptName: prereq.conceptName,
           system: (prereq.systemCodes?.[0]) ?? failedCard.system ?? 'unknown',
           depth: prereq.depth,
@@ -250,22 +265,20 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Step 6: Select remediation cards for weak prerequisites
       const topWeakConcepts = weakPrereqs.slice(0, budget * 2); // Overfetch for fallback
-      const conceptNames = topWeakConcepts.map(w => w.conceptName);
+      const conceptConditionIds = [...new Set(topWeakConcepts.map(w => w.conceptId))];
 
       const candidateCards = await prisma.preGeneratedQuestion.findMany({
         where: {
-          conditionFamily: { in: conceptNames },
-          status: 'active',
+          conditionId: { in: conceptConditionIds },
+          validationStatus: { not: 'rejected' },
         },
         select: {
           id: true,
-          conditionFamily: true,
           conditionId: true,
-          hierarchyLevel: true,
+          questionOrder: true,
           system: true,
         },
         take: budget * 5,
-        orderBy: { hierarchyLevel: 'asc' }, // Prefer foundational (level 1)
       });
 
       // Match cards to weak prerequisites
@@ -286,11 +299,12 @@ export const onRequestPost = authenticatedEndpoint(
         if (usedConcepts.has(prereq.conceptId)) continue;
 
         const card = candidateCards.find(
-          c => c.conditionFamily === prereq.conceptName && !usedCards.has(c.id)
+          c => c.conditionId === prereq.conceptId && !usedCards.has(c.id)
         );
         if (!card) continue;
 
         const depthLabel = prereq.depth === 1 ? 'direct prerequisite' : `prerequisite (depth ${prereq.depth})`;
+        const hierarchyLevel = getHierarchyLevel(card.questionOrder);
         let reason: string;
         switch (prereq.weakness) {
           case 'never_seen':
@@ -312,7 +326,7 @@ export const onRequestPost = authenticatedEndpoint(
           prerequisiteConceptName: prereq.conceptName,
           prerequisiteDepth: prereq.depth,
           remediationReason: reason,
-          hierarchyLevel: card.hierarchyLevel ?? 1,
+          hierarchyLevel,
         });
 
         usedCards.add(card.id);

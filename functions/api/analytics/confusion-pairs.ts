@@ -29,41 +29,49 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
       return { data: { success: false, error: 'User not found' }, status: 404 };
     }
 
-    // Find attempts where user selected a different condition than the correct one
-    const confusionAttempts = await prisma.questionAttempt.findMany({
+    // Read the canonical confusion-pair table rather than reconstructing pairs from attempts.
+    const confusionAttempts = await prisma.confusionPair.findMany({
       where: {
         userId,
-        wasCorrect: false,
-        conditionId: { not: null },
-        selectedConditionId: { not: null },
       },
       select: {
-        conditionId: true,
+        correctConditionId: true,
         selectedConditionId: true,
-        system: true,
-        createdAt: true,
+        realCondition: true,
+        mistakenFor: true,
+        count: true,
+        lastOccurrence: true,
       },
-      orderBy: { createdAt: 'desc' },
       take: 2000,
     });
 
     // Aggregate confusion pairs
-    const pairCounts = new Map<string, { correct: string; selected: string; system: string | null; count: number; lastSeen: Date }>();
+    const pairCounts = new Map<
+      string,
+      {
+        correctConditionId: string | null;
+        selectedConditionId: string | null;
+        realCondition: string;
+        mistakenFor: string;
+        count: number;
+        lastSeen: Date;
+      }
+    >();
 
     for (const a of confusionAttempts) {
-      if (!a.conditionId || !a.selectedConditionId) continue;
-      const key = `${a.conditionId}|${a.selectedConditionId}`;
+      const key = `${a.correctConditionId ?? a.realCondition}|${a.selectedConditionId ?? a.mistakenFor}`;
       const existing = pairCounts.get(key);
       if (existing) {
-        existing.count += 1;
-        if (a.createdAt > existing.lastSeen) existing.lastSeen = a.createdAt;
+        existing.count += a.count ?? 1;
+        if (a.lastOccurrence > existing.lastSeen) existing.lastSeen = a.lastOccurrence;
       } else {
         pairCounts.set(key, {
-          correct: a.conditionId,
-          selected: a.selectedConditionId,
-          system: a.system,
-          count: 1,
-          lastSeen: a.createdAt,
+          correctConditionId: a.correctConditionId,
+          selectedConditionId: a.selectedConditionId,
+          realCondition: a.realCondition,
+          mistakenFor: a.mistakenFor,
+          count: a.count ?? 1,
+          lastSeen: a.lastOccurrence,
         });
       }
     }
@@ -73,9 +81,10 @@ export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (c
       .slice(0, limit)
       .map((p, i) => ({
         id: `cp-${i}`,
-        correctConditionId: p.correct,
-        selectedConditionId: p.selected,
-        system: p.system,
+        correctConditionId: p.correctConditionId ?? null,
+        selectedConditionId: p.selectedConditionId ?? null,
+        realCondition: p.realCondition,
+        mistakenFor: p.mistakenFor,
         frequency: p.count,
         lastSeen: p.lastSeen.toISOString(),
       }));

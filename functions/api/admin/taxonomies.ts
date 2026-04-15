@@ -32,7 +32,9 @@ export const onRequestGet = adminAuthenticatedEndpoint(
     }),
   }),
   async (context) => {
-    const { env, auth, query } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const query = validated.query;
     const logger = createEndpointLogger('/api/admin/taxonomies');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -104,7 +106,9 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     body: TaxonomySchema,
   }),
   async (context) => {
-    const { env, auth, body } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const body = validated.body;
     const logger = createEndpointLogger('/api/admin/taxonomies');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -141,6 +145,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
           ...body,
           weight: body.weight ?? 0,
           isActive: body.isActive ?? true,
+          updatedAt: new Date(),
         },
       });
 
@@ -172,7 +177,10 @@ export const onRequestPut = adminAuthenticatedEndpoint(
     body: UpdateTaxonomySchema,
   }),
   async (context) => {
-    const { env, auth, params, body } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const params = validated.params;
+    const body = validated.body;
     const logger = createEndpointLogger('/api/admin/taxonomies');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -237,7 +245,10 @@ export const onRequestDelete = adminAuthenticatedEndpoint(
     query: z.object({ hard: z.string().optional() }),
   }),
   async (context) => {
-    const { env, auth, params, query } = context;
+    const { env, auth } = context;
+    const validated = context.validated;
+    const params = validated.params;
+    const query = validated.query;
     const logger = createEndpointLogger('/api/admin/taxonomies');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 

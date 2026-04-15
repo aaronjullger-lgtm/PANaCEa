@@ -31,6 +31,41 @@ export interface ApiErrorHandlerOptions {
   maxRetryAttempts?: number;
 }
 
+type RetryableAppError = AppError & {
+  retryDelay?: number;
+};
+
+function getRetryDelay(error: AppError, attempt: number): number {
+  const retryableError = error as RetryableAppError;
+  return retryableError.retryDelay || 1000 * Math.pow(2, attempt - 1);
+}
+
+function createApiError(
+  originalError: unknown,
+  category: ErrorCategory,
+  code: ErrorCode,
+  details: Record<string, unknown>,
+  options: {
+    userMessage: string;
+    technicalMessage: string;
+    recoveryActions: RecoveryAction[];
+    isRetryable: boolean;
+    retryDelay?: number;
+  }
+): RetryableAppError {
+  const appError = AppErrorFactory.create(originalError, category, code, details);
+
+  return {
+    ...appError,
+    userMessage: options.userMessage,
+    message: options.technicalMessage,
+    recoveryActions: options.recoveryActions,
+    isRetryable: options.isRetryable,
+    maxRetries: options.isRetryable ? appError.maxRetries : 0,
+    ...(options.retryDelay !== undefined ? { retryDelay: options.retryDelay } : {}),
+  };
+}
+
 /**
  * Convert a fetch Response error to AppError
  */
@@ -51,14 +86,20 @@ export async function responseToAppError(
     // Try to parse error response body
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as unknown;
       errorDetails.responseBody = includeResponseBody ? errorData : 'REDACTED';
 
       // Extract error message from common API error formats
+      const errorRecord =
+        errorData && typeof errorData === 'object' ? (errorData as Record<string, unknown>) : {};
+      const nestedError =
+        errorRecord.error && typeof errorRecord.error === 'object'
+          ? (errorRecord.error as Record<string, unknown>)
+          : undefined;
       const errorMessage =
-        errorData.error?.message ||
-        errorData.message ||
-        errorData.error ||
+        (nestedError?.message as string | undefined) ||
+        (errorRecord.message as string | undefined) ||
+        (typeof errorRecord.error === 'string' ? errorRecord.error : undefined) ||
         `HTTP ${response.status}: ${response.statusText}`;
 
       return createAppErrorForHttpStatus(response.status, errorMessage, errorDetails, options);
@@ -93,97 +134,111 @@ function createAppErrorForHttpStatus(
 
   switch (status) {
     case 400:
-      return AppErrorFactory.create({
-        category: ErrorCategory.VALIDATION,
-        code: ErrorCode.VALIDATION_FAILED,
-        originalError: new Error(message),
-        userMessage: 'Invalid request. Please check your input and try again.',
-        technicalMessage: `Validation error: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.CLEAR_CACHE, ...defaultRecoveryActions],
-        isRetryable: false,
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.VALIDATION,
+        ErrorCode.VALIDATION_INVALID_FORMAT,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'Invalid request. Please check your input and try again.',
+          technicalMessage: `Validation error: ${message}`,
+          recoveryActions: [RecoveryAction.CLEAR_CACHE, ...defaultRecoveryActions],
+          isRetryable: false,
+        }
+      );
 
     case 401:
-      return AppErrorFactory.create({
-        category: ErrorCategory.AUTHENTICATION,
-        code: ErrorCode.AUTH_TOKEN_EXPIRED,
-        originalError: new Error(message),
-        userMessage: 'Your session has expired. Please sign in again.',
-        technicalMessage: `Authentication error: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.REAUTHENTICATE, ...defaultRecoveryActions],
-        isRetryable: false,
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.AUTHENTICATION,
+        ErrorCode.AUTH_TOKEN_EXPIRED,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'Your session has expired. Please sign in again.',
+          technicalMessage: `Authentication error: ${message}`,
+          recoveryActions: [RecoveryAction.REAUTHENTICATE, ...defaultRecoveryActions],
+          isRetryable: false,
+        }
+      );
 
     case 403:
-      return AppErrorFactory.create({
-        category: ErrorCategory.AUTHENTICATION,
-        code: ErrorCode.AUTH_PERMISSION_DENIED,
-        originalError: new Error(message),
-        userMessage: "You don't have permission to access this resource.",
-        technicalMessage: `Permission denied: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.REAUTHENTICATE, ...defaultRecoveryActions],
-        isRetryable: false,
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.AUTHENTICATION,
+        ErrorCode.AUTH_PERMISSION_DENIED,
+        { ...details, endpoint, method },
+        {
+          userMessage: "You don't have permission to access this resource.",
+          technicalMessage: `Permission denied: ${message}`,
+          recoveryActions: [RecoveryAction.REAUTHENTICATE, ...defaultRecoveryActions],
+          isRetryable: false,
+        }
+      );
 
     case 404:
-      return AppErrorFactory.create({
-        category: ErrorCategory.CLIENT,
-        code: ErrorCode.RESOURCE_NOT_FOUND,
-        originalError: new Error(message),
-        userMessage: 'The requested resource was not found.',
-        technicalMessage: `Resource not found: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.REFRESH, ...defaultRecoveryActions],
-        isRetryable: false,
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.CLIENT,
+        ErrorCode.CONTENT_NOT_FOUND,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'The requested resource was not found.',
+          technicalMessage: `Resource not found: ${message}`,
+          recoveryActions: [RecoveryAction.REFRESH, ...defaultRecoveryActions],
+          isRetryable: false,
+        }
+      );
 
     case 429:
-      return AppErrorFactory.create({
-        category: ErrorCategory.RATE_LIMIT,
-        code: ErrorCode.RATE_LIMIT_EXCEEDED,
-        originalError: new Error(message),
-        userMessage: 'Too many requests. Please wait a moment and try again.',
-        technicalMessage: `Rate limit exceeded: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.WAIT_AND_RETRY, ...defaultRecoveryActions],
-        isRetryable: true,
-        retryDelay: 60000, // 1 minute
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.RATE_LIMIT,
+        ErrorCode.RATE_LIMIT_EXCEEDED,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'Too many requests. Please wait a moment and try again.',
+          technicalMessage: `Rate limit exceeded: ${message}`,
+          recoveryActions: [RecoveryAction.WAIT_AND_RETRY, ...defaultRecoveryActions],
+          isRetryable: true,
+          retryDelay: 60000, // 1 minute
+        }
+      );
 
     case 500:
     case 502:
     case 503:
     case 504:
-      return AppErrorFactory.create({
-        category: ErrorCategory.NETWORK,
-        code: ErrorCode.SERVER_ERROR,
-        originalError: new Error(message),
-        userMessage: 'The server is experiencing issues. Please try again in a moment.',
-        technicalMessage: `Server error (${status}): ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [
-          RecoveryAction.RETRY,
-          RecoveryAction.GO_OFFLINE,
-          ...defaultRecoveryActions,
-        ],
-        isRetryable: true,
-        retryDelay: 10000, // 10 seconds
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.NETWORK,
+        ErrorCode.NETWORK_SERVER_ERROR,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'The server is experiencing issues. Please try again in a moment.',
+          technicalMessage: `Server error (${status}): ${message}`,
+          recoveryActions: [
+            RecoveryAction.RETRY,
+            RecoveryAction.GO_OFFLINE,
+            ...defaultRecoveryActions,
+          ],
+          isRetryable: true,
+          retryDelay: 10000, // 10 seconds
+        }
+      );
 
     default:
-      return AppErrorFactory.create({
-        category: ErrorCategory.NETWORK,
-        code: ErrorCode.NETWORK_ERROR,
-        originalError: new Error(message),
-        userMessage: 'An unexpected error occurred. Please try again.',
-        technicalMessage: `HTTP ${status}: ${message}`,
-        details: { ...details, endpoint, method },
-        recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
-        isRetryable: status >= 500, // Retry on server errors
-      });
+      return createApiError(
+        new Error(message),
+        ErrorCategory.NETWORK,
+        status >= 500 ? ErrorCode.NETWORK_SERVER_ERROR : ErrorCode.UNKNOWN_ERROR,
+        { ...details, endpoint, method },
+        {
+          userMessage: 'An unexpected error occurred. Please try again.',
+          technicalMessage: `HTTP ${status}: ${message}`,
+          recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
+          isRetryable: status >= 500, // Retry on server errors
+        }
+      );
   }
 }
 
@@ -200,59 +255,67 @@ export function networkErrorToAppError(
   const isOffline = !navigator.onLine;
 
   if (isOffline) {
-    return AppErrorFactory.create({
-      category: ErrorCategory.NETWORK,
-      code: ErrorCode.NETWORK_OFFLINE,
-      originalError: error,
-      userMessage: 'You appear to be offline. Please check your connection.',
-      technicalMessage: `Network offline: ${errorMessage}`,
-      details: { endpoint, method, offline: true },
-      recoveryActions: [RecoveryAction.GO_OFFLINE, RecoveryAction.RETRY, ...defaultRecoveryActions],
-      isRetryable: true,
-      retryDelay: 5000, // 5 seconds
-    });
+    return createApiError(
+      error,
+      ErrorCategory.NETWORK,
+      ErrorCode.NETWORK_OFFLINE,
+      { endpoint, method, offline: true },
+      {
+        userMessage: 'You appear to be offline. Please check your connection.',
+        technicalMessage: `Network offline: ${errorMessage}`,
+        recoveryActions: [RecoveryAction.GO_OFFLINE, RecoveryAction.RETRY, ...defaultRecoveryActions],
+        isRetryable: true,
+        retryDelay: 5000, // 5 seconds
+      }
+    );
   }
 
   // Check for specific network error types
   if (error.name === 'AbortError') {
-    return AppErrorFactory.create({
-      category: ErrorCategory.NETWORK,
-      code: ErrorCode.REQUEST_TIMEOUT,
-      originalError: error,
-      userMessage: 'The request timed out. Please try again.',
-      technicalMessage: `Request timeout: ${errorMessage}`,
-      details: { endpoint, method, timeout: true },
-      recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
-      isRetryable: true,
-      retryDelay: 3000, // 3 seconds
-    });
+    return createApiError(
+      error,
+      ErrorCategory.NETWORK,
+      ErrorCode.NETWORK_TIMEOUT,
+      { endpoint, method, timeout: true },
+      {
+        userMessage: 'The request timed out. Please try again.',
+        technicalMessage: `Request timeout: ${errorMessage}`,
+        recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
+        isRetryable: true,
+        retryDelay: 3000, // 3 seconds
+      }
+    );
   }
 
   if (error.name === 'TypeError' && errorMessage.includes('Failed to fetch')) {
-    return AppErrorFactory.create({
-      category: ErrorCategory.NETWORK,
-      code: ErrorCode.NETWORK_ERROR,
-      originalError: error,
-      userMessage: 'Unable to connect to the server. Please check your connection.',
-      technicalMessage: `Failed to fetch: ${errorMessage}`,
-      details: { endpoint, method, fetchError: true },
-      recoveryActions: [RecoveryAction.RETRY, RecoveryAction.GO_OFFLINE, ...defaultRecoveryActions],
-      isRetryable: true,
-      retryDelay: 5000, // 5 seconds
-    });
+    return createApiError(
+      error,
+      ErrorCategory.NETWORK,
+      ErrorCode.NETWORK_SERVER_ERROR,
+      { endpoint, method, fetchError: true },
+      {
+        userMessage: 'Unable to connect to the server. Please check your connection.',
+        technicalMessage: `Failed to fetch: ${errorMessage}`,
+        recoveryActions: [RecoveryAction.RETRY, RecoveryAction.GO_OFFLINE, ...defaultRecoveryActions],
+        isRetryable: true,
+        retryDelay: 5000, // 5 seconds
+      }
+    );
   }
 
   // Generic network error
-  return AppErrorFactory.create({
-    category: ErrorCategory.NETWORK,
-    code: ErrorCode.NETWORK_ERROR,
-    originalError: error,
-    userMessage: 'A network error occurred. Please check your connection and try again.',
-    technicalMessage: `Network error: ${errorMessage}`,
-    details: { endpoint, method, errorName: error.name },
-    recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
-    isRetryable: true,
-  });
+  return createApiError(
+    error,
+    ErrorCategory.NETWORK,
+    ErrorCode.NETWORK_SERVER_ERROR,
+    { endpoint, method, errorName: error.name },
+    {
+      userMessage: 'A network error occurred. Please check your connection and try again.',
+      technicalMessage: `Network error: ${errorMessage}`,
+      recoveryActions: [RecoveryAction.RETRY, ...defaultRecoveryActions],
+      isRetryable: true,
+    }
+  );
 }
 
 /**
@@ -285,7 +348,7 @@ export async function fetchWithErrorHandling(
 
         // Check if we should retry
         if (autoRetry && appError.isRetryable && attempt < maxRetryAttempts) {
-          const delay = appError.retryDelay || 1000 * Math.pow(2, attempt - 1); // Exponential backoff
+          const delay = getRetryDelay(appError, attempt); // Exponential backoff
           console.log(
             `Retrying ${endpoint || 'request'} in ${delay}ms (attempt ${attempt}/${maxRetryAttempts})`
           );
@@ -304,7 +367,7 @@ export async function fetchWithErrorHandling(
 
         // Check if we should retry
         if (autoRetry && lastError.isRetryable && attempt < maxRetryAttempts) {
-          const delay = lastError.retryDelay || 1000 * Math.pow(2, attempt - 1);
+          const delay = getRetryDelay(lastError, attempt);
           console.log(
             `Retrying ${endpoint || 'request'} in ${delay}ms (attempt ${attempt}/${maxRetryAttempts})`
           );
@@ -324,7 +387,7 @@ export async function fetchWithErrorHandling(
 
       // Check if we should retry
       if (autoRetry && appError.isRetryable && attempt < maxRetryAttempts) {
-        const delay = appError.retryDelay || 1000 * Math.pow(2, attempt - 1);
+        const delay = getRetryDelay(appError, attempt);
         console.log(
           `Retrying ${endpoint || 'request'} in ${delay}ms (attempt ${attempt}/${maxRetryAttempts})`
         );
@@ -354,16 +417,18 @@ export async function fetchJsonWithErrorHandling<T = unknown>(
     const data = await response.json();
     return data as T;
   } catch (error) {
-    throw AppErrorFactory.create({
-      category: ErrorCategory.CLIENT,
-      code: ErrorCode.PARSE_ERROR,
-      originalError: error instanceof Error ? error : new Error(String(error)),
-      userMessage: 'Failed to parse server response.',
-      technicalMessage: 'JSON parse error',
-      details: { endpoint: options.endpoint, method: options.method },
-      recoveryActions: [RecoveryAction.REFRESH, RecoveryAction.CLEAR_CACHE],
-      isRetryable: false,
-    });
+    throw createApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      ErrorCategory.CLIENT,
+      ErrorCode.CLIENT_SCRIPT_ERROR,
+      { endpoint: options.endpoint, method: options.method },
+      {
+        userMessage: 'Failed to parse server response.',
+        technicalMessage: 'JSON parse error',
+        recoveryActions: [RecoveryAction.REFRESH, RecoveryAction.CLEAR_CACHE],
+        isRetryable: false,
+      }
+    );
   }
 }
 
@@ -376,17 +441,19 @@ export function checkNetworkStatus(): { isOnline: boolean; error?: AppError } {
   if (!isOnline) {
     return {
       isOnline: false,
-      error: AppErrorFactory.create({
-        category: ErrorCategory.NETWORK,
-        code: ErrorCode.NETWORK_OFFLINE,
-        originalError: new Error('Network offline'),
-        userMessage: 'You appear to be offline. Please check your connection.',
-        technicalMessage: 'Network offline',
-        details: { offline: true },
-        recoveryActions: [RecoveryAction.GO_OFFLINE, RecoveryAction.RETRY],
-        isRetryable: true,
-        retryDelay: 5000,
-      }),
+      error: createApiError(
+        new Error('Network offline'),
+        ErrorCategory.NETWORK,
+        ErrorCode.NETWORK_OFFLINE,
+        { offline: true },
+        {
+          userMessage: 'You appear to be offline. Please check your connection.',
+          technicalMessage: 'Network offline',
+          recoveryActions: [RecoveryAction.GO_OFFLINE, RecoveryAction.RETRY],
+          isRetryable: true,
+          retryDelay: 5000,
+        }
+      ),
     };
   }
 

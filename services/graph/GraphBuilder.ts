@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { GraphNodeType, GraphEdgeType } from '@prisma/client';
+import { GraphNodeType, GraphEdgeType, Prisma } from '@prisma/client';
 import type { GraphBuildOptions, GraphNodeData, GraphEdgeData } from './types';
 
 export class GraphBuilder {
@@ -147,9 +147,9 @@ export class GraphBuilder {
         taxonomyCode,
         systemCodes: cond.system ? [cond.system] : [],
         metadata: {
-          parentId: cond.parentId,
-          parentCategory: cond.parent_category,
-          panceYield: cond.pance_yield,
+          parentId: cond.parentId ?? undefined,
+          parentCategory: cond.parent_category ?? undefined,
+          panceYield: cond.pance_yield ?? undefined,
           subcategory: cond.subcategory,
         },
       };
@@ -229,24 +229,26 @@ export class GraphBuilder {
     const drugs = await prisma.drug.findMany({
       select: {
         id: true,
-        name: true,
-        class: true,
-        system: true,
-        description: true,
+        genericName: true,
+        brandName: true,
+        displayName: true,
+        mechanismOfAction: true,
+        clinicalNotes: true,
+        drugClass: true,
       },
     });
 
     const nodes: GraphNodeData[] = drugs.map((drug) => ({
       id: `drug:${drug.id}`,
       nodeType: GraphNodeType.DRUG,
-      label: drug.name,
-      description: drug.description ?? undefined,
+      label: drug.displayName ?? drug.brandName ?? drug.genericName,
+      description: drug.clinicalNotes ?? drug.mechanismOfAction ?? undefined,
       sourceType: 'Drug',
       sourceId: drug.id,
       taxonomyCode: undefined,
-      systemCodes: drug.system ? [drug.system] : [],
+      systemCodes: [],
       metadata: {
-        class: drug.class,
+        drugClass: drug.drugClass,
       },
     }));
 
@@ -308,8 +310,8 @@ export class GraphBuilder {
       select: {
         id: true,
         name: true,
-        system: true,
-        description: true,
+        category: true,
+        typicalUse: true,
       },
     });
 
@@ -317,12 +319,15 @@ export class GraphBuilder {
       id: `labTest:${lab.id}`,
       nodeType: GraphNodeType.LAB_TEST,
       label: lab.name,
-      description: lab.description ?? undefined,
+      description: lab.typicalUse ?? undefined,
       sourceType: 'LabTest',
       sourceId: lab.id,
       taxonomyCode: undefined,
-      systemCodes: lab.system ? [lab.system] : [],
-      metadata: {},
+      systemCodes: [],
+      metadata: {
+        category: lab.category,
+        typicalUse: lab.typicalUse ?? undefined,
+      },
     }));
 
     await this.upsertNodes(nodes);
@@ -333,7 +338,8 @@ export class GraphBuilder {
       select: {
         id: true,
         name: true,
-        system: true,
+        modality: true,
+        bodyRegion: true,
         description: true,
       },
     });
@@ -346,8 +352,11 @@ export class GraphBuilder {
       sourceType: 'ImagingStudy',
       sourceId: img.id,
       taxonomyCode: undefined,
-      systemCodes: img.system ? [img.system] : [],
-      metadata: {},
+      systemCodes: [],
+      metadata: {
+        modality: img.modality,
+        bodyRegion: img.bodyRegion ?? undefined,
+      },
     }));
 
     await this.upsertNodes(nodes);
@@ -413,7 +422,6 @@ export class GraphBuilder {
     // Build co-occurrence edges between conditions that share the same organ system
     const conditions = await prisma.condition.findMany({
       select: { id: true, system: true },
-      where: { system: { not: null } },
     });
 
     // Group conditions by system
@@ -494,7 +502,12 @@ export class GraphBuilder {
   ): Promise<void> {
     try {
       // Access prisma model dynamically — cast to any for dynamic key access
-      const model = (prisma as Record<string, unknown>)[modelName.charAt(0).toLowerCase() + modelName.slice(1)] as
+      const model = (prisma as unknown as Record<
+        string,
+        { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
+      >)[
+        modelName.charAt(0).toLowerCase() + modelName.slice(1)
+      ] as
         | { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
         | undefined;
       if (!model?.findMany) return;
@@ -503,17 +516,22 @@ export class GraphBuilder {
       const targetKey = `${targetPrefix}Id`;
       const links = await model.findMany({ select: { [sourceKey]: true, [targetKey]: true }, take: 5000 });
 
-      const edges: GraphEdgeData[] = links
-        .filter((l) => l[sourceKey] && l[targetKey])
-        .map((l) => ({
-          id: `link:${sourcePrefix}:${l[sourceKey]}->${targetPrefix}:${l[targetKey]}`,
-          sourceId: `${sourcePrefix}:${l[sourceKey]}`,
-          targetId: `${targetPrefix}:${l[targetKey]}`,
+      const edges: GraphEdgeData[] = [];
+      for (const link of links) {
+        const sourceValue = link[sourceKey];
+        const targetValue = link[targetKey];
+        if (typeof sourceValue !== 'string' || typeof targetValue !== 'string') continue;
+
+        edges.push({
+          id: `link:${sourcePrefix}:${sourceValue}->${targetPrefix}:${targetValue}`,
+          sourceId: `${sourcePrefix}:${sourceValue}`,
+          targetId: `${targetPrefix}:${targetValue}`,
           edgeType,
           weight: 0.6,
           description: `${modelName} association`,
           evidenceCount: 1,
-        }));
+        });
+      }
 
       if (edges.length > 0) await this.upsertEdges(edges);
     } catch {
@@ -522,6 +540,11 @@ export class GraphBuilder {
   }
 
   // --- Database Operations ---
+
+  private toJsonValue(value: GraphNodeData['metadata'] | GraphEdgeData['metadata'] | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+    if (value === undefined) return Prisma.JsonNull;
+    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+  }
 
   private async upsertNodes(nodes: GraphNodeData[]): Promise<void> {
     const batchSize = this.options.batchSize ?? 1000;
@@ -534,22 +557,23 @@ export class GraphBuilder {
             update: {
               nodeType: node.nodeType,
               label: node.label,
-              description: node.description,
-              taxonomyCode: node.taxonomyCode,
+              description: node.description ?? null,
+              taxonomyCode: node.taxonomyCode ?? null,
               systemCodes: node.systemCodes,
-              metadata: node.metadata,
+              metadata: this.toJsonValue(node.metadata),
               updatedAt: new Date(),
             },
             create: {
               id: node.id,
               nodeType: node.nodeType,
               label: node.label,
-              description: node.description,
+              description: node.description ?? null,
               sourceType: node.sourceType,
               sourceId: node.sourceId,
-              taxonomyCode: node.taxonomyCode,
+              taxonomyCode: node.taxonomyCode ?? null,
               systemCodes: node.systemCodes,
-              metadata: node.metadata,
+              metadata: this.toJsonValue(node.metadata),
+              updatedAt: new Date(),
             },
           }),
         ),
@@ -572,10 +596,10 @@ export class GraphBuilder {
               },
             },
             update: {
-              weight: edge.weight,
-              description: edge.description,
-              evidenceCount: edge.evidenceCount,
-              metadata: edge.metadata,
+              weight: edge.weight ?? null,
+              description: edge.description ?? null,
+              evidenceCount: edge.evidenceCount ?? null,
+              metadata: this.toJsonValue(edge.metadata),
               updatedAt: new Date(),
             },
             create: {
@@ -583,10 +607,11 @@ export class GraphBuilder {
               sourceId: edge.sourceId,
               targetId: edge.targetId,
               edgeType: edge.edgeType,
-              weight: edge.weight,
-              description: edge.description,
-              evidenceCount: edge.evidenceCount,
-              metadata: edge.metadata,
+              weight: edge.weight ?? null,
+              description: edge.description ?? null,
+              evidenceCount: edge.evidenceCount ?? null,
+              metadata: this.toJsonValue(edge.metadata),
+              updatedAt: new Date(),
             },
           }),
         ),
