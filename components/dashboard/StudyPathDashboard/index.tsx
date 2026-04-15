@@ -577,7 +577,7 @@ const StudyPathDashboard = () => {
                 size="sm"
                 onClick={handleAcceptPlan}
                 disabled={isAccepting}
-                icon={Check}
+                icon={<Check className="h-4 w-4" aria-hidden="true" />}
               >
                 {isAccepting ? 'Accepting...' : 'Accept plan'}
               </Button>

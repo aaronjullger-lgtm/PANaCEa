@@ -123,7 +123,7 @@ function PlanSkeleton() {
   return (
     <div
       className="bg-[var(--color-bg-secondary)] rounded-xl p-6"
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       <ClinicalSkeleton lines={5} className="min-h-[200px]" />
     </div>
@@ -134,7 +134,7 @@ function PlanError({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
     <div
       className="bg-[var(--color-bg-secondary)] rounded-xl p-6"
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       <div className="flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)] shrink-0 mt-0.5" />
@@ -176,7 +176,7 @@ export function TodayPlanCard({
       animate={{ y: 0, opacity: 1 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
       className="bg-[var(--color-bg-secondary)] rounded-xl p-6 space-y-5"
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">

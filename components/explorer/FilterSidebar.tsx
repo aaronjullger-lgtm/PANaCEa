@@ -176,7 +176,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
         <div className="space-y-2">
           {ALL_SYSTEMS.map(system => {
-            const weight = NCCPA_2025_BLUEPRINT[system];
+            const weight = NCCPA_2025_BLUEPRINT[system] ?? 0;
             return (
               <label
                 key={system}

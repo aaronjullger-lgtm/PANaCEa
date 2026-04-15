@@ -117,8 +117,8 @@ export const ConfidenceCalibrationTracker: React.FC<ConfidenceCalibrationTracker
   }
 
   // Compare latest week to earliest week
-  const latest = validData[validData.length - 1];
-  const earliest = validData[0];
+  const latest = validData[validData.length - 1]!;
+  const earliest = validData[0]!;
   const predictedDelta = latest.predictedAccuracy - earliest.predictedAccuracy;
   const actualDelta = latest.actualAccuracy - earliest.actualAccuracy;
   const gap = Math.abs(latest.predictedAccuracy - latest.actualAccuracy);

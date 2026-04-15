@@ -616,6 +616,25 @@ a,
     @apply text-sm font-normal text-[var(--color-text-secondary)];
   }
 
+  /* Fluid headings — scale smoothly between mobile and desktop without breakpoints.
+     Uses clamp(min, preferred, max) with viewport-based preferred size.
+     Apply to page-level H1/H2 (not card titles). */
+  .heading-fluid-xl {
+    font-size: clamp(1.75rem, 1.3rem + 2.2vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .heading-fluid-lg {
+    font-size: clamp(1.375rem, 1.1rem + 1.4vw, 2.25rem);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+  .heading-fluid-md {
+    font-size: clamp(1.125rem, 0.95rem + 0.9vw, 1.625rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
   /* Focus ring utility - accessible keyboard focus (cyan glow, no black) */
   .focus-ring {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)];
@@ -1298,6 +1317,57 @@ a,
 }
 .dark .hover\:shadow-xl:hover {
   box-shadow: 0 0 0 1px var(--color-glass-border), 0 16px 48px -8px rgba(0, 0, 0, 0.6), 0 0 24px -4px rgba(196, 183, 138, 0.10) !important;
+}
+
+/* ===== SEMANTIC ELEVATION UTILITIES ===== */
+/* Four-tier elevation scale using ring-shadow + ambient depth.
+   Use these for intentional surface hierarchy instead of inline box-shadow. */
+.elevation-1 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 1px 2px -1px rgba(15, 23, 42, 0.04),
+    0 1px 3px -1px rgba(15, 23, 42, 0.06);
+}
+.elevation-2 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 2px 4px -2px rgba(15, 23, 42, 0.06),
+    0 4px 12px -4px rgba(15, 23, 42, 0.10);
+}
+.elevation-3 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 4px 10px -4px rgba(15, 23, 42, 0.10),
+    0 8px 24px -6px rgba(15, 23, 42, 0.14);
+}
+.elevation-4 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 8px 20px -6px rgba(15, 23, 42, 0.14),
+    0 16px 40px -8px rgba(15, 23, 42, 0.18);
+}
+.dark .elevation-1 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 1px 3px -1px rgba(0, 0, 0, 0.45);
+}
+.dark .elevation-2 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 4px 12px -3px rgba(0, 0, 0, 0.5),
+    0 2px 4px -2px rgba(0, 0, 0, 0.3);
+}
+.dark .elevation-3 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 8px 24px -4px rgba(0, 0, 0, 0.55),
+    0 0 16px -4px rgba(196, 183, 138, 0.06);
+}
+.dark .elevation-4 {
+  box-shadow:
+    0 0 0 1px var(--color-glass-border),
+    0 16px 40px -8px rgba(0, 0, 0, 0.6),
+    0 0 24px -4px rgba(196, 183, 138, 0.10);
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */

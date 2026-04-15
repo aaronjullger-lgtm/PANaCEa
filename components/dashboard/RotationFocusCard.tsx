@@ -36,7 +36,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
 
   if (!rotation) {
     return (
-      <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+      <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}>
         <div className="flex items-center gap-2 mb-2">
           <Stethoscope className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h3 className="font-semibold text-[var(--color-text-primary)]">Rotation Focus</h3>
@@ -65,7 +65,7 @@ export const RotationFocusCard: React.FC<RotationFocusCardProps> = ({
   }, [rotation, systemPerformance]);
 
   return (
-    <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+    <div className={`rounded-xl bg-[var(--color-bg-secondary)] p-5 ${className}`} style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

@@ -95,7 +95,7 @@ export default function StudyHeatmap({
               color: isDark ? '#f1f5f9' : '#0f172a',
               fontSize: 12,
               borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow: '0 0 0 1px var(--color-glass-border), 0 8px 24px -4px var(--color-glass-shadow), 0 4px 8px -2px rgba(0,0,0,0.08)',
             },
           },
         }}

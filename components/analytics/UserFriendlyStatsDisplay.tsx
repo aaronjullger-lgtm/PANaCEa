@@ -201,15 +201,17 @@ function extractInsightCTA(insight: string): { system: string; label: string } |
   // Pattern 1: "Focus on <System> - ..."
   const focusMatch = insight.match(/^Focus on ([^-–]+?)(?:\s*[-–]|$)/);
   if (focusMatch) {
-    const system = focusMatch[1].trim();
-    return { system, label: `Practice ${system}` };
+    const system = focusMatch[1]?.trim();
+    if (system) {
+      return { system, label: `Practice ${system}` };
+    }
   }
 
   // Pattern 2: "Try more questions in: <System1>, <System2>, ..."
   const tryMoreMatch = insight.match(/^Try more questions in:\s*(.+)$/);
   if (tryMoreMatch) {
     // Use the first listed system as the drill target
-    const firstSystem = tryMoreMatch[1].split(',')[0].trim();
+    const firstSystem = tryMoreMatch[1]?.split(',')[0]?.trim();
     if (firstSystem) {
       return { system: firstSystem, label: 'Start drill' };
     }

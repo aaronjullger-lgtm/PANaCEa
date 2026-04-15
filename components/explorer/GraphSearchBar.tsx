@@ -14,6 +14,15 @@ interface GraphNodeSuggestion {
   description?: string;
 }
 
+interface GraphSearchResponse {
+  nodes?: Array<{
+    id: string;
+    label: string;
+    nodeType?: string;
+    description?: string;
+  }>;
+}
+
 interface GraphSearchBarProps {
   /** Callback when a node is selected (e.g., to center it on the graph) */
   onNodeSelect?: (nodeId: string, nodeLabel: string) => void;
@@ -70,13 +79,16 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
       if (!response.ok) {
         throw new Error(`Search failed: ${response.status}`);
       }
-      const data = await response.json();
-      setSuggestions(data.nodes.map((node: any) => ({
-        id: node.id,
-        label: node.label,
-        nodeType: node.nodeType,
-        description: node.description,
-      })));
+      const data = (await response.json()) as GraphSearchResponse;
+      const nodes = Array.isArray(data.nodes) ? data.nodes : [];
+      setSuggestions(
+        nodes.map((node) => ({
+          id: node.id,
+          label: node.label,
+          nodeType: node.nodeType ?? 'OTHER',
+          description: node.description,
+        }))
+      );
       setShowDropdown(true);
       setSelectedIndex(-1);
     } catch (error) {

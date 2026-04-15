@@ -162,13 +162,15 @@ function exportAnalyticsCSV(stats: DatabaseStats) {
   for (const [sys, data] of systems) {
     const fullName = ABBREVIATION_TO_TOPIC_MAP[sys] || sys;
     const accuracy = data.total > 0 ? ((data.correct / data.total) * 100).toFixed(1) : '0.0';
-    const avgTime = data.avgResponseTime ? (data.avgResponseTime / 1000).toFixed(1) : 'N/A';
+    const avgTime = data.avgTimeMs ? (data.avgTimeMs / 1000).toFixed(1) : 'N/A';
     rows.push(`"${fullName}",${data.total},${data.correct},${accuracy},${avgTime}`);
   }
 
   // Summary row
   rows.push('');
-  rows.push(`"Overall",${stats.totalQuestions},${stats.correctAnswers},${stats.totalQuestions > 0 ? ((stats.correctAnswers / stats.totalQuestions) * 100).toFixed(1) : '0.0'},`);
+  rows.push(
+    `"Overall",${stats.overall.totalAttempts},${stats.overall.correctAttempts},${stats.overall.totalAttempts > 0 ? ((stats.overall.correctAttempts / stats.overall.totalAttempts) * 100).toFixed(1) : '0.0'},`
+  );
 
   const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);

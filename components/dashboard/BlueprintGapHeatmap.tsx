@@ -12,7 +12,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, TrendingDown } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { BlueprintGapSystem, BlueprintGapsData } from '@/hooks/useBlueprintGaps';
@@ -87,12 +87,12 @@ export function BlueprintGapHeatmap({
       opacity: 1,
       transition: { staggerChildren: 0.04, delayChildren: 0.1 },
     },
-  };
+  } satisfies Variants;
 
   const rowVariants = {
     hidden: { opacity: 0, x: -12 },
     visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-  };
+  } satisfies Variants;
 
   if (data.totalAttempts === 0) {
     return (

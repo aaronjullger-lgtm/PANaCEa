@@ -126,17 +126,17 @@ export default function DailyLoadWidget() {
       {/* Main recommendation */}
       <div className="flex items-center gap-4">
         <div className="flex-1 text-center p-3 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
-          <div className="text-2xl font-bold text-[var(--color-accent)]">{rec.recommendedReviews}</div>
+          <div className="text-2xl font-bold tabular-nums text-[var(--color-accent)]">{rec.recommendedReviews}</div>
           <div className="text-xs text-[var(--color-text-muted)]">Reviews</div>
         </div>
         <div className="text-lg text-[var(--color-text-muted)]">+</div>
         <div className="flex-1 text-center p-3 rounded-xl bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/20">
-          <div className="text-2xl font-bold text-[var(--color-data-pass)]">{rec.recommendedNewCards}</div>
+          <div className="text-2xl font-bold tabular-nums text-[var(--color-data-pass)]">{rec.recommendedNewCards}</div>
           <div className="text-xs text-[var(--color-text-muted)]">New Cards</div>
         </div>
         <div className="text-lg text-[var(--color-text-muted)]">=</div>
         <div className="flex-1 text-center p-3 rounded-xl bg-[var(--color-text-primary)]/5 border border-[var(--color-border)]">
-          <div className="text-2xl font-bold text-[var(--color-text-primary)]">{rec.totalRecommended}</div>
+          <div className="text-2xl font-bold tabular-nums text-[var(--color-text-primary)]">{rec.totalRecommended}</div>
           <div className="text-xs text-[var(--color-text-muted)]">Total</div>
         </div>
       </div>

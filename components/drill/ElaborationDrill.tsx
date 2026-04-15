@@ -61,30 +61,23 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
     reset,
   } = useElaborationDrill();
 
-  const breadcrumbs = [
-    { label: 'Practice', href: ROUTES.STUDY },
-    { label: 'Elaborative Interrogation' },
-  ];
+  const handleBackToHub = onExit ?? (() => {});
+  const breadcrumb = ['Practice', 'Elaborative Interrogation'];
 
   // Landing
   if (status === 'landing') {
     return (
       <DrillShell
         title="Elaborative Interrogation"
-        subtitle="Explain WHY clinical facts are true"
-        breadcrumbs={breadcrumbs}
-        onExit={onExit}
+        breadcrumb={breadcrumb}
+        onBackToHub={handleBackToHub}
+        backTo={ROUTES.PRACTICE}
       >
         <DrillLandingPage
           title="Elaborative Interrogation"
           description="Research shows that explaining WHY something is true produces 2-3x better retention than passive review. You'll see a clinical fact and must explain the underlying mechanism before the answer is revealed."
-          icon={<Lightbulb className="w-10 h-10 text-[var(--color-accent)]" />}
+          icon={Lightbulb}
           onStart={startSession}
-          stats={{
-            method: 'Free-text',
-            grading: 'AI-Powered',
-            scale: '0-3 Rubric',
-          }}
         />
       </DrillShell>
     );
@@ -93,7 +86,7 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
   // Loading
   if (isLoading && !currentFact) {
     return (
-      <DrillShell title="Elaborative Interrogation" breadcrumbs={breadcrumbs} onExit={onExit}>
+      <DrillShell title="Elaborative Interrogation" breadcrumb={breadcrumb} onBackToHub={handleBackToHub} backTo={ROUTES.PRACTICE}>
         <QuestionSkeleton />
       </DrillShell>
     );
@@ -104,9 +97,10 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
   return (
     <DrillShell
       title="Elaborative Interrogation"
-      subtitle={currentFact.system}
-      breadcrumbs={breadcrumbs}
-      onExit={onExit}
+      breadcrumb={breadcrumb}
+      onBackToHub={handleBackToHub}
+      backTo={ROUTES.PRACTICE}
+      headerContent={<span className="text-sm text-[var(--color-text-muted)]">{currentFact.system}</span>}
     >
       <div className="max-w-2xl mx-auto py-6 space-y-6">
         {/* Score bar */}
@@ -159,11 +153,11 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
         {/* Input area (pre-grading) */}
         {(status === 'fact_presented' || status === 'typing') && (
           <div className="space-y-3">
-            <textarea
-              value={explanation}
-              onChange={(e) => {
-                setExplanation(e.target.value);
-              }}
+              <textarea
+                value={explanation}
+                onChange={(e) => {
+                  setExplanation(e.target.value);
+                }}
               placeholder="Explain the mechanism behind this clinical fact..."
               rows={5}
               className="w-full p-4 rounded-lg border text-sm leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
@@ -172,7 +166,7 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
                 borderColor: 'var(--color-border)',
                 color: 'var(--color-text-primary)',
               }}
-              disabled={status === 'grading'}
+              disabled={isLoading}
             />
             <div className="flex items-center justify-between">
               <div className="flex gap-2">

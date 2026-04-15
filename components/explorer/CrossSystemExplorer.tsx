@@ -105,8 +105,11 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({
       if (!response.ok) {
         throw new Error(`Path finding failed: ${response.statusText}`);
       }
-      const result = await response.json();
-      const path = result.data?.path || [];
+      const result = (await response.json()) as {
+        data?: { path?: Array<{ id: string }> };
+        path?: Array<{ id: string }>;
+      };
+      const path = result.data?.path ?? result.path ?? [];
       setHighlightedPath(path.map((node: any) => node.id));
     } catch (error) {
       console.error('Failed to find path', error);

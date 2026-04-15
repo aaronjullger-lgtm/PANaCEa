@@ -34,14 +34,16 @@ export class DrillErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error({
-      message: `Drill error boundary caught an error${
+    logger.error(
+      `Drill error boundary caught an error${
         this.props.drillName ? ` in ${this.props.drillName}` : ''
       }`,
+      {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
-    });
+      }
+    );
   }
 
   handleReset = () => {

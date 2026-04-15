@@ -186,7 +186,7 @@ const UnifiedDashboard = () => {
 
         {/* ===== VIEW TOGGLE ===== */}
         <div className="flex justify-center">
-          <div className="bg-[var(--color-bg-secondary)] p-1 rounded-lg" style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+          <div className="bg-[var(--color-bg-secondary)] p-1 rounded-lg" style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}>
             {DASHBOARD_VIEWS.map((v) => (
               <button
                 key={v.id}

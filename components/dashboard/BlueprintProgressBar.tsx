@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -118,26 +118,18 @@ export function BlueprintProgressBar({
     [systemCounts, targetWeights, totalAnswered]
   );
 
-  const animationVariants = {
-    container: {
-      hidden: { opacity: 0 },
-      visible: {
-        opacity: 1,
-        transition: { staggerChildren: 0.03, delayChildren: 0 },
-      },
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.03, delayChildren: 0 },
     },
-    item: {
-      hidden: { opacity: 0, y: 8 },
-      visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-    },
-    bar: {
-      initial: { scaleX: 0, transformOrigin: 'left' },
-      animate: (value: number) => ({
-        scaleX: value,
-        transition: { duration: 0.6, ease: 'easeOut' },
-      }),
-    },
-  };
+  } satisfies Variants;
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  } satisfies Variants;
 
   return (
     <div
@@ -172,7 +164,7 @@ export function BlueprintProgressBar({
       {/* Progress bars */}
       <motion.div
         className="space-y-3"
-        variants={animationVariants.container}
+        variants={containerVariants}
         initial={prefersReducedMotion ? 'visible' : 'hidden'}
         animate="visible"
       >
@@ -193,7 +185,7 @@ export function BlueprintProgressBar({
           return (
             <motion.div
               key={system}
-              variants={animationVariants.item}
+              variants={itemVariants}
               className="flex items-center gap-3"
             >
               {/* System label */}
@@ -208,21 +200,20 @@ export function BlueprintProgressBar({
 
               {/* Progress bar container */}
               <div className="flex-1">
-                <div
-                  className="relative h-5 overflow-hidden rounded-sm border border-opacity-20"
-                  style={{
-                    backgroundColor: 'var(--color-bg-tertiary)',
-                    borderColor: 'var(--color-text-muted)',
-                  }}
-                >
+                  <div
+                    className="relative h-5 overflow-hidden rounded-sm border border-opacity-20"
+                    style={{
+                      backgroundColor: 'var(--color-bg-tertiary)',
+                      borderColor: 'var(--color-text-muted)',
+                    }}
+                  >
                   {/* Filled bar */}
                   <motion.div
                     className="h-full"
-                    style={{ backgroundColor: barColor }}
-                    variants={animationVariants.bar}
-                    initial="initial"
-                    animate="animate"
-                    custom={Math.min(actualPercent / 100, 1)}
+                    style={{ backgroundColor: barColor, transformOrigin: 'left' }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: Math.min(actualPercent / 100, 1) }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
                   />
 
                   {/* Target marker */}
@@ -267,9 +258,9 @@ export function BlueprintProgressBar({
           <motion.span
             className="text-sm font-semibold tabular-nums"
             style={{ color: 'var(--color-accent)' }}
-            initial={prefersReducedMotion ? 1 : 0}
-            animate={1}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
           >
             {overallAlignment}%
           </motion.span>

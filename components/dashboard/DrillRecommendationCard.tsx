@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { springs, listItemVariants, skeletonLineVariants } from '@/config/appViews';
 import { ShimmerOverlay } from '@/components/loading';
 import { useNavigate } from 'react-router-dom';
@@ -63,7 +63,7 @@ const RecommendationRow: React.FC<{
   return (
     <motion.button
       custom={index}
-      variants={listItemVariants}
+      variants={listItemVariants as unknown as Variants}
       initial="hidden"
       animate="visible"
       whileHover={{ x: 4, transition: springs.snappy }}

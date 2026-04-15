@@ -14,6 +14,7 @@ import { Flame, RotateCcw, Shuffle } from 'lucide-react';
 import DrillShell from '@/components/drill/DrillShell';
 import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
+import { ROUTES } from '@/config/routes';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -88,9 +89,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
     return (
       <DrillShell
         title="Photo Drill"
-        subtitle="Select a category to begin"
-        onExit={handleExit}
-        fullWidth={false} // Lobby uses standard max-width
+        breadcrumb={['Practice', 'Photo Drill']}
+        onBackToHub={handleExit}
+        backTo={ROUTES.PRACTICE}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Category cards would go here */}
@@ -115,13 +116,11 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
   return (
     <DrillShell
       title={getDrillTitle()}
-      subtitle="Visual Diagnosis"
-      fullWidth={true} // Immersive full-width experience
-      noPadding={true} // Content touches edges
-      fullScreen={true} // Fixed positioning
-      backgroundColor="bg-data-neutral" // Dark mode for imaging
-      onExit={handleExit}
-      rightAction={
+      breadcrumb={['Practice', 'Photo Drill']}
+      onBackToHub={handleExit}
+      backTo={ROUTES.PRACTICE}
+      hideBreadcrumb
+      headerContent={
         <div className="flex items-center gap-3">
           {/* Streak Display */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30">
@@ -146,7 +145,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
       }
     >
       {/* Main Drill Content - No wrapper needed, DrillShell handles layout */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4 py-6">
         {/* Image Display */}
         {currentCase && (
           <motion.div

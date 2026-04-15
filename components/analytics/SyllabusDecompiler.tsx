@@ -270,12 +270,17 @@ export default function SyllabusDecompiler({
               variant="primary"
               size="sm"
               onClick={handleDownloadTags}
-              icon={Download}
+              icon={<Download className="w-4 h-4" />}
               className="flex-1"
             >
               Download Tags
             </PrimaryButton>
-            <PrimaryButton variant="ghost" size="sm" onClick={handleReset} icon={X}>
+            <PrimaryButton
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              icon={<X className="w-4 h-4" />}
+            >
               Reset
             </PrimaryButton>
           </div>

@@ -12,10 +12,7 @@ interface FormattedSectionProps {
 }
 
 /** Type guard for legacy structured content objects (steps/grid renderers) */
-interface StructuredContent {
-  type: 'steps' | 'grid';
-  items: unknown[];
-}
+type StructuredContent = Extract<NonNullable<ConditionContent>, { type: 'steps' | 'grid' }>;
 
 function isStructuredContent(c: unknown): c is StructuredContent {
   return (
@@ -24,7 +21,8 @@ function isStructuredContent(c: unknown): c is StructuredContent {
     !Array.isArray(c) &&
     'type' in c &&
     'items' in c &&
-    Array.isArray((c as StructuredContent).items)
+    ((c as { type?: unknown }).type === 'steps' || (c as { type?: unknown }).type === 'grid') &&
+    Array.isArray((c as { items?: unknown }).items)
   );
 }
 

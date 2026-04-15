@@ -260,8 +260,8 @@ const CardDecayCard: React.FC<{
           onClick={onReviewNow}
           variant={urgency === 'critical' ? 'danger' : 'warning'}
           size="sm"
-          fullWidth
-          iconRight={ChevronRight}
+          className="w-full"
+          iconRight={<ChevronRight className="w-4 h-4" />}
         >
           Review Now
         </PrimaryButton>

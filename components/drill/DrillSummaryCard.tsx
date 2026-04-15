@@ -19,7 +19,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { springs, successVariants, buttonPressVariants } from '@/config/appViews';
 import { RotateCcw, LogOut, Target, Zap, Clock, CheckCircle, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -144,7 +144,7 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
   ];
 
   // Staggered stat card entrance
-  const statCardVariants = {
+  const statCardVariants: Variants = {
     hidden: { opacity: 0, y: 16, scale: 0.9, filter: 'blur(4px)' },
     visible: (i: number) => ({
       opacity: 1,
@@ -160,7 +160,7 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
   };
 
   // Icon entrance with celebratory bounce
-  const iconVariants = {
+  const iconVariants: Variants = {
     hidden: { opacity: 0, scale: 0, rotate: -20 },
     visible: {
       opacity: 1,
@@ -187,7 +187,7 @@ const DrillSummaryCard: React.FC<DrillSummaryCardProps> = ({
       >
         <motion.div
           className="p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] text-center"
-          variants={prefersReducedMotion ? undefined : successVariants}
+          variants={prefersReducedMotion ? undefined : (successVariants as unknown as Variants)}
           initial="initial"
           animate={prefersReducedMotion ? undefined : 'celebrate'}
         >

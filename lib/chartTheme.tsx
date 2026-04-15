@@ -44,7 +44,9 @@ export const chartTheme = {
       border: '1px solid var(--color-border)',
       borderRadius: '0.75rem',
       padding: '0.75rem',
-      boxShadow: '0 4px 6px -1px var(--color-shadow-soft)',
+      boxShadow: '0 0 0 1px var(--color-glass-border), 0 8px 24px -4px var(--color-glass-shadow), 0 4px 8px -2px rgba(0,0,0,0.08)',
+      backdropFilter: 'blur(12px) saturate(140%)',
+      WebkitBackdropFilter: 'blur(12px) saturate(140%)',
     },
     labelStyle: {
       color: 'var(--color-text-primary)',

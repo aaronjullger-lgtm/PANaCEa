@@ -12,7 +12,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { ArrowRight, Repeat2, AlertTriangle } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { ConfusionPairData } from '@/hooks/useConfusionPairs';
@@ -58,12 +58,12 @@ export function ConfusionPairCard({
       opacity: 1,
       transition: { staggerChildren: 0.06, delayChildren: 0.1 },
     },
-  };
+  } satisfies Variants;
 
   const itemVariants = {
     hidden: { opacity: 0, x: -8 },
     visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-  };
+  } satisfies Variants;
 
   // Empty state
   if (pairs.length === 0) {
@@ -133,7 +133,7 @@ export function ConfusionPairCard({
             className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 ease-premium hover:-translate-y-0.5"
             style={{
               backgroundColor: 'var(--color-bg-primary)',
-              boxShadow: '0 0 0 1px var(--color-border), 0 1px 3px -1px rgba(0, 0, 0, 0.04)',
+              boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
             }}
           >
             {/* Frequency indicator */}

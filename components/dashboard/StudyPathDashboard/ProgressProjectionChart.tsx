@@ -179,10 +179,13 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
               borderRadius: '8px',
               color: 'var(--color-text-primary)',
             }}
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(1)}%`,
-              name.charAt(0).toUpperCase() + name.slice(1),
-            ]}
+            formatter={(value, name) => {
+              const numericValue = Array.isArray(value) ? Number(value[0]) : Number(value);
+              const label = typeof name === 'string'
+                ? name.charAt(0).toUpperCase() + name.slice(1)
+                : String(name);
+              return [`${numericValue.toFixed(1)}%`, label] as [string, string];
+            }}
             labelFormatter={(label) => `Date: ${label}`}
           />
           <Legend

@@ -52,7 +52,7 @@ function CalibrationTooltip({ active, payload }: any) {
         padding: '8px 12px',
         fontSize: 13,
         fontFamily: "'Inter', system-ui, sans-serif",
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        boxShadow: '0 0 0 1px var(--color-glass-border), 0 8px 24px -4px var(--color-glass-shadow), 0 4px 8px -2px rgba(0,0,0,0.08)',
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 4 }}>

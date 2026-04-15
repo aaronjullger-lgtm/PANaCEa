@@ -190,7 +190,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         <div className="text-center py-12">
           <p className="text-data-fail mb-4">{error}</p>
           <button
-            onClick={fetchGoals}
+            onClick={() => void fetchGoals()}
             className="px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
           >
             Retry

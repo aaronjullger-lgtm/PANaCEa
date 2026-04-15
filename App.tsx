@@ -1080,7 +1080,7 @@ const App: React.FC = () => {
           growthAreas={growthAreas}
           isSyncing={isSyncing}
           isStatsLoading={isStatsLoading}
-          lastSyncTime={lastSyncTime != null ? new Date(lastSyncTime) : null}
+          lastSyncTime={lastSyncTime}
           syncError={syncError}
           fontSizeAdjustment={fontSizeAdjustment}
           setFontSizeAdjustment={setFontSizeAdjustment}

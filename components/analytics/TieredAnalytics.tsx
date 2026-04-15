@@ -389,7 +389,17 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
       strongestSystems,
       recentTrend,
       weeklyGoalProgress: Math.min(100, Math.round(performanceData.length / 2)),
-      avgStability: performanceData.length > 0 ? Math.round(performanceData.reduce((sum, d) => sum + (d.stability ?? 0), 0) / performanceData.length * 10) / 10 || 0 : 0,
+      avgStability:
+        performanceData.length > 0
+          ? Math.round(
+              (performanceData.reduce(
+                (sum, d) => sum + ((d as PerformanceRecord & { stability?: number }).stability ?? 0),
+                0
+              ) /
+                performanceData.length) *
+                10
+            ) / 10 || 0
+          : 0,
       avgDifficulty: 5.2,
       retentionRate: recentAccuracy,
       optimalReviewTime: '9am',

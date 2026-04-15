@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
 import { logger } from "@/lib/simple-logger";
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+const recommendationLogger = logger.scope('RecommendationFeed');
 
 // Cache configuration: Only fetch fresh data if user returns after 6+ hours
 const CACHE_KEY = 'panceai_recommendations';
@@ -118,7 +119,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
       localStorage.setItem(TIMESTAMP_KEY, now.toString());
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-      logger.warn('RecommendationFeed', 'Failed to fetch recommendations', errorMsg);
+      recommendationLogger.warn('Failed to fetch recommendations', { errorMsg });
       toast.error('Failed to load recommendations. Please try again.', { id: 'recommendations-error' });
       setRecommendations([]); // Clear on error
     } finally {
@@ -174,7 +175,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-      logger.warn('RecommendationFeed', 'Failed to generate recommendations', errorMsg);
+      recommendationLogger.warn('Failed to generate recommendations', { errorMsg });
       toast.error('Failed to analyze progress. Please try again.');
     } finally {
       setGenerating(false);
@@ -347,7 +348,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                     variant="primary"
                     size="md"
                     onClick={() => handleStart(rec)}
-                    iconRight={ArrowRight}
+                    iconRight={<ArrowRight className="w-4 h-4" aria-hidden="true" />}
                     className="text-sm w-full sm:w-auto"
                   >
                     Start

@@ -68,7 +68,9 @@ function WeeklySparkline({ trend }: { trend: WeeklyTrend[] }) {
   }).join(' ');
 
   // Color based on trend direction
-  const isRising = values[values.length - 1] > values[0];
+  const firstValue = values[0]!;
+  const lastValue = values[values.length - 1]!;
+  const isRising = lastValue > firstValue;
 
   return (
     <div className="flex items-center gap-2">
@@ -98,7 +100,7 @@ export function RatingHealthCard({ data, isLoading, error, onRefresh, className 
     return (
       <div
         className={`bg-[var(--color-bg-secondary)] rounded-xl p-5 ${className}`}
-        style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+        style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
       >
         <ClinicalSkeleton lines={3} className="min-h-[120px]" />
       </div>
@@ -109,7 +111,7 @@ export function RatingHealthCard({ data, isLoading, error, onRefresh, className 
     return (
       <div
         className={`bg-[var(--color-bg-secondary)] rounded-xl p-5 ${className}`}
-        style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+        style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
       >
         <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
           <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)]" />
@@ -129,7 +131,7 @@ export function RatingHealthCard({ data, isLoading, error, onRefresh, className 
       animate={{ y: 0, opacity: 1 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       className={`bg-[var(--color-bg-secondary)] rounded-xl p-5 space-y-4 ${className}`}
-      style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+      style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">

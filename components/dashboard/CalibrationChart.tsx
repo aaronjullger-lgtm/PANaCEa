@@ -81,8 +81,11 @@ export default function CalibrationChart() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch calibration data');
-      const json = await res.json();
-      setData(json);
+      const json = await res.json() as { data?: CalibrationData } | CalibrationData | null;
+      const normalized = json && typeof json === 'object' && 'data' in json
+        ? json.data ?? null
+        : json;
+      setData(normalized as CalibrationData | null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {

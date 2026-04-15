@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 
-interface ContentGridProps {
+export interface ContentGridProps {
   children: React.ReactNode;
   columns?: {
     default?: number;

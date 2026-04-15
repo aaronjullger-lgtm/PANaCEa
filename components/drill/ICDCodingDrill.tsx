@@ -24,6 +24,7 @@ interface ICDCodingDrillProps {
 }
 
 export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
+  const handleBackToHub = onExit ?? (() => {});
   const {
     currentQuestion,
     score,
@@ -32,7 +33,6 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     userAnswerIndex,
     isCorrect,
     status,
-    selectedSystem,
     availableSystems,
     isLoading,
     submitAnswer,
@@ -40,12 +40,11 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     reset,
     startSession,
     showCategoryMenu,
-    fsrsNextReview,
   } = useICDDrill();
 
   const breadcrumbs = [
-    { label: 'Practice', href: ROUTES.STUDY },
-    { label: 'ICD-10 Coding' },
+    'Practice',
+    'ICD-10 Coding',
   ];
 
   // Landing page
@@ -53,20 +52,15 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     return (
       <DrillShell
         title="ICD-10 Coding Drill"
-        subtitle="Match clinical scenarios to ICD-10-CM codes"
-        breadcrumbs={breadcrumbs}
-        onExit={onExit}
+        breadcrumb={breadcrumbs}
+        onBackToHub={handleBackToHub}
+        backTo={ROUTES.PRACTICE}
       >
         <DrillLandingPage
           title="ICD-10 Coding Drill"
           description="Test your knowledge of ICD-10-CM codes — a tested PANCE competency. Match clinical scenarios to the correct diagnostic code from plausible same-system options."
-          icon={<Hash className="w-10 h-10 text-[var(--color-accent)]" />}
+          icon={Hash}
           onStart={() => showCategoryMenu()}
-          stats={{
-            totalCodes: '150+',
-            systems: '15',
-            difficulty: 'PANCE-Level',
-          }}
         />
       </DrillShell>
     );
@@ -77,9 +71,9 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     return (
       <DrillShell
         title="ICD-10 Coding Drill"
-        subtitle="Choose an organ system to focus on"
-        breadcrumbs={breadcrumbs}
-        onExit={onExit}
+        breadcrumb={breadcrumbs}
+        onBackToHub={handleBackToHub}
+        backTo={ROUTES.PRACTICE}
       >
         <div className="max-w-lg mx-auto py-8 space-y-3">
           {availableSystems.map((system) => (
@@ -118,9 +112,9 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     return (
       <DrillShell
         title="ICD-10 Coding Drill"
-        subtitle="Session Complete"
-        breadcrumbs={breadcrumbs}
-        onExit={onExit}
+        breadcrumb={breadcrumbs}
+        onBackToHub={handleBackToHub}
+        backTo={ROUTES.PRACTICE}
       >
         <DrillSummaryCard
           drillName="ICD-10 Coding"
@@ -128,7 +122,7 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
           accentColor="var(--color-accent)"
           stats={{ correct: score, total: totalAttempts, streak }}
           onNewSession={reset}
-          onExit={onExit ?? (() => {})}
+          onExit={handleBackToHub}
           newSessionLabel="New Session"
         />
       </DrillShell>
@@ -140,8 +134,9 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
     return (
       <DrillShell
         title="ICD-10 Coding Drill"
-        breadcrumbs={breadcrumbs}
-        onExit={onExit}
+        breadcrumb={breadcrumbs}
+        onBackToHub={handleBackToHub}
+        backTo={ROUTES.PRACTICE}
       >
         <QuestionSkeleton />
       </DrillShell>
@@ -151,55 +146,33 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
   // Playing + Feedback
   return (
     <MiniDrillLayout
-      score={score}
-      streak={streak}
-      total={totalAttempts}
-      onExit={onExit}
       title="ICD-10 Coding"
+      score={score}
+      totalAttempts={totalAttempts}
+      streak={streak}
+      isFeedback={status === 'feedback'}
+      isCorrect={isCorrect}
+      onExit={handleBackToHub}
+      onReset={reset}
     >
       {/* Vignette */}
-      <QuestionCard>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Hash className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-            <span
-              className="text-xs font-semibold uppercase tracking-wide"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {currentQuestion.system}
-            </span>
-          </div>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
-            {currentQuestion.vignette}
-          </p>
-        </div>
-      </QuestionCard>
+      <QuestionCard question={currentQuestion.vignette} category={currentQuestion.system} />
 
       {/* Options */}
       <div className="space-y-2 mt-4">
         {currentQuestion.options.map((option, idx) => {
           const isSelected = userAnswerIndex === idx;
           const isCorrectOption = idx === currentQuestion.correctAnswerIndex;
-          const showFeedback = status === 'feedback';
-
-          let variant: 'default' | 'correct' | 'incorrect' | 'missed' = 'default';
-          if (showFeedback) {
-            if (isCorrectOption) variant = 'correct';
-            else if (isSelected && !isCorrectOption) variant = 'incorrect';
-          }
 
           return (
             <AnswerOption
               key={`${option.code}-${idx}`}
-              label={option.code}
-              text={option.description}
-              variant={variant}
-              selected={isSelected}
-              disabled={status === 'feedback'}
-              onClick={() => submitAnswer(idx)}
+              index={idx}
+              text={`${option.code}: ${option.description}`}
+              isSelected={isSelected}
+              isCorrect={status === 'feedback' ? isCorrectOption : null}
+              isAnswered={status === 'feedback'}
+              onSelect={submitAnswer}
             />
           );
         })}

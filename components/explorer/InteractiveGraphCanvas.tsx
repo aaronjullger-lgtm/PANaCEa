@@ -19,6 +19,17 @@ import {
 } from '@/lib/types/graph';
 import { getConfidenceHex } from '@/lib/confidenceColorUtils';
 
+interface GraphExpandApiResponse {
+  data?: GraphExpandResponse;
+  nodes?: GraphNodeResponse[];
+  edges?: GraphEdgeResponse[];
+}
+
+interface GraphConfidenceApiResponse {
+  data?: { scores?: Record<string, number> };
+  scores?: Record<string, number>;
+}
+
 // Import Cytoscape extensions if needed (e.g., for layout)
 // import cytoscapeGridGuide from 'cytoscape-grid-guide';
 
@@ -218,8 +229,15 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       if (!response.ok) {
         throw new Error(`Graph expand failed: ${response.statusText}`);
       }
-      const result = await response.json();
-      const data = result.data as GraphExpandResponse;
+      const result = (await response.json()) as GraphExpandApiResponse;
+      const data =
+        result.data ??
+        (Array.isArray(result.nodes) && Array.isArray(result.edges)
+          ? { nodes: result.nodes, edges: result.edges, depth: 0, expandedNodeIds: [] }
+          : null);
+      if (!data) {
+        throw new Error('Invalid graph expand response');
+      }
       // Merge new nodes/edges with existing ones
       mergeGraphData(data.nodes, data.edges);
       // Mark node IDs as expanded
@@ -252,8 +270,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       if (!response.ok) {
         throw new Error(`Confidence fetch failed: ${response.statusText}`);
       }
-      const result = await response.json();
-      const scores = result.scores as Record<string, number>;
+      const result = (await response.json()) as GraphConfidenceApiResponse;
+      const scores = result.scores ?? result.data?.scores ?? {};
       setConfidenceScores(prev => ({ ...prev, ...scores }));
     } catch (err) {
       console.error('Failed to fetch confidence scores', err);
@@ -292,7 +310,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       }
       // Node type filter
       if (filter.nodeTypes.length > 0) {
-        if (!filter.nodeTypes.includes(node.type)) {
+        if (!filter.nodeTypes.includes(node.nodeType)) {
           return false;
         }
       }
@@ -302,7 +320,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
     const filteredEdges = edges.filter(edge => {
       // Edge type filter
       if (filter.edgeTypes.length > 0) {
-        if (!filter.edgeTypes.includes(edge.type)) {
+        if (!filter.edgeTypes.includes(edge.edgeType)) {
           return false;
         }
       }
@@ -311,8 +329,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
         return false;
       }
       // Ensure both source and target nodes are still present (optional)
-      const sourceExists = filteredNodes.some(n => n.id === edge.source);
-      const targetExists = filteredNodes.some(n => n.id === edge.target);
+      const sourceExists = filteredNodes.some(n => n.id === edge.sourceId);
+      const targetExists = filteredNodes.some(n => n.id === edge.targetId);
       return sourceExists && targetExists;
     });
     return { filteredNodes, filteredEdges };

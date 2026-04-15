@@ -216,9 +216,9 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
         <PrimaryButton
           variant={buttonVariant}
           size="md"
-          fullWidth
           disabled={disabled}
           onClick={onAction}
+          className="w-full"
         >
           {buttonText}
         </PrimaryButton>

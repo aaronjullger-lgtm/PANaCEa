@@ -98,7 +98,7 @@ export const StudyActionCard: React.FC<StudyActionCardProps> = ({ action }) => {
       <div
         className="relative flex items-center gap-3.5 rounded-xl bg-[var(--color-bg-secondary)] px-4 py-3.5 transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40"
         style={{
-          boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)',
+          boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)',
         }}
       >
         {/* Left accent stripe */}

@@ -50,8 +50,8 @@ export function RoundsButton({
     <PrimaryButton
       variant="primary"
       size="lg"
-      icon={Stethoscope}
-      iconRight={ChevronRight}
+      icon={<Stethoscope className="h-5 w-5" aria-hidden="true" />}
+      iconRight={<ChevronRight className="h-5 w-5" aria-hidden="true" />}
       onClick={() => onStartRounds(weakestSystem)}
       disabled={disabled}
       className="w-full sm:w-auto"

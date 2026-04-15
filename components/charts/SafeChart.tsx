@@ -8,7 +8,15 @@
  */
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import chartTheme, { safeChartDisplay } from '@/lib/chartTheme';
 
@@ -84,14 +92,14 @@ export function SafeChart({
           contentStyle={chartTheme.tooltip.contentStyle}
           labelStyle={chartTheme.tooltip.labelStyle}
           itemStyle={chartTheme.tooltip.itemStyle}
-          formatter={(value: unknown, name?: string) => {
+          formatter={(value, name) => {
             if (
               value == null ||
               (typeof value === 'number' && (!isFinite(value) || isNaN(value)))
             ) {
-              return ['—', name ?? ''];
+              return ['—', String(name ?? '')];
             }
-            return [value, name ?? ''];
+            return [value, String(name ?? '')];
           }}
         />
         <Line

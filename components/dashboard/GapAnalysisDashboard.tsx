@@ -196,7 +196,7 @@ function HighYieldFocus({
                 size="sm"
                 className="mt-4 w-full"
                 onClick={() => onStudyClick(system.name)}
-                iconRight={ArrowRight}
+                iconRight={<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />}
               >
                 Study this system
               </Button>
@@ -211,7 +211,7 @@ function HighYieldFocus({
 const CustomTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload as SystemData;
+  const data = payload[0]!.payload as SystemData;
   return (
     <div className="workspace-subsurface rounded-[1rem] px-4 py-3 shadow-lg backdrop-blur-sm">
       <h4 className="mb-2 font-semibold text-[var(--color-text-primary)]">{data.name}</h4>
@@ -336,6 +336,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
     () => systemsSorted.filter((system) => !system.isInsufficientData).slice(0, 3),
     [systemsSorted]
   );
+  const topSystem = topSystems[0] ?? null;
 
   const criticalCount = systemsSorted.filter(
     (system) => system.status === 'critical' || system.status === 'weakness'
@@ -424,10 +425,10 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
             status: `${data.userTotalAttempts} recorded attempts`,
             backLabel: 'Back to Progress',
             onBack: () => navigate(ROUTES.PROGRESS),
-            primaryAction: topSystems[0]
+            primaryAction: topSystem
               ? {
-                  label: `Study ${topSystems[0].name}`,
-                  onClick: () => handleStudyClick(topSystems[0].name),
+                  label: `Study ${topSystem.name}`,
+                  onClick: () => handleStudyClick(topSystem.name),
                 }
               : undefined,
             secondaryActions: [

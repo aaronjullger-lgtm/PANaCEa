@@ -57,8 +57,11 @@ async function fetchCalibrationDashboard(
 
   const res = await fetch('/api/user/calibration-dashboard', { headers });
   if (!res.ok) throw new Error(`Calibration fetch failed: ${res.status}`);
-  const json = await res.json();
-  return json.data as CalibrationDashboardData;
+  const json = await res.json() as { data?: CalibrationDashboardData } | CalibrationDashboardData;
+  const normalized = json && typeof json === 'object' && 'data' in json
+    ? json.data
+    : json;
+  return normalized as CalibrationDashboardData;
 }
 
 // ─── KPI Card ─────────────────────────────────────────────────────

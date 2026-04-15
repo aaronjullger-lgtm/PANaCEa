@@ -55,6 +55,7 @@ import {
   OVERALL_TARGET_SEC,
 } from '@/lib/speedBenchmarks';
 import { logger } from "@/lib/simple-logger";
+const analyticsLogger = logger.scope('AnalyticsDashboard');
 
 // Minimum reviews needed for confident predictions (FSRS calibration threshold)
 const CALIBRATION_THRESHOLD = 60;
@@ -183,7 +184,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         const result = (await response.json()) as UserStatsResponse;
         setUserStats(result);
       } catch (error) {
-        logger.error('AnalyticsDashboard', 'Failed to fetch user stats', error);
+        analyticsLogger.error('Failed to fetch user stats', { error });
         setStatsError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setStatsLoading(false);
@@ -239,7 +240,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           setStabilityTrendData(formattedData);
         }
       } catch (error) {
-        logger.error('AnalyticsDashboard', 'Failed to fetch stability trend', error);
+        analyticsLogger.error('Failed to fetch stability trend', { error });
         setStabilityError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setStabilityLoading(false);

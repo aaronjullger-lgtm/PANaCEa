@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // Base classes applied to every button
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[colors,transform,box-shadow] duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:active:scale-100 motion-reduce:transition-colors',
   {
     variants: {
       variant: {

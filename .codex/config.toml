@@ -1,2 +1,7 @@
+approval_policy = "never"
+sandbox_mode = "workspace-write"
 [mcp_servers.aidesigner]
 url = "https://api.aidesigner.ai/api/v1/mcp"
+
+[sandbox_workspace_write]
+network_access = true

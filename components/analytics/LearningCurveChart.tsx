@@ -19,7 +19,7 @@ import { ChartContainer } from '@/components/shared/ChartContainer';
 import { useLearningCurveData } from '@/hooks/useLearningCurveData';
 import { SkeletonLoader } from '@/components/loading';
 import { EmptyChartState } from '@/components/analytics/EmptyChartState';
-import { Calendar, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface TimeRangeOption {
   label: string;
@@ -31,6 +31,11 @@ const TIME_RANGES: TimeRangeOption[] = [
   { label: '30 days', days: 30 },
   { label: 'All time', days: 90 }, // max supported by API
 ];
+
+const DEFAULT_TIME_RANGE: TimeRangeOption = TIME_RANGES.find((range) => range.days === 30) ?? {
+  label: '30 days',
+  days: 30,
+};
 
 /**
  * Custom tooltip for the learning curve chart.
@@ -53,7 +58,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export const LearningCurveChart: React.FC = () => {
-  const [selectedRange, setSelectedRange] = useState<TimeRangeOption>(TIME_RANGES[1]); // default 30 days
+  const [selectedRange, setSelectedRange] = useState<TimeRangeOption>(DEFAULT_TIME_RANGE); // default 30 days
   const { data, isLoading, error, isEmpty } = useLearningCurveData({
     days: selectedRange.days,
   });
@@ -94,9 +99,8 @@ export const LearningCurveChart: React.FC = () => {
   if (isEmpty) {
     return (
       <EmptyChartState
-        icon={<Calendar className="w-12 h-12 text-[var(--color-text-muted)]" />}
-        title="No data yet"
-        message="Complete some questions to see your learning curve."
+        chartType="line"
+        message="No data yet. Complete some questions to see your learning curve."
       />
     );
   }

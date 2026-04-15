@@ -144,6 +144,12 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
   // Get stats
   const stats = customSessionService.getCurrentStats();
   const progress = customSessionService.getIncrementProgress();
+  const rationaleText =
+    currentQuestion && currentQuestion.rationale
+      ? typeof currentQuestion.rationale === 'string'
+        ? currentQuestion.rationale
+        : JSON.stringify(currentQuestion.rationale, null, 2)
+      : '';
 
   if (phase === 'loading') {
     return (
@@ -287,7 +293,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                 Explanation
               </p>
               <p className="text-sm text-data-neutral">
-                {currentQuestion.rationale}
+                {rationaleText}
               </p>
             </motion.div>
           )}

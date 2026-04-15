@@ -75,7 +75,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         {/* Main content skeleton */}
         <div
           className="bg-[var(--color-bg-primary)] rounded-xl p-6"
-          style={{ boxShadow: '0 0 0 1px var(--color-border), 0 1px 2px 0 rgba(0,0,0,0.03)' }}
+          style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
         >
           {/* Image skeleton for visual drills */}
           {(variant === 'image' || variant === 'lab') && (

@@ -11,6 +11,8 @@ interface DrillStats {
 /** Matches the response shape of submitAnswer */
 interface SubmitResult {
   isCorrect?: boolean;
+  correctCondition?: string;
+  distinguishers?: string[];
 }
 
 interface ContrastiveDrillProps {
@@ -62,11 +64,15 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   };
 
   const handleSubmit = async () => {
-    if (!selectedOption || hasAnswered) return;
+    if (!selectedOption || hasAnswered || !currentQuestion) return;
 
     const timeSpentMs = Date.now() - questionStartTimeRef.current;
     const result = await submitAnswer(selectedOption, timeSpentMs);
-    setLastResult(result);
+    setLastResult({
+      ...result,
+      correctCondition: currentQuestion.correctCondition,
+      distinguishers: currentQuestion.distinguishingCues,
+    });
     setHasAnswered(true);
   };
 

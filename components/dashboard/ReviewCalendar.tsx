@@ -38,7 +38,7 @@ function getIntensity(count: number): 'none' | 'light' | 'medium' | 'heavy' {
   return 'heavy';
 }
 
-const INTENSITY_STYLES: Record<string, { bg: string; text: string }> = {
+const INTENSITY_STYLES = {
   none: {
     bg: 'var(--color-bg-tertiary)',
     text: 'var(--color-text-muted)',
@@ -55,7 +55,7 @@ const INTENSITY_STYLES: Record<string, { bg: string; text: string }> = {
     bg: 'color-mix(in srgb, var(--color-data-provisional) 25%, var(--color-bg-secondary))',
     text: 'var(--color-data-provisional)',
   },
-};
+} as const satisfies Record<'none' | 'light' | 'medium' | 'heavy', { bg: string; text: string }>;
 
 export function ReviewCalendar({
   overdue,

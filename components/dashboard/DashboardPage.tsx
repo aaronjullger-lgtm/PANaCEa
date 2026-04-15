@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { widgetEntrance, springs, cardHoverVariants, tabContentVariants } from '@/config/appViews';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -60,6 +60,7 @@ import { useRecentSessions } from '@/hooks/useRecentSessions';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
+import type { UserProfile } from '@/types';
 
 // Lazy-loaded heavy chart — @nivo/calendar (~15-20 KB)
 const StudyHeatmap = React.lazy(() => import('@/components/charts/StudyHeatmap'));
@@ -91,6 +92,8 @@ const DASHBOARD_VIEWS: Array<{
     subtitle: 'Analysis — Radars, heatmaps, trends',
   },
 ];
+
+const TAB_CONTENT_VARIANTS = tabContentVariants as unknown as Variants;
 
 // ============================================================================
 // Types
@@ -246,19 +249,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   // LocalStorage is always populated by mergeEorFieldsFromApi after first API load,
   // so the RotationFocusCard shows immediately without waiting for the network.
   const localCachedProfile = useMemo(() => loadUserProfile(), []);
-  const userProfile = useMemo(() => {
-    if (apiUserProfile) return apiUserProfile;
-    // Seed from localStorage while API is loading
-    if (localCachedProfile) {
+  const userProfile = useMemo<UserProfile | null>(() => {
+    if (apiUserProfile) {
       return {
-        currentRotation: localCachedProfile.currentRotation ?? null,
-        eorTestDate: localCachedProfile.eorTestDate ?? null,
-        rotationStartDate: localCachedProfile.rotationStartDate ?? null,
-        rotationEndDate: localCachedProfile.rotationEndDate ?? null,
-        yearInProgram: localCachedProfile.yearInProgram ?? null,
-      } as Partial<typeof apiUserProfile> as typeof apiUserProfile;
+        school: apiUserProfile.school ?? undefined,
+        graduationDate: apiUserProfile.graduationDate ?? undefined,
+        currentRotation: apiUserProfile.currentRotation
+          ? (apiUserProfile.currentRotation as UserProfile['currentRotation'])
+          : undefined,
+        eorTestDate: apiUserProfile.eorTestDate ?? undefined,
+        rotationStartDate: apiUserProfile.rotationStartDate ?? undefined,
+        rotationEndDate: apiUserProfile.rotationEndDate ?? undefined,
+        yearInProgram: apiUserProfile.yearInProgram
+          ? (apiUserProfile.yearInProgram as UserProfile['yearInProgram'])
+          : undefined,
+        hasCompletedOnboarding: apiUserProfile.hasCompletedOnboarding,
+      };
     }
-    return null;
+    return localCachedProfile;
   }, [apiUserProfile, localCachedProfile]);
   const { sessions: recentSessions } = useRecentSessions();
   const { stats: dbStats } = useDatabaseStats();
@@ -614,7 +622,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               id="tabpanel-pilot"
               aria-labelledby="tab-pilot"
               custom={tabDirection}
-              variants={prefersReducedMotion ? undefined : tabContentVariants}
+              variants={prefersReducedMotion ? undefined : TAB_CONTENT_VARIANTS}
               initial={prefersReducedMotion ? false : 'enter'}
               animate="center"
               exit="exit"
@@ -801,7 +809,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               id="tabpanel-data"
               aria-labelledby="tab-data"
               custom={tabDirection}
-              variants={prefersReducedMotion ? undefined : tabContentVariants}
+              variants={prefersReducedMotion ? undefined : TAB_CONTENT_VARIANTS}
               initial={prefersReducedMotion ? false : 'enter'}
               animate="center"
               exit="exit"

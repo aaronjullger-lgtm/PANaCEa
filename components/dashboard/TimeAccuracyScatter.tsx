@@ -54,7 +54,7 @@ function Skeleton() {
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: TimeAccuracyPoint }> }) {
   if (!active || !payload || payload.length === 0) return null;
-  const d = payload[0].payload;
+  const d = payload[0]!.payload;
   return (
     <div style={chartTheme.tooltip.contentStyle}>
       <p style={chartTheme.tooltip.labelStyle as React.CSSProperties}>{d.system}</p>
