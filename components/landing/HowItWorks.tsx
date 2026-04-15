@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, type HTMLMotionProps } from 'framer-motion';
 import { Target, Activity, TrendingUp, Check, ArrowRight } from 'lucide-react';
 
 const STEPS = [
@@ -41,7 +41,7 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.1 });
 
-  const fadeUpView = (delay = 0) =>
+  const fadeUpView = (delay = 0): Partial<HTMLMotionProps<'div'>> =>
     prefersReducedMotion
       ? {}
       : {
@@ -51,7 +51,7 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
           transition: { type: 'spring' as const, stiffness: 350, damping: 26, delay, opacity: { duration: 0.35, delay } },
         };
 
-  const pulseVariants = prefersReducedMotion
+  const pulseVariants: Partial<HTMLMotionProps<'div'>> = prefersReducedMotion
     ? {}
     : {
         initial: { scale: 1, opacity: 0.6 },
@@ -59,7 +59,7 @@ export function HowItWorks({ onSignUp, prefersReducedMotion }: HowItWorksProps) 
         transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
       };
 
-  const glowLineVariants = prefersReducedMotion
+  const glowLineVariants: Partial<HTMLMotionProps<'div'>> = prefersReducedMotion
     ? {}
     : {
         initial: { scaleY: 0 },

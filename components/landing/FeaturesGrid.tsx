@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import {
   BookOpen,
   Brain,
@@ -78,7 +78,7 @@ function FeatureCard({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const fadeUpView = prefersReducedMotion
+  const fadeUpView: Partial<HTMLMotionProps<'div'>> = prefersReducedMotion
     ? {}
     : {
         initial: { opacity: 0, y: 24, filter: 'blur(4px)' },
@@ -269,7 +269,7 @@ function FeatureCard({
 }
 
 export function FeaturesGrid({ prefersReducedMotion }: FeaturesGridProps) {
-  const fadeUpView = prefersReducedMotion
+  const fadeUpView: Partial<HTMLMotionProps<'div'>> = prefersReducedMotion
     ? {}
     : {
         initial: { opacity: 0, y: 24, filter: 'blur(4px)' },

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 interface FinalCTAProps {
   onSignUp: () => void;
@@ -15,6 +15,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) return;
         if (entry.isIntersecting) {
           setIsInView(true);
         }
@@ -42,7 +43,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
       filter: 'blur(0px)',
       transition: { type: 'spring' as const, stiffness: 350, damping: 26, opacity: { duration: 0.35 } },
     },
-  };
+  } satisfies Variants;
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -53,7 +54,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
         delayChildren: 0.2,
       },
     },
-  };
+  } satisfies Variants;
 
   // Animated orbs (slow floating 12-24s)
   const orbVariants = {
@@ -67,7 +68,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
         repeat: Infinity,
       },
     },
-  };
+  } satisfies Variants;
 
   // Border pulse animation for secondary button
   const borderPulseVariants = {
@@ -83,7 +84,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
         ease: 'easeInOut',
       },
     },
-  };
+  } satisfies Variants;
 
   // Gradient shimmer text animation
   const gradientVariants = {
@@ -95,7 +96,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
         repeat: Infinity,
       },
     },
-  };
+  } satisfies Variants;
 
   return (
     <section
@@ -191,13 +192,13 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <motion.div
-          variants={prefersReducedMotion ? {} : staggerContainer}
+          variants={prefersReducedMotion ? undefined : staggerContainer}
           initial="hidden"
           animate={prefersReducedMotion || isInView ? 'visible' : 'hidden'}
           className="space-y-7"
         >
           {/* Gradient text heading */}
-          <motion.div variants={prefersReducedMotion ? {} : fadeUpVariants}>
+          <motion.div variants={prefersReducedMotion ? undefined : fadeUpVariants}>
             <motion.h2
               className="font-bold"
               style={{
@@ -209,7 +210,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-              variants={prefersReducedMotion ? {} : gradientVariants}
+              variants={prefersReducedMotion ? undefined : gradientVariants}
               animate={prefersReducedMotion || isInView ? 'shimmer' : 'initial'}
             >
               Ready to Own Your Exam Prep?
@@ -224,7 +225,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
               color: '#94a3b8',
               lineHeight: '1.6',
             }}
-            variants={prefersReducedMotion ? {} : fadeUpVariants}
+            variants={prefersReducedMotion ? undefined : fadeUpVariants}
           >
             Join the PA students using adaptive spaced repetition to study smarter — not harder.
           </motion.p>
@@ -232,7 +233,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
           {/* CTA Buttons */}
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center pt-2"
-            variants={prefersReducedMotion ? {} : fadeUpVariants}
+            variants={prefersReducedMotion ? undefined : fadeUpVariants}
           >
             {/* Primary button */}
             <motion.button
@@ -281,7 +282,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
                 color: '#cbd5e1',
                 border: '1px solid rgba(148, 163, 184, 0.2)',
               }}
-              variants={prefersReducedMotion ? {} : borderPulseVariants}
+              variants={prefersReducedMotion ? undefined : borderPulseVariants}
               animate={prefersReducedMotion || isInView ? 'pulse' : 'initial'}
               whileHover={
                 prefersReducedMotion
@@ -302,7 +303,7 @@ export function FinalCTA({ onSignUp, onSignIn, prefersReducedMotion }: FinalCTAP
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4"
             style={{ color: '#475569', fontSize: 'clamp(0.875rem, 2vw, 1rem)' }}
-            variants={prefersReducedMotion ? {} : fadeUpVariants}
+            variants={prefersReducedMotion ? undefined : fadeUpVariants}
           >
             <div className="flex items-center gap-1">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden>

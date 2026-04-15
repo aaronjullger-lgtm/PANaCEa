@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence, useInView, useAnimation } from 'framer-motion';
+import { motion, AnimatePresence, useInView, useAnimation, type HTMLMotionProps } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 const STATS = [
@@ -80,7 +80,7 @@ function AnimatedCounter({
 export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSectionProps) {
   const reduceMotion = prefersReducedMotion;
 
-  const fadeUp = (delay = 0) =>
+  const fadeUp = (delay = 0): Partial<HTMLMotionProps<'div'>> =>
     reduceMotion
       ? {}
       : {
@@ -96,7 +96,7 @@ export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSe
           },
         };
 
-  const fadeUpView = (delay = 0) =>
+  const fadeUpView = (delay = 0): Partial<HTMLMotionProps<'div'>> =>
     reduceMotion
       ? {}
       : {
@@ -112,13 +112,14 @@ export function HeroSection({ onSignUp, onSignIn, prefersReducedMotion }: HeroSe
           },
         };
 
-  const floatAnimation = useMemo(() =>
-    reduceMotion
-      ? {}
-      : {
-          animate: { y: [0, -12, 0] },
-          transition: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
-        },
+  const floatAnimation = useMemo<Partial<HTMLMotionProps<'div'>>>(
+    () =>
+      reduceMotion
+        ? {}
+        : {
+            animate: { y: [0, -12, 0] },
+            transition: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+          },
     [reduceMotion]
   );
 
