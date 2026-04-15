@@ -12,6 +12,7 @@ import { StorageKeys } from '../../storage/storageRegistry';
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'OfflineSync';
+const offlineSyncLogger = logger.scope(LOG_SCOPE);
 
 // Debug logging - set to true to re-enable verbose logs
 const DEBUG_OFFLINE_SYNC = false;
@@ -39,7 +40,7 @@ function getQueue(): SyncOperation[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to read queue', error);
+    offlineSyncLogger.error('Failed to read queue', { error });
     return [];
   }
 }
@@ -51,7 +52,7 @@ function saveQueue(queue: SyncOperation[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to save queue', error);
+    offlineSyncLogger.error('Failed to save queue', { error });
   }
 }
 
@@ -63,7 +64,7 @@ export function getDeadLetterQueue(): SyncOperation[] {
     const stored = localStorage.getItem(DEAD_LETTER_QUEUE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to read dead letter queue', error);
+    offlineSyncLogger.error('Failed to read dead letter queue', { error });
     return [];
   }
 }
@@ -75,7 +76,7 @@ function saveDeadLetterQueue(queue: SyncOperation[]): void {
   try {
     localStorage.setItem(DEAD_LETTER_QUEUE_KEY, JSON.stringify(queue));
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to save dead letter queue', error);
+    offlineSyncLogger.error('Failed to save dead letter queue', { error });
   }
 }
 
@@ -89,7 +90,7 @@ function moveToDeadLetterQueue(op: SyncOperation): void {
     status: 'failed',
   });
   saveDeadLetterQueue(deadLetterQueue);
-  logger.warn(LOG_SCOPE, `Moved to dead letter queue: ${op.operation} (${op.id})`);
+  offlineSyncLogger.warn(`Moved to dead letter queue: ${op.operation} (${op.id})`);
 }
 
 /**
@@ -116,7 +117,7 @@ export function queueOperation(
   queue.push(op);
   saveQueue(queue);
 
-  if (DEBUG_OFFLINE_SYNC) logger.debug(LOG_SCOPE, `Queued operation: ${operation} (${id})`);
+  if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug(`Queued operation: ${operation} (${id})`);
 
   // Try to sync immediately if online
   if (navigator.onLine) {
@@ -132,7 +133,7 @@ export function queueOperation(
  */
 export async function processQueue(token?: string): Promise<void> {
   if (!navigator.onLine) {
-    if (DEBUG_OFFLINE_SYNC) logger.debug(LOG_SCOPE, 'Offline - skipping queue processing');
+    if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug('Offline - skipping queue processing');
     return;
   }
 
@@ -144,22 +145,24 @@ export async function processQueue(token?: string): Promise<void> {
   }
 
   if (DEBUG_OFFLINE_SYNC)
-    logger.debug(LOG_SCOPE, `Processing ${pending.length} pending operations`);
+    offlineSyncLogger.debug(`Processing ${pending.length} pending operations`);
 
   for (const op of pending) {
     try {
       await syncOperation(op, token);
       op.status = 'synced';
-      if (DEBUG_OFFLINE_SYNC) logger.debug(LOG_SCOPE, `Synced: ${op.operation} (${op.id})`);
+      if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug(`Synced: ${op.operation} (${op.id})`);
     } catch (error: any) {
       op.attempts++;
       if (op.attempts >= MAX_ATTEMPTS) {
         // Permanent failure - move to dead letter queue
         moveToDeadLetterQueue(op);
         op.status = 'failed';
-        logger.error(LOG_SCOPE, `Permanent failure: ${op.operation} (${op.id}) after ${op.attempts} attempts`);
+        offlineSyncLogger.error(
+          `Permanent failure: ${op.operation} (${op.id}) after ${op.attempts} attempts`
+        );
       } else {
-        logger.warn(LOG_SCOPE, `Retry ${op.attempts}/${MAX_ATTEMPTS}: ${op.operation} (${op.id})`);
+        offlineSyncLogger.warn(`Retry ${op.attempts}/${MAX_ATTEMPTS}: ${op.operation} (${op.id})`);
       }
     }
   }
@@ -336,11 +339,11 @@ export function flushPendingToLocalStorage(): void {
         queue.push(op);
         saveQueue(queue);
         if (DEBUG_OFFLINE_SYNC)
-          logger.debug(LOG_SCOPE, 'Flushed pending data to queue on beforeunload');
+          offlineSyncLogger.debug('Flushed pending data to queue on beforeunload');
       }
     }
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to flush pending data', error);
+    offlineSyncLogger.error('Failed to flush pending data', { error });
   }
 
   // Clear any pending timeouts
@@ -352,7 +355,7 @@ export function flushPendingToLocalStorage(): void {
  */
 export function clearQueue(): void {
   localStorage.removeItem(STORAGE_KEY);
-  if (DEBUG_OFFLINE_SYNC) logger.debug(LOG_SCOPE, 'Queue cleared');
+  if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug('Queue cleared');
 }
 
 /**
@@ -383,7 +386,7 @@ async function retrieveToken(getToken?: () => Promise<string | null>): Promise<s
     const token = await getToken();
     return token || undefined;
   } catch (error) {
-    logger.error(LOG_SCOPE, 'Failed to retrieve token', error);
+    offlineSyncLogger.error('Failed to retrieve token', { error });
     return undefined;
   }
 }
@@ -394,14 +397,14 @@ async function retrieveToken(getToken?: () => Promise<string | null>): Promise<s
  */
 export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
   const handleOnline = async () => {
-    if (DEBUG_OFFLINE_SYNC) logger.debug(LOG_SCOPE, 'Connection restored - processing queue');
+    if (DEBUG_OFFLINE_SYNC) offlineSyncLogger.debug('Connection restored - processing queue');
     const token = await retrieveToken(getToken);
     await processQueue(token);
   };
 
   const handleOffline = () => {
     if (DEBUG_OFFLINE_SYNC)
-      logger.debug(LOG_SCOPE, 'Connection lost - operations will be queued');
+      offlineSyncLogger.debug('Connection lost - operations will be queued');
   };
 
   window.addEventListener('online', handleOnline);

@@ -10,7 +10,7 @@
  * API route should: authenticate, validate, delegate here, return result.
  */
 
-import type { CircadianPhase as PrismaCircadianPhase, PrismaClient } from '@prisma/client';
+import { Prisma, ProgressContext, type CircadianPhase as PrismaCircadianPhase, type PrismaClient } from '@prisma/client';
 import { calculateParTime } from '../utils/questionComplexity';
 import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
@@ -214,6 +214,7 @@ export interface SubmitDrillReviewResult {
     stability: number;
     difficulty: number;
   };
+  fireCredits?: Array<{ conceptId: string; stabilityMultiplier: number }>;
 }
 
 /** Optional logger for service-level events (e.g. KAR3L, rapid guess) */
@@ -226,6 +227,7 @@ export interface DrillReviewLogger {
 
 /** Server-authoritative Minimum Valid Response Time. Client cannot lower below this. */
 const SERVER_MVRT_THRESHOLD_MS = 2000;
+const DEFAULT_PROGRESS_CONTEXT = ProgressContext.READINESS;
 
 // ─── Per-Card RT Baseline (CRPL z-score enrichment — tier1augment.md) ──────
 
@@ -514,7 +516,7 @@ export async function submitDrillReview(
 
     // ── Wave 2: Distractor chronometry & switch direction (additive, backward-compatible) ──
     const optionInteractionsRaw = telemetry?.option_interactions as OptionInteractionRecord[] | undefined;
-    if (optionInteractionsRaw && Array.isArray(optionInteractionsRaw) && optionInteractionsRaw.length > 0) {
+    if (correctAnswer && optionInteractionsRaw && Array.isArray(optionInteractionsRaw) && optionInteractionsRaw.length > 0) {
       wave2Chronometry = analyzeDistractorChronometry(
         optionInteractionsRaw,
         correctAnswer,
@@ -896,7 +898,13 @@ export async function submitDrillReview(
         let liveState = 0, liveStability = 0, liveDifficulty = 0, liveRetrievability = 0, liveElapsedDays = 0;
         try {
           const existingProgress = await prisma.userProgress.findUnique({
-            where: { userId_conditionId: { userId, conditionId: question.conditionId! } },
+            where: {
+              userId_conditionId_progressContext: {
+                userId,
+                conditionId: question.conditionId,
+                progressContext: DEFAULT_PROGRESS_CONTEXT,
+              },
+            },
           });
           if (existingProgress?.fsrsCard) {
             const card = existingProgress.fsrsCard as Record<string, unknown>;
@@ -923,7 +931,7 @@ export async function submitDrillReview(
             grade_continuous: 1.0,
             rawGrade: 1.0,
             effectiveGrade: 1.0,
-            behavioralDeltas: null, // No behavioral modulation for rapid guesses
+            behavioralDeltas: Prisma.JsonNull, // No behavioral modulation for rapid guesses
             state: liveState,
             stability: liveStability,
             difficulty: liveDifficulty,
@@ -974,9 +982,10 @@ export async function submitDrillReview(
         const fsrs = fsrsParams ? new FSRS(fsrsParams) : new FSRS();
         const existingProgress = await prisma.userProgress.findUnique({
           where: {
-            userId_conditionId: {
+            userId_conditionId_progressContext: {
               userId,
               conditionId: question.conditionId,
+              progressContext: DEFAULT_PROGRESS_CONTEXT,
             },
           },
         });
@@ -1088,7 +1097,7 @@ export async function submitDrillReview(
             p.correctConditionId === question.conditionId
               ? p.selectedConditionId
               : p.correctConditionId
-          );
+          ).filter((conditionId): conditionId is string => conditionId != null);
 
           // Build session review history from recent ReviewLogs in this session
           // Uses session_id from telemetry if available, otherwise last 30 min of reviews
@@ -1361,7 +1370,9 @@ export async function submitDrillReview(
               grade_continuous: gradeContinuous,
               rawGrade: gradeModulationResult?.rawGrade ?? gradeContinuous,
               effectiveGrade: gradeModulationResult?.effectiveGrade ?? gradeContinuous,
-              behavioralDeltas: gradeModulationResult?.deltas ?? null,
+              behavioralDeltas: gradeModulationResult?.deltas
+                ? (gradeModulationResult.deltas as Prisma.InputJsonValue)
+                : Prisma.JsonNull,
               state: currentCard.state,
               stability: currentCard.stability,
               difficulty: currentCard.difficulty,
@@ -1471,16 +1482,18 @@ export async function submitDrillReview(
           const taskType = getTaskTypeFromContent(qText) || 'diagnosis';
           await prisma.userTopicProgress.upsert({
             where: {
-              userId_conditionId_taskType: {
+              userId_conditionId_taskType_progressContext: {
                 userId,
                 conditionId: question.conditionId,
                 taskType,
+                progressContext: DEFAULT_PROGRESS_CONTEXT,
               },
             },
             create: {
               userId,
               conditionId: question.conditionId,
               taskType,
+              progressContext: DEFAULT_PROGRESS_CONTEXT,
               stability: updatedCard.stability,
               difficulty: updatedCard.difficulty,
               state: updatedCard.state,
@@ -1488,6 +1501,8 @@ export async function submitDrillReview(
               lapses: updatedCard.lapses,
               lastReviewDate: new Date(),
               nextReviewDate: clampedNextDue,
+              variantsUsed: [],
+              updatedAt: new Date(),
             },
             update: {
               stability: updatedCard.stability,
@@ -1512,12 +1527,17 @@ export async function submitDrillReview(
         try {
           await prisma.card.upsert({
             where: {
-              userId_questionId: { userId, questionId },
+              userId_questionId_progressContext: {
+                userId,
+                questionId,
+                progressContext: DEFAULT_PROGRESS_CONTEXT,
+              },
             },
             create: {
               id: `${userId}_${questionId}`,
               userId,
               questionId,
+              progressContext: DEFAULT_PROGRESS_CONTEXT,
               due: clampedNextDue,
               stability: updatedCard.stability,
               difficulty: updatedCard.difficulty,
@@ -1527,6 +1547,7 @@ export async function submitDrillReview(
               lapses: updatedCard.lapses,
               state: updatedCard.state,
               last_review: new Date(),
+              updatedAt: new Date(),
             },
             update: {
               due: clampedNextDue,
@@ -1689,9 +1710,9 @@ export async function submitDrillReview(
       const edges = await prisma.graphEdge.findMany({
         where: {
           OR: [{ sourceId: question.conditionId }, { targetId: question.conditionId }],
-          type: 'SEMANTIC',
+          edgeType: 'SEMANTIC',
         },
-        select: { sourceId: true, targetId: true, weight: true, type: true },
+        select: { sourceId: true, targetId: true, weight: true, edgeType: true },
       });
 
       if (edges.length > 0) {
@@ -1705,7 +1726,7 @@ export async function submitDrillReview(
         const reviewResult = {
           conceptId: question.conditionId!,
           grade: isCorrect ? 1 : 0,
-          isSuccess: isCorrect,
+          stability: updatedCard?.stability ?? 1,
         };
 
         fireCredits = fireModule.computeCredits(reviewResult, prereqEdges)
@@ -1770,7 +1791,7 @@ export async function submitDrillReview(
 async function updateUserMedianRtAsync(
   prisma: PrismaClient,
   userId: string,
-  logger?: { warn?: (...args: unknown[]) => void; debug?: (...args: unknown[]) => void }
+  logger?: Pick<DrillReviewLogger, 'warn' | 'debug'>
 ): Promise<void> {
   const { computeMedianRt, MAX_RT_SAMPLE_WINDOW } = await import('./userRtBaselineService');
 

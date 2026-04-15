@@ -11,9 +11,11 @@
  */
 
 import { logger } from "@/lib/simple-logger";
+import type { TelemetryData } from '@/types/telemetry';
 import { offlineStore, isIndexedDBAvailable } from './offlineStore';
 
 const SCOPE = 'SyncManager';
+const syncLog = logger.scope(SCOPE);
 
 // ============================================================================
 // TYPES
@@ -56,14 +58,14 @@ export interface OfflinePearlAction {
 export interface OfflineReview {
   id: string;
   questionId: string;
-  selectedAnswer: number;
+  selectedAnswer: string | number;
   timeSpentMs: number;
   timeToFirstClick?: number;
   answerSwitches?: number;
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  telemetry?: Record<string, unknown>;
+  telemetry?: TelemetryData | Record<string, unknown>;
   sessionType?: string;
   timestamp: number;
   synced: boolean;
@@ -148,7 +150,7 @@ class SyncManager {
       try {
         return await this.tokenProvider();
       } catch (err) {
-        logger.warn(SCOPE, 'Token provider failed, proceeding without auth', err);
+        syncLog.warn('Token provider failed, proceeding without auth', { error: err });
         return null;
       }
     }
@@ -162,7 +164,7 @@ class SyncManager {
   private handleOnline(): void {
     this.emit('online', this.getStatus());
     // Automatically sync when coming online
-    this.syncAll().catch((err) => logger.error(SCOPE, 'Auto-sync failed', err));
+    this.syncAll().catch((err) => syncLog.error('Auto-sync failed', { error: err }));
   }
 
   private handleOffline(): void {
@@ -241,7 +243,7 @@ class SyncManager {
         this.setLastSyncError(message);
         this.emit('sync-error', this.getStatus());
         this.scheduleRetry();
-        logger.error(SCOPE, 'Immediate sync failed', err);
+        syncLog.error('Immediate sync failed', { error: err });
       });
     } else {
       // Register Background Sync so the SW retries when connectivity returns
@@ -291,7 +293,7 @@ class SyncManager {
     // Try immediate sync if online
     if (this.isOnline()) {
       this.syncPearlActions().catch((err) =>
-        logger.error(SCOPE, 'Immediate sync failed (pearls)', err)
+        syncLog.error('Immediate sync failed (pearls)', { error: err })
       );
     }
 
@@ -348,7 +350,7 @@ class SyncManager {
         this.setLastSyncError(message);
         this.emit('sync-error', this.getStatus());
         this.scheduleRetry();
-        logger.error(SCOPE, 'Immediate sync failed (reviews)', err);
+        syncLog.error('Immediate sync failed (reviews)', { error: err });
       });
     } else {
       // Register Background Sync so the SW retries when connectivity returns
@@ -379,12 +381,12 @@ class SyncManager {
 
   public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
     if (this.isSyncing) {
-      logger.debug(SCOPE, 'Sync already in progress');
+      syncLog.debug('Sync already in progress');
       return { answers: 0, pearls: 0, reviews: 0 };
     }
 
     if (!this.isOnline()) {
-      logger.debug(SCOPE, 'Offline, skipping sync');
+      syncLog.debug('Offline, skipping sync');
       return { answers: 0, pearls: 0, reviews: 0 };
     }
     
@@ -504,7 +506,7 @@ class SyncManager {
     const filtered = answers.filter((a) => !a.synced || a.timestamp > cutoff);
     this.saveOfflineAnswers(filtered);
 
-    logger.debug(SCOPE, `Synced ${synced}/${pending.length} answers`);
+    syncLog.debug(`Synced ${synced}/${pending.length} answers`);
     return synced;
   }
 
@@ -566,7 +568,7 @@ class SyncManager {
     const filtered = actions.filter((a) => !a.synced || a.timestamp > cutoff);
     this.saveOfflinePearlActions(filtered);
 
-    logger.debug(SCOPE, `Synced ${synced}/${pending.length} pearl actions`);
+    syncLog.debug(`Synced ${synced}/${pending.length} pearl actions`);
     return synced;
   }
 
@@ -675,7 +677,7 @@ class SyncManager {
     const filtered = reviews.filter((r) => !r.synced || r.timestamp > cutoff);
     this.saveOfflineReviews(filtered);
 
-    logger.debug(SCOPE, `Synced ${synced}/${pending.length} reviews`);
+    syncLog.debug(`Synced ${synced}/${pending.length} reviews`);
     return synced;
   }
 
@@ -696,7 +698,7 @@ class SyncManager {
 
     this.syncRetryTimeout = setTimeout(() => {
       if (this.isOnline()) {
-        this.syncAll().catch((err) => logger.warn(SCOPE, 'Background sync failed', err));
+        this.syncAll().catch((err) => syncLog.warn('Background sync failed', { error: err }));
       }
     }, retryDelay);
   }
@@ -748,9 +750,9 @@ class SyncManager {
       const target = offlineStore[store];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (target as any).add(record).catch((err: unknown) => {
-        logger.warn(SCOPE, `IndexedDB write failed for ${store}`, err);
+        syncLog.warn(`IndexedDB write failed for ${store}`, { error: err });
       });
-    }).catch(() => { logger.debug(SCOPE, "IndexedDB not available for persist"); });
+    }).catch(() => { syncLog.debug('IndexedDB not available for persist'); });
   }
 
   /**
@@ -765,13 +767,16 @@ class SyncManager {
         if ('sync' in reg) {
           return (reg as unknown as { sync: { register: (tag: string) => Promise<void> } }).sync.register(tag);
         }
+        return undefined;
       })
       .then(() => {
-        logger.debug(SCOPE, `Background sync registered: ${tag}`);
+        syncLog.debug(`Background sync registered: ${tag}`);
       })
       .catch((err) => {
         // Expected on iOS/Firefox — they don't support Background Sync
-        logger.debug(SCOPE, `Background sync registration failed (expected on some browsers): ${tag}`, err);
+        syncLog.debug(`Background sync registration failed (expected on some browsers): ${tag}`, {
+          error: err,
+        });
       });
   }
 
@@ -789,12 +794,12 @@ class SyncManager {
     // Also clear IndexedDB stores
     isIndexedDBAvailable().then((available) => {
       if (available) {
-        offlineStore.answers.clear().catch((e) => logger.debug(SCOPE, "IndexedDB answers clear skipped", e));
-        offlineStore.pearlActions.clear().catch((e) => logger.debug(SCOPE, "IndexedDB pearlActions clear skipped", e));
-        offlineStore.reviews.clear().catch((e) => logger.debug(SCOPE, "IndexedDB reviews clear skipped", e));
+        offlineStore.answers.clear().catch((e) => syncLog.debug('IndexedDB answers clear skipped', { error: e }));
+        offlineStore.pearlActions.clear().catch((e) => syncLog.debug('IndexedDB pearlActions clear skipped', { error: e }));
+        offlineStore.reviews.clear().catch((e) => syncLog.debug('IndexedDB reviews clear skipped', { error: e }));
       }
-    }).catch(() => { logger.debug(SCOPE, "IndexedDB not available for clear"); });
-    logger.debug(SCOPE, 'Cleared all pending items');
+    }).catch(() => { syncLog.debug('IndexedDB not available for clear'); });
+    syncLog.debug('Cleared all pending items');
   }
 }
 

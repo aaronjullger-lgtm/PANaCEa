@@ -4,6 +4,8 @@
 
 import { logger } from '@/lib/logger';
 
+const normalizerLogger = logger.scope('questionDataNormalizer');
+
 /**
  * Normalize question options to a string array format.
  * Handles multiple formats:
@@ -48,9 +50,9 @@ export function normalizeOptionsToArray(options: unknown): string[] {
       const parsed = JSON.parse(options);
       return normalizeOptionsToArray(parsed);
     } catch (err) {
-      logger.warn('questionDataNormalizer', 'Failed to parse options string as JSON — returning empty array', {
+      normalizerLogger.warn('Failed to parse options string as JSON — returning empty array', {
         options: options.slice(0, 200),
-        err,
+        error: err,
       });
       return [];
     }

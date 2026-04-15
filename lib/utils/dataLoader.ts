@@ -4,6 +4,7 @@ import { logger } from "@/lib/simple-logger";
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();
+const dataLoaderLogger = logger.scope('dataLoader');
 
 /** Log "backend not running" once per session to avoid console spam when API is down. */
 let backendDownWarned = false;
@@ -104,10 +105,9 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = (await parseJsonOrThrow(response)) as Record<string, unknown>;
       dataCache.set(cacheKey, data);
-      logger.debug(
-        'dataLoader',
-        `Loaded condition content (${Object.keys(data).length} conditions)`
-      );
+      dataLoaderLogger.debug('Loaded condition content', {
+        conditions: Object.keys(data).length,
+      });
       return data;
     }
 
@@ -115,7 +115,7 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     const contentType = response.headers.get('content-type');
 
     if (response.status === 429) {
-      logger.warn('dataLoader', 'Rate limited (429) for /api/content/all – retry later');
+      dataLoaderLogger.warn('Rate limited (429) for /api/content/all – retry later');
       warnBackendDownOnce();
     } else if (!contentType?.includes('application/json')) {
       warnBackendDownOnce();
@@ -124,22 +124,23 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
         const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
           message?: string;
         };
-        logger.warn(
-          'dataLoader',
-          'Database unavailable',
-          errorData?.message || 'Cannot connect to database'
-        );
+        dataLoaderLogger.warn('Database unavailable', {
+          message: errorData?.message || 'Cannot connect to database',
+        });
       } catch {
-        logger.warn('dataLoader', 'Database unavailable (503)');
+        dataLoaderLogger.warn('Database unavailable (503)');
       }
     } else {
-      logger.warn('dataLoader', `Content API returned status ${response.status}`, apiUrl);
+      dataLoaderLogger.warn('Content API returned non-OK status', {
+        status: response.status,
+        apiUrl,
+      });
     }
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
       warnBackendDownOnce();
     } else {
-      logger.error('dataLoader', `Failed to load condition content (${apiUrl})`, error);
+      dataLoaderLogger.error('Failed to load condition content', { error, apiUrl });
     }
   }
 
@@ -189,7 +190,7 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
         : ((responseData as { data?: unknown }).data ?? responseData);
       const cases = Array.isArray(data) ? data : [];
       dataCache.set(cacheKey, cases);
-      logger.debug('dataLoader', `Loaded ${cases.length} lab cases from database`);
+      dataLoaderLogger.debug('Loaded lab cases from database', { count: cases.length });
       return cases;
     }
 

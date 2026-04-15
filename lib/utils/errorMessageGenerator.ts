@@ -5,6 +5,7 @@
  * Maps technical errors to human-readable messages with clear next steps.
  */
 
+import * as React from 'react';
 import { toast } from 'sonner';
 import { AppError, NetworkError, ValidationError, AuthenticationError } from '@/lib/errors/types';
 
@@ -32,7 +33,19 @@ export interface ActionableErrorMessage {
 /**
  * Common error patterns and their user-friendly mappings
  */
-const errorPatterns = [
+type ErrorPattern = {
+  pattern: RegExp;
+  category: string;
+  title: string;
+  description: string;
+  actions: ActionableErrorMessage['actions'];
+  showRetry: boolean;
+  showHelp: boolean;
+  helpUrl?: string;
+  severity: ActionableErrorMessage['severity'];
+};
+
+const errorPatterns: ErrorPattern[] = [
   // Network errors
   {
     pattern: /network.*error|failed.*fetch|offline|connection.*lost/i,
@@ -339,12 +352,13 @@ export function generateErrorMessage(
   const errorString = errorMessage.toLowerCase();
 
   // Find matching pattern
+  const fallbackPattern = errorPatterns[errorPatterns.length - 1]!;
   const matchedPattern =
     errorPatterns.find(
       (pattern) =>
         pattern.pattern.test(errorString) ||
         (error instanceof Error && pattern.pattern.test(error.name.toLowerCase()))
-    ) || errorPatterns[errorPatterns.length - 1]; // Default fallback
+    ) ?? fallbackPattern; // Default fallback
 
   // Customize based on context
   let title = matchedPattern.title;
@@ -470,7 +484,7 @@ export function useErrorMessaging() {
       setCurrentError(errorMessage);
 
       // Log to console in development
-      if (import.meta.env.DEV) {
+      if ((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV) {
         console.error('User-facing error:', errorMessage.title, error);
       }
 

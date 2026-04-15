@@ -1,6 +1,7 @@
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'OfflineSyncService';
+const offlineSyncLogger = logger.scope(LOG_SCOPE);
 
 interface QueuedRequest {
   id: string;
@@ -53,7 +54,7 @@ export class OfflineSyncService {
         this.queue = JSON.parse(storedQueue);
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, 'Failed to load offline queue', error);
+      offlineSyncLogger.error('Failed to load offline queue', { error });
     }
   }
 
@@ -72,7 +73,7 @@ export class OfflineSyncService {
         globalStorage.setItem(QUEUE_KEY, serialized);
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, 'Failed to persist offline queue', error);
+      offlineSyncLogger.error('Failed to persist offline queue', { error });
     }
   }
 
@@ -101,7 +102,10 @@ export class OfflineSyncService {
       try {
         await fetch(request.url, request.options);
       } catch (error) {
-        logger.error(LOG_SCOPE, `Failed to process queued request, re-queuing: ${request.url}`, error);
+        offlineSyncLogger.error('Failed to process queued request, re-queuing', {
+          error,
+          url: request.url,
+        });
         this.queue.push(request);
         this.saveQueue();
       }

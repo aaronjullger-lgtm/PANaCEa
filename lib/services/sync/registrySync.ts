@@ -5,6 +5,7 @@ import { prisma } from '../../prisma';
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'RegistrySync';
+const registrySyncLogger = logger.scope(LOG_SCOPE);
 
 export interface SyncStats {
   total: number;
@@ -75,7 +76,11 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
         stats.created += 1;
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, `Condition sync failed for ${row.condition} (${row.system})`, error);
+      registrySyncLogger.error('Condition sync failed', {
+        error,
+        condition: row.condition,
+        system: row.system,
+      });
       stats.errors += 1;
     }
   }
@@ -130,7 +135,10 @@ export async function syncDrugs(client: PrismaClient = prisma): Promise<SyncStat
         stats.updated += 1;
       }
     } catch (error) {
-      logger.error(LOG_SCOPE, `Drug sync failed for ${meta.genericName}`, error);
+      registrySyncLogger.error('Drug sync failed', {
+        error,
+        genericName: meta.genericName,
+      });
       stats.errors += 1;
     }
   }

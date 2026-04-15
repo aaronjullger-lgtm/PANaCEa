@@ -4,6 +4,7 @@ import { logger } from '../../logger';
 import type { ABAssignmentMap } from '../../middleware/abTestMiddleware';
 
 const LOG_SCOPE = 'QuestionGenerationService';
+const generationLogger = logger.scope(LOG_SCOPE);
 
 export interface GroundingSource {
   uri: string;
@@ -108,7 +109,7 @@ Return ONLY valid JSON (no markdown):
 
     try {
       const strategy = this.resolveGenerationStrategy(abAssignments);
-      logger.debug(LOG_SCOPE, 'Generation strategy selected', { strategy });
+      generationLogger.debug('Generation strategy selected', { strategy });
 
       let result: any;
       let response: any;
@@ -147,13 +148,13 @@ Return ONLY valid JSON (no markdown):
       return parsed;
     } catch (error) {
       // Fallback to ungrounded model if search grounding fails
-      logger.warn(LOG_SCOPE, 'Grounded generation failed, falling back to standard', error);
+      generationLogger.warn('Grounded generation failed, falling back to standard', { error });
       try {
         const result = await this.model.generateContent(prompt);
         const text = result.response.text();
         return this.parseResponse(text);
       } catch (fallbackError) {
-        logger.error(LOG_SCOPE, 'Generation failed completely', fallbackError);
+        generationLogger.error('Generation failed completely', { error: fallbackError });
         return null;
       }
     }
@@ -233,7 +234,7 @@ Return ONLY valid JSON with the same structure as the input.`;
       jsonText = jsonText.trim();
       return JSON.parse(jsonText);
     } catch (error) {
-      logger.error(LOG_SCOPE, 'Failed to parse JSON', error);
+      generationLogger.error('Failed to parse JSON', { error });
       return null;
     }
   }

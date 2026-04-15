@@ -91,17 +91,24 @@ async function fetchNormalLabs(
       const links = await prisma.labConditionLink.findMany({
         where: { conditionId: context.conditionId },
         include: {
-          Lab: { select: { name: true, normalRange: true, unit: true, clinicalSignificance: true } },
+          LabTest: {
+            select: {
+              name: true,
+              conventionalRange: true,
+              units: true,
+              typicalUse: true,
+            },
+          },
         },
         take: 10,
       });
       return links
-        .filter(l => l.Lab)
+        .filter(l => l.LabTest)
         .map(l => ({
-          name: l.Lab.name,
-          normalRange: l.Lab.normalRange ?? '',
-          unit: l.Lab.unit ?? '',
-          clinicalSignificance: l.Lab.clinicalSignificance ?? undefined,
+          name: l.LabTest.name,
+          normalRange: l.LabTest.conventionalRange ?? '',
+          unit: l.LabTest.units ?? '',
+          clinicalSignificance: l.significance ?? l.expectedResult ?? l.LabTest.typicalUse ?? undefined,
         }));
     }
     return [];
@@ -137,12 +144,17 @@ async function fetchClinicalPearls(
   try {
     const pearls = await prisma.clinicalPearl.findMany({
       where: { conditionId: context.conditionId },
-      select: { content: true, source: true, Condition: { select: { name: true } } },
+      select: {
+        pearlText: true,
+        category: true,
+        system: true,
+        Condition: { select: { name: true } },
+      },
       take: 5,
     });
     return pearls.map(p => ({
-      content: p.content,
-      source: p.source ?? undefined,
+      content: p.pearlText,
+      source: p.category ?? p.system ?? undefined,
       conditionName: p.Condition?.name ?? undefined,
     }));
   } catch {
@@ -159,15 +171,15 @@ async function fetchDifferentialFeatures(
 
   try {
     const ddx = await prisma.differentialDiagnosis.findMany({
-      where: { conditionId: context.conditionId },
+      where: { primaryConditionId: context.conditionId },
       select: {
-        differentialName: true,
+        presentingComplaint: true,
         distinguishingFeatures: true,
       },
       take: 5,
     });
     return ddx.map(d => ({
-      conditionName: d.differentialName ?? 'Unknown',
+      conditionName: d.presentingComplaint,
       distinguishingFeatures: Array.isArray(d.distinguishingFeatures)
         ? d.distinguishingFeatures.map(String)
         : typeof d.distinguishingFeatures === 'string'

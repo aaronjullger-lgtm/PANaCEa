@@ -329,7 +329,7 @@ function blendWeights(
   // Renormalize to sum = 1.0
   if (total > 0) {
     for (const sys of Object.keys(result)) {
-      result[sys] /= total;
+      result[sys] = (result[sys] ?? 0) / total;
     }
   }
 
@@ -354,7 +354,7 @@ function gateSystems(
   // Renormalize
   if (total > 0) {
     for (const sys of Object.keys(result)) {
-      result[sys] /= total;
+      result[sys] = (result[sys] ?? 0) / total;
     }
   }
 

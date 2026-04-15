@@ -14,10 +14,10 @@ import { behavioralPayloadToTelemetryData, enrichTelemetryWithSessionPosition } 
 interface MicroMetrics {
   oscillations: number;
   vignetteRegressions: number;
-  selectionDriftMs: number;
+  selectionDriftMs: number | null;
   tremorScore: number;
   cursorEntropy: number;
-  inputMethod: string;
+  inputMethod: 'mouse' | 'touch';
 }
 
 export interface ScoreResult {
@@ -26,7 +26,7 @@ export interface ScoreResult {
   questionId: string;
   parTime: number;
   fsrsRating: number;
-  telemetryWithPosition: ReturnType<typeof enrichTelemetryWithSessionPosition>;
+  telemetryWithPosition: ReturnType<typeof enrichTelemetryWithSessionPosition> | undefined;
 }
 
 export function computeScore(params: {

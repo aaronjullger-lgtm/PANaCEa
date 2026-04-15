@@ -442,7 +442,7 @@ function getISOWeek(date: Date): string {
 
 /** Get the Monday start date for an ISO week string */
 function getWeekStartDate(isoWeek: string): string {
-  const [yearStr, weekStr] = isoWeek.split('-W');
+  const [yearStr = '1970', weekStr = '1'] = isoWeek.split('-W');
   const year = parseInt(yearStr, 10);
   const week = parseInt(weekStr, 10);
 
@@ -455,5 +455,5 @@ function getWeekStartDate(isoWeek: string): string {
   const targetMonday = new Date(mondayOfWeek1);
   targetMonday.setUTCDate(mondayOfWeek1.getUTCDate() + (week - 1) * 7);
 
-  return targetMonday.toISOString().split('T')[0];
+  return targetMonday.toISOString().split('T')[0] ?? targetMonday.toISOString();
 }

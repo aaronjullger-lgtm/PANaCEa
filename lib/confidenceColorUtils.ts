@@ -104,10 +104,11 @@ export function getConfidenceLabel(confidence: number): 'Low' | 'Medium' | 'High
 function hexToRgb(hex: string): [number, number, number] {
   const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
   if (!m) throw new Error(`Invalid hex color: ${hex}`);
+  const [, r = '00', g = '00', b = '00'] = m;
   return [
-    parseInt(m[1], 16),
-    parseInt(m[2], 16),
-    parseInt(m[3], 16),
+    parseInt(r, 16),
+    parseInt(g, 16),
+    parseInt(b, 16),
   ];
 }
 

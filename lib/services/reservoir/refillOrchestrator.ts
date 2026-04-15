@@ -19,10 +19,15 @@ import { RESERVOIR_POLICY, type RefillReason } from './reservoirPolicy';
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'RefillOrchestrator';
+const refillOrchestratorLogger = logger.scope(LOG_SCOPE);
 
 type PrismaClientLike = {
   backgroundJob: any;
   studentReservoirItem: any;
+  $queryRaw: any;
+  $queryRawUnsafe: any;
+  $transaction: any;
+  $executeRawUnsafe: any;
   [key: string]: any;
 };
 
@@ -111,7 +116,10 @@ export async function requestRefill(
 
     return { jobId: job.id, skipped: false };
   } catch (err: any) {
-    logger.error(LOG_SCOPE, `requestRefill failed for user=${userId}`, err);
+    refillOrchestratorLogger.error('requestRefill failed', {
+      error: err,
+      userId,
+    });
     return { jobId: null, skipped: true, reason: `error: ${err.message}` };
   }
 }

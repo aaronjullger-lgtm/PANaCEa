@@ -265,8 +265,9 @@ export function extractJSON(raw: string): unknown {
 
   // Strategy 1: Extract from ```json ... ``` fences (anywhere in the response)
   const fenceMatch = trimmed.match(/```json?\s*\n?([\s\S]*?)\n?\s*```/i);
-  if (fenceMatch) {
-    return JSON.parse(fenceMatch[1].trim());
+  const fencedJson = fenceMatch?.[1];
+  if (fencedJson) {
+    return JSON.parse(fencedJson.trim());
   }
 
   // Strategy 2: Find the first top-level { } block via brace counting
@@ -363,7 +364,7 @@ export function getChainSummary(chain: CausalChain): string {
   if (chain.links.length === 0) return chain.clinicalCorrelation;
 
   const entities = chain.links.map((l) => l.entity);
-  const lastConsequence = chain.links[chain.links.length - 1].consequence;
+  const lastConsequence = chain.links[chain.links.length - 1]?.consequence;
 
-  return [...entities, lastConsequence].join(' → ');
+  return [...entities, lastConsequence].filter(Boolean).join(' → ');
 }

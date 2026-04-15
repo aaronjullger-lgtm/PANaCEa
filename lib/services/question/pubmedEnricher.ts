@@ -14,6 +14,7 @@
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'PubMed';
+const pubmedLogger = logger.scope(LOG_SCOPE);
 
 export interface PubMedCitation {
   pmid: string;
@@ -84,7 +85,7 @@ export async function enrichWithPubMed(
     });
 
     if (!searchRes.ok) {
-      logger.warn(LOG_SCOPE, `Search failed: ${searchRes.status}`);
+      pubmedLogger.warn(`Search failed: ${searchRes.status}`);
       return [];
     }
 
@@ -132,7 +133,7 @@ export async function enrichWithPubMed(
     });
 
     if (!summaryRes.ok) {
-      logger.warn(LOG_SCOPE, `Summary fetch failed: ${summaryRes.status}`);
+      pubmedLogger.warn(`Summary fetch failed: ${summaryRes.status}`);
       return [];
     }
 
@@ -153,15 +154,16 @@ export async function enrichWithPubMed(
       const authors = article.authors as Array<{ name: string }> | undefined;
       let authorStr = 'Unknown';
       if (authors && authors.length > 0) {
+        const firstAuthor = authors[0];
         authorStr = authors.length > 2
-          ? `${authors[0].name} et al.`
+          ? `${firstAuthor?.name ?? 'Unknown'} et al.`
           : authors.map((a: { name: string }) => a.name).join(', ');
       }
 
       // Parse year from pubdate or sortpubdate
       const pubdate: string = article.pubdate || article.sortpubdate || '';
       const yearMatch = pubdate.match(/(\d{4})/);
-      const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+      const year = yearMatch?.[1] ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
 
       // Journal abbreviation
       const journal: string = article.source || article.fulljournalname || 'Unknown Journal';
@@ -179,7 +181,7 @@ export async function enrichWithPubMed(
     return citations.slice(0, maxResults);
   } catch (err) {
     // Non-fatal — questions generate without PubMed if this fails
-    logger.warn(LOG_SCOPE, 'Enrichment failed', err instanceof Error ? err.message : err);
+    pubmedLogger.warn('Enrichment failed', { error: err instanceof Error ? err.message : err });
     return [];
   }
 }

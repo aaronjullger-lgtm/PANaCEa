@@ -15,6 +15,7 @@
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'TrialEnricher';
+const trialLogger = logger.scope(LOG_SCOPE);
 
 export interface ClinicalTrialSummary {
   nctId: string;
@@ -89,7 +90,7 @@ export async function fetchRelevantTrials(
     });
 
     if (!response.ok) {
-      logger.warn(LOG_SCOPE, `ClinicalTrials.gov API returned ${response.status}`);
+      trialLogger.warn(`ClinicalTrials.gov API returned ${response.status}`);
       return [];
     }
 
@@ -122,7 +123,7 @@ export async function fetchRelevantTrials(
     return trials;
   } catch (err) {
     // Non-critical: silently fail — don't disrupt the explanation panel
-    logger.warn(LOG_SCOPE, 'Failed to fetch trials', err);
+    trialLogger.warn('Failed to fetch trials', { error: err });
     return [];
   }
 }

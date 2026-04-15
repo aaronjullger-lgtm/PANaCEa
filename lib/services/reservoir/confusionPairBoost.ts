@@ -25,6 +25,7 @@
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'ConfusionPairBoost';
+const confusionPairBoostLogger = logger.scope(LOG_SCOPE);
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -103,7 +104,9 @@ export async function loadUserConfusionPairs(
     }));
   } catch (error) {
     // If ConfusionPair table doesn't exist yet or query fails, return empty
-    logger.error(LOG_SCOPE, 'Failed to load pairs', error instanceof Error ? error.message : error);
+    confusionPairBoostLogger.error('Failed to load pairs', {
+      error: error instanceof Error ? error.message : error,
+    });
     return [];
   }
 }
