@@ -379,7 +379,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   };
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="launch">
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
@@ -387,11 +387,12 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             badgeTone: 'gold',
             title: 'Practice that adapts to your cognitive load.',
             subtitle:
-              'Move cleanly between adaptive question sets, clinical simulations, and specialty drills without losing the thread of what needs work next.',
+              'Search by workload, launch the right mode quickly, and keep the full practice library visible without another dashboard detour.',
             status:
               weakestSystem && hasResidencyData
                 ? `Weakest live signal: ${weakestSystem}`
-                : 'Adaptive library ready',
+                : 'Search and launch by workload',
+            actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
             primaryAction: weakestSystem && onNavigateToDrillWithSystem
@@ -414,49 +415,40 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.04}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <WorkspaceMetricCard
-            label="Visible modes"
-            value={totalVisibleModes}
-            detail="Modes matching your current search and timing filters."
-            icon={Layers}
-          />
-          <WorkspaceMetricCard
-            label="Recent focus"
-            value={recentModes.length}
-            detail="Recently reopened drills, ready to resume."
-            accent="#728ba6"
-            icon={Clock}
-          />
-          <WorkspaceMetricCard
-            label="Weakest system"
-            value={weakestSystem ?? 'Calibrating'}
-            detail={
-              weakestSystem
-                ? 'Pulled from Rolling 360 performance signals.'
-                : 'Answer a few more questions to unlock targeting.'
-            }
-            accent="#9a7f9a"
-            icon={TrendingUp}
-          />
-          <WorkspaceMetricCard
-            label="Tracked systems"
-            value={systemsWithData.length}
-            detail="Systems with enough recent data to shape recommendations."
-            accent="#7a8f6e"
-            icon={BarChart3}
-          />
-        </div>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.08}>
         <WorkspaceFilterBar>
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-1.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  Mode search
+                </p>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Filter by time first, then search by system, modality, or drill style.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(TIME_FILTER_LABELS) as Array<keyof typeof TIME_FILTER_LABELS>).map(
+                  (filter) => (
+                    <Button
+                      key={filter}
+                      type="button"
+                      size="sm"
+                      variant={timeFilter === filter ? 'primary' : 'secondary'}
+                      onClick={() => setTimeFilter(filter)}
+                      className="rounded-full"
+                    >
+                      {TIME_FILTER_LABELS[filter]}
+                    </Button>
+                  )
+                )}
+              </div>
+            </div>
+
             <label className="relative block">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder="Search for ECG, pharmacology, ventilator, stroke..."
+                placeholder="Search ECG, pharmacology, ventilator, stroke..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full rounded-2xl border py-3.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
@@ -477,42 +469,64 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                 </button>
               ) : null}
             </label>
-
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(TIME_FILTER_LABELS) as Array<keyof typeof TIME_FILTER_LABELS>).map(
-                (filter) => (
-                  <Button
-                    key={filter}
-                    type="button"
-                    size="sm"
-                    variant={timeFilter === filter ? 'primary' : 'secondary'}
-                    onClick={() => setTimeFilter(filter)}
-                    className="rounded-full"
-                  >
-                    {TIME_FILTER_LABELS[filter]}
-                  </Button>
-                )
-              )}
-            </div>
           </div>
         </WorkspaceFilterBar>
       </WorkspaceReveal>
 
+      <WorkspaceReveal delay={0.08}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <WorkspaceMetricCard
+            label="Best next start"
+            value={timeFilter === 'quick' ? 'Quick wins' : timeFilter === 'medium' ? 'Focused blocks' : timeFilter === 'long' ? 'Deep work' : 'All windows'}
+            detail={
+              searchQuery
+                ? `${totalVisibleModes} matching mode${totalVisibleModes === 1 ? '' : 's'} for "${searchQuery}".`
+                : `${totalVisibleModes} visible mode${totalVisibleModes === 1 ? '' : 's'} in the current workload window.`
+            }
+            icon={Layers}
+            variant="guidance"
+          />
+          <WorkspaceMetricCard
+            label="Weakest system"
+            value={weakestSystem ?? 'Calibrating'}
+            detail={
+              weakestSystem
+                ? 'Pulled from Rolling 360 performance signals.'
+                : 'Answer a few more questions to unlock targeting.'
+            }
+            accent="#9a7f9a"
+            icon={TrendingUp}
+            variant={weakestSystem ? 'progress' : 'guidance'}
+            action={
+              weakestSystem && onNavigateToDrillWithSystem ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onNavigateToDrillWithSystem('system_drill', weakestSystem)}
+                >
+                  Target system
+                </Button>
+              ) : undefined
+            }
+          />
+        </div>
+      </WorkspaceReveal>
+
       <WorkspaceReveal delay={0.12}>
-        <WorkspaceHeroStrip>
+        <WorkspaceHeroStrip tone="launch">
           <WorkspaceSplit className="items-start">
             <div className="space-y-6">
               <div className="space-y-3">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
-                  Practice flow
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
+                  Start now
                 </p>
                 <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)] sm:text-4xl">
-                  Start in the lane that matches your energy, then escalate with intent.
+                  Search first, launch fast, then escalate into harder modes on purpose.
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  Question practice keeps recall sharp, simulations test clinical judgment, and
-                  specialty drills let you pressure-test specific systems without leaving the same
-                  adaptive workspace.
+                  Use the searchable library when you know what you need. Use the adaptive route
+                  when you want the platform to choose the next productive rep for you.
                 </p>
               </div>
 
@@ -521,6 +535,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                   <WorkspaceSurface
                     key={mode.id}
                     accent={['#c4b78a', '#9a7f9a', '#728ba6'][index] ?? '#c4b78a'}
+                    role="action"
                     className="h-full"
                   >
                     <button
@@ -528,7 +543,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                       onClick={() => handleModeSelect(mode)}
                       className="flex h-full w-full flex-col items-start gap-3 text-left"
                     >
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
                         Recommended
                       </p>
                       <div>
@@ -545,10 +560,10 @@ export const PracticePage: React.FC<PracticePageProps> = ({
               </div>
             </div>
 
-            <WorkspaceSurface accent="#728ba6" className="space-y-4">
+            <WorkspaceSurface accent="#728ba6" role="reference" className="space-y-4">
               <div className="space-y-2">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Session signals
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                  Workload cues
                 </p>
                 <h3 className="text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
                   Choose the right difficulty window now.

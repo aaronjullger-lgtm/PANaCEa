@@ -102,6 +102,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   className={headerActionClass}
                   style={{ borderColor: chromeBorder }}
                   aria-label="Admin Dashboard"
+                  title="Admin dashboard"
                 >
                   <Shield className="w-5 h-5" />
                 </Link>
@@ -113,6 +114,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   className={headerActionClass}
                   style={{ borderColor: chromeBorder }}
                   aria-label="Settings and Stats"
+                  title="Settings and stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -127,6 +129,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   className={headerActionClass}
                   style={{ borderColor: chromeBorder }}
                   aria-label="Help and getting started"
+                  title="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />
                 </button>

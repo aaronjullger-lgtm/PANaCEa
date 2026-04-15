@@ -80,7 +80,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
   );
 
   return (
-    <WorkspacePage density="wide">
+    <WorkspacePage density="wide" mode="analytics">
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
@@ -88,11 +88,12 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             badgeTone: 'steel',
             title: 'Progress with narrative, not noise.',
             subtitle:
-              'See what is actually improving, what is decaying, and which next actions will move readiness faster than another generic question block.',
+              'See what is improving, what is slipping, and what to do next without decoding a full analytics dashboard first.',
             status:
               dueCount > 0
                 ? `${dueCount} review${dueCount === 1 ? '' : 's'} waiting`
                 : 'Review queue under control',
+            actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
             primaryAction: {
@@ -110,62 +111,36 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       </WorkspaceReveal>
 
       <WorkspaceReveal delay={0.04}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <WorkspaceMetricCard
-            label="Recent accuracy"
-            value={accuracy !== null ? `${accuracy}%` : '—'}
-            detail="Calculated from your most recent 100 recorded responses."
-            icon={TrendingUp}
-          />
-          <WorkspaceMetricCard
-            label="Due review"
-            value={dueCount}
-            detail="Questions that should be surfaced now for retention."
-            accent="#c4b78a"
-            icon={CalendarClock}
-          />
-          <WorkspaceMetricCard
-            label="Recorded answers"
-            value={performanceData.length}
-            detail="Responses currently available for analytics and profile modeling."
-            accent="#9a7f9a"
-            icon={BarChart3}
-          />
-          <WorkspaceMetricCard
-            label="Study streak"
-            value={streak}
-            detail="Consecutive study days based on your recorded activity."
-            accent="#7a8f6e"
-            icon={Sparkles}
-          />
-        </div>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.08}>
-        <WorkspaceSurface accent="#728ba6">
+        <WorkspaceSurface accent="#728ba6" role="hero">
           <WorkspaceSplit className="items-start">
             <div className="space-y-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-secondary)]">
-                Guided summary
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
+                Read this first
               </p>
               <h2 className="text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                Start with the headline signals, then drill down only where the story changes.
+                {dueCount > 0
+                  ? 'Your next gain is in the review queue, not another random block.'
+                  : accuracy !== null
+                    ? 'Your readiness story is visible. Drill deeper only where it changes.'
+                    : 'You need a little more recent data before the analytics become directional.'}
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                This page prioritizes clear trends and readiness cues first. Deep charting and
-                profile analysis still live below, but the first screen now tells you where to act
-                next instead of asking you to interpret every widget at once.
+                {dueCount > 0
+                  ? `There ${dueCount === 1 ? 'is' : 'are'} ${dueCount} due review${dueCount === 1 ? '' : 's'} waiting right now. Clear those first so the decay signal does not distort everything else on this page.`
+                  : accuracy !== null
+                    ? `Recent accuracy is ${accuracy}% across your last 100 recorded responses${streak > 0 ? ` with ${streak} study day${streak === 1 ? '' : 's'} active.` : '.'}`
+                    : 'Complete a few more study reps before treating any single chart as meaningful.'}
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="workspace-subsurface rounded-[1.25rem] p-4">
-                <p className="text-sm font-medium text-[var(--color-text-primary)]">
+            <WorkspaceSurface accent="#9a7f9a" role="reference" className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Reading mode
                 </p>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  Toggle advanced profile views only when you need detail. The default view stays
-                  optimized for day-to-day study decisions.
+                <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                  Keep the default view focused on day-to-day decisions. Turn on advanced profile
+                  panels only when you need a deeper diagnostic read.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -179,12 +154,67 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   {showAdvancedAnalytics ? 'Advanced view on' : 'Switch to advanced'}
                 </Button>
               </div>
-            </div>
+            </WorkspaceSurface>
           </WorkspaceSplit>
         </WorkspaceSurface>
       </WorkspaceReveal>
 
+      <WorkspaceReveal delay={0.08}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <WorkspaceMetricCard
+            label="Due review"
+            value={dueCount}
+            detail="Questions that should be surfaced now for retention."
+            accent="#c4b78a"
+            icon={CalendarClock}
+            variant={dueCount > 0 ? 'progress' : 'guidance'}
+          />
+          <WorkspaceMetricCard
+            label="Readiness signal"
+            value={
+              accuracy !== null
+                ? `${accuracy}% accuracy`
+                : performanceData.length > 0
+                  ? `${performanceData.length} recorded`
+                  : 'Still calibrating'
+            }
+            detail={
+              accuracy !== null
+                ? `Calculated from your most recent 100 responses${streak > 0 ? ` with ${streak} day${streak === 1 ? '' : 's'} active.` : '.'}`
+                : 'You need a few more recent responses before the summary turns into a stable signal.'
+            }
+            accent="#728ba6"
+            icon={accuracy !== null ? TrendingUp : BarChart3}
+            variant={accuracy !== null ? 'progress' : 'guidance'}
+          />
+        </div>
+      </WorkspaceReveal>
+
       <WorkspaceReveal delay={0.12}>
+        <WorkspaceSurface accent="#728ba6" role="subtle">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Keep the first screen directional.
+              </p>
+              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+                Deep analytics still live below. The default view should answer what changed and
+                where to act next before it asks you to interpret every chart.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={showAdvancedAnalytics ? 'primary' : 'outline'}
+              onClick={() => setShowAdvancedAnalytics((value) => !value)}
+            >
+              {showAdvancedAnalytics ? 'Showing advanced' : 'Show advanced'}
+            </Button>
+          </div>
+        </WorkspaceSurface>
+      </WorkspaceReveal>
+
+      <WorkspaceReveal delay={0.16}>
         <WorkspaceSection
           title="Your learning analytics"
           subtitle="Research-backed summary metrics translated into plain-language study signals."
@@ -206,7 +236,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         </WorkspaceSection>
       </WorkspaceReveal>
 
-      <WorkspaceReveal delay={0.16}>
+      <WorkspaceReveal delay={0.2}>
         <WorkspaceSection
           title="Review horizon"
           subtitle="See how much of your current review burden is already waiting in the next two weeks."
@@ -217,7 +247,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         </WorkspaceSection>
       </WorkspaceReveal>
 
-      <WorkspaceReveal delay={0.2}>
+      <WorkspaceReveal delay={0.24}>
         <WorkspaceSection
           title="Learning profile"
           subtitle="Keep the guided profile in front by default; switch into advanced mode only when you need a fuller diagnostic read."
@@ -244,7 +274,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         </WorkspaceSection>
       </WorkspaceReveal>
 
-      <WorkspaceReveal delay={0.24}>
+      <WorkspaceReveal delay={0.28}>
         <WorkspaceSection
           title="Deep analytics"
           subtitle="Detailed aggregates and session-level performance remain available for when you need them."
