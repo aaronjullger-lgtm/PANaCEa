@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { publicEndpoint, withCors } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -43,10 +43,10 @@ const ScoringSystemsQuerySchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = publicEndpoint(
   ScoringSystemsQuerySchema,
-  async ({ env, auth, request }) => {
-    const log = createEndpointLogger('/api/reference/scoring-systems', auth.userId);
+  async ({ env, request }) => {
+    const log = createEndpointLogger('/api/reference/scoring-systems');
     let prisma: EdgePrismaClient | null = null;
 
     try {
@@ -89,20 +89,18 @@ export const onRequestGet = authenticatedEndpoint(
           { panceYield: 'desc' },
           { name: 'asc' },
         ],
-        include: {
-          ScoringSystemConditionLink: {
-            select: {
-              conditionId: true,
-              Condition: {
-                select: {
-                  id: true,
-                  canonicalName: true,
-                  system: true,
-                },
-              },
-            },
-            take: 10,
-          },
+        take: 250,
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          category: true,
+          condition: true,
+          panceYield: true,
+          isHighYield: true,
+          maxScore: true,
+          sensitivity: true,
+          specificity: true,
         },
       });
 

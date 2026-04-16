@@ -78,12 +78,16 @@ export function useSRSItems(): UseSRSItemsResult {
     queryKey: ['srs', 'due', isSignedIn ? user?.id : null],
     queryFn: async () => {
       const token = await getToken();
+      if (!token) {
+        return { items: [], totalDue: 0 };
+      }
       return fetchDueFromApi(token);
     },
     enabled: !!isSignedIn && !!user,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 60 * 24,
     refetchOnWindowFocus: true,
+    retry: false,
   });
 
   // When coming back online, refetch due items so cache is updated after offline queue flush

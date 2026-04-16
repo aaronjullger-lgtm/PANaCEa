@@ -22,6 +22,7 @@ import {
 import { authenticatedEndpoint, withCors } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 import { getFromCache, setInCache, isKVAvailable } from './_shared/cache';
+import { resolveOrCreateUserId } from './_shared/user-resolver';
 
 // ============================================================================
 // SCHEMAS
@@ -170,33 +171,6 @@ function chunk<T>(array: T[], size: number): T[][] {
     chunks.push(array.slice(i, i + size));
   }
   return chunks;
-}
-
-/**
- * Resolve Clerk ID to Internal DB ID
- */
-async function resolveUserId(prisma: EdgePrismaClient, clerkId: string): Promise<string> {
-  const existingUser = await prisma.user.findUnique({
-    where: { clerkId },
-    select: { id: true },
-  });
-
-  if (existingUser) {
-    return existingUser.id;
-  }
-
-  // User doesn't exist, create them
-  const now = new Date();
-  const newUser = await prisma.user.create({
-    data: {
-      clerkId,
-      email: `${clerkId}@placeholder.panacea.app`,
-      updatedAt: now,
-    },
-    select: { id: true },
-  });
-
-  return newUser.id;
 }
 
 /**
@@ -387,13 +361,7 @@ export const onRequestGet = authenticatedEndpoint(
       prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
       // Resolve clerkId to internal userId
-      const internalUserId = await resolveUserId(prisma, context.auth.userId);
-      if (!internalUserId) {
-        return {
-          data: { success: false, error: 'User not found. Please sign out and back in.' },
-          status: 404,
-        };
-      }
+      const internalUserId = await resolveOrCreateUserId(prisma, context.auth.userId);
 
       // Fetch all user data in parallel (bounded + column-limited for performance)
       const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
@@ -485,7 +453,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
     // Resolve user ID with retry for transient failures
     const internalUserId = await withRetry(
-      () => resolveUserId(prisma!, context.auth.userId),
+      () => resolveOrCreateUserId(prisma!, context.auth.userId),
       'resolveUserId',
       log
     );

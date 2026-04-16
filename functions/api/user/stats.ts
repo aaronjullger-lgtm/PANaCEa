@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { resolveUserId } from '../_shared/user-resolver';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   getFromCache,
@@ -25,6 +25,7 @@ import { normalizeSystemName, getAllSystems } from '@/lib/constants/blueprint';
 const UserStatsSchema = z.object({
   query: z.object({}).optional(), // No query params for this endpoint
 });
+const RECENT_ATTEMPT_LIMIT = 2_000;
 
 export const onRequestOptions = withCors();
 
@@ -71,14 +72,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       };
     }
 
-    const userId = await resolveUserId(prisma, auth.userId);
+    const userId = await resolveOrCreateUserId(prisma, auth.userId);
     logger.info('user/stats step', { step: 'resolveUserId', hasUserId: !!userId });
-    if (!userId) {
-      return {
-        data: { success: false, error: 'User not found - must be synced from Clerk webhook first' },
-        status: 404,
-      };
-    }
 
     // Check cache first if KV is available
     if (isKVAvailable(env.CACHE)) {
@@ -149,7 +144,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
             createdAt: true,
           },
           orderBy: { createdAt: 'desc' },
-          take: 5000,
+          take: RECENT_ATTEMPT_LIMIT,
         }),
         prisma.userQuestionSeen.count({ where: { userId } }),
       ]);
@@ -187,7 +182,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
               reviewedAt: true,
             },
             orderBy: { reviewedAt: 'desc' },
-            take: 5000,
+            take: RECENT_ATTEMPT_LIMIT,
           }),
           prisma.userQuestionSeen.count({ where: { userId } }),
         ]);

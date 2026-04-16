@@ -27,11 +27,11 @@ interface SessionAnalyticsResponse {
 function createSessionFetcher(getToken: () => Promise<string | null>) {
   return async (url: string): Promise<RawSessionRecord[]> => {
     const token = await getToken();
-    if (!token) throw new Error('Not authenticated');
+    if (!token) return [];
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error('Failed to fetch sessions');
+    if (!res.ok) return [];
     const data = (await res.json()) as SessionAnalyticsResponse | { data?: SessionAnalyticsResponse };
     // Handle both { sessions: [...] } and { data: { sessions: [...] } } shapes
     const sessions = ('data' in data && data.data?.sessions) || ('sessions' in data && data.sessions) || [];
@@ -57,6 +57,8 @@ export function useRecentSessions(): {
     {
       revalidateOnFocus: false,
       dedupingInterval: 60_000, // 1 minute
+      shouldRetryOnError: false,
+      fallbackData: [],
     }
   );
 

@@ -13,6 +13,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { profileUpdateSchema } from '../_shared/zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 const EmptySchema = z.object({});
 
@@ -57,40 +58,30 @@ export const onRequestGet = authenticatedEndpoint(
     const { env, auth } = context;
     const logger = createEndpointLogger('/api/user/profile');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const profileSelect = {
+      id: true,
+      clerkId: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      examDate: true,
+      graduationDate: true,
+      school: true,
+      currentRotation: true,
+      yearInProgram: true,
+      rotationExamDate: true,
+      eorTestDate: true,
+      rotationStartDate: true,
+      rotationEndDate: true,
+      hasCompletedBaseline: true,
+      hasCompletedOnboarding: true,
+      updatedAt: true,
+    } as const;
 
     try {
       logger.addContext({ userId: auth.userId });
 
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: {
-          id: true,
-          clerkId: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          examDate: true,
-          graduationDate: true,
-          school: true,
-          currentRotation: true,
-          yearInProgram: true,
-          rotationExamDate: true,
-          eorTestDate: true,
-          rotationStartDate: true,
-          rotationEndDate: true,
-          hasCompletedBaseline: true,
-          hasCompletedOnboarding: true,
-          updatedAt: true,
-        },
-      });
-
-      if (!user) {
-        logger.warn('User not found', { clerkId: auth.userId });
-        return {
-          data: { success: false, error: 'User not found. Please log in again.' },
-          status: 404,
-        };
-      }
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, profileSelect);
 
       return {
         data: {
@@ -129,49 +120,38 @@ export const onRequestPut = authenticatedEndpoint(profileUpdateSchema, async (co
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/user/profile');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const profileSelect = {
+    id: true,
+    clerkId: true,
+    email: true,
+    firstName: true,
+    lastName: true,
+    examDate: true,
+    graduationDate: true,
+    school: true,
+    currentRotation: true,
+    yearInProgram: true,
+    rotationExamDate: true,
+    eorTestDate: true,
+    rotationStartDate: true,
+    rotationEndDate: true,
+    hasCompletedBaseline: true,
+    hasCompletedOnboarding: true,
+    updatedAt: true,
+  } as const;
 
   try {
     logger.addContext({ userId: auth.userId });
 
-    // Resolve user by clerkId (auth.userId is Clerk sub)
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
-
-    if (!user) {
-      logger.warn('User not found', { clerkId: auth.userId });
-      return {
-        data: { success: false, error: 'User not found. Please log in again.' },
-        status: 404,
-      };
-    }
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
     // Build update payload (exclude undefined, handle dates)
     const updateData = buildProfileUpdateData(validated);
 
     const updatedUser = await prisma.user.update({
-      where: { clerkId: auth.userId },
+      where: { id: user.id },
       data: updateData,
-      select: {
-        id: true,
-        clerkId: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        examDate: true,
-        graduationDate: true,
-        school: true,
-        currentRotation: true,
-        yearInProgram: true,
-        rotationExamDate: true,
-        eorTestDate: true,
-        rotationStartDate: true,
-        rotationEndDate: true,
-        hasCompletedBaseline: true,
-        hasCompletedOnboarding: true,
-        updatedAt: true,
-      },
+      select: profileSelect,
     });
 
     logger.info('Profile updated', { userId: user.id, fields: Object.keys(updateData) });

@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 
 const SRSDueSchema = z.object({
   query: z
@@ -30,22 +31,7 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    // Look up user by clerkId
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
-
-    if (!user) {
-      logger.warn('User not found in database', { clerkId: auth.userId.substring(0, 10) });
-      return {
-        data: { error: 'User not found. Please refresh and try again.' },
-        status: 404,
-      };
-    }
-
-    const userId = user.id;
+    const userId = await resolveOrCreateUserId(prisma, auth.userId);
     const now = new Date();
     const limit = validated.query?.limit || 100;
 

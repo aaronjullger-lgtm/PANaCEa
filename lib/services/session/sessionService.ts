@@ -4,6 +4,7 @@ import { ContentService } from '../content/contentService';
 import { logger } from '../../logger';
 
 const LOG_SCOPE = 'SessionService';
+const MAX_RECENT_SEEN_IDS = 5_000;
 import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
 import { resolveCorrectAnswerIndex } from '../../answerLetterMap';
 import { withTimeout } from '../../timeout';
@@ -161,6 +162,8 @@ export class SessionService {
         this.prisma.userQuestionSeen.findMany({
           where: { userId },
           select: { questionId: true, questionType: true },
+          orderBy: { lastSeenAt: 'desc' },
+          take: MAX_RECENT_SEEN_IDS,
         }),
         this.prisma.preGeneratedQuestion.count({
           where: { usedAt: null },

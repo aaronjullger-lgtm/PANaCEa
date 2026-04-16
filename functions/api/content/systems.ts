@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCached, setCached } from '../_shared/kv-cache';
@@ -19,7 +19,7 @@ const CACHE_TTL = 3600; // 1h
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (context) => {
+export const onRequestGet = publicEndpoint(ContentSystemsSchema, async (context) => {
   const { env } = context;
   const logger = createEndpointLogger('/api/content/systems');
 
