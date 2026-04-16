@@ -18,19 +18,37 @@ Classification values:
 
 - **Original claim:** 145 endpoints fail `npm run audit:zod`. Named examples: `functions/api/exam/start.ts`, `functions/api/exam/complete.ts`, `functions/api/feedback/submit.ts`, `functions/api/srs/sync.ts`, `functions/api/drills/submit-review.ts`, plus "all admin mutations."
 - **Verification:** Re-read each named file on 2026-04-16. All five use the middleware wrapper pattern `authenticatedEndpoint(Schema, handler)` which internally calls `withValidation(schema)`. These are properly Zod-validated.
-- **Root cause of false positives:** `scripts/audit-zod-validation.ts` only detects `validateRequest(`, `.safeParse(`, `.parse(` literally in file content. It does not recognize `authenticatedEndpoint` / `adminAuthenticatedEndpoint` / `aiEndpoint` / `publicEndpoint` as wrappers that guarantee validation. Endpoints using the wrapper are classified FAIL even when they are correctly validated.
-- **Improved audit (wrapper-aware)** run on 2026-04-16 against `functions/api/**`:
-  - 193 mutation endpoints total.
-  - 154 PASS.
-  - 5 WARN (manual validation only).
-  - 34 FAIL — of which 4 are `.test.ts` harness fixtures. **30 real endpoints need Zod validation.**
-- **Classification of specific named endpoints:** `stale`.
-- **Classification of the overall "~30 endpoints need Zod" finding:** `accurate` (but the list is different from what the audit implied).
-- **Real FAIL list (30 endpoints) → queued as TASK-002…TASK-006 in `IMPLEMENTATION_QUEUE.md`.**
+- **Root cause of false positives:** `scripts/audit-zod-validation.ts` had four independent detection gaps, each compounding the false-positive count:
+  1. It did not recognize the seven shared middleware wrappers (`authenticatedEndpoint`, `adminEndpoint`, `adminAuthenticatedEndpoint`, `aiEndpoint`, `refineryEndpoint`, `cmsEndpoint`, `publicEndpoint`) as validated call sites. The wrappers internally compose `withValidation(schema)`; the audit only looked for `validateRequest(`, `.safeParse(`, or `.parse(` literally.
+  2. Its `.parse(` detection matched `JSON.parse(` as evidence of Zod. Any file that parsed a request body via `JSON.parse(...)` was erroneously classified PASS for the wrong reason, and any file using Zod only via a wrapper was classified FAIL.
+  3. It did not handle the TypeScript generic call form `authenticatedEndpoint<Input>(...)`. Strongly-typed wrapper usages (e.g. `functions/api/performance/record.ts`) were flagged FAIL.
+  4. It did not treat CRON_SECRET bearer-auth or Svix webhook signature verification as legitimate out-of-band security models — cron endpoints and `webhooks/clerk.ts` were flagged FAIL even though Zod is structurally not the right tool for them.
+- **Fix applied this run:** `scripts/audit-zod-validation.ts` was rewritten. Detection now:
+  - Enumerates all seven wrappers in `VALIDATED_WRAPPERS`.
+  - Allows an optional TS generic argument between the wrapper name and its `(`: `\b${name}\s*(?:<[^>]*>)?\s*\(`.
+  - Recognizes `withValidation(...)` composition anywhere in a file.
+  - Rejects `JSON.parse(` via a line-scan that inspects the preceding token.
+  - Classifies CRON_SECRET (`/\.CRON_SECRET\b/` + `Authorization|Bearer`) and Svix webhook patterns as `WARN_OUT_OF_BAND` — Zod not applicable.
+  - Excludes `.test.ts` and `.disabled` paths from consideration.
+- **Post-fix audit run on 2026-04-16:**
+  - 176 PASS.
+  - 8 WARN_OUT_OF_BAND (7 cron endpoints + `webhooks/clerk`).
+  - 3 WARN_MANUAL_ONLY (`knowledge/upload` — multipart; `technique-check/analyze` — multipart; `sentry-tunnel` — Sentry envelope proxy).
+  - **2 FAIL**: `drill/log-attempt.ts` (deprecated 410 Gone tombstone that never reads the body) and `podcast/generate.ts` (proxy forwarding to external Node service).
+- **Classification of specific named endpoints (exam/start, exam/complete, feedback/submit, srs/sync, drills/submit-review, and "all admin mutations"):** `stale`.
+- **Classification of the umbrella "145 endpoints" claim:** `stale` — the number was an artifact of the detection gap, not real risk.
+- **Classification of the residual file-level work:** `accurate` for `users/me/daily-plan.ts` and `users/me/exam-outcome.ts` (addressed this run as TASK-007 and TASK-008). `accurate` but parked for `podcast/generate.ts` (TASK-009).
 - **Deferred from this run:**
-  - 7 cron endpoints (CRON_SECRET-gated, not user input; add after cron-auth model is reviewed as a unit).
-  - 4 test fixtures (not production code).
-  - `branches/[branchName]/merge`, `podcast/generate` (lower-risk long tail).
+  - 7 cron endpoints (CRON_SECRET-gated; Zod not applicable).
+  - `webhooks/clerk` (Svix signature; Zod not applicable).
+  - 3 multipart / proxy endpoints in WARN_MANUAL_ONLY (file-upload pipelines and Sentry envelope proxy; Zod does not fit the body shape).
+  - `podcast/generate` (proxy to external Node service; validation lives in the downstream service).
+
+### §5 "Audit script detection gaps (meta)"
+
+- **Classification:** `addressed-this-run`.
+- **What changed:** `scripts/audit-zod-validation.ts` rewritten as described above. Also gained `WARN_OUT_OF_BAND` status and richer `AuditResult` fields (`usesWrapper`, `usesWithValidation`, `usesCronSecret`, `usesSvixWebhook`, `note`).
+- **Impact:** Future `npm run audit:zod` runs produce a signal that's actually actionable. Without this fix, every sprint would have kept re-surfacing the same phantom 145-endpoint list.
 
 ### §5 "Prisma disconnect cleanup — 18 endpoints still flagged"
 
@@ -112,3 +130,20 @@ Classification values:
 ## Per-task reconciliation entries
 
 <!-- One short block added per task as it completes, recording which audit claim the change closes. -->
+
+### TASK-001 (commit `0e0fed16`) → §5 OSCE queueAnswer write
+- Classification updated to **addressed-this-run**.
+- Bogus `syncManager.queueAnswer({ questionId: sessionId, ... })` removed from `components/modes/PatientEncounterMode.tsx`; `updateConditionSchedule(...)` retained.
+- Parked follow-up: strategic question of whether OSCE should ever emit a review artifact (none / analytics event / OSCEAttempt pipeline) — product decision.
+
+### TASK-007 → §5 `users/me/daily-plan.ts` POST Zod gap
+- Classification updated to **addressed-this-run**.
+- Switched `onRequestPost` from raw `withMiddleware(...)` to `authenticatedEndpoint(DailyPlanCompleteSchema, handler, { requestsPerMinute: 30 })`. Schema clamps `accuracy` to 0..1 and `durationMinutes` to 0..1440. GET handler untouched (no body).
+
+### TASK-008 → §5 `users/me/exam-outcome.ts` POST Zod gap
+- Classification updated to **addressed-this-run**.
+- Rewrote `onRequestPost` to `authenticatedEndpoint(ExamOutcomeSchema, handler, { requestsPerMinute: 30 })`. Schema enforces `examType` enum, ISO `examDate` refine, 0..100 score/percentile, and 0..86400 bounds on `timeLimit` / `timeUsed`.
+
+### Audit-script fix → meta
+- Classification **addressed-this-run**.
+- `scripts/audit-zod-validation.ts` rewritten to cover the seven shared middleware wrappers, the TS-generic call form, CRON_SECRET / Svix out-of-band security, and to reject `JSON.parse(` as false Zod evidence. Post-fix FAIL count is 2 (log-attempt tombstone + podcast/generate proxy), matching reality.

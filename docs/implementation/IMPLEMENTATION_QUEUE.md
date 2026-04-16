@@ -6,8 +6,8 @@ Derived from `UNFINISHED_WORK_MASTER_AUDIT.md` (2026-04-16) and cross-checked ag
 
 Before queueing tasks, I re-validated the audit's specific claims against current code and re-ran (improved, middleware-aware) versions of the repo-native audit tools. Findings that change the queue:
 
-- **Audit's named "still flagged" Zod endpoints are already validated**: `functions/api/exam/start.ts`, `functions/api/exam/complete.ts`, `functions/api/feedback/submit.ts`, `functions/api/srs/sync.ts`, `functions/api/drills/submit-review.ts` all use `authenticatedEndpoint(Schema, handler)`, which internally runs `withValidation(schema)`. The audit script `scripts/audit-zod-validation.ts` has a detection gap — it does not recognize the wrapper pattern and therefore classifies these as FAIL.
-- **Improved Zod audit (wrapper-aware)** on 2026-04-16 reports: 193 mutation endpoints, 154 PASS, 5 WARN (manual-only), 34 FAIL — of which 4 are `.test.ts` files (test harnesses, not real endpoints). **30 real endpoints** need Zod validation.
+- **Audit's named "still flagged" Zod endpoints are already validated**: `functions/api/exam/start.ts`, `functions/api/exam/complete.ts`, `functions/api/feedback/submit.ts`, `functions/api/srs/sync.ts`, `functions/api/drills/submit-review.ts` all use `authenticatedEndpoint(Schema, handler)`, which internally runs `withValidation(schema)`. The original `scripts/audit-zod-validation.ts` had multiple detection gaps: it did not recognize the seven shared middleware wrappers (`authenticatedEndpoint`, `adminEndpoint`, `adminAuthenticatedEndpoint`, `aiEndpoint`, `refineryEndpoint`, `cmsEndpoint`, `publicEndpoint`), did not handle the TypeScript-generic call form `authenticatedEndpoint<Input>(...)`, did not recognize CRON_SECRET / Svix webhook as legitimate out-of-band security, and matched `JSON.parse(` as evidence of Zod. After the script fix, **real FAIL count drops to 2**: `drill/log-attempt.ts` (a deprecated 410-Gone tombstone that never reads the body) and `podcast/generate.ts` (a proxy that forwards to an external Node service).
+- **Real file-level gaps that were accurate**: `users/me/daily-plan.ts` POST and `users/me/exam-outcome.ts` POST genuinely lacked Zod. Addressed this run as TASK-007 and TASK-008.
 - **Prisma disconnect audit** flagged 3 files, all of which are false positives: `_shared/env-validation.ts` (match is in a JSDoc example comment), `_shared/prisma-user-scope.ts` (factory — caller owns disconnect), `functions/api/health.ts` (DOES disconnect, via an indirect `disconnect = ...; await disconnect(prisma)` pattern my regex missed). **Prisma disconnect cleanup is effectively complete.** The audit's "18 fails" is stale.
 - **OSCE bogus `queueAnswer({ questionId: sessionId })`** — confirmed present at `components/modes/PatientEncounterMode.tsx:1015–1024`. Valid quick-win.
 
@@ -18,22 +18,23 @@ All tasks are scoped to the "Just Do It" bucket from `CLAUDE.md`: no schema migr
 | ID | Title | Category | Priority | Risk | Size | Depends on | Audit ref |
 |---|---|---|---|---|---|---|---|
 | TASK-001 | Remove bogus OSCE `queueAnswer({ questionId: sessionId })` write | Frontend bug | High | Low | S | — | §5 "OSCE mode still has an incorrect answer-queue write"; §10 Quick win #1 |
-| TASK-002 | Add Zod validation to `admin/staging/*` (approve, reject, run-critic, update) | API hardening | High | Low | M | — | §5 "API validation hardening"; §10 Quick win #2 |
-| TASK-003 | Add Zod validation to `admin/content/create`, `admin/content/transition`, `admin/enrich-condition` | API hardening | High | Low | M | — | §5 "API validation hardening" |
-| TASK-004 | Add Zod validation to `admin/media/approve`, `admin/refinery/action`, `admin/blueprint-coverage`, `admin/conditions/[id]/parent` | API hardening | High | Low | M | — | §5 "API validation hardening" |
-| TASK-005 | Add Zod validation to user-facing writes: `users/me/daily-plan`, `users/me/exam-outcome`, `performance/record`, `drill/log-attempt` | API hardening | High | Low | M | — | §5 "API validation hardening" |
-| TASK-006 | Add Zod validation to question-pipeline writes: `questions/curate`, `questions/flag/[flagId]/resolve`, `questions/seeds/*`, `questions/staging/*` | API hardening | High | Low | M | — | §5 "API validation hardening" |
+| TASK-002 | (STALE) `admin/staging/*` Zod validation | API hardening | — | — | — | — | Superseded: all four files already validated via `adminEndpoint`/`adminAuthenticatedEndpoint` wrapper (internally applies `withValidation(schema)`). Script detection gap. |
+| TASK-003 | (STALE) `admin/content/*` + `admin/enrich-condition` Zod | API hardening | — | — | — | — | Superseded: validated via wrapper. Script detection gap. |
+| TASK-004 | (STALE) `admin/media/approve`, `admin/refinery/action`, `admin/blueprint-coverage`, `admin/conditions/[id]/parent` Zod | API hardening | — | — | — | — | Superseded: validated via wrapper. Script detection gap. |
+| TASK-005 | (PARTIAL → split) user-facing write Zod | API hardening | — | — | — | — | Split into TASK-007 (`daily-plan`) + TASK-008 (`exam-outcome`). `performance/record` was already wrapper-validated (generic-call form); `drill/log-attempt` is a 410 Gone tombstone that never reads body. |
+| TASK-006 | (STALE) question-pipeline writes Zod | API hardening | — | — | — | — | Superseded: validated via wrapper. Script detection gap. |
+| TASK-007 | Zod-harden `POST /api/users/me/daily-plan/complete` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
+| TASK-008 | Zod-harden `POST /api/users/me/exam-outcome` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
+| TASK-009 | (DEFERRED) Zod-harden `POST /api/podcast/generate` | API hardening | Medium | Low | M | — | §5 "API validation hardening" — proxy forwards body (JSON or multipart) to external Node service at `PODCAST_SERVICE_URL`. External service currently owns validation; revisit when the podcast pipeline is reviewed as a unit. |
 
-Evidence for each: every file listed was inspected and lacks both a `withValidation(schema)` middleware wrapper and a direct `.safeParse`/`.parse` call. See `/tmp/zod-audit-output.txt` for the full improved-audit run.
+Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolved — the files are correctly validated via the shared middleware wrappers and were false positives of the original audit script. The only real file-level gaps were `users/me/daily-plan.ts` and `users/me/exam-outcome.ts` (now TASK-007 / TASK-008). See `docs/implementation/AUDIT_RECONCILIATION.md` for the per-claim reconciliation and the full audit-run deltas.
 
 ## Proposed execution order
 
-1. TASK-001 — tiny, unblocks the "OSCE polluting sync/analytics" finding immediately.
-2. TASK-002 → TASK-004 — admin surface first (biggest blast radius per endpoint hit; all use the same shared middleware pattern so the repetition accelerates through the cluster).
-3. TASK-005 — user-facing mutations second (cheaper blast radius per request, but higher request volume).
-4. TASK-006 — content pipeline last (mostly cron-adjacent and seed/staging tools; lower request rate, still worth validating).
-
-After TASK-006 I stop the run: the next tranche in the master audit (NotificationLog schema migration, runtime-owned scheduler, Express retirement, study-groups decision, deprecated SRS endpoint retirement) requires Aaron's "Ask First" approvals per `CLAUDE.md`.
+1. TASK-001 — tiny, unblocks the "OSCE polluting sync/analytics" finding immediately. (done)
+2. Fix `scripts/audit-zod-validation.ts` itself so follow-up audits do not keep generating false positives on wrapper-validated endpoints. (done)
+3. TASK-007 + TASK-008 — user-facing mutation gaps surfaced by the fixed audit. (done)
+4. Stop here. Remaining audit items (NotificationLog schema migration, runtime-owned scheduler, Express retirement, study-groups decision, deprecated SRS endpoint retirement, TASK-009 podcast/generate proxy validation) require Aaron's "Ask First" approvals per `CLAUDE.md`.
 
 ## Not doing now — parked / deferred
 
@@ -67,9 +68,12 @@ After TASK-006 I stop the run: the next tranche in the master audit (Notificatio
 
 | ID | Status | Commit | Notes |
 |---|---|---|---|
-| TASK-001 | pending | — | — |
-| TASK-002 | pending | — | — |
-| TASK-003 | pending | — | — |
-| TASK-004 | pending | — | — |
-| TASK-005 | pending | — | — |
-| TASK-006 | pending | — | — |
+| TASK-001 | completed | 0e0fed16 | OSCE `syncManager.queueAnswer` write removed; `updateConditionSchedule` preserved. |
+| TASK-002 | obsolete | — | All admin/staging endpoints already wrapper-validated; script gap produced the false positive. |
+| TASK-003 | obsolete | — | All admin/content endpoints already wrapper-validated; script gap produced the false positive. |
+| TASK-004 | obsolete | — | All listed admin endpoints already wrapper-validated; script gap produced the false positive. |
+| TASK-005 | obsolete | — | Split into TASK-007 + TASK-008. `performance/record` already wrapper-validated (generic-call form). `drill/log-attempt` is a 410 Gone tombstone. |
+| TASK-006 | obsolete | — | All question-pipeline writes already wrapper-validated; script gap produced the false positive. |
+| TASK-007 | completed | (pending commit) | `users/me/daily-plan.ts` POST switched to `authenticatedEndpoint(DailyPlanCompleteSchema, handler, { requestsPerMinute: 30 })`. GET unchanged. |
+| TASK-008 | completed | (pending commit) | `users/me/exam-outcome.ts` POST rewritten to `authenticatedEndpoint(ExamOutcomeSchema, handler, { requestsPerMinute: 30 })` with enum/date/range bounds. |
+| TASK-009 | deferred | — | `podcast/generate.ts` proxies body to external Node service — defer until podcast pipeline is reviewed as a unit. |
