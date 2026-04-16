@@ -6,6 +6,15 @@
  *
  * Body: multipart/form-data with "file" field. Optional "displayName".
  * Max file size: 50MB (Edge limit).
+ *
+ * Validation model:
+ *   - Content-type gate (415) rejects non-multipart requests before formData()
+ *     materializes the body.
+ *   - Content-Length short-circuit (413) rejects oversized payloads before
+ *     materialization. A post-materialization file.size guard remains as
+ *     defense-in-depth for requests that omit or misreport Content-Length.
+ *   - MIME whitelist (ALLOWED_MIMES) enforces the file-type contract.
+ *   - File-level shape checks (presence, non-empty) run after formData().
  */
 
 import {
@@ -90,6 +99,31 @@ export const onRequestPost = withMiddleware(
       if (e instanceof MissingEnvError) return e.toResponse();
       throw e;
     }
+
+    // Content-type gate: only multipart/form-data is supported.
+    // Rejecting before formData() avoids wasted work on misrouted traffic.
+    const contentType = request.headers.get('content-type') ?? '';
+    if (!contentType.includes('multipart/form-data')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Unsupported content-type. Expected multipart/form-data with a "file" field.',
+        }),
+        { status: 415, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Content-Length short-circuit: reject oversized payloads before formData()
+    // materializes the whole body into memory. The post-materialization
+    // file.size check below remains as a defense-in-depth safety net for
+    // requests that omit or misreport Content-Length.
+    const contentLength = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
+    if (Number.isFinite(contentLength) && contentLength > MAX_FILE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: `Payload too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB` }),
+        { status: 413, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     try {
       const formData = await request.formData();
       const file = formData.get('file') as File | null;

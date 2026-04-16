@@ -3,6 +3,16 @@
  * Analyze physical exam technique from video (e.g. otoscope hold).
  * Body: multipart form-data with "video" (file) and "query" (string).
  * Returns { critique: string, boundingBoxes?: Array<{ label, x, y, w, h }> }.
+ *
+ * Validation model:
+ *   - Content-type gate (415) rejects non-multipart requests before formData()
+ *     materializes the body.
+ *   - Content-Length short-circuit (413) rejects oversized payloads before
+ *     materialization. A post-materialization video.size guard remains as
+ *     defense-in-depth for requests that omit or misreport Content-Length.
+ *   - "query" field is bounded to MAX_QUERY_CHARS to prevent oversized prompts
+ *     from reaching Gemini.
+ *   - "video" field must be a non-empty File.
  */
 
 import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
@@ -11,6 +21,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_QUERY_CHARS = 2000;
 const TECHNIQUE_MODEL = 'gemini-2.0-flash-exp';
 
 interface Env {
@@ -36,11 +47,25 @@ export const onRequestPost = withMiddleware(
       );
     }
 
+    // Content-type gate: only multipart/form-data is supported.
+    // Rejecting before formData() avoids wasted work on misrouted traffic.
     const contentType = request.headers.get('content-type') ?? '';
     if (!contentType.includes('multipart/form-data')) {
       return new Response(
-        JSON.stringify({ error: 'Expected multipart/form-data with "video" and "query"' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Unsupported content-type. Expected multipart/form-data with "video" and "query" fields.' }),
+        { status: 415, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Content-Length short-circuit: reject oversized payloads before formData()
+    // materializes the whole body into memory. The post-materialization
+    // video.size check below remains as a defense-in-depth safety net for
+    // requests that omit or misreport Content-Length.
+    const contentLength = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
+    if (Number.isFinite(contentLength) && contentLength > MAX_VIDEO_SIZE) {
+      return new Response(
+        JSON.stringify({ error: `Payload too large. Max ${MAX_VIDEO_SIZE / 1024 / 1024}MB` }),
+        { status: 413, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -69,12 +94,18 @@ export const onRequestPost = withMiddleware(
     if (videoFile.size > MAX_VIDEO_SIZE) {
       return new Response(
         JSON.stringify({ error: `Video too large (max ${MAX_VIDEO_SIZE / 1024 / 1024}MB)` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 413, headers: { 'Content-Type': 'application/json' } }
       );
     }
     if (!query) {
       return new Response(
         JSON.stringify({ error: 'Missing "query" (e.g. Is the otoscope held correctly for a pediatric exam?)' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (query.length > MAX_QUERY_CHARS) {
+      return new Response(
+        JSON.stringify({ error: `"query" too long (max ${MAX_QUERY_CHARS} characters)` }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
