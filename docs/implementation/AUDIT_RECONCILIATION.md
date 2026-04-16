@@ -37,12 +37,12 @@ Classification values:
   - **2 FAIL**: `drill/log-attempt.ts` (deprecated 410 Gone tombstone that never reads the body) and `podcast/generate.ts` (proxy forwarding to external Node service).
 - **Classification of specific named endpoints (exam/start, exam/complete, feedback/submit, srs/sync, drills/submit-review, and "all admin mutations"):** `stale`.
 - **Classification of the umbrella "145 endpoints" claim:** `stale` — the number was an artifact of the detection gap, not real risk.
-- **Classification of the residual file-level work:** `accurate` for `users/me/daily-plan.ts` and `users/me/exam-outcome.ts` (addressed this run as TASK-007 and TASK-008). `accurate` but parked for `podcast/generate.ts` (TASK-009).
+- **Classification of the residual file-level work:** `accurate` for `users/me/daily-plan.ts`, `users/me/exam-outcome.ts`, and `podcast/generate.ts` — all three addressed this run (TASK-007, TASK-008, TASK-009 respectively).
 - **Deferred from this run:**
   - 7 cron endpoints (CRON_SECRET-gated; Zod not applicable).
   - `webhooks/clerk` (Svix signature; Zod not applicable).
-  - 3 multipart / proxy endpoints in WARN_MANUAL_ONLY (file-upload pipelines and Sentry envelope proxy; Zod does not fit the body shape).
-  - `podcast/generate` (proxy to external Node service; validation lives in the downstream service).
+  - 3 multipart endpoints in WARN_MANUAL_ONLY (`knowledge/upload`, `technique-check/analyze` for video, `sentry-tunnel` for Sentry envelope proxy; Zod does not fit the body shape).
+- **Remaining FAIL after this run:** 1 — `functions/api/drill/log-attempt.ts`, a deliberate 410 Gone tombstone that never reads its request body. Real risk = 0; parked with a tombstone annotation.
 
 ### §5 "Audit script detection gaps (meta)"
 
@@ -143,6 +143,11 @@ Classification values:
 ### TASK-008 → §5 `users/me/exam-outcome.ts` POST Zod gap
 - Classification updated to **addressed-this-run**.
 - Rewrote `onRequestPost` to `authenticatedEndpoint(ExamOutcomeSchema, handler, { requestsPerMinute: 30 })`. Schema enforces `examType` enum, ISO `examDate` refine, 0..100 score/percentile, and 0..86400 bounds on `timeLimit` / `timeUsed`.
+
+### TASK-009 → §5 `podcast/generate.ts` POST Zod gap (proxy)
+- Classification updated to **addressed-this-run** (authorized past the original Ask-First deferral).
+- Kept the custom `withMiddleware` chain (required because `withValidation` can't handle multipart). Added branch-specific validation: 415 content-type gate, `PodcastGenerateJsonSchema.safeParse()` with `.passthrough()` on the JSON branch, and a 25 MB `Content-Length` ceiling on the multipart branch before `formData()` parses.
+- Audit state after this task: **177 PASS, 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, 1 FAIL** (`drill/log-attempt.ts` 410 tombstone — no action needed).
 
 ### Audit-script fix → meta
 - Classification **addressed-this-run**.

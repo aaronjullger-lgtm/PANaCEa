@@ -70,3 +70,14 @@ Reconciliation notes: `docs/implementation/AUDIT_RECONCILIATION.md`
 - **Audit delta:** Closes the file-level item under §5 for `users/me/exam-outcome`. Feeds clean data into the outcome-optimization / system-predictiveness pipeline — no more arbitrary strings or out-of-range numerics reaching `recordExamOutcome()`.
 - **Follow-ups:** If PA programs introduce additional exam categories, extend the `examType` enum in lock-step with the Prisma column.
 - **Progress note:** `docs/implementation/progress/TASK-008.md`
+
+### TASK-009 — Zod-harden `POST /api/podcast/generate` (proxy)
+- **Date:** 2026-04-16
+- **Status:** completed
+- **Commit:** (pending this-run commit)
+- **Files touched:** `functions/api/podcast/generate.ts`
+- **Change summary:** Branch-specific validation. Added `import { z } from 'zod'`; declared `PodcastGenerateJsonSchema = z.object({ pdfUrl, topic, voice, title, language, style }).passthrough()` with bounded scalars; exported `PodcastGenerateSchema` + `PodcastGenerateRequest` type. Added 415 content-type gate. JSON branch now runs `.safeParse()` and forwards the validated object (not the raw body). Multipart branch rejects payloads past 25 MB via `Content-Length` before `formData()` materializes. Existing `withMiddleware(withCors, withErrorHandling, withAuth, withRateLimit(5/min), handler)` chain retained — proxy semantics preserved because the downstream Node service at `PODCAST_SERVICE_URL` still owns the multipart field contract.
+- **Verification:** Faithful node-native port of `scripts/audit-zod-validation.ts` on full `functions/api/**`: 189 mutation endpoints, 177 PASS (+1), 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, **1 FAIL** (`drill/log-attempt.ts` — 410 Gone tombstone, expected). `podcast/generate.ts` → PASS via `.safeParse(` detection.
+- **Audit delta:** Closes the file-level item under §5 "API validation hardening" for `podcast/generate`. Only remaining audit:zod FAIL is the deprecated 410 tombstone.
+- **Follow-ups:** Tighten schema from `.passthrough()` to `.strict()` if/when the downstream Node service publishes a stable JSON contract. Raise `MAX_MULTIPART_BYTES` in lock-step with any Cloud Run request-size bump.
+- **Progress note:** `docs/implementation/progress/TASK-009.md`

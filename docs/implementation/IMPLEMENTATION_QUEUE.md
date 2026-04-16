@@ -25,7 +25,7 @@ All tasks are scoped to the "Just Do It" bucket from `CLAUDE.md`: no schema migr
 | TASK-006 | (STALE) question-pipeline writes Zod | API hardening | — | — | — | — | Superseded: validated via wrapper. Script detection gap. |
 | TASK-007 | Zod-harden `POST /api/users/me/daily-plan/complete` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
 | TASK-008 | Zod-harden `POST /api/users/me/exam-outcome` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
-| TASK-009 | (DEFERRED) Zod-harden `POST /api/podcast/generate` | API hardening | Medium | Low | M | — | §5 "API validation hardening" — proxy forwards body (JSON or multipart) to external Node service at `PODCAST_SERVICE_URL`. External service currently owns validation; revisit when the podcast pipeline is reviewed as a unit. |
+| TASK-009 | Zod-harden `POST /api/podcast/generate` (proxy) | API hardening | Medium | Low | M | — | §5 "API validation hardening" — branch-specific validation: inline `.safeParse()` on JSON path (`.passthrough()` permissive schema), 415 content-type gate, 25 MB multipart size ceiling. External Node service retains authority on multipart field-level shape. |
 
 Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolved — the files are correctly validated via the shared middleware wrappers and were false positives of the original audit script. The only real file-level gaps were `users/me/daily-plan.ts` and `users/me/exam-outcome.ts` (now TASK-007 / TASK-008). See `docs/implementation/AUDIT_RECONCILIATION.md` for the per-claim reconciliation and the full audit-run deltas.
 
@@ -34,7 +34,8 @@ Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolve
 1. TASK-001 — tiny, unblocks the "OSCE polluting sync/analytics" finding immediately. (done)
 2. Fix `scripts/audit-zod-validation.ts` itself so follow-up audits do not keep generating false positives on wrapper-validated endpoints. (done)
 3. TASK-007 + TASK-008 — user-facing mutation gaps surfaced by the fixed audit. (done)
-4. Stop here. Remaining audit items (NotificationLog schema migration, runtime-owned scheduler, Express retirement, study-groups decision, deprecated SRS endpoint retirement, TASK-009 podcast/generate proxy validation) require Aaron's "Ask First" approvals per `CLAUDE.md`.
+4. TASK-009 — podcast/generate proxy gets branch-specific validation. (done; authorized past Ask First gate)
+5. TASK-010+ — SRS endpoint retirement inventory, library-enrichment `.disabled` endpoints, loading-state normalization, and the architecture-level items (NotificationLog schema, runtime-owned push scheduler, Express-to-Edge retirement, study-groups decision). Each still requires reading live callers before committing to a change shape.
 
 ## Not doing now — parked / deferred
 
@@ -76,4 +77,4 @@ Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolve
 | TASK-006 | obsolete | — | All question-pipeline writes already wrapper-validated; script gap produced the false positive. |
 | TASK-007 | completed | (pending commit) | `users/me/daily-plan.ts` POST switched to `authenticatedEndpoint(DailyPlanCompleteSchema, handler, { requestsPerMinute: 30 })`. GET unchanged. |
 | TASK-008 | completed | (pending commit) | `users/me/exam-outcome.ts` POST rewritten to `authenticatedEndpoint(ExamOutcomeSchema, handler, { requestsPerMinute: 30 })` with enum/date/range bounds. |
-| TASK-009 | deferred | — | `podcast/generate.ts` proxies body to external Node service — defer until podcast pipeline is reviewed as a unit. |
+| TASK-009 | completed | (pending commit) | `podcast/generate.ts` now content-type gated (415 for non-JSON/non-multipart), JSON branch runs `PodcastGenerateJsonSchema.safeParse()` with `.passthrough()`, multipart branch 413s above 25 MB. Audit: 1 FAIL remaining (log-attempt tombstone, expected). |
