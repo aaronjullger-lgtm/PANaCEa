@@ -31,14 +31,41 @@ export interface SessionMetadata {
 }
 
 /**
+ * Legacy priority buckets still consumed by older frontend session launchers.
+ *
+ * `A` maps to review-heavy cards, `B` is reserved for an intermediate bucket
+ * that some older selectors used, and `C` maps to new-card exploration.
+ */
+export interface SessionPriorityBreakdown {
+  A: number;
+  B: number;
+  C: number;
+}
+
+/**
+ * Minimal persisted StudySession snapshot needed to resume or inspect a
+ * generated session without reconstructing settings client-side.
+ */
+export interface StudySessionSnapshot {
+  id: string;
+  mode?: string | null;
+  focus?: string | null;
+  difficulty?: string | null;
+  systemsTargeted: string[];
+  blueprintStage?: string | null;
+  blueprintLabel?: string | null;
+  totalQuestions?: number | null;
+}
+
+/**
  * POST /api/study/session/generate response data (unwrapped).
  */
 export interface SessionGenerateResult {
   sessionId: string;
   questions: QuestionDTO[];
   metadata: SessionMetadata;
-  /** Legacy fields some callers still read. */
+  /** Legacy compatibility fields derived from `questions` + `metadata` when omitted. */
   questionIds?: string[];
-  priorityBreakdown?: Record<string, number>;
+  priorityBreakdown?: SessionPriorityBreakdown;
   initialDifficulty?: string;
 }

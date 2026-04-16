@@ -15,6 +15,12 @@ import {
   DifficultyLevel,
 } from '@/lib/services/progressiveDifficultyService';
 import { createApiClient, createSessionsClient } from '@/lib/sdk';
+import type { SessionGeneratePayload } from '@/lib/sdk/types';
+import {
+  mapLaunchModeToSessionRequestMode,
+  normalizeSessionGenerateResult,
+  type NormalizedSessionGenerateResult,
+} from '@/lib/sessionGeneration';
 
 // =============================================================================
 // TYPES
@@ -27,23 +33,7 @@ export interface GenerateSessionOptions {
   adaptive?: boolean; // New flag for adaptive sessions
 }
 
-export interface GeneratedSession {
-  sessionId: string;
-  mode: string;
-  questionIds: string[];
-  priorityBreakdown: {
-    A: number;
-    B: number;
-    C: number;
-  };
-  deficitsAddressed: Array<{
-    system: string;
-    deficitPercent: number;
-  }>;
-  interleavingEnforced: boolean;
-  message: string;
-  initialDifficulty?: DifficultyLevel;
-}
+export type GeneratedSession = NormalizedSessionGenerateResult;
 
 interface UseSessionGeneratorReturn {
   generateSession: (options: GenerateSessionOptions) => Promise<GeneratedSession | null>;
@@ -79,25 +69,29 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
 
         const api = createApiClient(getToken);
         const sessions = createSessionsClient(api);
-
-        const result = await sessions.generate({
-          mode: options.mode,
+        const requestMode = mapLaunchModeToSessionRequestMode(options.mode);
+        const payload: SessionGeneratePayload = {
+          mode: requestMode,
           size: options.size || 20,
           systems: options.systems,
           initialDifficulty,
-        });
+          sessionLane: options.mode === 'drill' ? 'drill' : 'main',
+        };
 
-        const session: GeneratedSession = result as unknown as GeneratedSession;
+        const session = normalizeSessionGenerateResult(await sessions.generate(payload));
         setLastSession(session);
 
         // Navigate to the session
+        const isAdaptiveSession =
+          options.adaptive ?? (requestMode === 'adaptive' || requestMode === 'focused');
+
         navigate(`/session/${session.sessionId}`, {
           state: {
-            mode: session.mode,
+            mode: requestMode,
             questionIds: session.questionIds,
             priorityBreakdown: session.priorityBreakdown,
-            adaptive: options.adaptive,
-            initialDifficulty: session.initialDifficulty,
+            adaptive: isAdaptiveSession,
+            initialDifficulty: session.initialDifficulty ?? initialDifficulty,
           },
         });
 

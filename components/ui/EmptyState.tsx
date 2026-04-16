@@ -8,8 +8,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonSize } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  bodySupportClass,
+  emptyStateIconWrapClass,
+  emptyStateInlineClass,
+  emptyStateSurfaceClass,
+  sectionHeadingClass,
+} from '@/components/ui/system';
 import {
   Inbox,
   Search,
@@ -44,11 +51,14 @@ export interface EmptyStateProps {
     label: string;
     onClick: () => void;
     variant?: 'primary' | 'secondary';
+    icon?: React.ReactNode;
   };
   /** Secondary action */
   secondaryAction?: {
     label: string;
     onClick: () => void;
+    variant?: 'ghost' | 'secondary' | 'outline';
+    icon?: React.ReactNode;
   };
   /** Additional CSS classes */
   className?: string;
@@ -56,6 +66,12 @@ export interface EmptyStateProps {
   animate?: boolean;
   /** Compact mode for smaller spaces */
   compact?: boolean;
+  /** Whether to render the icon */
+  showIcon?: boolean;
+  /** Visual container treatment */
+  layout?: 'inline' | 'surface';
+  /** Shared action size */
+  actionSize?: ButtonSize;
 }
 
 const VARIANT_CONFIG: Record<
@@ -109,6 +125,9 @@ export function EmptyState({
   className = '',
   animate = true,
   compact = false,
+  showIcon = true,
+  layout = 'inline',
+  actionSize = 'md',
 }: EmptyStateProps) {
   const prefersReducedMotion = useReducedMotion();
   const config = VARIANT_CONFIG[variant];
@@ -119,32 +138,36 @@ export function EmptyState({
   const content = (
     <div
       className={cn(
-        'flex flex-col items-center justify-center text-center',
+        emptyStateInlineClass,
+        layout === 'surface' && emptyStateSurfaceClass,
         compact ? 'py-6 px-4' : 'py-12 px-6',
         className,
       )}
     >
       {/* Icon */}
-      <div className={cn(compact ? 'mb-3' : 'mb-4')}>
-        <div
-          className={cn(
-            'rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center',
-            compact ? 'w-12 h-12' : 'w-16 h-16',
-          )}
-        >
-          <IconComponent
+      {showIcon && (
+        <div className={cn(compact ? 'mb-3' : 'mb-4')}>
+          <div
             className={cn(
-              'text-[var(--color-text-tertiary)]',
-              compact ? 'w-6 h-6' : 'w-8 h-8',
+              emptyStateIconWrapClass,
+              compact ? 'w-12 h-12' : 'w-16 h-16',
             )}
-          />
+          >
+            <IconComponent
+              className={cn(
+                'text-[var(--color-text-tertiary)]',
+                compact ? 'w-6 h-6' : 'w-8 h-8',
+              )}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Text */}
       <h3
         className={cn(
-          'font-semibold text-[var(--color-text-primary)] mb-1',
+          sectionHeadingClass,
+          'mb-1',
           compact ? 'text-base' : 'text-lg',
         )}
       >
@@ -154,7 +177,8 @@ export function EmptyState({
       {displayDescription && (
         <p
           className={cn(
-            'text-[var(--color-text-secondary)] max-w-sm',
+            bodySupportClass,
+            'max-w-sm',
             compact ? 'text-sm mb-3' : 'text-base mb-4',
           )}
         >
@@ -170,7 +194,8 @@ export function EmptyState({
           {action && (
             <Button
               variant={action.variant === 'secondary' ? 'secondary' : 'primary'}
-              size="md"
+              size={actionSize}
+              icon={action.icon}
               onClick={action.onClick}
             >
               {action.label}
@@ -178,8 +203,9 @@ export function EmptyState({
           )}
           {secondaryAction && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant={secondaryAction.variant ?? 'ghost'}
+              size={compact ? 'sm' : actionSize}
+              icon={secondaryAction.icon}
               onClick={secondaryAction.onClick}
             >
               {secondaryAction.label}

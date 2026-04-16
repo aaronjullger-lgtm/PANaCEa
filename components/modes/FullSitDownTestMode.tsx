@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { QuizView } from '@/components/session/QuizView';
 import type { ErrorTag, PerformanceRecord, Question, SessionSettings } from '@/types';
+import { mapLaunchModeToSessionRequestMode } from '@/lib/sessionGeneration';
 
 interface FullSitDownTestModeProps {
   /** Callback to navigate back to the menu */
@@ -81,8 +82,9 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
-            mode: 'mainSession',
+            mode: mapLaunchModeToSessionRequestMode('mainSession'),
             size: 300,
+            sessionLane: 'main',
           }),
         });
 

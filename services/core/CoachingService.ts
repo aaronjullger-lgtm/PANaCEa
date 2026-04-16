@@ -67,8 +67,8 @@ export interface AnalyzeAnswerParams {
 
 /**
  * Analyze user's answer and provide Socratic dialogue response
- * This is a placeholder that returns a helpful response. In production,
- * this would call an AI API for dynamic responses.
+ * Uses the Gemini text pipeline when available and falls back to a concise,
+ * explanation-grounded coaching response if the AI call fails.
  */
 export async function analyzeAnswer(params: AnalyzeAnswerParams): Promise<string> {
   const { questionText, isCorrect, explanation, condition, userAnswer, correctAnswer } = params;

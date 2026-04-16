@@ -5,6 +5,11 @@ import type { SessionSettings, Question, PerformanceRecord } from '@/types';
 import { QuizViewWithErrorBoundary } from '@/components/session/QuizViewWithErrorBoundary';
 import { Loader } from '@/components/loading';
 import { EnhancedErrorMessage } from '@/components/shared/EnhancedErrorMessage';
+import type { StudySessionSnapshot } from '@/lib/api/types';
+import {
+  buildSessionModeLabel,
+  buildSessionSettingsFromSnapshot,
+} from '@/lib/sessionGeneration';
 
 interface SessionRunnerProps {
   /** Callback to navigate back to the menu */
@@ -39,12 +44,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function extractSessionQuestions(payload: unknown): Question[] {
-  if (!isRecord(payload)) return [];
+function extractSessionPayload(payload: unknown): {
+  questions: Question[];
+  session: StudySessionSnapshot | null;
+} {
+  if (!isRecord(payload)) {
+    return { questions: [], session: null };
+  }
 
   const nestedData = isRecord(payload.data) ? payload.data : null;
   const rawQuestions = nestedData?.questions ?? payload.questions;
-  return Array.isArray(rawQuestions) ? (rawQuestions as Question[]) : [];
+  const rawSession = nestedData?.session ?? payload.session;
+
+  return {
+    questions: Array.isArray(rawQuestions) ? (rawQuestions as Question[]) : [],
+    session: isStudySessionSnapshot(rawSession) ? rawSession : null,
+  };
+}
+
+function isStudySessionSnapshot(value: unknown): value is StudySessionSnapshot {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    Array.isArray(value.systemsTargeted)
+  );
 }
 
 /**
@@ -82,6 +105,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
   const [questions, setQuestions] = useState<Question[]>([]);
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
   const [growthAreas, setGrowthAreas] = useState<string[]>([]);
+  const [sessionSnapshot, setSessionSnapshot] = useState<StudySessionSnapshot | null>(null);
 
   const fetchSession = useCallback(async () => {
     if (!sessionId) {
@@ -99,18 +123,16 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
         throw new Error(`Failed to fetch session: ${response.status} ${text}`);
       }
       const json = await response.json();
-      const questionList = extractSessionQuestions(json);
+      const { questions: questionList, session } = extractSessionPayload(json);
+      const derivedGrowthAreas = deriveGrowthAreas(questionList);
       setQuestions(questionList);
-      setGrowthAreas(deriveGrowthAreas(questionList));
+      setGrowthAreas(derivedGrowthAreas);
+      setSessionSnapshot(session);
 
-      // Construct minimal SessionSettings from the session metadata (if available).
-      // For now, we use defaults; could be extended if the endpoint returns session metadata.
-      const settings: SessionSettings = {
-        mode: 'standard',
-        focus: 'all',
-        systems: [],
-        difficulty: 'adaptive',
-      };
+      const settings: SessionSettings = buildSessionSettingsFromSnapshot(
+        session,
+        derivedGrowthAreas
+      );
       setSessionSettings(settings);
     } catch (err) {
       console.error('Error fetching session:', err);
@@ -163,7 +185,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
 
   return (
     <QuizViewWithErrorBoundary
-      modeLabel="Practice → Session"
+      modeLabel={buildSessionModeLabel(sessionSnapshot)}
       initialQueue={questions}
       setParentQueue={setQuestions}
       addPerformanceRecord={addPerformanceRecord}

@@ -3,6 +3,11 @@ import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import {
+  bodySupportClass,
+  sectionHeaderRowClass,
+  sectionTitleClass,
+} from '@/components/ui/system';
 
 interface SectionHeaderProps {
   title: string;
@@ -10,6 +15,7 @@ interface SectionHeaderProps {
   action?: React.ReactNode;
   variant?: 'brand' | 'accent';
   className?: string;
+  subtitle?: string;
 }
 
 /**
@@ -37,6 +43,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   action,
   variant = 'brand',
   className = '',
+  subtitle,
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const iconColorClass =
@@ -47,18 +54,23 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
       initial={prefersReducedMotion ? false : { y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
-      className={cn('mt-8 mb-4 flex items-center justify-between', className)}
+      className={cn('mt-8 mb-4', className)}
     >
-      <div className="flex items-center gap-3">
+      <div className={sectionHeaderRowClass}>
+        <div className="min-w-0 flex items-start gap-3">
         {Icon && (
           <div className={`flex-shrink-0 ${iconColorClass}`}>
             <Icon className="w-5 h-5" aria-hidden="true" />
           </div>
         )}
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h2>
-      </div>
+          <div className="min-w-0 space-y-1">
+            <h2 className={sectionTitleClass}>{title}</h2>
+            {subtitle ? <p className={bodySupportClass}>{subtitle}</p> : null}
+          </div>
+        </div>
 
-      {action && <div className="flex-shrink-0">{action}</div>}
+        {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
+      </div>
     </motion.div>
   );
 };

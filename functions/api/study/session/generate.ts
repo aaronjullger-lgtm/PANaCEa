@@ -35,6 +35,10 @@ import {
   deriveScope,
 } from '../../../../lib/services/reservoir';
 import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
+import {
+  buildGeneratedStudySessionRecord,
+  normalizeSessionGenerateResult,
+} from '../../../../lib/sessionGeneration';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 // Shared schema — single source of truth for this endpoint's request contract.
@@ -179,18 +183,66 @@ export const onRequestPost = authenticatedEndpoint(
         );
       }
 
+      const normalizedResult = normalizeSessionGenerateResult(result);
+      const persistedSession = buildGeneratedStudySessionRecord({
+        request: {
+          mode: body.mode,
+          initialDifficulty: body.initialDifficulty,
+          systems: body.systems,
+          system: body.system,
+          blueprintStage: body.blueprintStage,
+          blueprintExamTypes: body.blueprintExamTypes,
+          blueprintLabel: body.blueprintLabel,
+          sessionLane: body.sessionLane,
+        },
+        result: normalizedResult,
+      });
+
+      await prisma.studySession.upsert({
+        where: { id: persistedSession.id },
+        create: {
+          id: persistedSession.id,
+          userId: user.id,
+          startedAt: new Date(),
+          totalQuestions: persistedSession.totalQuestions,
+          mode: persistedSession.mode ?? null,
+          focus: persistedSession.focus,
+          difficulty: persistedSession.difficulty,
+          systemsTargeted: persistedSession.systemsTargeted,
+          questionIds: persistedSession.questionIds,
+          blueprintStage: persistedSession.blueprintStage ?? null,
+          blueprintExamTypes: persistedSession.blueprintExamTypes,
+          blueprintLabel: persistedSession.blueprintLabel ?? null,
+          sessionType: persistedSession.sessionType ?? null,
+          updatedAt: new Date(),
+        },
+        update: {
+          totalQuestions: persistedSession.totalQuestions,
+          mode: persistedSession.mode ?? null,
+          focus: persistedSession.focus,
+          difficulty: persistedSession.difficulty,
+          systemsTargeted: persistedSession.systemsTargeted,
+          questionIds: persistedSession.questionIds,
+          blueprintStage: persistedSession.blueprintStage ?? null,
+          blueprintExamTypes: persistedSession.blueprintExamTypes,
+          blueprintLabel: persistedSession.blueprintLabel ?? null,
+          sessionType: persistedSession.sessionType ?? null,
+          updatedAt: new Date(),
+        },
+      });
+
       logger.info('Session generated', {
-        sessionId: result.sessionId,
+        sessionId: normalizedResult.sessionId,
         mode: body.mode,
-        questionCount: result.questions.length,
-        dueReviews: result.metadata.dueReviewCount,
-        newCards: result.metadata.newCardCount,
+        questionCount: normalizedResult.questions.length,
+        dueReviews: normalizedResult.metadata.dueReviewCount,
+        newCards: normalizedResult.metadata.newCardCount,
         stage: body.blueprintStage,
-        source: result.metadata.source || 'on_demand',
+        source: normalizedResult.metadata.source || 'on_demand',
         reservoirHit: reservoirSource,
       });
 
-      return new Response(JSON.stringify(result), {
+      return new Response(JSON.stringify(normalizedResult), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });

@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../../_shared/secureLogger';
+import { normalizeSessionQuestion } from '../../../../lib/sessionGeneration';
 
 const ParamsSchema = z.object({
   sessionId: z.string().min(1, 'Missing session id'),
@@ -28,13 +29,31 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       const { sessionId } = validated;
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
 
-      // Fetch session with questionIds, ensure it belongs to the user
+      if (!user) {
+        return {
+          status: 404,
+          error: 'User not found',
+        };
+      }
+
+      // Fetch session with questionIds and persisted study metadata.
       const session = await prisma.studySession.findUnique({
         where: { id: sessionId },
         select: {
           userId: true,
           questionIds: true,
+          mode: true,
+          focus: true,
+          difficulty: true,
+          systemsTargeted: true,
+          blueprintStage: true,
+          blueprintLabel: true,
+          totalQuestions: true,
         },
       });
 
@@ -45,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      if (session.userId !== auth.userId) {
+      if (session.userId !== user.id) {
         return {
           status: 403,
           error: 'Unauthorized to access this session',
@@ -56,7 +75,19 @@ export const onRequestGet = authenticatedEndpoint(
       if (!questionIds || questionIds.length === 0) {
         // No questions associated with this session (should not happen for newly generated sessions)
         return {
-          data: { questions: [] },
+          data: {
+            questions: [],
+            session: {
+              id: sessionId,
+              mode: session.mode,
+              focus: session.focus,
+              difficulty: session.difficulty,
+              systemsTargeted: session.systemsTargeted,
+              blueprintStage: session.blueprintStage,
+              blueprintLabel: session.blueprintLabel,
+              totalQuestions: session.totalQuestions,
+            },
+          },
         };
       }
 
@@ -83,33 +114,50 @@ export const onRequestGet = authenticatedEndpoint(
         .filter((q): q is NonNullable<typeof q> => q !== undefined);
 
       // Transform to match the shape expected by frontend (same as /api/questions/session)
-      const formattedQuestions = orderedQuestions.map(q => ({
-        id: q.id,
-        vignette: q.vignette,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        system: q.system,
-        condition: q.Condition ? {
-          id: q.Condition.id,
-          name: q.Condition.name,
-          system: q.Condition.system,
-        } : null,
-        difficulty: q.difficulty,
-        source: q.source,
-        tags: q.tags,
-        cognitiveLevel: q.cognitiveLevel,
-        clinicalSettings: q.clinicalSettings,
-        relatedDrugs: q.relatedDrugs,
-        relatedDiseases: q.relatedDiseases,
-        taskType: q.taskType,
-        questionFormat: q.questionFormat,
-        mediaAssetId: q.mediaAssetId,
-      }));
+      const formattedQuestions = orderedQuestions.map((q) =>
+        normalizeSessionQuestion({
+          id: q.id,
+          vignette: q.vignette,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          system: q.system,
+          category: typeof q.category === 'string' ? q.category : null,
+          topic: typeof q.topic === 'string' ? q.topic : null,
+          conditionId: q.Condition?.id ?? null,
+          condition: q.Condition
+            ? {
+                name: q.Condition.name,
+                system: q.Condition.system,
+              }
+            : null,
+          difficulty: q.difficulty,
+          source: q.source,
+          tags: q.tags,
+          subcategory:
+            typeof q.category === 'string'
+              ? q.category
+              : typeof q.taskType === 'string'
+                ? q.taskType
+                : null,
+        })
+      );
 
       return {
-        data: { questions: formattedQuestions },
+        data: {
+          questions: formattedQuestions,
+          session: {
+            id: sessionId,
+            mode: session.mode,
+            focus: session.focus,
+            difficulty: session.difficulty,
+            systemsTargeted: session.systemsTargeted,
+            blueprintStage: session.blueprintStage,
+            blueprintLabel: session.blueprintLabel,
+            totalQuestions: session.totalQuestions,
+          },
+        },
       };
     } catch (error) {
       logger.error('Failed to fetch session questions', error);

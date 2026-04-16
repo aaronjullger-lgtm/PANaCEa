@@ -61,6 +61,7 @@ import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 import type { UserProfile } from '@/types';
+import type { StudyHeatmapDatum } from '@/components/charts/StudyHeatmap';
 
 // Lazy-loaded heavy chart — @nivo/calendar (~15-20 KB)
 const StudyHeatmap = React.lazy(() => import('@/components/charts/StudyHeatmap'));
@@ -464,6 +465,32 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     [recentSessions]
   );
 
+  const studyActivityData = useMemo<StudyHeatmapDatum[]>(() => {
+    const counts = new Map<string, number>();
+    const currentYear = new Date().getUTCFullYear();
+
+    const addDay = (day: string, amount: number) => {
+      if (!day.startsWith(`${currentYear}-`) || amount <= 0) return;
+      counts.set(day, (counts.get(day) ?? 0) + amount);
+    };
+
+    if ((performanceData?.length ?? 0) > 0) {
+      for (const record of performanceData ?? []) {
+        if (!record.timestamp) continue;
+        const day = new Date(record.timestamp).toISOString().slice(0, 10);
+        addDay(day, 1);
+      }
+    } else {
+      for (const session of recentSessions) {
+        addDay(session.date, Math.max(1, session.questionsCompleted || 0));
+      }
+    }
+
+    return Array.from(counts.entries())
+      .map(([day, value]) => ({ day, value }))
+      .sort((a, b) => a.day.localeCompare(b.day));
+  }, [performanceData, recentSessions]);
+
   // Build prioritized study actions from retention data
   const studyActions = useMemo<StudyAction[]>(() => {
     const actions: StudyAction[] = [];
@@ -668,12 +695,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               )}
 
               {/* Study Activity Heatmap — GitHub-style year view (lazy-loaded) */}
-              {/* TODO: Wire to real daily activity data from /api/analytics/daily-activity */}
               <div className="card-cinematic p-5">
                 <h3 className="text-caption font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-3">Study Activity</h3>
                 <React.Suspense fallback={<div className="h-[180px] animate-pulse bg-[var(--color-bg-tertiary)] rounded-lg" />}>
                   <StudyHeatmap
-                    data={[]}
+                    data={studyActivityData}
                     height={180}
                   />
                 </React.Suspense>

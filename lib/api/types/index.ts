@@ -68,6 +68,8 @@ export type {
   SessionAnalyticsRequest,
   SessionGenerateResult,
   SessionMetadata,
+  SessionPriorityBreakdown,
+  StudySessionSnapshot,
 } from './sessions';
 
 // ── User ────────────────────────────────────────────────────────────────────

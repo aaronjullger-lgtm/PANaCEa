@@ -1,6 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  bodySupportClass,
+  sectionHeaderRowClass,
+  sectionSubtitleClass,
+  sectionTitleClass,
+} from '@/components/ui/system';
 
 export interface ContentGridProps {
   children: React.ReactNode;
@@ -20,6 +27,7 @@ export interface ContentGridProps {
 
 interface GridSkeletonProps {
   count?: number;
+  gap?: number;
   columns?: {
     default?: number;
     sm?: number;
@@ -34,12 +42,18 @@ interface GridSkeletonProps {
  */
 const GridSkeleton: React.FC<GridSkeletonProps> = ({
   count = 6,
+  gap = 6,
   columns = { default: 1, md: 2, lg: 3 },
 }) => {
   const gridClass = getGridClass(columns);
 
   return (
-    <div role="status" aria-label="Loading content" className={gridClass}>
+    <div
+      role="status"
+      aria-label="Loading content"
+      className={gridClass}
+      style={{ gap: `${gap * 0.25}rem` }}
+    >
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
@@ -125,11 +139,11 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   className = '',
 }) => {
   const gridClass = getGridClass(columns);
-  const gapClass = `gap-${gap}`;
+  const gapStyle = { gap: `${gap * 0.25}rem` };
 
   // Loading state
   if (loading) {
-    return <GridSkeleton count={skeletonCount} columns={columns} />;
+    return <GridSkeleton count={skeletonCount} gap={gap} columns={columns} />;
   }
 
   // Empty state
@@ -139,7 +153,7 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   }
 
   return (
-    <div className={`${gridClass} ${gapClass} ${className}`}>
+    <div className={cn(gridClass, className)} style={gapStyle}>
       <AnimatePresence mode="popLayout">
         {React.Children.map(children, (child, index) => (
           <motion.div
@@ -181,19 +195,19 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
     <div className="mb-8 space-y-4">
       {/* Title row */}
       {(title || actions) && (
-        <div className="flex items-start justify-between gap-4">
+        <div className={sectionHeaderRowClass}>
           {title && (
-            <div>
+            <div className="min-w-0">
               <h1
-                className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide"
+                className={cn(sectionTitleClass, 'sm:text-4xl')}
                 style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
               >
                 {title}
               </h1>
-              {subtitle && <p className="text-[var(--color-text-muted)] mt-1">{subtitle}</p>}
+              {subtitle && <p className={cn(sectionSubtitleClass, 'mt-1')}>{subtitle}</p>}
             </div>
           )}
-          {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
+          {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
         </div>
       )}
 
@@ -216,7 +230,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">
       <Loader2 aria-hidden="true" className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
-      <p className="text-[var(--color-text-muted)] text-sm">{message}</p>
+      <p className={bodySupportClass}>{message}</p>
     </div>
   );
 };

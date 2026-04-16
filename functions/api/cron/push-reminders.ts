@@ -60,11 +60,10 @@ type CronPagesFunction<E = Record<string, unknown>> = (
 function isQuietHours(
   quietStart: string,
   quietEnd: string,
-  now: Date
+  now: Date,
+  timeZone?: string | null
 ): boolean {
-  const hours = now.getUTCHours();
-  const minutes = now.getUTCMinutes();
-  const currentMinutes = hours * 60 + minutes;
+  const currentMinutes = getCurrentMinutes(now, timeZone);
 
   const [startHRaw = '0', startMRaw = '0'] = quietStart.split(':');
   const [endHRaw = '0', endMRaw = '0'] = quietEnd.split(':');
@@ -80,6 +79,99 @@ function isQuietHours(
     return currentMinutes >= startMinutes || currentMinutes < endMinutes;
   }
   return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+}
+
+function getCurrentMinutes(now: Date, timeZone?: string | null): number {
+  if (!timeZone) {
+    return now.getUTCHours() * 60 + now.getUTCMinutes();
+  }
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(now);
+    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
+    return hour * 60 + minute;
+  } catch {
+    return now.getUTCHours() * 60 + now.getUTCMinutes();
+  }
+}
+
+function getTimezoneOffsetHours(now: Date, timeZone?: string | null): number {
+  if (!timeZone) return 0;
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    const parts = Object.fromEntries(
+      formatter
+        .formatToParts(now)
+        .filter((part) => part.type !== 'literal')
+        .map((part) => [part.type, part.value])
+    );
+
+    const localTimeAsUtc = Date.UTC(
+      Number(parts.year ?? now.getUTCFullYear()),
+      Number(parts.month ?? now.getUTCMonth() + 1) - 1,
+      Number(parts.day ?? now.getUTCDate()),
+      Number(parts.hour ?? now.getUTCHours()),
+      Number(parts.minute ?? now.getUTCMinutes()),
+      Number(parts.second ?? now.getUTCSeconds())
+    );
+
+    return Math.round((localTimeAsUtc - now.getTime()) / (60 * 60 * 1000));
+  } catch {
+    return 0;
+  }
+}
+
+function derivePreferredHours(reminderTime?: string | null): number[] {
+  const parsedHour = Number(reminderTime?.split(':')[0]);
+  if (Number.isFinite(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
+    return [parsedHour, 18, 21].filter(
+      (hour, index, hours) => hours.indexOf(hour) === index
+    );
+  }
+
+  return [9, 18, 21];
+}
+
+function computeAccuracyTrend(
+  attempts: Array<{ createdAt: Date; wasCorrect: boolean }>,
+  now: Date
+): number {
+  if (attempts.length < 6) return 0;
+
+  const recentWindowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const priorWindowStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  const recent = attempts.filter((attempt) => attempt.createdAt >= recentWindowStart);
+  const prior = attempts.filter(
+    (attempt) =>
+      attempt.createdAt >= priorWindowStart && attempt.createdAt < recentWindowStart
+  );
+
+  if (recent.length < 3 || prior.length < 3) return 0;
+
+  const recentAccuracy =
+    recent.filter((attempt) => attempt.wasCorrect).length / recent.length;
+  const priorAccuracy =
+    prior.filter((attempt) => attempt.wasCorrect).length / prior.length;
+
+  return recentAccuracy - priorAccuracy;
 }
 
 /**
@@ -151,9 +243,12 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
         },
         select: {
           userId: true,
+          dailyGoal: true,
           pushQuietStart: true,
           pushQuietEnd: true,
           pushMaxPerDay: true,
+          reminderTime: true,
+          consolidationTimezone: true,
         },
       });
 
@@ -165,7 +260,7 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
         // Check quiet hours
         const quietStart = userPref.pushQuietStart || '22:00';
         const quietEnd = userPref.pushQuietEnd || '07:00';
-        if (isQuietHours(quietStart, quietEnd, now)) {
+        if (isQuietHours(quietStart, quietEnd, now, userPref.consolidationTimezone)) {
           usersSkipped++;
           continue;
         }
@@ -195,8 +290,10 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
 
         if (subscriptions.length === 0) continue;
 
+        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
         // Study phenotype, streak profile, and stats for habit profile
-        const [phenotype, learningProfile, stats, todayAttempts, systemProgress] = await Promise.all([
+        const [phenotype, learningProfile, stats, todayAttempts, systemProgress, recentAttempts] = await Promise.all([
           prisma.userStudyPhenotype.findUnique({
             where: { userId: userPref.userId },
             select: { averageDailyLoad: true },
@@ -215,6 +312,15 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
           prisma.userProgress.findMany({
             where: { userId: userPref.userId },
             select: { system: true, lastReviewAt: true },
+          }),
+          prisma.questionAttempt.findMany({
+            where: {
+              userId: userPref.userId,
+              createdAt: { gte: fourteenDaysAgo },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 200,
+            select: { createdAt: true, wasCorrect: true },
           }),
         ]);
 
@@ -249,22 +355,24 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
           }
         }
 
+        const accuracyTrend = computeAccuracyTrend(recentAttempts, now);
+
         const habitProfile: HabitProfile = {
-          preferredHours: [9, 18, 21], // TODO: derive from circadian profile
+          preferredHours: derivePreferredHours(userPref.reminderTime),
           avgDailyQuestions: phenotype?.averageDailyLoad ?? 0,
           currentStreak,
           longestStreak,
           hoursSinceLastSession,
           cardsDueNow: dueNowCount,
           cardsDueNext24h: dueNext24hCount,
-          dailyGoal: 20, // TODO: fetch from UserGoal
+          dailyGoal: userPref.dailyGoal || 20,
           questionsToday: todayAttempts,
           notificationsSent24h: 0, // TODO: track via NotificationLog when migration ships
           notificationsSent7d: 0,
-          timezoneOffsetHours: 0, // TODO: fetch from UserPreferences
+          timezoneOffsetHours: getTimezoneOffsetHours(now, userPref.consolidationTimezone),
           systemStaleness,
           activeSystems,
-          accuracyTrend: 0, // TODO: compute from recent attempts
+          accuracyTrend,
           totalQuestionsAnswered: stats?.totalQuestions ?? 0,
           notificationsEnabled: true,
         };

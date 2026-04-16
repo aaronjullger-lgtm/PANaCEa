@@ -30,17 +30,40 @@ const GLASS_CARD_STYLE: React.CSSProperties = {
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { onClick?: () => void }
->(({ className, onClick, style, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('rounded-xl transition-shadow duration-200', className)}
-    style={{ ...GLASS_CARD_STYLE, ...style }}
-    onClick={onClick}
-    role={onClick ? 'button' : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    {...props}
-  />
-));
+>(({ className, onClick, onKeyDown, role, style, tabIndex, ...props }, ref) => {
+  const isInteractive = typeof onClick === 'function';
+
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
+    onKeyDown?.(event);
+
+    if (!isInteractive || event.defaultPrevented) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'rounded-xl transition-shadow duration-200',
+        isInteractive &&
+          'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2',
+        className,
+      )}
+      style={{ ...GLASS_CARD_STYLE, ...style }}
+      onClick={onClick}
+      onKeyDown={isInteractive ? handleKeyDown : onKeyDown}
+      role={role ?? (isInteractive ? 'button' : undefined)}
+      tabIndex={tabIndex ?? (isInteractive ? 0 : undefined)}
+      {...props}
+    />
+  );
+});
 Card.displayName = 'Card';
 
 /* ---------- CardHeader ---------- */
