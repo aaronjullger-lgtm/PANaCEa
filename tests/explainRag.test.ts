@@ -9,6 +9,7 @@
  * - RAG metadata attachment
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { z } from 'zod';
 import {
   retrieveForExplanation,
   formatContextForPrompt,
@@ -185,7 +186,6 @@ describe('explain-rag: cache key construction', () => {
 
 describe('explain-rag: input validation schema', () => {
   it('should accept valid explanation request body', () => {
-    const { z } = require('zod');
     const BodySchema = z.object({
       questionId: z.string().min(1).max(100),
       questionText: z.string().min(1).max(5000),
@@ -209,7 +209,6 @@ describe('explain-rag: input validation schema', () => {
   });
 
   it('should reject empty questionId', () => {
-    const { z } = require('zod');
     const BodySchema = z.object({
       questionId: z.string().min(1).max(100),
       questionText: z.string().min(1).max(5000),
@@ -223,7 +222,6 @@ describe('explain-rag: input validation schema', () => {
   });
 
   it('should accept body without allOptions (optional)', () => {
-    const { z } = require('zod');
     const BodySchema = z.object({
       questionId: z.string().min(1).max(100),
       questionText: z.string().min(1).max(5000),
