@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const { mockPrisma, mockSafePrismaDisconnect, captured } = vi.hoisted(() => ({
   mockPrisma: {
-    user: { findUnique: vi.fn() },
+    user: { findUnique: vi.fn(), create: vi.fn() },
     sRSItem: { findMany: vi.fn() },
   },
   mockSafePrismaDisconnect: vi.fn(),
@@ -80,15 +80,18 @@ describe('GET /api/srs/due', () => {
     vi.useRealTimers();
   });
 
-  it('returns 404 when user not found', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(null);
+  it('creates a placeholder user when the row is missing', async () => {
+    mockPrisma.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'user-1' });
+    mockPrisma.user.create.mockResolvedValue({ id: 'user-1' });
+    mockPrisma.sRSItem.findMany.mockResolvedValue([]);
 
     const result = await captured.handler(makeContext());
 
-    expect(result).toEqual({
-      data: { error: 'User not found. Please refresh and try again.' },
-      status: 404,
-    });
+    expect(mockPrisma.user.create).toHaveBeenCalledTimes(1);
+    expect(result.data.items).toEqual([]);
+    expect(result.data.totalDue).toBe(0);
   });
 
   it('returns due items with overdueDays calculated correctly', async () => {

@@ -15,6 +15,7 @@ import {
   CACHE_STRATEGY,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import {
   getFromCache,
   setInCache,
@@ -186,6 +187,7 @@ function mapToPreGeneratedQuestion(r: {
 const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
 const BASE_THRESHOLD_MULTIPLIER = 200;
+const MAX_SEEN_HISTORY = 5_000;
 
 function getSystemThreshold(system: string): number {
   const weight = getSystemWeight(system);
@@ -252,17 +254,10 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true, role: true },
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+        id: true,
+        role: true,
       });
-
-      if (!user) {
-        return {
-          data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
-          status: 404,
-        };
-      }
 
       const userId = user.id;
       const system = validated.system || null;
@@ -305,7 +300,8 @@ export const onRequestGet = authenticatedEndpoint(
       const seenQuestionIds = await prisma.userQuestionSeen.findMany({
         where: { userId },
         select: { questionId: true },
-        take: 10000, // Bound to prevent memory exhaustion for power users
+        orderBy: { lastSeenAt: 'desc' },
+        take: MAX_SEEN_HISTORY,
       });
       const seenIds = new Set<string>(
         seenQuestionIds.map((q: { questionId: string }) => q.questionId)
@@ -569,9 +565,10 @@ async function getFromPreGeneratedPool(
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
 
-  // Fetch more questions than needed for PANCE-weighted selection
-  const fetchMultiplier = hasSystemFilter ? 5 : 20; // Fetch 20x when no system filter for better distribution
-  const fetchCount = count * fetchMultiplier;
+  // Bound pool scans to avoid timeouts on large session requests.
+  const fetchCount = hasSystemFilter
+    ? Math.min(Math.max(count * 3, count + 12), 120)
+    : Math.min(Math.max(count * 8, count + 40), 240);
 
   if (cachedQuestions && cachedQuestions.length > 0) {
     preGenQuestions = cachedQuestions;
@@ -729,9 +726,10 @@ async function getFromMainTable(
   const hasSystemFilter = system || (systems && systems.length > 0);
   const logger = createEndpointLogger('pool:getFromMainTable');
 
-  // Fetch more questions than needed for PANCE-weighted selection
-  const fetchMultiplier = hasSystemFilter ? 5 : 20;
-  const fetchCount = count * fetchMultiplier;
+  // Bound main-table scans to avoid large fan-out when the pool is thin.
+  const fetchCount = hasSystemFilter
+    ? Math.min(Math.max(count * 3, count + 10), 100)
+    : Math.min(Math.max(count * 6, count + 30), 180);
 
   const where: Record<string, unknown> = {};
   if (systems?.length) where.system = { in: systems };

@@ -12,6 +12,7 @@
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { isGoalDay, previousGoalDay, lastGoalDayOnOrBefore, type StreakGoalDays } from '../../../lib/streakCalc';
 
 export const onRequestOptions = withCors();
@@ -39,10 +40,11 @@ export const onRequestPost = authenticatedEndpoint({}, async (context) => {
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
     const today = toMidnightUTC(new Date());
+    const internalUserId = await resolveOrCreateUserId(prisma, auth.userId);
 
     // Fetch user preferences
     const prefs = await prisma.userPreferences.findUnique({
-      where: { userId: auth.userId },
+      where: { userId: internalUserId },
       select: { streakFreezes: true, streakGoalDays: true },
     });
 
@@ -63,14 +65,14 @@ export const onRequestPost = authenticatedEndpoint({}, async (context) => {
     const [activities, existingFreezes] = await Promise.all([
       prisma.dailyStreak.findMany({
         where: {
-          userId: auth.userId,
+          userId: internalUserId,
           date: { gte: twoWeeksAgo },
         },
         select: { date: true },
       }),
       prisma.streakFreezeUse.findMany({
         where: {
-          userId: auth.userId,
+          userId: internalUserId,
           date: { gte: twoWeeksAgo },
         },
         select: { date: true },
@@ -133,16 +135,16 @@ export const onRequestPost = authenticatedEndpoint({}, async (context) => {
     const operations = freezesToApply.map((date) =>
       prisma!.streakFreezeUse.upsert({
         where: {
-          userId_date: { userId: auth.userId, date },
+          userId_date: { userId: internalUserId, date },
         },
-        create: { userId: auth.userId, date },
+        create: { userId: internalUserId, date },
         update: {},
       })
     );
 
     operations.push(
       prisma.userPreferences.update({
-        where: { userId: auth.userId },
+        where: { userId: internalUserId },
         data: { streakFreezes: { decrement: freezesToApply.length } },
       }) as any
     );
@@ -150,7 +152,7 @@ export const onRequestPost = authenticatedEndpoint({}, async (context) => {
     await prisma.$transaction(operations);
 
     logger.info('Auto-freeze applied', {
-      userId: auth.userId,
+      userId: internalUserId,
       freezesApplied: freezesToApply.length,
       dates: freezesToApply.map(toDateKey),
     });

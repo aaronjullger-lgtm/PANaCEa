@@ -19,6 +19,7 @@ import {
   CACHE_CONFIG,
   isKVAvailable,
 } from '../_shared/cache';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 
 type SessionAnalyticsData = z.infer<typeof sessionAnalyticsSchema>;
 type SessionAnalyticsQuery = z.infer<typeof sessionAnalyticsQuerySchema>;
@@ -41,24 +42,13 @@ export const onRequestPost = authenticatedEndpoint(
     try {
       const data = context.validated;
 
-      // Find user by Clerk ID
-      const user = await prisma.user.findUnique({
-        where: { clerkId: context.auth.userId },
-        select: { id: true },
-      });
-
-      if (!user) {
-        return {
-          status: 404,
-          error: 'User not found - must be synced from Clerk webhook first',
-        };
-      }
+      const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
 
       // Create session analytics record
       const session = await prisma.studySession.create({
         data: {
           id: data.sessionId || uuidv4(),
-          userId: user.id,
+          userId,
           startedAt: new Date(data.startedAt),
           endedAt: new Date(data.endedAt),
 
@@ -137,7 +127,7 @@ export const onRequestPost = authenticatedEndpoint(
       await prisma.sessionAnalytics.create({
         data: {
           id: `analytics_${session.id}`,
-          userId: user.id,
+          userId,
           sessionId: session.id,
           totalDurationMinutes: totalDurationMinutes ?? undefined,
           avgResponseTime: data.avgTimePerQuestion ?? undefined,
@@ -147,7 +137,7 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       // Update user learning profile (upsert)
-      await updateUserLearningProfile(prisma, user.id, data);
+      await updateUserLearningProfile(prisma, userId, data);
 
       return {
         status: 201,
@@ -195,22 +185,11 @@ export const onRequestGet = authenticatedEndpoint(
         }
       }
 
-      // Find user by Clerk ID
-      const user = await prisma.user.findUnique({
-        where: { clerkId: context.auth.userId },
-        select: { id: true },
-      });
-
-      if (!user) {
-        return {
-          status: 404,
-          error: 'User not found',
-        };
-      }
+      const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
 
       // Get recent sessions
       const sessions = await prisma.studySession.findMany({
-        where: { userId: user.id },
+        where: { userId },
         orderBy: { startedAt: 'desc' },
         take: Math.min(limit, 100),
       });
@@ -219,7 +198,7 @@ export const onRequestGet = authenticatedEndpoint(
       let profile = null;
       if (includeProfile) {
         profile = await prisma.userLearningProfile.findUnique({
-          where: { userId: user.id },
+          where: { userId },
         });
       }
 

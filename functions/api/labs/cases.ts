@@ -3,14 +3,17 @@
  * Edge port of routes/labs.ts
  */
 
+import { z } from 'zod';
 import { withCors, authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
+const EmptySchema = z.object({}).optional();
+
 export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
-  undefined,
+  EmptySchema,
   async (context) => {
     const log = createEndpointLogger('labs/cases');
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);

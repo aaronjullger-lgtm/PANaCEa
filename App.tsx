@@ -701,10 +701,12 @@ const App: React.FC = () => {
         } else {
           const token = await getToken();
           let initialQuestions: QuizQuestion[];
+          let sessionEmptyMessage: string | null = null;
           try {
             if (token) {
               const result = await fetchSessionQuestions(settings, token, INITIAL_QUEUE_SIZE);
               initialQuestions = result.questions as QuizQuestion[];
+              sessionEmptyMessage = result.emptyState?.message ?? null;
             } else {
               const { getQuestionBatch } = await import('./services/questionService');
               initialQuestions = await getQuestionBatch(
@@ -714,7 +716,10 @@ const App: React.FC = () => {
                 getToken
               );
             }
-          } catch {
+          } catch (sessionFetchError) {
+            if (settings.simulationStrict) {
+              throw sessionFetchError;
+            }
             const { getQuestionBatch } = await import('./services/questionService');
             initialQuestions = await getQuestionBatch(
               settings,
@@ -725,7 +730,8 @@ const App: React.FC = () => {
           }
           if (initialQuestions.length === 0) {
             setError(
-              'No questions available for your selection. Try adjusting focus or try again later.'
+              sessionEmptyMessage ??
+                'No questions available for your selection. Try adjusting focus or try again later.'
             );
             return;
           }

@@ -29,11 +29,17 @@ interface PoolStatus {
   needsGeneration: boolean;
 }
 
+interface SessionEmptyState {
+  code: string;
+  message: string;
+}
+
 // Full session response
 interface SessionResponse {
   questions: Question[];
   analytics: SessionAnalytics;
   poolStatus: PoolStatus;
+  emptyState?: SessionEmptyState;
 }
 
 // Session state for tracking
@@ -158,13 +164,24 @@ export async function fetchSessionQuestions(
       }
 
       if (!response.ok) {
+        let errorMessage = `API error: ${response.status}`;
+        try {
+          const payload = await response.json();
+          if (payload && typeof payload === 'object') {
+            const typed = payload as { error?: string; message?: string };
+            errorMessage = typed.message || typed.error || errorMessage;
+          }
+        } catch {
+          // Ignore JSON parse errors and keep status-based message.
+        }
+
         // If 503 and not last attempt, retry
         if (response.status === 503 && attempt < maxRetries) {
           console.warn(`[SessionService] API 503 (attempt ${attempt}), retrying...`);
           await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
           continue;
         }
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -194,6 +211,7 @@ export async function fetchSessionQuestions(
         questions,
         analytics: data.analytics,
         poolStatus: data.poolStatus,
+        emptyState: data.emptyState,
       };
     } catch (error) {
       lastError = error as Error;
@@ -205,6 +223,28 @@ export async function fetchSessionQuestions(
   }
 
   console.error('[SessionService] All API fetch attempts failed, using fallback:', lastError);
+  if (settings.simulationStrict) {
+    return {
+      questions: [],
+      analytics: {
+        questionsServed: 0,
+        fromPool: 0,
+        fromMain: 0,
+        generated: 0,
+        fromSeeds: 0,
+        avgDifficulty: 0,
+        systemDistribution: {},
+      },
+      poolStatus: {
+        available: 0,
+        needsGeneration: false,
+      },
+      emptyState: {
+        code: 'SESSION_SERVICE_UNAVAILABLE',
+        message: 'Simulation is temporarily unavailable. Please try again shortly.',
+      },
+    };
+  }
   return fallbackQuestionFetch(settings, count, token);
 }
 
@@ -237,6 +277,13 @@ async function fallbackQuestionFetch(
         available: 0,
         needsGeneration: true,
       },
+      emptyState:
+        questions.length === 0
+          ? {
+              code: 'SESSION_FALLBACK_EMPTY',
+              message: 'No questions matched this session configuration. Try a broader focus or try again later.',
+            }
+          : undefined,
     };
   } catch (fallbackError) {
     console.error('[SessionService] Fallback also failed:', fallbackError);
@@ -254,6 +301,10 @@ async function fallbackQuestionFetch(
       poolStatus: {
         available: 0,
         needsGeneration: true,
+      },
+      emptyState: {
+        code: 'SESSION_FALLBACK_UNAVAILABLE',
+        message: 'Question service is temporarily unavailable. Please try again shortly.',
       },
     };
   }

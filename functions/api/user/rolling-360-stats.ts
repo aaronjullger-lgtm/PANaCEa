@@ -10,6 +10,7 @@ import { authenticatedEndpoint, withCors, getSentryTraceId } from '../_shared/mi
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { withTimeout, TimeoutError } from '../_shared/timeout';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { Rolling360Service } from '../../../lib/services/rolling360Service';
 
 const ROLLING_360_TIMEOUT_MS = 8_000; // 8s so we respond before Worker "code had hung" kill
@@ -47,16 +48,17 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const internalUserId = await resolveOrCreateUserId(prisma, auth.userId);
     const rolling360Service = new Rolling360Service(prisma);
     const stats = await withTimeout(
-      rolling360Service.getRolling360Stats(auth.userId, { skipCalibration: true }),
+      rolling360Service.getRolling360Stats(internalUserId, { skipCalibration: true }),
       ROLLING_360_TIMEOUT_MS,
       'Rolling 360 stats request timed out'
     );
 
     // Safety: Return structured empty state if no data exists
     if (!stats) {
-      logger.info('Returning empty state for new user', { userId: auth.userId });
+      logger.info('Returning empty state for new user', { userId: internalUserId });
       return { data: EMPTY_STATE_RESPONSE };
     }
 
@@ -69,7 +71,7 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
     }
 
     logger.info('Fetched Rolling 360 stats', {
-      userId: auth.userId,
+      userId: internalUserId,
       totalInWindow: stats.totalInWindow,
       scoreConfidence: stats.scoreConfidence,
     });

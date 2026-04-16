@@ -107,6 +107,10 @@ const EMPTY_STATS: Rolling360Stats = {
 // =============================================================================
 
 async function fetchRolling360Stats(url: string, token: string | null): Promise<Rolling360Stats> {
+  if (!token) {
+    return EMPTY_STATS;
+  }
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,

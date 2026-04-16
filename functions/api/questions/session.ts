@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import {
   SessionService,
   type SessionQuestionRequest,
@@ -48,6 +49,16 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/questions/session');
+    const userSelect = {
+      id: true,
+      rotationExamDate: true,
+      currentRotation: true,
+      eorTestDate: true,
+      rotationEndDate: true,
+      examDate: true,
+      yearInProgram: true,
+      trainingPhase: true,
+    } as const;
     logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
     if (!env.DATABASE_URL) {
       logger.error('DATABASE_URL not configured');
@@ -62,51 +73,7 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     let sessionService: SessionService | null = null;
     try {
-      // Retry user lookup to handle intermittent Accelerate failures
-      let user = null;
-      let userLookupError = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          user = await prisma.user.findUnique({
-            where: { clerkId: auth.userId },
-            select: {
-              id: true,
-              rotationExamDate: true,
-              currentRotation: true,
-              eorTestDate: true,
-              rotationEndDate: true,
-              examDate: true,
-              yearInProgram: true,
-              trainingPhase: true,
-            },
-          });
-          break;
-        } catch (error) {
-          userLookupError = error;
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-        }
-      }
-
-      if (!user) {
-        // If user lookup fails, log but continue with a placeholder user ID
-        // The session service will handle missing user gracefully
-        logger.warn('User lookup failed after retries, using placeholder', {
-          error: userLookupError?.message,
-          userId: auth.userId,
-        });
-        // Use a placeholder ID that won't conflict with real users
-        const placeholderUserId = -1;
-        // For now, return 503 to avoid corrupting user data
-        return {
-          data: {
-            error: 'Session service unavailable',
-            message: 'Database is temporarily unavailable. Please try again.',
-          },
-          status: 503,
-        };
-      }
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, userSelect);
 
       const count = Math.min(parseInt(validated?.count || '10', 10), 50);
       const system = validated?.system || undefined;
@@ -143,9 +110,31 @@ export const onRequestGet = authenticatedEndpoint(
       logger.info('Session questions fetched (GET)', {
         userId: auth.userId,
         count: result.questions?.length || 0,
+        requestedCount: count,
+        simulationStrict,
       });
 
-      return { data: result };
+      const emptyState =
+        result.questions.length === 0
+          ? {
+              code: simulationStrict ? 'SIMULATION_EMPTY' : 'SESSION_EMPTY',
+              message: simulationStrict
+                ? 'No eligible questions are currently available for a strict simulation. Please try again shortly.'
+                : 'No questions matched this session configuration. Try a broader focus or try again later.',
+            }
+          : undefined;
+
+      if (emptyState) {
+        logger.warn('Session request returned no questions', {
+          userId: auth.userId,
+          code: emptyState.code,
+          requestedCount: count,
+          simulationStrict,
+          sessionLane,
+        });
+      }
+
+      return { data: emptyState ? { ...result, emptyState } : result };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
@@ -187,6 +176,16 @@ export const onRequestGet = authenticatedEndpoint(
 export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/session');
+  const userSelect = {
+    id: true,
+    rotationExamDate: true,
+    currentRotation: true,
+    eorTestDate: true,
+    rotationEndDate: true,
+    examDate: true,
+    yearInProgram: true,
+    trainingPhase: true,
+  } as const;
   logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
@@ -199,51 +198,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
   let sessionService: SessionService | null = null;
 
   try {
-    // Retry user lookup to handle intermittent Accelerate failures
-    let user = null;
-    let userLookupError = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          user = await prisma.user.findUnique({
-            where: { clerkId: auth.userId },
-            select: {
-              id: true,
-              rotationExamDate: true,
-              currentRotation: true,
-              eorTestDate: true,
-              rotationEndDate: true,
-              examDate: true,
-              yearInProgram: true,
-              trainingPhase: true,
-            },
-          });
-          break;
-      } catch (error) {
-        userLookupError = error;
-        if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        }
-      }
-    }
-
-    if (!user) {
-      // If user lookup fails, log but continue with a placeholder user ID
-      // The session service will handle missing user gracefully
-      logger.warn('User lookup failed after retries, using placeholder', {
-        error: userLookupError?.message,
-        userId: auth.userId,
-      });
-      // Use a placeholder ID that won't conflict with real users
-      const placeholderUserId = -1;
-      // For now, return 503 to avoid corrupting user data
-      return {
-        data: {
-          error: 'Session service unavailable',
-          message: 'Database is temporarily unavailable. Please try again.',
-        },
-        status: 503,
-      };
-    }
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, userSelect);
 
     sessionService = new SessionService(env.DATABASE_URL, env);
     const learnerPhasePost = inferLearnerPhase(user);
@@ -273,9 +228,31 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     logger.info('Session questions fetched (POST)', {
       userId: auth.userId,
       count: result.questions?.length || 0,
+      requestedCount: Math.min(validated.count || 10, 50),
+      simulationStrict: postSimStrict,
     });
 
-    return { data: result };
+    const emptyState =
+      result.questions.length === 0
+        ? {
+            code: postSimStrict ? 'SIMULATION_EMPTY' : 'SESSION_EMPTY',
+            message: postSimStrict
+              ? 'No eligible questions are currently available for a strict simulation. Please try again shortly.'
+              : 'No questions matched this session configuration. Try a broader focus or try again later.',
+          }
+        : undefined;
+
+    if (emptyState) {
+      logger.warn('Session request returned no questions', {
+        userId: auth.userId,
+        code: emptyState.code,
+        requestedCount: Math.min(validated.count || 10, 50),
+        simulationStrict: postSimStrict,
+        sessionLane: postSessionLane,
+      });
+    }
+
+    return { data: emptyState ? { ...result, emptyState } : result };
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;

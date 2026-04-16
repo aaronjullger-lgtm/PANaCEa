@@ -14,11 +14,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const {
   mockFindUnique,
+  mockCreate,
   mockUpdate,
   mockDisconnect,
   capturedHandlers,
 } = vi.hoisted(() => {
   const mockFindUnique = vi.fn();
+  const mockCreate = vi.fn();
   const mockUpdate = vi.fn();
   const mockDisconnect = vi.fn().mockResolvedValue(undefined);
   const capturedHandlers: { get: ((ctx: any) => Promise<any>) | null; put: ((ctx: any) => Promise<any>) | null; index: number } = {
@@ -26,12 +28,12 @@ const {
     put: null,
     index: 0,
   };
-  return { mockFindUnique, mockUpdate, mockDisconnect, capturedHandlers };
+  return { mockFindUnique, mockCreate, mockUpdate, mockDisconnect, capturedHandlers };
 });
 
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: () => ({
-    user: { findUnique: mockFindUnique, update: mockUpdate },
+    user: { findUnique: mockFindUnique, create: mockCreate, update: mockUpdate },
   }),
   safePrismaDisconnect: (...args: unknown[]) => mockDisconnect(...args),
 }));
@@ -214,13 +216,32 @@ describe('GET /api/user/profile', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 404 when user not found', async () => {
-    mockFindUnique.mockResolvedValue(null);
+  it('creates a placeholder user when the row is missing', async () => {
+    const placeholderUser = makeMockUser({
+      email: 'clerk_user_123@placeholder.panacea.app',
+      firstName: null,
+      lastName: null,
+      examDate: null,
+      graduationDate: null,
+      school: null,
+      currentRotation: null,
+      yearInProgram: null,
+      rotationExamDate: null,
+      eorTestDate: null,
+      rotationStartDate: null,
+      rotationEndDate: null,
+      hasCompletedBaseline: false,
+      hasCompletedOnboarding: false,
+    });
+    mockFindUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(placeholderUser);
+    mockCreate.mockResolvedValue({ id: 'uuid-1' });
     const result = await capturedHandlers.get!(makeContext());
 
-    expect(result.status).toBe(404);
-    expect(result.data.success).toBe(false);
-    expect(result.data.error).toContain('User not found');
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(result.data.success).toBe(true);
+    expect(result.data.profile.email).toBe('clerk_user_123@placeholder.panacea.app');
   });
 
   it('returns profile with ISO date strings when user found', async () => {
@@ -313,13 +334,17 @@ describe('PUT /api/user/profile', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 404 when user not found', async () => {
-    mockFindUnique.mockResolvedValue(null);
+  it('creates a placeholder user before updating when the row is missing', async () => {
+    mockFindUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'uuid-1' });
+    mockCreate.mockResolvedValue({ id: 'uuid-1' });
+    mockUpdate.mockResolvedValue(makeMockUser({ firstName: 'X' }));
     const result = await capturedHandlers.put!(makeContext({ validated: { firstName: 'X' } }));
 
-    expect(result.status).toBe(404);
-    expect(result.data.success).toBe(false);
-    expect(result.data.error).toContain('User not found');
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(result.data.success).toBe(true);
+    expect(result.data.profile.firstName).toBe('X');
   });
 
   it('updates user and returns profile with ISO dates', async () => {
@@ -347,7 +372,7 @@ describe('PUT /api/user/profile', () => {
 
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { clerkId: 'clerk_user_123' },
+        where: { id: 'uuid-1' },
         data: { firstName: 'Updated', school: 'Harvard' },
       })
     );

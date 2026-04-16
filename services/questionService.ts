@@ -254,7 +254,11 @@ async function fetchFromPool(
   if (token && token.trim().length > 0) {
     headers.Authorization = `Bearer ${token}`;
   } else {
-    console.warn('[QuestionService] No auth token provided to fetchFromPool - relying on session cookies');
+    console.warn('[QuestionService] No auth token provided to fetchFromPool - skipping pool request');
+    return {
+      questions: [],
+      poolStatus: { available: 0, needsGeneration: false, threshold: 50 },
+    };
   }
 
   try {

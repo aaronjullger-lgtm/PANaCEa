@@ -165,6 +165,9 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
   }
 
   try {
+    if (!getToken) {
+      return [];
+    }
     const apiUrl = getApiEndpoint(API_ENDPOINTS.LABS_CASES);
 
     // Build headers with auth token if available
@@ -172,12 +175,11 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
       'Content-Type': 'application/json',
     };
 
-    if (getToken) {
-      const token = await getToken();
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+    const token = await getToken();
+    if (!token) {
+      return [];
     }
+    headers['Authorization'] = `Bearer ${token}`;
 
     const response = await fetch(apiUrl, { headers });
 
