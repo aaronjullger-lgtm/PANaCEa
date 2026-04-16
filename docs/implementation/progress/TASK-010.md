@@ -3,6 +3,7 @@
 - **Status:** completed
 - **Date:** 2026-04-16
 - **Branch:** `codex-study-session-prod-hotfix-v2`
+- **Commits:** `fbad2689` (code) / `6771368a` (docs)
 - **Category:** Endpoint retirement / dead-code removal
 - **Priority / Risk / Size:** Medium / Low / S
 - **Audit reference:** `UNFINISHED_WORK_MASTER_AUDIT.md` "Not doing now — parked" row: _Retire deprecated SRS endpoints (`functions/api/questions/review.ts`, narrow `functions/api/srs/submit.ts`)_. Unparked this run after a clean caller inventory.
