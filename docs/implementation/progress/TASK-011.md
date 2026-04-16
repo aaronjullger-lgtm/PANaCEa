@@ -3,7 +3,7 @@
 - **Status:** completed
 - **Date:** 2026-04-16
 - **Branch:** `codex-study-session-prod-hotfix-v2`
-- **Commits:** (pending this-run commit)
+- **Commits:** `acb0a0d5` (code) / `a15cfdd0` (docs)
 - **Category:** API hardening (content-type gates + Content-Length short-circuits)
 - **Priority / Risk / Size:** Medium / Low / S
 - **Audit reference:** `UNFINISHED_WORK_MASTER_AUDIT.md` §5 "API validation hardening" (WARN_MANUAL_ONLY tail); improved audit script output on 2026-04-16 listing three endpoints under `WARN_MANUAL_ONLY`.
