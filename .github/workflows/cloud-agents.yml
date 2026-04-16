@@ -1,6 +1,9 @@
-# Cloud Agents: trigger Cursor Cloud Agents from CI based on changed paths.
-# Requires GitHub secret: CURSOR_AGENTS_API_KEY (from Cursor Dashboard).
-# See docs/automation/CLOUD_AGENTS_API.md.
+# purpose: Trigger Cursor Cloud Agents on code changes or manual operator dispatch without any scheduled execution path.
+# owner: Platform / DevEx
+# trigger strategy: pull_request, push, workflow_dispatch (intentionally no schedule)
+# secrets required: CURSOR_AGENTS_API_KEY
+# expected runtime: 5-20 minutes per agent job
+# failure behavior: Review the failed job log, then rerun the specific agent manually if the path-based trigger still applies. Do not restore recurring cron execution for cloud agents.
 
 name: Cloud Agents
 
@@ -9,15 +12,54 @@ on:
     branches: [main, develop]
   push:
     branches: [main, develop]
-  schedule:
-    # Security sentinel: nightly (optional; set PACKAGE_* when triggered by Dependabot)
-    - cron: "0 6 * * *"
   workflow_dispatch:
     inputs:
       agent_job:
-        description: "Agent job (edge-guard, living-docs, asset-perf, schema-sync, e2e-gap, pr-review, security-sentinel, lint-fix)"
+        description: "Manual agent job"
         required: true
         default: "pr-review"
+        type: choice
+        options:
+          - pr-review
+          - edge-guard
+          - living-docs
+          - asset-perf
+          - schema-sync
+          - e2e-gap
+          - security-sentinel
+          - lint-fix
+      target_branch:
+        description: "Repo branch/ref for the agent to inspect (security-sentinel must use main)"
+        required: false
+        default: "main"
+        type: string
+      changed_files_override:
+        description: "Optional changed-files context for manual non-security runs (comma or newline separated)"
+        required: false
+        default: ""
+        type: string
+      package_name:
+        description: "Required for security-sentinel: vulnerable package name"
+        required: false
+        default: ""
+        type: string
+      package_version:
+        description: "Optional for security-sentinel: target safe version"
+        required: false
+        default: ""
+        type: string
+      advisory_url:
+        description: "Optional for security-sentinel: advisory or Dependabot URL"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-agents-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: 22
@@ -27,6 +69,7 @@ jobs:
   path-filter:
     name: Path filter
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     outputs:
       functions: ${{ steps.filter.outputs.functions }}
@@ -68,6 +111,7 @@ jobs:
   changed-files:
     name: Changed files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     outputs:
       list: ${{ steps.files.outputs.list }}
@@ -91,6 +135,7 @@ jobs:
   agent-edge-guard:
     name: Agent – Edge/Prisma Guard
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [path-filter, changed-files]
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
@@ -113,6 +158,7 @@ jobs:
   agent-living-docs:
     name: Agent – Living Docs
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [path-filter, changed-files]
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
@@ -135,6 +181,7 @@ jobs:
   agent-asset-perf:
     name: Agent – Asset/Perf
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [path-filter, changed-files]
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
@@ -157,6 +204,7 @@ jobs:
   agent-schema-sync:
     name: Agent – Schema Sync
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [path-filter, changed-files]
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
@@ -179,6 +227,7 @@ jobs:
   agent-e2e-gap:
     name: Agent – E2E Gap
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [path-filter, changed-files]
     if: |
       (github.event_name == 'pull_request' || github.event_name == 'push') &&
@@ -201,6 +250,7 @@ jobs:
   agent-pr-review:
     name: Agent – PR Review
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [changed-files]
     if: github.event_name == 'pull_request'
     steps:
@@ -217,31 +267,11 @@ jobs:
           CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
         run: npx tsx scripts/cloud-agents/run-from-ci.ts
 
-  # ---------- Agent: Security sentinel (nightly schedule; for manual use agent_job=security-sentinel)
-  agent-security-sentinel:
-    name: Agent – Security Sentinel
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-      - run: npm ci
-      - name: Launch Security Sentinel agent
-        env:
-          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
-          AGENT_JOB: security-sentinel
-          PACKAGE_NAME: ${{ github.event.inputs.package_name || env.PACKAGE_NAME }}
-          PACKAGE_VERSION: ${{ github.event.inputs.package_version || env.PACKAGE_VERSION }}
-          ADVISORY_URL: ${{ github.event.inputs.advisory_url || env.ADVISORY_URL }}
-        run: npx tsx scripts/cloud-agents/run-from-ci.ts
-
-  # ---------- Manual dispatch: run any job by name
+  # ---------- Manual dispatch: operator-triggered jobs only. No scheduled cloud-agent lane.
   agent-manual:
     name: Agent – Manual
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.agent_job != ''
     steps:
       - uses: actions/checkout@v4
@@ -252,10 +282,56 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
-      - name: List changed files for manual run
+      - name: Validate manual dispatch inputs
+        run: |
+          set -euo pipefail
+
+          job="${{ github.event.inputs.agent_job }}"
+          branch="${{ github.event.inputs.target_branch }}"
+          package_name="${{ github.event.inputs.package_name }}"
+          package_version="${{ github.event.inputs.package_version }}"
+          advisory_url="${{ github.event.inputs.advisory_url }}"
+
+          if [ "${job}" = "security-sentinel" ]; then
+            if [ -z "${package_name}" ]; then
+              echo "security-sentinel requires package_name." >&2
+              exit 1
+            fi
+
+            if [ -z "${package_version}" ] && [ -z "${advisory_url}" ]; then
+              echo "security-sentinel requires package_version or advisory_url." >&2
+              exit 1
+            fi
+
+            if [ "${branch}" != "main" ]; then
+              echo "security-sentinel must target main so the agent branches from the primary release line." >&2
+              exit 1
+            fi
+          fi
+
+          {
+            echo "### Manual Cloud-Agent Dispatch"
+            echo ""
+            echo "- Agent job: ${job}"
+            echo "- Target branch: ${branch}"
+            echo "- Scheduled execution: disallowed"
+            echo "- Trigger mode: workflow_dispatch"
+            if [ "${job}" = "security-sentinel" ]; then
+              echo "- Package name: ${package_name}"
+              echo "- Package version: ${package_version:-n/a}"
+              echo "- Advisory URL: ${advisory_url:-n/a}"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
+      - name: Build manual context
         id: changed
         run: |
-          LIST=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo ".")
+          set -euo pipefail
+
+          if [ -n "${{ github.event.inputs.changed_files_override }}" ]; then
+            LIST="${{ github.event.inputs.changed_files_override }}"
+          else
+            LIST=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo ".")
+          fi
           echo "list<<EOF" >> $GITHUB_OUTPUT
           echo "$LIST" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -264,4 +340,8 @@ jobs:
           CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
           AGENT_JOB: ${{ github.event.inputs.agent_job }}
           CHANGED_FILES: ${{ steps.changed.outputs.list }}
+          AGENT_BRANCH_OVERRIDE: ${{ github.event.inputs.target_branch }}
+          PACKAGE_NAME: ${{ github.event.inputs.package_name }}
+          PACKAGE_VERSION: ${{ github.event.inputs.package_version }}
+          ADVISORY_URL: ${{ github.event.inputs.advisory_url }}
         run: npx tsx scripts/cloud-agents/run-from-ci.ts

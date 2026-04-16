@@ -67,6 +67,7 @@ import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
   isOpen?: boolean; // For conditional rendering from parent
+  sessionId?: string | null;
   performanceData: PerformanceRecord[];
   sessionDurationMs?: number;
   sessionStartTime?: number;
@@ -120,6 +121,7 @@ function AccuracyBarFill({ accuracy, barClass }: Readonly<{ accuracy: number; ba
 
 export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   isOpen = true,
+  sessionId,
   performanceData,
   sessionDurationMs,
   sessionStartTime,
@@ -410,16 +412,17 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         }
 
         // Collect all analytics
-        const analytics = collectSessionAnalytics(
-          sessionStartTime || Date.now() - (sessionDurationMs || 0),
-          overallStats.total,
-          overallStats.correct,
-          overallStats.maxStreak,
+        const analytics = collectSessionAnalytics({
+          sessionId,
+          sessionStartTime: sessionStartTime || Date.now() - (sessionDurationMs || 0),
+          totalQuestions: overallStats.total,
+          correctAnswers: overallStats.correct,
+          bestStreak: overallStats.maxStreak,
           finalStreak,
-          sessionSettings?.mode,
-          sessionSettings?.focus,
-          'same' // All sessions are PANCE-level
-        );
+          mode: sessionSettings?.mode,
+          focus: sessionSettings?.focus,
+          difficulty: 'same', // All sessions are PANCE-level
+        });
 
         // Sync to database
         const result = await syncSessionAnalytics(analytics, token);
@@ -442,6 +445,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
     sessionDurationMs,
     overallStats,
     sessionSettings,
+    sessionId,
     getToken,
   ]);
 

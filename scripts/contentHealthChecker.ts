@@ -2,6 +2,9 @@
  * Content Health Checker
  * Runs nightly to audit content quality and flag issues
  *
+ * DEPRECATED: this legacy local-cron helper is no longer part of the scheduled
+ * production architecture. GitHub Actions owns recurring automation.
+ *
  * Usage: tsx scripts/contentHealthChecker.ts
  *
  * NOTE: This now uses the database as the source of truth for content.

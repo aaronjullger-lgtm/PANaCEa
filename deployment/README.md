@@ -133,16 +133,17 @@ npm run dev
 
 ## Scheduled Jobs
 
-Set up recurring tasks using cron:
+Recurring automation is no longer configured with local machine cron.
+
+Use the GitHub Actions lanes documented in [`docs/automation/README.md`](../docs/automation/README.md).
+
+The old local-cron examples below are retired and should not be installed:
 
 ```bash
-# Edit crontab
-crontab -e
-
-# Add PANaCEa jobs (see deployment/cron/panacea.cron)
-0 0 * * * cd /opt/PANaCEa && npx tsx scripts/scheduleJobs.ts >> logs/scheduler.log 2>&1
-0 3 * * * cd /opt/PANaCEa && npx tsx scripts/contentHealthChecker.ts >> logs/health-check.log 2>&1
-0 4 * * 0 cd /opt/PANaCEa && npx tsx scripts/cleanupJobs.ts >> logs/cleanup.log 2>&1
+# retired
+# 0 0 * * * cd /opt/PANaCEa && npx tsx scripts/scheduleJobs.ts >> logs/scheduler.log 2>&1
+# 0 3 * * * cd /opt/PANaCEa && npx tsx scripts/contentHealthChecker.ts >> logs/health-check.log 2>&1
+# 0 4 * * 0 cd /opt/PANaCEa && npx tsx scripts/cleanupJobs.ts >> logs/cleanup.log 2>&1
 ```
 
 See `deployment/cron/README.md` for more details.

@@ -11,8 +11,9 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { requireCronSecret, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   batchCalibrateItems,
@@ -36,13 +37,19 @@ type Env = CloudflareEnv & { CACHE?: KVNamespace };
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
-  const { env, validated } = context as {
-    env: Env;
-    validated: z.infer<typeof BodySchema>;
-    auth: { userId: string };
-  };
+export async function onRequestPost(context: any): Promise<Response> {
+  const unauthorized = requireCronSecret(context.request, context.env);
+  if (unauthorized) {
+    return unauthorized;
+  }
 
+  const validation = await validateRequest(context.request, BodySchema);
+  if (validation.success === false) {
+    return validation.response;
+  }
+
+  const env = context.env as Env;
+  const validated = validation.data;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const minResponses = validated?.minResponses ?? MIN_OBSERVATIONS;
 
@@ -71,13 +78,14 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
     const userAccuracyMap = new Map(userStats.map((u) => [u.userId, u.accuracy]));
 
     if (userAccuracyMap.size === 0) {
-      return {
+      return Response.json({
+        success: true,
         data: {
           message: 'No eligible users found (need >=10 attempts each)',
           calibrated: 0,
           summary: null,
         },
-      };
+      });
     }
 
     // 3. Query question attempts
@@ -99,9 +107,10 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
     });
 
     if (rawAttempts.length === 0) {
-      return {
+      return Response.json({
+        success: true,
         data: { message: 'No attempts found in time window', calibrated: 0, summary: null },
-      };
+      });
     }
 
     // 4. Group by question and build AttemptRecord arrays
@@ -163,7 +172,8 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
       }
     }
 
-    return {
+    return Response.json({
+      success: true,
       data: {
         calibrated: calibrations.size,
         skipped: attemptsByQuestion.size - calibrations.size,
@@ -174,14 +184,16 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
         flaggedItems: flaggedItems.slice(0, 50),
         calibratedAt: new Date().toISOString(),
       },
-    };
+    });
   } catch (error) {
     console.error('[calibrate-items]', error);
-    return {
-      status: 500,
-      error: error instanceof Error ? error.message : 'Calibration failed',
-    };
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : 'Calibration failed',
+      },
+      { status: 500 }
+    );
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}

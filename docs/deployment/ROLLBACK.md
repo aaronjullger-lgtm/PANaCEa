@@ -42,11 +42,13 @@ git checkout main  # Return to main when done
 2. **Check Sentry** for any new errors
 3. **Communicate** to team via Slack (workflow uses `SLACK_WEBHOOK_URL`)
 
-## CI/CD Rollback Job
+## GitHub Actions Rollback Path
 
-The workflow at `.github/workflows/ci-cd.yml` includes a manual rollback job. Trigger it via:
+There is no longer a dedicated rollback job in a legacy CI/CD workflow.
 
-1. **Actions** → **StudyPANaCEa CI/CD Pipeline** → **Run workflow**
-2. Set input `action` to `rollback`
+Use one of these operator paths instead:
 
-Ensure `CLOUDFLARE_API_TOKEN` and `SLACK_WEBHOOK_URL` secrets are configured.
+1. Roll back directly from the Cloudflare Pages dashboard.
+2. Redeploy a known-good commit with `.github/workflows/deploy.yml` or local `wrangler`.
+
+Ensure `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are configured for redeploy-based rollback.

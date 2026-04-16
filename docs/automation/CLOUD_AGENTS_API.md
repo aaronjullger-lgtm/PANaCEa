@@ -34,13 +34,19 @@ CURSOR_AGENTS_REPO=https://github.com/org/repo npx tsx scripts/cloud-agents/trig
 
 ### 2. CI (GitHub Actions)
 
-Workflow `cloud-agents.yml` runs on PRs and optionally on push/schedule. It sets `AGENT_JOB` and `CHANGED_FILES`, then runs:
+Workflow `cloud-agents.yml` runs on PRs, pushes, and manual dispatch. It has no `on.schedule` path by design. It sets `AGENT_JOB` and `CHANGED_FILES`, then runs:
 
 ```bash
 npx tsx scripts/cloud-agents/run-from-ci.ts
 ```
 
 **Job types:** `edge-guard`, `living-docs`, `asset-perf`, `schema-sync`, `e2e-gap`, `pr-review`, `security-sentinel`, `lint-fix`.
+
+### Trigger policy
+
+- Keep path-scoped review jobs event-driven on `pull_request` and `push`.
+- Keep `security-sentinel` manual-only. It requires explicit package/advisory context and should not become a nightly or weekly generic dependency sweep.
+- Do not create a recurring cloud-agent lane unless the job proves bounded scope, stable operator value, and artifact/summary visibility comparable to the repo's scheduled workflow standards.
 
 To run a custom instruction from CI without a template, set:
 

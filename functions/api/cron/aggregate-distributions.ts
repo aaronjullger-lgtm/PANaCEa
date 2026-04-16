@@ -12,8 +12,9 @@
  * @see components/session/AnswerFeedback.tsx — UI rendering
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { requireCronSecret, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
 import { z } from 'zod';
 
 const bodySchema = z.object({
@@ -27,105 +28,108 @@ interface DistributionMap {
   [optionLetter: string]: number;
 }
 
-export const onRequestPost = authenticatedEndpoint(
-  bodySchema,
-  async (context) => {
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+export const onRequestOptions = withCors();
 
-    try {
-      // Get all question attempts grouped by questionId and selectedAnswer
-      // This uses raw query for efficient aggregation
-      const whereClause = context.data?.questionIds?.length
-        ? `WHERE qa."questionId" IN (${context.data.questionIds.map((id: string) => `'${id}'`).join(',')})`
-        : '';
+export async function onRequestPost(context: any): Promise<Response> {
+  const unauthorized = requireCronSecret(context.request, context.env);
+  if (unauthorized) {
+    return unauthorized;
+  }
 
-      const rawResults = await prisma.$queryRaw<
-        Array<{
-          questionId: string;
-          selectedAnswer: string;
-          count: bigint;
-        }>
-      >`
-        SELECT
-          "questionId",
-          "selectedAnswer",
-          COUNT(*)::bigint as count
-        FROM "QuestionAttempt"
-        WHERE "selectedAnswer" IS NOT NULL
-        ${context.data?.questionIds?.length ?
-          // Filter by specific question IDs if provided
-          // (Prisma raw queries need careful SQL construction)
-          Prisma.sql`AND "questionId" = ANY(${context.data.questionIds})` :
-          Prisma.sql``
-        }
-        GROUP BY "questionId", "selectedAnswer"
-        ORDER BY "questionId"
-      `;
+  const validation = await validateRequest(context.request, bodySchema);
+  if (validation.success === false) {
+    return validation.response;
+  }
 
-      // Aggregate into per-question distributions
-      const questionDistributions = new Map<
-        string,
-        { distribution: DistributionMap; totalAttempts: number }
-      >();
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-      for (const row of rawResults) {
-        const qId = row.questionId;
-        const count = Number(row.count);
+  try {
+    const groupedAttempts = await prisma.questionAttempt.groupBy({
+      by: ['questionId', 'selectedAnswer'],
+      where: {
+        selectedAnswer: { not: null },
+        ...(validation.data.questionIds?.length
+          ? { questionId: { in: validation.data.questionIds } }
+          : {}),
+      },
+      _count: {
+        _all: true,
+      },
+      orderBy: {
+        questionId: 'asc',
+      },
+    });
 
-        if (!questionDistributions.has(qId)) {
-          questionDistributions.set(qId, { distribution: {}, totalAttempts: 0 });
-        }
+    const questionDistributions = new Map<
+      string,
+      { distribution: DistributionMap; totalAttempts: number }
+    >();
 
-        const entry = questionDistributions.get(qId)!;
-        // Normalize selectedAnswer to option letter (A, B, C, D, E)
-        const letter = normalizeToLetter(row.selectedAnswer);
-        if (letter) {
-          entry.distribution[letter] = (entry.distribution[letter] || 0) + count;
-          entry.totalAttempts += count;
-        }
+    for (const row of groupedAttempts) {
+      const qId = row.questionId;
+      const count = row._count._all;
+
+      if (!questionDistributions.has(qId)) {
+        questionDistributions.set(qId, { distribution: {}, totalAttempts: 0 });
       }
 
-      // Upsert distributions for questions with enough attempts
-      let upsertedCount = 0;
-      let skippedCount = 0;
-
-      for (const [questionId, data] of questionDistributions) {
-        if (data.totalAttempts < MIN_ATTEMPTS) {
-          skippedCount++;
-          continue;
-        }
-
-        await prisma.questionAnswerDistribution.upsert({
-          where: { questionId },
-          create: {
-            questionId,
-            distribution: data.distribution,
-            totalAttempts: data.totalAttempts,
-            lastUpdated: new Date(),
-          },
-          update: {
-            distribution: data.distribution,
-            totalAttempts: data.totalAttempts,
-            lastUpdated: new Date(),
-          },
-        });
-        upsertedCount++;
+      const entry = questionDistributions.get(qId)!;
+      const letter = normalizeToLetter(row.selectedAnswer);
+      if (!letter) {
+        continue;
       }
 
-      return Response.json({
-        success: true,
-        data: {
-          totalQuestionsProcessed: questionDistributions.size,
-          upsertedCount,
-          skippedBelowThreshold: skippedCount,
-          minAttemptsThreshold: MIN_ATTEMPTS,
+      entry.distribution[letter] = (entry.distribution[letter] || 0) + count;
+      entry.totalAttempts += count;
+    }
+
+    let upsertedCount = 0;
+    let skippedCount = 0;
+
+    for (const [questionId, data] of questionDistributions) {
+      if (data.totalAttempts < MIN_ATTEMPTS) {
+        skippedCount++;
+        continue;
+      }
+
+      await prisma.questionAnswerDistribution.upsert({
+        where: { questionId },
+        create: {
+          questionId,
+          distribution: data.distribution,
+          totalAttempts: data.totalAttempts,
+          lastUpdated: new Date(),
+        },
+        update: {
+          distribution: data.distribution,
+          totalAttempts: data.totalAttempts,
+          lastUpdated: new Date(),
         },
       });
-    } finally {
-      await safePrismaDisconnect(prisma);
+      upsertedCount++;
     }
+
+    return Response.json({
+      success: true,
+      data: {
+        totalQuestionsProcessed: questionDistributions.size,
+        upsertedCount,
+        skippedBelowThreshold: skippedCount,
+        minAttemptsThreshold: MIN_ATTEMPTS,
+      },
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        error: 'Answer distribution aggregation failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+}
 
 /**
  * Normalize a selectedAnswer value to a single letter (A-E).

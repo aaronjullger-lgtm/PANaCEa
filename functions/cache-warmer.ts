@@ -1,6 +1,7 @@
 // functions/cache-warmer.ts
-// Scheduled worker to pre-warm KV cache with frequently accessed content
-// Run this as a CloudFlare Cron Trigger (e.g., every 30 minutes)
+// DEPRECATED: Cloudflare Pages does not own recurring scheduling in this repo.
+// GitHub Actions is the scheduler authority; keep this worker only as a
+// historical/manual reference until the cache strategy is reintroduced safely.
 
 import { createEdgePrismaClient } from './api/_shared/prisma-edge';
 import {

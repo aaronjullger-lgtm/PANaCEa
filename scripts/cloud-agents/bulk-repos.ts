@@ -1,6 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
  * Launch Cloud Agents across multiple repositories with the same instruction.
+ * Manual-only helper. Do not use this as a recurring scheduled workflow path.
  * Usage:
  *   npx tsx scripts/cloud-agents/bulk-repos.ts --instruction "Bump lodash to 4.18 and fix breaking changes" --repos "org/repo1" "org/repo2"
  *   npx tsx scripts/cloud-agents/bulk-repos.ts -i "Update .cursorrules for new lint rule" -r org/lib-a org/app-b

@@ -2,6 +2,9 @@
 /**
  * Job Scheduler
  *
+ * DEPRECATED: local cron scheduling is retired. GitHub Actions is the only
+ * recurring scheduler authority. Keep this file only for historical/manual use.
+ *
  * Sets up recurring jobs for:
  * - Nightly health checks (3 AM)
  * - Question pre-generation (2-5 AM low traffic)
