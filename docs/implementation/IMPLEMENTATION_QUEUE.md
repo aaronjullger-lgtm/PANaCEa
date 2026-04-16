@@ -26,6 +26,7 @@ All tasks are scoped to the "Just Do It" bucket from `CLAUDE.md`: no schema migr
 | TASK-007 | Zod-harden `POST /api/users/me/daily-plan/complete` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
 | TASK-008 | Zod-harden `POST /api/users/me/exam-outcome` | API hardening | High | Low | S | — | §5 "API validation hardening"; §10 Quick win #2 |
 | TASK-009 | Zod-harden `POST /api/podcast/generate` (proxy) | API hardening | Medium | Low | M | — | §5 "API validation hardening" — branch-specific validation: inline `.safeParse()` on JSON path (`.passthrough()` permissive schema), 415 content-type gate, 25 MB multipart size ceiling. External Node service retains authority on multipart field-level shape. |
+| TASK-010 | Retire orphaned `/api/questions/review` endpoint (410 tombstone both methods) + delete 3 orphaned service files | Endpoint retirement / dead-code removal | Medium | Low | S | — | "Not doing now" row unparked: caller inventory was clean. `functions/api/srs/submit.ts` narrowing stays parked (active `SrsFlashcardView` caller). |
 
 Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolved — the files are correctly validated via the shared middleware wrappers and were false positives of the original audit script. The only real file-level gaps were `users/me/daily-plan.ts` and `users/me/exam-outcome.ts` (now TASK-007 / TASK-008). See `docs/implementation/AUDIT_RECONCILIATION.md` for the per-claim reconciliation and the full audit-run deltas.
 
@@ -35,7 +36,8 @@ Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolve
 2. Fix `scripts/audit-zod-validation.ts` itself so follow-up audits do not keep generating false positives on wrapper-validated endpoints. (done)
 3. TASK-007 + TASK-008 — user-facing mutation gaps surfaced by the fixed audit. (done)
 4. TASK-009 — podcast/generate proxy gets branch-specific validation. (done; authorized past Ask First gate)
-5. TASK-010+ — SRS endpoint retirement inventory, library-enrichment `.disabled` endpoints, loading-state normalization, and the architecture-level items (NotificationLog schema, runtime-owned push scheduler, Express-to-Edge retirement, study-groups decision). Each still requires reading live callers before committing to a change shape.
+5. TASK-010 — `/api/questions/review` retirement. Caller inventory came back clean → both HTTP methods tombstoned as 410 Gone; 3 orphaned service files deleted. `/api/srs/submit` narrowing still parked (has active caller). (done)
+6. TASK-011+ — WARN_MANUAL_ONLY endpoints (`knowledge/upload`, `sentry-tunnel`, `technique-check/analyze`) assessment, library-enrichment `.disabled` endpoints, loading-state normalization, and the architecture-level items (NotificationLog schema, runtime-owned push scheduler, Express-to-Edge retirement, study-groups decision). Each still requires reading live callers before committing to a change shape.
 
 ## Not doing now — parked / deferred
 
@@ -45,7 +47,7 @@ Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolve
 | Runtime-owned replacement for GitHub-cron push reminders | Requires `web-push` prod dep + architecture decision → Ask First. |
 | Express-to-Edge retirement plan | Architecture change → Ask First; needs route-parity decision. |
 | Study-groups/social build-or-freeze | Explicit product decision needed per audit §5. |
-| Retire deprecated SRS endpoints (`functions/api/questions/review.ts`, narrow `functions/api/srs/submit.ts`) | Needs active-caller inventory + product sign-off on lifecycle; medium risk if clients still hit it. |
+| Narrow `functions/api/srs/submit.ts` (drop `srsItemId` branch) + drop `SRSItem` model | Has active caller (`SrsFlashcardView`). Narrowing requires a product decision on whether flashcard practice flips to FSRS. `SRSItem` model drop is a Prisma migration → Ask First. (`functions/api/questions/review.ts` already retired this run — TASK-010.) |
 | Library-enrichment admin endpoints re-enable | Two `.disabled` endpoints need data-source decision (files vs DB vs admin API). Ask First. |
 | Dead-man-switch alerting | Deferred per audit §10; wait for automation ownership to settle. |
 | Automated backup restore verification | Medium-risk ops lane; needs runbook before wiring into weekly maintenance. |
@@ -78,3 +80,4 @@ Evidence: after the script fix on 2026-04-16, TASK-002 through TASK-006 dissolve
 | TASK-007 | completed | (pending commit) | `users/me/daily-plan.ts` POST switched to `authenticatedEndpoint(DailyPlanCompleteSchema, handler, { requestsPerMinute: 30 })`. GET unchanged. |
 | TASK-008 | completed | (pending commit) | `users/me/exam-outcome.ts` POST rewritten to `authenticatedEndpoint(ExamOutcomeSchema, handler, { requestsPerMinute: 30 })` with enum/date/range bounds. |
 | TASK-009 | completed | (pending commit) | `podcast/generate.ts` now content-type gated (415 for non-JSON/non-multipart), JSON branch runs `PodcastGenerateJsonSchema.safeParse()` with `.passthrough()`, multipart branch 413s above 25 MB. Audit: 1 FAIL remaining (log-attempt tombstone, expected). |
+| TASK-010 | completed | (pending commit) | `functions/api/questions/review.ts` tombstoned (both GET and POST → 410 Gone with migration pointers). Deleted `lib/services/review/reviewSubmissionService.ts`, `lib/services/review/reviewService.ts`, `lib/services/review/reviewService.test.ts`, and the now-empty `lib/services/review/` directory. Caller inventory was clean — no UI/hook/store importers. Audit: 2 FAILs, both tombstones, expected. |

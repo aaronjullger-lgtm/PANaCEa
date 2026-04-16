@@ -42,7 +42,7 @@ Classification values:
   - 7 cron endpoints (CRON_SECRET-gated; Zod not applicable).
   - `webhooks/clerk` (Svix signature; Zod not applicable).
   - 3 multipart endpoints in WARN_MANUAL_ONLY (`knowledge/upload`, `technique-check/analyze` for video, `sentry-tunnel` for Sentry envelope proxy; Zod does not fit the body shape).
-- **Remaining FAIL after this run:** 1 — `functions/api/drill/log-attempt.ts`, a deliberate 410 Gone tombstone that never reads its request body. Real risk = 0; parked with a tombstone annotation.
+- **Remaining FAIL after this run:** 2 — `functions/api/drill/log-attempt.ts` and `functions/api/questions/review.ts`, both deliberate 410 Gone tombstones that never read their request bodies. Real risk = 0; both parked with tombstone annotations. (`review.ts` became a tombstone in TASK-010 this run; `log-attempt.ts` was already a tombstone before this run.)
 
 ### §5 "Audit script detection gaps (meta)"
 
@@ -91,8 +91,8 @@ Classification values:
 
 ### §5 "Retire deprecated SRS endpoints"
 
-- **Classification:** `accurate`. Needs active-caller inventory + product sign-off on lifecycle; medium risk if clients still hit these endpoints.
-- **Action this run:** deferred.
+- **Classification (original):** `accurate`. Needs active-caller inventory + product sign-off on lifecycle; medium risk if clients still hit these endpoints.
+- **Action this run:** `functions/api/questions/review.ts` addressed via TASK-010 after a clean caller inventory (the endpoint was orphaned at the application level; only the companion client service `reviewSubmissionService.ts` called it, and it had no UI importers). `functions/api/srs/submit.ts` remains parked — it still has an active caller (`SrsFlashcardView`) sending `srsItemId`, which means narrowing it involves a product decision about whether flashcard practice switches to the FSRS pipeline.
 
 ### §6 "Library-enrichment admin endpoints (.disabled)"
 
@@ -152,3 +152,10 @@ Classification values:
 ### Audit-script fix → meta
 - Classification **addressed-this-run**.
 - `scripts/audit-zod-validation.ts` rewritten to cover the seven shared middleware wrappers, the TS-generic call form, CRON_SECRET / Svix out-of-band security, and to reject `JSON.parse(` as false Zod evidence. Post-fix FAIL count is 2 (log-attempt tombstone + podcast/generate proxy), matching reality.
+
+### TASK-010 → "Retire deprecated SRS endpoints" (partial — `/api/questions/review` only)
+- Classification updated to **addressed-this-run** (for `functions/api/questions/review.ts`).
+- Tombstoned both `onRequestGet` and `onRequestPost` with 410 Gone + migration pointers (`POST /api/drills/submit-review` for writes; proactive reservoir for reads). Deleted three orphaned files: `lib/services/review/reviewSubmissionService.ts`, `lib/services/review/reviewService.ts`, `lib/services/review/reviewService.test.ts`. Removed the now-empty `lib/services/review/` directory.
+- Caller inventory (2026-04-16): zero UI/hook/store importers of the deleted client service; only reference outside the retired files was the endpoint's own JSDoc and 3 historical audit docs.
+- Audit state after this task: **176 PASS, 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, 2 FAIL** (`drill/log-attempt.ts` + `questions/review.ts` — both deliberate 410 tombstones, both expected).
+- Still parked: `functions/api/srs/submit.ts` (active caller in `SrsFlashcardView`) and the `SRSItem` model itself (requires schema migration → Ask First).

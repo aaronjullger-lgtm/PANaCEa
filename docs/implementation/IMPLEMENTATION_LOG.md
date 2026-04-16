@@ -81,3 +81,14 @@ Reconciliation notes: `docs/implementation/AUDIT_RECONCILIATION.md`
 - **Audit delta:** Closes the file-level item under §5 "API validation hardening" for `podcast/generate`. Only remaining audit:zod FAIL is the deprecated 410 tombstone.
 - **Follow-ups:** Tighten schema from `.passthrough()` to `.strict()` if/when the downstream Node service publishes a stable JSON contract. Raise `MAX_MULTIPART_BYTES` in lock-step with any Cloud Run request-size bump.
 - **Progress note:** `docs/implementation/progress/TASK-009.md`
+
+### TASK-010 — Retire orphaned `/api/questions/review` endpoint
+- **Date:** 2026-04-16
+- **Status:** completed
+- **Commit:** (pending this-run commit)
+- **Files touched:** `functions/api/questions/review.ts` (rewritten as 410 Gone tombstone for both GET and POST); **deleted** `lib/services/review/reviewSubmissionService.ts`, `lib/services/review/reviewService.ts`, `lib/services/review/reviewService.test.ts`; **removed** now-empty `lib/services/review/` directory.
+- **Change summary:** Caller inventory of `/api/questions/review` came back clean — the only caller of the POST path was the client-side wrapper `reviewSubmissionService.ts`, which had zero UI/hook/store importers; the GET path's server-side `ReviewService` class was only used by the retiring endpoint itself. Replaced the endpoint with a 410 Gone tombstone matching the `functions/api/drill/log-attempt.ts` pattern — both handlers return `{ error, migration }` with distinct migration pointers (POST → `/api/drills/submit-review`; GET → proactive question reservoir). Deleted the three orphaned service files (safely via `mv ~/.Trash/panacea-task010-retirement/` per CLAUDE.md) and `rmdir`'d the now-empty directory.
+- **Verification:** Post-deletion `grep -rn 'reviewSubmissionService\|services/review/'` across `*.{ts,tsx,js,jsx}` returns zero importers. Audit script run: 189 mutation endpoints, 176 PASS, 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, **2 FAIL** (`drill/log-attempt.ts` + `questions/review.ts` — both deliberate 410 tombstones, both expected). Tombstone uses the same `PagesFunction` ambient type as `log-attempt.ts`, matching established precedent (Cloudflare provides the type at deploy time).
+- **Audit delta:** Unparks and closes the `/api/questions/review` half of the "Retire deprecated SRS endpoints" row. The `/api/srs/submit` half stays parked — it has an active caller (`SrsFlashcardView`) and narrowing requires a product decision on whether flashcard practice flips to the FSRS pipeline. Audit `audit:zod` FAIL count: 1 → 2, new steady state (tombstones intentionally don't validate request bodies).
+- **Follow-ups:** Revisit the tombstone in ~2 release cycles — if zero production traffic lands on `/api/questions/review` in that window, the file can be deleted entirely and the resulting 404 is a safe steady state. Narrow `/api/srs/submit` + drop `SRSItem` model remain deferred.
+- **Progress note:** `docs/implementation/progress/TASK-010.md`
