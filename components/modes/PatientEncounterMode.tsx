@@ -107,8 +107,6 @@ import { ContextBanner } from '@/components/shared/ContextBanner';
 import { PatientAVEngine } from '@/services/av/patientAVEngine';
 import type { PatientAVStateMachine, AVState } from '@/types/patient-av-state-machine';
 
-import { syncManager } from '@/lib/services/sync/syncManager';
-
 // Gemini API Key (from environment or config)
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
@@ -1005,26 +1003,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       if (rubricResult) {
         setGradeResult(rubricResult);
 
-        // Sync OSCE performance to FSRS scheduling via attempt endpoint
-        // Derive correctness from rubric score (pass threshold: 60%)
-        const osceScore = rubricResult.score ?? 0;
-        const scorePct = osceScore / 100;
-        const isPass = scorePct >= 0.6;
-
+        // OSCE performance feeds the condition-level spaced repetition schedule.
+        // We intentionally do NOT emit a QuestionAttempt record here — a session
+        // id is not a legitimate question id, and pushing it through the main
+        // sync queue would pollute FSRS/analytics with semantically wrong rows.
+        // OSCE results are already persisted via completeOSCESession() +
+        // gradeOSCESession() above.
         if (currentCase) {
-          syncManager.queueAnswer({
-            questionId: sessionId,
-            selectedAnswer: 0,
-            isCorrect: isPass,
-            timeSpentMs: Date.now() - (session?.startTime || Date.now()),
-            system: undefined,
-            conditionId: undefined,
-            isMainSession: false,
-            rating: isPass ? 3 : 1, // FSRS: Good(3) if pass, Again(1) if fail
-          });
-
-          // Update OSCE condition-level spaced repetition schedule
           try {
+            const osceScore = rubricResult.score ?? 0;
             updateConditionSchedule(
               currentCase.id,
               currentCase.correctDiagnosis || 'Unknown',

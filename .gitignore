@@ -340,3 +340,8 @@ __pycache__/
 .claude/skills/
 .aidesigner/*
 !.aidesigner/.gitkeep
+
+# Local scratch audit/scope files (not part of source)
+/UNFINISHED_WORK_MASTER_AUDIT.md
+/tsconfig.scope.json
+/tsconfig.scratch.json
