@@ -14,18 +14,15 @@ import {
   getNextDifficultyLevel,
   DifficultyLevel,
 } from '@/lib/services/progressiveDifficultyService';
-import { createApiClient, createSessionsClient } from '@/lib/sdk';
+import { createApiClient } from '@/lib/sdk';
+import { generateStudySession, type GenerateStudySessionOptions } from '@/lib/study/sessionRuntime';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-export interface GenerateSessionOptions {
-  mode: 'mainSession' | 'review' | 'drill';
-  size?: number;
-  systems?: string[];
-  adaptive?: boolean; // New flag for adaptive sessions
-}
+export interface GenerateSessionOptions extends GenerateStudySessionOptions {}
 
 export interface GeneratedSession {
   sessionId: string;
@@ -78,17 +75,14 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
         }
 
         const api = createApiClient(getToken);
-        const sessions = createSessionsClient(api);
-
-        const result = await sessions.generate({
-          mode: options.mode,
-          size: options.size || 20,
-          systems: options.systems,
+        const { generatedSession, runtime } = await generateStudySession(api, {
+          ...options,
           initialDifficulty,
         });
 
-        const session: GeneratedSession = result as unknown as GeneratedSession;
+        const session: GeneratedSession = generatedSession;
         setLastSession(session);
+        useStudyStore.getState().hydrateSession(runtime);
 
         // Navigate to the session
         navigate(`/session/${session.sessionId}`, {

@@ -112,9 +112,9 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
           meta={{
             badge: 'Technique Coach',
             badgeTone: 'sage',
-            title: 'Review physical exam technique without leaving the study workflow.',
+            title: 'Coach a physical exam maneuver.',
             subtitle:
-              'Upload a short maneuver clip, ask a targeted question, and get coaching feedback that is framed for skill refinement rather than generic video analysis.',
+              'Upload a short clip and ask a targeted question — get coaching framed for skill refinement, not generic video analysis.',
             backLabel: 'Back to Study',
             onBack,
           }}

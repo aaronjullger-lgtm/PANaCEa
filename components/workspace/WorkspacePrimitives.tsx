@@ -107,6 +107,11 @@ const PAGE_MODE_BACKGROUNDS: Record<WorkspacePageMode, string> = {
     'radial-gradient(circle at 12% 14%, rgba(166,127,127,0.22), transparent 26%), radial-gradient(circle at 84% 12%, rgba(179,155,108,0.12), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.015), transparent 58%)',
 };
 
+const SUPPORTING_TEXT_COLOR =
+  'color-mix(in srgb, var(--color-text-primary) 74%, var(--color-text-secondary))';
+const MUTED_TEXT_COLOR =
+  'color-mix(in srgb, var(--color-text-primary) 56%, var(--color-text-secondary))';
+
 function resolveDensityClass(density: WorkspacePageMeta['density']) {
   switch (density) {
     case 'compact':
@@ -325,7 +330,10 @@ export function WorkspacePageHeader({
             {meta.title}
           </h1>
           {meta.subtitle ? (
-            <p className="max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
+            <p
+              className="max-w-2xl text-base leading-7"
+              style={{ color: SUPPORTING_TEXT_COLOR }}
+            >
               {meta.subtitle}
             </p>
           ) : null}
@@ -447,7 +455,10 @@ export function WorkspaceSection({
             {title}
           </h2>
           {subtitle ? (
-            <p className="max-w-3xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
+            <p
+              className="max-w-3xl text-sm leading-7 sm:text-base"
+              style={{ color: SUPPORTING_TEXT_COLOR }}
+            >
               {subtitle}
             </p>
           ) : null}
@@ -494,20 +505,28 @@ export function WorkspaceMetricCard({
 
   const labelClass =
     variant === 'summary'
-      ? 'text-[0.82rem] tracking-[0.12em] text-[var(--color-text-secondary)]'
-      : 'text-[0.76rem] tracking-[0.12em] text-[var(--color-text-secondary)]';
+      ? 'text-[0.88rem] tracking-[-0.01em]'
+      : 'text-[0.8rem] tracking-[-0.01em]';
 
   return (
     <WorkspaceSurface accent={accent} className="h-full" role={surfaceRole}>
       <div className="flex h-full items-start justify-between gap-4">
         <div className="flex h-full flex-1 flex-col gap-3">
           <div className="space-y-2">
-            <p className={cn('font-semibold uppercase', labelClass)}>{label}</p>
+            <p
+              className={cn('font-medium', labelClass)}
+              style={{ color: MUTED_TEXT_COLOR }}
+            >
+              {label}
+            </p>
             <div className={cn('font-semibold tracking-[-0.045em] text-[var(--color-text-primary)]', valueClass)}>
               {value}
             </div>
             {detail ? (
-              <p className="max-w-sm text-sm leading-6 text-[var(--color-text-secondary)]">
+              <p
+                className="max-w-sm text-sm leading-6"
+                style={{ color: SUPPORTING_TEXT_COLOR }}
+              >
                 {detail}
               </p>
             ) : null}
@@ -580,7 +599,12 @@ export function WorkspaceEmptyState({
           <h3 className="text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
             {title}
           </h3>
-          <p className="text-sm leading-7 text-[var(--color-text-secondary)]">{description}</p>
+          <p
+            className="text-sm leading-7"
+            style={{ color: SUPPORTING_TEXT_COLOR }}
+          >
+            {description}
+          </p>
         </div>
         {action}
       </div>

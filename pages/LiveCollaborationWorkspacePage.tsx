@@ -23,9 +23,9 @@ export const LiveCollaborationWorkspacePage: React.FC = () => {
           meta={{
             badge: 'Live Collaboration',
             badgeTone: 'sage',
-            title: 'Study with live context, not just solo repetition.',
+            title: 'Study alongside peers in real time.',
             subtitle:
-              'Use collaborative mode when peer presence, benchmarking, and quick discussion will sharpen the session instead of distracting from it.',
+              'Peer presence, benchmarking, and quick discussion to sharpen the session — turn it on when it will help, not distract.',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
           }}

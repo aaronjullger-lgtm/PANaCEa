@@ -403,6 +403,28 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
     onStartSession({ focus: 'all' });
   };
 
+  const topFocusAreas = growthAreas.filter(Boolean).slice(0, 2);
+  const heroTitle =
+    hasActiveSession && onResumeSession
+      ? 'Resume the session already in motion.'
+      : dueCount > 0
+        ? 'Clear what is already due before opening something new.'
+        : 'Start one focused block, then let the rest wait.';
+  const heroDescription =
+    hasActiveSession && onResumeSession
+      ? 'You already have momentum. Finish the in-progress session before switching contexts or opening another study lane.'
+      : dueCount > 0
+        ? 'Review has the highest payoff right now. Once the queue is under control, use adaptive practice or a short fallback route for new work.'
+        : 'Nothing urgent is competing for attention. Use adaptive questions for the main block, or take the faster practice route if you only have a few minutes.';
+  const decisionSupportCopy =
+    dueCount > 0
+      ? `Due review is the best next move. ${weakestSystem ? `${weakestSystem} is still the weakest signal once the queue is clear.` : 'Use practice afterward if you still have time.'}`
+      : stats.questionsToday === 0
+        ? 'If today has not started yet, use a short practice block to establish a real targeting signal before browsing deeper tools.'
+        : weakestSystem
+          ? `${weakestSystem} is the weakest recent signal. Use a shorter block when you need a targeted reset instead of a full session.`
+          : 'Choose the block length that matches your available time and leave the secondary routes below the fold.';
+
   return (
     <WorkspacePage density="wide" mode="launch">
       {syncError && dismissedSyncError !== syncError ? (
@@ -444,7 +466,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
             badgeTone: 'gold',
             title: `${greeting}, ${user?.firstName || 'Student'}.`,
             subtitle:
-              'Start the right session, clear what is due, and keep your reference tools close without scanning a full dashboard first.',
+              'Start the right next block, clear due work first, and keep the rest of the surface quiet until you need it.',
             status:
               dueCount > 0
                 ? `${dueCount} item${dueCount === 1 ? '' : 's'} ready for review`
@@ -461,7 +483,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
             },
             secondaryActions: [
               {
-                label: 'Practice',
+                label: 'Open practice',
                 onClick: () => navigate(ROUTES.PRACTICE),
               },
             ],
@@ -519,7 +541,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                 : 'No review debt is waiting right now. Start a fresh block instead.'
             }
             icon={Target}
-            variant={dueCount > 0 ? 'summary' : 'guidance'}
+            variant={dueCount > 0 ? 'alert' : 'guidance'}
             action={
               dueCount > 0 && onNavigateToSrsReview ? (
                 <Button type="button" size="sm" variant="outline" onClick={onNavigateToSrsReview}>
@@ -566,50 +588,67 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
 
       <WorkspaceReveal delay={0.12}>
         <WorkspaceHeroStrip tone="launch">
-          <WorkspaceSplit className="items-start">
-            <div className="space-y-6">
+          <WorkspaceSplit className="items-start xl:grid-cols-[1.18fr_0.82fr]">
+            <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-                  Start here
+                  Next move
                 </p>
                 <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] text-[var(--color-text-primary)] sm:text-4xl">
-                  Pick one strong next move, then keep the rest quiet.
+                  {heroTitle}
                 </h2>
                 <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  Use due review if something is waiting. Otherwise launch a focused adaptive block
-                  or take the faster practice route when you only have a few minutes.
+                  {heroDescription}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {growthAreas.slice(0, 4).map((area) => (
-                  <span
-                    key={area}
-                    className="rounded-full border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]"
-                  >
-                    {area}
-                  </span>
-                ))}
-                {weakestSystem ? (
-                  <span
-                    className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]"
-                    style={{
-                      borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-                      background:
-                        'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
-                    }}
-                  >
-                    Weakest signal: {weakestSystem}
-                  </span>
-                ) : null}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div
+                  className="rounded-[1.35rem] border p-4"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                  }}
+                >
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                    Why now
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                    {dueCount > 0
+                      ? 'The review queue has the highest priority.'
+                      : stats.questionsToday === 0
+                        ? 'Today has no real baseline yet.'
+                        : 'You have room for one focused study block.'}
+                  </p>
+                </div>
+                <div
+                  className="rounded-[1.35rem] border p-4"
+                  style={{
+                    borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                    background:
+                      'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)',
+                  }}
+                >
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                    Focus
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                    {topFocusAreas.length > 0
+                      ? topFocusAreas.join(' • ')
+                      : weakestSystem
+                        ? `${weakestSystem} is the weakest recent signal.`
+                        : 'No narrow weak-signal focus is established yet.'}
+                  </p>
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <QuickLaunchCard
-                  title={dueCount > 0 ? 'Clear the review queue' : 'Launch adaptive questions'}
+                  title={dueCount > 0 ? 'Clear due review' : 'Launch adaptive questions'}
                   description={
                     dueCount > 0
-                      ? 'Protect recall first, then return to new material once the queue is under control.'
+                      ? 'Protect recall first, then return to new material once the queue is stable.'
                       : 'Run a mixed session tuned to current readiness and recall pressure.'
                   }
                   icon={dueCount > 0 ? Target : Brain}
@@ -628,11 +667,11 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                   cta={dueCount > 0 ? 'Start review' : 'Start session'}
                 />
                 <QuickLaunchCard
-                  title="Fallback route"
+                  title="Fallback practice route"
                   description={
                     stats.questionsToday === 0
-                      ? 'Use the practice library to create a baseline fast when today has not started yet.'
-                      : 'Open practice mode when you want a tighter, searchable route instead of another dashboard.'
+                      ? 'Use the practice library to create a baseline quickly when today has not started yet.'
+                      : 'Open practice mode when you want a searchable, shorter route instead of another dashboard pass.'
                   }
                   icon={stats.questionsToday === 0 ? Sparkles : Compass}
                   accent="#728ba6"
@@ -650,11 +689,10 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       Decision support
                     </p>
                     <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                      Choose based on time, not guilt.
+                      Choose by time, not by guilt.
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                      Keep one fast start visible, watch the weakest signal, and avoid opening three
-                      competing routes before you begin.
+                      {decisionSupportCopy}
                     </p>
                   </div>
                   <TimeBoxButtons onStartSession={onStartSession} />

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { pageContainerPaddingClass } from '@/components/ui/system';
 
 export type PageContainerMaxWidth = '4xl' | '6xl' | '7xl' | 'full';
 
@@ -14,8 +15,6 @@ const maxWidthClasses: Record<PageContainerMaxWidth, string> = {
   '7xl': 'max-w-7xl',
   full: 'max-w-full',
 };
-
-const defaultPadding = 'px-4 sm:px-6 lg:px-8';
 
 export interface PageContainerProps {
   children: React.ReactNode;
@@ -34,7 +33,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   as: Component = 'div',
 }) => {
   return (
-    <Component className={cn('mx-auto', maxWidthClasses[maxWidth], defaultPadding, className)}>
+    <Component className={cn('mx-auto', maxWidthClasses[maxWidth], pageContainerPaddingClass, className)}>
       {children}
     </Component>
   );

@@ -31,6 +31,7 @@ export {
   type DrillSubmitResult,
   type SessionGeneratePayload,
   type SessionGenerateResult,
+  type SessionQuestionsResult,
   type SRSItem,
   type SRSDueResult,
   type SRSSubmitPayload,

@@ -11,10 +11,10 @@
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { badgeBaseClass, badgeSizeClasses } from '@/components/ui/system';
 
 const clinicalBadgeVariants = cva(
-  // Base: pill shape, small text, consistent padding
-  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border transition-colors',
+  badgeBaseClass,
   {
     variants: {
       variant: {
@@ -48,28 +48,36 @@ const clinicalBadgeVariants = cva(
         'high-yield':
           'bg-[var(--color-data-provisional)] text-[var(--color-data-provisional)] border-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/30 dark:text-[var(--color-data-provisional)] dark:border-[var(--color-data-provisional)]/50',
       },
+      size: {
+        sm: badgeSizeClasses.sm,
+        md: badgeSizeClasses.md,
+        lg: badgeSizeClasses.lg,
+      },
     },
     defaultVariants: {
       variant: 'default',
+      size: 'md',
     },
   },
 );
 
 type ClinicalBadgeVariant = NonNullable<VariantProps<typeof clinicalBadgeVariants>['variant']>;
+type ClinicalBadgeSize = NonNullable<VariantProps<typeof clinicalBadgeVariants>['size']>;
 
 interface ClinicalBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof clinicalBadgeVariants> {
   /** When true, truncate long labels with ellipsis */
   truncate?: boolean;
+  size?: ClinicalBadgeSize;
 }
 
 const ClinicalBadge = React.forwardRef<HTMLSpanElement, ClinicalBadgeProps>(
-  ({ variant, truncate, className, ...props }, ref) => (
+  ({ variant, size, truncate, className, ...props }, ref) => (
     <span
       ref={ref}
       className={cn(
-        clinicalBadgeVariants({ variant }),
+        clinicalBadgeVariants({ variant, size }),
         truncate && 'truncate max-w-[10rem]',
         className,
       )}
@@ -81,4 +89,4 @@ const ClinicalBadge = React.forwardRef<HTMLSpanElement, ClinicalBadgeProps>(
 ClinicalBadge.displayName = 'ClinicalBadge';
 
 export { ClinicalBadge, clinicalBadgeVariants };
-export type { ClinicalBadgeVariant, ClinicalBadgeProps };
+export type { ClinicalBadgeVariant, ClinicalBadgeProps, ClinicalBadgeSize };

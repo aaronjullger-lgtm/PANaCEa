@@ -21,31 +21,34 @@ import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
   // Base classes applied to every button
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[colors,transform,box-shadow] duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:active:scale-100 motion-reduce:transition-colors',
+  'inline-flex items-center justify-center gap-2 rounded-xl border font-medium tracking-[-0.01em] transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.985] motion-reduce:active:scale-100 motion-reduce:transition-colors',
   {
     variants: {
       variant: {
-        primary: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 active:opacity-80',
+        primary:
+          'border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-[0_18px_36px_-24px_color-mix(in_srgb,var(--color-accent)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--color-accent)_78%,white)] hover:bg-[color-mix(in_srgb,var(--color-accent)_92%,white_8%)]',
         secondary:
-          'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
+          'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] shadow-[0_10px_24px_-20px_rgba(15,23,42,0.48)] hover:border-[var(--color-accent)]/18 hover:bg-[var(--color-bg-tertiary)]',
         danger:
-          'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/30 border border-[var(--color-data-fail)]/40',
-        ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+          'border-[var(--color-data-fail)]/35 bg-[var(--color-data-fail)]/14 text-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]/55 hover:bg-[var(--color-data-fail)]/18',
+        ghost:
+          'border-transparent bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
         outline:
-          'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
+          'border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] hover:border-[var(--color-accent)]/18 hover:bg-[var(--color-bg-secondary)]',
         warning:
-          'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
+          'border-[var(--color-data-provisional)]/35 bg-[var(--color-data-provisional)]/14 text-[var(--color-data-provisional)] hover:border-[var(--color-data-provisional)]/55 hover:bg-[var(--color-data-provisional)]/18',
         accent:
-          'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
-        success: 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] hover:opacity-90 active:opacity-80',
+          'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/12 text-[var(--color-accent)] hover:border-[var(--color-accent)]/45 hover:bg-[var(--color-accent)]/18',
+        success:
+          'border-[var(--color-data-pass)] bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] shadow-[0_18px_36px_-24px_color-mix(in_srgb,var(--color-data-pass)_80%,transparent)] hover:border-[var(--color-data-pass)]/80 hover:bg-[color-mix(in_srgb,var(--color-data-pass)_92%,white_8%)]',
       },
       size: {
         xs: 'px-2.5 py-1 text-xs min-h-[32px]',
-        sm: 'px-3 py-1.5 text-sm min-h-[36px]',
-        md: 'px-4 py-2 text-base min-h-[44px]',
-        lg: 'px-6 py-3 text-lg min-h-[44px]',
-        xl: 'px-8 py-4 text-xl min-h-[52px]',
-        icon: 'p-2 min-h-[44px] min-w-[44px]',
+        sm: 'px-3.5 py-2 text-sm min-h-[38px]',
+        md: 'px-4 py-2.5 text-sm min-h-[44px]',
+        lg: 'px-5 py-3 text-base min-h-[48px]',
+        xl: 'px-7 py-4 text-lg min-h-[52px]',
+        icon: 'p-0 min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {

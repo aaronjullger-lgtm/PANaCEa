@@ -23,9 +23,9 @@ export const ExplorerWorkspacePage: React.FC = () => {
           meta={{
             badge: 'Systems Explorer',
             badgeTone: 'plum',
-            title: 'Trace links across systems instead of studying them in isolation.',
+            title: 'Trace how conditions connect across the knowledge graph.',
             subtitle:
-              'Use the explorer to follow how diseases, findings, edges, and node relationships connect across the knowledge graph.',
+              'Follow how diseases, findings, and relationships link together — study the system, not isolated facts.',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
           }}

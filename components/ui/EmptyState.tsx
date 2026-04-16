@@ -11,6 +11,12 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
+  bodySupportClass,
+  emptyStateIconWrapClass,
+  emptyStateSurfaceClass,
+  sectionHeadingClass,
+} from '@/components/ui/system';
+import {
   Inbox,
   Search,
   FileQuestion,
@@ -56,6 +62,8 @@ export interface EmptyStateProps {
   animate?: boolean;
   /** Compact mode for smaller spaces */
   compact?: boolean;
+  /** Whether to render the icon */
+  showIcon?: boolean;
 }
 
 const VARIANT_CONFIG: Record<
@@ -109,6 +117,7 @@ export function EmptyState({
   className = '',
   animate = true,
   compact = false,
+  showIcon = true,
 }: EmptyStateProps) {
   const prefersReducedMotion = useReducedMotion();
   const config = VARIANT_CONFIG[variant];
@@ -119,32 +128,34 @@ export function EmptyState({
   const content = (
     <div
       className={cn(
-        'flex flex-col items-center justify-center text-center',
-        compact ? 'py-6 px-4' : 'py-12 px-6',
+        emptyStateSurfaceClass,
+        compact ? 'px-4 py-6 sm:px-5' : 'px-6 py-10 sm:px-8 sm:py-12',
         className,
       )}
     >
       {/* Icon */}
-      <div className={cn(compact ? 'mb-3' : 'mb-4')}>
-        <div
-          className={cn(
-            'rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center',
-            compact ? 'w-12 h-12' : 'w-16 h-16',
-          )}
-        >
-          <IconComponent
+      {showIcon && (
+        <div className={cn(compact ? 'mb-3' : 'mb-4')}>
+          <div
             className={cn(
-              'text-[var(--color-text-tertiary)]',
-              compact ? 'w-6 h-6' : 'w-8 h-8',
+              emptyStateIconWrapClass,
+              compact ? 'h-12 w-12' : 'h-16 w-16',
             )}
-          />
+          >
+            <IconComponent
+              className={cn(
+                'text-[var(--color-text-secondary)]',
+                compact ? 'w-6 h-6' : 'w-8 h-8',
+              )}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Text */}
       <h3
         className={cn(
-          'font-semibold text-[var(--color-text-primary)] mb-1',
+          sectionHeadingClass,
           compact ? 'text-base' : 'text-lg',
         )}
       >
@@ -154,8 +165,9 @@ export function EmptyState({
       {displayDescription && (
         <p
           className={cn(
-            'text-[var(--color-text-secondary)] max-w-sm',
-            compact ? 'text-sm mb-3' : 'text-base mb-4',
+            bodySupportClass,
+            'max-w-lg',
+            compact ? 'mb-3 text-sm' : 'mb-4',
           )}
         >
           {displayDescription}
@@ -165,7 +177,7 @@ export function EmptyState({
       {/* Actions */}
       {(action || secondaryAction) && (
         <div
-          className={cn('flex flex-col sm:flex-row items-center gap-3', compact ? 'mt-2' : 'mt-4')}
+          className={cn('flex flex-col items-center gap-3 sm:flex-row', compact ? 'mt-2' : 'mt-4')}
         >
           {action && (
             <Button
@@ -178,8 +190,8 @@ export function EmptyState({
           )}
           {secondaryAction && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant="secondary"
+              size={compact ? 'sm' : 'md'}
               onClick={secondaryAction.onClick}
             >
               {secondaryAction.label}

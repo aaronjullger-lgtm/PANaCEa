@@ -1,10 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { SessionSettings, Question, PerformanceRecord } from '@/types';
 import { QuizViewWithErrorBoundary } from '@/components/session/QuizViewWithErrorBoundary';
 import { Loader } from '@/components/loading';
 import { EnhancedErrorMessage } from '@/components/shared/EnhancedErrorMessage';
+import { useAuth } from '@clerk/clerk-react';
+import { createApiClient, createSessionsClient } from '@/lib/sdk';
+import type { StudySessionRuntime } from '@/lib/study/sessionRuntime';
+import {
+  createStudySessionRuntimeFromQuestions,
+  normalizeSessionQuestionsResult,
+} from '@/lib/study/sessionRuntime';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 interface SessionRunnerProps {
   /** Callback to navigate back to the menu */
@@ -35,18 +42,6 @@ interface SessionRunnerProps {
   removeDueConcept?: (conditionId: string, taskType: string | null) => void;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function extractSessionQuestions(payload: unknown): Question[] {
-  if (!isRecord(payload)) return [];
-
-  const nestedData = isRecord(payload.data) ? payload.data : null;
-  const rawQuestions = nestedData?.questions ?? payload.questions;
-  return Array.isArray(rawQuestions) ? (rawQuestions as Question[]) : [];
-}
-
 /**
  * SessionRunner – resumes a previously generated study session by its ID.
  * Fetches the session's questions and renders the QuizView with the stored order.
@@ -59,6 +54,23 @@ function deriveGrowthAreas(questions: Question[]): string[] {
     if (sys && typeof sys === 'string') systems.add(sys);
   }
   return Array.from(systems);
+}
+
+function buildSessionSettings(
+  questionCount: number,
+  runtime: StudySessionRuntime | null
+): SessionSettings {
+  const requestedSystems =
+    runtime?.request.systems?.filter(Boolean) ??
+    (runtime?.request.system ? [runtime.request.system] : []);
+
+  return {
+    mode: runtime?.metadata.mode === 'exam' ? 'exam' : 'standard',
+    focus: runtime?.request.conditionId || runtime?.request.subcategory || runtime?.request.system ? 'topic' : 'all',
+    systems: requestedSystems,
+    difficulty: runtime?.request.initialDifficulty ?? 'adaptive',
+    count: questionCount,
+  };
 }
 
 const SessionRunner: React.FC<SessionRunnerProps> = ({
@@ -76,6 +88,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
   updateQuestionNote,
   removeDueConcept,
 }) => {
+  const { getToken } = useAuth();
   const { sessionId } = useParams<{ sessionId: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,32 +106,35 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SESSION_QUESTIONS(sessionId)));
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Failed to fetch session: ${response.status} ${text}`);
+
+      const cachedSession = useStudyStore.getState().activeSession;
+      if (cachedSession?.sessionId === sessionId && cachedSession.questions.length > 0) {
+        setQuestions(cachedSession.questions);
+        setGrowthAreas(deriveGrowthAreas(cachedSession.questions));
+        setSessionSettings(buildSessionSettings(cachedSession.questions.length, cachedSession));
+        return;
       }
-      const json = await response.json();
-      const questionList = extractSessionQuestions(json);
+
+      const api = createApiClient(getToken);
+      const sessions = createSessionsClient(api);
+      const result = await sessions.getQuestions(sessionId);
+      const questionList = normalizeSessionQuestionsResult(result).questions as Question[];
       setQuestions(questionList);
       setGrowthAreas(deriveGrowthAreas(questionList));
-
-      // Construct minimal SessionSettings from the session metadata (if available).
-      // For now, we use defaults; could be extended if the endpoint returns session metadata.
-      const settings: SessionSettings = {
-        mode: 'standard',
-        focus: 'all',
-        systems: [],
-        difficulty: 'adaptive',
-      };
-      setSessionSettings(settings);
+      const hydratedSession = createStudySessionRuntimeFromQuestions({
+        sessionId,
+        questions: questionList,
+        mode: 'adaptive',
+      });
+      useStudyStore.getState().hydrateSession(hydratedSession);
+      setSessionSettings(buildSessionSettings(questionList.length, hydratedSession));
     } catch (err) {
       console.error('Error fetching session:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [getToken, sessionId]);
 
   useEffect(() => {
     fetchSession();
@@ -184,6 +200,8 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       addFlaggedQuestion={addFlaggedQuestion}
       removeFlaggedQuestion={removeFlaggedQuestion}
       updateQuestionNote={updateQuestionNote}
+      sessionId={sessionId}
+      queueStrategy="finite"
       onReviewMissed={undefined}
     />
   );

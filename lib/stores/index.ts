@@ -15,3 +15,5 @@ export type { Toast, ToastVariant } from './useToastStore';
 
 export { useTooltipStore, useTooltip } from './useTooltipStore';
 export type { MedicalTermDefinition } from './useTooltipStore';
+
+export { useStudyStore, useStudy } from './useStudyStore';

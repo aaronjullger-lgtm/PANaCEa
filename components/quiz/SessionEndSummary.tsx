@@ -63,6 +63,7 @@ import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { fireStreakCelebration } from '@/lib/streakCelebration';
 import { saveLastSession } from '@/lib/utils/sessionStorage';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
@@ -243,6 +244,19 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       weakSystemName: weakSystem ? ABBREVIATION_TO_TOPIC_MAP[weakSystem] : undefined,
       duration: sessionDurationMs || 0,
     });
+
+    const activeSession = useStudyStore.getState().activeSession;
+    if (activeSession) {
+      useStudyStore.getState().completeSession({
+        sessionId: activeSession.sessionId,
+        timestamp: Date.now(),
+        mode: mergedSettings.mode ?? 'session',
+        questionsCompleted: performanceData.length,
+        questionsCorrect: correct,
+        accuracy,
+        durationMs: sessionDurationMs || 0,
+      });
+    }
   }, [isOpen, performanceData, sessionSettings, sessionDurationMs]);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
   const [showReflection, setShowReflection] = React.useState(false);

@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { QuizView } from '@/components/session/QuizView';
 import type { ErrorTag, PerformanceRecord, Question, SessionSettings } from '@/types';
+import { MAX_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
+import { createApiClient } from '@/lib/sdk';
+import { generateStudySession } from '@/lib/study/sessionRuntime';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 interface FullSitDownTestModeProps {
   /** Callback to navigate back to the menu */
@@ -21,24 +25,9 @@ interface FullSitDownTestModeProps {
   updateQuestionNote?: (question: Question, note: string) => void;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function extractGeneratedSession(payload: unknown): { sessionId: string; questions: Question[] } | null {
-  if (!isRecord(payload)) return null;
-
-  const root = isRecord(payload.data) ? payload.data : payload;
-  if (typeof root.sessionId !== 'string') return null;
-
-  return {
-    sessionId: root.sessionId,
-    questions: Array.isArray(root.questions) ? (root.questions as Question[]) : [],
-  };
-}
-
 const NOOP = () => undefined;
 const NOOP_SET_FONT_SIZE: React.Dispatch<React.SetStateAction<number>> = () => undefined;
+const FULL_SIT_DOWN_COUNT = 300;
 
 /**
  * Full Sit-Down Test Mode
@@ -67,54 +56,85 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ requested: FULL_SIT_DOWN_COUNT, generated: 0, completedBatches: 0, totalBatches: 0 });
+
+  const generateSession = useCallback(async (forceRegenerate = false) => {
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      if (!forceRegenerate) {
+        const cachedSession = useStudyStore.getState().activeSession;
+        if (
+          cachedSession?.request.size === FULL_SIT_DOWN_COUNT &&
+          cachedSession.questions.length >= FULL_SIT_DOWN_COUNT
+        ) {
+          setSessionSettings({
+            mode: 'exam',
+            focus: 'all',
+            count: FULL_SIT_DOWN_COUNT,
+            difficulty: 'adaptive',
+          });
+          setSessionId(cachedSession.sessionId);
+          setQuestionQueue(cachedSession.questions.slice(0, FULL_SIT_DOWN_COUNT));
+          setProgress({
+            requested: FULL_SIT_DOWN_COUNT,
+            generated: FULL_SIT_DOWN_COUNT,
+            completedBatches: Math.ceil(FULL_SIT_DOWN_COUNT / MAX_SESSION_SIZE),
+            totalBatches: Math.ceil(FULL_SIT_DOWN_COUNT / MAX_SESSION_SIZE),
+          });
+          return;
+        }
+      }
+
+      setProgress({
+        requested: FULL_SIT_DOWN_COUNT,
+        generated: 0,
+        completedBatches: 0,
+        totalBatches: Math.ceil(FULL_SIT_DOWN_COUNT / MAX_SESSION_SIZE),
+      });
+
+      const api = createApiClient(getToken);
+      const { generatedSession, runtime } = await generateStudySession(api, {
+        mode: 'mainSession',
+        size: FULL_SIT_DOWN_COUNT,
+        onProgress: (nextProgress) => {
+          setProgress({
+            requested: nextProgress.requestedQuestions,
+            generated: nextProgress.generatedQuestions,
+            completedBatches: nextProgress.completedBatches,
+            totalBatches: nextProgress.totalBatches,
+          });
+        },
+      });
+      useStudyStore.getState().hydrateSession(runtime);
+
+      const settings: SessionSettings = {
+        mode: 'exam',
+        focus: 'all',
+        count: FULL_SIT_DOWN_COUNT,
+        difficulty: 'adaptive',
+      };
+
+      setSessionSettings(settings);
+      setSessionId(generatedSession.sessionId);
+      setQuestionQueue(generatedSession.questions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('Failed to generate full sit-down test session:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getToken]);
 
   // Generate 300-question session
   useEffect(() => {
-    const generateSession = async () => {
-      try {
-        setIsLoading(true);
-        const token = await getToken();
-        const response = await fetch('/api/study/session/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            mode: 'mainSession',
-            size: 300,
-          }),
-        });
+    void generateSession();
+  }, [generateSession]);
 
-        if (!response.ok) {
-          throw new Error(`Failed to generate session: ${response.status}`);
-        }
-
-        const data = extractGeneratedSession(await response.json());
-        if (!data) {
-          throw new Error('Invalid session response');
-        }
-
-        const settings: SessionSettings = {
-          mode: 'exam',
-          focus: 'all',
-          count: 300,
-          difficulty: 'adaptive',
-        };
-
-        setSessionSettings(settings);
-        setSessionId(data.sessionId);
-        setQuestionQueue(data.questions);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Failed to generate full sit-down test session:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    generateSession();
-  }, [getToken]);
+  const handleRetry = useCallback(() => {
+    void generateSession(true);
+  }, [generateSession]);
 
   const handleEndSession = useCallback(() => {
     // Optionally send analytics before exiting
@@ -129,7 +149,13 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
         <div role="status" aria-label="Loading exam session" className="text-center">
           <div aria-hidden="true" className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           <p className="mt-4 text-lg">Generating 300‑question exam session…</p>
-          <p className="text-sm text-muted-foreground">This may take a moment.</p>
+          <p className="text-sm text-muted-foreground">
+            Built from canonical 50-question batches to preserve the shared session pipeline.
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {progress.generated}/{progress.requested} questions ready
+            {progress.totalBatches > 0 ? ` • batch ${Math.min(progress.completedBatches + 1, progress.totalBatches)} of ${progress.totalBatches}` : ''}
+          </p>
         </div>
       </div>
     );
@@ -142,7 +168,7 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
           <h2 className="text-2xl font-bold text-destructive mb-2">Session Generation Failed</h2>
           <p className="mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleRetry}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
           >
             Retry
@@ -188,8 +214,9 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
       removeFlaggedQuestion={removeFlaggedQuestion ?? NOOP}
       updateQuestionNote={updateQuestionNote ?? NOOP}
       isFullSitDownTest={true}
-      totalQuestions={300}
+      totalQuestions={FULL_SIT_DOWN_COUNT}
       sessionId={sessionId}
+      queueStrategy="finite"
     />
   );
 };

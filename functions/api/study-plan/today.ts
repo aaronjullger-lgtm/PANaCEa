@@ -1,34 +1,40 @@
-/**
- * GET /api/study-plan/today
- *
- * Returns today's recommended study allocation split between MAIN (readiness)
- * and TARGETED (FSRS retention) sessions.
- *
- * Response shape: DailyStudyAllocation — see dailyStudyAllocatorService.ts
- *
- * Security: Authenticated endpoint — requires valid Clerk JWT.
- *
- * Sprint: Dual-Study Allocator — April 2026
- */
-
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { getDailyStudyAllocation } from '../../../lib/services/dailyStudyAllocatorService';
+import {
+  authenticatedEndpoint,
+  type AuthenticatedContext,
+  type ValidatedContext,
+} from '../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+} from '../_shared/prisma-edge';
+import { getTodayStudyPlan } from '../_shared/studyPlanService';
 
-// GET endpoint — no request body needed
 const EmptySchema = z.object({});
-type EmptyQuery = z.infer<typeof EmptySchema>;
+
+async function getInternalUserId(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  clerkId: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  });
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return user.id;
+}
 
 export const onRequestGet = authenticatedEndpoint(
   EmptySchema,
-  async (context: AuthenticatedContext & ValidatedContext<EmptyQuery>) => {
-    const { userId } = context.auth;
-    const prisma = createEdgePrismaClient(context.env);
+  async (context: AuthenticatedContext & ValidatedContext<Record<string, never>>) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      const allocation = await getDailyStudyAllocation(prisma, userId);
-      return { data: allocation };
+      const userId = await getInternalUserId(prisma, context.auth.userId);
+      const today = await getTodayStudyPlan(prisma, userId);
+      return { data: today };
     } finally {
       await safePrismaDisconnect(prisma);
     }

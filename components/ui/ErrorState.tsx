@@ -1,10 +1,10 @@
 import React from 'react';
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createAppError, getUserFacingError } from '@/lib/utils/errorHandlingUtils';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface ErrorStateProps {
   message?: string;
@@ -46,44 +46,28 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={cn('flex flex-col items-center justify-center text-center', className)}
     >
-      <div className="w-full max-w-md rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
-        {showIcon && (
-          <motion.div
-            initial={prefersReducedMotion ? false : { scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', delay: 0.1 }}
-          >
-            <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mb-4 mx-auto" />
-          </motion.div>
-        )}
-
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
-
-        <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
-
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {onRetry && (
-            <Button
-              variant="primary"
-              size="lg"
-              icon={<RefreshCw className="w-4 h-4" />}
-              onClick={onRetry}
-            >
-              Try Again
-            </Button>
-          )}
-          {secondaryAction && (
-            <Button
-              variant="secondary"
-              size="lg"
-              icon={<Home className="w-4 h-4" />}
-              onClick={secondaryAction.onClick}
-            >
-              {secondaryAction.label}
-            </Button>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        title={title}
+        description={message}
+        icon={AlertCircle}
+        showIcon={showIcon}
+        action={
+          onRetry
+            ? {
+                label: 'Try Again',
+                onClick: onRetry,
+              }
+            : undefined
+        }
+        secondaryAction={
+          secondaryAction
+            ? {
+                label: secondaryAction.label,
+                onClick: secondaryAction.onClick,
+              }
+            : undefined
+        }
+      />
     </motion.div>
   );
 };

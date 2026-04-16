@@ -29,6 +29,18 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       const { sessionId } = validated;
 
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        return {
+          status: 404,
+          error: 'User not found',
+        };
+      }
+
       // Fetch session with questionIds, ensure it belongs to the user
       const session = await prisma.studySession.findUnique({
         where: { id: sessionId },
@@ -45,7 +57,7 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      if (session.userId !== auth.userId) {
+      if (session.userId !== user.id) {
         return {
           status: 403,
           error: 'Unauthorized to access this session',
@@ -60,53 +72,92 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      // Fetch full Question objects in the same order as questionIds
-      // Use a raw query to preserve order? Prisma's findMany does not guarantee order.
-      // We'll fetch and then sort manually.
-      const questions = await prisma.question.findMany({
+      const preGenerated = await prisma.preGeneratedQuestion.findMany({
         where: { id: { in: questionIds } },
-        include: {
-          Condition: {
-            select: {
-              id: true,
-              name: true,
-              system: true,
-            },
-          },
+        select: {
+          id: true,
+          questionData: true,
+          system: true,
+          difficulty: true,
+          conditionId: true,
         },
       });
 
-      // Map to preserve order
-      const questionMap = new Map(questions.map(q => [q.id, q]));
-      const orderedQuestions = questionIds
-        .map(id => questionMap.get(id))
-        .filter((q): q is NonNullable<typeof q> => q !== undefined);
+      const preGeneratedIds = new Set(preGenerated.map((question) => question.id));
+      const remainingIds = questionIds.filter((id) => !preGeneratedIds.has(id));
+      const standardQuestions = remainingIds.length
+        ? await prisma.question.findMany({
+            where: { id: { in: remainingIds } },
+            select: {
+              id: true,
+              question: true,
+              options: true,
+              correctAnswer: true,
+              explanation: true,
+              system: true,
+              difficulty: true,
+              conditionId: true,
+              category: true,
+              topic: true,
+              vignette: true,
+            },
+          })
+        : [];
 
-      // Transform to match the shape expected by frontend (same as /api/questions/session)
-      const formattedQuestions = orderedQuestions.map(q => ({
-        id: q.id,
-        vignette: q.vignette,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        system: q.system,
-        condition: q.Condition ? {
-          id: q.Condition.id,
-          name: q.Condition.name,
-          system: q.Condition.system,
-        } : null,
-        difficulty: q.difficulty,
-        source: q.source,
-        tags: q.tags,
-        cognitiveLevel: q.cognitiveLevel,
-        clinicalSettings: q.clinicalSettings,
-        relatedDrugs: q.relatedDrugs,
-        relatedDiseases: q.relatedDiseases,
-        taskType: q.taskType,
-        questionFormat: q.questionFormat,
-        mediaAssetId: q.mediaAssetId,
-      }));
+      const questionMap = new Map<string, Record<string, unknown>>();
+      for (const question of preGenerated) {
+        const data = question.questionData as Record<string, unknown> | null;
+        const options = Array.isArray(data?.options)
+          ? data.options.map((option) => String(option))
+          : [];
+        const correctAnswer = String(data?.correctAnswer ?? data?.answer ?? '');
+
+        questionMap.set(question.id, {
+          id: question.id,
+          question: String(data?.question ?? data?.stem ?? ''),
+          vignette: data?.vignette ?? null,
+          options,
+          correctAnswer,
+          correctAnswerIndex: resolveCorrectAnswerIndex(
+            options,
+            typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null,
+            correctAnswer
+          ),
+          explanation: data?.explanation ?? data?.rationale ?? null,
+          system: question.system ?? data?.system ?? null,
+          category: data?.subcategory ?? null,
+          topic: data?.conditionName ?? null,
+          difficulty: question.difficulty ?? data?.difficulty ?? null,
+          conditionId: question.conditionId ?? null,
+          source: 'reservoir',
+        });
+      }
+
+      for (const question of standardQuestions) {
+        const options = Array.isArray(question.options)
+          ? question.options.map((option) => String(option))
+          : [];
+
+        questionMap.set(question.id, {
+          id: question.id,
+          question: question.question,
+          vignette: question.vignette,
+          options,
+          correctAnswer: question.correctAnswer,
+          correctAnswerIndex: resolveCorrectAnswerIndex(options, null, question.correctAnswer ?? ''),
+          explanation: question.explanation,
+          system: question.system,
+          category: question.category,
+          topic: question.topic,
+          difficulty: question.difficulty,
+          conditionId: question.conditionId,
+          source: 'on_demand',
+        });
+      }
+
+      const formattedQuestions = questionIds
+        .map((id) => questionMap.get(id))
+        .filter((question): question is Record<string, unknown> => Boolean(question));
 
       return {
         data: { questions: formattedQuestions },
@@ -123,3 +174,28 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'params', requestsPerMinute: 120 }
 );
+
+function resolveCorrectAnswerIndex(
+  options: string[],
+  rawIndex: number | null,
+  rawCorrectAnswer: string
+): number {
+  if (typeof rawIndex === 'number' && Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < options.length) {
+    return rawIndex;
+  }
+
+  const correctAnswer = rawCorrectAnswer.trim();
+  if (!correctAnswer) return 0;
+
+  const exactMatch = options.findIndex(
+    (option) => option.trim().toLowerCase() === correctAnswer.toLowerCase()
+  );
+  if (exactMatch >= 0) return exactMatch;
+
+  if (/^[A-E]$/i.test(correctAnswer)) {
+    const letterIndex = correctAnswer.toUpperCase().charCodeAt(0) - 65;
+    if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
+  }
+
+  return 0;
+}

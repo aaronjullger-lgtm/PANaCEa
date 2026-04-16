@@ -6,29 +6,55 @@
  */
 
 import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { badgeBaseClass, badgeSizeClasses } from '@/components/ui/system';
 
-export type BadgeVariant = 'default' | 'highYield' | 'category' | 'mechanism' | 'muted';
+const badgeVariants = cva(badgeBaseClass, {
+  variants: {
+    variant: {
+      default:
+        'border-[var(--color-accent)]/26 bg-[var(--color-accent)]/12 text-[var(--color-accent)]',
+      highYield:
+        'border-[var(--color-data-provisional)]/34 bg-[var(--color-data-provisional)]/14 text-[var(--color-data-provisional)]',
+      category:
+        'border-[var(--color-accent-secondary)]/26 bg-[var(--color-accent-secondary)]/12 text-[var(--color-accent-secondary)]',
+      mechanism:
+        'border-[var(--color-data-neutral)]/30 bg-[var(--color-data-neutral)]/14 text-[var(--color-data-neutral)]',
+      muted:
+        'border-transparent bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]',
+      secondary:
+        'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
+      outline:
+        'border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)]',
+      success:
+        'border-[var(--color-data-pass)]/34 bg-[var(--color-data-pass)]/14 text-[var(--color-data-pass)]',
+      warning:
+        'border-[var(--color-data-provisional)]/34 bg-[var(--color-data-provisional)]/14 text-[var(--color-data-provisional)]',
+      danger:
+        'border-[var(--color-data-fail)]/34 bg-[var(--color-data-fail)]/14 text-[var(--color-data-fail)]',
+      neutral:
+        'border-[var(--color-border)] bg-[var(--color-bg-primary)]/70 text-[var(--color-text-secondary)]',
+    },
+    size: {
+      sm: badgeSizeClasses.sm,
+      md: badgeSizeClasses.md,
+      lg: badgeSizeClasses.lg,
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'md',
+  },
+});
 
-const VARIANT_CLASSES: Record<
-  BadgeVariant,
-  string
-> = {
-  default:
-    'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-  highYield:
-    'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-  category:
-    'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-  mechanism:
-    'bg-[var(--color-data-neutral)]/15 text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)] border-[var(--color-data-neutral)]/30',
-  muted:
-    'bg-[var(--color-bg-secondary)]/50 text-[var(--color-text-muted)] border-transparent',
-};
+export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
+export type BadgeSize = NonNullable<VariantProps<typeof badgeVariants>['size']>;
 
 export interface BadgeProps {
   children: React.ReactNode;
   variant?: BadgeVariant;
+  size?: BadgeSize;
   className?: string;
   /** When true, truncate long labels with ellipsis */
   truncate?: boolean;
@@ -42,6 +68,7 @@ export interface BadgeProps {
 export const Badge: React.FC<BadgeProps> = ({
   children,
   variant = 'default',
+  size = 'md',
   className = '',
   truncate = false,
   maxWidth,
@@ -49,8 +76,7 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border',
-        VARIANT_CLASSES[variant],
+        badgeVariants({ variant, size }),
         truncate && 'truncate',
         maxWidth,
         className,
@@ -61,4 +87,5 @@ export const Badge: React.FC<BadgeProps> = ({
   );
 };
 
+export { badgeVariants };
 export default Badge;

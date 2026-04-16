@@ -3,7 +3,17 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
-import { CARD_RING_SHADOW } from '@/components/ui/card';
+import { Badge } from '@/components/ui/Badge';
+import {
+  bodySupportClass,
+  iconTileClass,
+  sectionHeadingClass,
+  surfaceBaseClass,
+  surfaceInteractiveClass,
+  surfacePaddingClass,
+  surfaceRaisedStyle,
+  surfaceShadowStyle,
+} from '@/components/ui/system';
 
 /**
  * GlassCard - Elevated card component with semantic variant system
@@ -34,26 +44,26 @@ interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
 
 const variantStyles: Record<CardVariant, { bg: string; border: string; glow: string; useShadow: boolean }> = {
   primary: {
-    bg: 'bg-gradient-to-br from-[var(--color-accent)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/8',
-    border: 'border border-[var(--color-accent)]/15 hover:border-[var(--color-accent)]/30',
+    bg: 'bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/6',
+    border: 'border-[var(--color-accent)]/16 hover:border-[var(--color-accent)]/28',
     glow: 'bg-[var(--color-accent)]/8',
     useShadow: false,
   },
   success: {
-    bg: 'bg-gradient-to-br from-[var(--color-data-pass)]/8 via-[var(--color-bg-secondary)] to-[var(--color-data-pass)]/8',
-    border: 'border border-[var(--color-data-pass)]/15 hover:border-[var(--color-data-pass)]/30',
+    bg: 'bg-gradient-to-br from-[var(--color-data-pass)]/10 via-[var(--color-bg-secondary)] to-[var(--color-data-pass)]/6',
+    border: 'border-[var(--color-data-pass)]/16 hover:border-[var(--color-data-pass)]/28',
     glow: 'bg-[var(--color-data-pass)]/8',
     useShadow: false,
   },
   warning: {
-    bg: 'bg-gradient-to-br from-[var(--color-data-provisional)]/8 via-[var(--color-bg-secondary)] to-[var(--color-data-provisional)]/8',
-    border: 'border border-[var(--color-data-provisional)]/15 hover:border-[var(--color-data-provisional)]/30',
+    bg: 'bg-gradient-to-br from-[var(--color-data-provisional)]/10 via-[var(--color-bg-secondary)] to-[var(--color-data-provisional)]/6',
+    border: 'border-[var(--color-data-provisional)]/16 hover:border-[var(--color-data-provisional)]/28',
     glow: 'bg-[var(--color-data-provisional)]/8',
     useShadow: false,
   },
   info: {
-    bg: 'bg-gradient-to-br from-[var(--color-accent-secondary)]/8 via-[var(--color-bg-secondary)] to-[var(--color-accent-secondary)]/8',
-    border: 'border border-[var(--color-accent-secondary)]/15 hover:border-[var(--color-accent-secondary)]/30',
+    bg: 'bg-gradient-to-br from-[var(--color-accent-secondary)]/10 via-[var(--color-bg-secondary)] to-[var(--color-accent-secondary)]/6',
+    border: 'border-[var(--color-accent-secondary)]/16 hover:border-[var(--color-accent-secondary)]/28',
     glow: 'bg-[var(--color-accent-secondary)]/8',
     useShadow: false,
   },
@@ -79,7 +89,6 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   const hoverStyles = hoverable
     ? 'transition-colors duration-150 hover:bg-[var(--color-bg-tertiary)]/40'
     : '';
-  const paddingStyles = noPadding ? '' : 'p-5 sm:p-6';
 
   return (
     <motion.div
@@ -90,14 +99,16 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       whileHover={hoverable && !prefersReducedMotion ? { y: -2, transition: springs.snappy } : undefined}
       transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
       className={`
-        relative overflow-hidden rounded-xl
+        relative overflow-hidden rounded-[1.25rem]
+        ${surfaceBaseClass}
+        ${surfaceInteractiveClass}
         ${styles.bg}
         ${styles.border}
-        ${paddingStyles}
+        ${noPadding ? '' : surfacePaddingClass}
         ${hoverStyles}
         ${className}
       `}
-      style={styles.useShadow ? { boxShadow: CARD_RING_SHADOW } : undefined}
+      style={styles.useShadow ? surfaceShadowStyle : surfaceRaisedStyle}
       {...props}
     >
       {/* Subtle background glow — only for colored variants */}
@@ -138,21 +149,23 @@ export const GlassCardHeader: React.FC<GlassCardHeaderProps> = ({
 }) => {
   return (
     <div className="flex items-start gap-3 mb-4">
-      <div className="p-2.5 rounded-lg bg-[var(--color-bg-tertiary)]">
+      <div className={iconTileClass}>
         <Icon className={`w-5 h-5 ${iconColor}`} />
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-0.5">
-          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
+          <h3 className={sectionHeadingClass}>{title}</h3>
           {badge && (
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${badge.color || 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'}`}
+            <Badge
+              size="sm"
+              variant="secondary"
+              className={badge.color}
             >
               {badge.text}
-            </span>
+            </Badge>
           )}
         </div>
-        {subtitle && <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>}
+        {subtitle && <p className={bodySupportClass}>{subtitle}</p>}
       </div>
     </div>
   );
@@ -180,7 +193,7 @@ export const GlassCardStats: React.FC<GlassCardStatsProps> = ({ stats }) => {
       {stats.map((stat) => (
         <div
           key={`${stat.label}-${stat.value}`}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm ${stat.color || 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'}`}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm ${stat.color || 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'}`}
         >
           <stat.icon className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
           <span className="font-medium">

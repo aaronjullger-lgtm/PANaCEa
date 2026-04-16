@@ -12,6 +12,7 @@
 
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
 
 const querySchema = z.object({}).optional().default({});
@@ -36,7 +37,13 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      const userId = context.auth.userId;
+      const userId = await resolveUserId(prisma, context.auth.userId);
+      if (!userId) {
+        return Response.json(
+          { data: { overdue: 0, today: 0, forecast: [], totalActive: 0 } satisfies ReviewForecastResponse },
+          { status: 404 },
+        );
+      }
       const now = new Date();
 
       // Get the start of today (UTC)

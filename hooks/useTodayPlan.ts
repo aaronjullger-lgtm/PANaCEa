@@ -1,46 +1,30 @@
-/**
- * useTodayPlan — Fetches today's recommended study allocation.
- *
- * Returns the MAIN vs TARGETED split, priority systems, targeted conditions,
- * and a human-readable reason summary from the Daily Study Allocator.
- *
- * @see functions/api/study-plan/today.ts
- * @see lib/services/dailyStudyAllocatorService.ts
- * @see components/dashboard/TodayPlanCard.tsx
- */
-
-import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { getApiEndpoint } from '@/lib/utils/apiConfig';
-
-export type StudySplit = 'main_heavy' | 'balanced' | 'targeted_heavy';
-
-export interface TodayPlanData {
-  recommendedMainCount: number;
-  recommendedTargetedCount: number;
-  mainSystems: string[];
-  targetedConditions: string[];
-  readinessPriority: number;
-  retentionPriority: number;
-  recommendedSplit: StudySplit;
-  reasonSummary: string;
-  generatedAt: string;
-}
+import { useCallback, useEffect, useState } from 'react';
+import { API_ENDPOINTS, getApiEndpoint } from '@/lib/utils/apiConfig';
+import type { StudyPlanDay } from '@/lib/api/types/studyPlan';
 
 export function useTodayPlan() {
   const { getToken, isSignedIn } = useAuth();
-  const [data, setData] = useState<TodayPlanData | null>(null);
+  const [data, setData] = useState<StudyPlanDay | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPlan = useCallback(async () => {
+    if (!isSignedIn) {
+      setData(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
-      const endpoint = getApiEndpoint('/api/study-plan/today');
+      const endpoint = getApiEndpoint(API_ENDPOINTS.STUDY_PLAN_TODAY);
       const response = await fetch(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -49,22 +33,21 @@ export function useTodayPlan() {
         throw new Error(`Study plan fetch failed: ${response.status}`);
       }
 
-      const json = await response.json();
-      if (json?.data) {
-        setData(json.data);
-      }
+      const json = (await response.json()) as { data?: StudyPlanDay | null };
+      setData(json?.data ?? null);
     } catch (err) {
       console.warn('[useTodayPlan] Failed:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isSignedIn]);
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    fetchPlan();
-  }, [isSignedIn, fetchPlan]);
+    void fetchPlan();
+  }, [fetchPlan]);
 
   return { data, isLoading, error, refresh: fetchPlan };
 }
+
+export default useTodayPlan;

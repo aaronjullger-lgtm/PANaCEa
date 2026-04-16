@@ -45,6 +45,7 @@ import { getBrowserTimezone } from '@/lib/circadian';
 import { createApiClient, createDrillsClient, ApiError } from '@/lib/sdk';
 import { syncManager } from '@/lib/services/sync/syncManager';
 import { toast } from '@/lib/toast';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 // Types are now imported from the shared library.
 // Interfaces defined here previously are re-exported for backward compatibility
@@ -94,6 +95,7 @@ export interface UseDrillFSRSReturn {
 export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
   const { drillType } = options;
   const { getToken } = useAuth();
+  const recordStudyAttempt = useStudyStore((state) => state.recordAttempt);
 
   // Timing and telemetry tracking
   const questionStartTimeRef = useRef<number>(Date.now());
@@ -191,6 +193,16 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
 
         // Store the response for access by session components
         setLastFSRSResponse(result);
+        recordStudyAttempt({
+          sessionId: null,
+          questionId,
+          canonicalQuestionId: questionId,
+          source: 'drill',
+          result: result.isCorrect ? 'correct' : 'incorrect',
+          selectedAnswer: String(selectedAnswer),
+          timeSpentMs,
+          syncState: 'synced',
+        });
 
         if (import.meta.env.DEV) {
           console.debug(`[useDrillFSRS:${drillType}] Submitted answer:`, {

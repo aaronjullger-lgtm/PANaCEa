@@ -6,6 +6,12 @@
  */
 
 import React from 'react';
+import {
+  fieldBaseClass,
+  fieldErrorClass,
+  fieldHintClass,
+  fieldLabelClass,
+} from '@/components/ui/system';
 
 type InputSize = 'sm' | 'md' | 'lg';
 
@@ -32,21 +38,8 @@ const sizeClasses: Record<InputSize, string> = {
   lg: 'px-4 py-3 text-lg min-h-[52px]',
 };
 
-const baseClasses = `
-  w-full rounded-lg font-normal transition-colors
-  bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]
-  border border-[var(--color-border)]
-  placeholder:text-[var(--color-text-muted)]
-  hover:border-[var(--color-accent)]/40
-  focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]
-  disabled:opacity-50 disabled:cursor-not-allowed
-`;
-
-const errorClasses = `
-  border-[var(--color-data-fail)] 
-  focus-visible:ring-[var(--color-data-fail)]
-  hover:border-[var(--color-data-fail)]
-`;
+const errorClasses =
+  'border-[var(--color-data-fail)] focus-visible:ring-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]';
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ size = 'md', error, label, hint, icon, iconRight, wrapperClassName = '', className = '', id, ...props }, ref) => {
@@ -59,7 +52,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+            className={fieldLabelClass}
           >
             {label}
           </label>
@@ -76,7 +69,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={!!error}
             aria-describedby={errorId || hintId}
             className={`
-              ${baseClasses}
+              ${fieldBaseClass}
               ${sizeClasses[size]}
               ${error ? errorClasses : ''}
               ${icon ? 'pl-10' : ''}
@@ -92,12 +85,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-[var(--color-data-fail)]" role="alert">
+          <p id={errorId} className={fieldErrorClass} role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={hintId} className="mt-1.5 text-sm text-[var(--color-text-muted)]">
+          <p id={hintId} className={fieldHintClass}>
             {hint}
           </p>
         )}
@@ -141,7 +134,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
         {label && (
           <label
             htmlFor={textareaId}
-            className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5"
+            className={fieldLabelClass}
           >
             {label}
           </label>
@@ -152,21 +145,21 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           aria-invalid={!!error}
           aria-describedby={errorId || hintId}
           className={`
-            ${baseClasses}
+            ${fieldBaseClass}
             ${textareaSizeClasses[size]}
-            resize-vertical
+            min-h-[120px] resize-y
             ${error ? errorClasses : ''}
             ${className}
           `}
           {...props}
         />
         {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-[var(--color-data-fail)]" role="alert">
+          <p id={errorId} className={fieldErrorClass} role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={hintId} className="mt-1.5 text-sm text-[var(--color-text-muted)]">
+          <p id={hintId} className={fieldHintClass}>
             {hint}
           </p>
         )}

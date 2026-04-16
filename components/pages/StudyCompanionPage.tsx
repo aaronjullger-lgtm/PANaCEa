@@ -208,9 +208,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
           meta={{
             badge: 'Study Companion',
             badgeTone: 'plum',
-            title: 'Read, question, and cite directly against approved study documents.',
+            title: 'Read, question, and cite your study documents.',
             subtitle:
-              'Keep the PDF, the question, and the citation trail in one workspace so studying a document feels like active review instead of passive reading.',
+              'PDF, question, and citation trail in one workspace — turn passive reading into active review.',
             backLabel: 'Back to Study',
             onBack: onExit,
             status: selected?.title ?? `${resources.length} approved document${resources.length === 1 ? '' : 's'}`,

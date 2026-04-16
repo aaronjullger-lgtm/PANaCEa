@@ -13,15 +13,24 @@ import React from 'react';
 import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { cardHoverVariants, springs } from '@/config/appViews';
+import {
+  bodySupportClass,
+  sectionHeadingClass,
+  surfaceBaseClass,
+  surfaceCompactPaddingClass,
+  surfaceInteractiveClass,
+  surfacePaddingClass,
+  surfaceRaisedStyle,
+  surfaceShadowStyle,
+} from '@/components/ui/system';
 
 /* ---------- Ring-shadow value (single source of truth) ---------- */
-const RING_SHADOW = '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)';
+const RING_SHADOW =
+  '0 0 0 1px color-mix(in srgb, var(--color-text-primary) 4%, transparent), 0 20px 42px -30px rgba(15,23,42,0.58), 0 8px 16px -12px rgba(15,23,42,0.36)';
 
 /* ---------- Glassmorphism card style ---------- */
 const GLASS_CARD_STYLE: React.CSSProperties = {
-  boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 4px 16px -4px var(--color-glass-shadow, rgba(0,0,0,0.12)), 0 2px 6px -2px rgba(0,0,0,0.04)',
-  backdropFilter: 'blur(16px) saturate(140%)',
-  WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+  ...surfaceShadowStyle,
   background: 'var(--color-card-bg, var(--color-bg-secondary))',
 };
 
@@ -33,7 +42,13 @@ const Card = React.forwardRef<
 >(({ className, onClick, style, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('rounded-xl transition-shadow duration-200', className)}
+    className={cn(
+      surfaceBaseClass,
+      surfaceInteractiveClass,
+      'rounded-[1.25rem]',
+      onClick && 'cursor-pointer hover:-translate-y-0.5 hover:border-[var(--color-accent)]/16',
+      className
+    )}
     style={{ ...GLASS_CARD_STYLE, ...style }}
     onClick={onClick}
     role={onClick ? 'button' : undefined}
@@ -49,8 +64,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('px-5 py-3.5', className)}
-      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-glass-border, var(--color-border))', borderBottom: '1px solid transparent' }}
+      className={cn('border-b border-[var(--color-border)] px-5 py-4 sm:px-6', className)}
       {...props}
     />
   ),
@@ -65,7 +79,7 @@ const CardTitle = React.forwardRef<
 >(({ className, as: Tag = 'h3', ...props }, ref) => (
   <Tag
     ref={ref}
-    className={cn('text-base font-semibold text-[var(--color-text-primary)]', className)}
+    className={cn(sectionHeadingClass, className)}
     {...props}
   />
 ));
@@ -79,7 +93,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-[var(--color-text-muted)] mt-0.5', className)}
+    className={cn('mt-1', bodySupportClass, className)}
     {...props}
   />
 ));
@@ -89,7 +103,7 @@ CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('px-5 py-4', className)} {...props} />
+    <div ref={ref} className={cn(surfacePaddingClass, className)} {...props} />
   ),
 );
 CardContent.displayName = 'CardContent';
@@ -100,8 +114,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('px-5 py-3', className)}
-      style={{ boxShadow: 'inset 0 1px 0 0 var(--color-glass-border, var(--color-border))' }}
+      className={cn('border-t border-[var(--color-border)] px-5 py-4 sm:px-6', className)}
       {...props}
     />
   ),
@@ -123,8 +136,14 @@ const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
       initial="rest"
       whileHover={disableHover ? undefined : 'hover'}
       whileTap={disableHover ? undefined : 'tap'}
-      className={cn('rounded-xl', className)}
-      style={{ ...GLASS_CARD_STYLE, ...style }}
+      className={cn(
+        surfaceBaseClass,
+        surfaceInteractiveClass,
+        surfaceCompactPaddingClass,
+        'rounded-[1.25rem]',
+        className
+      )}
+      style={{ ...surfaceRaisedStyle, ...style }}
       {...props}
     />
   ),

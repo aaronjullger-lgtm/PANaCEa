@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, TrendingUp, Minus, Flame } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 
 interface YieldBadgeProps {
   yield: number | string | null | undefined;
@@ -35,9 +36,9 @@ export const YieldBadge: React.FC<YieldBadgeProps> = ({
   } = parseYieldValue(yieldValue);
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs gap-1',
-    md: 'px-3 py-1 text-sm gap-1.5',
-    lg: 'px-4 py-1.5 text-base gap-2',
+    sm: 'text-[11px]',
+    md: 'text-xs',
+    lg: 'text-sm',
   };
 
   const iconSizes = {
@@ -47,18 +48,19 @@ export const YieldBadge: React.FC<YieldBadgeProps> = ({
   };
 
   return (
-    <div
+    <Badge
+      size={size}
+      variant="neutral"
       className={`
-        inline-flex items-center ${sizeClasses[size]} rounded-lg font-bold
+        ${sizeClasses[size]}
         ${bgClass} ${textClass} ${borderClass}
-        border transition-all duration-200
-        hover:scale-105 hover:shadow-lg
+        font-semibold
         ${className}
       `}
     >
       {showIcon && <Icon className={iconSizes[size]} />}
       <span>{displayText}</span>
-    </div>
+    </Badge>
   );
 };
 

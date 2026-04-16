@@ -3,6 +3,15 @@ import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import {
+  bodySupportClass,
+  sectionHeadingClass,
+  surfaceBaseClass,
+  surfaceCompactPaddingClass,
+  surfaceInteractiveClass,
+  surfaceShadowStyle,
+} from '@/components/ui/system';
 
 export interface SectorItem {
   id: string;
@@ -48,7 +57,13 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
             onClick={() => handleNavigate(item.path)}
-            className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-6 text-left border border-transparent hover:border-[var(--color-accent)] transition-all shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md"
+            className={cn(
+              'group relative text-left hover:-translate-y-0.5 hover:border-[var(--color-accent)]/24',
+              surfaceBaseClass,
+              surfaceCompactPaddingClass,
+              surfaceInteractiveClass,
+            )}
+            style={surfaceShadowStyle}
           >
             {/* Icon Badge */}
             <div className={`inline-flex p-3 ${item.color} rounded-lg mb-4`}>
@@ -57,12 +72,8 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
 
             {/* Content */}
             <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                {item.title}
-              </h3>
-              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-                {item.description}
-              </p>
+              <h3 className={sectionHeadingClass}>{item.title}</h3>
+              <p className={bodySupportClass}>{item.description}</p>
             </div>
 
             {/* Arrow Indicator */}

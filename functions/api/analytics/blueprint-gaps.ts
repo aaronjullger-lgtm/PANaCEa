@@ -15,6 +15,7 @@
 
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
 
 /** NCCPA 2025 Blueprint target weights (sum ≈ 1.0) */
@@ -122,11 +123,23 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
+      const userId = await resolveUserId(prisma, context.auth.userId);
+      if (!userId) {
+        return {
+          status: 404,
+          data: {
+            systems: [],
+            totalAttempts: 0,
+            coverageScore: 0,
+          } satisfies BlueprintGapsResponse,
+        };
+      }
+
       // Load the rows directly and aggregate in JS to stay aligned with the
       // current Prisma type surface.
       const attempts = await prisma.questionAttempt.findMany({
         where: {
-          userId: context.auth.userId,
+          userId,
           systemNormalized: { not: null },
         },
         select: {
@@ -155,7 +168,7 @@ export const onRequestGet = authenticatedEndpoint(
       if (totalAttempts === 0) {
         const perfRecords = await prisma.performanceRecord.findMany({
           where: {
-            userId: context.auth.userId,
+            userId,
             system: { not: null },
           },
           select: {

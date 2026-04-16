@@ -1,5 +1,9 @@
 import React from 'react';
 import { Layers, LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/Badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { bodySupportClass, sectionHeadingClass } from '@/components/ui/system';
 
 interface StudyCardProps {
   /** Card title */
@@ -45,29 +49,14 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   className = '',
   children,
 }) => {
-  // Theme-aware styles using CSS variables
-  const cardBg = isActive ? 'bg-[var(--color-accent)]/10' : 'bg-[var(--color-bg-primary)]';
-
-  const cardBorder = isActive
-    ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30'
-    : 'border-[var(--color-border)] hover:border-[var(--color-accent)]';
-
   return (
-    <div
+    <Card
       className={`
-        ${cardBg}
-        rounded-xl
-        p-4
-        border
-        ${cardBorder}
-        transition-all
-        duration-200
-        ${onClick ? 'cursor-pointer hover:shadow-lg' : ''}
+        ${isActive ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/8 shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-accent)_18%,transparent),0_20px_40px_-30px_color-mix(in_srgb,var(--color-accent)_60%,transparent)]' : ''}
+        ${onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-[var(--color-accent)]/18' : ''}
         ${className}
       `}
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
       onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
@@ -75,75 +64,48 @@ export const StudyCard: React.FC<StudyCardProps> = ({
         }
       }}
     >
-      {/* Header with icon and title */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Icon
-            className={`
-              w-5 h-5 
-              ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-accent)]'}
-            `}
-          />
-          <h3
-            className={`
-              text-lg 
-              font-bold 
-              ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}
-            `}
-          >
-            {title}
-          </h3>
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-tertiary)]">
+              <Icon className="h-5 w-5 text-[var(--color-accent)]" />
+            </div>
+            <div className="space-y-1">
+              <h3
+                className={`${sectionHeadingClass} ${
+                  isActive ? 'text-[var(--color-accent)]' : ''
+                }`}
+              >
+                {title}
+              </h3>
+              {subtitle && <p className={`${bodySupportClass} line-clamp-2`}>{subtitle}</p>}
+            </div>
+          </div>
+
+          {badge && (
+            <Badge variant={isActive ? 'default' : 'secondary'} size="sm">
+              {badge}
+            </Badge>
+          )}
         </div>
 
-        {/* Optional badge */}
-        {badge && (
-          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]">
-            {badge}
-          </span>
+        {children}
+
+        {showButton && (
+          <Button
+            className="w-full"
+            size="md"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.();
+            }}
+            aria-label={`${buttonLabel} ${title}`}
+          >
+            {buttonLabel}
+          </Button>
         )}
-      </div>
-
-      {/* Subtitle */}
-      {subtitle && (
-        <p className="text-sm text-[var(--color-text-secondary)] mb-3 line-clamp-2">{subtitle}</p>
-      )}
-
-      {/* Custom children content */}
-      {children}
-
-      {/* Action Button - AAA accessible with pure white text on Action Blue */}
-      {showButton && (
-        <button
-          className="
-            mt-3
-            w-full
-            py-2
-            px-4
-            rounded-lg
-            font-semibold
-            text-sm
-            bg-[var(--color-accent)]
-            hover:bg-[var(--color-accent-hover)]
-            active:bg-[var(--color-accent-hover)]
-            text-[var(--color-text-inverse)]
-            transition-colors
-            duration-150
-            focus:outline-none
-            focus:ring-2
-            focus:ring-[var(--color-accent)]
-            focus:ring-offset-2
-            focus:ring-offset-[var(--color-bg-primary)]
-          "
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.();
-          }}
-          aria-label={`${buttonLabel} ${title}`}
-        >
-          {buttonLabel}
-        </button>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

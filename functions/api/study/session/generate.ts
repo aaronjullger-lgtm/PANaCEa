@@ -133,6 +133,11 @@ export const onRequestPost = authenticatedEndpoint(
               blueprintStage: body.blueprintStage,
               learnerPhase,
               source: 'reservoir',
+              selectionMix: {
+                dueReviewCount: reserved.filter((r: any) => r.isReview).length,
+                resurfacedCount: 0,
+                newCardCount: reserved.filter((r: any) => !r.isReview).length,
+              },
             },
           };
         }
@@ -171,6 +176,32 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
+      await prisma.studySession.create({
+        data: {
+          id: result.sessionId,
+          userId: user.id,
+          startedAt: new Date(),
+          totalQuestions: result.questions.length,
+          mode: body.mode,
+          focus: body.system
+            ? 'system'
+            : body.conditionId
+              ? 'condition'
+              : body.subcategory
+                ? 'subcategory'
+                : 'all',
+          sessionType: body.sessionLane ?? 'MAIN',
+          systemsTargeted: Object.keys(result.metadata.systemDistribution ?? {}),
+          questionIds: result.questions
+            .map((question: any) => question.id)
+            .filter((questionId: unknown): questionId is string => typeof questionId === 'string' && questionId.length > 0),
+          blueprintStage: body.blueprintStage,
+          blueprintExamTypes: body.blueprintExamTypes ?? [],
+          blueprintLabel: body.blueprintLabel,
+          isQuickSession: body.size <= 10,
+        },
+      });
+
       // ── Step 3: Trigger background refill (fire-and-forget) ──
       if (context.waitUntil) {
         context.waitUntil(
@@ -185,6 +216,8 @@ export const onRequestPost = authenticatedEndpoint(
         questionCount: result.questions.length,
         dueReviews: result.metadata.dueReviewCount,
         newCards: result.metadata.newCardCount,
+        resurfaced: result.metadata.selectionMix?.resurfacedCount ?? 0,
+        adaptiveVersion: result.metadata.adaptiveVersion ?? null,
         stage: body.blueprintStage,
         source: result.metadata.source || 'on_demand',
         reservoirHit: reservoirSource,
@@ -258,30 +291,33 @@ async function hydrateReservoirQuestions(
   // Build lookup
   const questionMap = new Map<string, any>();
   for (const q of preGenerated) {
-    const data = q.questionData as any;
-    questionMap.set(q.id, {
-      id: q.id,
-      question: data?.question || data?.stem || '',
-      vignette: data?.vignette || null,
-      options: data?.options || [],
-      correctAnswer: data?.correctAnswer || data?.answer || '',
-      correctAnswerIndex: data?.correctAnswerIndex ?? 0,
-      explanation: data?.explanation || data?.rationale || null,
-      system: q.system || data?.system || null,
-      category: data?.subcategory || null,
+      const data = q.questionData as any;
+      const options = Array.isArray(data?.options) ? data.options.map((option: unknown) => String(option)) : [];
+      const correctAnswer = data?.correctAnswer || data?.answer || '';
+      questionMap.set(q.id, {
+        id: q.id,
+        question: data?.question || data?.stem || '',
+        vignette: data?.vignette || null,
+        options,
+        correctAnswer,
+        correctAnswerIndex: resolveCorrectAnswerIndex(options, data?.correctAnswerIndex, correctAnswer),
+        explanation: data?.explanation || data?.rationale || null,
+        system: q.system || data?.system || null,
+        category: data?.subcategory || null,
       topic: data?.conditionName || null,
       difficulty: q.difficulty || data?.difficulty || null,
       conditionId: q.conditionId || null,
     });
   }
   for (const q of standardQuestions) {
+    const options = Array.isArray(q.options) ? q.options.map((option: unknown) => String(option)) : [];
     questionMap.set(q.id, {
       id: q.id,
       question: q.question || '',
       vignette: q.vignette || null,
-      options: q.options || [],
+      options,
       correctAnswer: q.correctAnswer || '',
-      correctAnswerIndex: 0,
+      correctAnswerIndex: resolveCorrectAnswerIndex(options, null, q.correctAnswer || ''),
       explanation: q.explanation || null,
       system: q.system || null,
       category: q.category || null,
@@ -312,4 +348,29 @@ function countSystems(questions: any[]): Record<string, number> {
     counts[sys] = (counts[sys] || 0) + 1;
   }
   return counts;
+}
+
+function resolveCorrectAnswerIndex(
+  options: string[],
+  rawIndex: unknown,
+  rawCorrectAnswer: string
+): number {
+  if (typeof rawIndex === 'number' && Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < options.length) {
+    return rawIndex;
+  }
+
+  const correctAnswer = rawCorrectAnswer.trim();
+  if (!correctAnswer) return 0;
+
+  const exactMatch = options.findIndex(
+    (option) => option.trim().toLowerCase() === correctAnswer.toLowerCase()
+  );
+  if (exactMatch >= 0) return exactMatch;
+
+  if (/^[A-E]$/i.test(correctAnswer)) {
+    const letterIndex = correctAnswer.toUpperCase().charCodeAt(0) - 65;
+    if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
+  }
+
+  return 0;
 }

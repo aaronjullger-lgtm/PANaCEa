@@ -1,6 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  bodySupportClass,
+  sectionHeaderRowClass,
+  sectionSubtitleClass,
+  sectionTitleClass,
+  surfaceBaseClass,
+  surfaceCompactPaddingClass,
+  surfaceShadowStyle,
+} from '@/components/ui/system';
 
 export interface ContentGridProps {
   children: React.ReactNode;
@@ -44,7 +54,8 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
         <div
           key={index}
           aria-hidden="true"
-          className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 animate-pulse"
+          className={cn(surfaceBaseClass, surfaceCompactPaddingClass, 'animate-pulse')}
+          style={surfaceShadowStyle}
         >
           {/* Header skeleton */}
           <div className="space-y-3 mb-6">
@@ -125,7 +136,7 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   className = '',
 }) => {
   const gridClass = getGridClass(columns);
-  const gapClass = `gap-${gap}`;
+  const gapStyle = { gap: `${gap * 0.25}rem` };
 
   // Loading state
   if (loading) {
@@ -139,7 +150,7 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   }
 
   return (
-    <div className={`${gridClass} ${gapClass} ${className}`}>
+    <div className={cn(gridClass, className)} style={gapStyle}>
       <AnimatePresence mode="popLayout">
         {React.Children.map(children, (child, index) => (
           <motion.div
@@ -178,27 +189,22 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
   filters,
 }) => {
   return (
-    <div className="mb-8 space-y-4">
+    <div className="mb-8 space-y-5">
       {/* Title row */}
       {(title || actions) && (
-        <div className="flex items-start justify-between gap-4">
+        <div className={sectionHeaderRowClass}>
           {title && (
-            <div>
-              <h1
-                className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide"
-                style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
-              >
-                {title}
-              </h1>
-              {subtitle && <p className="text-[var(--color-text-muted)] mt-1">{subtitle}</p>}
+            <div className="space-y-1">
+              <h1 className={sectionTitleClass}>{title}</h1>
+              {subtitle && <p className={sectionSubtitleClass}>{subtitle}</p>}
             </div>
           )}
-          {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
+          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </div>
       )}
 
       {/* Filter row */}
-      {filters && <div className="flex items-center gap-3 flex-wrap">{filters}</div>}
+      {filters && <div className="flex flex-wrap items-center gap-3">{filters}</div>}
     </div>
   );
 };
@@ -216,7 +222,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">
       <Loader2 aria-hidden="true" className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
-      <p className="text-[var(--color-text-muted)] text-sm">{message}</p>
+      <p className={bodySupportClass}>{message}</p>
     </div>
   );
 };
