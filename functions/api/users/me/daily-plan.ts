@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import {
   withMiddleware,
   withCors,
@@ -6,10 +7,23 @@ import {
   withAuth,
   withRateLimit,
   withLogging,
+  authenticatedEndpoint,
   type AuthenticatedContext,
 } from '../../_shared/middleware';
 import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
+
+const DailyPlanCompleteSchema = z.object({
+  body: z.object({
+    // Accuracy expressed as a 0..1 decimal (matches `actualAccuracy` storage).
+    accuracy: z.number().min(0).max(1).optional(),
+    // Minutes spent; clamp to a realistic full-day range so malformed input
+    // can't pollute downstream analytics.
+    durationMinutes: z.number().int().min(0).max(24 * 60).optional(),
+  }),
+});
+
+export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
 
 /**
  * GET /api/users/me/daily-plan
@@ -71,15 +85,11 @@ import { prisma } from '../../_shared/prisma-edge';
  * POST /api/users/me/daily-plan/complete
  * Mark today's plan as completed
  */
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+export const onRequestPost = authenticatedEndpoint(
+  DailyPlanCompleteSchema,
+  async (context) => {
     const clerkId = context.auth.userId;
+    const { accuracy, durationMinutes } = context.validated.body;
 
     const user = await prisma.user.findUnique({
       where: { clerkId },
@@ -88,8 +98,6 @@ export const onRequestPost = withMiddleware(
     if (!user) {
       return { status: 404, error: 'User not found' };
     }
-
-    const body = await context.request.json() as { accuracy?: number; durationMinutes?: number };
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -112,15 +120,16 @@ export const onRequestPost = withMiddleware(
       where: { id: plan.id },
       data: {
         status: 'completed',
-        actualAccuracy: body.accuracy || undefined,
-        actualDurationMinutes: body.durationMinutes || undefined,
+        actualAccuracy: accuracy ?? undefined,
+        actualDurationMinutes: durationMinutes ?? undefined,
         completedAt: new Date(),
         updatedAt: new Date(),
       },
     });
 
     return { status: 200, data: formatPlanResponse(updatedPlan) };
-  }
+  },
+  { requestsPerMinute: 30 }
 );
 // ============================================
 // Helper functions
