@@ -41,7 +41,10 @@ Classification values:
 - **Deferred from this run:**
   - 7 cron endpoints (CRON_SECRET-gated; Zod not applicable).
   - `webhooks/clerk` (Svix signature; Zod not applicable).
-  - 3 multipart endpoints in WARN_MANUAL_ONLY (`knowledge/upload`, `technique-check/analyze` for video, `sentry-tunnel` for Sentry envelope proxy; Zod does not fit the body shape).
+- **Hardened this run (still `WARN_MANUAL_ONLY` by design, but with tightened manual validation):**
+  - `knowledge/upload.ts` — added 415 content-type gate + 413 `Content-Length` short-circuit before `formData()` materializes up to 50 MB. Post-materialization `file.size` guard retained. (TASK-011)
+  - `technique-check/analyze.ts` — flipped wrong-content-type 400 → 415 and oversized-video 400 → 413, added 413 `Content-Length` short-circuit before `formData()` materializes up to 20 MB, bounded `query` to `MAX_QUERY_CHARS = 2000` to prevent pathological Gemini prompts. (TASK-011)
+  - `sentry-tunnel.ts` — **no change; intentional steady state.** Sentry envelopes are a newline-delimited streaming format owned by Sentry's SDK; the correct contract-matching validation is DSN extraction + project-ID whitelist (already present) plus per-IP rate limiting (already present). Zod does not structurally fit. (TASK-011)
 - **Remaining FAIL after this run:** 2 — `functions/api/drill/log-attempt.ts` and `functions/api/questions/review.ts`, both deliberate 410 Gone tombstones that never read their request bodies. Real risk = 0; both parked with tombstone annotations. (`review.ts` became a tombstone in TASK-010 this run; `log-attempt.ts` was already a tombstone before this run.)
 
 ### §5 "Audit script detection gaps (meta)"
@@ -159,3 +162,11 @@ Classification values:
 - Caller inventory (2026-04-16): zero UI/hook/store importers of the deleted client service; only reference outside the retired files was the endpoint's own JSDoc and 3 historical audit docs.
 - Audit state after this task: **176 PASS, 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, 2 FAIL** (`drill/log-attempt.ts` + `questions/review.ts` — both deliberate 410 tombstones, both expected).
 - Still parked: `functions/api/srs/submit.ts` (active caller in `SrsFlashcardView`) and the `SRSItem` model itself (requires schema migration → Ask First).
+
+### TASK-011 → §5 WARN_MANUAL_ONLY tail (`knowledge/upload`, `technique-check/analyze`, `sentry-tunnel`)
+- Classification updated to **addressed-this-run** for the two multipart endpoints; **structurally correct / intentional steady state** for `sentry-tunnel`.
+- `knowledge/upload.ts`: added `415` content-type gate and `413` `Content-Length` short-circuit before `formData()` materializes up to 50 MB. JSDoc updated with "Validation model" block. Defense-in-depth `file.size` guard retained.
+- `technique-check/analyze.ts`: flipped wrong-content-type from `400` to `415`; flipped oversized-video from `400` to `413`; added `413` `Content-Length` short-circuit before `formData()` materializes up to 20 MB; added `MAX_QUERY_CHARS = 2000` bound on the `query` field to prevent pathological Gemini prompts. JSDoc updated.
+- `sentry-tunnel.ts`: **no code change.** The endpoint's validation surface (DSN extraction + project-ID whitelist + per-IP in-memory rate limit) is structurally correct for a Sentry envelope proxy. Sentry envelopes are newline-delimited streaming JSON owned by Sentry's SDK — Zod cannot validate that shape. This endpoint stays `WARN_MANUAL_ONLY` permanently by design, and future audit passes should not re-queue it.
+- Caller contract check: `MyLibraryPage.tsx` (knowledge/upload), `TechniqueCheckPage.tsx` (technique-check/analyze), and `lib/monitoring/sentry.ts` (sentry-tunnel via Sentry SDK) all send compliant requests and are not affected by the new gates under normal operation.
+- Audit state after this task: **176 PASS, 8 WARN_OUT_OF_BAND, 3 WARN_MANUAL_ONLY, 2 FAIL** — unchanged, by design. The audit script classifies by code-shape, not validation depth; the hardening tightens manual validation within the bucket without moving endpoints between buckets.
