@@ -71,7 +71,6 @@ export {
   LineChart,
   Link,
   List,
-  Loader2,
   Lock,
   LogOut,
   Menu,

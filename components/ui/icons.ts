@@ -65,7 +65,6 @@ export {
   CheckCircle2,
   XCircle,
   Info,
-  Loader2,
   RefreshCw,
   Eye,
   EyeOff,
