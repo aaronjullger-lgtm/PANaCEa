@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from './DrillLandingPage';
 import { ContrastiveDrill } from './ContrastiveDrill';
-import { Target, Loader2, ChevronRight } from 'lucide-react';
+import { Target, ChevronRight } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import DrillShell from './DrillShell';
 import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
@@ -151,8 +152,8 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
           </p>
 
           {isLoadingSets ? (
-            <div role="status" aria-label="Loading study sets" className="flex items-center justify-center h-48">
-              <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-data-neutral" />
+            <div role="status" aria-label="Loading study sets" aria-live="polite" className="flex items-center justify-center h-48">
+              <InlineSpinner size="lg" className="text-data-neutral" />
             </div>
           ) : availableSets.length === 0 ? (
             <div className="text-center text-data-neutral py-8">
