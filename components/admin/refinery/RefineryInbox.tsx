@@ -6,7 +6,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { TriageCard, type RefineryItem, type MediaApprovePayload } from './TriageCard';
 
 interface InboxResponse {
@@ -123,8 +124,12 @@ export function RefineryInbox() {
 
   if (loading && items.length === 0) {
     return (
-      <div className="flex items-center justify-center gap-2 py-12 text-[var(--color-text-muted)]">
-        <Loader2 className="w-6 h-6 animate-spin" />
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex items-center justify-center gap-2 py-12 text-[var(--color-text-muted)]"
+      >
+        <InlineSpinner size="lg" />
         <span>Loading inbox…</span>
       </div>
     );
@@ -144,7 +149,7 @@ export function RefineryInbox() {
               aria-label="Retry"
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <InlineSpinner size="sm" />
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}

@@ -1,9 +1,9 @@
 # TASK-018 — Migrate drill/session cluster animate-spin loaders to canonical InlineSpinner
 
-- **Status:** completed (uncommitted — git index.lock held at host level; user to commit at convenience)
+- **Status:** completed
 - **Date:** 2026-04-17
 - **Branch:** `codex-study-session-prod-hotfix-v2`
-- **Commits:** pending
+- **Commits:** code landed across `a6b5f2cc` (ContrastiveDrillSession), `64d93d33` (ElaborationDrill), `0280b661` (ConditionDrillSession + RapidRecallDrill + incidental question service), and `31f26d99` (remaining 8 drill + session files — folded into a sibling useReducedMotion a11y sprint by a parallel agent); docs `bda6752a`.
 - **Category:** UI hygiene / design system consolidation
 - **Priority / Risk / Size:** Medium / Low-Medium / M (combined cluster — 13 files, 15 migrations)
 - **Audit reference:** Continuation of the cluster-by-cluster sweep started in TASK-014 (library), TASK-015 (dashboard), TASK-017 (analytics).
