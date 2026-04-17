@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   DndContext,
   DragEndEvent,
@@ -69,6 +70,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssign
 };
 
 export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({ question, onAnswer }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [startTime] = useState<number>(Date.now());
   const [unassignedFeatures, setUnassignedFeatures] = useState<DistinguisherFeature[]>([]);
   const [condition1Features, setCondition1Features] = useState<DistinguisherFeature[]>([]);
