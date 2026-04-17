@@ -137,7 +137,7 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
           <>
             <CollapsibleSection title="Vital Ranges" icon={<Heart className="w-4 h-4 text-[var(--color-data-fail)]" />}>
               <div className="space-y-1">
-                {data.vitalRanges.map((v, i) => (
+                {(data.vitalRanges ?? []).map((v, i) => (
                   <div key={i} className="flex justify-between text-xs">
                     <span className="text-[var(--color-text-secondary)]">{v.name}</span>
                     <span className="text-[var(--color-text-muted)]">{v.normalRange} {v.unit}</span>
@@ -147,7 +147,7 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
             </CollapsibleSection>
 
             <CollapsibleSection title="Normal Labs" icon={<FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />}>
-              <LabTable labs={data.normalLabs} />
+              <LabTable labs={data.normalLabs ?? []} />
             </CollapsibleSection>
 
             {data.relevantPearls.length > 0 && (
@@ -162,14 +162,14 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
                 </ul>
               </CollapsibleSection>
             )}
-            {data.differentialFeatures.length > 0 && (
+            {(data.differentialFeatures ?? []).length > 0 && (
               <CollapsibleSection title="Differential Features" icon={<BookOpen className="w-4 h-4 text-[var(--color-text-secondary)]" />} defaultOpen={false}>
                 <div className="space-y-3">
-                  {data.differentialFeatures.map((ddx, i) => (
+                  {(data.differentialFeatures ?? []).map((ddx, i) => (
                     <div key={i}>
                       <p className="text-xs font-medium text-[var(--color-text-primary)]">{ddx.conditionName}</p>
                       <ul className="mt-1 space-y-0.5">
-                        {ddx.distinguishingFeatures.map((f, j) => (
+                        {(ddx.distinguishingFeatures ?? []).map((f, j) => (
                           <li key={j} className="text-xs text-[var(--color-text-secondary)] pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[var(--color-text-muted)]">
                             {f}
                           </li>
