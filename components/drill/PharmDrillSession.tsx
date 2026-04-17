@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -16,6 +16,7 @@ import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface PharmDrillSessionProps {
@@ -92,6 +93,7 @@ const CATEGORY_CARDS: Array<{
  * PharmDrillSession - Pharmacology quiz drill mode
  */
 const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentQuestion,
     score,
@@ -113,10 +115,43 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
     exitToMenu();
     onExit?.();
   };
 
+  const handleNewSession = () => {
+    setShowSummary(false);
+    reset();
+  };
+
+
+  // =========================================================================
+  // SUMMARY VIEW
+  // =========================================================================
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Pharmacology — Complete"
+        breadcrumb={['Drills', 'Pharmacology', 'Results']}
+        onBackToHub={() => { exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Pharmacology"
+          icon={Pill}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleNewSession}
+          onExit={() => { exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
 
   if (isDataLoading) {
     return (

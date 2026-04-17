@@ -88,7 +88,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
 
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Score - Hidden on very small screens */}
-          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] hidden xs:block">
+          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] hidden xs:block tabular-nums">
             <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
             <span className="text-[var(--color-text-muted)]">/{totalAttempts}</span>
           </div>
@@ -101,7 +101,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
               }`}
             />
             <span
-              className={`text-sm sm:text-base font-bold ${
+              className={`text-sm sm:text-base font-bold tabular-nums ${
                 streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-muted-foreground'
               }`}
             >

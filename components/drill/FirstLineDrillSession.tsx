@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -17,6 +17,7 @@ import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './Min
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface FirstLineDrillSessionProps {
@@ -93,6 +94,7 @@ const CATEGORY_CARDS: Array<{
  * FirstLineDrillSession - First-line treatment quiz drill mode
  */
 const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit }) => {
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentQuestion,
     score,
@@ -122,11 +124,44 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
   }
 
   const handleExit = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
     exitToMenu();
     if (onExit) {
       onExit();
     }
   };
+
+  const handleNewSession = () => {
+    setShowSummary(false);
+    reset();
+  };
+
+  // =========================================================================
+  // SUMMARY VIEW
+  // =========================================================================
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="First Line Treatment — Complete"
+        breadcrumb={['Drills', 'First Line', 'Results']}
+        onBackToHub={() => { exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="First Line Treatment"
+          icon={Pill}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleNewSession}
+          onExit={() => { exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
 
   // =========================================================================
   // MENU VIEW

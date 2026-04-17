@@ -7,7 +7,7 @@
  * @see hooks/game/use-elaboration-drill.ts
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lightbulb,
@@ -23,6 +23,7 @@ import { useElaborationDrill } from '@/hooks/game/use-elaboration-drill';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface ElaborationDrillProps {
@@ -44,6 +45,7 @@ const SCORE_LABELS: Record<number, string> = {
 };
 
 export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentFact,
     status,
@@ -61,8 +63,36 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
     reset,
   } = useElaborationDrill();
 
-  const handleBackToHub = onExit ?? (() => {});
+  const handleBackToHub = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
+    onExit?.();
+  };
   const breadcrumb = ['Practice', 'Elaborative Interrogation'];
+
+  // Summary
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Elaborative Interrogation — Complete"
+        breadcrumb={['Practice', 'Elaborative Interrogation', 'Results']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Elaborative Interrogation"
+          icon={Lightbulb}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak: 0 }}
+          onNewSession={() => { setShowSummary(false); reset(); startSession(); }}
+          onExit={() => onExit?.()}
+          newSessionLabel="Practice More"
+        />
+      </DrillShell>
+    );
+  }
 
   // Landing
   if (status === 'landing') {
@@ -104,7 +134,7 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
     >
       <div className="max-w-2xl mx-auto py-6 space-y-6">
         {/* Score bar */}
-        <div className="flex items-center justify-between text-xs" style={{ color: 'var(--color-text-muted)' }}>
+        <div className="flex items-center justify-between text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
           <span>Score: {score}/{totalAttempts}</span>
           <span>{currentFact.system}</span>
         </div>

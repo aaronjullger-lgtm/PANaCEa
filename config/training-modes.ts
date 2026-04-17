@@ -84,6 +84,7 @@ export interface TrainingModeConfig {
   route: string;
   isComingSoon?: boolean;
   panreOnly?: boolean;
+  didacticOnly?: boolean;
   estimatedMinutes?: number;
 }
 
