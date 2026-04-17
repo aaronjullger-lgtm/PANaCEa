@@ -5,13 +5,13 @@ import {
   Flame,
   RotateCcw,
   ArrowRight,
-  Loader2,
   BadgeCheck,
   Zap,
   AlertTriangle,
 } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
+import { InlineSpinner } from '@/components/loading';
 import { buzzwordService } from '@/services/domain';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
 import { useTelemetryCollector } from '@/hooks/useTelemetryCollector';
@@ -328,8 +328,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading drill" className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div aria-hidden="true" className="w-10 h-10 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      <div role="status" aria-label="Loading drill" aria-live="polite" className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
       </div>
     );
   }
@@ -454,7 +454,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
                 />
                 {isValidating && (
                   <div role="status" aria-live="polite" className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[var(--color-text-secondary)]">
-                    <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
+                    <InlineSpinner size="sm" className="text-[var(--color-primary)]" />
                     <span className="text-xs font-medium">Verifying...</span>
                   </div>
                 )}

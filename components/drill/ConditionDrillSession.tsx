@@ -8,7 +8,7 @@ import MiniDrillLayout, {
   FeedbackPanel,
   CategoryCard,
 } from './MiniDrillLayout';
-import { QuestionSkeleton } from '../loading';
+import { QuestionSkeleton, InlineSpinner } from '../loading';
 import MetacognitionPromptModal from './MetacognitionPromptModal';
 import DrillShell from './DrillShell';
 import DrillSummaryCard from './DrillSummaryCard';
@@ -290,8 +290,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
                         Coach's Corner
                       </h3>
                       {isLoadingHint ? (
-                        <div role="status" aria-label="Loading hint" className="flex items-center gap-3 text-[var(--color-text-muted)]">
-                          <div aria-hidden="true" className="w-5 h-5 border-2 border-[var(--color-data-provisional)] border-t-transparent rounded-full animate-spin"></div>
+                        <div role="status" aria-label="Loading hint" aria-live="polite" className="flex items-center gap-3 text-[var(--color-text-muted)]">
+                          <InlineSpinner size="md" className="text-[var(--color-data-provisional)]" />
                           <span className="text-sm italic">Thinking about your answer...</span>
                         </div>
                       ) : (
@@ -322,8 +322,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
               <div className="space-y-2 sm:space-y-3 relative">
                 {/* Submitting overlay */}
                 {isSubmitting && (
-                  <div role="status" aria-label="Submitting answer" className="absolute inset-0 bg-[var(--color-bg-primary)]/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-                    <div aria-hidden="true" className="w-6 h-6 border-3 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
+                  <div role="status" aria-label="Submitting answer" aria-live="polite" className="absolute inset-0 bg-[var(--color-bg-primary)]/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+                    <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   </div>
                 )}
                 {currentQuestion.options.map((option, index) => (
