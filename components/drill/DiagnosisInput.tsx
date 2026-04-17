@@ -147,11 +147,11 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
       <AnimatePresence>
         {isOpen && filteredConditions.length > 0 && (
           <motion.div
-            variants={dropdownVariants}
-            initial="initial"
+            variants={prefersReducedMotion ? undefined : dropdownVariants}
+            initial={prefersReducedMotion ? false : "initial"}
             animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15 }}
+            exit={prefersReducedMotion ? undefined : "exit"}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
             className="absolute bottom-full left-0 right-0 mb-2 z-50"
           >
             <ul

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Check, ChevronDown, Loader2 } from 'lucide-react';
+import { Globe, Check, ChevronDown } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useLocaleSwitcher } from '@/hooks/useI18n';
 import { LocaleConfig } from '@/config/locales';
 import StandardButton from './StandardButton';
@@ -86,7 +87,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         aria-haspopup="true"
       >
         {isChanging ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <InlineSpinner size="sm" />
         ) : (
           <>
             <Globe className="w-4 h-4" />

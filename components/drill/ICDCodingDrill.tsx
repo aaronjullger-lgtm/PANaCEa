@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Hash, CheckCircle, XCircle, ArrowRight, Stethoscope } from 'lucide-react';
 import { useICDDrill } from '@/hooks/game/use-icd-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
@@ -24,6 +25,7 @@ interface ICDCodingDrillProps {
 }
 
 export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
+  const prefersReducedMotion = useReducedMotion();
   const handleBackToHub = onExit ?? (() => {});
   const {
     currentQuestion,
@@ -181,8 +183,9 @@ export default function ICDCodingDrill({ onExit }: ICDCodingDrillProps) {
       {/* Feedback bar */}
       {status === 'feedback' && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="mt-4 p-4 rounded-lg border"
           style={{
             backgroundColor: isCorrect

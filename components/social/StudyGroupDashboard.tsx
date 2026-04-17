@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Trophy, Loader2, Copy, Check } from 'lucide-react';
+import { Users, Plus, Trophy, Copy, Check } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 
 // Types
@@ -264,8 +265,8 @@ export default function StudyGroupDashboard() {
 
             {/* Loading State */}
             {isLoadingGroups ? (
-              <div role="status" aria-label="Loading study groups" className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                <Loader2 aria-hidden="true" className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
+              <div role="status" aria-live="polite" aria-label="Loading study groups" className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
+                <InlineSpinner size="xl" className="text-[var(--color-accent)] mb-4" />
                 <p className="text-[var(--color-text-secondary)] font-medium">
                   Loading study groups...
                 </p>
@@ -369,8 +370,8 @@ export default function StudyGroupDashboard() {
 
               {/* Loading State */}
               {isLoadingLeaderboard ? (
-                <div role="status" aria-label="Loading leaderboard" className="flex flex-col items-center justify-center py-16">
-                  <Loader2 aria-hidden="true" className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
+                <div role="status" aria-live="polite" aria-label="Loading leaderboard" className="flex flex-col items-center justify-center py-16">
+                  <InlineSpinner size="xl" className="text-[var(--color-accent)] mb-4" />
                   <p className="text-[var(--color-text-secondary)] font-medium">
                     Loading leaderboard...
                   </p>

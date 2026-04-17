@@ -10,7 +10,8 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { WifiOff, CloudOff, Cloud, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { WifiOff, CloudOff, Cloud, AlertCircle, RefreshCw } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import {
@@ -149,7 +150,7 @@ export function OfflineSyncIndicator() {
       : 'bg-[var(--color-accent)]/15 border-[var(--color-accent)]/30 text-[var(--color-accent)]';
 
   const badgeIcon = syncing ? (
-    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+    <InlineSpinner size="sm" />
   ) : isOfflineState ? (
     <CloudOff className="w-3.5 h-3.5" />
   ) : hasSyncError ? (
@@ -209,7 +210,7 @@ export function OfflineSyncIndicator() {
               </>
             ) : syncing ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-[var(--color-accent)]" />
+                <InlineSpinner size="sm" className="text-[var(--color-accent)]" />
                 <span className="font-medium text-[var(--color-text-primary)]">Syncing…</span>
               </>
             ) : (

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   RotateCcw,
@@ -547,6 +548,7 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
   const categories = useMemo(() => {
     const cats = new Map<string, DDxPair[]>();
     DDX_PAIRS.forEach((pair) => {
@@ -652,8 +654,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
                 {pairs.map((pair) => (
                   <motion.button
                     key={pair.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                     onClick={() => onSelectPair(pair)}
                     className="text-left p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-all group"
                   >
@@ -702,6 +704,7 @@ interface DrillSessionProps {
 }
 
 const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [status, setStatus] = useState<'playing' | 'feedback'>('playing');
   const [isCorrect, setIsCorrect] = useState(false);
@@ -781,8 +784,9 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
         <motion.div
-          initial={{ scale: 0.9 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9 }}
           animate={{ scale: 1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="max-w-md w-full p-8 rounded-3xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
@@ -858,9 +862,9 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
       <div className="w-full h-1 bg-[var(--color-bg-tertiary)]">
         <motion.div
           className="h-full bg-[var(--color-category-practice)]"
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${((currentCardIndex + 1) / shuffledCards.length) * 100}%` }}
-          transition={{ duration: 0.3 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
         />
       </div>
 
@@ -881,14 +885,14 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
             {currentCard && (
               <motion.div
                 key={currentCard.id}
-                initial={{ y: 30, scale: 0.95 }}
+                initial={prefersReducedMotion ? false : { y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{
+                exit={prefersReducedMotion ? undefined : {
                   opacity: 0,
                   x: userChoice === 'A' ? -100 : userChoice === 'B' ? 100 : 0,
                   scale: 0.95,
                 }}
-                transition={{ duration: 0.25 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25 }}
                 className="w-full max-w-lg"
               >
                 <div
@@ -899,8 +903,9 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                   </p>
                   {status === 'feedback' && (
                     <motion.div
-                      initial={{ y: 10 }}
+                      initial={prefersReducedMotion ? false : { y: 10 }}
                       animate={{ y: 0 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : undefined}
                       className="pt-4 border-t border-[var(--color-border)]"
                     >
                       <div className="flex items-center justify-center gap-2 mb-3">
@@ -936,8 +941,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
           {status === 'playing' && (
             <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-6">
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 onClick={() => handleChoice('A')}
                 className="py-4 px-6 rounded-xl bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-2 border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] hover:border-[var(--color-category-practice)] text-[var(--color-category-practice)] font-semibold transition-all flex items-center justify-center gap-2"
               >
@@ -945,8 +950,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                 {pair.conditionA.split(' ')[0]}
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 onClick={() => handleChoice('B')}
                 className="py-4 px-6 rounded-xl bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/20 border-2 border-[var(--color-data-fail)]/30 hover:border-[var(--color-data-fail)] text-[var(--color-data-fail)] font-semibold transition-all flex items-center justify-center gap-2"
               >

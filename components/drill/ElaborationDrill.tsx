@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Lightbulb,
   Send,
@@ -45,6 +46,7 @@ const SCORE_LABELS: Record<number, string> = {
 };
 
 export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [showSummary, setShowSummary] = useState(false);
   const {
     currentFact,
@@ -141,8 +143,9 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
 
         {/* Fact card */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="p-6 rounded-xl border"
           style={{
             backgroundColor: 'var(--color-bg-secondary)',
@@ -165,8 +168,9 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
         {/* Hint (rubric keywords) */}
         {hintUsed && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             className="p-3 rounded-lg border"
             style={{
               backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-secondary))',
@@ -249,8 +253,9 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
         <AnimatePresence>
           {status === 'feedback' && gradeResult && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className="space-y-4"
             >
               {/* Score badge */}

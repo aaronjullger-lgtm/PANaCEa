@@ -7,8 +7,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Beaker, ChevronDown, RefreshCw } from 'lucide-react';
+import { Beaker, ChevronDown } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { InlineSpinner } from '@/components/loading';
 import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 import type { NormalLabEntry } from '@/components/session/NormalLabsPanel';
 
@@ -71,8 +72,12 @@ export const NormalLabsLibraryView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-[var(--color-text-muted)]">
-        <RefreshCw className="w-6 h-6 animate-spin mr-3" />
+      <div
+        className="flex items-center justify-center py-16 text-[var(--color-text-muted)]"
+        role="status"
+        aria-live="polite"
+      >
+        <InlineSpinner size="lg" className="mr-3" />
         <span>Loading normal lab values…</span>
       </div>
     );

@@ -26,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { InlineSpinner } from '@/components/loading';
 import { syncManager } from '../../lib/services/sync/syncManager';
 import './pearls.css';
 
@@ -350,8 +351,12 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex flex-col items-center justify-center h-64">
-          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+        <div
+          className="flex flex-col items-center justify-center h-64"
+          role="status"
+          aria-live="polite"
+        >
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
           <p className="mt-3 text-[var(--color-text-muted)]">Loading pearls...</p>
         </div>
       );

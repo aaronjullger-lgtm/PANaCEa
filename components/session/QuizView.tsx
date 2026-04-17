@@ -880,6 +880,13 @@ const QuizView: React.FC<QuizViewProps> = ({
       quizLogger.error('Question missing correctAnswerIndex — cannot score answer', {
         id: currentQuestion.id,
       });
+      // Surface a user-facing error so the submit click isn't a black hole.
+      // Reset the answered state so the user isn't stuck on a frozen rationale panel.
+      setError(
+        'This question has corrupted scoring data and was skipped. Please flag it and move on.',
+      );
+      setIsAnswered(false);
+      submittingRef.current = false;
       setIsSubmitting(false);
       return;
     }

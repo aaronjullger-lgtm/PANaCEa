@@ -25,6 +25,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface ComplianceDashboardProps {
   isOpen?: boolean;
@@ -114,9 +115,15 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
   if (isLoading || !dashboardData) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="status"
+        aria-live="polite"
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-category-practice)] mx-auto mb-4"></div>
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="xl" className="text-[var(--color-category-practice)]" />
+          </div>
           <p className="text-[var(--color-text-muted)]">Loading compliance dashboard...</p>
         </div>
       </div>

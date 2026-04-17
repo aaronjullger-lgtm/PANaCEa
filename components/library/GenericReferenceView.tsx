@@ -36,6 +36,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 // ============================================================================
 // RESPONSIVE HOOK
@@ -461,36 +462,30 @@ export default function GenericReferenceView<T>({
 
       {/* ---- CARD GRID ---- */}
       {filtered.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '60px 20px',
-          color: 'var(--color-text-secondary)',
-        }}>
-          <Search size={36} style={{ marginBottom: 12, opacity: 0.3 }} />
-          <p style={{ fontWeight: 600, fontSize: 16, color: 'var(--color-text-primary)' }}>
-            No {config.entityName.toLowerCase()} found
-          </p>
-          <p style={{ fontSize: 13 }}>
-            {searchQuery
+        <EmptyState
+          variant="search"
+          title={`No ${config.entityName.toLowerCase()} found`}
+          description={
+            searchQuery
               ? `No results for "${searchQuery}". Try a different search term.`
-              : 'Try adjusting your filters.'}
-          </p>
-          {(searchQuery || highYieldOnly || Object.values(filterValues).some((v) => v && v !== 'all')) && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setHighYieldOnly(false);
-                setFilterValues({});
-              }}
-              style={{
-                marginTop: 12, padding: '8px 16px', borderRadius: 8, fontSize: 13,
-                border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)',
-                color: config.accentColor, cursor: 'pointer', fontWeight: 600,
-              }}
-            >
-              Clear all filters
-            </button>
-          )}
-        </div>
+              : 'Try adjusting your filters.'
+          }
+          action={
+            searchQuery ||
+            highYieldOnly ||
+            Object.values(filterValues).some((v) => v && v !== 'all')
+              ? {
+                  label: 'Clear all filters',
+                  onClick: () => {
+                    setSearchQuery('');
+                    setHighYieldOnly(false);
+                    setFilterValues({});
+                  },
+                  variant: 'secondary',
+                }
+              : undefined
+          }
+        />
       ) : (
         <div role="list" aria-label={`${config.entityName} list`} style={{
           display: 'grid',

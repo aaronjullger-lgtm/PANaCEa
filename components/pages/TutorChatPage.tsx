@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AlertCircle,
   Bot,
   Brain,
   MessageCircle,
@@ -56,6 +57,8 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [previousThoughtSignatures, setPreviousThoughtSignatures] = useState<string[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [streamError, setStreamError] = useState<string | null>(null);
+  const lastSentTextRef = useRef<string | null>(null);
   const streamStartTimeRef = useRef<number>(0);
   const thinkingTimeMsReportedRef = useRef(false);
   const logRef = useRef<HTMLDivElement | null>(null);
@@ -168,6 +171,8 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
       setMessages((prev) => [...prev, userMessage]);
       setInput('');
       setIsStreaming(true);
+      setStreamError(null);
+      lastSentTextRef.current = trimmed;
       thinkingTimeMsReportedRef.current = false;
 
       const history: StreamHistoryTurn[] = messages.map((message) => ({
@@ -221,12 +226,16 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
           onComplete: () => {
             setIsStreaming(false);
           },
-          onError: () => {
+          onError: (err) => {
             setIsStreaming(false);
+            const message = err instanceof Error ? err.message : 'Tutor stream failed.';
+            setStreamError(message);
           },
         });
-      } catch {
+      } catch (err) {
         setIsStreaming(false);
+        const message = err instanceof Error ? err.message : 'Tutor is unreachable right now.';
+        setStreamError(message);
       }
     },
     [
@@ -405,6 +414,47 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                 <div className="sr-only" aria-live="assertive" aria-atomic role="status">
                   {isStreaming ? 'Tutor is thinking.' : ''}
                 </div>
+
+                {streamError ? (
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="flex items-start gap-3 rounded-[1.25rem] border border-[var(--color-data-fail)]/25 bg-[var(--color-data-fail)]/8 p-4"
+                  >
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-[var(--color-data-fail)]" />
+                    <div className="flex-1 space-y-2">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                        Tutor couldn't respond
+                      </p>
+                      <p className="text-xs leading-5 text-[var(--color-text-muted)]">
+                        {streamError}
+                      </p>
+                      {lastSentTextRef.current ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="warning"
+                          onClick={() => {
+                            const retryText = lastSentTextRef.current;
+                            if (!retryText) return;
+                            // Remove the stranded user message so we don't duplicate it
+                            setMessages((prev) => {
+                              const last = prev.at(-1);
+                              if (last?.role === 'user' && last.text === retryText) {
+                                return prev.slice(0, -1);
+                              }
+                              return prev;
+                            });
+                            void handleSend(retryText);
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Retry
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
 
                 {messages.length === 0 ? (
                   <div className="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 px-6 text-center" role="status" aria-live="polite">

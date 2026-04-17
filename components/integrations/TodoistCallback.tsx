@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { exchangeCodeForToken, type TodoistOAuthConfig } from '@/lib/services/todoistService';
 
 const TODOIST_CONFIG: TodoistOAuthConfig = {
@@ -57,15 +58,17 @@ export default function TodoistCallback() {
       <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] p-8 max-w-md w-full mx-4">
         <div className="text-center">
           {status === 'loading' && (
-            <>
-              <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+            <div role="status" aria-live="polite">
+              <div className="flex justify-center mb-4">
+                <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+              </div>
               <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
                 Connecting to Todoist
               </h2>
               <p className="text-[var(--color-text-muted)]">
                 Please wait while we complete the connection...
               </p>
-            </>
+            </div>
           )}
 
           {status === 'success' && (

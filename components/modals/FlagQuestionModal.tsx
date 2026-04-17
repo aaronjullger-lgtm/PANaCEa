@@ -7,6 +7,7 @@ import React, { useState, useRef } from 'react';
 import { X, Flag, AlertCircle, CheckCircle } from 'lucide-react';
 import { useQuestionFlag } from '@/hooks/useQuestionFlag';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
+import { InlineSpinner } from '@/components/loading';
 
 interface FlagQuestionModalProps {
   isOpen: boolean;
@@ -234,7 +235,7 @@ export function FlagQuestionModal({
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[var(--color-text-inverse)]/30 border-t-[var(--color-text-inverse)] rounded-full animate-spin" />
+                    <InlineSpinner size="sm" />
                     Submitting...
                   </>
                 ) : (

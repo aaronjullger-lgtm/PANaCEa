@@ -9,7 +9,8 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Brain, Play, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Brain, Play, CheckCircle, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import {
   optimizeFSRSParameters,
   saveOptimizedParameters,
@@ -114,7 +115,7 @@ export const FSRSOptimizer: React.FC = () => {
       >
         {isOptimizing ? (
           <>
-            <Loader aria-hidden="true" className="w-4 h-4 animate-spin" />
+            <InlineSpinner size="sm" />
             <span role="status" aria-live="polite">Optimizing...</span>
           </>
         ) : (

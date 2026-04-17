@@ -8,6 +8,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import { X, Edit2 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { UserGoal } from './GoalsDashboard';
 
 interface GoalEditModalProps {
@@ -234,12 +235,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
-                {isSubmitting && (
-                  <span
-                    className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-                    aria-hidden="true"
-                  />
-                )}
+                {isSubmitting && <InlineSpinner size="sm" />}
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>

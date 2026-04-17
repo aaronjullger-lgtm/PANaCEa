@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import { useBreakpoint, useMediaQuery } from '@/lib/utils/mobileOptimization';
 import { springs } from '@/config/appViews';
+import { InlineSpinner } from '@/components/loading';
 
 export interface GestureConfig {
   /** Enable swipe gestures for navigation */
@@ -571,7 +572,7 @@ export const PullToRefresh: React.FC<{
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
         >
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--color-action-primary)] border-t-transparent" />
+          <InlineSpinner size="lg" className="text-[var(--color-action-primary)]" />
         </motion.div>
       )}
       <motion.div

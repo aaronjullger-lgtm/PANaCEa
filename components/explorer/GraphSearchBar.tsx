@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 interface GraphNodeSuggestion {
@@ -156,7 +157,9 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           aria-label="Search graph nodes"
         />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] animate-spin" />
+          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)]">
+            <InlineSpinner size="sm" />
+          </span>
         )}
       </div>
 
