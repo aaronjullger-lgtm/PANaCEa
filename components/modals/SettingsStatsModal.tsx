@@ -397,7 +397,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       try {
         const arr = JSON.parse(saved) as SystemCode[];
         return new Set(Array.isArray(arr) && arr.length > 0 ? arr : all);
-      } catch {
+      } catch (err) {
+        console.debug('[SettingsStatsModal] Failed to parse enabled systems', err);
         return new Set(all);
       }
     }
@@ -422,7 +423,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as SystemCode[]);
-      } catch {
+      } catch (err) {
+        console.debug('[SettingsStatsModal] Failed to parse active unit systems', err);
         return new Set();
       }
     }
@@ -455,7 +457,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as string[]);
-      } catch {
+      } catch (err) {
+        console.debug('[SettingsStatsModal] Failed to parse mini modes', err);
         // Default: all mini modes enabled
         return new Set(ALL_MINI_MODES);
       }
@@ -974,7 +977,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         avgQuestionsPerDay,
         recentSessionAccuracies,
       };
-    } catch {
+    } catch (err) {
+      console.warn('[SettingsStatsModal] Failed to compute stats', err);
       return emptyStats;
     }
   }, [performanceData]);

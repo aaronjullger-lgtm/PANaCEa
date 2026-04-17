@@ -112,8 +112,9 @@ async function fetchNormalLabs(
         }));
     }
     return [];
-  } catch {
-    return []; // Graceful fallback
+  } catch (err) {
+    console.debug('[clinicalQuickRefService] failed to fetch normal labs, returning empty', err);
+    return [];
   }
 }
 // ─── Vital Ranges ────────────────────────────────────────────────────────────
@@ -157,7 +158,8 @@ async function fetchClinicalPearls(
       source: p.category ?? p.system ?? undefined,
       conditionName: p.Condition?.name ?? undefined,
     }));
-  } catch {
+  } catch (err) {
+    console.debug('[clinicalQuickRefService] failed to fetch clinical pearls, returning empty', err);
     return [];
   }
 }
@@ -186,7 +188,8 @@ async function fetchDifferentialFeatures(
           ? [d.distinguishingFeatures]
           : [],
     }));
-  } catch {
+  } catch (err) {
+    console.debug('[clinicalQuickRefService] failed to fetch differential features, returning empty', err);
     return [];
   }
 }
@@ -212,7 +215,8 @@ async function fetchRelatedConditions(
     return relations
       .map(r => r.Condition_ConditionRelation_conditionId2ToCondition?.name)
       .filter((n): n is string => !!n);
-  } catch {
+  } catch (err) {
+    console.debug('[clinicalQuickRefService] failed to fetch related conditions, returning empty', err);
     return [];
   }
 }

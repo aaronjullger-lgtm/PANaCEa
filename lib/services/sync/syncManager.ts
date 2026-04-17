@@ -103,8 +103,8 @@ async function parseSyncErrorMessage(response: Response): Promise<string> {
     const payload = (await response.json()) as { error?: string; message?: string; details?: string };
     const message = payload?.error || payload?.message || payload?.details;
     if (message) return message;
-  } catch {
-    // Non-JSON error payloads (e.g., proxy HTML) fall back to HTTP status.
+  } catch (err) {
+    console.debug('[SyncManager] non-JSON error payload, falling back to HTTP status', err);
   }
   return `HTTP ${response.status}`;
 }
@@ -258,7 +258,8 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_ANSWERS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline answers from localStorage', err);
       return [];
     }
   }
@@ -305,7 +306,8 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline pearl actions from localStorage', err);
       return [];
     }
   }
@@ -365,7 +367,8 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_REVIEWS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline reviews from localStorage', err);
       return [];
     }
   }

@@ -313,8 +313,9 @@ export async function attemptRegeneration(
     const cleaned = rewriteRaw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned) as GeneratedQuestion;
     return { regeneratedContent: parsed, critiqueResult: critique };
-  } catch {
+  } catch (err) {
     log?.warn('Failed to parse rewrite response', { questionId: question.id });
+    console.debug('[contentQualityLoop] rewrite parse failed', err);
     return { regeneratedContent: null, critiqueResult: critique };
   }
 }

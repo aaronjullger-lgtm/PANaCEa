@@ -197,8 +197,8 @@ export async function applyFIReImplicitCredit(
           newNextDue,
           capped,
         });
-      } catch {
-        // Non-fatal: sibling credit is best-effort
+      } catch (err) {
+        console.debug('[FIReService] sibling credit best-effort skip', err);
         result.siblingsSkipped++;
       }
     }

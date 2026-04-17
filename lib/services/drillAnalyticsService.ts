@@ -96,8 +96,8 @@ export async function getRelativeDrillPerformance(
         conditionAccuracy =
           conditionAttemptCount > 0 ? Number(conditionRows[0].correct) / conditionAttemptCount : 0;
       }
-    } catch {
-      // Non-fatal — condition metrics unavailable
+    } catch (err) {
+      console.debug('[drillAnalyticsService] condition metrics unavailable', err);
     }
   }
 
@@ -146,8 +146,8 @@ export async function getRelativeDrillPerformance(
       systemAccuracy =
         systemAttemptCount > 0 ? Number(systemRows[0].correct) / systemAttemptCount : 0;
     }
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.debug('[drillAnalyticsService] system accuracy query failed', err);
   }
 
   // ── Relative performance ──────────────────────────────────────────────────

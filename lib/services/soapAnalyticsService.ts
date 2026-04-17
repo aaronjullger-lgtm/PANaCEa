@@ -74,7 +74,7 @@ export async function storeSoapGradingEvent(
     }).catch(() => {
       // Swallow network/backend errors; data is already stored locally
     });
-  } catch {
-    // In very old environments, fetch may not exist; just rely on local storage
+  } catch (err) {
+    console.debug('[soapAnalyticsService] fetch unavailable, relying on local storage', err);
   }
 }

@@ -304,7 +304,8 @@ export async function getUserCalibration(
     }).catch(() => { /* non-fatal */ });
 
     return calibration;
-  } catch {
+  } catch (err) {
+    console.debug('[calibrationService] calibration computation failed, using neutral', err);
     return neutralCalibration;
   }
 }

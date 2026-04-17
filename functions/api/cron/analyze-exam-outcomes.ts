@@ -79,8 +79,8 @@ export default async function analyzeExamOutcomes(
           contentQualityDiff:
             strongPredictors.length > 0
               ? parseFloat(
-                  (strongPredictors[0].highHealthQuestionsScore -
-                    strongPredictors[0].lowHealthQuestionsScore).toFixed(1)
+                  (strongPredictors[0]!.highHealthQuestionsScore -
+                    strongPredictors[0]!.lowHealthQuestionsScore).toFixed(1)
                 )
               : 0,
         };
@@ -130,7 +130,7 @@ export default async function analyzeExamOutcomes(
     const summary = {
       timestamp: new Date().toISOString(),
       examTypesAnalyzed: examTypes.length,
-      systemsAnalyzed: Object.values(analysisResults).reduce(
+      systemsAnalyzed: Object.values(analysisResults).reduce<number>(
         (sum, result) => sum + ((result as Record<string, number>).systemsAnalyzed || 0),
         0
       ),

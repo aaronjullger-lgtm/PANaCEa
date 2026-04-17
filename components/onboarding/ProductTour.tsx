@@ -57,7 +57,8 @@ export function useProductTourShouldShow(): boolean {
       }
       const completed = localStorage.getItem(STORAGE_KEY) === 'true';
       setShouldShow(!completed);
-    } catch {
+    } catch (err) {
+      console.debug('[ProductTour] Failed to check localStorage', err);
       setShouldShow(false);
     }
   }, []);
@@ -68,8 +69,8 @@ export function useProductTourShouldShow(): boolean {
 export function markProductTourCompleted(): void {
   try {
     localStorage.setItem(STORAGE_KEY, 'true');
-  } catch {
-    /* ignore */
+  } catch (err) {
+    console.debug('[ProductTour] Failed to persist completion', err);
   }
 }
 

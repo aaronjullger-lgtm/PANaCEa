@@ -381,7 +381,8 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       const { callGeminiText } = await import('@/services/ai/geminiService');
       const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
       setAiSummary((text || '').trim());
-    } catch {
+    } catch (err) {
+      console.warn('[SessionEndSummary] AI summary generation failed', err);
       setAiSummary("We couldn't generate a summary right now. Try again in a moment.");
     } finally {
       setLoadingAiSummary(false);

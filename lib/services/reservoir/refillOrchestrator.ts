@@ -141,8 +141,8 @@ export async function triggerRefillsForLowUsers(
       GROUP BY "userId", "scope"
       HAVING COUNT(*) < $1
     `, RESERVOIR_POLICY.LOW_WATER_MARK);
-  } catch {
-    // If query fails (e.g., table empty), return safely
+  } catch (err) {
+    console.warn('[RefillOrchestrator] failed to query low-water users', err);
     return { checked: 0, triggered: 0, skipped: 0 };
   }
 

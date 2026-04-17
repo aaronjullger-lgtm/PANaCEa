@@ -325,7 +325,8 @@ export async function generateCausalChain(
     let parsed: unknown;
     try {
       parsed = extractJSON(rawResponse);
-    } catch {
+    } catch (err) {
+      console.warn('[causalChainService] failed to parse Gemini response as JSON', err);
       return {
         success: false,
         error: 'Failed to parse Gemini response as JSON',

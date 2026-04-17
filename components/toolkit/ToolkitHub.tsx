@@ -196,7 +196,8 @@ function useCalculatorPreferences(): CalculatorPreferences {
     try {
       const stored = localStorage.getItem(key);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[ToolkitHub] Failed to parse stored array', err);
       return [];
     }
   };
@@ -209,8 +210,8 @@ function useCalculatorPreferences(): CalculatorPreferences {
       const next = prev.includes(calcId) ? prev.filter((id) => id !== calcId) : [...prev, calcId];
       try {
         localStorage.setItem(PINNED_CALCULATORS_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore storage errors */
+      } catch (err) {
+        console.debug('[ToolkitHub] Failed to persist pinned calculators', err);
       }
       return next;
     });
@@ -221,8 +222,8 @@ function useCalculatorPreferences(): CalculatorPreferences {
       const next = [calcId, ...prev.filter((id) => id !== calcId)].slice(0, 5);
       try {
         localStorage.setItem(RECENT_CALCULATORS_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore storage errors */
+      } catch (err) {
+        console.debug('[ToolkitHub] Failed to persist recent calculators', err);
       }
       return next;
     });
@@ -471,7 +472,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
   const [searchQuery, setSearchQuery] = useState(() => {
     try {
       return localStorage.getItem('toolkit.searchQuery') || '';
-    } catch {
+    } catch (err) {
+      console.debug('[ToolkitHub] Failed to read search query from localStorage', err);
       return '';
     }
   });
@@ -492,8 +494,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onClose }) => {
   useEffect(() => {
     try {
       localStorage.setItem('toolkit.searchQuery', searchQuery);
-    } catch {
-      /* ignore storage errors */
+    } catch (err) {
+      console.debug('[ToolkitHub] Failed to persist search query', err);
     }
   }, [searchQuery]);
 

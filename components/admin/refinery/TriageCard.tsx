@@ -72,7 +72,8 @@ function formatDate(ts: string): string {
       hour: '2-digit',
       minute: '2-digit',
     });
-  } catch {
+  } catch (err) {
+    console.debug('[TriageCard] Failed to format date', err);
     return String(ts);
   }
 }
@@ -182,7 +183,8 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
         } else {
           setImageLoadError(true);
         }
-      } catch {
+      } catch (err) {
+        console.warn('[TriageCard] Failed to load signed image URL', err);
         if (!cancelled) setImageLoadError(true);
       }
     })();
@@ -205,7 +207,8 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
       setConditionSearchResults(
         list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition }))
       );
-    } catch {
+    } catch (err) {
+      console.warn('[TriageCard] Condition search failed', err);
       setConditionSearchResults([]);
     }
   }, []);

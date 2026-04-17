@@ -245,8 +245,8 @@ export async function computeFSRSUpdate(
   try {
     const calibration = await getUserCalibration(prisma, userId);
     calibrationFactor = calibration.dampenerFactor;
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.debug('[fsrsScheduleService] calibration lookup non-fatal', err);
   }
 
   // 3c: Session fatigue dampener
@@ -319,8 +319,8 @@ export async function computeFSRSUpdate(
       // Cap the multiplier to prevent excessively long intervals
       interferenceIntervalMultiplier = Math.min(interferenceIntervalMultiplier, 1.8);
     }
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.debug('[fsrsScheduleService] interference detection non-fatal', err);
   }
 
   // 3e: Fluency illusion dampener
@@ -341,8 +341,8 @@ export async function computeFSRSUpdate(
   try {
     wave3SessionRegularity = await computeSessionRegularity(prisma, userId);
     adjustedConfidence *= wave3SessionRegularity.telemetryTrustMultiplier;
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.debug('[fsrsScheduleService] session regularity non-fatal', err);
   }
 
   adjustedConfidence *= interferenceResult.discount;
@@ -391,8 +391,8 @@ export async function computeFSRSUpdate(
       if (wave3RelearningSpeed.hasSavings && wave3RelearningSpeed.postLapseStabilityBonus > 1.0) {
         modifiedStability *= wave3RelearningSpeed.postLapseStabilityBonus;
       }
-    } catch {
-      // Non-fatal
+    } catch (err) {
+      console.debug('[fsrsScheduleService] relearning speed non-fatal', err);
     }
   }
 
@@ -417,8 +417,8 @@ export async function computeFSRSUpdate(
   try {
     const correctionFactor = await getStabilityCorrectionFactor(prisma, userId, system);
     modifiedStability *= correctionFactor;
-  } catch {
-    // Non-fatal
+  } catch (err) {
+    console.debug('[fsrsScheduleService] stability correction non-fatal', err);
   }
 
   // Step 8: Confidence-weighted difficulty modulation

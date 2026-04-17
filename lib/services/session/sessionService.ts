@@ -957,7 +957,8 @@ export class SessionService {
       if (stability < 2) return 'Use classic presentation, straightforward case (low mastery).';
       if (stability > 10) return 'Use atypical presentation, multiple comorbidities, or rare side effect (high mastery).';
       return '';
-    } catch {
+    } catch (err) {
+      console.debug('[sessionService] difficulty hint generation failed', err);
       return '';
     }
   }

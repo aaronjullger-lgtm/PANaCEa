@@ -191,8 +191,9 @@ Return ONLY valid JSON with the same structure as the input.`;
         return refined;
       }
       return draft;
-    } catch {
-      return draft; // Fallback to draft if self-refine fails
+    } catch (err) {
+      console.warn('[generationService] self-refine failed, falling back to draft', err);
+      return draft;
     }
   }
 
@@ -220,7 +221,8 @@ Return ONLY valid JSON with the same structure as the input.`;
       }
 
       return sources.slice(0, 5); // Cap at 5 sources
-    } catch {
+    } catch (err) {
+      console.debug('[generationService] grounding source extraction failed', err);
       return [];
     }
   }

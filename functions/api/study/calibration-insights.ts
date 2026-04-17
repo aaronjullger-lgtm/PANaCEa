@@ -92,12 +92,15 @@ export const onRequestGet = authenticatedEndpoint(
 
       const circadianPhases = ['morning', 'afternoon', 'evening', 'night']
         .filter(phase => phaseMap[phase]?.total > 0)
-        .map(phase => ({
-          phase,
-          reviewCount: phaseMap[phase].total,
-          recallRate: phaseMap[phase].correct / phaseMap[phase].total,
-          optimized: phaseMap[phase].total >= 50,
-        }));
+        .map(phase => {
+          const data = phaseMap[phase]!;
+          return {
+            phase,
+            reviewCount: data.total,
+            recallRate: data.correct / data.total,
+            optimized: data.total >= 50,
+          };
+        });
 
       // Per-system calibration
       const systems = [...new Set(reviews.map(r => r.system).filter(Boolean))] as string[];

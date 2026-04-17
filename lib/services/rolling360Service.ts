@@ -566,8 +566,8 @@ export class Rolling360Service {
         metrics.avgResponseTimeMs = avgTimeResult[0]?.avg_time
           ? Math.round(avgTimeResult[0].avg_time)
           : null;
-      } catch {
-        // Fallback if query fails
+      } catch (err) {
+        console.debug('[rolling360Service] avg response time query failed', err);
         metrics.avgResponseTimeMs = null;
       }
     }
@@ -597,8 +597,8 @@ export class Rolling360Service {
         const confCorrect = Number(confidenceResult[0]?.confident_correct || 0);
         metrics.confidenceAlignment =
           confTotal > 0 ? Math.round((confCorrect / confTotal) * 100) / 100 : null;
-      } catch {
-        // Fallback: Simple High/Medium/Low string
+      } catch (err) {
+        console.debug('[rolling360Service] confidence alignment query failed', err);
         metrics.confidenceAlignment = null;
       }
     }

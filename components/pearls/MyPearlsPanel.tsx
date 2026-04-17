@@ -65,7 +65,8 @@ function getPearlSRSData(pearlId: string): { nextReviewDate?: string; mastered?:
   try {
     const data = localStorage.getItem(`${PEARL_SRS_KEY}_${pearlId}`);
     return data ? JSON.parse(data) : {};
-  } catch {
+  } catch (err) {
+    console.debug('[MyPearlsPanel] Failed to parse pearl SRS data', err);
     return {};
   }
 }

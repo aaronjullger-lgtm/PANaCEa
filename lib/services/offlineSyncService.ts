@@ -124,7 +124,8 @@ export function isOnline(): boolean {
 export function isOfflineMode(): boolean {
   try {
     return localStorage.getItem(STORAGE_KEYS.OFFLINE_MODE) === 'true';
-  } catch {
+  } catch (err) {
+    console.debug('[offlineSyncService] localStorage unavailable for offline mode check', err);
     return false;
   }
 }
