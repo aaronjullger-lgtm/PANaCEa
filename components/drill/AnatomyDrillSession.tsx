@@ -7,7 +7,7 @@
  * @verified-clean Design tokens compliant - no violations found
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Bone } from 'lucide-react';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
@@ -15,6 +15,7 @@ import { DrillLandingPage } from './DrillLandingPage';
 import { useAnatomyDrill } from '@/hooks/game/use-anatomy-drill';
 import { getDrillLandingStats } from '@/services/analytics';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface AnatomyDrillSessionProps {
@@ -26,8 +27,18 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
   onExit,
   onNavigateToReference,
 }) => {
+  const [showSummary, setShowSummary] = useState(false);
   const drill = useAnatomyDrill();
   const stats = getDrillLandingStats('anatomy_review');
+
+  const handleExit = useCallback(() => {
+    if (drill.totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
+    drill.exitToMenu();
+    onExit?.();
+  }, [drill.totalAttempts, showSummary, drill.exitToMenu, onExit]);
 
   // Handler for deep dive into reference material
   const handleDeepDive = useCallback(
@@ -39,13 +50,35 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
     [onNavigateToReference]
   );
 
+  // Summary
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Anatomy Review — Complete"
+        breadcrumb={['Drills', 'Anatomy', 'Results']}
+        onBackToHub={() => { drill.exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Anatomy Review"
+          icon={Bone}
+          accentColor="var(--color-accent)"
+          stats={{ correct: drill.score, total: drill.totalAttempts, streak: drill.streak }}
+          onNewSession={() => { setShowSummary(false); drill.reset(); drill.startSession(); }}
+          onExit={() => { drill.exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
+
   // Landing page
   if (drill.status === 'landing') {
     return (
       <DrillShell
         title="Anatomy Review"
         breadcrumb={['Drills', 'Anatomy']}
-        onBackToHub={() => onExit?.()}
+        onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
         hideBreadcrumb
       >
@@ -56,7 +89,7 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
           accentColor="slate"
           stats={stats}
           onStart={drill.startSession}
-          onExit={onExit}
+          onExit={handleExit}
           instructions={[
             'Review anatomical structures by region',
             'Connect anatomy to clinical presentations',
@@ -85,7 +118,7 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
       streak={drill.streak}
       isFeedback={isFeedback}
       isCorrect={drill.isCorrect}
-      onExit={drill.exitToMenu}
+      onExit={handleExit}
       onReset={drill.reset}
       footer={
         isFeedback && drill.currentQuestion ? (
