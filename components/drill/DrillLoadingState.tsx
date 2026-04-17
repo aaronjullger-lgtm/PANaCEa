@@ -119,9 +119,9 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
               {Array.from({ length: optionCount || 4 }).map((_, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0.5 }}
+                  initial={prefersReducedMotion ? false : { opacity: 0.5 }}
                   animate={{}}
-                  transition={{
+                  transition={prefersReducedMotion ? { duration: 0 } : {
                     duration: 0.5,
                     delay: idx * 0.1,
                     repeat: Infinity,
@@ -152,9 +152,9 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         {/* Loading message */}
         <div className="text-center mt-6">
           <motion.p
-            initial={{ opacity: 0.5 }}
+            initial={prefersReducedMotion ? false : { opacity: 0.5 }}
             animate={{}}
-            transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
             className="text-[var(--color-text-muted)] flex items-center justify-center gap-2"
           >
             <span className="w-1.5 h-1.5 bg-[var(--color-text-muted)] rounded-full animate-pulse" />
@@ -184,11 +184,13 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
   onAction,
   icon,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <div className="min-h-[400px] flex items-center justify-center p-6">
       <motion.div
-        initial={{ y: 20 }}
+        initial={prefersReducedMotion ? false : { y: 20 }}
         animate={{ y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="max-w-md w-full text-center"
       >
         <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center mx-auto mb-5">

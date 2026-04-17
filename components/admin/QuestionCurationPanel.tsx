@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface PreGeneratedQuestion {
   id: string;
@@ -167,9 +168,13 @@ const QuestionCurationPanel = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex items-center justify-center min-h-[400px]"
+      >
         <div className="flex items-center gap-3 text-[var(--color-text-muted)]">
-          <RefreshCw className="w-5 h-5 animate-spin" />
+          <InlineSpinner size="md" />
           Loading questions for curation...
         </div>
       </div>
