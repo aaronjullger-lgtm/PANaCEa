@@ -589,7 +589,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   disabled={veoLoading}
                 >
                   {veoLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                   ) : (
                     <Video className="h-4 w-4" />
                   )}
@@ -703,7 +703,7 @@ Provide a concise, clinically focused answer (3-6 sentences).`;
                   }}
                 >
                   {libraryLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                   ) : (
                     <MessageSquare className="h-4 w-4" />
                   )}
