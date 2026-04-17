@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { fetchLearningProfile } from '@/services/analytics';
 import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
+import { InlineSpinner } from '@/components/loading';
 
 interface LearningProfile {
   lifetimeQuestions: number;
@@ -154,8 +155,13 @@ export const LearningProfileDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading learning profile"
+      >
+        <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
       </div>
     );
   }

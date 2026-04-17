@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PrimaryButton } from '../ui/PrimaryButton';
-import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
+import { Lightbulb, X, Check, ArrowRight, RefreshCw, Sparkles } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
 import { logger } from "@/lib/simple-logger";
@@ -360,8 +361,12 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         </AnimatePresence>
 
         {generating && recommendations.length === 0 && (
-          <div className="col-span-full py-8 flex flex-col items-center justify-center text-[var(--color-text-muted)]">
-            <Loader2 className="w-8 h-8 animate-spin mb-2 text-[var(--color-accent)]" />
+          <div
+            className="col-span-full py-8 flex flex-col items-center justify-center text-[var(--color-text-muted)]"
+            role="status"
+            aria-live="polite"
+          >
+            <InlineSpinner size="lg" className="text-[var(--color-accent)] mb-2" />
             <p>Analyzing your learning profile...</p>
           </div>
         )}

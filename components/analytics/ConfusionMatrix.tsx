@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { AlertTriangle, ArrowRightLeft, Loader2, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, Sparkles } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import {
   fetchUserConfusions,
   generateComparison,
@@ -79,7 +80,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
 
       {isLoading && (
         <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]" role="status" aria-live="polite">
-          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          <InlineSpinner size="sm" />
           Loading confusion data...
         </div>
       )}
@@ -127,7 +128,7 @@ export const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ limit = 10, on
                   disabled={prefetchingId === pair.id}
                 >
                   {prefetchingId === pair.id ? (
-                    <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                    <InlineSpinner size="sm" />
                   ) : (
                     <Sparkles className="w-3 h-3" aria-hidden="true" />
                   )}

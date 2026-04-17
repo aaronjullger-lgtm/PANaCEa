@@ -14,8 +14,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, TrendingUp, TrendingDown, Target,
-  Flame, Brain, ChevronRight, Loader2, RefreshCw,
+  Flame, Brain, ChevronRight, RefreshCw,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // ─── Types (mirrors insightGenerationService) ────────────────────────────────
 
@@ -191,8 +192,13 @@ export default function InsightsHub() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
+      <div
+        className="flex items-center justify-center p-8"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading insights"
+      >
+        <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />
       </div>
     );
   }

@@ -14,11 +14,11 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
-  Loader2,
   Download,
   Sparkles,
   X,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface SyllabusDecompilerProps {
   theme?: 'light' | 'dark';
@@ -199,8 +199,14 @@ export default function SyllabusDecompiler({
           )}
         </div>
       ) : uploadState === 'uploading' || uploadState === 'processing' ? (
-        <div className="rounded-lg p-8 text-center bg-[var(--color-bg-secondary)]">
-          <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin text-[var(--color-accent)]" />
+        <div
+          className="rounded-lg p-8 text-center bg-[var(--color-bg-secondary)]"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="mx-auto mb-3 flex justify-center">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+          </div>
           <p className="text-sm font-medium mb-1 text-[var(--color-text-primary)]">
             {uploadState === 'uploading' ? 'Uploading...' : 'Analyzing syllabus...'}
           </p>

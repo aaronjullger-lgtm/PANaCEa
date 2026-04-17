@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import {
   WorkspaceEmptyState,
   WorkspaceHeroStrip,
@@ -361,8 +362,12 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
           <WorkspaceSurface accent="#728ba6">
-            <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-b-transparent" />
+            <div
+              className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Loading your gap analysis...
               </p>

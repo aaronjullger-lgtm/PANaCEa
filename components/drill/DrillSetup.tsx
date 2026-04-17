@@ -7,8 +7,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Filter, Zap, TrendingUp, Loader2 } from 'lucide-react';
-import { SkeletonLoader } from '@/components/loading';
+import { Play, Filter, Zap, TrendingUp } from 'lucide-react';
+import { SkeletonLoader, InlineSpinner } from '@/components/loading';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -314,7 +314,7 @@ export function DrillSetup({
           >
             {isStarting ? (
               <>
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <InlineSpinner size="lg" />
                 Starting...
               </>
             ) : (

@@ -1,9 +1,10 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { BulletListRenderer } from './BulletListRenderer';
-
-const MarkdownRenderer = lazy(() =>
-  import('./MarkdownRenderer').then((m) => ({ default: m.MarkdownRenderer }))
-);
+// MarkdownRenderer is imported statically here because EnhancedConditionCard
+// (and other library surfaces) also import it statically. Lazy-loading it only
+// in this renderer produced Vite "dynamic+static" warnings and no real code
+// split, so we unify on the static import and drop the Suspense fallback.
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { KeyValueRenderer } from './KeyValueRenderer';
 import {
   getFieldRenderType,
@@ -46,21 +47,7 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
       return null;
 
     case 'markdown':
-      return (
-        <Suspense
-          fallback={
-            <div
-              className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}
-            >
-              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-full mb-2" />
-              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-5/6 mb-2" />
-              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-4/6" />
-            </div>
-          }
-        >
-          <MarkdownRenderer content={value as string} className={className} />
-        </Suspense>
-      );
+      return <MarkdownRenderer content={value as string} className={className} />;
 
     case 'bullet-list':
       return (
