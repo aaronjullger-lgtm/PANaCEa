@@ -66,12 +66,4 @@ const toast: ToastApi = {
   add: (message, variant, opts) => add(variant, message, opts),
 };
 
-/**
- * @deprecated No longer needed — store is always available.
- * Kept for backward compatibility with ToastContext.tsx during migration.
- */
-export function registerToast(_fn: any): () => void {
-  return () => {};
-}
-
 export { toast };
