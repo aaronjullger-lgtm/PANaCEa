@@ -149,14 +149,14 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
                 {badge}
               </span>
             )}
-            {(condition as any).evidenceGrade || (condition as any).lastClinicalReviewAt ? (
+            {condition.evidenceGrade || condition.lastClinicalReviewAt ? (
               <ProvenanceBadge
                 provenance={{
-                  evidenceGrade: (condition as any).evidenceGrade,
-                  guidelineSource: (condition as any).guidelineSource,
-                  guidelineYear: (condition as any).guidelineYear,
-                  lastClinicalReviewAt: (condition as any).lastClinicalReviewAt,
-                  reviewedBy: (condition as any).reviewedBy,
+                  evidenceGrade: condition.evidenceGrade,
+                  guidelineSource: condition.guidelineSource,
+                  guidelineYear: condition.guidelineYear,
+                  lastClinicalReviewAt: condition.lastClinicalReviewAt,
+                  reviewedBy: condition.reviewedBy,
                 }}
                 size="sm"
               />
