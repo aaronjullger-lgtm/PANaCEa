@@ -13,7 +13,6 @@ import { motion } from 'framer-motion';
 import {
   Gem,
   X,
-  RefreshCw,
   CheckCircle2,
   Clock,
   Sparkles,

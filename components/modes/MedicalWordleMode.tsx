@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, HelpCircle, Share2, RotateCcw, Trophy, Calendar } from 'lucide-react';
 import { useWordleGame, type WordleStatus } from '@/hooks/useWordleGame';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { toast } from '@/lib/toast';
 import type { MedicalWordleGame } from '@/types';
 
 interface MedicalWordleModeProps {
@@ -134,12 +135,19 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             const revealDelay = targetLength * 150 + 300;
             setTimeout(() => setRevealRow(null), revealDelay);
           })
-          .catch(() => {
+          .catch((err) => {
             setRevealRow(null);
             setCurrentGuess(upperGuess);
             setShake(true);
             hapticError();
             setTimeout(() => setShake(false), 500);
+            // Surface the actual error so invalid-word / network / auth failures
+            // aren't indistinguishable silent shakes.
+            const message =
+              err instanceof Error && err.message
+                ? err.message
+                : 'Could not submit guess. Check your connection and try again.';
+            toast.error(message);
           });
       } else if (key === '⌫' || key === 'BACKSPACE') {
         setCurrentGuess((prev) => prev.slice(0, -1));

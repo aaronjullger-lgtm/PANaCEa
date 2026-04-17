@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { cn } from '@/lib/utils';
 import {
   bodySupportClass,
@@ -229,7 +229,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 }) => {
   return (
     <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">
-      <Loader2 aria-hidden="true" className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+      <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
       <p className={bodySupportClass}>{message}</p>
     </div>
   );

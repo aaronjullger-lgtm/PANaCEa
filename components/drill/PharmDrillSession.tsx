@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   Beaker,
@@ -93,6 +94,7 @@ const CATEGORY_CARDS: Array<{
  * PharmDrillSession - Pharmacology quiz drill mode
  */
 const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [showSummary, setShowSummary] = useState(false);
   const {
     currentQuestion,

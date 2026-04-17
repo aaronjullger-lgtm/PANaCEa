@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 'lucide-react';
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
 import MiniDrillLayout, {
@@ -73,6 +74,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
   initialSystem,
   initialSubcategory,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const {
     currentQuestion,
     score,
@@ -136,9 +138,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
       >
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -277,8 +279,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
               {/* Coach's Corner - Socratic Hint UI */}
               {status === 'coaching' && (
                 <motion.div
-                  initial={{ y: -10 }}
+                  initial={prefersReducedMotion ? false : { y: -10 }}
                   animate={{ y: 0 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : undefined}
                   className="mb-6 rounded-xl border-2 border-[var(--color-data-provisional)]/50 bg-[var(--color-data-provisional)]/10 p-6 shadow-lg"
                 >
                   <div className="flex items-start gap-4">

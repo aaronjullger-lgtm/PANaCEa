@@ -78,6 +78,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
     const [isLoading, setIsLoading] = useState(false);
     const [showBundles, setShowBundles] = useState(true);
     const [alerts, setAlerts] = useState<OrderAlert[]>([]);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [retryKey, setRetryKey] = useState(0);
 
     useEffect(() => {
       if (!isOpen) return;
@@ -94,20 +96,29 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
       const fetchItems = async () => {
         setIsLoading(true);
+        setFetchError(null);
         try {
           const response = await fetch(
             `/api/osce/orderable-items?category=${activeTab}&search=${searchQuery}`
           );
-          if (response.ok) {
-            const data = (await response.json()) as {
-              items?: OrderableItemWithMeta[];
-              bundles?: OrderBundle[];
-            };
-            setOrderableItems(data.items || []);
-            setBundles(data.bundles || []);
+          if (!response.ok) {
+            throw new Error(`Order catalog unavailable (HTTP ${response.status})`);
           }
+          const data = (await response.json()) as {
+            items?: OrderableItemWithMeta[];
+            bundles?: OrderBundle[];
+          };
+          setOrderableItems(data.items || []);
+          setBundles(data.bundles || []);
         } catch (error) {
           console.error('Failed to fetch orderable items:', error);
+          setOrderableItems([]);
+          setBundles([]);
+          setFetchError(
+            error instanceof Error
+              ? error.message
+              : 'Could not load orderable items. Check your connection and try again.'
+          );
         } finally {
           setIsLoading(false);
         }
@@ -115,7 +126,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
       const debounceTimer = setTimeout(fetchItems, 300);
       return () => clearTimeout(debounceTimer);
-    }, [isOpen, activeTab, searchQuery]);
+    }, [isOpen, activeTab, searchQuery, retryKey]);
 
     // Filter bundles by chief complaint
     const relevantBundles = useMemo(() => {
@@ -408,6 +419,30 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                   </div>
                 </div>
               )}
+
+              {/* Error Banner — fetch failure surfaces here so clinician knows why the list is empty */}
+              {fetchError ? (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="mb-3 flex items-start gap-3 rounded-lg border border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/8 p-3"
+                >
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 text-[var(--color-data-fail)] mt-0.5" />
+                  <div className="flex-1 space-y-2">
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Order catalog unavailable
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)]">{fetchError}</p>
+                    <button
+                      type="button"
+                      onClick={() => setRetryKey((k) => k + 1)}
+                      className="text-xs font-medium text-[var(--color-accent)] hover:underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {/* Items List */}
               {isLoading ? (
