@@ -114,6 +114,34 @@ describe('sessionGeneration helpers', () => {
     expect(question.correctAnswer).toBe('D. CHF');
   });
 
+  it('returns -1 (never option A) when correctAnswer is unresolvable — patient safety', () => {
+    // Patient-safety invariant: if we can't resolve the correctAnswer, we must
+    // NOT silently fall back to 0 (option A). Return -1 so the question scores
+    // as always-wrong and the data bug surfaces in analytics/logs instead of
+    // mis-grading the student.
+    const question = normalizeSessionQuestion({
+      id: 'q-bad',
+      question: 'Which diagnosis is most likely?',
+      options: ['A. Asthma', 'B. COPD', 'C. PE', 'D. CHF'],
+      correctAnswer: 'Sarcoidosis', // not in options, not a letter, not an index
+    });
+
+    expect(question.correctAnswerIndex).toBe(-1);
+    // correctAnswer string is preserved so admins can see the bad data
+    expect(question.correctAnswer).toBe('Sarcoidosis');
+  });
+
+  it('returns -1 when both correctAnswerIndex and correctAnswer are missing', () => {
+    const question = normalizeSessionQuestion({
+      id: 'q-empty',
+      question: 'Which diagnosis is most likely?',
+      options: ['A. Asthma', 'B. COPD', 'C. PE', 'D. CHF'],
+      // no correctAnswer, no correctAnswerIndex
+    });
+
+    expect(question.correctAnswerIndex).toBe(-1);
+  });
+
   it('builds persisted study-session metadata from the generated result', () => {
     const normalized = normalizeSessionGenerateResult(buildSessionResult());
     const record = buildGeneratedStudySessionRecord({
