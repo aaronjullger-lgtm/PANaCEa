@@ -3,7 +3,7 @@
 - **Status:** completed
 - **Date:** 2026-04-17
 - **Branch:** `codex-study-session-prod-hotfix-v2`
-- **Commits:** (pending this-run commit)
+- **Commits:** `050a09df` (code) / `2dfb82d1` (docs)
 - **Category:** UI hygiene / design system consolidation
 - **Priority / Risk / Size:** Medium / Low / S
 - **Audit reference:** `UNFINISHED_WORK_MASTER_AUDIT.md` §6 "Partial — Loading-state normalization rollout"; `AUDIT_RECONCILIATION.md` §7 "Loading-state normalization rollout" (currently `partial` after TASK-012; this task addresses the inline-button-spinner cluster that TASK-012 explicitly deferred because no canonical primitive existed yet).
