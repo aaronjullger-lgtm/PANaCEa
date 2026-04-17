@@ -7,6 +7,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
@@ -42,6 +43,8 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
     validDiagnoses,
     fsrsNextReview,
   } = usePhotoDrill();
+
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (status === 'menu') startSession('radiology');
@@ -102,7 +105,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             className="p-4"
           >

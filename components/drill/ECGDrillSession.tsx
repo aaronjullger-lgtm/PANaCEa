@@ -8,6 +8,7 @@
 
 import React, { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
@@ -46,6 +47,7 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
     fsrsNextReview,
   } = usePhotoDrill();
 
+  const prefersReducedMotion = useReducedMotion();
   const [useEnhancedFeedback, setUseEnhancedFeedback] = useState(true);
 
   // Handler for deep dive into reference material
@@ -129,10 +131,10 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit, onNavigateToR
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className="p-4"
           >
             <div className="max-w-2xl mx-auto">

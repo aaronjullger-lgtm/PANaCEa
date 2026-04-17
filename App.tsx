@@ -297,7 +297,15 @@ const App: React.FC = () => {
         if (data?.data?.profile?.hasCompletedOnboarding === true)
           saveUserProfile({ hasCompletedOnboarding: true });
       })
-      .catch(() => {})
+      .catch((err) => {
+        // Silent by design — we fall back to local hasCompletedOnboarding() in
+        // the .finally block, so the user still gets a correct prompt decision.
+        // But log in dev so regressions in the /api/user/profile endpoint are
+        // visible and don't look like a mysterious re-onboarding loop.
+        if (import.meta.env.DEV) {
+          console.warn('[App] onboarding profile hydration failed (falling back to local state):', err);
+        }
+      })
       .finally(() => {
         if (cancelled) return;
         const completed = hasCompletedOnboarding();
@@ -692,8 +700,17 @@ const App: React.FC = () => {
                 setIsLoading(false);
                 return;
               }
-            } catch {
-              // Fall through to use originals
+            } catch (enrichmentError) {
+              // Fall through to use original flagged questions unenriched.
+              // Log in dev — silent failure here means the student sees stale
+              // versions of flagged items instead of the latest enriched copy,
+              // which is recoverable but worth surfacing for debugging.
+              if (import.meta.env.DEV) {
+                console.warn(
+                  '[App] flagged-question enrichment failed, falling back to originals:',
+                  enrichmentError
+                );
+              }
             }
           }
           setQuestionQueue(flaggedQuestions as QuizQuestion[]);
