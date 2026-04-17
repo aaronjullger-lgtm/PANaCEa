@@ -333,9 +333,10 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({ question, onAn
         <AnimatePresence>
           {result && (
             <motion.div
-              initial={{ y: -20 }}
+              initial={prefersReducedMotion ? false : { y: -20 }}
               animate={{ y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className={`
                 flex items-center gap-3 px-6 py-3 rounded-xl text-[var(--color-text-inverse)] font-semibold
                 ${result.correct === result.total ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-provisional)]'}
