@@ -28,6 +28,13 @@ import {
   hasCompleteContent,
   buildDatabaseContext,
 } from '../conditionContentService';
+// streamingClient is statically imported by components/modes/PatientEncounterMode.tsx,
+// so the prior dynamic `await import()` here produced Vite "dynamic+static" warnings
+// with no real code-split benefit. The stale "circular dependency" comment was a
+// false alarm — streamingClient.ts does not import from geminiService. Hoisting to
+// a static import eliminates the warning and removes the need for defensive
+// try/catch around the import (static imports resolve at module init, not runtime).
+import { streamGeminiText, type StreamHistoryTurn } from '@/lib/utils/streamingClient';
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
