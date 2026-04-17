@@ -16,6 +16,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
+import { NCCPA_2025_BLUEPRINT } from '../constants/blueprint';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -299,7 +300,6 @@ async function loadBlueprintWeights(
 
   if (rows.length === 0) {
     // Fallback to hardcoded PANCE blueprint
-    const { NCCPA_2025_BLUEPRINT } = await import('../constants/blueprint');
     return { ...NCCPA_2025_BLUEPRINT };
   }
 

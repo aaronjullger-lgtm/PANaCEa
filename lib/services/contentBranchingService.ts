@@ -5,6 +5,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Prisma } from '@prisma/client';
+import { prisma } from '../prisma';
 import { logger } from '../logger';
 
 const LOG_SCOPE = 'ContentBranching';
@@ -44,7 +45,6 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
       throw new Error('Database not configured');
     }
 
-    const { prisma } = await import('../prisma');
 
     // Validate branch name
     if (!/^[a-zA-Z0-9_-]+$/.test(options.name)) {
@@ -99,7 +99,6 @@ export async function addChangeToBranch(branchName: string, change: BranchChange
       throw new Error('Database not configured');
     }
 
-    const { prisma } = await import('../prisma');
 
     // Find branch
     const branch = await prisma.contentBranch.findUnique({
@@ -153,7 +152,6 @@ export async function getBranchChanges(branchName: string): Promise<BranchChange
       return [];
     }
 
-    const { prisma } = await import('../prisma');
 
     type BranchWithChanges = Prisma.ContentBranchGetPayload<{
       include: { BranchChange: true };
@@ -199,7 +197,6 @@ export async function mergeBranch(
       throw new Error('Database not configured');
     }
 
-    const { prisma } = await import('../prisma');
 
     // Find source branch
     const branch = await prisma.contentBranch.findUnique({
@@ -327,7 +324,6 @@ export async function listBranches(includeArchived: boolean = false): Promise<an
       return [];
     }
 
-    const { prisma } = await import('../prisma');
 
     const branches = (await prisma.contentBranch.findMany({
       where: includeArchived ? {} : { status: { not: 'archived' } },
@@ -366,7 +362,6 @@ export async function deleteBranch(branchName: string): Promise<void> {
       throw new Error('Database not configured');
     }
 
-    const { prisma } = await import('../prisma');
 
     const branch = await prisma.contentBranch.findUnique({
       where: { name: branchName },

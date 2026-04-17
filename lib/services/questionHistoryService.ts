@@ -5,6 +5,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '../prisma';
 import { logger } from '../logger';
 
 const LOG_SCOPE = 'QuestionHistory';
@@ -40,7 +41,6 @@ export async function saveQuestionVersion(
       return 1;
     }
 
-    const { prisma } = await import('../prisma');
 
     // Get latest version number
     const latestVersion = await prisma.questionHistory.findFirst({
@@ -92,7 +92,6 @@ export async function getQuestionAtTime(
       return null;
     }
 
-    const { prisma } = await import('../prisma');
 
     // Find the version that was valid at the given time
     const version = await prisma.questionHistory.findFirst({
@@ -139,7 +138,6 @@ export async function getQuestionHistory(questionId: string): Promise<VersionHis
       return null;
     }
 
-    const { prisma } = await import('../prisma');
 
     const versions = await prisma.questionHistory.findMany({
       where: { questionId },
@@ -195,7 +193,6 @@ export async function compareQuestionVersions(
       return null;
     }
 
-    const { prisma } = await import('../prisma');
 
     const [v1, v2] = await Promise.all([
       prisma.questionHistory.findFirst({
@@ -270,7 +267,6 @@ export async function revertQuestionToVersion(
       return false;
     }
 
-    const { prisma } = await import('../prisma');
 
     // Get the target version
     const targetVersionData = await prisma.questionHistory.findFirst({
@@ -310,7 +306,6 @@ export async function getQuestionsModifiedInRange(
       return [];
     }
 
-    const { prisma } = await import('../prisma');
 
     const versions = await prisma.questionHistory.findMany({
       where: {
@@ -422,7 +417,6 @@ export async function pruneQuestionHistory(
       return 0;
     }
 
-    const { prisma } = await import('../prisma');
 
     const versions = await prisma.questionHistory.findMany({
       where: { questionId },
