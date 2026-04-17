@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Plus,
-  Loader2,
   Shield,
   CheckCircle,
   XCircle,
@@ -18,6 +17,7 @@ import {
   Save,
   RefreshCw,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../config/routes';
 
@@ -165,8 +165,13 @@ export function QuestionGeneratorPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading taxonomies"
+        className="flex items-center justify-center min-h-screen"
+      >
+        <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
         <span className="ml-2 text-lg">Loading taxonomies...</span>
       </div>
     );
@@ -318,7 +323,7 @@ export function QuestionGeneratorPage() {
               >
                 {generating ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                     Generating...
                   </>
                 ) : (
