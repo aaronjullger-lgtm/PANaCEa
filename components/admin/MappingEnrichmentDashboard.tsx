@@ -21,6 +21,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InlineSpinner } from '@/components/loading';
 import { SuggestionTable } from './SuggestionTable';
 import { BulkApprovalPanel } from './BulkApprovalPanel';
 import { ChangePreviewModal } from './mapping-enrichment/ChangePreviewModal';
@@ -328,7 +329,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-primary)] hover:bg-[var(--color-action-primary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors disabled:opacity-50"
         >
           {detectingGaps ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
+            <InlineSpinner size="sm" />
           ) : (
             <Search className="w-4 h-4" />
           )}
@@ -340,7 +341,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2 bg-[var(--color-action-secondary)] hover:bg-[var(--color-action-secondary-hover)] text-[var(--color-text-inverse)] rounded-lg transition-colors disabled:opacity-50"
         >
           {generatingSuggestions ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
+            <InlineSpinner size="sm" />
           ) : (
             <Sparkles className="w-4 h-4" />
           )}

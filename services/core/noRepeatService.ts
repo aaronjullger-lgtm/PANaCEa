@@ -10,6 +10,11 @@
 import { prisma } from '@/lib/prisma';
 import { generateSingleQuestion } from '@/lib/questionGenerator';
 import { saveToStaging, runAdequacyCheck, promoteToLive } from './stagingQuestionService';
+// Hoisted from dynamic `await import()` in generateQuestionsForFilter below.
+// conditionDataLoader is statically imported elsewhere (lib/services/questionBankService.ts)
+// so the dynamic import triggered Vite "dynamic+static" mixed-import warnings without
+// providing a real code-split benefit. This file is server-only (see services/core/index.ts).
+import { loadConditionData } from './conditionDataLoader';
 
 interface QuestionFilter {
   system?: string;
@@ -207,8 +212,6 @@ export async function generateQuestionsForFilter(
   if (!filter.conditionId) {
     throw new Error('Cannot generate questions without conditionId');
   }
-
-  const { loadConditionData } = await import('./conditionDataLoader');
 
   // Load condition data
   const conditionData = await loadConditionData(filter.conditionId);

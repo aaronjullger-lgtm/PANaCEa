@@ -290,9 +290,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 {/* Fluids & Electrolytes Mode */}
                 {simulationStats.fluids.hasActivity && (
                   <motion.div
-                    initial={{ y: 10 }}
+                    initial={prefersReducedMotion ? false : { y: 10 }}
                     animate={{ y: 0 }}
-                    transition={{ delay: 0.1 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.1 }}
                     className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-accent)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('fluid_electrolyte')}
                   >
@@ -326,9 +326,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 {/* Antibiotic Coverage Mode */}
                 {simulationStats.antibiotics.hasActivity && (
                   <motion.div
-                    initial={{ y: 10 }}
+                    initial={prefersReducedMotion ? false : { y: 10 }}
                     animate={{ y: 0 }}
-                    transition={{ delay: 0.2 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2 }}
                     className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-data-pass)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('antibiotic_mode')}
                   >
@@ -387,8 +387,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 return (
                   <motion.div
                     key={drillType}
-                    initial={{ y: 20 }}
+                    initial={prefersReducedMotion ? false : { y: 20 }}
                     animate={{ y: 0 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : undefined}
                     className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden"
                   >
                     <button
@@ -434,9 +435,10 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     <AnimatePresence>
                       {isExpanded && (
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
+                          initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
+                          exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                          transition={prefersReducedMotion ? { duration: 0 } : undefined}
                           className="border-t border-[var(--color-border)] overflow-hidden"
                         >
                           <div className="p-5 space-y-4">

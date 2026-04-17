@@ -18,6 +18,7 @@ import {
   Upload,
   RefreshCw,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface MediaAsset {
   id: string;
@@ -207,9 +208,16 @@ export function MediaApprovalDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading pending media"
+        className="flex items-center justify-center h-screen"
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)] mx-auto mb-4"></div>
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+          </div>
           <p className="text-[var(--color-text-secondary)]">Loading pending media...</p>
         </div>
       </div>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { VirtualizedTableBody } from '@/components/ui/VirtualizedTableBody';
+import { InlineSpinner } from '@/components/loading';
 
 interface QuestionPerformance {
   questionId: string;
@@ -237,8 +238,13 @@ export const QuestionPerformanceDashboard: React.FC = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label="Loading question performance"
+          className="flex items-center justify-center py-12"
+        >
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
         </div>
       )}
 
