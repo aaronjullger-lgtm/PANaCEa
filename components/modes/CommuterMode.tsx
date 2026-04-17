@@ -13,6 +13,7 @@ import { Volume2 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useSessionGenerator } from '@/hooks/useSessionGenerator';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
+import { InlineSpinner } from '@/components/loading';
 
 interface CommuterModeProps {
   onExit?: () => void;
@@ -70,8 +71,10 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
           onExit={onExit}
         />
         <MiniModeCard>
-          <div role="status" aria-label="Loading session" className="p-8 text-center">
-            <div aria-hidden="true" className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
+          <div role="status" aria-live="polite" aria-label="Loading session" className="p-8 text-center">
+            <div className="flex justify-center">
+              <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
+            </div>
             <p className="mt-4 text-[var(--color-text-secondary)]">Preparing questions…</p>
           </div>
         </MiniModeCard>

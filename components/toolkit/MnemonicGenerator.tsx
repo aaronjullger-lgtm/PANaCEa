@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 
 interface MnemonicGeneratorProps {
   /** The medical concept to create a mnemonic for */
@@ -276,9 +277,9 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
 
             {/* Loading State */}
             {isGenerating && (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
                 <div className="flex items-center gap-3">
-                  <RefreshCw className="w-5 h-5 text-[var(--color-accent)] animate-spin" />
+                  <InlineSpinner size="md" className="text-[var(--color-accent)]" />
                   <span className="text-[var(--color-text-muted)]">Generating mnemonic...</span>
                 </div>
               </div>

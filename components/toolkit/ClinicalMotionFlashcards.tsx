@@ -10,7 +10,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2,
   AlertTriangle,
   ArrowLeft,
   Sparkles,
@@ -21,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 
 const PRESETS = [
   { id: 'parkinsonian_gait', label: 'Parkinsonian Gait', desc: 'Shuffling, reduced arm swing' },
@@ -349,7 +349,7 @@ export function ClinicalMotionFlashcards({
         >
           {isGenerating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <InlineSpinner size="sm" />
               Generating…
             </>
           ) : (
@@ -396,8 +396,8 @@ export function ClinicalMotionFlashcards({
               <p className="text-sm text-[var(--color-text-muted)] mt-1">
                 It&apos;ll be ready in ~1–2 minutes. Keep studying other cards in the meantime.
               </p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-2 flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" />
+              <p className="text-xs text-[var(--color-text-muted)] mt-2 flex items-center gap-1" role="status" aria-live="polite">
+                <InlineSpinner size="sm" />
                 Polling for completion…
               </p>
             </div>

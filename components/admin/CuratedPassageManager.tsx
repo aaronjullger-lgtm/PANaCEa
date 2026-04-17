@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, Loader2, Trash2, Plus } from 'lucide-react';
+import { BookOpen, Trash2, Plus } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 
 export interface CuratedPassageManagerProps {
   conditionId: string;
@@ -147,8 +148,8 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
           </div>
         </div>
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-            <Loader2 className="w-4 h-4 animate-spin" />
+          <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]" role="status" aria-live="polite">
+            <InlineSpinner size="sm" />
             <span>Loading passages…</span>
           </div>
         )}
@@ -293,7 +294,7 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
               disabled={saving}
               className="inline-flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving && <InlineSpinner size="sm" />}
               <span>Add passage</span>
             </button>
           </div>

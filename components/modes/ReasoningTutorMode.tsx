@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Send, X, Loader2, ShieldCheck, Sparkles, Search } from 'lucide-react';
+import { Brain, Send, X, ShieldCheck, Sparkles, Search } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 type ChatRole = 'user' | 'model';
 
@@ -260,7 +261,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
                 </AnimatePresence>
                 {isLoading && (
                   <div role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                     Reasoning through your case&hellip;
                   </div>
                 )}
@@ -297,7 +298,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               className="mb-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                <InlineSpinner size="sm" />
               ) : (
                 <Send aria-hidden="true" className="h-4 w-4" />
               )}

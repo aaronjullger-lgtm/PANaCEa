@@ -6,9 +6,10 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Loader2, Phone, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
+import { InlineSpinner } from '@/components/loading';
 
 import type { VoiceModulation, AVState } from '@/types/patient-av-state-machine';
 
@@ -275,7 +276,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
       )}
       {status === 'connecting' && (
         <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 py-3 text-[var(--color-text-muted)]">
-          <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
+          <InlineSpinner size="md" />
           Connecting…
         </div>
       )}

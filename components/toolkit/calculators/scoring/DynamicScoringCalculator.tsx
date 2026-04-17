@@ -32,6 +32,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { CalculatorProps, RiskLevel } from '../types';
+import { InlineSpinner } from '@/components/loading';
 
 // ============================================================================
 // TYPES
@@ -338,8 +339,10 @@ export default function DynamicScoringCalculator({
   // ---- Loading / Error states ----
   if (loading) {
     return (
-      <div role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
-        <RefreshCw size={20} className="animate-spin" style={{ marginRight: 8 }} />
+      <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
+        <span style={{ marginRight: 8, display: 'inline-flex' }}>
+          <InlineSpinner size="md" />
+        </span>
         Loading scoring system...
       </div>
     );

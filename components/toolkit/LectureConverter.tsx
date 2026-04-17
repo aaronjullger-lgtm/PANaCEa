@@ -9,8 +9,9 @@
 
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Headphones, Loader2, ArrowLeft, Copy, Check, Sparkles } from 'lucide-react';
+import { Headphones, ArrowLeft, Copy, Check, Sparkles } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 
 interface LectureConverterProps {
   readonly onClose?: () => void;
@@ -188,7 +189,7 @@ export function LectureConverter({
           >
             {status === 'generating' ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <InlineSpinner size="sm" />
                 Generating…
               </>
             ) : (
