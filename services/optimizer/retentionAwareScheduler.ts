@@ -18,8 +18,6 @@
  */
 
 import { PrismaClient } from '@prisma/client/edge';
-import { computeRetrievability } from '@/lib/fsrs/retrievability';
-import { computeDecayFactor } from '@/lib/fsrs';
 
 export interface ScheduledReview {
   taxonomyCode: string;            // e.g., "Cardiovascular"
