@@ -27,6 +27,7 @@ import { useAuth } from '@clerk/clerk-react';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
 import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
 import { SessionScopeSelector } from '@/components/session/SessionScopeSelector';
+import { DrillLoadingState } from '@/components/loading';
 
 const QuizView = lazy(() => import('@/components/session/QuizView'));
 
@@ -378,12 +379,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[var(--color-border)] border-t-[var(--color-text-primary)]" />
-        <p className="text-[var(--color-text-muted)] text-sm">
-          Resolving your study plan...
-        </p>
-      </div>
+      <DrillLoadingState
+        message="Resolving your study plan..."
+        variant="question"
+        showTimer
+        showProgress
+      />
     );
   }
 
@@ -570,9 +571,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       {/* QuizView — wired with full shared props from DrillViewRouter */}
       <div className="flex-1">
         <Suspense fallback={
-          <div className="flex items-center justify-center min-h-[40vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--color-border)] border-t-[var(--color-text-primary)]" />
-          </div>
+          <DrillLoadingState
+            message="Preparing your questions..."
+            variant="question"
+            showTimer
+            showProgress
+          />
         }>
           <QuizView
             initialQueue={questions}

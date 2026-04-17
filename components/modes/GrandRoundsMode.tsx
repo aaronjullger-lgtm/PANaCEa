@@ -27,6 +27,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { DrillLoadingState } from '@/components/loading';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -571,12 +572,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Loading state
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
-        <div role="status" aria-label={`Loading ${modeLabel}`} className="text-center space-y-4">
-          <Loader2 aria-hidden="true" className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
-          <p className="text-xl text-[var(--color-text-muted)]">Loading {modeLabel}...</p>
-        </div>
-      </div>
+      <DrillLoadingState
+        message={`Loading ${modeLabel}...`}
+        variant="question"
+        showTimer
+        showProgress
+      />
     );
   }
 
@@ -883,12 +884,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     // Guard: If currentQuestion is undefined, show loading
     if (!currentQuestion) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
-            <p className="text-xl text-[var(--color-text-muted)]">Loading question...</p>
-          </div>
-        </div>
+        <DrillLoadingState
+          message="Loading question..."
+          variant="question"
+          showTimer
+          showProgress
+        />
       );
     }
 
