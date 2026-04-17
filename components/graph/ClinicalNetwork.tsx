@@ -90,7 +90,7 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    const base = (import.meta as any).env?.VITE_API_URL ?? '';
+    const base = import.meta.env?.VITE_API_URL ?? '';
     fetch(`${base}/api/graph/network/${encodeURIComponent(conditionId)}`, {
       credentials: 'include',
       headers: { Accept: 'application/json' },

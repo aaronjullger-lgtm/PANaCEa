@@ -20,7 +20,7 @@ import { CausalChainDisplay } from '@/components/session/CausalChainDisplay';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 import { MessageCircle, PenLine } from 'lucide-react';
-import type { Question, ErrorTag, StructuredRationale } from '@/types';
+import type { Question, ErrorTag } from '@/types';
 import type { CausalChain, CausalChainDisplayLevel } from '@/types/causalChain';
 
 export interface AnswerFeedbackProps {

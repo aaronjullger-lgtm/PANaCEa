@@ -13,9 +13,10 @@ import { updateReviewOutcome } from '../lib/services/srsService';
 
 // Mock all external dependencies
 vi.mock('@prisma/client', () => ({
+  ProgressContext: { READINESS: 'READINESS', PANCE_PREP: 'PANCE_PREP', CLINICAL_ROTATION: 'CLINICAL_ROTATION' },
   PrismaClient: vi.fn(function() {
     const self: any = {
-      questionAttempt: { create: vi.fn(), findFirst: vi.fn() },
+      questionAttempt: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
       reviewLog: { create: vi.fn(), findMany: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
@@ -26,6 +27,10 @@ vi.mock('@prisma/client', () => ({
       // Sprint 2: added for ported UserQuestionSeen + Question stats
       userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
       question: { update: vi.fn() },
+      // A/B test experiment lookup
+      aBExperiment: { findMany: vi.fn().mockResolvedValue([]) },
+      // User SRS config for grade modulation
+      userSRSConfig: { findUnique: vi.fn() },
       $transaction: vi.fn(function(fn: (tx: unknown) => unknown) { return fn(self); }),
       $disconnect: vi.fn(),
     };
@@ -195,6 +200,17 @@ vi.mock('../lib/utils/questionComplexity', () => ({
 
 vi.mock('../../types/telemetry', () => ({
   getMVRTThreshold: vi.fn(function() { return 2000; }),
+}));
+
+vi.mock('../lib/middleware/abTestMiddleware', () => ({
+  resolveAssignments: vi.fn(function() { return Promise.resolve({}); }),
+  logABConversion: vi.fn(),
+}));
+
+vi.mock('../lib/services/gradeModulationCoordinator', () => ({
+  modulateGrade: vi.fn(function() {
+    return { rawGrade: 3, effectiveGrade: 3, discreteGrade: 3, deltas: {}, signals: { rtZone: 'normal', fatigueScore: 0 } };
+  }),
 }));
 
 // Wave 2 behavioral signal services

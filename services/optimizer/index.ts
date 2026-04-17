@@ -10,4 +10,4 @@ export * from './pathGenerator';
 export * from './confidenceScorer';
 
 // Re‑export FSRS optimizer for completeness
-export { optimizeFSRS } from './fsrsOptimizer';
+export { optimizeFSRSParameters as optimizeFSRS } from './fsrsOptimizer';

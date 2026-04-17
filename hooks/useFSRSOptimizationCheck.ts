@@ -57,7 +57,7 @@ export function useFSRSOptimizationCheck(): void {
         const api = createApiClient(getToken);
         const user = createUserClient(api);
 
-        const data = await user.getFSRSParams() as any;
+        const data = await user.getFSRSParams();
         const canOptimize = data?.canOptimize === true;
         const lastOptimizedAt = data?.params?.lastOptimizedAt;
 

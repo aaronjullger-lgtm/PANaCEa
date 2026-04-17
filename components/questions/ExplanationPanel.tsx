@@ -730,7 +730,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
         {/* PubMed References — peer-reviewed citations */}
         {(() => {
-          const citations = propPubmedCitations || (isStructuredRationale(rationale) ? (rationale as any).pubmedCitations : undefined);
+          const citations = propPubmedCitations || (isStructuredRationale(rationale) ? rationale.pubmedCitations : undefined);
           if (!citations || citations.length === 0) return null;
 
           return (

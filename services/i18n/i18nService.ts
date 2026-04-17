@@ -41,8 +41,8 @@ export class I18nService {
 
   constructor(config?: Partial<I18nConfig>) {
     this.config = {
-      defaultLocale: SUPPORTED_LOCALES[0], // en-US
-      fallbackLocale: SUPPORTED_LOCALES[0], // en-US
+      defaultLocale: SUPPORTED_LOCALES[0]!, // en-US
+      fallbackLocale: SUPPORTED_LOCALES[0]!, // en-US
       debug: process.env.NODE_ENV === 'development',
       cacheEnabled: true,
       autoDetect: true,
