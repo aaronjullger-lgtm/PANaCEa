@@ -805,14 +805,28 @@ export class SessionService {
         logger.warn(`[${LOG_SCOPE}] Skipping question ${q.id} - no valid options`);
         continue;
       }
-      const correctIndex = options.findIndex((opt) => opt === q.correctAnswer);
+
+      // Canonical resolver — handles letter ("A"), numeric ("0"), and full-text formats.
+      // Skip rows where correctAnswer cannot be resolved; silently falling back to
+      // index 0 would mark option A as correct regardless of truth.
+      if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+        logger.warn(`[${LOG_SCOPE}] Skipping question ${q.id} - missing correctAnswer`);
+        continue;
+      }
+      const correctIndex = resolveCorrectAnswerIndex(q.correctAnswer, options);
+      if (correctIndex === null) {
+        logger.warn(
+          `[${LOG_SCOPE}] Skipping question ${q.id} - correctAnswer "${q.correctAnswer}" does not match any option`
+        );
+        continue;
+      }
 
       questions.push({
         id: q.id,
         question: q.question,
         vignette: q.vignette || undefined,
         options,
-        correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+        correctAnswerIndex: correctIndex,
         rationale: q.explanation,
         system: q.system,
         conditionId: q.conditionId || undefined,
