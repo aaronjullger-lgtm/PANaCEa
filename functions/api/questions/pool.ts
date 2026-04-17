@@ -26,7 +26,12 @@ import {
 import type { KVNamespace } from '@cloudflare/workers-types';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
-import { ANSWER_LETTERS, letterToIndex, indexToLetter } from '../../../lib/answerLetterMap';
+import {
+  ANSWER_LETTERS,
+  letterToIndex,
+  indexToLetter,
+  resolveCorrectAnswerIndex,
+} from '../../../lib/answerLetterMap';
 
 /**
  * Compute a lightweight semantic fingerprint from question text for near-duplicate detection.
@@ -961,17 +966,41 @@ async function generateAndAddToPool(
       return 'medium';
     })();
 
-    // Convert generated question to PreGeneratedQuestion format
+    // Convert generated question to PreGeneratedQuestion format.
+    // Hard-require resolvable correctAnswer — silently defaulting to option A
+    // would persist mis-indexed questions to the pool for every user.
     const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const options = generatedQ.options || ['A', 'B', 'C', 'D', 'E'];
-    const correctAnswer = generatedQ.correctAnswer || 'A';
-    const correctAnswerIndex = letterToIndex(correctAnswer.charAt(0));
+    const options = Array.isArray(generatedQ.options) ? generatedQ.options : [];
+    if (options.length === 0) {
+      logger.warn('Generated pool question rejected — no options', {
+        conditionId: conditionData.id,
+      });
+      return null;
+    }
+    const correctAnswer =
+      typeof generatedQ.correctAnswer === 'string' && generatedQ.correctAnswer.trim().length > 0
+        ? generatedQ.correctAnswer
+        : '';
+    if (!correctAnswer) {
+      logger.warn('Generated pool question rejected — missing correctAnswer', {
+        conditionId: conditionData.id,
+      });
+      return null;
+    }
+    const correctAnswerIndex = resolveCorrectAnswerIndex(correctAnswer, options);
+    if (correctAnswerIndex === null) {
+      logger.warn(
+        'Generated pool question rejected — correctAnswer does not resolve to any option',
+        { conditionId: conditionData.id, correctAnswer },
+      );
+      return null;
+    }
     const questionData: QuestionDataJson = {
       vignette: generatedQ.question?.includes('Vignette') ? generatedQ.question : undefined,
       question: generatedQ.question,
       options: options,
       correctAnswer: correctAnswer,
-      correctAnswerIndex: correctAnswerIndex ?? 0,
+      correctAnswerIndex,
       explanation: generatedQ.explanation?.rationale || '',
       conditionName: conditionData.condition,
       system: conditionData.system,

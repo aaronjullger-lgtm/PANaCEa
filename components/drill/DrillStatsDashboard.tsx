@@ -12,6 +12,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   BarChart3,
   TrendingUp,
@@ -78,6 +79,7 @@ const DRILL_INFO: Record<DrillType, { label: string; icon: React.ElementType }> 
 const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onStartDrill }) => {
   const [expandedDrill, setExpandedDrill] = useState<DrillType | null>(null);
   const [view, setView] = useState<'overview' | 'details'>('overview');
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     if (!onClose) return;
@@ -135,9 +137,10 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
       <motion.div
-        initial={{ scale: 0.95 }}
+        initial={prefersReducedMotion ? false : { scale: 0.95 }}
         animate={{ scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         role="dialog"
         aria-modal="true"
         aria-label="Drill performance dashboard"
@@ -243,9 +246,9 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                 {/* Code Blue Speed Mode */}
                 {simulationStats.codeBlue.hasActivity && (
                   <motion.div
-                    initial={{ y: 10 }}
+                    initial={prefersReducedMotion ? false : { y: 10 }}
                     animate={{ y: 0 }}
-                    transition={{ delay: 0 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { delay: 0 }}
                     className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-[var(--color-data-fail)]/50 transition-all duration-300 cursor-pointer"
                     onClick={() => onStartDrill?.('code_blue_speed')}
                   >

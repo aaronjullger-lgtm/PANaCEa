@@ -18,6 +18,7 @@ import {
   Filter,
   Download,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { AuditLogEntry, ChangeType } from '../../types/admin-cms';
 
 interface AuditLogViewerProps {
@@ -138,8 +139,13 @@ export function AuditLogViewer({ contentId, showFilters = true }: AuditLogViewer
       {/* Log Entries */}
       <div className="divide-y divide-[var(--color-border)]">
         {loading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+          <div
+            role="status"
+            aria-live="polite"
+            aria-label="Loading audit log"
+            className="flex items-center justify-center p-8"
+          >
+            <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
           </div>
         ) : logs.length === 0 ? (
           <div className="p-8 text-center text-[var(--color-text-muted)]">
