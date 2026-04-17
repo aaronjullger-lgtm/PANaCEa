@@ -114,6 +114,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
             <button
               onClick={onClose}
               className="p-2 hover:bg-data-neutral rounded-lg transition-colors"
+              aria-label="Close encounter settings"
             >
               <span className="text-2xl">&times;</span>
             </button>

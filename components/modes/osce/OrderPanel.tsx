@@ -299,6 +299,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
               <button
                 onClick={onClose}
                 className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                aria-label="Close order panel"
               >
                 <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
               </button>

@@ -140,6 +140,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               <button
                 onClick={onClose}
                 className="p-1 text-data-neutral hover:text-data-neutral"
+                aria-label="Close exam panel"
               >
                 ×
               </button>

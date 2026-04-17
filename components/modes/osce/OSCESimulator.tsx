@@ -318,6 +318,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
                   onClick={toggleListening}
                   className={`p-3 rounded-full ${isListening ? 'bg-[var(--color-data-fail)]/20' : 'bg-[var(--color-accent)]/20'}`}
                   disabled={!speechRecognitionSupported}
+                  aria-label={isListening ? 'Stop listening' : 'Start listening'}
                 >
                   {isListening ? (
                     <MicOff className="w-5 h-5 text-[var(--color-data-fail)]" />

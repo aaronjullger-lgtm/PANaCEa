@@ -169,7 +169,20 @@ export function BodyMapWidget({
                 transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
                 onMouseEnter={() => setHoveredSystem(system)}
                 onMouseLeave={() => setHoveredSystem(null)}
+                role={onSystemClick ? 'button' : undefined}
+                tabIndex={onSystemClick ? 0 : undefined}
+                aria-label={tooltip}
+                onKeyDown={onSystemClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSystemClick(system); } } : undefined}
               >
+                <circle
+                  cx={region.cx}
+                  cy={region.cy}
+                  r={region.r}
+                  fill="transparent"
+                  stroke="transparent"
+                  strokeWidth={4}
+                  style={{ pointerEvents: 'all' }}
+                />
                 <circle
                   cx={region.cx}
                   cy={region.cy}

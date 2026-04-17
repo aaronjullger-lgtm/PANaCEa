@@ -361,6 +361,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 <button
                   onClick={onExit}
                   className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)]"
+                  aria-label="Close procedure panel"
                 >
                   <X className="w-5 h-5" />
                 </button>

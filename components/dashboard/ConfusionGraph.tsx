@@ -379,10 +379,22 @@ export const ConfusionGraph: React.FC<Props> = ({ maxPairs = 20 }) => {
               <g
                 key={node.id}
                 className="cursor-pointer"
+                role="button"
+                tabIndex={0}
+                aria-label={`Confusion node: ${node.label}`}
                 onClick={() => handleNodeClick(node)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNodeClick(node); } }}
                 onMouseEnter={(e) => handleNodeHover(node, e)}
                 onMouseLeave={() => setTooltip(null)}
               >
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={r + 4}
+                  fill="transparent"
+                  stroke="transparent"
+                  style={{ pointerEvents: 'all' }}
+                />
                 <circle
                   cx={node.x}
                   cy={node.y}

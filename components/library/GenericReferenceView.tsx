@@ -511,6 +511,7 @@ export default function GenericReferenceView<T>({
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.2 }}
                   onClick={() => { setExpandedId(isExpanded ? null : id); setFocusedIndex(idx); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(isExpanded ? null : id); setFocusedIndex(idx); } }}
                   style={{
                     borderRadius: 12,
                     border: isExpanded

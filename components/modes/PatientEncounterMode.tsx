@@ -2029,6 +2029,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowRapportMeter(!showRapportMeter)}
                   className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Rapport Meter"
+                  aria-label="Toggle Rapport Meter"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
@@ -2036,6 +2037,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowExamPanel(!showExamPanel)}
                   className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Physical Exam Panel"
+                  aria-label="Toggle Physical Exam Panel"
                 >
                   <StethoscopeIcon className="w-4 h-4" />
                 </button>
@@ -2043,6 +2045,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowOrderPanel(!showOrderPanel)}
                   className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Order Panel"
+                  aria-label="Toggle Order Panel"
                 >
                   <ClipboardList className="w-4 h-4" />
                 </button>
@@ -2561,6 +2564,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowRapportMeter(!showRapportMeter)}
                       className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Rapport Meter"
+                      aria-label="Toggle Rapport Meter"
                     >
                       <Heart className="w-4 h-4" />
                     </button>
@@ -2568,6 +2572,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowExamPanel(!showExamPanel)}
                       className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Physical Exam Panel"
+                      aria-label="Toggle Physical Exam Panel"
                     >
                       <StethoscopeIcon className="w-4 h-4" />
                     </button>
@@ -2575,6 +2580,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowOrderPanel(!showOrderPanel)}
                       className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Order Panel"
+                      aria-label="Toggle Order Panel"
                     >
                       <ClipboardList className="w-4 h-4" />
                     </button>
@@ -2828,6 +2834,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <Button
                   variant="ghost"
                   onClick={onExit}
+                  aria-label="Exit debrief"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -2865,6 +2872,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <Button
                   variant="ghost"
                   onClick={onExit}
+                  aria-label="Exit debrief"
                 >
                   <X className="w-5 h-5" />
                 </Button>
