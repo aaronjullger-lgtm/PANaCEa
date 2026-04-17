@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StandardButton } from '@/components/shared/StandardButton';
+import { InlineSpinner } from '@/components/loading';
 
 interface DisasterRecoveryDashboardProps {
   /** Whether the dashboard is open */
@@ -164,8 +165,13 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               {isLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
+                <div
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading disaster recovery data"
+                  className="flex items-center justify-center py-12"
+                >
+                  <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                 </div>
               )}
 

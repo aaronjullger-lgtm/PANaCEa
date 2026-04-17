@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
-import { X, AlertTriangle, CheckCircle2, BarChart3, Loader2 } from 'lucide-react';
+import { X, AlertTriangle, CheckCircle2, BarChart3 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { logAuditEvent } from '@/services/domain/audit/mappingAuditLogger';
@@ -215,8 +216,13 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             {/* Body */}
             <div className="p-6 space-y-6">
               {loading && (
-                <div className="flex items-center justify-center py-12" role="status" aria-label="Loading preview">
-                  <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
+                <div
+                  className="flex items-center justify-center py-12"
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading preview"
+                >
+                  <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   <span className="ml-3 text-[var(--color-text-secondary)]">Computing preview…</span>
                 </div>
               )}
