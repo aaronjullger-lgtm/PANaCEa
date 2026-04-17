@@ -218,9 +218,9 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
       >
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
