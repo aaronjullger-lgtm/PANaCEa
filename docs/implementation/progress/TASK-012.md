@@ -3,7 +3,7 @@
 - **Status:** completed
 - **Date:** 2026-04-16
 - **Branch:** `codex-study-session-prod-hotfix-v2`
-- **Commits:** (pending this-run commit)
+- **Commits:** `e11b0457` (code) / `3b15f3f7` (docs)
 - **Category:** UI hygiene / design system consolidation
 - **Priority / Risk / Size:** Medium / Low / S
 - **Audit reference:** `UNFINISHED_WORK_MASTER_AUDIT.md` §6 "Partial — Loading-state normalization rollout"; `AUDIT_RECONCILIATION.md` §7 "Loading-state normalization rollout" (previously `accurate` → `deferred`; this task begins the rollout on the highest-traffic session/mode shells).
