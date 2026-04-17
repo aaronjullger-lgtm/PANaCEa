@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface DrillLoadingStateProps {
   /** Number of answer options to show in skeleton */
@@ -28,6 +29,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   message = 'Loading question...',
   variant = 'question',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <div
       className="min-h-[500px] bg-[var(--color-bg-primary)] p-6"
@@ -64,9 +66,9 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
             <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-[var(--color-accent)]/30"
-                initial={{ width: '0%' }}
+                initial={prefersReducedMotion ? false : { width: '0%' }}
                 animate={{ width: '30%' }}
-                transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 1, repeat: Infinity, repeatType: 'reverse' }}
               />
             </div>
           </div>
