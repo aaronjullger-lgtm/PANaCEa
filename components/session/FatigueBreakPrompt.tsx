@@ -18,6 +18,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Coffee, ChevronRight } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { ProactiveFatigueCheck } from '@/lib/services/wellnessEngine';
 
 interface FatigueBreakPromptProps {
@@ -40,6 +41,7 @@ export const FatigueBreakPrompt: React.FC<FatigueBreakPromptProps> = ({
   onDismiss,
   hardStopVisible = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Only show when break is suggested, not dismissed, and hard stop isn't already visible
   const visible =
     fatigue.fatigueLevel === 'break_suggested' &&
@@ -51,10 +53,10 @@ export const FatigueBreakPrompt: React.FC<FatigueBreakPromptProps> = ({
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' }}
           className="overflow-hidden"
         >
           <div className="mx-auto max-w-2xl mt-4 mb-2 p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">

@@ -16,6 +16,7 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Coffee } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface BreakTimerProps {
   /** Whether the break is active */
@@ -48,6 +49,7 @@ export const BreakTimer: React.FC<BreakTimerProps> = ({
   questionsAnswered = 0,
   accuracy = 0,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
   const progress = totalSeconds > 0 ? 1 - secondsLeft / totalSeconds : 0;
@@ -67,10 +69,10 @@ export const BreakTimer: React.FC<BreakTimerProps> = ({
     <AnimatePresence>
       {isActive && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
           className="fixed inset-0 z-[40] flex items-center justify-center bg-[var(--color-bg-primary)]/95 backdrop-blur-sm"
           role="dialog"
           aria-label="Study break timer"
@@ -79,9 +81,9 @@ export const BreakTimer: React.FC<BreakTimerProps> = ({
           <div className="flex flex-col items-center gap-8 px-6 max-w-sm text-center">
             {/* Coffee icon */}
             <motion.div
-              initial={{ scale: 0.8 }}
+              initial={prefersReducedMotion ? false : { scale: 0.8 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2, duration: 0.3 }}
             >
               <Coffee className="w-8 h-8 text-[var(--color-accent)]" />
             </motion.div>
@@ -114,7 +116,7 @@ export const BreakTimer: React.FC<BreakTimerProps> = ({
               </svg>
               {/* Time display */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-mono font-semibold text-[var(--color-text-primary)]">
+                <span className="text-4xl font-mono font-semibold tabular-nums text-[var(--color-text-primary)]">
                   {minutes}:{seconds.toString().padStart(2, '0')}
                 </span>
                 <span className="text-xs text-[var(--color-text-muted)] mt-1">remaining</span>
