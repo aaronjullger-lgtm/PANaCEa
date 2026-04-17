@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs } from '@/config/appViews';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Brain, Lightbulb, ArrowRight, X, AlertTriangle, Target } from 'lucide-react';
 import type { MetacognitionPrompt } from '@/lib/metacognition';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
   const [responses, setResponses] = useState<string[]>([]);
   const [currentResponse, setCurrentResponse] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   // Accessibility: trap focus within modal
   useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
@@ -110,10 +112,10 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
         onClick={handleSkipAll}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={springs.snappy}
+          exit={prefersReducedMotion ? undefined : { scale: 0.9, opacity: 0, y: 20 }}
+          transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"

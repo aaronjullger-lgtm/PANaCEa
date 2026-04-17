@@ -15,6 +15,10 @@ import {
   isEorRotation,
 } from '../config/rotation-systems';
 import { loadUserProfile } from '@/services/analytics';
+// Hoisted from dynamic `await import()` below. enhancedQuestionService is already
+// statically pulled into the bundle via services/ai/index.ts barrel, so lazy-loading
+// it here produced Vite "dynamic+static" warnings without real code-split benefit.
+import { generateEnhancedQuestion } from './ai/enhancedQuestionService';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -907,7 +911,6 @@ export async function getEnhancedQuestion(
   enabledSystems?: Set<string>
 ): Promise<Question> {
   try {
-    const { generateEnhancedQuestion } = await import('./ai/enhancedQuestionService');
     const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems);
 
     if (question) {
