@@ -3,7 +3,7 @@
 - **Status:** completed
 - **Date:** 2026-04-17
 - **Branch:** `codex-study-session-prod-hotfix-v2`
-- **Commits:** `0cb099fc` (code — bundled with calculator sprint-9 in a combined commit) / `<pending-docs>` (docs) — the code hash is already final; the docs hash is backfilled in a final `chore(docs)` sweep.
+- **Commits:** `0cb099fc` (code — bundled with calculator sprint-9 in a combined commit) / `0b90329a` (docs).
 - **Category:** UI hygiene / design system consolidation
 - **Priority / Risk / Size:** Medium / Low / S
 - **Audit reference:** `UNFINISHED_WORK_MASTER_AUDIT.md` §6 "Partial — Loading-state normalization rollout"; `AUDIT_RECONCILIATION.md` §7 "Loading-state normalization rollout" (currently `partial` after TASK-013; this task addresses the clinical-library cluster TASK-013 explicitly queued as "~25 other animate-spin files").
