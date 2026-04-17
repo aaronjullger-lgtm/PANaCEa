@@ -19,6 +19,15 @@ import {
 } from '@/lib/loadConditions';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { getConditionsBySystem, getAllConditions } from '../conditionService';
+// Hoisted from dynamic `await import()` calls below. The service is already
+// statically pulled into the bundle via services/core/index.ts barrel, so
+// lazy-loading it here produced Vite "dynamic+static" warnings without real
+// code-split benefit. Unifying on static import.
+import {
+  fetchConditionContent,
+  hasCompleteContent,
+  buildDatabaseContext,
+} from '../conditionContentService';
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
@@ -932,8 +941,6 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
 
       // Load database content via API (browser-safe)
       try {
-        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-          await import('../conditionContentService');
         const dbContent = await fetchConditionContent(settings.conditionName);
 
         if (dbContent && hasCompleteContent(dbContent)) {
@@ -988,8 +995,6 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
 
         // Load database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(
             safeString(selectedConditionMeta.condition)
           );
@@ -1219,8 +1224,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       ) {
         // Fetch database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(safeString(chosenConditionMeta.condition));
 
           if (dbContent && hasCompleteContent(dbContent)) {
