@@ -166,20 +166,55 @@ describe('analyzeCalibration — insufficient data', () => {
   });
 });
 
+/**
+ * Build a tracker whose observations span 2+ confidence bins (needed for
+ * determineCalibrationState to escape 'unknown' state, which requires ≥2
+ * significant bins with count ≥ 3).
+ */
+function buildMultiBinTracker(
+  entries: Array<{ confidence: number; accuracy: number; count: number }>,
+  latencyRatio = 1.0
+): CalibrationTracker {
+  let tracker = initCalibrationTracker();
+  let idx = 0;
+  for (const { confidence, accuracy, count } of entries) {
+    const correctCount = Math.round(count * accuracy);
+    for (let i = 0; i < count; i++) {
+      const isCorrect =
+        Math.floor(((i + 1) * correctCount) / count) > Math.floor((i * correctCount) / count);
+      tracker = addJOLObservation(
+        tracker,
+        makeObservation({
+          questionId: `q-${idx++}`,
+          implicitConfidence: confidence,
+          actualOutcome: isCorrect ? 1 : 0,
+          latencyRatio,
+        })
+      );
+    }
+  }
+  return tracker;
+}
+
 // ─── analyzeCalibration — well-calibrated ───────────────────────────────────
 
 describe('analyzeCalibration — well calibrated', () => {
-  it('detects well-calibrated when confidence matches accuracy', () => {
-    // 20 obs, conf=0.7, accuracy=0.7 → bias ≈ 0
-    const tracker = buildTracker(20, 0.7, 0.7);
+  it('detects well-calibrated when confidence matches accuracy across bins', () => {
+    // Bin 40-60%: conf=0.5, acc=0.5 (error=0); Bin 80-100%: conf=0.9, acc=0.9 (error=0)
+    const tracker = buildMultiBinTracker([
+      { confidence: 0.5, accuracy: 0.5, count: 10 },
+      { confidence: 0.9, accuracy: 0.9, count: 10 },
+    ]);
     const analysis = analyzeCalibration(tracker);
     expect(analysis.state).toBe('well_calibrated');
     expect(Math.abs(analysis.overconfidenceBias)).toBeLessThan(0.1);
   });
 
   it('produces low Brier score for well-calibrated predictions', () => {
-    // With conf=0.7 on all, accuracy=0.7 → Brier = 0.3*(0.7)^2 + 0.7*(0.3)^2 = 0.21
-    const tracker = buildTracker(20, 0.7, 0.7);
+    const tracker = buildMultiBinTracker([
+      { confidence: 0.5, accuracy: 0.5, count: 10 },
+      { confidence: 0.9, accuracy: 0.9, count: 10 },
+    ]);
     const analysis = analyzeCalibration(tracker);
     expect(analysis.brierScore).toBeLessThan(0.3);
   });
@@ -188,17 +223,23 @@ describe('analyzeCalibration — well calibrated', () => {
 // ─── analyzeCalibration — overconfidence ────────────────────────────────────
 
 describe('analyzeCalibration — overconfidence', () => {
-  it('detects overconfidence (high confidence, low accuracy)', () => {
-    // 20 obs, conf=0.9, accuracy=0.3 → bias = 0.6 (positive)
-    const tracker = buildTracker(20, 0.9, 0.3);
+  it('detects overconfidence (high confidence, low accuracy) across bins', () => {
+    // Both bins overconfident by similar amount → low variance → 'overconfident'
+    // Bin 60-80%: conf=0.7, acc=0.3 (error=0.4); Bin 80-100%: conf=0.9, acc=0.5 (error=0.4)
+    const tracker = buildMultiBinTracker([
+      { confidence: 0.7, accuracy: 0.3, count: 10 },
+      { confidence: 0.9, accuracy: 0.5, count: 10 },
+    ]);
     const analysis = analyzeCalibration(tracker);
     expect(analysis.overconfidenceBias).toBeGreaterThan(0.15);
-    // Either 'overconfident' or 'fluctuating' depending on variance in calibration curve
     expect(['overconfident', 'fluctuating']).toContain(analysis.state);
   });
 
-  it('generates overconfidence recommendation', () => {
-    const tracker = buildTracker(20, 0.9, 0.3);
+  it('generates overconfidence recommendation when state=overconfident', () => {
+    const tracker = buildMultiBinTracker([
+      { confidence: 0.7, accuracy: 0.3, count: 10 },
+      { confidence: 0.9, accuracy: 0.5, count: 10 },
+    ]);
     const analysis = analyzeCalibration(tracker);
     if (analysis.state === 'overconfident') {
       expect(analysis.recommendation.toLowerCase()).toContain('overconfidence');
@@ -209,9 +250,12 @@ describe('analyzeCalibration — overconfidence', () => {
 // ─── analyzeCalibration — underconfidence ───────────────────────────────────
 
 describe('analyzeCalibration — underconfidence', () => {
-  it('detects underconfidence (low confidence, high accuracy)', () => {
-    // 20 obs, conf=0.3, accuracy=0.9 → bias = -0.6
-    const tracker = buildTracker(20, 0.3, 0.9);
+  it('detects underconfidence (low confidence, high accuracy) across bins', () => {
+    // Bin 0-20%: conf=0.1, acc=0.5 (error=-0.4); Bin 20-40%: conf=0.3, acc=0.7 (error=-0.4)
+    const tracker = buildMultiBinTracker([
+      { confidence: 0.1, accuracy: 0.5, count: 10 },
+      { confidence: 0.3, accuracy: 0.7, count: 10 },
+    ]);
     const analysis = analyzeCalibration(tracker);
     expect(analysis.overconfidenceBias).toBeLessThan(-0.15);
     expect(['underconfident', 'fluctuating']).toContain(analysis.state);
