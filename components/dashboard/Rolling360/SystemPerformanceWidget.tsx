@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useRolling360Stats, SystemStats } from '../../../hooks/useRolling360Stats';
 
 // =============================================================================
@@ -35,12 +36,13 @@ const BLUEPRINT_TARGETS: Record<string, number> = {
 // =============================================================================
 
 function SystemPerformanceSkeleton() {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <motion.div
       key="system-perf-skeleton"
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
       className="bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] animate-pulse">
       <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-48 mb-6" />
       <div className="space-y-3">
@@ -68,6 +70,7 @@ interface SystemRowProps {
 }
 
 function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
+  const prefersReducedMotion = useReducedMotion();
   const targetPercent = BLUEPRINT_TARGETS[system] || 5;
   const safeTotalQuestions = totalQuestions > 0 ? totalQuestions : 1;
   const actualPercent = (stats.total / safeTotalQuestions) * 100;
@@ -78,9 +81,9 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
 
   return (
     <motion.div
-      initial={{ x: -20 }}
+      initial={prefersReducedMotion ? false : { x: -20 }}
       animate={{ x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
       className={`p-3 rounded-xl transition-colors ${
         isUnderStudied
           ? 'bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20'
@@ -120,9 +123,9 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
                 ? 'bg-[var(--color-data-provisional)]'
                 : 'bg-[var(--color-data-fail)]'
           }`}
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${safeAccuracy}%` }}
-          transition={{ duration: 0.6, delay: index * 0.05 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.6, delay: index * 0.05 }}
         />
       </div>
 

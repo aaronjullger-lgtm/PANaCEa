@@ -14,6 +14,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { StartSessionButton } from '../../ui/SemanticButton';
 
@@ -187,6 +188,7 @@ interface StepCardProps {
 }
 
 function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
+  const prefersReducedMotion = useReducedMotion();
   const isUnlocked = currentQuestions >= step.threshold;
   const isActive = currentQuestions >= step.threshold - 20 && !isUnlocked;
   const progress = Math.min(100, (currentQuestions / step.threshold) * 100);
@@ -216,9 +218,9 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={prefersReducedMotion ? false : { y: 10 }}
       animate={{ y: 0 }}
-      transition={{ delay: step.step * 0.1 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: step.step * 0.1 }}
       className={`relative p-4 rounded-xl border transition-all duration-300 ${
         isUnlocked
           ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
@@ -255,9 +257,9 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
           <div className="h-1.5 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               className={`h-full ${isActive ? 'bg-[var(--color-data-provisional)]' : 'bg-[var(--color-data-neutral)]'}`}
-              initial={{ width: 0 }}
+              initial={prefersReducedMotion ? false : { width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8 }}
             />
           </div>
           <p className="text-xs text-data-neutral mt-1 text-center">
@@ -291,6 +293,7 @@ export function CalibrationProtocolUI({
   onStartSession,
   isStarting,
 }: CalibrationProtocolUIProps) {
+  const prefersReducedMotion = useReducedMotion();
   const totalQuestions = stats.totalInWindow;
   const currentStep = getCurrentStep(totalQuestions);
   const questionsToNext = getQuestionsToNextUnlock(totalQuestions);
@@ -331,9 +334,9 @@ export function CalibrationProtocolUI({
         <div className="h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-teal-500"
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 1, ease: 'easeOut' }}
           />
         </div>
         <div className="flex justify-between text-xs text-[var(--color-text-muted)]">

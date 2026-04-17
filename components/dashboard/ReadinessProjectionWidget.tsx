@@ -11,6 +11,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   useReadinessProjection,
   type SystemReadiness,
@@ -60,6 +61,7 @@ function ProjectionSkeleton() {
 // ─── System Bar ────────────────────────────────────────────────────────
 
 function SystemBar({ sys }: { sys: SystemReadiness }) {
+  const prefersReducedMotion = useReducedMotion();
   const pct = Math.round(sys.readiness * 100);
   const projPct = sys.projectedReadiness != null ? Math.round(sys.projectedReadiness * 100) : null;
 
@@ -96,9 +98,9 @@ function SystemBar({ sys }: { sys: SystemReadiness }) {
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: readinessColor(sys.readiness) }}
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${projPct != null ? Math.min(projPct, pct) : pct}%` }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' }}
         />
       </div>
     </div>
@@ -116,6 +118,7 @@ export function ReadinessProjectionWidget({
   examDate,
   className = '',
 }: ReadinessProjectionWidgetProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { data, isLoading, error } = useReadinessProjection(examDate);
 
   if (isLoading) return <ProjectionSkeleton />;
@@ -229,9 +232,9 @@ export function ReadinessProjectionWidget({
           <motion.div
             className="h-full rounded-full"
             style={{ backgroundColor: readinessColor(data.projectedAtExam) }}
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${projectedPct}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
           />
         </div>
       </div>

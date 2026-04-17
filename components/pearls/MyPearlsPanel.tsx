@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Gem,
   X,
@@ -100,6 +100,7 @@ function isDueForReview(nextReviewDate?: string): boolean {
 
 export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFilter = 'all' }) => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [pearls, setPearls] = useState<ClinicalPearl[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -402,7 +403,9 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           onClick={() => setIsFlipped(!isFlipped)}
           style={{ transformStyle: 'preserve-3d' }}
           animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={
+            prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }
+          }
         >
           {/* Front of card */}
           <div className="flashcard-face absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-border)] flex flex-col">
@@ -537,16 +540,18 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
 
   return (
     <motion.div
-     
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         onClick={(e) => e.stopPropagation()}
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >

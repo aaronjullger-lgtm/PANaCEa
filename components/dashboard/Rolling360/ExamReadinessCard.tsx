@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useUnifiedStats } from '../../../hooks/useUnifiedStats';
 import { Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { useSessionGenerator } from '../../../hooks/useSessionGenerator';
@@ -132,6 +133,7 @@ function CollectingState({
   isStarting,
   examLabel = 'PANCE',
 }: CollectingStateProps) {
+  const prefersReducedMotion = useReducedMotion();
   const progress = (stats.totalInWindow / 50) * 100;
   const questionsNeeded = 50 - stats.totalInWindow;
 
@@ -170,9 +172,9 @@ function CollectingState({
               strokeWidth="8"
               fill="none"
               strokeLinecap="round"
-              initial={{ strokeDasharray: '0 352' }}
+              initial={prefersReducedMotion ? false : { strokeDasharray: '0 352' }}
               animate={{ strokeDasharray: `${progress * 3.52} 352` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, ease: 'easeOut' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -223,6 +225,7 @@ function ProvisionalState({
   isStarting,
   examLabel = 'PANCE',
 }: ProvisionalStateProps) {
+  const prefersReducedMotion = useReducedMotion();
   const questionsToConfident = 180 - stats.totalInWindow;
   const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';
 
@@ -243,7 +246,7 @@ function ProvisionalState({
       {/* Score Display */}
       <div className="text-center py-2">
         <motion.div
-          initial={{ scale: 0.9 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9 }}
           animate={{ scale: 1 }}
           className="inline-block"
         >
@@ -287,9 +290,9 @@ function ProvisionalState({
           <motion.div
             className="h-full"
             style={{ background: 'linear-gradient(to right, var(--color-data-provisional), var(--color-accent))' }}
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${(stats.totalInWindow / 180) * 100}%` }}
-            transition={{ duration: 0.8 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8 }}
           />
         </div>
         <p className="text-xs text-[var(--color-text-muted)] text-center">
@@ -327,6 +330,7 @@ function ConfidentState({
   isStarting,
   examLabel = 'PANCE',
 }: ConfidentStateProps) {
+  const prefersReducedMotion = useReducedMotion();
   const isPassing = (stats.predictedScore ?? 0) >= 350;
   const rawPassLikelihood = stats.passLikelihood;
   const passLikelihood =
@@ -357,7 +361,7 @@ function ConfidentState({
       {/* Score Display */}
       <div className="text-center py-2">
         <motion.div
-          initial={{ scale: 0.9 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9 }}
           animate={{ scale: 1 }}
           className="inline-block"
         >
@@ -414,9 +418,9 @@ function ConfidentState({
                 ? 'bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]'
                 : 'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)]'
             }`}
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${passLikelihood}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 1, ease: 'easeOut' }}
           />
         </div>
         {passLikelihood < 50 && (
@@ -475,6 +479,7 @@ interface ExamReadinessCardProps {
 }
 
 export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { stats: unifiedStats, isLoading, error } = useUnifiedStats({ includeRaw: true });
   const stats = unifiedStats?._raw?.rolling360 ?? null;
   const { generateSession, isGenerating } = useSessionGenerator();
@@ -544,9 +549,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {isCalibrating && (
           <motion.div
             key="calibrating"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -10 }}
           >
             <CalibrationProtocolUI
               stats={stats}
@@ -560,9 +565,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {!isCalibrating && stats.scoreConfidence === 'provisional' && (
           <motion.div
             key="provisional"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -10 }}
           >
             <ProvisionalState
               stats={stats}
@@ -576,9 +581,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {stats.scoreConfidence === 'confident' && (
           <motion.div
             key="confident"
-            initial={{ y: 10 }}
+            initial={prefersReducedMotion ? false : { y: 10 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -10 }}
           >
             <ConfidentState
               stats={stats}

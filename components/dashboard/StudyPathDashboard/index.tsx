@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import {
@@ -87,6 +88,7 @@ function formatFatigueLabel(level: StudyPlan['metadata']['fatigueRisk']) {
 }
 
 const StudyPathDashboard = () => {
+  const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -513,9 +515,9 @@ const StudyPathDashboard = () => {
             {sortedSessions.map((session, index) => (
               <motion.div
                 key={session.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
               >
                 <WorkspaceSurface accent={index % 2 === 0 ? '#c4b78a' : '#728ba6'}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
