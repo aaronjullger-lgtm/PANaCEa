@@ -262,5 +262,5 @@ export function getRateLimitStatus(): {
  */
 export function clearRateLimitStore(): void {
   rateLimitStore.clear();
-  console.log('[RATE_LIMIT] Store cleared');
+  console.debug('[RATE_LIMIT] Store cleared');
 }

@@ -383,7 +383,7 @@ export class PermissionSystem {
     this.customRules.set(userId, userRules);
 
     // In production, this would persist to database
-    console.log('Custom permission granted:', rule);
+    console.debug('Custom permission granted:', rule);
   }
 
   /**
@@ -418,7 +418,7 @@ export class PermissionSystem {
     this.customRules.set(userId, filteredRules);
 
     // In production, this would persist to database
-    console.log('Custom permission revoked:', { userId, permission, resourceType, resourceId });
+    console.debug('Custom permission revoked:', { userId, permission, resourceType, resourceId });
   }
 
   /**
