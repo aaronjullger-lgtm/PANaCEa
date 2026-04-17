@@ -123,7 +123,9 @@ export default function ErrorPatternWidget() {
       <div className="space-y-2">
         {topPatterns.map((tp) => {
           const meta = PATTERN_LABELS[tp.pattern] ?? PATTERN_LABELS['UNKNOWN']!;
-          const pct = Math.round(tp.frequency * 100);
+          // Avoid "0%" display when count > 0 (rounding artifact from very small frequencies)
+          const rawPct = Number.isFinite(tp.frequency) ? tp.frequency * 100 : 0;
+          const pct = tp.count > 0 ? Math.max(1, Math.round(rawPct)) : 0;
           return (
             <div key={tp.pattern}>
               <div className="flex items-center justify-between mb-1">

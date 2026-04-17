@@ -98,7 +98,10 @@ export default function DailyLoadWidget() {
   }
 
   const { recommendation: rec, profile } = data;
-  const utilizationPct = Math.round(rec.capacityUtilization * 100);
+  const rawUtilization = rec.capacityUtilization;
+  const utilizationPct = Number.isFinite(rawUtilization)
+    ? Math.round(rawUtilization * 100)
+    : 0;
 
   return (
     <div className="p-5 space-y-4">
