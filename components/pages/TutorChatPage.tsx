@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Bot,
   Brain,
-  Loader2,
   MessageCircle,
   RefreshCw,
   Sparkles,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import {
   WorkspaceMetricCard,
   WorkspacePage,
@@ -407,10 +407,10 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                 </div>
 
                 {messages.length === 0 ? (
-                  <div className="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 px-6 text-center">
+                  <div className="flex h-full min-h-[18rem] flex-col items-center justify-center gap-4 px-6 text-center" role="status" aria-live="polite">
                     <div className="workspace-icon-tile flex h-14 w-14 items-center justify-center rounded-2xl">
                       {isLoadingContext ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-[var(--color-accent)]" />
+                        <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                       ) : (
                         <MessageCircle className="h-6 w-6 text-[var(--color-accent)]" />
                       )}
@@ -488,7 +488,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
                   >
                     {isStreaming ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <InlineSpinner size="sm" />
                         Thinking…
                       </>
                     ) : (

@@ -20,6 +20,7 @@ import {
   Upload,
   AlertTriangle,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type {
   MedicalContent,
   ContentStatus,
@@ -297,8 +298,13 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
         {/* Content List */}
         <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <div className="w-8 h-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+            <div
+              role="status"
+              aria-live="polite"
+              aria-label="Loading content"
+              className="flex items-center justify-center p-12"
+            >
+              <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
             </div>
           ) : filteredContent.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center">

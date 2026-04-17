@@ -29,11 +29,11 @@ import {
   Flag,
   ArrowLeft,
   Sparkles,
-  Loader2,
   RefreshCw,
   BookOpen,
   Map,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '../../hooks/useAuth';
 import { canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
 import { ROUTES } from '../../config/routes';
@@ -198,10 +198,15 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Verifying access"
+        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center"
+      >
         <div className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)]">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+            <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
             <span className="text-[var(--color-text-primary)]">Verifying access...</span>
           </div>
         </div>
@@ -394,7 +399,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-data-fail)]/20 hover:bg-[var(--color-data-fail)]/30 text-[var(--color-data-fail)] text-sm font-medium disabled:opacity-50"
                   >
                     {statsLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                      <InlineSpinner size="sm" />
                     ) : (
                       <RefreshCw className="w-4 h-4" aria-hidden />
                     )}
@@ -403,8 +408,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 </motion.div>
               )}
               {statsLoading && !statsError && (
-                <div className="mb-4 flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="mb-4 flex items-center gap-2 text-sm text-[var(--color-text-muted)]"
+                >
+                  <InlineSpinner size="sm" />
                   Loading stats…
                 </div>
               )}

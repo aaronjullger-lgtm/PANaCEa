@@ -40,7 +40,7 @@ interface SmartReviewModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'loading' | 'active' | 'complete';
+type ViewState = 'loading' | 'active' | 'complete' | 'error';
 
 const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
@@ -50,6 +50,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const recordCalibrationObservation = session?.recordCalibrationObservation ?? null;
 
   const [viewState, setViewState] = useState<ViewState>('loading');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -60,8 +61,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
 
   useEffect(() => {
     loadReviewItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const loadReviewItems = async () => {
+    setViewState('loading');
+    setLoadError(null);
     try {
       const token = await getToken();
       const response = await fetch('/api/drills/smart-review', {
@@ -77,12 +81,19 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         setViewState('active');
         setStartTime(Date.now());
       } else {
+        // Legitimate empty state — user has no reviews due. Show celebratory complete screen.
         setViewState('complete');
       }
     } catch (error) {
       console.error('Failed to load review items:', error);
+      const message =
+        error instanceof Error ? error.message : 'Could not load review items.';
       toast.error('Could not load review items. Check your connection and try again.');
-      setViewState('complete');
+      setLoadError(message);
+      // Distinguish a real fetch failure from a legitimate empty review queue —
+      // the old behavior showed "Brain Upgraded!" celebration even when the API
+      // errored, which masked real load failures from the user.
+      setViewState('error');
     }
   };
 
@@ -237,6 +248,37 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
           {/* Button skeleton */}
           <div className="flex justify-center">
             <SkeletonLoader width="160px" height="48px" className="rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State — distinct from "Complete" so failed loads are visible to the user
+  if (viewState === 'error') {
+    return (
+      <div className="fixed inset-0 bg-[var(--color-bg-primary)] flex items-center justify-center z-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-6" />
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
+            Couldn't load review items
+          </h1>
+          <p className="text-sm text-[var(--color-text-muted)] mb-6">
+            {loadError ?? 'Check your connection and try again.'}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={loadReviewItems}
+              className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={onExit}
+              className="px-6 py-3 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-xl font-semibold hover:bg-[var(--color-bg-tertiary)] transition-colors"
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
       </div>
