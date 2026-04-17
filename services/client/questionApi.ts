@@ -58,7 +58,23 @@ export async function getQuestionClient(
       return null;
     }
 
-    const data = await response.json() as { questions?: unknown[]; needsGeneration?: boolean };
+    const data = await response.json() as {
+      questions?: Array<{
+        id: string;
+        questionText: string;
+        answerOptions: string[];
+        correctAnswerIndex: number;
+        correctAnswer: string;
+        explanation: string;
+        topic: string;
+        system: string;
+        subcategory: string;
+        condition: string;
+        conditionId: string;
+        difficulty: string;
+      }>;
+      needsGeneration?: boolean;
+    };
 
     if (data.questions && data.questions.length > 0) {
       const q = data.questions[0];

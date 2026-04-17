@@ -522,6 +522,8 @@ describe('submitDrillReview', () => {
       (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
       (prisma.reviewLog.create as Mock).mockResolvedValue({});
       (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+      (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
+      (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
 
       await submitDrillReview(prisma, userId, input, question);
 
@@ -708,6 +710,7 @@ describe('submitDrillReview', () => {
       (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
       (prisma.reviewLog.create as Mock).mockResolvedValue({});
       (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_456' });
+      (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
 
       // Mock extreme grade and confidence
       (deriveContinuousRating as Mock).mockReturnValueOnce({
