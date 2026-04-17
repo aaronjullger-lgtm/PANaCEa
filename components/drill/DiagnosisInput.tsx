@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /** Delay in ms before closing dropdown on blur, allows click events to register */
 const BLUR_DELAY_MS = 150;
@@ -24,6 +25,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
   autoFocus = false,
   options,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
