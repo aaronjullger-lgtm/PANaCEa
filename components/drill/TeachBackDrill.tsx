@@ -409,6 +409,7 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
                     borderColor: 'var(--color-border)',
                     color: 'var(--color-text-secondary)',
                   }}
+                  aria-label="Reset drill"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
