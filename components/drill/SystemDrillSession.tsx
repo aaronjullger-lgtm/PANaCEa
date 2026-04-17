@@ -24,7 +24,6 @@ import {
   Shield,
   ArrowRight,
   BarChart3,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
 import { QuestionSkeleton } from '@/components/loading';

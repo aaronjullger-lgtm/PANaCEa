@@ -12,6 +12,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
 import {
   Shield,
@@ -105,20 +106,21 @@ function StatusDot({ status }: { status: string }) {
 // =============================================================================
 
 function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }) {
+  const prefersReducedMotion = useReducedMotion();
   const isPositive = delta > 0;
   const isNeutral = delta === 0;
 
   return (
     <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
+      initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={springs.gentle}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.gentle}
       className="text-center py-6"
     >
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2 }}
         className={cn(
           'text-5xl font-black',
           isPositive
@@ -132,9 +134,9 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         {delta.toFixed(1)} POINTS
       </motion.div>
       <motion.div
-        initial={{ y: 10, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.4 }}
         className="text-[var(--color-text-muted)] text-sm mt-2"
       >
         Your PANCE Score {isPositive ? 'Increased' : isNeutral ? 'Held Steady' : 'Adjusted'}
@@ -160,12 +162,13 @@ function ImpactCards({
   decayPrevented: number;
   bufferDays: number;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <div className="grid grid-cols-3 gap-3">
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.3 }}
         className="bg-[var(--color-accent)]/10 rounded-xl p-4 text-center"
       >
         <div className="text-3xl font-semibold text-[var(--color-accent)]">{stabilized}</div>
@@ -176,9 +179,9 @@ function ImpactCards({
       </motion.div>
 
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.4 }}
         className="bg-[var(--color-data-provisional)]/10 rounded-xl p-4 text-center"
       >
         <div className="text-3xl font-semibold text-[var(--color-data-provisional)]">
@@ -191,9 +194,9 @@ function ImpactCards({
       </motion.div>
 
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.5 }}
         className="bg-[var(--color-data-pass)]/10 rounded-xl p-4 text-center"
       >
         <div className="text-3xl font-semibold text-[var(--color-data-pass)]">+{bufferDays}</div>
@@ -207,6 +210,7 @@ function ImpactCards({
 }
 
 function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
+  const prefersReducedMotion = useReducedMotion();
   // Only show systems that actually changed
   const changedSystems = impact.filter((s) => s.questionsAnswered > 0 && s.accuracyDelta !== 0);
 
@@ -214,9 +218,9 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
 
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
+      initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.6 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.6 }}
       className="bg-[var(--color-bg-secondary)] rounded-xl p-4"
     >
       <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
@@ -227,9 +231,9 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
         {changedSystems.slice(0, 5).map((sys, i) => (
           <motion.div
             key={sys.system}
-            initial={{ x: -10, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { x: -10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.7 + i * 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.7 + i * 0.1 }}
             className="flex items-center justify-between text-sm"
           >
             <span className="font-medium text-[var(--color-text-primary)]">{sys.system}</span>
@@ -270,13 +274,14 @@ function TrajectoryUpdate({
   after: number;
   bufferDays: number;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const improved = after > before;
 
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
+      initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.8 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.8 }}
       className="bg-gradient-to-r from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
       <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2 flex items-center gap-2">
@@ -312,13 +317,14 @@ function TrajectoryUpdate({
 }
 
 function StreakBadge({ streak, milestone }: { streak: number; milestone: string | null }) {
+  const prefersReducedMotion = useReducedMotion();
   if (streak < 2) return null;
 
   return (
     <motion.div
-      initial={{ scale: 0, rotate: -10 }}
+      initial={prefersReducedMotion ? false : { scale: 0, rotate: -10 }}
       animate={{ scale: 1, rotate: 0 }}
-      transition={{ ...springs.gentle, delay: 0.9 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: 0.9 }}
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
@@ -340,11 +346,12 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
 }
 
 function AchievementBadge({ achievement }: { achievement: string }) {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0, scale: 0.9 }}
+      initial={prefersReducedMotion ? false : { y: 20, opacity: 0, scale: 0.9 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
-      transition={{ ...springs.gentle, delay: 1.0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: 1.0 }}
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
@@ -368,6 +375,7 @@ export function SessionPostMortem({
   isCalibrationReliable,
   calibrationProgress,
 }: SessionPostMortemProps) {
+  const prefersReducedMotion = useReducedMotion();
   const headline = getHeadline(data);
 
   return (
@@ -383,17 +391,17 @@ export function SessionPostMortem({
       {/* Header */}
       <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] p-6 text-[var(--color-text-inverse)] text-center">
         <motion.div
-          initial={{ y: -20, opacity: 0 }}
+          initial={prefersReducedMotion ? false : { y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.1 }}
           className="mb-2"
         >
           <PartyPopper className="w-10 h-10 mx-auto text-[var(--color-text-inverse)]" />
         </motion.div>
         <motion.h2
-          initial={{ y: -10, opacity: 0 }}
+          initial={prefersReducedMotion ? false : { y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.2 }}
           className="text-2xl font-semibold"
         >
           {headline}
@@ -407,15 +415,15 @@ export function SessionPostMortem({
 
         {/* Accuracy Bar */}
         <motion.div
-          initial={{ scaleX: 0 }}
+          initial={prefersReducedMotion ? false : { scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.5, duration: 0.5 }}
           className="bg-[var(--color-bg-secondary)] rounded-full h-3 overflow-hidden"
         >
           <motion.div
-            initial={{ width: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0 }}
             animate={{ width: `${data.accuracy}%` }}
-            transition={{ delay: 0.7, duration: 0.8 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.7, duration: 0.8 }}
             className={cn(
               'h-full rounded-full',
               data.accuracy >= 80
@@ -465,18 +473,18 @@ export function SessionPostMortem({
       {/* CTAs */}
       <div className="p-6 pt-0 flex gap-3">
         <motion.button
-          initial={{ y: 10, opacity: 0 }}
+          initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 1.2 }}
           onClick={onContinue}
           className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold py-3 px-6 rounded-xl transition-colors"
         >
           Continue Streak
         </motion.button>
         <motion.button
-          initial={{ y: 10, opacity: 0 }}
+          initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.3 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { delay: 1.3 }}
           onClick={onViewDashboard}
           className="flex-1 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] font-semibold py-3 px-6 rounded-xl transition-colors"
         >

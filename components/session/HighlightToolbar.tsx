@@ -15,6 +15,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Highlighter, Strikethrough, Eraser } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { AnnotationMode, HighlightColor } from '@/hooks/useQuestionAnnotations';
 
 interface HighlightToolbarProps {
@@ -40,6 +41,8 @@ export function HighlightToolbar({
   onClear,
   className = '',
 }: HighlightToolbarProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -102,9 +105,10 @@ export function HighlightToolbar({
       <AnimatePresence>
         {activeMode === 'highlight' && (
           <motion.div
-            initial={{ width: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { width: 0, opacity: 0 }}
             animate={{ width: 'auto', opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { width: 0, opacity: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             className="flex items-center gap-1 overflow-hidden"
           >
             {(Object.keys(COLOR_MAP) as HighlightColor[]).map((color) => (

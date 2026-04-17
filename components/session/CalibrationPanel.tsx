@@ -13,6 +13,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   CheckCircle,
   TrendingUp,
@@ -243,6 +244,7 @@ function InsufficientDataState({
 }: {
   progress: { current: number; required: number; percentage: number };
 }) {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <div className="text-center py-4">
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-data-neutral)] mb-3">
@@ -257,9 +259,9 @@ function InsufficientDataState({
       <div className="w-full bg-[var(--color-data-neutral)] rounded-full h-2">
         <motion.div
           className="bg-[var(--color-accent)] h-2 rounded-full"
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${progress.percentage}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
         />
       </div>
       <span className="text-xs text-[var(--color-data-neutral)] mt-1 block">
@@ -279,13 +281,16 @@ export function CalibrationPanel({
   onDismiss,
   compact = false,
 }: CalibrationPanelProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   // If no summary and not enough data, show progress state
   if (!summary || !isReliable) {
     if (progress) {
       return (
         <motion.div
-          initial={{ y: 10 }}
+          initial={prefersReducedMotion ? false : { y: 10 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
         >
           <InsufficientDataState progress={progress} />
@@ -302,8 +307,9 @@ export function CalibrationPanel({
   if (compact) {
     return (
       <motion.div
-        initial={{ scale: 0.95 }}
+        initial={prefersReducedMotion ? false : { scale: 0.95 }}
         animate={{ scale: 1 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className={`rounded-lg border ${colors.border} ${colors.bg} p-3`}
       >
         <div className="flex items-center gap-2">
@@ -326,9 +332,9 @@ export function CalibrationPanel({
   // Full mode - detailed display
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden"
     >
       {/* Header */}
@@ -357,9 +363,10 @@ export function CalibrationPanel({
         <AnimatePresence>
           {summary.illusionOfCompetence && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
             >
               <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />

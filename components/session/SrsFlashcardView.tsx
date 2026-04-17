@@ -16,7 +16,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@clerk/clerk-react';
 import {
   fetchNextVariantCard,
@@ -106,6 +108,7 @@ function formatNextReview(date: Date | string | undefined): string {
 
 export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const srsAuth = useCallback(() => ({ getToken }), [getToken]);
 
   const [question, setQuestion] = useState<ReviewQuestion | null>(null);
@@ -249,8 +252,10 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
 
   if (loading && !question) {
     return (
-      <div role="status" aria-label="Loading next question" className="flex flex-col items-center justify-center min-h-[320px] p-6">
-        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
+      <div role="status" aria-label="Loading next question" aria-live="polite" className="flex flex-col items-center justify-center min-h-[320px] p-6">
+        <div className="mb-4">
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
+        </div>
         <p className="text-sm text-[var(--color-text-muted)]">Loading next question…</p>
       </div>
     );
@@ -387,7 +392,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
           data-testid="srs-review-submit"
         >
           {submitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <InlineSpinner size="sm" />
           ) : (
             <>
               Submit
@@ -399,9 +404,9 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
         <AnimatePresence mode="wait">
           <motion.div
             key="explanation"
-            initial={{ y: 8 }}
+            initial={prefersReducedMotion ? false : { y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: 'easeOut' }}
             className="flex flex-col gap-3"
           >
             {/* Result banner */}

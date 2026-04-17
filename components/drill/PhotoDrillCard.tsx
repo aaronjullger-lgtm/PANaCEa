@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Check, X, Clock, Zap } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { PhotoDrillQuestion } from '@/services/drill/photoDrill.service';
 
 interface PhotoDrillCardProps {
@@ -116,8 +117,8 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
 
         {/* Loading Indicator */}
         {!imageLoaded && (
-          <div role="status" aria-label="Loading image" className="absolute inset-0 flex items-center justify-center">
-            <div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent" />
+          <div role="status" aria-label="Loading image" aria-live="polite" className="absolute inset-0 flex items-center justify-center">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
           </div>
         )}
 

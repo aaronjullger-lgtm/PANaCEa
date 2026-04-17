@@ -11,8 +11,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   X, BookOpen, FlaskConical, Heart, Stethoscope,
-  ChevronDown, ChevronUp, Loader2,
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // ─── Types (mirrors clinicalQuickRefService) ─────────────────────────────────
 
@@ -119,8 +120,8 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {loading && (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+          <div className="flex items-center justify-center p-8" role="status" aria-live="polite">
+            <InlineSpinner size="md" className="text-[var(--color-text-muted)]" />
           </div>
         )}
 

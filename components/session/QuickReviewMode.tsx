@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, CheckCircle2, XCircle, Clock, Target } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@clerk/clerk-react';
 import type { Question } from '@/types';
 import type { QuizQuestion } from '@/types';
@@ -23,6 +24,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
   onClose,
   onStartReview,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedTimeframe, setSelectedTimeframe] = useState<'today' | 'week' | 'all'>('today');
   const [selectedCount, setSelectedCount] = useState<number>(10);
 
@@ -177,9 +179,10 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        exit={prefersReducedMotion ? undefined : { scale: 0.9, opacity: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

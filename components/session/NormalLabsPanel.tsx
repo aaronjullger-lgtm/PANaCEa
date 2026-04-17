@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Beaker, X, ChevronDown, RefreshCw } from 'lucide-react';
+import { Beaker, X, ChevronDown } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { normalizeApiItems } from '@/lib/utils/normalizeApiResponse';
 
 export interface NormalLabEntry {
@@ -159,8 +160,12 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
         {/* Content */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4">
           {loading && (
-            <div className="flex items-center justify-center py-12 text-[var(--color-text-muted)] text-sm">
-              <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+            <div
+              className="flex items-center justify-center py-12 text-[var(--color-text-muted)] text-sm"
+              role="status"
+              aria-live="polite"
+            >
+              <InlineSpinner size="md" className="mr-2" />
               Loading…
             </div>
           )}
