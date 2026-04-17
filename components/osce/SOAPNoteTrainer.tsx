@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, CheckCircle, AlertCircle, Lightbulb, Award, Check } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { SOAPNote } from '@/services/ai';
 import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
 import { storeSoapGradingEvent } from '@/lib/services/soapAnalyticsService';
@@ -269,7 +270,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             >
               {isGrading ? (
                 <>
-                  <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
+                  <InlineSpinner size="sm" />
                   <span>Consulting Chief Resident...</span>
                 </>
               ) : (
@@ -288,8 +289,10 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] flex items-center gap-4 border border-[var(--color-border)]"
+            role="status"
+            aria-live="polite"
           >
-            <span className="inline-flex h-10 w-10 animate-spin rounded-full border-4 border-[color-mix(in_srgb,var(--color-category-practice)_60%,transparent)] border-t-transparent" />
+            <InlineSpinner size="xl" className="text-[var(--color-category-practice)]" />
             <div>
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
                 Consulting Chief Resident...
