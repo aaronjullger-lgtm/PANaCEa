@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Image, HelpCircle, Check, X, Loader2 } from 'lucide-react';
+import { BookOpen, Image, HelpCircle, Check, X } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 
 export type RefineryItemType = 'content' | 'media' | 'question';
@@ -248,7 +249,7 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
         </span>
       );
     }
-    return <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" aria-hidden />;
+    return <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />;
   }
 
   return (
