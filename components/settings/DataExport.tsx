@@ -29,7 +29,7 @@ interface ReviewExportData {
 }
 
 export const DataExport: React.FC = () => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
     type: 'success' | 'error' | null;
@@ -42,8 +42,11 @@ export const DataExport: React.FC = () => {
   const fetchReviewHistory = async (): Promise<ReviewExportData[]> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
+    const token = await getToken();
+    if (!token) throw new Error('Authentication required');
     const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`, {
       signal: controller.signal,
+      headers: { Authorization: `Bearer ${token}` },
     });
     clearTimeout(timeout);
 
