@@ -518,6 +518,10 @@ describe('submitDrillReview', () => {
         telemetry: { duration_ms: 300, rapid_guess: true },
       };
       const question = { id: questionId, conditionId, questionData: {} };
+      // Set up mocks for the questionAttempt duplicate-check + reviewLog write
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.reviewLog.create as Mock).mockResolvedValue({});
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
 
       await submitDrillReview(prisma, userId, input, question);
 
@@ -699,6 +703,11 @@ describe('submitDrillReview', () => {
         conditionId,
         questionData: { correctAnswer: 'Correct Answer' },
       };
+
+      // Set up mocks for the questionAttempt duplicate-check + reviewLog write
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.reviewLog.create as Mock).mockResolvedValue({});
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_456' });
 
       // Mock extreme grade and confidence
       (deriveContinuousRating as Mock).mockReturnValueOnce({
