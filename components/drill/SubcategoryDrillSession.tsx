@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   FolderTree,
   X,
@@ -96,6 +97,7 @@ const SUBCATEGORY_OPTIONS = [
 ];
 
 const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
 
@@ -214,8 +216,9 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-bold mb-2">Select Disease Category</h2>
@@ -229,9 +232,9 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
             return (
               <motion.button
                 key={subcategory.id}
-                initial={{ y: 20 }}
+                initial={prefersReducedMotion ? false : { y: 20 }}
                 animate={{ y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
                 onClick={() => handleSubcategorySelect(subcategory.id)}
                 className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all text-left group"
               >
