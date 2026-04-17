@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import {
   TrendingUp,
   TrendingDown,
@@ -224,6 +225,7 @@ function SystemBreakdown({ systems }: { systems: SystemCalibration[] }) {
 // ─── Main Component ─────────────────────────────────────────────
 
 export default function CalibrationInsightsDashboard() {
+  const { getToken } = useAuth();
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -232,7 +234,17 @@ export default function CalibrationInsightsDashboard() {
     let cancelled = false;
     async function fetchInsights() {
       try {
-        const res = await fetch('/api/study/calibration-insights');
+        const token = await getToken();
+        if (!token) {
+          if (!cancelled) {
+            setError('Not authenticated');
+            setLoading(false);
+          }
+          return;
+        }
+        const res = await fetch('/api/study/calibration-insights', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json() as { data?: InsightsData } | InsightsData | null;
         const normalized = json && typeof json === 'object' && 'data' in json
@@ -240,6 +252,7 @@ export default function CalibrationInsightsDashboard() {
           : json;
         if (!cancelled) setData(normalized as InsightsData | null);
       } catch (err: any) {
+        console.warn('[CalibrationInsightsDashboard] Fetch failed', err);
         if (!cancelled) setError(err.message);
       } finally {
         if (!cancelled) setLoading(false);
@@ -247,7 +260,7 @@ export default function CalibrationInsightsDashboard() {
     }
     fetchInsights();
     return () => { cancelled = true; };
-  }, []);
+  }, [getToken]);
 
   if (loading) {
     return (

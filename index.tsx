@@ -44,7 +44,11 @@ window.addEventListener('unhandledrejection', (event) => {
           level: 'error',
         });
       })
-      .catch(() => {});
+      .catch((loadErr) => {
+        // Secondary failure: Sentry module itself failed to load. Swallow to avoid
+        // infinite loops, but surface to console for local debugging.
+        console.warn('[Sentry] Failed to capture unhandledrejection', loadErr);
+      });
   }
 });
 
@@ -72,7 +76,11 @@ window.addEventListener('error', (event) => {
           level: 'error',
         });
       })
-      .catch(() => {});
+      .catch((loadErr) => {
+        // Secondary failure: Sentry module itself failed to load. Swallow to avoid
+        // infinite loops, but surface to console for local debugging.
+        console.warn('[Sentry] Failed to capture window.onerror', loadErr);
+      });
   }
 });
 

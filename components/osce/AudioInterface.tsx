@@ -63,7 +63,11 @@ export function AudioInterface({
       mediaStreamRef.current = null;
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => {});
+      // AudioContext.close() can reject if the context is already closed or
+      // in a transitional state; this is non-fatal, but log for debugging.
+      audioContextRef.current.close().catch((closeErr) => {
+        console.debug('[AudioInterface] AudioContext close rejected', closeErr);
+      });
       audioContextRef.current = null;
     }
     // Only update React state if still mounted

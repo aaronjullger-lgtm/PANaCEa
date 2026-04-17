@@ -99,7 +99,8 @@ export default function DailyTriadCard() {
       if (token) {
         await markTriadReviewed(token);
       }
-    } catch {
+    } catch (markErr) {
+      console.warn('[DailyTriad] Mark-reviewed failed', markErr);
       setMarkError(true);
       // Auto-clear error after 3 seconds
       setTimeout(() => setMarkError(false), 3000);

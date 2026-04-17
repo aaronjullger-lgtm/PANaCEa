@@ -9,6 +9,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import {
   X, BookOpen, FlaskConical, Heart, Stethoscope,
   ChevronDown, ChevronUp,
@@ -84,6 +85,7 @@ function LabTable({ labs }: { labs: NormalLabRef[] }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditionId }: Props) {
+  const { getToken } = useAuth();
   const [data, setData] = useState<QuickRefData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -94,11 +96,17 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
       const params = new URLSearchParams();
       if (system) params.set('system', system);
       if (conditionId) params.set('conditionId', conditionId);
-      const res = await fetch(`/api/reference/quick-ref?${params}`);
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`/api/reference/quick-ref?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) setData(await res.json());
-    } catch { /* graceful fail */ }
+    } catch (refErr) {
+      console.warn('[ClinicalQuickRefPanel] Fetch failed', refErr);
+    }
     finally { setLoading(false); }
-  }, [system, conditionId]);
+  }, [system, conditionId, getToken]);
 
   useEffect(() => {
     if (isOpen) fetchRef();

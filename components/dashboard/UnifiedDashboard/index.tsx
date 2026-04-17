@@ -138,8 +138,9 @@ const UnifiedDashboard = () => {
   useEffect(() => {
     try {
       localStorage.setItem(DASHBOARD_VIEW_KEY, view);
-    } catch {
-      // ignore
+    } catch (storageErr) {
+      // Benign: storage quota, private-mode Safari, or disabled storage.
+      console.debug('[UnifiedDashboard] localStorage write rejected', storageErr);
     }
   }, [view]);
 

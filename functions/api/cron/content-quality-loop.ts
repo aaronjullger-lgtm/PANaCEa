@@ -396,11 +396,19 @@ export const onRequestPost: CronPagesFunction<CronEnv> = async (context) => {
           questionId: staleFlag.questionId,
           error: err instanceof Error ? err.message : String(err),
         });
-        // Reset status on failure
+        // Reset status on failure. This is a best-effort repair path inside an
+        // already-failed branch; a second failure must not throw or we'd abort
+        // the entire cron loop over one flag, but we do log for observability.
         await prisma.contentQualityFlag.update({
           where: { id: staleFlag.id },
           data: { status: 'FLAGGED' },
-        }).catch(() => {});
+        }).catch((resetErr) => {
+          console.warn('[contentQualityLoop] Status reset after regeneration failure also failed', {
+            flagId: staleFlag.id,
+            questionId: staleFlag.questionId,
+            error: resetErr instanceof Error ? resetErr.message : String(resetErr),
+          });
+        });
       }
     }
 

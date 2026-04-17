@@ -12,6 +12,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import {
   AlertTriangle, TrendingUp, TrendingDown, Target,
   Flame, Brain, ChevronRight, RefreshCw,
@@ -151,6 +152,7 @@ function ReadinessGauge({ readiness }: { readiness: ExamReadiness }) {
 
 export default function InsightsHub() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [data, setData] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,15 +161,24 @@ export default function InsightsHub() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/student/insights');
+      const token = await getToken();
+      if (!token) {
+        setError('Not authenticated');
+        setLoading(false);
+        return;
+      }
+      const res = await fetch('/api/student/insights', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error(`${res.status}`);
       setData(await res.json());
     } catch (err) {
+      console.warn('[InsightsHub] Fetch failed', err);
       setError('Failed to load insights');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getToken]);
 
   useEffect(() => { fetchInsights(); }, [fetchInsights]);
 

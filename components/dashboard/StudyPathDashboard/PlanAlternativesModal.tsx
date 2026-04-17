@@ -47,7 +47,8 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
       if (!res.ok) throw new Error('Failed to select plan');
       toast.success('Study plan updated.');
       onClose();
-    } catch {
+    } catch (selectErr) {
+      console.warn('[PlanAlternativesModal] Plan selection failed', { planId, error: selectErr });
       toast.error('Could not select plan. Please try again.');
     }
   };

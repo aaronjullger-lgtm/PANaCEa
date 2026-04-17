@@ -72,8 +72,10 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
               setLoading(false);
               return; // Skip API call - cache is fresh
             }
-          } catch {
-            // Invalid cache, continue to fetch
+          } catch (parseErr) {
+            // Invalid cache — fall through to fetch. Log at debug level since this
+            // is expected when the cache schema changes or storage is corrupted.
+            console.debug('[RecommendationFeed] Cache parse failed, refetching', parseErr);
           }
         }
       }
