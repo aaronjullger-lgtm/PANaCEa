@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useElaborationDrill } from '@/hooks/game/use-elaboration-drill';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading';
+import { QuestionSkeleton, InlineSpinner } from '@/components/loading';
 import DrillShell from './DrillShell';
 import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
@@ -237,8 +237,8 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
 
         {/* Grading spinner */}
         {status === 'grading' && (
-          <div className="text-center py-8">
-            <div className="inline-block w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+          <div className="text-center py-8" role="status" aria-live="polite">
+            <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
             <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
               Grading your explanation...
             </p>
