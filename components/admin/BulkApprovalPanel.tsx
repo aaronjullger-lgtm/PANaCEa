@@ -10,13 +10,13 @@ import {
   CheckCircle2,
   XCircle,
   EyeOff,
-  Loader2,
   AlertTriangle,
   CheckSquare,
   Square,
   ChevronDown,
   Sparkles,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
@@ -179,7 +179,7 @@ export function BulkApprovalPanel({
                 disabled={selectedIds.length === 0 || isLoading}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${config.bgColor} ${config.color} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+                {isLoading ? <InlineSpinner size="sm" /> : <Icon className="w-4 h-4" />}
                 {config.label}
               </button>
             );

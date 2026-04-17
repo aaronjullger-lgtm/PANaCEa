@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Filter, Zap, TrendingUp } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SkeletonLoader, InlineSpinner } from '@/components/loading';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
@@ -82,6 +83,7 @@ export function DrillSetup({
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | undefined>(undefined);
   const [questionCount, setQuestionCount] = useState(defaultQuestionCount);
   const [isStarting, setIsStarting] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Fetch conditions from database on mount
   useEffect(() => {
@@ -176,8 +178,9 @@ export function DrillSetup({
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       <motion.div
-        initial={{ y: 20 }}
+        initial={prefersReducedMotion ? false : { y: 20 }}
         animate={{ y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="max-w-2xl mx-auto"
       >
         {/* Header */}
@@ -306,8 +309,8 @@ export function DrillSetup({
 
           {/* Start Button */}
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             onClick={handleStart}
             disabled={isStarting || filteredConditions.length === 0}
             className="w-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
