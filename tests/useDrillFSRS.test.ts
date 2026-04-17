@@ -892,8 +892,8 @@ describe('useDrillFSRS Hook', () => {
         });
       });
 
-      // Hook uses `submitted?.data ?? submitted` so inner should be extracted
-      expect(result.current.lastFSRSResponse).toEqual(inner);
+      // Hook stores the raw response (no envelope unwrapping)
+      expect(result.current.lastFSRSResponse).toEqual({ data: inner });
     });
   });
 

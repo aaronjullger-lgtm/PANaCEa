@@ -74,24 +74,24 @@ describe('simulateRetentionWorkload', () => {
 
 describe('calculateRecommendedRetention', () => {
   it('recommends higher retention when more time available', () => {
-    const low = calculateRecommendedRetention(20, 10, defaultParameters);
-    const high = calculateRecommendedRetention(90, 10, defaultParameters);
+    const low = calculateRecommendedRetention(20, 10, defaultParameters, 30);
+    const high = calculateRecommendedRetention(90, 10, defaultParameters, 30);
     expect(high.recommendedRetention).toBeGreaterThanOrEqual(low.recommendedRetention);
   }, SIMULATION_TIMEOUT);
 
   it('returns explanation string', () => {
-    const result = calculateRecommendedRetention(45, 15, defaultParameters);
+    const result = calculateRecommendedRetention(45, 15, defaultParameters, 30);
     expect(result.explanation).toBeTruthy();
     expect(result.explanation.length).toBeGreaterThan(10);
   }, SIMULATION_TIMEOUT);
 
   it('recommends at least 0.8 retention', () => {
-    const result = calculateRecommendedRetention(5, 50, defaultParameters);
+    const result = calculateRecommendedRetention(5, 50, defaultParameters, 30);
     expect(result.recommendedRetention).toBeGreaterThanOrEqual(0.8);
   }, SIMULATION_TIMEOUT);
 
   it('falls back when time budget is too low', () => {
-    const result = calculateRecommendedRetention(5, 50, defaultParameters);
+    const result = calculateRecommendedRetention(5, 50, defaultParameters, 30);
     expect(result.explanation).toContain('reducing');
   }, SIMULATION_TIMEOUT);
 });
