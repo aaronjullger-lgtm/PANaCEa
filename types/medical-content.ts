@@ -84,6 +84,13 @@ export interface MedicalContentDisplay {
   conditionId?: string | null;
   relatedSystems?: string[] | null;
   synonyms?: string[] | null;
+
+  // Provenance / content governance
+  evidenceGrade?: string | null;
+  guidelineSource?: string | null;
+  guidelineYear?: number | null;
+  lastClinicalReviewAt?: string | Date | null;
+  reviewedBy?: string | null;
 }
 
 /**
