@@ -428,7 +428,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
             {/* Lab Panels */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {currentCase.panels.map((panel, index) => (
+              {(currentCase.panels ?? []).map((panel, index) => (
                 <motion.div
                   key={`${panel.name}-${index}`}
                   initial={prefersReducedMotion ? false : { y: 20 }}

@@ -20,7 +20,7 @@ import { CausalChainDisplay } from '@/components/session/CausalChainDisplay';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 import { MessageCircle, PenLine } from 'lucide-react';
-import type { Question, ErrorTag } from '@/types';
+import type { Question, ErrorTag, StructuredRationale } from '@/types';
 import type { CausalChain, CausalChainDisplayLevel } from '@/types/causalChain';
 
 export interface AnswerFeedbackProps {
@@ -153,7 +153,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
                 if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
                   return parsed as any;
               } catch {
-                /* not JSON */
+                /* not JSON — rationale is a plain string, not structured */
               }
               return r;
             }
@@ -172,15 +172,15 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           contentSource={currentQuestion.contentSource}
           contentSourceTitle={currentQuestion.contentSourceTitle}
           groundingSources={
-            (currentQuestion as any).groundingSources ||
+            currentQuestion.groundingSources ??
             (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as any).groundingSources
+              ? (currentQuestion.rationale as StructuredRationale).groundingSources
               : undefined)
           }
           pubmedCitations={
-            (currentQuestion as any).pubmedCitations ||
+            currentQuestion.pubmedCitations ??
             (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as any).pubmedCitations
+              ? (currentQuestion.rationale as StructuredRationale).pubmedCitations
               : undefined)
           }
         />

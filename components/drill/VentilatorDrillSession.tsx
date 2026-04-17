@@ -143,7 +143,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                 What is the most appropriate action?
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" role="radiogroup" aria-label="Ventilator action options">
-                {currentCase?.options.map((option) => (
+                {currentCase?.options?.map((option) => (
                   <button
                     key={option}
                     onClick={() => submitAction(option)}

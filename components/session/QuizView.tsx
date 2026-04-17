@@ -132,7 +132,7 @@ import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
-import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
+import { useAnalyticsTracking, type QuestionMeta } from '@/hooks/useAnalyticsTracking';
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 import { computeScore } from '@/lib/scoring/computeScore';
 
@@ -217,8 +217,9 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         span.className = 'user-highlight';
         range.surroundContents(span);
         selection.removeAllRanges();
-      } catch {
-        // Highlighting failed - clear selection
+      } catch (highlightErr) {
+        // Highlighting failed - clear selection (cross-element ranges can't be wrapped)
+        console.debug('[QuizView] user-highlight failed', highlightErr);
         window.getSelection()?.removeAllRanges();
       }
     };
@@ -989,7 +990,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       eliminatedCount: eliminatedAnswers.size,
       answerChangeCount: answerChangeCountRef.current,
       firstAnswer: firstSelectedAnswerRef.current,
-      question: currentQuestion as any,
+      question: currentQuestion as QuestionMeta,
     });
 
     // Sprint 4: Update performance prediction

@@ -97,6 +97,7 @@ function BottomTabBar({
   pathname: string;
   search: string;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   // Take max 5 for the bottom bar
   const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
   const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 88%, transparent)';

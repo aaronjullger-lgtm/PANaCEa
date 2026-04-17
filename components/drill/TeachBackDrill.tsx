@@ -310,7 +310,7 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
 
               {/* Category breakdown */}
               <div className="space-y-2 mb-4">
-                {drill.gradeResult.categories.map((cat) => (
+                {(drill.gradeResult.categories ?? []).map((cat) => (
                   <CategoryScoreRow key={cat.category} category={cat} />
                 ))}
               </div>

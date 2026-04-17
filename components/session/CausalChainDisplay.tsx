@@ -445,7 +445,7 @@ export const CausalChainDisplay: React.FC<CausalChainDisplayProps> = ({
           </div>
 
           {/* Branch points */}
-          {chain.branchPoints.map((bp, index) => (
+          {(chain.branchPoints ?? []).map((bp, index) => (
             <BranchPointDisplay
               key={`bp-${index}`}
               branchPoint={bp}

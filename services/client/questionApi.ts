@@ -58,7 +58,7 @@ export async function getQuestionClient(
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as { questions?: unknown[]; needsGeneration?: boolean };
 
     if (data.questions && data.questions.length > 0) {
       const q = data.questions[0];
@@ -146,7 +146,7 @@ export async function fetchPearlsClient(
       return [];
     }
 
-    const data = await response.json();
+    const data = await response.json() as { pearls?: string[] };
     return data.pearls || [];
   } catch (error) {
     console.error('[fetchPearlsClient] Error:', error);
