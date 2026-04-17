@@ -29,6 +29,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 import type { SystemCode } from '@/types';
 
 export interface MappingSuggestion {
@@ -281,9 +282,15 @@ export function SuggestionTable({
 
   if (loading && suggestions.length === 0) {
     return (
-      <div role="status" className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]"
+      >
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-[var(--color-text-muted)] mx-auto mb-4" />
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />
+          </div>
           <p className="text-[var(--color-text-secondary)]">Loading mapping suggestions...</p>
         </div>
       </div>
