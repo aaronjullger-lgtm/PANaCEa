@@ -341,7 +341,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         const json = (await res.json()) as { data?: { leaderboard?: unknown[] } };
         const list = json?.data?.leaderboard ?? [];
         if (!cancelled) setLeaderboard((Array.isArray(list) ? list : []) as LeaderboardEntry[]);
-      } catch {
+      } catch (lbErr) {
+        console.warn('[GrandRounds] leaderboard fetch failed', lbErr);
         if (!cancelled) setLeaderboardError('Failed to load leaderboard');
       } finally {
         if (!cancelled) setLeaderboardLoading(false);
@@ -522,7 +523,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       const list = json?.data?.review ?? [];
       setReviewData((Array.isArray(list) ? list : []) as ReviewEntry[]);
       setShowReview(true);
-    } catch {
+    } catch (reviewErr) {
+      console.warn('[GrandRounds] review fetch failed', reviewErr);
       setReviewError('Failed to load review');
     } finally {
       setReviewLoading(false);

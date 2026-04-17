@@ -242,8 +242,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             trend: (d.trend || []).map((t: any) => t.score as number),
           });
         }
-      } catch {
-        // silent — stats are optional
+      } catch (statsErr) {
+        console.debug('[PatientEncounter] stats fetch failed (optional)', statsErr);
       }
     })();
   }, [viewState, getToken]);
@@ -254,8 +254,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       setDueConditions(getDueConditions());
       setConditionStats(getConditionStats());
-    } catch {
-      // localStorage-based — silent on error
+    } catch (lsErr) {
+      console.debug('[PatientEncounter] localStorage condition stats failed', lsErr);
     }
   }, [viewState]);
 
@@ -1023,8 +1023,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 hadDangerousActions: (rubricResult.dangerousActionsDetected?.length ?? 0) > 0,
               }
             );
-          } catch {
-            // Non-critical — don't block results
+          } catch (dashErr) {
+            console.warn('[PatientEncounter] dashboard update failed (non-critical)', dashErr);
           }
         }
       }

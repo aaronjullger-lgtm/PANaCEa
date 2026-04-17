@@ -201,7 +201,8 @@ export default function ReferenceHub() {
           const json = await res.json();
           const arr = normalizeApiItems(json);
           return { slug: config.entitySlug, items: arr.slice(0, 5) };
-        } catch {
+        } catch (crossErr) {
+          console.warn('[ReferenceHub] cross-search fetch failed', crossErr);
           return { slug: config.entitySlug, items: [] };
         }
       });

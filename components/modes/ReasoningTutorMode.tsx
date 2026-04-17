@@ -34,7 +34,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
   const [enableGoogleSearch, setEnableGoogleSearch] = useState(() => {
     try {
       return globalThis.localStorage?.getItem(STORAGE_KEY_GOOGLE_SEARCH) === 'true';
-    } catch {
+    } catch (lsErr) {
+      console.debug('[ReasoningTutor] localStorage read failed for googleSearch', lsErr);
       return false;
     }
   });
@@ -45,8 +46,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
       const next = !prev;
       try {
         globalThis.localStorage?.setItem(STORAGE_KEY_GOOGLE_SEARCH, String(next));
-      } catch {
-        /* ignore */
+      } catch (lsErr) {
+        console.debug('[ReasoningTutor] localStorage write failed for googleSearch', lsErr);
       }
       return next;
     });

@@ -39,8 +39,8 @@ export default function CustomStudyMode({ onBack }: Props) {
       const sessionSummary = customSessionService.endSession();
       setSummary(sessionSummary);
       setPhase('summary');
-    } catch {
-      // If no session state, just go back to builder
+    } catch (sessionErr) {
+      console.debug('[CustomStudyMode] endSession failed — no active session', sessionErr);
       setPhase('builder');
     }
   };

@@ -155,7 +155,8 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
       }
       onClose();
       onStartReview(queue);
-    } catch {
+    } catch (variantErr) {
+      console.warn('[QuickReviewMode] Failed to load variant questions', variantErr);
       setVariantError('Could not load variant questions. Try again.');
     } finally {
       setVariantLoading(false);

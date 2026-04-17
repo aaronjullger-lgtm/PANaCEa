@@ -211,7 +211,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         mediaAssetId: currentCase.id,
         pathology: currentCase.correctDiagnosis,
       });
-    } catch {
+    } catch (spatialErr) {
+      console.warn('[PhotoDrillSession] submitReview failed', spatialErr);
       resetSpatial();
     }
   };

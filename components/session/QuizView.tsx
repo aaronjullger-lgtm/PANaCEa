@@ -707,7 +707,8 @@ const QuizView: React.FC<QuizViewProps> = ({
         };
         const dist = json?.data?.distribution;
         if (!cancelled && Array.isArray(dist)) setAnswerDistribution(dist);
-      } catch {
+      } catch (distErr) {
+        console.warn('[QuizView] Failed to fetch answer distribution', distErr);
         if (!cancelled) setAnswerDistribution(null);
       }
     };

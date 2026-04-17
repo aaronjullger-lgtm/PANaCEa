@@ -243,7 +243,8 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
           toast.info(`Next review: ${nextStr}`, { duration: 2500 });
         }
       }
-    } catch {
+    } catch (srsErr) {
+      console.warn('[SrsFlashcardView] FSRS submit failed', srsErr);
       setSubmitting(false);
     }
   }, [selectedIndex, question, submitting, submitted, srsAuth]);
