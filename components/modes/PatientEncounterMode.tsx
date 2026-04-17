@@ -673,8 +673,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
             }
           })
-          .catch(() => {
-            // Swallow to keep queue alive — toast already shown if saveOSCEChat returned false
+          .catch((err) => {
+            console.debug('[PatientEncounterMode] Chat save queue error', err);
           });
       }
     } catch (error) {

@@ -71,8 +71,8 @@ export async function storeSoapGradingEvent(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(event),
-    }).catch(() => {
-      // Swallow network/backend errors; data is already stored locally
+    }).catch((err) => {
+      console.debug('[soapAnalyticsService] Backend sync failed, data stored locally', err);
     });
   } catch (err) {
     console.debug('[soapAnalyticsService] fetch unavailable, relying on local storage', err);
