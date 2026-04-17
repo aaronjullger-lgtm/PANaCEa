@@ -517,8 +517,12 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
               {currentCase.medicationList.medications.map((med) => (
                 <motion.div
                   key={med.id}
+                  role="checkbox"
+                  aria-checked={selectedDrugs.has(med.id)}
+                  tabIndex={0}
                   onClick={() => toggleDrugSelection(med.id)}
                   onDoubleClick={() => checkContraindication(med.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDrugSelection(med.id); } }}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                     selectedDrugs.has(med.id)
                       ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
