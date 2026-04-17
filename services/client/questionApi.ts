@@ -77,7 +77,7 @@ export async function getQuestionClient(
     };
 
     if (data.questions && data.questions.length > 0) {
-      const q = data.questions[0];
+      const q = data.questions[0]!;
       const opts = Array.isArray(q.answerOptions) ? q.answerOptions : [];
 
       // Patient safety: never silently default correctAnswerIndex to 0 (option A).
@@ -111,11 +111,11 @@ export async function getQuestionClient(
         correctAnswerIndex: idx,
         rationale: q.explanation || '',
         topic: q.topic || q.system || 'General',
-        system: q.system,
+        system: q.system as Question['system'],
         subcategory: q.subcategory,
         condition: q.condition,
         conditionId: q.conditionId,
-        difficulty: q.difficulty,
+        difficulty: q.difficulty as Question['difficulty'],
         pearls: [],
       };
 
