@@ -29,13 +29,14 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     const na = parseFloat(sodium);
     const cl = parseFloat(chloride);
     const hco3 = parseFloat(bicarb);
-    if (!na || !cl || !hco3) return null;
+    if (Number.isNaN(na) || Number.isNaN(cl) || Number.isNaN(hco3)) return null;
+    if (na <= 0 || cl <= 0 || hco3 < 0) return null;
     return calcAnionGap(na, cl, hco3);
   };
 
   const calculateCorrected = (ag: number): number | null => {
     const alb = parseFloat(albumin);
-    if (!alb) return null;
+    if (Number.isNaN(alb) || alb <= 0) return null;
     return correctedAnionGap(ag, alb);
   };
 
@@ -154,6 +155,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             unit="mEq/L"
             range="135-145"
             placeholder="Enter Na⁺"
+            min={100}
+            max={200}
             step={0.1}
           />
           <ClinicalInput
@@ -164,6 +167,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             unit="mEq/L"
             range="95-105"
             placeholder="Enter Cl⁻"
+            min={50}
+            max={150}
             step={0.1}
           />
           <ClinicalInput
@@ -174,6 +179,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             unit="mEq/L"
             range="22-28"
             placeholder="Enter HCO₃⁻"
+            min={0}
+            max={60}
             step={0.1}
           />
           <ClinicalInput
@@ -185,6 +192,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             unit="g/dL"
             range="3.5-5.0"
             placeholder="Enter albumin"
+            min={0.5}
+            max={7}
             step={0.1}
           />
         </div>

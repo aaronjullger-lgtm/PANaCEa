@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { springs } from '@/config/appViews';
 import { AlertCircle, CheckCircle2, Info, TrendingUp, RotateCcw, Copy, Check } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { CalculatorResult, CriteriaItem, InputFieldConfig } from '../types';
 
 /**
@@ -151,6 +152,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
             checked={item.state}
             onChange={(e) => !item.disabled && item.setState(e.target.checked)}
             disabled={item.disabled}
+            aria-label={`${item.title}${item.points !== undefined ? ` (+${item.points} points)` : ''}`}
             className="w-5 h-5 mt-0.5 text-[var(--color-accent)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)] rounded focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
@@ -159,7 +161,7 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
               {item.points !== undefined && (
                 <span
                   className={`
-                  px-2 py-0.5 rounded text-xs font-bold
+                  px-2 py-0.5 rounded text-xs font-bold tabular-nums
                   ${item.state ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]' : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'}
                 `}
                 >
@@ -226,12 +228,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
       : result.riskLevel === 'moderate'
         ? Info
         : AlertCircle;
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: 'easeOut' }}
       className={`
         ${colors.bg} border-2 ${colors.border} rounded-2xl p-6 ${className}
       `}
@@ -244,10 +247,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           <div>
             <div className="flex items-baseline gap-3 mb-2">
               <motion.span
-                initial={{ scale: 0 }}
+                initial={prefersReducedMotion ? false : { scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ ...springs.gentle, delay: 0.1 }}
-                className="text-5xl font-bold text-[var(--color-text-primary)] font-teko"
+                transition={prefersReducedMotion ? { duration: 0 } : { ...springs.gentle, delay: 0.1 }}
+                className="text-5xl font-bold text-[var(--color-text-primary)] font-teko tabular-nums"
               >
                 {result.score}
               </motion.span>
@@ -260,7 +263,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
             {showRiskBar && (
               <div className="relative h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                 <motion.div
-                  initial={{ width: 0 }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{
                     width:
                       result.riskLevel === 'low'
@@ -269,7 +272,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                           ? '66%'
                           : '100%',
                   }}
-                  transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                   className={`h-full ${
                     result.riskLevel === 'low'
                       ? 'bg-data-pass'
@@ -373,7 +376,7 @@ export const SimpleCalculatorResult: React.FC<SimpleResultProps> = ({
     >
       <div className="text-sm text-[var(--color-text-muted)] mb-1">{label}</div>
       <div
-        className={`text-2xl font-bold ${highlight ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}
+        className={`text-2xl font-bold tabular-nums ${highlight ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}
       >
         {value}
       </div>

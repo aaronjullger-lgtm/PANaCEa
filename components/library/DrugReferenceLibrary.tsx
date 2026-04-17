@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import DrugMaster from './DrugMaster';
+import { InlineSpinner } from '@/components/loading';
 
 // Types
 interface DrugClass {
@@ -47,8 +48,12 @@ interface ClinicalReferenceLibraryProps {
 const LoadingOverlay: React.FC<{ message?: string }> = ({
   message = 'Loading drug reference…',
 }) => (
-  <div className="flex flex-col items-center justify-center h-full">
-    <div className="w-12 h-12 border-4 border-[var(--color-accent)]/20 border-t-[var(--color-accent)] rounded-full animate-spin mb-4" />
+  <div
+    className="flex flex-col items-center justify-center h-full"
+    role="status"
+    aria-live="polite"
+  >
+    <InlineSpinner size="xl" className="text-[var(--color-accent)] mb-4" />
     <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
   </div>
 );

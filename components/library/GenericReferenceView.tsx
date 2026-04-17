@@ -31,11 +31,11 @@ import {
   Search,
   Star,
   X,
-  RefreshCw,
   AlertCircle,
   Keyboard,
   Zap,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // ============================================================================
 // RESPONSIVE HOOK
@@ -270,8 +270,12 @@ export default function GenericReferenceView<T>({
   // ---- Loading state ----
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}>
-        <RefreshCw size={20} className="animate-spin" style={{ marginRight: 8 }} />
+      <div
+        role="status"
+        aria-live="polite"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--color-text-secondary)' }}
+      >
+        <InlineSpinner size="md" className="mr-2" />
         Loading {config.entityName.toLowerCase()}...
       </div>
     );

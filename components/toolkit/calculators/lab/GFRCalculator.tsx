@@ -28,7 +28,9 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const calculateResult = (): number | null => {
     const ageNum = parseFloat(age);
     const crNum = parseFloat(creatinine);
-    if (!ageNum || !crNum || ageNum <= 0 || crNum <= 0) return null;
+    if (Number.isNaN(ageNum) || Number.isNaN(crNum)) return null;
+    if (ageNum <= 0 || crNum <= 0) return null;
+    if (ageNum > 120 || crNum > 30) return null;
     return calculateGFR({ age: ageNum, creatinine: crNum, sex, race });
   };
 
@@ -183,6 +185,8 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
           type="number"
           placeholder="Enter creatinine"
           range="0.6-1.2"
+          min={0.1}
+          max={30}
           step={0.01}
         />
       </div>
