@@ -199,6 +199,11 @@ export async function getEnhancedQuestionBatch(
         conditionId: q.conditionId,
       });
 
+      // Skip questions whose correctAnswer couldn't be resolved to an option index.
+      // convertPoolQuestion already logs a warning — we just filter here so users
+      // never receive a question with option A silently marked correct.
+      if (!converted) continue;
+
       // STEP 9: Resolve conditionId if missing (Sprint A Step 1)
       if (
         !converted.conditionId ||
@@ -299,12 +304,21 @@ export async function getEnhancedQuestion(
     const q = questions[0]!;
     const data = q.questionData as any;
 
+    // Prefer explicit correctAnswer on either casing; don't fall back to 'A'
+    // — a bogus fallback would silently mark option A correct.
+    const rawCorrectAnswer =
+      typeof data.correctAnswer === 'string' && data.correctAnswer.length > 0
+        ? data.correctAnswer
+        : typeof data.correct_answer === 'string' && data.correct_answer.length > 0
+          ? data.correct_answer
+          : '';
+
     const converted = await convertPoolQuestion({
       id: q.id,
       vignette: data.vignette,
       question: data.question,
       options: Array.isArray(data.options) ? data.options : [],
-      correctAnswer: data.correctAnswer || data.correct_answer || 'A',
+      correctAnswer: rawCorrectAnswer,
       explanation: data.explanation || data.rationale || '',
       system: q.system ?? 'unknown',
       difficulty: q.difficulty,
@@ -312,6 +326,11 @@ export async function getEnhancedQuestion(
       source: 'pool',
       conditionId: q.conditionId ?? undefined,
     });
+
+    // convertPoolQuestion returns null when correctAnswer can't be resolved.
+    if (!converted) {
+      return null;
+    }
 
     // Resolve conditionId if needed
     if (

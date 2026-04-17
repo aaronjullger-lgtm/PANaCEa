@@ -90,19 +90,22 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
     case 'mustNotMiss': {
       const correctAnswer =
         ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)] ?? '';
+      if (!correctAnswer) return null;
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
       const options = shuffleArray(
         [correctAnswer, ...distractors].filter(
           (x): x is string => typeof x === 'string' && x !== ''
         )
       );
+      const correctIndex = options.indexOf(correctAnswer);
+      if (correctIndex === -1) return null;
 
       return {
         id: `${ddx.id}-mnm-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
         questionText: `A patient presents with ${ddx.presentingComplaint.toLowerCase()}. Which diagnosis is a "must not miss" condition?`,
         options,
-        correctIndex: options.indexOf(correctAnswer),
+        correctIndex,
         explanation: `${correctAnswer} is a must-not-miss diagnosis for ${ddx.presentingComplaint} due to its potentially life-threatening nature.`,
         category: ddx.category,
         questionType: 'mustNotMiss',
@@ -120,13 +123,15 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
           (x): x is string => typeof x === 'string' && x !== ''
         )
       );
+      const correctIndex = options.indexOf(correctAnswer);
+      if (correctIndex === -1) return null;
 
       return {
         id: `${ddx.id}-mc-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
         questionText: `Which is the MOST COMMON cause of ${ddx.presentingComplaint.toLowerCase()}?`,
         options,
-        correctIndex: options.indexOf(correctAnswer),
+        correctIndex,
         explanation: `${correctAnswer} is among the most common causes of ${ddx.presentingComplaint}.`,
         category: ddx.category,
         questionType: 'mostCommon',
@@ -153,13 +158,15 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         .slice(0, 3);
 
       const options = shuffleArray([correctFeature, ...distractorFeatures.slice(0, 3)]);
+      const correctIndex = options.indexOf(correctFeature);
+      if (correctIndex === -1) return null;
 
       return {
         id: `${ddx.id}-dist-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
         questionText: `For ${ddx.presentingComplaint}, which feature helps distinguish between ${pairKey}?`,
         options,
-        correctIndex: options.indexOf(correctFeature),
+        correctIndex,
         explanation: `${correctFeature} is a distinguishing feature for ${pairKey}.`,
         category: ddx.category,
         questionType: 'distinguishing',
@@ -187,13 +194,15 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
           (x): x is string => typeof x === 'string' && x !== ''
         )
       );
+      const correctIndex = options.indexOf(correctAnswer);
+      if (correctIndex === -1) return null;
 
       return {
         id: `${ddx.id}-rf-${Date.now()}`,
         presentingComplaint: ddx.presentingComplaint,
         questionText: `A patient presents with ${ddx.presentingComplaint.toLowerCase()}. Which finding is a RED FLAG requiring urgent evaluation?`,
         options,
-        correctIndex: options.indexOf(correctAnswer),
+        correctIndex,
         explanation: `${correctAnswer} is a red flag for ${ddx.presentingComplaint} that warrants urgent evaluation.`,
         category: ddx.category,
         questionType: 'redFlag',

@@ -16,6 +16,7 @@
  */
 
 import type { Question, SessionSettings } from '../../types';
+import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
 
 // ============================================================================
 // Re-exports from legacy services (will be inlined in Phase 6.2)
@@ -163,8 +164,10 @@ export const SYSTEM_NAME_TO_CODE: Record<string, string> = {
 // ============================================================================
 
 /**
- * Convert pool question format to app Question format
- * Previously duplicated in questionService.ts and intelligentQuestionService.ts
+ * Convert pool question format to app Question format.
+ * Returns null if the correctAnswer cannot be resolved against the options — callers
+ * must filter these out so users never see a silently-mis-indexed question.
+ * Previously duplicated in questionService.ts and intelligentQuestionService.ts.
  */
 export function convertPoolQuestion(poolQ: {
   id: string;
@@ -178,17 +181,21 @@ export function convertPoolQuestion(poolQ: {
   tags?: string[];
   source?: 'pool' | 'main';
   conditionId?: string;
-}): Question {
-  // Convert correctAnswer letter (A, B, C, D) to index
-  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
-
-  // If correctAnswer is not a letter, try to find it in options
-  if (correctIndex === undefined || isNaN(correctIndex)) {
-    correctIndex = poolQ.options.findIndex(
-      (opt) => opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
+}): Question | null {
+  if (!Array.isArray(poolQ.options) || poolQ.options.length === 0) {
+    console.warn('[core/questionService] Skipping question with no options:', poolQ.id);
+    return null;
+  }
+  if (typeof poolQ.correctAnswer !== 'string' || poolQ.correctAnswer.trim().length === 0) {
+    console.warn('[core/questionService] Skipping question with missing correctAnswer:', poolQ.id);
+    return null;
+  }
+  const correctIndex = resolveCorrectAnswerIndex(poolQ.correctAnswer, poolQ.options);
+  if (correctIndex === null) {
+    console.warn(
+      `[core/questionService] Skipping question ${poolQ.id} — correctAnswer "${poolQ.correctAnswer}" does not resolve to any option`,
     );
-    if (correctIndex === -1) correctIndex = 0;
+    return null;
   }
 
   // Derive condition name from tags or system

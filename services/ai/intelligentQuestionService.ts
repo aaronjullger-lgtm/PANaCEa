@@ -9,6 +9,7 @@
  */
 
 import type { Question, SessionSettings } from '@/types';
+import { resolveCorrectAnswerIndex } from '@/lib/answerLetterMap';
 import {
   getCognitiveState,
   getLearningVelocity,
@@ -386,7 +387,8 @@ async function fetchQuestionsFromPool(
         for (const q of data.questions || []) {
           if (!seenIds.has(q.id)) {
             seenIds.add(q.id);
-            questions.push(convertPoolQuestion(q));
+            const converted = convertPoolQuestion(q);
+            if (converted) questions.push(converted);
           }
         }
       }
@@ -406,7 +408,8 @@ async function fetchQuestionsFromPool(
         for (const q of data.questions || []) {
           if (!seenIds.has(q.id)) {
             seenIds.add(q.id);
-            questions.push(convertPoolQuestion(q));
+            const converted = convertPoolQuestion(q);
+            if (converted) questions.push(converted);
           }
         }
       }
@@ -419,11 +422,30 @@ async function fetchQuestionsFromPool(
 }
 
 /**
- * Convert pool question format to app Question format
+ * Convert pool question format to app Question format.
+ * Returns null when the correctAnswer can't be resolved — callers filter those out
+ * rather than silently defaulting to option A.
  */
-function convertPoolQuestion(poolQ: any): Question {
-  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  const correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
+function convertPoolQuestion(poolQ: any): Question | null {
+  const options: string[] = Array.isArray(poolQ.options) ? poolQ.options : [];
+  if (options.length === 0) {
+    console.warn('[IntelligentQuestionService] Skipping question with no options:', poolQ.id);
+    return null;
+  }
+  if (typeof poolQ.correctAnswer !== 'string' || poolQ.correctAnswer.trim().length === 0) {
+    console.warn(
+      '[IntelligentQuestionService] Skipping question with missing correctAnswer:',
+      poolQ.id,
+    );
+    return null;
+  }
+  const correctIndex = resolveCorrectAnswerIndex(poolQ.correctAnswer, options);
+  if (correctIndex === null) {
+    console.warn(
+      `[IntelligentQuestionService] Skipping question ${poolQ.id} — correctAnswer "${poolQ.correctAnswer}" does not resolve to any option`,
+    );
+    return null;
+  }
 
   const condition: string = String(poolQ.tags?.[0] ?? poolQ.system ?? 'unknown');
   const conditionId = poolQ.conditionId ?? condition.toLowerCase().replace(/\s+/g, '-');
@@ -431,7 +453,7 @@ function convertPoolQuestion(poolQ: any): Question {
   return {
     id: poolQ.id,
     question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
-    options: (poolQ.options || []).map((opt: string) => opt.replace(/^[A-D]\.\s*/, '')),
+    options: options.map((opt: string) => opt.replace(/^[A-D]\.\s*/, '')),
     correctAnswerIndex: correctIndex,
     rationale: poolQ.explanation || '',
     topic: poolQ.system || 'General',
@@ -489,7 +511,8 @@ export async function getWeakAreaQuestions(
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
-          questions.push(convertPoolQuestion(q));
+          const converted = convertPoolQuestion(q);
+          if (converted) questions.push(converted);
         }
       }
     } catch (error: unknown) {
@@ -531,7 +554,8 @@ export async function getReviewQuestions(
         const data = await response.json();
         const firstQ = data.questions?.[0];
         if (firstQ) {
-          questions.push(convertPoolQuestion(firstQ));
+          const converted = convertPoolQuestion(firstQ);
+          if (converted) questions.push(converted);
         }
       }
     } catch (error: unknown) {
@@ -585,7 +609,8 @@ export async function getFlowStateQuestions(
       if (response.ok) {
         const data = await response.json();
         for (const q of data.questions || []) {
-          questions.push(convertPoolQuestion(q));
+          const converted = convertPoolQuestion(q);
+          if (converted) questions.push(converted);
         }
       }
     } catch (error: unknown) {

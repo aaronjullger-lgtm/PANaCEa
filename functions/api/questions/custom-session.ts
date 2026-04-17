@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -98,25 +99,44 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
 
     const optionsArr = (opts: unknown): string[] => (Array.isArray(opts) ? (opts as string[]) : []);
 
-    const questions = selectedQuestions.map((q) => {
-      const opts = optionsArr(q.options);
-      const correctIdx = opts.indexOf(q.correctAnswer);
-      return {
-        id: q.id,
-        question: q.question,
-        options: opts,
-        correctAnswerIndex: correctIdx >= 0 ? correctIdx : 0,
-        rationale: q.explanation ?? '',
-        topic: q.topic ?? q.system,
-        system: q.system,
-        subcategory: q.category,
-        conditionId: q.conditionId,
-        condition: 'Unknown',
-        pearls: [],
-        focusArea: null,
-        difficulty: q.difficulty,
-      };
-    });
+    const questions = selectedQuestions
+      .map((q) => {
+        const opts = optionsArr(q.options);
+        if (opts.length === 0) {
+          logger.warn('Skipping custom-session question with no options', { id: q.id });
+          return null;
+        }
+        if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+          logger.warn('Skipping custom-session question with missing correctAnswer', {
+            id: q.id,
+          });
+          return null;
+        }
+        const correctIdx = resolveCorrectAnswerIndex(q.correctAnswer, opts);
+        if (correctIdx === null) {
+          logger.warn(
+            'Skipping custom-session question — correctAnswer does not resolve to any option',
+            { id: q.id, correctAnswer: q.correctAnswer },
+          );
+          return null;
+        }
+        return {
+          id: q.id,
+          question: q.question,
+          options: opts,
+          correctAnswerIndex: correctIdx,
+          rationale: q.explanation ?? '',
+          topic: q.topic ?? q.system,
+          system: q.system,
+          subcategory: q.category,
+          conditionId: q.conditionId,
+          condition: 'Unknown',
+          pearls: [],
+          focusArea: null,
+          difficulty: q.difficulty,
+        };
+      })
+      .filter((q): q is NonNullable<typeof q> => q !== null);
 
     const totalAvailable = await prisma.question.count({
       where: whereClause,

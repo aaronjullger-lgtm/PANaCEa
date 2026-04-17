@@ -12,6 +12,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { fetchWithTimeout } from '../_shared/timeout';
 import { computeSemanticHash } from '../../../lib/utils/semanticHash';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
 
 // Flattened schema for body parsing (no nested 'body' object)
 const GenerateBatchSchema = z.object({
@@ -83,12 +84,49 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       };
     }
 
-    // Normalize questions and convert correctAnswer letter to correctAnswerIndex
-    const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-    const normalizedQuestions = generatedQuestions.map((q) => ({
-      ...q,
-      correctAnswerIndex: letterToIndex[q.correctAnswer?.toUpperCase()] ?? 0,
-    }));
+    // Normalize questions: resolve correctAnswer letter/text to correctAnswerIndex.
+    // Critical: NEVER fall back to 0/A silently — malformed rows get persisted to the pool
+    // and served to every user, damaging FSRS trust. Skip unresolvable questions instead.
+    const normalizedQuestions = generatedQuestions
+      .map((q) => {
+        if (!Array.isArray(q.options) || q.options.length === 0) {
+          logger.warn('Skipping generated question with no options', {
+            system: selectedSystem,
+          });
+          return null;
+        }
+        if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+          logger.warn('Skipping generated question with missing correctAnswer', {
+            system: selectedSystem,
+          });
+          return null;
+        }
+        const correctAnswerIndex = resolveCorrectAnswerIndex(q.correctAnswer, q.options);
+        if (correctAnswerIndex === null) {
+          logger.warn(
+            'Skipping generated question — correctAnswer does not resolve to any option',
+            { system: selectedSystem, correctAnswer: q.correctAnswer },
+          );
+          return null;
+        }
+        return { ...q, correctAnswerIndex };
+      })
+      .filter((q): q is NonNullable<typeof q> => q !== null);
+
+    if (normalizedQuestions.length === 0) {
+      logger.info('All generated questions failed correctAnswer resolution', {
+        userId: auth.userId,
+        system: selectedSystem,
+        total: generatedQuestions.length,
+      });
+      return {
+        data: {
+          success: false,
+          message: 'No questions had resolvable correct answers',
+          generated: 0,
+        },
+      };
+    }
 
     // Sprint 9: Gate by distractor validation (score >= 70)
     const DISTRACTOR_THRESHOLD = 70;
