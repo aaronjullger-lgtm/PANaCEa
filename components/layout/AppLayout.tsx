@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Settings, Shield, HelpCircle } from 'lucide-react';
 import { AppBrand } from './AppBrand';
 import { NavRail } from './NavRail';
@@ -36,6 +37,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   contentMaxWidth = '72rem',
   contentClassName,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { user } = useUser();
   const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -115,8 +117,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   style={{ borderColor: chromeBorder }}
                   aria-label="Settings and Stats"
                   title="Settings and stats"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
                 >
                   <Settings className="w-5 h-5" />
                 </motion.button>
@@ -155,9 +157,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         <motion.div
           className={`mx-auto min-w-0 max-w-full overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 lg:px-8 ${contentClassName ?? ''}`}
           style={{ maxWidth: `var(--content-max-width, ${contentMaxWidth})` }}
-          initial={{ opacity: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
         >
           {children}
         </motion.div>

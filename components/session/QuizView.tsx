@@ -1,6 +1,7 @@
 // components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useShortcut } from '@/contexts/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 import { useCommuter } from '@/contexts/CommuterContext';
@@ -353,6 +354,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   totalQuestions,
   modeLabel,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Validate required callback props at runtime
   useEffect(() => {
     const requiredCallbacks = {
@@ -1449,10 +1451,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-                initial={{ y: 10, opacity: 0 }}
+                initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
                 {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
                 <div className="flex items-center gap-2 mb-2">
@@ -1539,9 +1541,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {/* SUBMIT BUTTON - Sticky on mobile with glass effect */}
           {!isAnswered && selectedAnswerIndex !== null && (
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="sticky bottom-0 z-10 mt-6 -mx-4 px-4 py-4 text-center space-y-2 md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4"
               style={{
                 background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',
@@ -1619,9 +1621,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {isAnswered && !sessionWellness.onBreak && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="sticky bottom-0 z-10 mt-4 -mx-4 px-4 py-4 text-center md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-5"
               style={{
                 background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',

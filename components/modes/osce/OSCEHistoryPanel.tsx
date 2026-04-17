@@ -55,8 +55,16 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
           throw new Error('Failed to fetch OSCE stats');
         }
 
+        // Middleware strips `{ data: ... }` at the HTTP layer, so stats
+        // live at the top level. Prior code read `json.data`, which was
+        // always undefined — the OSCE history panel showed "no data" for
+        // every user. Accept both shapes defensively.
         const json: any = await response.json();
-        setStats(json.data);
+        const payload =
+          json && typeof json === 'object' && 'totalEncounters' in json
+            ? json
+            : json?.data ?? null;
+        setStats(payload);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');

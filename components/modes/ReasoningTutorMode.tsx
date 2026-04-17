@@ -102,8 +102,16 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
         }),
       });
 
+      // Middleware unwraps `{ data: payload }` at the HTTP layer — reply,
+      // sessionCacheName, and groundingSources live at the top level of the
+      // parsed body. The old code read `json.data.reply`, which was always
+      // undefined, so every tutor response surfaced as "empty response"
+      // error to the student. Accept both shapes defensively.
       const json = (await response.json()) as {
         error?: string;
+        reply?: string;
+        sessionCacheName?: string;
+        groundingSources?: GroundingSource[];
         data?: { reply?: string; sessionCacheName?: string; groundingSources?: GroundingSource[] };
       };
 
@@ -114,9 +122,10 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
         return;
       }
 
-      const replyText: string | undefined = json?.data?.reply;
-      const newCacheName: string | undefined = json?.data?.sessionCacheName;
-      const groundingSources: GroundingSource[] | undefined = json?.data?.groundingSources;
+      const replyText: string | undefined = json?.reply ?? json?.data?.reply;
+      const newCacheName: string | undefined = json?.sessionCacheName ?? json?.data?.sessionCacheName;
+      const groundingSources: GroundingSource[] | undefined =
+        json?.groundingSources ?? json?.data?.groundingSources;
 
       if (newCacheName) {
         setSessionCacheName(newCacheName);

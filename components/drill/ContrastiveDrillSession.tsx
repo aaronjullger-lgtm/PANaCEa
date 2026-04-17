@@ -1,3 +1,19 @@
+/**
+ * ContrastiveDrillSession — LOBBY LAYER for the Contrastive drill.
+ *
+ * Architectural note: this component is intentionally paired with
+ * `ContrastiveDrill.tsx`, which is the PLAY LAYER. They are NOT duplicates.
+ *
+ * - `ContrastiveDrillSession` (this file): fetches available sets from
+ *   `/api/drills/contrastive/sets`, renders the landing page / set picker /
+ *   summary card, and manages drill lifecycle state.
+ * - `ContrastiveDrill`: receives `{ set, drillId, onComplete }` and runs the
+ *   gameplay — uses `useContrastiveDrill` hook, submits to FSRS via the
+ *   canonical pipeline.
+ *
+ * FSRS submission happens via the child (`ContrastiveDrill`), not here.
+ * Wired into `components/layout/DrillViewRouter.tsx` and `config/lazyComponents.tsx`.
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from './DrillLandingPage';

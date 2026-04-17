@@ -1,8 +1,19 @@
 /**
- * PharmacologyDrillSession - Drug-focused drill mode
+ * PharmacologyDrillSession — QuizView-based pharm practice mode.
  *
- * Allows users to practice pharmacology questions by drug class.
- * Uses /api/questions/pharmacology-drill endpoint for database-driven content.
+ * Architectural note: this is intentionally distinct from `PharmDrillSession.tsx`.
+ * They are NOT duplicates — they are two different drill modes for pharmacology.
+ *
+ * - `PharmacologyDrillSession` (this file): drug-class-driven practice using the
+ *   full `QuizView` pipeline. Pulls questions from `/api/questions/pharmacology-drill`
+ *   and submits via the main session FSRS path (sessionType='drill' routed through
+ *   the regular QuizView submission).
+ * - `PharmDrillSession`: lightweight "mini-drill" variant using the `usePharmDrill`
+ *   game hook, renders inside `MiniDrillLayout` + `EnhancedFeedbackPanel`. Category-
+ *   card UX (mechanism, side_effect, contraindication, antidote, etc.).
+ *
+ * Both are wired into `components/layout/DrillViewRouter.tsx` and
+ * `config/lazyComponents.tsx` — users can pick either mode for pharm practice.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';

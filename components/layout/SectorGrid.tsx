@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +28,7 @@ interface SectorGridProps {
  * - Responsive grid (1 → 2 → 3 columns)
  */
 export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => {
+  const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const handleNavigate = (path: string) => {
     if (onNavigate) {
@@ -44,9 +46,9 @@ export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => 
         return (
           <motion.button
             key={item.id}
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: index * 0.05 }}
             onClick={() => handleNavigate(item.path)}
             className="group relative bg-[var(--color-bg-secondary)] rounded-xl p-6 text-left border border-transparent hover:border-[var(--color-accent)] transition-all shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)] hover:shadow-md"
           >

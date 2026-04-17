@@ -74,10 +74,25 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       if (!response.ok) {
         throw new Error(`Failed to load review items: ${response.status}`);
       }
-      const data = (await response.json()) as { success?: boolean; items?: unknown[] };
+      const data = (await response.json()) as {
+        success?: boolean;
+        items?: unknown[];
+        error?: string;
+      };
 
-      if (data.success && data.items && data.items.length > 0) {
-        setReviewQueue(data.items as ReviewItem[]);
+      // Middleware unwraps { data: ... } at the HTTP layer so items lives at
+      // the top level here. The old check required `data.success`, which the
+      // server never set — so every student hit the "Brain Upgraded!" branch
+      // even when reviews were due. We now treat a missing success flag as a
+      // successful response (for forward-compat) and only fall into the
+      // complete branch when items is truly empty.
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const items = Array.isArray(data.items) ? (data.items as ReviewItem[]) : [];
+      if (items.length > 0) {
+        setReviewQueue(items);
         setViewState('active');
         setStartTime(Date.now());
       } else {

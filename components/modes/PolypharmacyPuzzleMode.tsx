@@ -202,9 +202,16 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
         );
 
         if (response.ok) {
-          const data: any = await response.json();
-          if (data.data?.cases?.[0]) {
-            setCurrentCase(data.data.cases[0] as PolypharmacyCase);
+          // Middleware strips the `{ data: ... }` envelope at the HTTP layer,
+          // so `cases` lives at the top level of response.json(). The old check
+          // for `data.data.cases` matched neither shape and silently fell
+          // through to SAMPLE_CASES[0] — every student got the demo case
+          // instead of a real generated one. Handle both shapes defensively
+          // in case some deployed version still double-wraps.
+          const json: any = await response.json();
+          const cases = json?.cases ?? json?.data?.cases;
+          if (Array.isArray(cases) && cases[0]) {
+            setCurrentCase(cases[0] as PolypharmacyCase);
           } else {
             setCurrentCase(SAMPLE_CASES[0]!);
           }

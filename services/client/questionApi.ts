@@ -8,6 +8,7 @@
  */
 
 import type { SessionSettings, Question } from '../../types';
+import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
 
 /**
  * Fetch a pre-generated question from the API
@@ -61,13 +62,37 @@ export async function getQuestionClient(
 
     if (data.questions && data.questions.length > 0) {
       const q = data.questions[0];
-      
+      const opts = Array.isArray(q.answerOptions) ? q.answerOptions : [];
+
+      // Patient safety: never silently default correctAnswerIndex to 0 (option A).
+      // If the server-provided index is valid, use it; otherwise resolve from the
+      // correctAnswer string; otherwise return -1 so the UI surfaces the data bug
+      // instead of mis-grading the student as always-A-is-correct.
+      let idx: number;
+      const providedIdx =
+        typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : null;
+      if (providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length) {
+        idx = providedIdx;
+      } else {
+        const rawAns = typeof q.correctAnswer === 'string' ? q.correctAnswer : '';
+        const resolved = resolveCorrectAnswerIndex(rawAns, opts);
+        if (resolved === null) {
+          console.error('[getQuestionClient] correctAnswer unresolvable', {
+            questionId: q.id,
+            correctAnswer: rawAns,
+            providedIdx,
+            optionCount: opts.length,
+          });
+        }
+        idx = resolved ?? -1;
+      }
+
       // Transform PreGeneratedQuestion to Question format
       const question: Question = {
         id: q.id,
         question: q.questionText,
-        options: q.answerOptions || [],
-        correctAnswerIndex: q.correctAnswerIndex ?? 0,
+        options: opts,
+        correctAnswerIndex: idx,
         rationale: q.explanation || '',
         topic: q.topic || q.system || 'General',
         system: q.system,
@@ -77,7 +102,7 @@ export async function getQuestionClient(
         difficulty: q.difficulty,
         pearls: [],
       };
-      
+
       return question;
     }
 

@@ -559,6 +559,12 @@ class SyncManager {
         }
       } catch (error) {
         action.syncAttempts++;
+        // Log at debug so repeated transient failures don't flood, but the error
+        // isn't invisible when a pearl sync genuinely breaks for every action.
+        syncLog.debug('Pearl action sync attempt failed', {
+          error,
+          attempts: action.syncAttempts,
+        });
         this.scheduleRetry();
       }
     }
