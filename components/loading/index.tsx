@@ -198,6 +198,71 @@ export const Loader: React.FC<LoaderProps> = ({
 };
 
 // ============================================================================
+// InlineButtonSpinner — Scoped spinner for disabled-during-submit buttons
+// ============================================================================
+
+export type InlineButtonSpinnerSize = 'sm' | 'md';
+
+export interface InlineButtonSpinnerProps {
+  /** sm = w-4 h-4 (icon-next-to-text small buttons); md = w-5 h-5 (primary/wide buttons). Default: 'md'. */
+  size?: InlineButtonSpinnerSize;
+  /** Extra Tailwind classes appended to the ring (rarely needed — inherits `currentColor`). */
+  className?: string;
+}
+
+/**
+ * CANONICAL InlineButtonSpinner - compact ring spinner for inside buttons.
+ *
+ * Use inside disabled-during-submit buttons where the button text (e.g. "Submitting...",
+ * "Loading...", "Evaluating...") announces the state to assistive tech. The spinner
+ * itself is `aria-hidden="true"` so it doesn't double-announce.
+ *
+ * - Inherits `currentColor` via SVG `stroke="currentColor"` so it adapts to any
+ *   button color (white-on-amber, white-on-dark, accent-on-neutral, etc.) without
+ *   a prop. Track ring at `opacity=0.3`, animated head at full opacity.
+ * - SVG is chosen over CSS border tricks because `border-current/30` relies on
+ *   `color-mix(... currentColor ...)` support which is uneven across supported
+ *   browsers; SVG's `stroke-opacity` is universal.
+ * - Animation is Tailwind's `animate-spin`, which respects `prefers-reduced-motion`
+ *   via the user's media query.
+ *
+ * NOT for full-container loading blocks — use `DrillLoadingState` for those.
+ */
+export const InlineButtonSpinner: React.FC<InlineButtonSpinnerProps> = ({
+  size = 'md',
+  className = '',
+}) => {
+  const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`${sizeClass} inline-block animate-spin ${className}`}
+    >
+      {/* Track ring — low opacity, full circle */}
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeOpacity={0.3}
+        strokeWidth={3}
+      />
+      {/* Animated head — one-quarter arc at full opacity */}
+      <path
+        d="M22 12a10 10 0 0 1-10 10"
+        stroke="currentColor"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};
+
+// ============================================================================
 // Skeleton Component — Base with gold shimmer
 // ============================================================================
 

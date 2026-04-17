@@ -82,7 +82,7 @@ import {
 } from '@/services/ai';
 import { streamGeminiText } from '@/lib/utils/streamingClient';
 import { Sparkline } from '@/components/ui/Sparkline';
-import { ChatSkeleton } from '@/components/loading';
+import { ChatSkeleton, InlineButtonSpinner } from '@/components/loading';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAgeShort } from '@/lib/utils/ageFormatter';
 
@@ -1703,7 +1703,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 {isLoading ? (
                   <>
-                    <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <InlineButtonSpinner />
                     Generating Case...
                   </>
                 ) : (
@@ -2613,7 +2613,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       aria-label="Order Diagnostic Test"
                     >
                       {isLoading ? (
-                        <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <InlineButtonSpinner />
                       ) : (
                         <Activity className="w-5 h-5" />
                       )}
@@ -2719,7 +2719,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   >
                     {isLoading ? (
                       <>
-                        <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <InlineButtonSpinner size="sm" />
                         Evaluating...
                       </>
                     ) : (
@@ -2772,7 +2772,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       >
                         {isLoading ? (
                           <>
-                            <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <InlineButtonSpinner size="sm" />
                             Evaluating...
                           </>
                         ) : (
@@ -2790,7 +2790,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     >
                       {isLoading ? (
                         <>
-                          <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <InlineButtonSpinner size="sm" />
                           Consulting Preceptor...
                         </>
                       ) : (

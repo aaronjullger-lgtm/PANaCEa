@@ -17,7 +17,6 @@ import {
   CheckCircle,
   Crown,
   AlertCircle,
-  Loader2,
   Timer,
   Target,
   X,
@@ -27,7 +26,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { DrillLoadingState } from '@/components/loading';
+import { DrillLoadingState, InlineButtonSpinner } from '@/components/loading';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -700,7 +699,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               {reviewLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <InlineButtonSpinner />
                   Loading...
                 </>
               ) : (
@@ -1025,7 +1024,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <InlineButtonSpinner />
                       Submitting...
                     </>
                   ) : currentQuestionIndex === challengeData.questions.length - 1 ? (
@@ -1192,7 +1191,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               {reviewLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <InlineButtonSpinner />
                   Loading...
                 </>
               ) : (
