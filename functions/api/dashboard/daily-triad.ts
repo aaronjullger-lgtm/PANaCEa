@@ -46,7 +46,7 @@ function extractPearl(clinicalPearls: unknown): string | null {
 
   // Object with pearls array
   if (typeof clinicalPearls === 'object' && clinicalPearls && 'pearls' in clinicalPearls) {
-    const pearls = (clinicalPearls as any).pearls;
+    const pearls = (clinicalPearls as Record<string, unknown>).pearls;
     if (Array.isArray(pearls) && pearls.length > 0) {
       return typeof pearls[0] === 'string' ? pearls[0] : String(pearls[0]);
     }
