@@ -8,9 +8,6 @@
 
 import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from './constants/blueprint';
 
-/** @deprecated Use BLUEPRINT_PERCENT_BY_ABBREVIATION from lib/constants/blueprint.ts */
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...BLUEPRINT_PERCENT_BY_ABBREVIATION };
-
 /**
  * Fisher-Yates shuffle for unbiased randomization
  */
