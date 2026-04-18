@@ -97,6 +97,10 @@ playwright/*.json
 *credential*
 *apikey*
 *api_key*
+
+# Allow design token source modules (not secrets)
+!lib/tokens/
+!lib/tokens/**
 *auth_token*
 *access_token*
 *refresh_token*
@@ -345,3 +349,6 @@ __pycache__/
 /UNFINISHED_WORK_MASTER_AUDIT.md
 /tsconfig.scope.json
 /tsconfig.scratch.json
+/tsconfig.sprint*.json
+/PANaCEa_WIP.md
+/.claude/.write_test

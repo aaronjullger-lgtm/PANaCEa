@@ -60,13 +60,61 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
 
     const dueCount = srsItems.filter((item: SRSItemRecord) => item.dueDate <= now).length;
 
-    const avgStability =
-      srsItems.reduce((sum: number, item: SRSItemRecord) => sum + (item.fsrsStability || 5), 0) /
-      (srsItems.length || 1);
+    // Provenance: only items with real FSRS stability + at least one real review
+    // count toward the retention curve. Everything else is fabricated precision.
+    const reviewedItems = srsItems.filter(
+      (item: SRSItemRecord) =>
+        item.fsrsStability != null &&
+        item.fsrsStability > 0 &&
+        item.lastReviewed != null
+    );
 
+    // Short-circuit when there is no real data: don't fabricate a curve.
+    if (reviewedItems.length === 0) {
+      logger.info('Retention stats: insufficient data', {
+        userId: auth.userId,
+        totalCards: srsItems.length,
+        reviewedCount: 0,
+      });
+
+      return {
+        data: {
+          success: true,
+          data: {
+            dueCount,
+            totalCards: srsItems.length,
+            decayCurveData: [],
+            stabilityBuckets: [],
+            // Empty strings hide the Algorithm Status widget via the
+            // `safeData.lastTuned &&` guard in DashboardPage.tsx.
+            lastTuned: '',
+            tuningReason: '',
+            adjustment: 'tighten' as const,
+            meta: {
+              status: 'insufficient_data' as const,
+              reason: 'no_reviewed_items' as const,
+            },
+          },
+        },
+      };
+    }
+
+    const avgStability =
+      reviewedItems.reduce(
+        (sum: number, item: SRSItemRecord) => sum + (item.fsrsStability ?? 0),
+        0
+      ) / reviewedItems.length;
+
+    // FSRS v6 retrievability: R(t) = (1 + FACTOR · t / S)^DECAY
+    // FACTOR = 19/81, DECAY = -0.5 (do NOT use Ebbinghaus exp(-t/S))
+    const FSRS_FACTOR = 19 / 81;
+    const FSRS_DECAY = -0.5;
     const decayCurveData = Array.from({ length: 31 }, (_, day) => ({
       day,
-      retentionProb: Math.max(0, Math.min(100, Math.exp(-day / avgStability) * 100)),
+      retentionProb: Math.max(
+        0,
+        Math.min(100, Math.pow(1 + (FSRS_FACTOR * day) / avgStability, FSRS_DECAY) * 100)
+      ),
     }));
 
     const stabilityBuckets = [
@@ -77,7 +125,8 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
       { bucket: '21d+', count: 0, color: 'var(--color-data-pass)' },
     ];
 
-    srsItems.forEach((item: SRSItemRecord) => {
+    // Bucket only reviewed items — unreviewed items have no real interval.
+    reviewedItems.forEach((item: SRSItemRecord) => {
       const interval = item.interval;
       const bucket0 = stabilityBuckets[0];
       const bucket1 = stabilityBuckets[1];
@@ -91,14 +140,11 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
       else if (bucket4) bucket4.count++;
     });
 
-    const lastTuned = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-    const tuningReason = 'Pharmacology';
-    const adjustment: 'tighten' | 'loosen' = 'tighten';
-
     logger.info('Fetched retention stats', {
       userId: auth.userId,
       dueCount,
       totalCards: srsItems.length,
+      reviewedCount: reviewedItems.length,
     });
 
     return {
@@ -109,9 +155,17 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
           totalCards: srsItems.length,
           decayCurveData,
           stabilityBuckets,
-          lastTuned: lastTuned.toISOString(),
-          tuningReason,
-          adjustment,
+          // Tuning metadata is not yet wired to a real optimizer run.
+          // Return empty strings so the Algorithm Status widget stays hidden
+          // until a real optimization pipeline populates these fields.
+          lastTuned: '',
+          tuningReason: '',
+          adjustment: 'tighten' as const,
+          meta: {
+            status: 'ok' as const,
+            reviewedCount: reviewedItems.length,
+            avgStability,
+          },
         },
       },
     };
