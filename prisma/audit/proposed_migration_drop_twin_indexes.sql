@@ -1,0 +1,45 @@
+-- ============================================================================
+-- WITHDRAWN — DO NOT APPLY
+-- ----------------------------------------------------------------------------
+-- This migration was drafted on the (incorrect) assumption that schema.prisma
+-- declarations matched DB reality. They didn't.
+--
+-- DB verification on 2026-04-17 against project lzfescdrpezzjhgveotz showed:
+--
+--   QuestionAttempt:
+--     * _userId_isMainSession_createdAt_desc_idx  ->  EXISTS in DB (DESC sort)
+--     * _userId_isMainSession_createdAt_idx       ->  DOES NOT EXIST in DB
+--                                                    (declared in schema.prisma
+--                                                     line 2435, added 2026-02-07
+--                                                     in commit 67f2dabd9 "first
+--                                                     round" with no migration —
+--                                                     pure Prisma drift)
+--
+--   ReviewLog:
+--     * _userId_reviewedAt_desc_idx  ->  DOES NOT EXIST in DB
+--                                       (created by 20260212 migration with
+--                                        IF NOT EXISTS, but no longer present —
+--                                        likely dropped manually or by a
+--                                        subsequent action; either way, gone.)
+--     * _userId_reviewedAt_idx       ->  EXISTS in DB (ASC sort) — matches
+--                                       schema.prisma line 2615.
+--
+-- THERE ARE NO TWINS TO DROP. The "redundancy" the audit reported was an
+-- artifact of reading schema.prisma without verifying DB state.
+--
+-- Resolution (applied 2026-04-17):
+--   * Removed the orphaned `@@index([userId, isMainSession, createdAt])` line
+--     from prisma/schema.prisma (line 2435). Schema.prisma now matches DB
+--     reality.
+--   * No DB migration needed. No write-amplification savings either — the
+--     audit's claim of "10–20% write throughput improvement" was based on
+--     phantom indexes.
+--
+-- Lesson:
+--   The audit's index analysis cross-walked schema.prisma against itself,
+--   not against the running DB. A re-baseline is required before authoring
+--   any further index-consolidation migrations (P1 in the audit). See the
+--   corrected §2 of DATABASE_AUDIT_2026-04-17.md.
+-- ============================================================================
+
+-- (No SQL — this file is a tombstone for a withdrawn migration.)
