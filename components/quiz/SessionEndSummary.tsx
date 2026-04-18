@@ -33,8 +33,8 @@ import {
   getSessionSummary,
   calculateDistributionDrift,
   resetSessionDistribution,
-  PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 
 // Session services
 import {
@@ -328,7 +328,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         correct: stats.correct,
         total: stats.total,
         accuracy: Math.round((stats.correct / stats.total) * 100),
-        targetPercent: PANCE_SYSTEM_PERCENTAGES[system] || 0,
+        targetPercent: BLUEPRINT_PERCENT_BY_ABBREVIATION[system] || 0,
         actualPercent:
           overallStats.total > 0 ? Math.round((stats.total / overallStats.total) * 100) : 0,
       }))
