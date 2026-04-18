@@ -1,11 +1,33 @@
 /**
  * Auto-Author Content Generator
  *
- * Uses Google Gemini to generate medical condition content.
- * Designed to work in both Node.js (scripts) and Cloudflare Workers (if needed).
+ * Uses the AI Gateway (Sprint 7) to generate medical condition content for
+ * PA/PANCE study. Designed to work in Node.js scripts (current) and
+ * Cloudflare Workers (future) — the public API still takes an `apiKey`
+ * string so the long list of generator scripts don't need to change.
+ *
+ * Sprint 7 migration notes (AI Gateway):
+ *   - Direct `@google/generative-ai` SDK calls replaced with
+ *     `gateway.callText()` using task='generation'.
+ *   - The previous manual fallback (2.5-pro → 2.5-flash) is superseded by the
+ *     gateway's same-provider fallback strategy (default for 'generation').
+ *     Note: because 'powerful' sits at the top of the tier ladder, the
+ *     gateway doesn't cross-fall to 'balanced' on its own. For content gen
+ *     that's the right call — we'd rather surface a GatewayError than
+ *     silently downgrade medical content quality to flash.
+ *   - Manual retry loop (MAX_RETRIES=2 with exponential backoff) is removed —
+ *     `gateway.callText()` handles retryable errors (RATE_LIMITED, 5xx,
+ *     timeouts) internally with bounded backoff.
+ *   - JSON.parse + required-field validation stays as a defensive layer.
+ *     Full Zod schemas for the 5 content shapes would be a bigger refactor;
+ *     the existing validator in services/cms/contentValidator.ts is already
+ *     the source-of-truth quality gate downstream in the pipeline.
+ *   - API keys from Node scripts are wrapped into a minimal GatewayContext
+ *     so the gateway's telemetry, cost tracking, and error mapping apply
+ *     uniformly to script runs and future edge invocations alike.
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { gateway, GatewayError, type GatewayContext } from '@/lib/ai/aiGateway';
 import type {
   GeneratedConditionContent,
   GeneratedLabContent,
@@ -16,54 +38,79 @@ import type {
   ContentGenerationResult,
 } from './types';
 
-// Only use Gemini 2.5 models - these are the only ones that work with the API key
-const GEMINI_MODEL_NAMES = ['gemini-2.5-pro', 'gemini-2.5-flash'];
 const DEFAULT_TEMPERATURE = 0.7;
-const MAX_RETRIES = 2;
+const DEFAULT_MAX_TOKENS = 4096;
 
-async function generateTextWithFallback(
-  apiKey: string,
-  prompt: string,
-  temperature: number
-): Promise<{ text: string; modelUsed: string }> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  let lastError: unknown;
-
-  for (const modelName of GEMINI_MODEL_NAMES) {
-    try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: { temperature },
-      });
-
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
-
-      return { text, modelUsed: modelName };
-    } catch (error) {
-      lastError = error;
-      console.warn(`Gemini model ${modelName} failed, trying fallback...`);
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('All Gemini models failed');
+/**
+ * Wrap a bare apiKey into the minimal GatewayContext shape the gateway
+ * expects. For Node.js callers we don't have auth/waitUntil — the gateway
+ * treats those as optional.
+ */
+function makeGatewayContext(apiKey: string): GatewayContext {
+  return {
+    env: { GEMINI_API_KEY: apiKey },
+  };
 }
 
 /**
- * Clean markdown code fences from AI response
+ * Call the gateway for a generation task and return clean text.
+ * Throws on blocked/empty responses so the caller's try/catch can handle it.
+ */
+async function generateText(
+  apiKey: string,
+  endpoint: string,
+  prompt: string,
+  temperature: number,
+  maxOutputTokens: number = DEFAULT_MAX_TOKENS,
+): Promise<{ text: string; modelUsed: string }> {
+  const result = await gateway.callText(makeGatewayContext(apiKey), {
+    mode: 'text',
+    task: 'generation',
+    endpoint,
+    userPrompt: prompt,
+    temperature,
+    maxOutputTokens,
+  });
+
+  if (result.blocked) {
+    throw new Error(
+      `Content generation blocked by safety filter: ${result.blockReason ?? 'unknown reason'}`,
+    );
+  }
+
+  const text = (result.text ?? '').trim();
+  if (!text) {
+    throw new Error('Gateway returned empty content');
+  }
+
+  return { text, modelUsed: result.telemetry.modelUsed };
+}
+
+/**
+ * Clean markdown code fences from AI response.
  */
 function stripCodeFences(text: string): string {
   if (!text) return '';
-  let cleaned = text.trim();
-
-  // Remove ```json or ``` markers
-  cleaned = cleaned
+  return text
+    .trim()
     .replace(/^```json\s*/gm, '')
     .replace(/^```\s*/gm, '')
-    .replace(/```$/gm, '');
+    .replace(/```$/gm, '')
+    .trim();
+}
 
-  return cleaned.trim();
+/**
+ * Translate a thrown error into the shape ContentGenerationResult expects.
+ * GatewayError carries structured codes we'd like to preserve for observability.
+ */
+function errorMessage(err: unknown): string {
+  if (err instanceof GatewayError) {
+    return `[${err.code}] ${err.message}`;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return 'Unknown error during content generation';
 }
 
 /**
@@ -118,99 +165,65 @@ Return this exact JSON structure:
 }
 
 /**
- * Generate content for a medical condition using Gemini
+ * Generate content for a medical condition using the AI Gateway.
  */
 export async function generateConditionContent(
   apiKey: string,
-  options: ContentGenerationOptions
+  options: ContentGenerationOptions,
 ): Promise<ContentGenerationResult> {
   if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key is required',
-    };
+    return { success: false, error: 'API key is required' };
   }
 
   try {
     const prompt = buildContentPrompt(options);
+    const { text, modelUsed } = await generateText(
+      apiKey,
+      '/auto-author/condition',
+      prompt,
+      options.temperature ?? DEFAULT_TEMPERATURE,
+    );
 
-    let lastError: Error | null = null;
+    const cleanedText = stripCodeFences(text);
+    const parsed = JSON.parse(cleanedText);
 
-    // Retry logic for transient failures
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { text, modelUsed } = await generateTextWithFallback(
-          apiKey,
-          prompt,
-          options.temperature || DEFAULT_TEMPERATURE
-        );
-
-        // Clean response
-        const cleanedText = stripCodeFences(text);
-
-        // Parse JSON
-        const parsed = JSON.parse(cleanedText);
-
-        // Validate required fields
-        if (!parsed.overview || !parsed.symptoms || !parsed.diagnosis || !parsed.treatment) {
-          throw new Error('Missing required fields in generated content');
-        }
-
-        // Ensure arrays are arrays
-        const content: GeneratedConditionContent = {
-          overview: parsed.overview,
-          symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : [parsed.symptoms],
-          riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [],
-          diagnosis: parsed.diagnosis,
-          treatment: parsed.treatment,
-          clinicalPearls: Array.isArray(parsed.clinicalPearls) ? parsed.clinicalPearls : [],
-          // Extended fields
-          etiologyPathophysiology: parsed.etiologyPathophysiology,
-          epidemiology: parsed.epidemiology,
-          examFindings: Array.isArray(parsed.examFindings) ? parsed.examFindings : [],
-          complications: Array.isArray(parsed.complications) ? parsed.complications : [],
-          prognosis: parsed.prognosis,
-          differentialDiagnosis: Array.isArray(parsed.differentialDiagnosis)
-            ? parsed.differentialDiagnosis
-            : [],
-        };
-
-        return {
-          success: true,
-          content,
-          modelUsed,
-        };
-      } catch (err) {
-        lastError = err as Error;
-
-        if (attempt < MAX_RETRIES) {
-          // Wait before retry (exponential backoff)
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-          console.log(`   Retry attempt ${attempt + 1} for ${options.conditionName}...`);
-        }
-      }
+    if (!parsed.overview || !parsed.symptoms || !parsed.diagnosis || !parsed.treatment) {
+      throw new Error('Missing required fields in generated content');
     }
 
-    // All retries failed
-    return {
-      success: false,
-      error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
+    const content: GeneratedConditionContent = {
+      overview: parsed.overview,
+      symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : [parsed.symptoms],
+      riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [],
+      diagnosis: parsed.diagnosis,
+      treatment: parsed.treatment,
+      clinicalPearls: Array.isArray(parsed.clinicalPearls) ? parsed.clinicalPearls : [],
+      // Extended fields
+      etiologyPathophysiology: parsed.etiologyPathophysiology,
+      epidemiology: parsed.epidemiology,
+      examFindings: Array.isArray(parsed.examFindings) ? parsed.examFindings : [],
+      complications: Array.isArray(parsed.complications) ? parsed.complications : [],
+      prognosis: parsed.prognosis,
+      differentialDiagnosis: Array.isArray(parsed.differentialDiagnosis)
+        ? parsed.differentialDiagnosis
+        : [],
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || 'Unknown error during content generation',
-    };
+
+    return { success: true, content, modelUsed };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }
 
 /**
- * Batch generate content with rate limiting
+ * Batch generate content with rate limiting. Gateway handles per-request
+ * retries, so the delay here is just cooperative pacing to avoid burning
+ * through quota on a long run.
  */
 export async function batchGenerateContent(
   apiKey: string,
   conditions: ContentGenerationOptions[],
-  delayMs: number = 2000
+  delayMs: number = 2000,
 ): Promise<ContentGenerationResult[]> {
   const results: ContentGenerationResult[] = [];
 
@@ -222,7 +235,6 @@ export async function batchGenerateContent(
     const result = await generateConditionContent(apiKey, condition);
     results.push(result);
 
-    // Rate limiting (except for last item)
     if (i < conditions.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
@@ -235,19 +247,13 @@ export async function batchGenerateContent(
 // LAB TEST CONTENT GENERATION
 // ============================================================
 
-/**
- * Generate content for a lab test using Gemini
- */
 export async function generateLabContent(
   apiKey: string,
   name: string,
-  temperature: number = DEFAULT_TEMPERATURE
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<ContentGenerationResult<GeneratedLabContent>> {
   if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key is required',
-    };
+    return { success: false, error: 'API key is required' };
   }
 
   const prompt = `You are a medical education expert creating high-yield study content for PA students preparing for the PANCE exam.
@@ -269,45 +275,32 @@ Return this exact JSON structure:
 }`;
 
   try {
-    let lastError: Error | null = null;
+    const { text, modelUsed } = await generateText(
+      apiKey,
+      '/auto-author/lab',
+      prompt,
+      temperature,
+    );
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
-        const cleanedText = stripCodeFences(text);
-        const parsed = JSON.parse(cleanedText);
+    const cleanedText = stripCodeFences(text);
+    const parsed = JSON.parse(cleanedText);
 
-        if (!parsed.description || !parsed.commonAbnormalities || !parsed.indications) {
-          throw new Error('Missing required fields in generated content');
-        }
-
-        const content: GeneratedLabContent = {
-          description: parsed.description,
-          typicalNormalRange: parsed.typicalNormalRange || null,
-          commonAbnormalities: Array.isArray(parsed.commonAbnormalities)
-            ? parsed.commonAbnormalities
-            : [],
-          indications: Array.isArray(parsed.indications) ? parsed.indications : [],
-        };
-
-        return { success: true, content, modelUsed };
-      } catch (err) {
-        lastError = err as Error;
-        if (attempt < MAX_RETRIES) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-        }
-      }
+    if (!parsed.description || !parsed.commonAbnormalities || !parsed.indications) {
+      throw new Error('Missing required fields in generated content');
     }
 
-    return {
-      success: false,
-      error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
+    const content: GeneratedLabContent = {
+      description: parsed.description,
+      typicalNormalRange: parsed.typicalNormalRange || null,
+      commonAbnormalities: Array.isArray(parsed.commonAbnormalities)
+        ? parsed.commonAbnormalities
+        : [],
+      indications: Array.isArray(parsed.indications) ? parsed.indications : [],
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || 'Unknown error during content generation',
-    };
+
+    return { success: true, content, modelUsed };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }
 
@@ -315,19 +308,13 @@ Return this exact JSON structure:
 // IMAGING STUDY CONTENT GENERATION
 // ============================================================
 
-/**
- * Generate content for an imaging study using Gemini
- */
 export async function generateImagingContent(
   apiKey: string,
   name: string,
-  temperature: number = DEFAULT_TEMPERATURE
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<ContentGenerationResult<GeneratedImagingContent>> {
   if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key is required',
-    };
+    return { success: false, error: 'API key is required' };
   }
 
   const prompt = `You are a medical education expert creating high-yield study content for PA students preparing for the PANCE exam.
@@ -349,43 +336,30 @@ Return this exact JSON structure:
 }`;
 
   try {
-    let lastError: Error | null = null;
+    const { text, modelUsed } = await generateText(
+      apiKey,
+      '/auto-author/imaging',
+      prompt,
+      temperature,
+    );
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
-        const cleanedText = stripCodeFences(text);
-        const parsed = JSON.parse(cleanedText);
+    const cleanedText = stripCodeFences(text);
+    const parsed = JSON.parse(cleanedText);
 
-        if (!parsed.description || !parsed.bestFor || !parsed.limitations) {
-          throw new Error('Missing required fields in generated content');
-        }
-
-        const content: GeneratedImagingContent = {
-          description: parsed.description,
-          bestFor: Array.isArray(parsed.bestFor) ? parsed.bestFor : [],
-          limitations: Array.isArray(parsed.limitations) ? parsed.limitations : [],
-          radiationRisk: Boolean(parsed.radiationRisk),
-        };
-
-        return { success: true, content, modelUsed };
-      } catch (err) {
-        lastError = err as Error;
-        if (attempt < MAX_RETRIES) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-        }
-      }
+    if (!parsed.description || !parsed.bestFor || !parsed.limitations) {
+      throw new Error('Missing required fields in generated content');
     }
 
-    return {
-      success: false,
-      error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
+    const content: GeneratedImagingContent = {
+      description: parsed.description,
+      bestFor: Array.isArray(parsed.bestFor) ? parsed.bestFor : [],
+      limitations: Array.isArray(parsed.limitations) ? parsed.limitations : [],
+      radiationRisk: Boolean(parsed.radiationRisk),
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || 'Unknown error during content generation',
-    };
+
+    return { success: true, content, modelUsed };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }
 
@@ -393,19 +367,13 @@ Return this exact JSON structure:
 // TREATMENT CONTENT GENERATION
 // ============================================================
 
-/**
- * Generate content for a treatment/drug using Gemini
- */
 export async function generateTreatmentContent(
   apiKey: string,
   name: string,
-  temperature: number = DEFAULT_TEMPERATURE
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<ContentGenerationResult<GeneratedTreatmentContent>> {
   if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key is required',
-    };
+    return { success: false, error: 'API key is required' };
   }
 
   const prompt = `You are a medical education expert creating high-yield study content for PA students preparing for the PANCE exam.
@@ -427,52 +395,39 @@ Return this exact JSON structure:
 }`;
 
   try {
-    let lastError: Error | null = null;
+    const { text, modelUsed } = await generateText(
+      apiKey,
+      '/auto-author/treatment',
+      prompt,
+      temperature,
+    );
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
-        const cleanedText = stripCodeFences(text);
-        const parsed = JSON.parse(cleanedText);
+    const cleanedText = stripCodeFences(text);
+    const parsed = JSON.parse(cleanedText);
 
-        if (
-          !parsed.description ||
-          !parsed.mechanismOfAction ||
-          !parsed.commonIndications ||
-          !parsed.seriousSideEffects
-        ) {
-          throw new Error('Missing required fields in generated content');
-        }
-
-        const content: GeneratedTreatmentContent = {
-          description: parsed.description,
-          mechanismOfAction: parsed.mechanismOfAction,
-          commonIndications: Array.isArray(parsed.commonIndications)
-            ? parsed.commonIndications
-            : [],
-          seriousSideEffects: Array.isArray(parsed.seriousSideEffects)
-            ? parsed.seriousSideEffects
-            : [],
-        };
-
-        return { success: true, content, modelUsed };
-      } catch (err) {
-        lastError = err as Error;
-        if (attempt < MAX_RETRIES) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-        }
-      }
+    if (
+      !parsed.description ||
+      !parsed.mechanismOfAction ||
+      !parsed.commonIndications ||
+      !parsed.seriousSideEffects
+    ) {
+      throw new Error('Missing required fields in generated content');
     }
 
-    return {
-      success: false,
-      error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
+    const content: GeneratedTreatmentContent = {
+      description: parsed.description,
+      mechanismOfAction: parsed.mechanismOfAction,
+      commonIndications: Array.isArray(parsed.commonIndications)
+        ? parsed.commonIndications
+        : [],
+      seriousSideEffects: Array.isArray(parsed.seriousSideEffects)
+        ? parsed.seriousSideEffects
+        : [],
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || 'Unknown error during content generation',
-    };
+
+    return { success: true, content, modelUsed };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }
 
@@ -480,19 +435,13 @@ Return this exact JSON structure:
 // PHYSIOLOGY CONTENT GENERATION
 // ============================================================
 
-/**
- * Generate content for a physiology concept using Gemini
- */
 export async function generatePhysiologyContent(
   apiKey: string,
   name: string,
-  temperature: number = DEFAULT_TEMPERATURE
+  temperature: number = DEFAULT_TEMPERATURE,
 ): Promise<ContentGenerationResult<GeneratedPhysiologyContent>> {
   if (!apiKey) {
-    return {
-      success: false,
-      error: 'API key is required',
-    };
+    return { success: false, error: 'API key is required' };
   }
 
   const prompt = `You are a medical education expert creating high-yield study content for PA students preparing for the PANCE exam.
@@ -513,41 +462,28 @@ Return this exact JSON structure:
 }`;
 
   try {
-    let lastError: Error | null = null;
+    const { text, modelUsed } = await generateText(
+      apiKey,
+      '/auto-author/physiology',
+      prompt,
+      temperature,
+    );
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
-        const cleanedText = stripCodeFences(text);
-        const parsed = JSON.parse(cleanedText);
+    const cleanedText = stripCodeFences(text);
+    const parsed = JSON.parse(cleanedText);
 
-        if (!parsed.description || !parsed.mechanism || !parsed.clinicalSignificance) {
-          throw new Error('Missing required fields in generated content');
-        }
-
-        const content: GeneratedPhysiologyContent = {
-          description: parsed.description,
-          mechanism: parsed.mechanism,
-          clinicalSignificance: parsed.clinicalSignificance,
-        };
-
-        return { success: true, content, modelUsed };
-      } catch (err) {
-        lastError = err as Error;
-        if (attempt < MAX_RETRIES) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-        }
-      }
+    if (!parsed.description || !parsed.mechanism || !parsed.clinicalSignificance) {
+      throw new Error('Missing required fields in generated content');
     }
 
-    return {
-      success: false,
-      error: `Failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}`,
+    const content: GeneratedPhysiologyContent = {
+      description: parsed.description,
+      mechanism: parsed.mechanism,
+      clinicalSignificance: parsed.clinicalSignificance,
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || 'Unknown error during content generation',
-    };
+
+    return { success: true, content, modelUsed };
+  } catch (err) {
+    return { success: false, error: errorMessage(err) };
   }
 }

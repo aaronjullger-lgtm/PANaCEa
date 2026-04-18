@@ -178,19 +178,23 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
   GI: 'Gastrointestinal',
   Gastro: 'Gastrointestinal',
   Digestive: 'Gastrointestinal',
+  'Gastrointestinal/Nutrition': 'Gastrointestinal',
 
   // Musculoskeletal
   Musculoskeletal: 'Musculoskeletal',
   MSK: 'Musculoskeletal',
   Ortho: 'Musculoskeletal',
   Orthopedic: 'Musculoskeletal',
+  Orthopedics: 'Musculoskeletal',
 
   // HEENT
   HEENT: 'HEENT',
+  EENT: 'HEENT',
   ENT: 'HEENT',
   Eyes: 'HEENT',
   Ears: 'HEENT',
   'Head and Neck': 'HEENT',
+  'Head/Neck/ENT': 'HEENT',
 
   // Reproductive
   Reproductive: 'Reproductive',
@@ -201,6 +205,7 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
 
   // Neurological
   Neurological: 'Neurological',
+  Neurologic: 'Neurological',
   Neuro: 'Neurological',
   NEURO: 'Neurological',
   Neurology: 'Neurological',
@@ -212,6 +217,7 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
   PSYCH: 'Psychiatry',
   'Mental Health': 'Psychiatry',
   Behavioral: 'Psychiatry',
+  'Psychiatry/Behavioral': 'Psychiatry',
 
   // Endocrine
   Endocrine: 'Endocrine',
@@ -222,6 +228,7 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
 
   // Dermatology
   Dermatology: 'Dermatology',
+  Dermatologic: 'Dermatology',
   Derm: 'Dermatology',
   DERM: 'Dermatology',
   Skin: 'Dermatology',
@@ -233,6 +240,7 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
 
   // Hematology
   Hematology: 'Hematology',
+  Hematologic: 'Hematology',
   Heme: 'Hematology',
   HEME: 'Hematology',
   Blood: 'Hematology',
@@ -240,6 +248,7 @@ export const SYSTEM_ALIASES: Readonly<Record<string, string>> = {
 
   // Infectious Disease
   'Infectious Disease': 'Infectious Disease',
+  'Infectious Diseases': 'Infectious Disease',
   ID: 'Infectious Disease',
   Infectious: 'Infectious Disease',
   Infection: 'Infectious Disease',

@@ -8,6 +8,8 @@ import {
   getApiEndpoint,
   getApiBaseUrl,
 } from './utils/apiConfig';
+import { withTraceHeaders, getResponseTraceId } from './utils/traceHeaders';
+import { setLastApiTraceId } from './utils/lastTraceId';
 
 export const API_ENDPOINTS = {
   ...CONFIG_ENDPOINTS,
@@ -17,6 +19,11 @@ export const API_ENDPOINTS = {
 /**
  * Fetch with Authorization Bearer token.
  * Uses getApiBaseUrl() + path for full URL in browser; path-only for relative.
+ *
+ * Every outgoing request gets an `X-Request-ID` header so the edge function
+ * `resolveRequestId()` reuses the same id throughout request_start logs,
+ * response envelope body, and X-Trace-ID response header. This is how a
+ * single Sentry event can be correlated back to one edge log line.
  */
 export async function fetchWithAuth(
   pathOrKey: string,
@@ -26,12 +33,17 @@ export async function fetchWithAuth(
   const url = pathOrKey.startsWith('/')
     ? `${getApiBaseUrl()}${pathOrKey}`
     : getApiEndpoint(pathOrKey);
-  return fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+  const { headers } = withTraceHeaders({
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    ...init?.headers,
   });
+  const response = await fetch(url, {
+    ...init,
+    headers,
+  });
+  // Capture the server trace id so error surfaces can show it alongside any
+  // client-generated error id. Happens on both ok and error responses.
+  setLastApiTraceId(getResponseTraceId(response));
+  return response;
 }

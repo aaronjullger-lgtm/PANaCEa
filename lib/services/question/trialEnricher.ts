@@ -13,6 +13,13 @@
  */
 
 import { logger } from '../../logger';
+import {
+  ok,
+  classifyError,
+  failedFromResponse,
+  dataOrEmpty,
+  type EnrichmentResult,
+} from '../enrichment/enrichmentResult';
 
 const LOG_SCOPE = 'TrialEnricher';
 const trialLogger = logger.scope(LOG_SCOPE);
@@ -63,6 +70,10 @@ const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
  * Search ClinicalTrials.gov for relevant Phase III/IV trials.
  * Returns up to 3 trials for display in the explanation panel.
  *
+ * Legacy-compatible: returns `[]` on failure. UI that needs to distinguish
+ * "no trials found" from "service unavailable" should call
+ * {@link fetchRelevantTrialsResult} instead.
+ *
  * @param condition - The condition name (e.g., "Heart Failure", "COPD")
  * @param system - Optional PANCE system for fallback search
  * @returns Array of trial summaries, or empty array on failure
@@ -71,13 +82,25 @@ export async function fetchRelevantTrials(
   condition: string,
   system?: string
 ): Promise<ClinicalTrialSummary[]> {
-  if (!condition || condition.length < 3) return [];
+  return dataOrEmpty(await fetchRelevantTrialsResult(condition, system));
+}
+
+/**
+ * Result-returning variant of {@link fetchRelevantTrials}. Returns a
+ * discriminated union so the UI can render an explicit failure indicator
+ * when ClinicalTrials.gov is unreachable. Never throws.
+ */
+export async function fetchRelevantTrialsResult(
+  condition: string,
+  system?: string
+): Promise<EnrichmentResult<ClinicalTrialSummary[]>> {
+  if (!condition || condition.length < 3) return ok([]);
 
   // Check cache
   const cacheKey = `${condition}|${system || ''}`;
   const cached = trialCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.trials;
+    return ok(cached.trials, { fromCache: true });
   }
 
   try {
@@ -91,7 +114,7 @@ export async function fetchRelevantTrials(
 
     if (!response.ok) {
       trialLogger.warn(`ClinicalTrials.gov API returned ${response.status}`);
-      return [];
+      return failedFromResponse(response, 'ClinicalTrials.gov');
     }
 
     const data = (await response.json()) as CTGovResponse;
@@ -120,11 +143,12 @@ export async function fetchRelevantTrials(
 
     // Cache result
     trialCache.set(cacheKey, { trials, timestamp: Date.now() });
-    return trials;
+    return ok(trials);
   } catch (err) {
-    // Non-critical: silently fail — don't disrupt the explanation panel
+    // Non-critical for backward-compat paths; UI using the *Result variant will
+    // render an explicit "service unavailable" badge.
     trialLogger.warn('Failed to fetch trials', { error: err });
-    return [];
+    return classifyError(err);
   }
 }
 

@@ -10,17 +10,27 @@
  */
 
 import { getApiEndpoint } from './apiConfig';
+import { withTraceHeaders, getResponseTraceId } from './traceHeaders';
+import { setLastApiTraceId } from './lastTraceId';
 
 /**
  * Wraps fetch to ensure content-type is application/json before parsing.
  * Returns the Response object after validation.
  * If the response is not JSON, throws an error with the content-type.
+ *
+ * Automatically attaches an `X-Request-ID` trace header so the edge function
+ * threads the same id through logs, response body, and response headers.
  */
 export async function safeFetch(
   input: RequestInfo,
   init?: RequestInit
 ): Promise<Response> {
-  const response = await fetch(input, init);
+  const { headers } = withTraceHeaders(init?.headers);
+  const response = await fetch(input, { ...init, headers });
+  // Capture the server trace id so error surfaces (boundaries, toasts, bug
+  // reports) can show it alongside any client-generated error id. Works for
+  // both ok and error responses — we want trace ids from 5xx just as much.
+  setLastApiTraceId(getResponseTraceId(response));
   const contentType = response.headers.get('content-type');
   if (!contentType?.includes('application/json')) {
     throw new Error(`Expected JSON but got ${contentType}`);
@@ -69,6 +79,7 @@ export async function apiFetch(
   }
 ): Promise<Response> {
   const url = getApiEndpoint(endpoint);
+  // safeFetch attaches X-Request-ID — we just merge auth + content-type here.
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options?.token && { Authorization: `Bearer ${options.token}` }),

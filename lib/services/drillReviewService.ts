@@ -53,6 +53,14 @@ import { modulateGrade, type BehavioralContext, type GradeModulation } from './g
 import { analyzeConfusionRecurrence, type ConfusionPairAction } from './confusionPairRecurrenceService';
 // A/B test integration
 import { resolveAssignments, logABConversion, type ABAssignmentMap } from '../middleware/abTestMiddleware';
+// Sprint 3.1 — shadow-mode scheduling telemetry
+import { writeCalibrationLog } from '../scheduling/calibrationLogger';
+// Sprint 3.4 — Wilson mastery (signal-only; does not affect scheduling)
+import {
+  assessMastery,
+  DEFAULT_DECAY_LAMBDA as WILSON_DECAY_LAMBDA,
+  type WilsonMasteryResult,
+} from './wilsonMasteryService';
 
 /** Active A/B test experiment IDs wired into the review pipeline */
 const AB_EXPERIMENTS = [
@@ -215,6 +223,27 @@ export interface SubmitDrillReviewResult {
     difficulty: number;
   };
   fireCredits?: Array<{ conceptId: string; stabilityMultiplier: number }>;
+  /**
+   * Sprint 3.4 — Wilson mastery signal (SHADOW / READ-ONLY).
+   *
+   * Computed from recent ReviewLog outcomes for this (userId, questionId) with
+   * exponential recency weighting (λ=0.95). NEVER feeds into FSRS scheduling —
+   * exposed so the UI and analytics layer can surface mastery state without
+   * rebuilding the calculation client-side.
+   *
+   * Undefined when FSRS was skipped (rapid guess, cram, no conditionId) or when
+   * the item has fewer than MIN_OBSERVATIONS reviews.
+   */
+  mastery?: {
+    wilsonLower: number;
+    wilsonUpper: number;
+    pointEstimate: number;
+    effectiveN: number;
+    totalN: number;
+    isMastered: boolean;
+    isGoldMastery: boolean;
+    correctNeededForMastery: number;
+  };
 }
 
 /** Optional logger for service-level events (e.g. KAR3L, rapid guess) */
@@ -357,6 +386,11 @@ export async function submitDrillReview(
     // Non-fatal: A/B resolution failure must not block the review pipeline
   }
 
+  // Sprint 3.4 — Wilson mastery. Hoisted so we can expose it in the response
+  // after it is computed inside the FSRS-eligible branch. Signal-only — the
+  // scheduler never reads this; only CalibrationLog + the API response do.
+  let masteryAssessment: WilsonMasteryResult | null = null;
+
   const normalizedSelectedAnswer =
     typeof selectedAnswer === 'string'
       ? selectedAnswer
@@ -458,6 +492,11 @@ export async function submitDrillReview(
   let implicitConfidence: number;
   let rtClassification: string | null = null;
   let rtSignalQuality = 1.0;
+  // Sprint 3.5 — capture Ghost Grader rule at outer scope so the shadow-mode
+  // CalibrationLog emission (~1500 lines down) can record which behavioral
+  // override (if any) fired on this review. `null` means either rapid-guess
+  // (Ghost Grader skipped) or the rule field was empty.
+  let ghostRuleCaptured: string | null = null;
   // Wave 2: Distractor chronometry & switch direction results (set when option_interactions present)
   let wave2Chronometry: DistractorChronometryResult | undefined;
   let wave2SwitchDirection: SwitchDirectionResult | undefined;
@@ -641,6 +680,9 @@ export async function submitDrillReview(
       hintDurationMs: behaviorMetrics.hintViewDurationMs,
     });
     rating = ghostResult.rating;
+    // Sprint 3.5 — hoist the rule (e.g. 'indecision', 'hint_assisted',
+    // 'confidence_boost', 'none') so downstream CalibrationLog can record it.
+    ghostRuleCaptured = ghostResult.rule ?? null;
 
     // Apply grade_continuous adjustment from Ghost Grader
     if (ghostResult.rule === 'indecision') {
@@ -1460,6 +1502,105 @@ export async function submitDrillReview(
           });
         }
 
+        // ── Sprint 3.4 + 3.5: Wilson mastery + hypercorrection detection ──
+        // Single query pulls the last 20 REAL ReviewLogs for (userId, questionId).
+        // From that we derive:
+        //   • Wilson mastery: outcomes array (oldest-first) + current outcome,
+        //     λ=0.95 recency weighting.
+        //   • Hypercorrection (Metcalfe 2017): the MOST RECENT prior review was
+        //     high-confidence AND wrong, and the current review is correct.
+        //     Threshold 0.7 matches the Sprint 3.5 plan.
+        // Both are shadow signals. Neither feeds FSRS. Failure is non-fatal.
+        let hypercorrectionEligible = false;
+        try {
+          const priorReviews = await prisma.reviewLog.findMany({
+            where: {
+              userId,
+              questionId,
+              review_type: 'real',
+            },
+            orderBy: { reviewedAt: 'desc' },
+            take: 20,
+            select: {
+              wasCorrect: true,
+              reviewedAt: true,
+              implicit_confidence: true,
+            },
+          });
+
+          // Hypercorrection: check the single most recent prior (index 0 since
+          // ordered desc). High-confidence wrong → correct now.
+          if (isCorrect && priorReviews.length > 0) {
+            const mostRecentPrior = priorReviews[0];
+            if (mostRecentPrior) {
+              const priorConfidence =
+                typeof mostRecentPrior.implicit_confidence === 'number'
+                  ? mostRecentPrior.implicit_confidence
+                  : 0;
+              if (mostRecentPrior.wasCorrect === false && priorConfidence >= 0.7) {
+                hypercorrectionEligible = true;
+              }
+            }
+          }
+
+          // Reverse to oldest-first (Wilson expects ascending by time), then
+          // append the current review which is the newest.
+          const outcomes = priorReviews
+            .slice()
+            .reverse()
+            .map((r) => Boolean(r.wasCorrect));
+          outcomes.push(isCorrect);
+
+          masteryAssessment = assessMastery({
+            outcomes,
+            decayLambda: WILSON_DECAY_LAMBDA,
+          });
+        } catch (masteryErr) {
+          logger?.warn?.('Wilson mastery / hypercorrection query failed (non-fatal)', {
+            error: masteryErr instanceof Error ? masteryErr.message : String(masteryErr),
+          });
+          masteryAssessment = null;
+          hypercorrectionEligible = false;
+        }
+
+        // Sprint 3.1 — shadow-mode calibration telemetry. Fire-and-forget; never
+        // blocks scheduler semantics. Captures predicted retrievability at the
+        // moment of this review so offline validators can score predictions
+        // against the realized outcome on the NEXT review of the same item.
+        // Sprint 3.4 wires wilsonLower + isMastered.
+        // Sprint 3.5 wires ghostGraderRule + hypercorrectionEligible.
+        void writeCalibrationLog(
+          prisma,
+          {
+            userId,
+            questionId,
+            conditionId: question.conditionId,
+            // reviewLogId is unknown here (we did not capture the created id above);
+            // outcomeReviewLogId is wired in Sprint 3.2 via a join in the validator.
+            reviewLogId: null,
+            outcomeReviewLogId: null,
+            predictedRetrievability: fsrs.calculateRetrievability(
+              currentCard.elapsed_days,
+              currentCard.stability
+            ),
+            stabilityAtPrediction: currentCard.stability,
+            difficultyAtPrediction: currentCard.difficulty,
+            intervalDaysAtPrediction: currentCard.scheduled_days,
+            ratingFed: rating,
+            elapsedDaysAtOutcome: currentCard.elapsed_days,
+            actualOutcome: isCorrect,
+            implicitConfidence,
+            rapidGuess: isRapidGuess,
+            ghostGraderRule: ghostRuleCaptured,
+            telemetryQuality,
+            wilsonLower: masteryAssessment?.wilsonLower ?? null,
+            isMastered: masteryAssessment?.isMastered ?? null,
+            hypercorrectionEligible,
+            sessionType: logSessionType,
+          },
+          logger as { warn?: (msg: string, meta?: Record<string, unknown>) => void } | undefined
+        );
+
         // Update UserProgress and sibling propagation for normal reviews only
         await updateUserProgressWithHistory(prisma, {
           userId,
@@ -1761,6 +1902,21 @@ export async function submitDrillReview(
     fsrsSchedule,
     // FIRe implicit review credits — stability multipliers for prerequisite concepts
     fireCredits,
+    // Sprint 3.4 — Wilson mastery signal (read-only; does not affect scheduling).
+    // Undefined when mastery was not computed (rapid guess, cram, no conditionId)
+    // or when the prior-review query failed.
+    mastery: masteryAssessment
+      ? {
+          wilsonLower: masteryAssessment.wilsonLower,
+          wilsonUpper: masteryAssessment.wilsonUpper,
+          pointEstimate: masteryAssessment.pointEstimate,
+          effectiveN: masteryAssessment.effectiveN,
+          totalN: masteryAssessment.totalN,
+          isMastered: masteryAssessment.isMastered,
+          isGoldMastery: masteryAssessment.isGoldMastery,
+          correctNeededForMastery: masteryAssessment.correctNeededForMastery,
+        }
+      : undefined,
   };
 
   // ── A/B Test: log conversion events for completed reviews ──

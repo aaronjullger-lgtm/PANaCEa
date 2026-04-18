@@ -1,7 +1,17 @@
 // lib/services/soapGradingService.ts
-// SOAP Note grading via Gemini proxy (Cloudflare /api/ai/models)
+// SOAP Note grading — browser client that calls the server grading endpoint.
+//
+// Migration notes (Sprint 4):
+//   - Previously posted to the deprecated /geminiProxy endpoint (410 Gone).
+//   - Now calls POST /api/drills/soap/grade, which wraps the unified AI
+//     Gateway on the Cloudflare edge. The client therefore:
+//       • never sees a model key,
+//       • never parses raw model output,
+//       • receives a pre-validated, schema-reconciled SoapBriefGrade.
+//   - The external shape `GradingResult` is preserved verbatim so
+//     SOAPNoteTrainer and the analytics helpers don't change.
 
-import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { geminiLogger } from '../logger';
 
 const LOG_SCOPE = 'SOAPGrading';
@@ -22,75 +32,56 @@ export interface GradingResult {
 }
 
 const isTestEnv =
-  typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
-
-const isDevEnv = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+  typeof process !== 'undefined' &&
+  Boolean(
+    (process.env as Record<string, string | undefined>)?.VITEST ??
+      (process.env as Record<string, string | undefined>)?.NODE_ENV === 'test',
+  );
 
 /**
- * Call Gemini via the Cloudflare Pages proxy at /geminiProxy
- * and return a structured SOAP grading result.
+ * Minimal adapter type so callers can pass either a pre-fetched Clerk token
+ * (`string | null`) or the Clerk `getToken` function itself. Keeps the
+ * service transport-agnostic and easy to test.
  */
-export async function gradeSoapNote(userNote: string, caseContext: string): Promise<GradingResult> {
+export type TokenProvider = string | null | (() => Promise<string | null>);
+
+async function resolveToken(provider: TokenProvider | undefined): Promise<string | null> {
+  if (!provider) return null;
+  if (typeof provider === 'function') {
+    try {
+      return await provider();
+    } catch (err) {
+      geminiLogger.warn(`[${LOG_SCOPE}] token provider threw`, { err });
+      return null;
+    }
+  }
+  return provider;
+}
+
+/**
+ * Grade a SOAP note on the server. Returns the structured grading result
+ * consumed by SOAPNoteTrainer.
+ *
+ * @param userNote     The student's full SOAP note text (already concatenated).
+ * @param caseContext  The answer-key case context (CC, HPI, vitals, PE, labs).
+ * @param token        Optional Clerk token or async getter. When omitted the
+ *                     endpoint's auth middleware will 401 — supply one in all
+ *                     production call-sites.
+ */
+export async function gradeSoapNote(
+  userNote: string,
+  caseContext: string,
+  token?: TokenProvider,
+): Promise<GradingResult> {
   const trimmedNote = userNote.trim();
   if (!trimmedNote) {
     throw new Error('SOAP note is empty');
   }
-
   const trimmedContext = caseContext.trim();
 
-  const prompt = `You are a strict PANCE/USMLE Board Examiner.
-
-Task: Evaluate the Student's SOAP Note against the Answer Key (Correct Case Findings).
-
-Input:
-Student Note:
-"""
-${trimmedNote}
-"""
-
-Correct Case Findings (Answer Key):
-"""
-${trimmedContext}
-"""
-
-Rubric:
-- Award points for identifying key pathologies, correct vitals, appropriate differentials, and SAFE management plans.
-- Penalize heavily for missing "do not miss" diagnoses, unsafe plans, or major misunderstandings.
-- Weight each SOAP component equally (Subjective, Objective, Assessment, Plan).
-- Focus feedback on what a PA student can realistically improve on their very next attempt.
-
-Scoring Rules (STRICT):
-- Each section (subjective, objective, assessment, plan) MUST be scored from 0 to 25.
-- The totalScore MUST equal the EXACT sum of these four section scores.
-- Do NOT invent any additional scoring dimensions.
-
-Feedback Formatting Rules:
-- feedback.strengths: maximum of 5 concise bullets.
-- feedback.missedConcepts: maximum of 5 concise bullets focusing on truly important missed findings.
-- feedback.suggestions: maximum of 5 concise bullets focusing on style/phrasing/organization.
-- Each bullet should be a single, coaching-oriented sentence and stay under ~25 words.
-
-Output format:
-Respond PURELY in JSON matching this TypeScript interface. No markdown, no commentary, no code fences. Do not include explanation outside the JSON object.
-
-interface GradingResult {
-  totalScore: number; // 0-100
-  breakdown: {
-    subjective: number; // 0-25
-    objective: number; // 0-25
-    assessment: number; // 0-25
-    plan: number; // 0-25
-  };
-  feedback: {
-    strengths: string[];
-    missedConcepts: string[]; // Critical findings they forgot
-    suggestions: string[]; // Style/Medical phrasing improvements
-  };
-}
-`;
-
   if (isTestEnv) {
-    // Deterministic mock for tests
+    // Deterministic mock for tests — mirrors the server contract so
+    // integration tests don't need a live edge function.
     return {
       totalScore: 80,
       breakdown: {
@@ -107,75 +98,54 @@ interface GradingResult {
     };
   }
 
-  const response = await fetch('/geminiProxy', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      modelName: 'gemini-2.5-flash',
-      prompt,
-      temperature: 0.2,
-    }),
-  });
+  const authToken = await resolveToken(token);
+  const endpoint = getApiEndpoint('/api/drills/soap/grade');
+
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify({
+        studentNote: trimmedNote,
+        caseContext: trimmedContext,
+      }),
+    });
+  } catch (err) {
+    geminiLogger.error(`[${LOG_SCOPE}] Network error calling SOAP grader`, { err });
+    throw new Error('Network error while grading — check your connection and try again.');
+  }
 
   if (!response.ok) {
-    geminiLogger.error(`[${LOG_SCOPE}] Gemini proxy returned error status`, { status: response.status });
-    throw new Error('Gemini proxy error');
+    let serverMessage: string | undefined;
+    try {
+      const errBody = (await response.json()) as { error?: string };
+      serverMessage = errBody?.error;
+    } catch {
+      /* ignore JSON parse failure on error body */
+    }
+    geminiLogger.error(`[${LOG_SCOPE}] Grader endpoint returned ${response.status}`, {
+      status: response.status,
+      serverMessage,
+    });
+    throw new Error(serverMessage ?? `SOAP grader returned HTTP ${response.status}`);
   }
 
-  const data: any = await response.json();
-  const rawText = typeof data === 'string' ? data : (data.data?.text ?? data.text);
-
-  if (!rawText || typeof rawText !== 'string') {
-    throw new Error('Empty response from Gemini');
-  }
-
-  if (isDevEnv) {
-    // Log raw AI output in development to help tune prompts
-    console.debug('[SOAP Grading] Raw Gemini response:', rawText);
-  }
-
-  // Gemini proxy already strips code fences, but we defensively clean again
-  const jsonString = rawText
-    .replace(/```json\n?/gi, '')
-    .replace(/```/g, '')
-    .trim();
-
+  let envelope: { data?: GradingResult };
   try {
-    const parsed = JSON.parse(jsonString) as GradingResult;
-
-    // Safety guard: ensure totalScore matches sum of section scores
-    if (parsed && parsed.breakdown) {
-      const sectionTotal =
-        parsed.breakdown.subjective +
-        parsed.breakdown.objective +
-        parsed.breakdown.assessment +
-        parsed.breakdown.plan;
-
-      if (typeof parsed.totalScore !== 'number' || parsed.totalScore !== sectionTotal) {
-        return {
-          ...parsed,
-          totalScore: sectionTotal,
-        };
-      }
-    }
-
-    // Safety guard: enforce max lengths on feedback arrays
-    if (parsed && parsed.feedback) {
-      const { feedback } = parsed;
-      feedback.strengths = Array.isArray(feedback.strengths) ? feedback.strengths.slice(0, 5) : [];
-      feedback.missedConcepts = Array.isArray(feedback.missedConcepts)
-        ? feedback.missedConcepts.slice(0, 5)
-        : [];
-      feedback.suggestions = Array.isArray(feedback.suggestions)
-        ? feedback.suggestions.slice(0, 5)
-        : [];
-    }
-
-    return parsed;
-  } catch (error) {
-    geminiLogger.error(`[${LOG_SCOPE}] Failed to parse SOAP grading JSON`, { error, jsonString });
-    throw new Error('Failed to parse grading result from AI');
+    envelope = (await response.json()) as { data?: GradingResult };
+  } catch (err) {
+    geminiLogger.error(`[${LOG_SCOPE}] Failed to parse grader response`, { err });
+    throw new Error('Failed to parse grading result.');
   }
+
+  const grade = envelope.data;
+  if (!grade || typeof grade.totalScore !== 'number' || !grade.breakdown || !grade.feedback) {
+    geminiLogger.error(`[${LOG_SCOPE}] Grader returned malformed envelope`, { envelope });
+    throw new Error('Grader returned an incomplete response.');
+  }
+  return grade;
 }

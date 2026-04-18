@@ -1,36 +1,146 @@
 /**
  * Gemini / Google AI helpers for embeddings (text-embedding-005) and vision (gemini-2.5-flash).
  * Used by RAG chunking, hybrid search, semantic scripts, and image quality assessment.
+ *
+ * Trace propagation: both helpers accept an optional `traceId` (the same id
+ * that threads the upstream edge request). It's included in thrown errors and
+ * structured timing logs so a slow / failed Gemini call can be correlated
+ * back to the originating request in Workers Logs and Sentry.
  */
 
 const EMBED_MODEL = 'text-embedding-005';
 const EMBED_DIMS = 768;
 const VISION_MODEL = 'gemini-2.5-flash';
 
+/** Shared options accepted by every helper in this module. */
+export interface GeminiHelperOptions {
+  /** Upstream trace id for log correlation. */
+  traceId?: string;
+}
+
+/**
+ * Structured error raised when a Gemini call fails. Carries the HTTP status,
+ * truncated upstream message, and the trace id of the originating request so
+ * callers can surface it in user-facing errors and Sentry breadcrumbs.
+ */
+export class GeminiError extends Error {
+  readonly status: number;
+  readonly traceId?: string;
+  readonly operation: string;
+
+  constructor(init: {
+    operation: string;
+    status: number;
+    message: string;
+    traceId?: string;
+  }) {
+    const prefix = init.traceId ? `[trace ${init.traceId}] ` : '';
+    super(`${prefix}Gemini ${init.operation} error ${init.status}: ${init.message}`);
+    this.name = 'GeminiError';
+    this.status = init.status;
+    this.traceId = init.traceId;
+    this.operation = init.operation;
+  }
+}
+
+/** Emit a structured JSON span record — picked up by Cloudflare Workers Logs. */
+function logGeminiSpan(entry: {
+  operation: string;
+  durationMs: number;
+  status?: number;
+  success: boolean;
+  traceId?: string;
+  error?: string;
+}): void {
+  // Structured so Workers Logs can filter by `operation`, `success`, `traceId`.
+  try {
+    console.log(
+      JSON.stringify({ event: 'gemini_span', timestamp: new Date().toISOString(), ...entry })
+    );
+  } catch {
+    // If console.log is unavailable (rare), swallow — logging must never fail the call.
+  }
+}
+
 /**
  * Generate a 768-d embedding for the given text using Google AI embedContent API.
  * Requires GEMINI_API_KEY (or pass apiKey).
  */
-export async function getEmbedding(text: string, apiKey: string): Promise<number[]> {
+export async function getEmbedding(
+  text: string,
+  apiKey: string,
+  options: GeminiHelperOptions = {}
+): Promise<number[]> {
+  const { traceId } = options;
+  const startMs = Date.now();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Embed API error ${res.status}: ${err.slice(0, 200)}`);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: { parts: [{ text }] },
+        outputDimensionality: EMBED_DIMS,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      const durationMs = Date.now() - startMs;
+      logGeminiSpan({
+        operation: 'embed',
+        durationMs,
+        status: res.status,
+        success: false,
+        traceId,
+        error: err.slice(0, 200),
+      });
+      throw new GeminiError({
+        operation: 'embed',
+        status: res.status,
+        message: err.slice(0, 200),
+        traceId,
+      });
+    }
+    const data: { embedding?: { values?: number[] } } = await res.json();
+    const values = data.embedding?.values;
+    if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
+      const durationMs = Date.now() - startMs;
+      logGeminiSpan({
+        operation: 'embed',
+        durationMs,
+        status: res.status,
+        success: false,
+        traceId,
+        error: `Invalid embedding dims: expected ${EMBED_DIMS}, got ${values?.length ?? 0}`,
+      });
+      throw new GeminiError({
+        operation: 'embed',
+        status: 502,
+        message: `Invalid embedding: expected ${EMBED_DIMS} dims, got ${values?.length ?? 0}`,
+        traceId,
+      });
+    }
+    logGeminiSpan({
+      operation: 'embed',
+      durationMs: Date.now() - startMs,
+      status: res.status,
+      success: true,
+      traceId,
+    });
+    return values;
+  } catch (error) {
+    if (error instanceof GeminiError) throw error;
+    const durationMs = Date.now() - startMs;
+    const message = error instanceof Error ? error.message : String(error);
+    logGeminiSpan({
+      operation: 'embed',
+      durationMs,
+      success: false,
+      traceId,
+      error: message.slice(0, 200),
+    });
+    throw new GeminiError({ operation: 'embed', status: 502, message, traceId });
   }
-  const data: { embedding?: { values?: number[] } } = await res.json();
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
-    throw new Error(`Invalid embedding: expected ${EMBED_DIMS} dims, got ${values?.length ?? 0}`);
-  }
-  return values;
 }
 
 export interface GradeResult {
@@ -43,22 +153,60 @@ export interface GradeResult {
 }
 
 /**
- * Grade a medical image for educational quality using Gemini 1.5 Pro Vision.
+ * Grade a medical image for educational quality using Gemini Vision.
  *
  * @param imageUrl - Public URL of the image to grade
  * @param conditionName - Medical condition name (e.g., "Pneumonia")
  * @param apiKey - Gemini API key
+ * @param options - Optional helper options including traceId for log correlation
  * @returns Grade result with educational score and metadata
  */
 export async function gradeMedicalImage(
   imageUrl: string,
   conditionName: string,
-  apiKey: string
+  apiKey: string,
+  options: GeminiHelperOptions = {}
 ): Promise<GradeResult> {
+  const { traceId } = options;
+  const startMs = Date.now();
+
   // Fetch image as buffer and convert to base64
-  const imageRes = await fetch(imageUrl);
+  let imageRes: Response;
+  try {
+    imageRes = await fetch(imageUrl);
+  } catch (error) {
+    const durationMs = Date.now() - startMs;
+    const message = error instanceof Error ? error.message : String(error);
+    logGeminiSpan({
+      operation: 'vision-fetch-image',
+      durationMs,
+      success: false,
+      traceId,
+      error: message.slice(0, 200),
+    });
+    throw new GeminiError({
+      operation: 'vision-fetch-image',
+      status: 502,
+      message: `Failed to fetch image: ${message}`,
+      traceId,
+    });
+  }
   if (!imageRes.ok) {
-    throw new Error(`Failed to fetch image: ${imageRes.status}`);
+    const durationMs = Date.now() - startMs;
+    logGeminiSpan({
+      operation: 'vision-fetch-image',
+      durationMs,
+      status: imageRes.status,
+      success: false,
+      traceId,
+      error: `HTTP ${imageRes.status}`,
+    });
+    throw new GeminiError({
+      operation: 'vision-fetch-image',
+      status: imageRes.status,
+      message: `Failed to fetch image: ${imageRes.status}`,
+      traceId,
+    });
   }
 
   const arrayBuffer = await imageRes.arrayBuffer();
@@ -96,46 +244,106 @@ Return your assessment as **valid JSON only** (no markdown, no code fences):
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent?key=${apiKey}`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            { text: prompt },
-            {
-              inline_data: {
-                mime_type: mimeType,
-                data: base64Image,
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Image,
+                },
               },
-            },
-          ],
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2, // Low temperature for consistent grading
+          maxOutputTokens: 500,
         },
-      ],
-      generationConfig: {
-        temperature: 0.2, // Low temperature for consistent grading
-        maxOutputTokens: 500,
-      },
-    }),
-  });
+      }),
+    });
+  } catch (error) {
+    const durationMs = Date.now() - startMs;
+    const message = error instanceof Error ? error.message : String(error);
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs,
+      success: false,
+      traceId,
+      error: message.slice(0, 200),
+    });
+    throw new GeminiError({
+      operation: 'vision-grade',
+      status: 502,
+      message,
+      traceId,
+    });
+  }
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Gemini Vision API error ${res.status}: ${err.slice(0, 200)}`);
+    const durationMs = Date.now() - startMs;
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs,
+      status: res.status,
+      success: false,
+      traceId,
+      error: err.slice(0, 200),
+    });
+    throw new GeminiError({
+      operation: 'vision-grade',
+      status: res.status,
+      message: err.slice(0, 200),
+      traceId,
+    });
   }
 
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!text) {
-    throw new Error('Empty response from Gemini Vision API');
+    const durationMs = Date.now() - startMs;
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs,
+      status: res.status,
+      success: false,
+      traceId,
+      error: 'Empty response',
+    });
+    throw new GeminiError({
+      operation: 'vision-grade',
+      status: 502,
+      message: 'Empty response from Gemini Vision API',
+      traceId,
+    });
   }
 
   // Parse JSON from response (strip markdown fences if present)
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    console.warn('Failed to parse Gemini response as JSON:', text.slice(0, 200));
+    const durationMs = Date.now() - startMs;
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs,
+      status: res.status,
+      success: false,
+      traceId,
+      error: 'JSON shape missing in response',
+    });
+    console.warn(
+      traceId ? `[trace ${traceId}] ` : '',
+      'Failed to parse Gemini response as JSON:',
+      text.slice(0, 200)
+    );
     return {
       isClassic: false,
       educationalScore: 0,
@@ -148,6 +356,13 @@ Return your assessment as **valid JSON only** (no markdown, no code fences):
 
   try {
     const parsed = JSON.parse(jsonMatch[0]);
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs: Date.now() - startMs,
+      status: res.status,
+      success: true,
+      traceId,
+    });
     return {
       isClassic: Boolean(parsed.isClassic),
       educationalScore: Number(parsed.educationalScore) || 0,
@@ -157,7 +372,17 @@ Return your assessment as **valid JSON only** (no markdown, no code fences):
       reasoning: String(parsed.reasoning || ''),
     };
   } catch (error) {
-    console.warn('JSON parse error:', error);
+    const durationMs = Date.now() - startMs;
+    const message = error instanceof Error ? error.message : String(error);
+    logGeminiSpan({
+      operation: 'vision-grade',
+      durationMs,
+      status: res.status,
+      success: false,
+      traceId,
+      error: `JSON parse: ${message.slice(0, 150)}`,
+    });
+    console.warn(traceId ? `[trace ${traceId}] ` : '', 'JSON parse error:', error);
     return {
       isClassic: false,
       educationalScore: 0,
