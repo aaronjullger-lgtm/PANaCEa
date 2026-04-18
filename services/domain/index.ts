@@ -40,8 +40,8 @@ export {
   resetSessionDistribution,
   recordQuestion,
   normalizeSystemCode,
-  PANCE_SYSTEM_PERCENTAGES,
 } from './panceDistributionService';
+export { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 
 // REMOVED: Re-export exam utilities - server-only
 // export * from './examService'; // EXPORT DISABLED: server-only
