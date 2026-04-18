@@ -8,9 +8,6 @@
 import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
-/** @deprecated Use BLUEPRINT_PERCENT_BY_ABBREVIATION from lib/constants/blueprint.ts */
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...BLUEPRINT_PERCENT_BY_ABBREVIATION };
-
 // PANCE Task Categories
 export const PANCE_TASK_PERCENTAGES: Record<string, number> = {
   'Formulating Diagnosis': 18,
@@ -61,7 +58,7 @@ export function getSessionDistribution(): SessionDistributionState {
 }
 
 function createFreshState(): SessionDistributionState {
-  const systems = Object.keys(PANCE_SYSTEM_PERCENTAGES);
+  const systems = Object.keys(BLUEPRINT_PERCENT_BY_ABBREVIATION);
   const tasks = Object.keys(PANCE_TASK_PERCENTAGES);
 
   return {
@@ -107,7 +104,7 @@ export function recordQuestion(system: string, task?: string): void {
  */
 export function normalizeSystemCode(system: string): string | null {
   // Already a code
-  if (PANCE_SYSTEM_PERCENTAGES[system]) {
+  if (BLUEPRINT_PERCENT_BY_ABBREVIATION[system]) {
     return system;
   }
 
@@ -116,7 +113,7 @@ export function normalizeSystemCode(system: string): string | null {
     ([, fullName]) => fullName.toLowerCase() === system.toLowerCase()
   )?.[0];
 
-  if (code && PANCE_SYSTEM_PERCENTAGES[code]) {
+  if (code && BLUEPRINT_PERCENT_BY_ABBREVIATION[code]) {
     return code;
   }
 
@@ -175,7 +172,7 @@ export function calculateDistributionDrift(): DistributionDrift[] {
     return [];
   }
 
-  for (const [system, targetPercent] of Object.entries(PANCE_SYSTEM_PERCENTAGES)) {
+  for (const [system, targetPercent] of Object.entries(BLUEPRINT_PERCENT_BY_ABBREVIATION)) {
     const actual = state.systemCounts[system] || 0;
     const actualPercent = (actual / state.totalQuestions) * 100;
     const driftPercent = actualPercent - targetPercent;
@@ -247,7 +244,7 @@ export function getSessionSummary(): {
       name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
       count,
       percent: state.totalQuestions > 0 ? Math.round((count / state.totalQuestions) * 100) : 0,
-      target: PANCE_SYSTEM_PERCENTAGES[system] || 0,
+      target: BLUEPRINT_PERCENT_BY_ABBREVIATION[system] || 0,
     }))
     .sort((a, b) => b.count - a.count);
 
