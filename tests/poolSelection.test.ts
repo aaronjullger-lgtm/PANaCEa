@@ -6,8 +6,8 @@ import { describe, it, expect } from 'vitest';
 import {
   fisherYatesShuffle,
   selectByPanceDistribution,
-  PANCE_SYSTEM_PERCENTAGES,
 } from '../lib/poolSelection';
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '../lib/constants/blueprint';
 
 describe('fisherYatesShuffle', () => {
   it('returns same length as input', () => {
@@ -121,14 +121,14 @@ describe('selectByPanceDistribution', () => {
   });
 });
 
-describe('PANCE_SYSTEM_PERCENTAGES', () => {
+describe('BLUEPRINT_PERCENT_BY_ABBREVIATION', () => {
   it('has expected systems', () => {
-    expect(PANCE_SYSTEM_PERCENTAGES.CV).toBe(11);
-    expect(PANCE_SYSTEM_PERCENTAGES.PULM).toBe(9);
+    expect(BLUEPRINT_PERCENT_BY_ABBREVIATION.CV).toBe(11);
+    expect(BLUEPRINT_PERCENT_BY_ABBREVIATION.PULM).toBe(9);
   });
 
   it('total is close to 100', () => {
-    const total = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
+    const total = Object.values(BLUEPRINT_PERCENT_BY_ABBREVIATION).reduce((a, b) => a + b, 0);
     expect(total).toBeGreaterThanOrEqual(90);
     expect(total).toBeLessThanOrEqual(110);
   });
