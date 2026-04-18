@@ -427,7 +427,7 @@ export default function GenericReferenceView<T>({
         <select
           value={sortBy}
           aria-label="Sort order"
-          onChange={(e) => setSortBy(e.target.value as any)}
+          onChange={(e) => setSortBy(e.target.value as 'name' | 'highYield' | 'panceYield')}
           style={{
             padding: '8px 12px', borderRadius: 10, fontSize: 13,
             border: '1px solid var(--color-border)', background: 'var(--color-bg-secondary)',

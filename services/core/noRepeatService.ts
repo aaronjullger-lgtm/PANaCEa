@@ -243,7 +243,7 @@ export async function generateQuestionsForFilter(
 
       const question = await generateSingleQuestion(
         transformedCondition,
-        (filter.questionType as any) || 'mcq'
+        filter.questionType || 'mcq'
       );
 
       if (question) {

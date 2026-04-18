@@ -13,13 +13,22 @@ import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
 /**
  * Fetch a pre-generated question from the API
  * Replaces the server-side getQuestion from questionService
+ *
+ * S5 — Accepts an optional `signal` so callers can cancel in-flight fetches
+ * on unmount. AbortError is re-thrown (not swallowed to null) so the caller
+ * can distinguish cancellation from a real failure. All other errors are
+ * still swallowed to null as before.
  */
 export async function getQuestionClient(
   sessionSettings: SessionSettings,
   growthAreas: string[],
-  getToken: () => Promise<string | null>
+  getToken: () => Promise<string | null>,
+  signal?: AbortSignal
 ): Promise<Question | null> {
   try {
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
     const token = await getToken();
     if (!token) {
       console.warn('[getQuestionClient] No auth token available');
@@ -51,6 +60,7 @@ export async function getQuestionClient(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
+      signal,
     });
 
     if (!response.ok) {
@@ -130,6 +140,11 @@ export async function getQuestionClient(
 
     return null;
   } catch (error) {
+    // S5 — Re-throw AbortError so callers can distinguish a cancelled fetch
+    // from a real failure. Everything else is still swallowed to null.
+    if ((error as { name?: string })?.name === 'AbortError' || signal?.aborted) {
+      throw error;
+    }
     console.error('[getQuestionClient] Error:', error);
     return null;
   }

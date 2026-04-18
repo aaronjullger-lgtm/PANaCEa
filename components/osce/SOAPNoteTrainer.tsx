@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, CheckCircle, AlertCircle, Lightbulb, Award, Check } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { InlineSpinner } from '@/components/loading';
 import type { SOAPNote } from '@/services/ai';
 import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
@@ -29,6 +30,7 @@ interface PatientCase {
 }
 
 export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, onComplete }) => {
+  const { getToken } = useAuth();
   const [soapNote, setSOAPNote] = useState<SOAPNote>({
     subjective: '',
     objective: '',
@@ -47,7 +49,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
       const caseContext = `Chief Complaint: ${patientCase.chiefComplaint}\nHistory: ${patientCase.history}\nVitals: ${patientCase.vitals}\nPhysical Exam: ${patientCase.physicalExam}\nLabs: ${patientCase.labs || 'N/A'}`;
 
-      const result = await gradeSoapNote(studentNote, caseContext);
+      const result = await gradeSoapNote(studentNote, caseContext, getToken);
       setGradingResult(result);
       onComplete(result.totalScore);
 

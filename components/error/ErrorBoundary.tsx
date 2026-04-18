@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { getUserFacingError, type ErrorDisplayContext } from '@/lib/utils/errorHandlingUtils';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
 import { captureError } from '@/lib/monitoring/sentry';
+import { getLastApiTraceId } from '@/lib/utils/lastTraceId';
 import { MaintenancePage } from './MaintenancePage';
 
 // ============================================================================
@@ -55,6 +56,13 @@ interface ErrorBoundaryState {
   isRetrying: boolean;
   showDetails: boolean;
   errorId: string | null;
+  /**
+   * Server-side trace id from the most recent API response, captured at the
+   * moment the error fired. Surfaced to users so support reports can be
+   * correlated to Workers Logs / Sentry. Stored on state (not derived in
+   * render) because the underlying value may change between catch and render.
+   */
+  serverTraceId: string | null;
 }
 
 // ============================================================================
@@ -126,10 +134,19 @@ function generateErrorId(): string {
   return `ERR-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 }
 
-function persistError(errorId: string, error: Error, errorInfo: ErrorInfo): void {
+function persistError(
+  errorId: string,
+  error: Error,
+  errorInfo: ErrorInfo,
+  serverTraceId: string | null
+): void {
   try {
     const errorLog = {
       id: errorId,
+      // Server trace id (if any) captured at the moment of the failure. Preserved
+      // in the local error log so support can correlate a client error id to the
+      // exact edge log/Sentry event, even after the user has navigated away.
+      serverTraceId: serverTraceId ?? null,
       timestamp: new Date().toISOString(),
       message: error.message,
       name: error.name,
@@ -182,11 +199,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       isRetrying: false,
       showDetails: false,
       errorId: null,
+      serverTraceId: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { hasError: true, error, errorId: generateErrorId() };
+    // Capture the last API trace id only if it's recent (within 60s). Older
+    // trace ids are unlikely to be related to the error and would be misleading
+    // in a bug report. 60s is long enough to cover slow renders after a fetch.
+    const serverTraceId = getLastApiTraceId(60_000);
+    return { hasError: true, error, errorId: generateErrorId(), serverTraceId };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
@@ -235,6 +257,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       componentStack: errorInfo.componentStack,
       errorName: error.name,
       errorMessage: error.message,
+      serverTraceId: this.state.serverTraceId ?? undefined,
     });
 
     // Sentry reporting for global and page variants
@@ -245,7 +268,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             componentStack: errorInfo.componentStack,
             errorBoundary: variant,
             errorId: this.state.errorId,
+            serverTraceId: this.state.serverTraceId,
           },
+          // Tag the server trace so Sentry's search can filter incidents by
+          // trace id. Tags are indexed; extras are not.
+          tags: this.state.serverTraceId
+            ? { serverTraceId: this.state.serverTraceId }
+            : undefined,
         });
       } catch {
         // Sentry not available
@@ -254,7 +283,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     // Persist errors for global variant
     if (variant === 'global' && this.state.errorId) {
-      persistError(this.state.errorId, error, errorInfo);
+      persistError(this.state.errorId, error, errorInfo, this.state.serverTraceId);
     }
 
     // Call custom handler
@@ -274,6 +303,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       isRetrying: false,
       showDetails: false,
       errorId: null,
+      serverTraceId: null,
     });
     this.props.onReset?.();
   };
@@ -302,6 +332,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         isRetrying: false,
         showDetails: false,
         errorId: null,
+        serverTraceId: null,
       });
       this.props.onReset?.();
     }, backoffMs);
@@ -319,7 +350,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render(): ReactNode {
     if (!this.state.hasError) return this.props.children;
 
-    const { error, errorInfo, retryCount, isRetrying, showDetails, errorId } = this.state;
+    const { error, errorInfo, retryCount, isRetrying, showDetails, errorId, serverTraceId } = this.state;
     const variant = this.props.variant || 'page';
     const { fallback } = this.props;
 
@@ -360,7 +391,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // Variant-specific rendering
     switch (variant) {
       case 'global':
-        return this.renderGlobal(error!, errorInfo, errorId, showDetails);
+        return this.renderGlobal(error!, errorInfo, errorId, serverTraceId, showDetails);
       case 'ai':
         return this.renderAi(error!, retryCount, isRetrying);
       case 'drill':
@@ -374,8 +405,26 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   // ---------- Global fallback ----------
-  private renderGlobal(error: Error, errorInfo: ErrorInfo | null, errorId: string | null, showDetails: boolean): ReactNode {
+  private renderGlobal(
+    error: Error,
+    errorInfo: ErrorInfo | null,
+    errorId: string | null,
+    serverTraceId: string | null,
+    showDetails: boolean
+  ): ReactNode {
     const { title, message } = getUserFacingError('server', 'default');
+
+    // Build the bug-report email body with both ids when present so support can
+    // jump straight from the user's report to the matching Workers Logs entry.
+    const bugReportBody = [
+      `Error ID: ${errorId ?? 'unknown'}`,
+      serverTraceId ? `Server Trace: ${serverTraceId}` : null,
+      `Error: ${error.message}`,
+      `URL: ${window.location.href}`,
+      '',
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
@@ -400,6 +449,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </div>
             )}
 
+            {/*
+              The server trace id only renders when a recent API response was
+              captured (within the 60s staleness window in getDerivedStateFromError).
+              Showing it lets users copy a single string that maps directly to a
+              Workers Logs / Sentry event — much more actionable than the client
+              error id alone.
+            */}
+            {serverTraceId && (
+              <div className="bg-[var(--color-bg-tertiary)]/50 rounded-lg p-3 flex items-center justify-between">
+                <span className="text-sm text-[var(--color-text-muted)]">Server Trace:</span>
+                <code className="text-sm font-mono text-[var(--color-text-primary)] select-all">{serverTraceId}</code>
+              </div>
+            )}
+
             <p className="text-[var(--color-text-secondary)]">
               You can try again or go home and try another section.
             </p>
@@ -413,7 +476,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </Button>
             </div>
 
-            <Button variant="ghost" className="w-full" onClick={() => { window.open(`mailto:support@panacea-study.com?subject=${encodeURIComponent(`Bug Report: ${error.name}`)}&body=${encodeURIComponent(`Error ID: ${errorId}\nError: ${error.message}\nURL: ${window.location.href}\n`)}`); }}>
+            <Button variant="ghost" className="w-full" onClick={() => { window.open(`mailto:support@panacea-study.com?subject=${encodeURIComponent(`Bug Report: ${error.name}`)}&body=${encodeURIComponent(bugReportBody)}`); }}>
               <Bug className="w-4 h-4" /> Report this issue
             </Button>
 

@@ -29,3 +29,7 @@ export { DrillErrorBoundary } from './DrillErrorBoundary';
 
 // Config/maintenance error page
 export { MaintenancePage } from './MaintenancePage';
+
+// System-status incident banner (polls /api/health)
+export { IncidentBanner } from './IncidentBanner';
+export type { IncidentBannerProps } from './IncidentBanner';

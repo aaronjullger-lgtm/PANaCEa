@@ -38,6 +38,7 @@ import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { useRelevantTrials } from '@/hooks/useRelevantTrials';
 import { formatTrialStatus } from '@/lib/services/question/trialEnricher';
+import { EnrichmentFailureBadge } from '@/components/library/EnrichmentFailureBadge';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -319,8 +320,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
   const [curatedPassage, setCuratedPassage] = useState<CuratedPassageView | null>(null);
 
-  // Clinical trials — non-blocking, supplementary content
-  const { trials: relevantTrials } = useRelevantTrials(condition);
+  // Clinical trials — non-blocking, supplementary content. `failure` is
+  // populated when ClinicalTrials.gov is unreachable so we can surface an
+  // explicit "service unavailable" badge instead of silently hiding evidence.
+  const { trials: relevantTrials, failure: trialsFailure } = useRelevantTrials(condition);
   const [showTrials, setShowTrials] = useState(false);
 
   useEffect(() => {
@@ -342,7 +345,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         const payload = (await res.json()) as
           | { passages?: CuratedPassageView[] }
           | { data?: { passages?: CuratedPassageView[] } };
-        const root: any = (payload as any).data ?? payload;
+        const root = 'data' in payload && payload.data ? payload.data : payload;
         const list = (root?.passages || []) as CuratedPassageView[];
         if (!cancelled && list.length > 0) {
           setCuratedPassage(list[0] ?? null);
@@ -584,6 +587,11 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         )}
 
         {/* Active Research — Clinical Trials */}
+        {trialsFailure && (
+          <section className="mb-6">
+            <EnrichmentFailureBadge source="ClinicalTrials.gov" failure={trialsFailure} />
+          </section>
+        )}
         {relevantTrials.length > 0 && (
           <section className="mb-6">
             <button

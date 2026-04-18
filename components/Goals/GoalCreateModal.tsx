@@ -265,7 +265,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
               <select
                 id="goal-type"
                 value={formData.goalType}
-                onChange={(e) => setFormData({ ...formData, goalType: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, goalType: e.target.value as 'daily' | 'weekly' | 'exam_date' | 'mastery' })}
                 className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 title="Select goal type"
               >
@@ -327,7 +327,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     id="goal-target-unit"
                     value={formData.targetUnit}
                     onChange={(e) =>
-                      setFormData({ ...formData, targetUnit: e.target.value as any })
+                      setFormData({ ...formData, targetUnit: e.target.value as 'questions' | 'minutes' | 'conditions' | 'accuracy' })
                     }
                     className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                     title="Select target unit"

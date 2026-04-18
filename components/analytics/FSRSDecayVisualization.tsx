@@ -14,6 +14,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PrimaryButton } from '../ui/PrimaryButton';
 import {
+  retrievability as fsrsRetrievability,
+  daysUntilRetrievability,
+} from '@/lib/fsrs-retrievability';
+import {
   Brain,
   Clock,
   TrendingDown,
@@ -41,11 +45,19 @@ interface FSRSDecayVisualizationProps {
   onReviewNow?: (cardId: string) => void;
 }
 
-// Forgetting curve calculation (FSRS formula)
-const calculateRetrievability = (stability: number, daysSinceReview: number): number => {
-  // R(t) = (1 + t/S)^(-1) simplified exponential decay
-  return Math.pow(1 + daysSinceReview / stability, -1);
-};
+/**
+ * Forgetting curve calculation (FSRS v6).
+ *
+ * Previously this used the wrong formula `R(t) = (1 + t/S)^(-1)`, which
+ * under/overstated retention at every point and disagreed with the scheduler
+ * actually grading the student. Now delegates to the shared `fsrsRetrievability`
+ * helper that uses the ts-fsrs v6 published defaults (FACTOR=19/81, DECAY=-0.5),
+ * matching retention.ts and RetentionForecastCard.
+ *
+ * Argument order preserved for minimal diff at call sites.
+ */
+const calculateRetrievability = (stability: number, daysSinceReview: number): number =>
+  fsrsRetrievability(daysSinceReview, stability);
 
 // Get urgency level based on retrievability
 const getUrgencyLevel = (retrievability: number): 'safe' | 'warning' | 'critical' => {
@@ -167,8 +179,10 @@ const CardDecayCard: React.FC<{
   const currentRetrievability = calculateRetrievability(card.stability, daysSinceReview);
   const urgency = getUrgencyLevel(currentRetrievability);
 
-  // Days until 70% retention
-  const daysUntilForgotten = card.stability * (Math.pow(0.7, -1) - 1) - daysSinceReview;
+  // Days until 70% retention (FSRS v6 inverse). The previous inline formula
+  // `S * (0.7^-1 - 1)` assumed the wrong `(1+t/S)^-1` curve; replaced with the
+  // shared inverse that matches the FSRS v6 retrievability helper.
+  const daysUntilForgotten = daysUntilRetrievability(card.stability, 0.7) - daysSinceReview;
 
   const urgencyColors = {
     safe: 'border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/10',
@@ -411,7 +425,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
         const firstSafeCard = safeCards[0];
         const nextCriticalIn = firstSafeCard
           ? formatTimeUntilForgotten(
-              firstSafeCard.stability * (Math.pow(0.7, -1) - 1) -
+              daysUntilRetrievability(firstSafeCard.stability, 0.7) -
                 (Date.now() - new Date(firstSafeCard.lastReview).getTime()) / (1000 * 60 * 60 * 24)
             )
           : undefined;

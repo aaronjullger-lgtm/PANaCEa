@@ -25,10 +25,25 @@ interface BlueprintGapHeatmapProps {
 }
 
 /**
- * Returns a color based on accuracy: red < 50%, amber 50–70%, green > 70%
+ * Minimum number of attempts required before showing a confident pass/fail
+ * accuracy color. Below this threshold, 3/3 = 100% is statistical noise,
+ * not mastery — showing it in green is a trust lie. Render a muted tone
+ * instead, matching the "provisional" UX pattern used elsewhere.
  */
-function accuracyColor(accuracy: number): string {
-  if (accuracy === 0) return 'var(--color-text-muted)';
+const MIN_ATTEMPTS_FOR_ACCURACY_COLOR = 5;
+
+/**
+ * Returns a color based on accuracy: red < 50%, amber 50–70%, green > 70%.
+ *
+ * Returns muted (provisional) when attempts are zero OR below the minimum
+ * confidence threshold, so a student with n=1..4 doesn't see "mastered
+ * green" off a single correct answer.
+ */
+function accuracyColor(accuracy: number, attempts: number): string {
+  if (attempts <= 0) return 'var(--color-text-muted)';
+  if (attempts < MIN_ATTEMPTS_FOR_ACCURACY_COLOR) {
+    return 'var(--color-text-muted)';
+  }
   if (accuracy < 50) return 'var(--color-data-fail, #ef4444)';
   if (accuracy < 70) return 'var(--color-data-provisional, #f59e0b)';
   return 'var(--color-data-pass, #22c55e)';
@@ -230,9 +245,23 @@ export function BlueprintGapHeatmap({
                   {!compact && sys.totalAttempts > 0 && (
                     <span
                       className="text-xs font-semibold"
-                      style={{ color: accuracyColor(sys.accuracy) }}
+                      style={{ color: accuracyColor(sys.accuracy, sys.totalAttempts) }}
+                      title={
+                        sys.totalAttempts < MIN_ATTEMPTS_FOR_ACCURACY_COLOR
+                          ? `${sys.accuracy}% accuracy (provisional — n=${sys.totalAttempts}, needs ≥${MIN_ATTEMPTS_FOR_ACCURACY_COLOR})`
+                          : `${sys.accuracy}% accuracy (n=${sys.totalAttempts})`
+                      }
                     >
                       {sys.accuracy}%
+                      {sys.totalAttempts < MIN_ATTEMPTS_FOR_ACCURACY_COLOR && (
+                        <span
+                          aria-hidden="true"
+                          className="ml-0.5"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          *
+                        </span>
+                      )}
                     </span>
                   )}
                   <span
@@ -256,7 +285,13 @@ export function BlueprintGapHeatmap({
                   className="rounded px-2.5 py-1.5 text-xs whitespace-nowrap shadow-lg"
                   style={{ backgroundColor: 'rgba(0,0,0,0.85)', color: 'white' }}
                 >
-                  {sys.system}: {sys.totalAttempts} Qs ({sys.accuracy}% acc) · Target {sys.targetPercent}% · Actual {sys.actualPercent}% · {gapLabel(sys.gapPercent)}
+                  {sys.system}: {sys.totalAttempts} Q{sys.totalAttempts === 1 ? '' : 's'}
+                  {' '}({sys.accuracy}% acc
+                  {sys.totalAttempts > 0 &&
+                    sys.totalAttempts < MIN_ATTEMPTS_FOR_ACCURACY_COLOR && (
+                    <span style={{ color: '#d1d5db' }}> · provisional, n&lt;{MIN_ATTEMPTS_FOR_ACCURACY_COLOR}</span>
+                  )}
+                  ) · Target {sys.targetPercent}% · Actual {sys.actualPercent}% · {gapLabel(sys.gapPercent)}
                 </div>
               </div>
             </motion.div>
@@ -299,6 +334,10 @@ export function BlueprintGapHeatmap({
             style={{ backgroundColor: 'var(--color-accent, #3b82f6)' }}
           />
           Over-studied
+        </span>
+        <span className="flex items-center gap-1" title={`Provisional accuracy — fewer than ${MIN_ATTEMPTS_FOR_ACCURACY_COLOR} attempts in this system`}>
+          <span style={{ color: 'var(--color-text-muted)' }}>*</span>
+          Provisional (n&lt;{MIN_ATTEMPTS_FOR_ACCURACY_COLOR})
         </span>
       </div>
     </div>

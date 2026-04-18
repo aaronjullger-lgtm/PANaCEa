@@ -50,7 +50,7 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
       const payload = (await res.json()) as
         | { passages?: CuratedPassage[] }
         | { data?: { passages?: CuratedPassage[] } };
-      const root: any = (payload as any).data ?? payload;
+      const root = 'data' in payload && payload.data ? payload.data : payload;
       const list = (root?.passages || []) as CuratedPassage[];
       setPassages(list);
     } catch (e) {

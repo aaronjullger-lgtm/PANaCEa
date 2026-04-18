@@ -547,4 +547,247 @@ describe('SyncManager', () => {
       vi.useRealTimers();
     });
   });
+
+  // --------------------------------------------------------------------------
+  // SPRINT S1: DEAD-LETTER QUEUE
+  // --------------------------------------------------------------------------
+
+  describe('S1 dead-letter queue', () => {
+    /**
+     * Helper: directly seed an offline review into localStorage with specific
+     * syncAttempts/deadLettered state. Bypasses queueReview so we can set up
+     * exactly the state we want to test without triggering immediate syncs.
+     */
+    const seedReview = (overrides: Partial<OfflineReview>) => {
+      const existing = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      const review: OfflineReview = {
+        id: `review-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        questionId: 'seed-q',
+        selectedAnswer: 0,
+        timeSpentMs: 1000,
+        timestamp: Date.now(),
+        synced: false,
+        syncAttempts: 0,
+        ...overrides,
+      };
+      existing.push(review);
+      localStorage.setItem('panceai_offline_reviews', JSON.stringify(existing));
+      return review;
+    };
+
+    it('should flag an item as dead-lettered after MAX_SYNC_ATTEMPTS failures', async () => {
+      // Seed a review already at 4 attempts — next failure pushes to 5 (dead-letter threshold)
+      seedReview({ syncAttempts: 4, synced: false });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      const deadLetterListener = vi.fn();
+      syncManager.on('dead-letter', deadLetterListener);
+
+      try { await syncManager.syncAll(); } catch { /* sync throws but item state is what we verify */ }
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored[0].syncAttempts).toBe(5);
+      expect(stored[0].deadLettered).toBe(true);
+      expect(deadLetterListener).toHaveBeenCalled();
+    });
+
+    it('should exclude dead-lettered items from pending count', async () => {
+      seedReview({ syncAttempts: 5, deadLettered: true, synced: false });
+      seedReview({ syncAttempts: 1, synced: false });
+
+      const status = syncManager.getStatus();
+      expect(status.pendingReviews).toBe(1);
+      expect(status.deadLetteredReviews).toBe(1);
+    });
+
+    it('should treat legacy items with syncAttempts >= MAX as dead-lettered even without the flag', () => {
+      // Legacy item: no deadLettered field, but syncAttempts already maxed
+      seedReview({ syncAttempts: 5, synced: false });
+
+      const status = syncManager.getStatus();
+      expect(status.pendingReviews).toBe(0);
+      expect(status.deadLetteredReviews).toBe(1);
+    });
+
+    it('getDeadLetteredItems should return only dead-lettered items', () => {
+      seedReview({ syncAttempts: 5, deadLettered: true, synced: false, questionId: 'dead-1' });
+      seedReview({ syncAttempts: 2, synced: false, questionId: 'pending-1' });
+      seedReview({ syncAttempts: 0, synced: true, questionId: 'synced-1' });
+
+      const items = syncManager.getDeadLetteredItems();
+      expect(items.reviews).toHaveLength(1);
+      expect(items.reviews[0]?.questionId).toBe('dead-1');
+    });
+
+    it('retryDeadLettered should reset attempts and trigger a fresh sync', async () => {
+      seedReview({
+        syncAttempts: 5,
+        deadLettered: true,
+        synced: false,
+        questionId: 'retry-me',
+        lastSyncError: 'stuck',
+      });
+
+      // Mock the retry fetch to succeed
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ questionId: 'retry-me', success: true }] }),
+      });
+
+      const result = await syncManager.retryDeadLettered();
+      expect(result.reviews).toBe(1);
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored[0].synced).toBe(true);
+    });
+
+    it('retryDeadLettered should re-flag items if failure persists', async () => {
+      seedReview({
+        syncAttempts: 5,
+        deadLettered: true,
+        synced: false,
+        questionId: 'still-broken',
+      });
+
+      // Retry triggers a single syncAll; the underlying fetch still fails.
+      mockFetch.mockResolvedValue({ ok: false, status: 500 });
+
+      try { await syncManager.retryDeadLettered(); } catch { /* may throw */ }
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      // After retry: syncAttempts reset to 0, then incremented to 1 by the single
+      // sync attempt inside retryDeadLettered. Not back at MAX yet — user can retry again
+      // or wait for normal backoff to re-flag.
+      expect(stored[0].syncAttempts).toBe(1);
+      expect(stored[0].deadLettered).toBe(false);
+    });
+
+    it('discardDeadLettered should permanently remove dead-lettered items', () => {
+      seedReview({ syncAttempts: 5, deadLettered: true, synced: false, questionId: 'discard-me' });
+      seedReview({ syncAttempts: 1, synced: false, questionId: 'keep-me' });
+
+      const counts = syncManager.discardDeadLettered();
+      expect(counts.reviews).toBe(1);
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored).toHaveLength(1);
+      expect(stored[0].questionId).toBe('keep-me');
+    });
+
+    it('discardDeadLettered should be a no-op when nothing is dead-lettered', () => {
+      seedReview({ syncAttempts: 0, synced: false });
+
+      const counts = syncManager.discardDeadLettered();
+      expect(counts.answers + counts.reviews + counts.pearlActions).toBe(0);
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored).toHaveLength(1);
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // SPRINT S2: LOCALSTORAGE QUOTA GUARD
+  // --------------------------------------------------------------------------
+
+  describe('S2 localStorage quota guard', () => {
+    it('should prune synced items and retry on QuotaExceededError', () => {
+      // Pre-populate: some synced + some unsynced items
+      const existing = [
+        { id: 'a1', questionId: 'q1', selectedAnswer: 0, timeSpentMs: 100, timestamp: Date.now(), synced: true, syncAttempts: 0 },
+        { id: 'a2', questionId: 'q2', selectedAnswer: 0, timeSpentMs: 100, timestamp: Date.now(), synced: false, syncAttempts: 0 },
+        { id: 'a3', questionId: 'q3', selectedAnswer: 0, timeSpentMs: 100, timestamp: Date.now(), synced: true, syncAttempts: 0 },
+      ];
+      localStorage.setItem('panceai_offline_reviews', JSON.stringify(existing));
+
+      // First call throws QuotaExceededError, second call (after prune) succeeds.
+      let setItemCalls = 0;
+      const originalSetItem = mockLocalStorage.setItem;
+      mockLocalStorage.setItem = vi.fn((key: string, value: string) => {
+        setItemCalls++;
+        // Only throw on the FIRST call against the REVIEWS key (the test write);
+        // prune's write and initial existing setup should succeed.
+        if (setItemCalls === 1 && key === 'panceai_offline_reviews') {
+          const quotaErr = new Error('Quota exceeded');
+          quotaErr.name = 'QuotaExceededError';
+          throw quotaErr;
+        }
+        return originalSetItem(key, value);
+      });
+
+      // Trigger a save that hits the quota path
+      syncManager.queueReview({
+        questionId: 'new-q',
+        selectedAnswer: 0,
+        timeSpentMs: 100,
+      });
+
+      // After recovery: synced items pruned, new review present
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      const syncedCount = stored.filter((r: OfflineReview) => r.synced).length;
+      const newItemPresent = stored.some((r: OfflineReview) => r.questionId === 'new-q');
+      expect(syncedCount).toBe(0); // all synced items pruned
+      expect(newItemPresent).toBe(true); // new review made it in after retry
+    });
+
+    it('should emit storage-full event when retry still hits quota', () => {
+      const storageFullListener = vi.fn();
+      syncManager.on('storage-full', storageFullListener);
+
+      // Every setItem throws — simulating a truly full quota with nothing to prune.
+      mockLocalStorage.setItem = vi.fn(() => {
+        const quotaErr = new Error('Quota exceeded');
+        quotaErr.name = 'QuotaExceededError';
+        throw quotaErr;
+      });
+
+      syncManager.queueReview({
+        questionId: 'overflow',
+        selectedAnswer: 0,
+        timeSpentMs: 100,
+      });
+
+      expect(storageFullListener).toHaveBeenCalled();
+    });
+
+    it('should not catch non-quota errors in safeSetItem', () => {
+      mockLocalStorage.setItem = vi.fn(() => {
+        throw new Error('Some other storage error');
+      });
+
+      // Non-quota errors bubble up and cause queueReview's synchronous save to throw.
+      expect(() =>
+        syncManager.queueReview({
+          questionId: 'boom',
+          selectedAnswer: 0,
+          timeSpentMs: 100,
+        })
+      ).toThrow('Some other storage error');
+    });
+
+    it('should recognize Firefox-style quota errors by code 1014', () => {
+      const storageFullListener = vi.fn();
+      syncManager.on('storage-full', storageFullListener);
+
+      mockLocalStorage.setItem = vi.fn(() => {
+        const err = new Error('NS_ERROR_DOM_QUOTA_REACHED');
+        (err as Error & { code: number }).code = 1014;
+        (err as Error & { name: string }).name = 'NS_ERROR_DOM_QUOTA_REACHED';
+        throw err;
+      });
+
+      syncManager.queueReview({
+        questionId: 'firefox-overflow',
+        selectedAnswer: 0,
+        timeSpentMs: 100,
+      });
+
+      // Firefox-style error was recognized as quota, prune+retry also failed,
+      // so storage-full fired.
+      expect(storageFullListener).toHaveBeenCalled();
+    });
+  });
 });

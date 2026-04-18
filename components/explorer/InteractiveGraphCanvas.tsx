@@ -18,6 +18,15 @@ import {
   GraphFilter,
 } from '@/lib/types/graph';
 import { getConfidenceHex } from '@/lib/confidenceColorUtils';
+import {
+  graphNodeColor,
+  graphNodeColorFallback,
+  graphEdgeStyle,
+  graphEdgeColorFallback,
+  graphUI,
+  type GraphNodeColorKey,
+  type GraphEdgeStyleKey,
+} from '@/lib/tokens';
 
 interface GraphExpandApiResponse {
   data?: GraphExpandResponse;
@@ -69,31 +78,10 @@ interface InteractiveGraphCanvasProps {
   performanceOverlay?: boolean;
 }
 
-const NODE_TYPE_COLORS: Record<string, string> = {
-  CONDITION: '#dc2626',
-  FINDING: '#2563eb',
-  DRUG: '#16a34a',
-  PROCEDURE: '#d97706',
-  SYSTEM: '#7c3aed',
-  ANATOMY: '#64748b',
-  LAB_TEST: '#0891b2',
-  IMAGING: '#db2777',
-  VITAL_SIGN: '#059669',
-  OTHER: '#6b7280',
-};
-
-const EDGE_TYPE_STYLES: Record<string, { lineColor: string; lineStyle: 'solid' | 'dashed' | 'dotted' }> = {
-  HIERARCHICAL: { lineColor: '#4b5563', lineStyle: 'solid' },
-  CO_OCCURRENCE: { lineColor: '#3b82f6', lineStyle: 'solid' },
-  SEMANTIC: { lineColor: '#10b981', lineStyle: 'dashed' },
-  EXPLICIT: { lineColor: '#f59e0b', lineStyle: 'solid' },
-  ASSOCIATED: { lineColor: '#8b5cf6', lineStyle: 'dotted' },
-  TREATS: { lineColor: '#ef4444', lineStyle: 'solid' },
-  CAUSES: { lineColor: '#f97316', lineStyle: 'solid' },
-  MANIFESTS: { lineColor: '#ec4899', lineStyle: 'dashed' },
-  DIFFERENTIAL: { lineColor: '#14b8a6', lineStyle: 'dotted' },
-  COMPLICATES: { lineColor: '#b91c1c', lineStyle: 'solid' },
-};
+// Node/edge color palettes sourced from @/lib/tokens (graphNodeColor, graphEdgeStyle).
+// Re-exported under the legacy local names to minimize downstream churn.
+const NODE_TYPE_COLORS = graphNodeColor;
+const EDGE_TYPE_STYLES = graphEdgeStyle;
 
 /**
  * Convert GraphNodeResponse and GraphEdgeResponse to Cytoscape elements.
@@ -358,11 +346,11 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           selector: 'node',
           style: {
             'background-color': (ele: NodeSingular) => {
-              const nodeType = ele.data('nodeType') as string;
-              return NODE_TYPE_COLORS[nodeType] ?? '#6b7280';
+              const nodeType = ele.data('nodeType') as GraphNodeColorKey;
+              return NODE_TYPE_COLORS[nodeType] ?? graphNodeColorFallback;
             },
             'label': 'data(label)',
-            'color': '#fff',
+            'color': graphUI.nodeLabel,
             'font-size': '12px',
             'font-weight': 'bold',
             'text-valign': 'center',
@@ -370,7 +358,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
             'width': 40,
             'height': 40,
             'border-width': 2,
-            'border-color': '#ffffff',
+            'border-color': graphUI.nodeBorder,
             'border-opacity': 0.8,
           },
         },
@@ -379,15 +367,15 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           style: {
             'width': 2,
             'line-color': (ele: EdgeSingular) => {
-              const edgeType = ele.data('edgeType') as string;
-              return EDGE_TYPE_STYLES[edgeType]?.lineColor ?? '#9ca3af';
+              const edgeType = ele.data('edgeType') as GraphEdgeStyleKey;
+              return EDGE_TYPE_STYLES[edgeType]?.lineColor ?? graphEdgeColorFallback;
             },
             'line-style': (ele: EdgeSingular) => {
-              const edgeType = ele.data('edgeType') as string;
+              const edgeType = ele.data('edgeType') as GraphEdgeStyleKey;
               return EDGE_TYPE_STYLES[edgeType]?.lineStyle ?? 'solid';
             },
             'curve-style': 'bezier',
-            'target-arrow-color': '#9ca3af',
+            'target-arrow-color': graphEdgeColorFallback,
             'target-arrow-shape': 'triangle',
             'arrow-scale': 1.2,
           },
@@ -396,14 +384,14 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           selector: 'node:selected',
           style: {
             'border-width': 4,
-            'border-color': '#fbbf24',
+            'border-color': graphUI.focusBorder,
           },
         },
         {
           selector: 'edge:selected',
           style: {
             'width': 4,
-            'line-color': '#f59e0b',
+            'line-color': graphUI.focusLine,
           },
         },
       ],
@@ -502,8 +490,8 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
         node.style('background-color', color);
       } else {
         // Revert to node type color
-        const nodeType = node.data('nodeType') as string;
-        node.style('background-color', NODE_TYPE_COLORS[nodeType] ?? '#6b7280');
+        const nodeType = node.data('nodeType') as GraphNodeColorKey;
+        node.style('background-color', NODE_TYPE_COLORS[nodeType] ?? graphNodeColorFallback);
       }
     });
   }, [performanceOverlay, confidenceScores]);

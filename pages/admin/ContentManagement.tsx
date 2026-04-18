@@ -277,7 +277,10 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                       value={`${sortBy.field}-${sortBy.direction}`}
                       onChange={(e) => {
                         const [field, direction] = e.target.value.split('-');
-                        setSortBy({ field: field as any, direction: direction as any });
+                        setSortBy({
+                          field: field as ContentSort['field'],
+                          direction: direction as ContentSort['direction'],
+                        });
                       }}
                       className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)]"
                     >

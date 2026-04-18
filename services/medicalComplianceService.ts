@@ -294,7 +294,7 @@ export class MedicalComplianceService {
    */
   async checkContentCompliance(
     contentId: string,
-    contentType: string
+    contentType: ContentComplianceCheck['contentType']
   ): Promise<ContentComplianceCheck> {
     console.log(`🔍 Checking compliance for ${contentType}: ${contentId}`);
 
@@ -328,7 +328,7 @@ export class MedicalComplianceService {
 
     return {
       contentId,
-      contentType: contentType as any,
+      contentType,
       standards: ['nccpa-pance-2025', 'arc-pa-5th', 'aapa-cpg'],
       checks,
       overallStatus,

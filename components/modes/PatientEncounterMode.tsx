@@ -107,8 +107,9 @@ import { ContextBanner } from '@/components/shared/ContextBanner';
 import { PatientAVEngine } from '@/services/av/patientAVEngine';
 import type { PatientAVStateMachine, AVState } from '@/types/patient-av-state-machine';
 
-// Gemini API Key (from environment or config)
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+// Gemini access is server-side only — the browser bundle no longer carries
+// any model API key. The scribe calls /api/scribe/soap/extract with a Clerk
+// Bearer token instead (see useRealtimeSOAP / soapNoteService).
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
@@ -187,7 +188,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     finalize: finalizeSOAP,
   } = useRealtimeSOAP({
     sessionId: session?.id || null,
-    geminiApiKey: GEMINI_API_KEY,
+    getToken,
     enabled: viewState === 'active',
   });
 

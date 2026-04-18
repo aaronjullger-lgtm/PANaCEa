@@ -252,7 +252,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({
         <div className="mt-4 pt-4 border-t border-data-neutral">
           <div className="text-xs text-data-neutral mb-2">Milestones:</div>
           <div className="flex gap-2 flex-wrap">
-            {(goal.milestones as any[]).map((milestone, idx) => (
+            {(goal.milestones as Array<{ reached?: boolean; value: string }>).map((milestone, idx) => (
               <div
                 key={idx}
                 className={`px-2 py-1 rounded text-xs ${

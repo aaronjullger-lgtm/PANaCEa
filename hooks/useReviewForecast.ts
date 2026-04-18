@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getBrowserTimezone } from '@/lib/time/userTz';
 
 export interface ForecastDay {
   date: string;
@@ -23,6 +24,8 @@ export interface ReviewForecastData {
   today: number;
   forecast: ForecastDay[];
   totalActive: number;
+  /** IANA tz the server used to bucket — useful for debugging drift. */
+  timezone?: string;
 }
 
 export function useReviewForecast() {
@@ -40,7 +43,13 @@ export function useReviewForecast() {
         const token = await getToken();
         if (!token) return;
 
-        const endpoint = getApiEndpoint('/api/analytics/review-forecast');
+        // Pass browser tz so the server buckets "today" / forecast on the
+        // student's local calendar, not UTC.
+        const tz = getBrowserTimezone();
+        const base = getApiEndpoint('/api/analytics/review-forecast');
+        const endpoint = tz && tz !== 'UTC'
+          ? `${base}${base.includes('?') ? '&' : '?'}tz=${encodeURIComponent(tz)}`
+          : base;
         const response = await fetch(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
         });

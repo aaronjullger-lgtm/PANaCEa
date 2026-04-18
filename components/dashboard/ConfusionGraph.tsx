@@ -14,35 +14,13 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConfusionPairs, type ConfusionPairData } from '@/hooks/useConfusionPairs';
+import { organSystemColorFor } from '@/lib/tokens';
 
 // ── System color palette ─────────────────────────────────────────────────
+// Canonical palette lives in `lib/tokens/dataViz.ts` (`organSystemColor`).
+// Use `organSystemColorFor(system)` for case-insensitive lookup with fallback.
 
-const SYSTEM_COLORS: Record<string, string> = {
-  Cardiovascular: '#ef4444',
-  Pulmonary: '#3b82f6',
-  Gastrointestinal: '#f59e0b',
-  Musculoskeletal: '#8b5cf6',
-  HEENT: '#06b6d4',
-  Reproductive: '#ec4899',
-  Neurological: '#6366f1',
-  Psychiatry: '#a78bfa',
-  Endocrine: '#14b8a6',
-  Dermatology: '#f97316',
-  Genitourinary: '#84cc16',
-  Hematology: '#dc2626',
-  'Infectious Disease': '#10b981',
-  Nephrology: '#0ea5e9',
-  'Emergency Medicine': '#e11d48',
-  Pharmacology: '#7c3aed',
-};
-
-function getSystemColor(system: string | null): string {
-  if (!system) return '#6b7280';
-  // Try direct match, then case-insensitive
-  return SYSTEM_COLORS[system] ?? SYSTEM_COLORS[
-    Object.keys(SYSTEM_COLORS).find(k => k.toLowerCase() === system.toLowerCase()) ?? ''
-  ] ?? '#6b7280';
-}
+const getSystemColor = organSystemColorFor;
 
 // ── Force simulation types ───────────────────────────────────────────────
 

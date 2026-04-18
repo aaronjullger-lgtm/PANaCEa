@@ -33,6 +33,17 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import {
+  diagnosticStrength,
+  diagnosticStrengthFallback,
+  severity,
+  severityFallback,
+  completenessColor,
+  illnessScriptAccent,
+  tintBg,
+  type DiagnosticStrengthKey,
+  type SeverityKey,
+} from '@/lib/tokens';
 
 // ─── Types (mirrors illnessScriptService) ───────────────────────────────
 
@@ -195,15 +206,8 @@ function CollapsibleSection({
 }
 
 function StrengthBadge({ strength }: { strength: string }) {
-  const colors: Record<string, { bg: string; text: string }> = {
-    pathognomonic: { bg: '#dc262620', text: '#ef4444' },
-    strong: { bg: '#f9731620', text: '#f97316' },
-    moderate: { bg: '#eab30820', text: '#eab308' },
-    weak: { bg: '#6b728020', text: '#9ca3af' },
-    unknown: { bg: '#6b728015', text: '#6b7280' },
-  };
-  const fallbackPalette = { bg: '#6b728015', text: '#6b7280' };
-  const palette = colors[strength as keyof typeof colors] ?? fallbackPalette;
+  const palette =
+    diagnosticStrength[strength as DiagnosticStrengthKey] ?? diagnosticStrengthFallback;
   return (
     <span
       style={{
@@ -227,7 +231,7 @@ function CompletenessRing({ value }: { value: number }) {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - value);
-  const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#eab308' : '#ef4444';
+  const color = completenessColor(value);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -277,11 +281,7 @@ function GapsList({ gaps }: { gaps: ScriptGap[] }) {
   const sorted = [...gaps].sort(
     (a, b) => (severityOrder[a.severity] ?? 2) - (severityOrder[b.severity] ?? 2)
   );
-  const severityColor: Record<string, string> = {
-    critical: '#ef4444',
-    moderate: '#f97316',
-    minor: '#6b7280',
-  };
+  // severity palette sourced from @/lib/tokens (severity)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -298,7 +298,11 @@ function GapsList({ gaps }: { gaps: ScriptGap[] }) {
         >
           <AlertTriangle
             size={14}
-            style={{ color: severityColor[g.severity] ?? '#6b7280', marginTop: 2, flexShrink: 0 }}
+            style={{
+              color: severity[g.severity as SeverityKey] ?? severityFallback,
+              marginTop: 2,
+              flexShrink: 0,
+            }}
             aria-hidden="true"
           />
           <span>
@@ -330,7 +334,7 @@ function EnablingConditionsPanel({ conditions }: { conditions: EnablingCondition
   };
 
   return (
-    <CollapsibleSection title="Enabling Conditions" icon={Heart} accentColor="#f97316">
+    <CollapsibleSection title="Enabling Conditions" icon={Heart} accentColor={illnessScriptAccent.enabling}>
       {conditions.length === 0 ? (
         <p style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>
           No enabling conditions documented.
@@ -359,11 +363,15 @@ function EnablingConditionsPanel({ conditions }: { conditions: EnablingCondition
                       padding: '4px 10px',
                       borderRadius: 6,
                       fontSize: '0.85rem',
-                      background: c.isHighYield ? '#f9731615' : 'var(--color-bg-primary)',
+                      background: c.isHighYield
+                        ? tintBg(illnessScriptAccent.enabling, '15')
+                        : 'var(--color-bg-primary)',
                       border: c.isHighYield
-                        ? '1px solid #f9731640'
+                        ? `1px solid ${tintBg(illnessScriptAccent.enabling, '40')}`
                         : '1px solid var(--color-border)',
-                      color: c.isHighYield ? '#f97316' : 'var(--color-text-secondary)',
+                      color: c.isHighYield
+                        ? illnessScriptAccent.enabling
+                        : 'var(--color-text-secondary)',
                       fontWeight: c.isHighYield ? 600 : 400,
                     }}
                   >
@@ -381,7 +389,7 @@ function EnablingConditionsPanel({ conditions }: { conditions: EnablingCondition
 
 function FaultPanel({ fault }: { fault: FaultMechanism }) {
   return (
-    <CollapsibleSection title="Fault (Pathophysiology)" icon={Brain} accentColor="#8b5cf6">
+    <CollapsibleSection title="Fault (Pathophysiology)" icon={Brain} accentColor={illnessScriptAccent.fault}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {fault.etiology && (
           <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
@@ -426,8 +434,8 @@ function FaultPanel({ fault }: { fault: FaultMechanism }) {
                       width: 22,
                       height: 22,
                       borderRadius: '50%',
-                      background: '#8b5cf620',
-                      color: '#8b5cf6',
+                      background: tintBg(illnessScriptAccent.fault, '20'),
+                      color: illnessScriptAccent.fault,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -466,7 +474,7 @@ function ConsequencesPanel({ consequences }: { consequences: ClinicalConsequence
   };
 
   return (
-    <CollapsibleSection title="Consequences" icon={Target} accentColor="#22c55e">
+    <CollapsibleSection title="Consequences" icon={Target} accentColor={illnessScriptAccent.consequence}>
       {consequences.length === 0 ? (
         <p style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>
           No consequences documented.
@@ -511,7 +519,7 @@ function ConsequencesPanel({ consequences }: { consequences: ClinicalConsequence
                     >
                       <span>
                         {c.isClassic && (
-                          <span style={{ color: '#f59e0b', marginRight: 4 }} title="Classic finding">
+                          <span style={{ color: illnessScriptAccent.classic, marginRight: 4 }} title="Classic finding">
                             ★
                           </span>
                         )}
@@ -565,7 +573,7 @@ function DiagnosticsPanel({ dx }: { dx: DiagnosticWorkup }) {
 
 function TreatmentPanel({ tx }: { tx: TreatmentSummary }) {
   return (
-    <CollapsibleSection title="Treatment" icon={Pill} defaultOpen={false} accentColor="#06b6d4">
+    <CollapsibleSection title="Treatment" icon={Pill} defaultOpen={false} accentColor={illnessScriptAccent.treatment}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem' }}>
         {tx.firstLine && (
           <div>
@@ -593,9 +601,9 @@ function TreatmentPanel({ tx }: { tx: TreatmentSummary }) {
                 style={{
                   padding: '3px 8px',
                   borderRadius: 4,
-                  background: '#06b6d415',
-                  border: '1px solid #06b6d430',
-                  color: '#06b6d4',
+                  background: tintBg(illnessScriptAccent.treatment, '15'),
+                  border: `1px solid ${tintBg(illnessScriptAccent.treatment, '30')}`,
+                  color: illnessScriptAccent.treatment,
                   fontSize: '0.8rem',
                 }}
               >
@@ -651,9 +659,9 @@ function DifferentialPanel({ ddx }: { ddx: DifferentialContext }) {
                   style={{
                     padding: '3px 8px',
                     borderRadius: 4,
-                    background: '#f59e0b15',
-                    border: '1px solid #f59e0b30',
-                    color: '#f59e0b',
+                    background: tintBg(illnessScriptAccent.classic, '15'),
+                    border: `1px solid ${tintBg(illnessScriptAccent.classic, '30')}`,
+                    color: illnessScriptAccent.classic,
                     fontSize: '0.8rem',
                     fontWeight: 500,
                   }}
@@ -670,7 +678,7 @@ function DifferentialPanel({ ddx }: { ddx: DifferentialContext }) {
               Must Not Miss
             </div>
             {ddx.mustNotMiss.map((m, i) => (
-              <div key={i} style={{ color: '#ef4444', paddingLeft: 8 }}>
+              <div key={i} style={{ color: severity.critical, paddingLeft: 8 }}>
                 {m}
               </div>
             ))}
@@ -695,11 +703,11 @@ function DifferentialPanel({ ddx }: { ddx: DifferentialContext }) {
 
 function ComparisonPanel({ comparison, nameA, nameB }: { comparison: ScriptComparison; nameA: string; nameB: string }) {
   return (
-    <CollapsibleSection title="Comparison" icon={ArrowLeftRight} accentColor="#ec4899">
+    <CollapsibleSection title="Comparison" icon={ArrowLeftRight} accentColor={illnessScriptAccent.comparison}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: '0.85rem' }}>
         {comparison.keyDistinguishers.length > 0 && (
           <div>
-            <div style={{ fontWeight: 600, color: '#ec4899', marginBottom: 4 }}>
+            <div style={{ fontWeight: 600, color: illnessScriptAccent.comparison, marginBottom: 4 }}>
               Key Distinguishers
             </div>
             {comparison.keyDistinguishers.map((d, i) => (
@@ -776,7 +784,7 @@ function ScriptColumn({ script }: { script: IllnessScript }) {
       <TreatmentPanel tx={script.treatment} />
       <DifferentialPanel ddx={script.differential} />
       {script.gaps.length > 0 && (
-        <CollapsibleSection title="Knowledge Gaps" icon={AlertTriangle} defaultOpen={false} accentColor="#ef4444">
+        <CollapsibleSection title="Knowledge Gaps" icon={AlertTriangle} defaultOpen={false} accentColor={illnessScriptAccent.gap}>
           <GapsList gaps={script.gaps} />
         </CollapsibleSection>
       )}
@@ -864,7 +872,7 @@ export function IllnessScriptView({
           color: 'var(--color-text-muted)',
         }}
       >
-        <AlertTriangle size={24} style={{ color: '#ef4444', marginBottom: 8 }} />
+        <AlertTriangle size={24} style={{ color: severity.critical, marginBottom: 8 }} />
         <p style={{ fontSize: '0.9rem' }}>{error}</p>
         <button
           onClick={() => void fetchScript()}

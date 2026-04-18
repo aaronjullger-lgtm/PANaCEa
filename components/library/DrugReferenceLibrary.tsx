@@ -680,7 +680,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
       </div>
 
       {/* Detail Modal */}
-      <DrugMaster drug={selected as any} onClose={() => setSelected(null)} />
+      <DrugMaster drug={selected} onClose={() => setSelected(null)} />
     </div>
   );
 };

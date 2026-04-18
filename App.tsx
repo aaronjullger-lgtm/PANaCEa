@@ -35,6 +35,7 @@ import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './service
 import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
+import { IncidentBanner } from './components/error/IncidentBanner';
 
 // Lazy-loaded command palette (~cmdk + dialog, deferred until ⌘K)
 const LazyCommandPalette = React.lazy(() => import('@/components/command/CommandPalette'));
@@ -1082,6 +1083,15 @@ const App: React.FC = () => {
   return (
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        {/*
+          System status ribbon — stays mounted at the top of every page so users
+          see the heads-up regardless of route. Renders nothing while healthy;
+          shows a dismissible warning when /api/health reports degraded or the
+          backend is unreachable. Mounted above the guest banner so an outage
+          message takes the top slot when both apply.
+        */}
+        <IncidentBanner />
+
         {/* Guest mode banner */}
         {showGuestModeBanner && (
           <div className="bg-[var(--color-data-provisional)]/10 border-b border-[var(--color-data-provisional)]/30">

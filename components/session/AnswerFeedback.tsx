@@ -13,7 +13,7 @@
  */
 
 import React, { memo } from 'react';
-import ExplanationPanel from '@/components/questions/ExplanationPanel';
+import ExplanationPanel, { type StructuredRationale } from '@/components/questions/ExplanationPanel';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import { CalibrationFeedbackBadge } from '@/components/session/CalibrationFeedbackBadge';
 import { CausalChainDisplay } from '@/components/session/CausalChainDisplay';
@@ -146,12 +146,12 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
         <ExplanationPanel
           rationale={(() => {
             const r = currentQuestion.rationale;
-            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as any;
+            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as StructuredRationale;
             if (typeof r === 'string') {
               try {
                 const parsed = JSON.parse(r) as unknown;
                 if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
-                  return parsed as any;
+                  return parsed as StructuredRationale;
               } catch {
                 /* not JSON — rationale is a plain string, not structured */
               }

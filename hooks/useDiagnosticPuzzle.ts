@@ -65,8 +65,8 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
       const payload = result.data as DiagnosticPuzzleDailyPayload;
       setPuzzle(payload.puzzle);
       setUserState(payload.userState);
-    } catch (err: any) {
-      setError(err.message || 'Unknown error');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Failed to fetch diagnostic puzzle:', err);
     } finally {
       setIsLoading(false);
@@ -100,8 +100,8 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
       const payload = result.data as DiagnosticPuzzleDailyPayload;
       setPuzzle(payload.puzzle);
       setUserState(payload.userState);
-    } catch (err: any) {
-      setError(err.message || 'Unknown error');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Failed to submit guess:', err);
     } finally {
       setIsSubmitting(false);

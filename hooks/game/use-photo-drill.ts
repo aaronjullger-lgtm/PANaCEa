@@ -430,7 +430,7 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
  *   "no cases available" empty state instead of silently serving mock data.
  */
 export function usePhotoDrill(
-  initialCases: PhotoCase[] = (import.meta as any).env?.VITE_USE_MOCK === 'true' ? MOCK_CASES : [],
+  initialCases: PhotoCase[] = import.meta.env?.VITE_USE_MOCK === 'true' ? MOCK_CASES : [],
 ): UsePhotoDrillReturn {
   // MUST call all hooks at top level - Rules of Hooks requirement
   const auth = useAuth();

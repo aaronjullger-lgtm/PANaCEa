@@ -438,12 +438,15 @@ const QuizView: React.FC<QuizViewProps> = ({
   const recoveredSessionScoreRef = useRef<{ correct: number; total: number } | null>(null);
 
   // ---- QUEUE REPLENISHMENT (extracted hook) ----
+  // Note (S4): replenishQueue & isGeneratingQuestion are intentionally NOT
+  // destructured here. The hook runs its own proactive useEffect that fires
+  // replenishQueue() whenever queue.length < LOW_QUEUE_THRESHOLD. QuizView
+  // should never trigger replenishment directly — that's what previously
+  // created a render-phase side effect.
   const {
-    isGeneratingQuestion,
     replenishAttempts,
     replenishmentError,
     shouldEndlesslyReplenish,
-    replenishQueue,
     retryReplenishment,
   } = useQuizReplenishment({
     queue,
@@ -689,34 +692,44 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [currentQuestion, flaggedQuestions]);
 
   // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
+  // S5 — Uses AbortController so the fetch itself is cancelled on unmount /
+  // question change, not just its result discarded. Previously the response
+  // body still flowed over the wire and was JSON-parsed in the background.
   useEffect(() => {
     if (!isAnswered || !currentQuestion?.id || selectedAnswerIndex === null) {
       setAnswerDistribution(null);
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
+    const { signal } = controller;
     const fetchDistribution = async () => {
       try {
         const token = await getToken();
+        if (signal.aborted) return;
         const res = await fetch(
           `/api/analytics/peer-stats?questionId=${encodeURIComponent(currentQuestion?.id ?? '')}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            signal,
+          }
         );
-        if (!res.ok || cancelled) return;
+        if (!res.ok || signal.aborted) return;
         const json = (await res.json()) as {
           data?: { distribution?: { optionLetter: string; count: number; percent: number }[] };
         };
+        if (signal.aborted) return;
         const dist = json?.data?.distribution;
-        if (!cancelled && Array.isArray(dist)) setAnswerDistribution(dist);
+        if (Array.isArray(dist)) setAnswerDistribution(dist);
       } catch (distErr) {
+        if ((distErr as { name?: string })?.name === 'AbortError') return;
         console.warn('[QuizView] Failed to fetch answer distribution', distErr);
-        if (!cancelled) setAnswerDistribution(null);
+        if (!signal.aborted) setAnswerDistribution(null);
       }
     };
     const timeoutId = setTimeout(fetchDistribution, 500);
     return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
+      controller.abort();
+      clearTimeout(timeoutId);
     };
   }, [isAnswered, currentQuestion?.id, selectedAnswerIndex, getToken]);
 
@@ -827,7 +840,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     queue,
     setParentQueue,
     shouldEndlesslyReplenish,
-    replenishQueue,
+    // S4: replenishQueue removed — proactive useEffect in useQuizReplenishment
+    // owns replenishment; showNextQuestion no longer triggers it directly.
     handleEndSession,
     setError,
     implicitMetrics,
@@ -1363,9 +1377,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           </div>
         );
       }
-      if (!isGeneratingQuestion) {
-        void replenishQueue();
-      }
+      // S4 — Intentionally NO render-phase `void replenishQueue()` here.
+      // useQuizReplenishment's proactive useEffect (queue.length < LOW_QUEUE_THRESHOLD
+      // && !isGeneratingQuestion) already covers the empty-queue case. Firing
+      // replenishQueue() during render violates React rules and double-fires under
+      // React 19 strict mode in dev.
       return (
         <DrillLoadingState
           message="Preparing your question..."

@@ -19,6 +19,12 @@ import {
   Star, AlertTriangle, Zap, MapPin,
   FlaskConical, Calculator, ChevronRight,
 } from 'lucide-react';
+import {
+  entityAccent,
+  highYieldBadgePair,
+  warningBadgePair,
+  safetyRed,
+} from '@/lib/tokens';
 
 // ============================================================================
 // TYPOGRAPHY TOKENS
@@ -39,7 +45,7 @@ const badge = (text: string, bg: string, color: string) => (
   }}>{text}</span>
 );
 
-const highYieldBadge = () => badge('★ High Yield', '#fef3c7', '#92400e');
+const highYieldBadge = () => badge('★ High Yield', highYieldBadgePair.bg, highYieldBadgePair.text);
 
 const arrayPreview = (arr: string[] | undefined, max = 3) => {
   if (!arr?.length) return null;
@@ -82,12 +88,12 @@ const detailSection = (label: string, content: React.ReactNode) => (
 const detailSectionCritical = (label: string, content: React.ReactNode) => (
   <div style={{
     marginBottom: 14, padding: '10px 12px', borderRadius: 8,
-    borderLeft: '3px solid #ef4444',
-    background: 'color-mix(in srgb, var(--color-bg-secondary) 80%, #fef2f2 20%)',
+    borderLeft: `3px solid ${safetyRed.border}`,
+    background: `color-mix(in srgb, var(--color-bg-secondary) 80%, ${safetyRed.tint} 20%)`,
   }}>
     <div style={{
       fontSize: 12, fontWeight: 700, textTransform: 'uppercase',
-      letterSpacing: 0.6, color: '#dc2626', marginBottom: 4,
+      letterSpacing: 0.6, color: safetyRed.label, marginBottom: 4,
       fontFamily: FONT_BODY, display: 'flex', alignItems: 'center', gap: 5,
     }}>
       <AlertTriangle size={12} /> {label}
@@ -158,7 +164,7 @@ const detailGroup = (title: string, children: React.ReactNode) => (
 const crossRefHint = (text: string, icon?: React.ReactNode) => (
   <div style={{
     marginBottom: 14, padding: '8px 12px', borderRadius: 8,
-    background: 'color-mix(in srgb, var(--color-bg-secondary) 90%, var(--color-accent, #3b82f6) 10%)',
+    background: 'color-mix(in srgb, var(--color-bg-secondary) 90%, var(--color-accent) 10%)',
     border: '1px dashed var(--color-border)',
     fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY,
     display: 'flex', alignItems: 'center', gap: 6, lineHeight: 1.5,
@@ -248,7 +254,7 @@ export const procedureConfig: ReferenceViewConfig<ProcedureItem> = {
   entityNameSingular: 'Procedure',
   entitySlug: 'procedures',
   icon: Scissors,
-  accentColor: '#8b5cf6',
+  accentColor: entityAccent.procedure.accent,
   apiEndpoint: '/api/reference/procedures',
   getId: (p) => p.id,
   getDisplayName: (p) => p.displayName || p.name,
@@ -270,7 +276,7 @@ export const procedureConfig: ReferenceViewConfig<ProcedureItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(p.displayName || p.name)}
         {p.isHighYield && highYieldBadge()}
-        {p.category && badge(p.category, '#f3e8ff', '#7c3aed')}
+        {p.category && badge(p.category, entityAccent.procedure.badge.bg, entityAccent.procedure.badge.text)}
       </div>
       {!expanded && p.description && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
@@ -279,7 +285,7 @@ export const procedureConfig: ReferenceViewConfig<ProcedureItem> = {
   ),
   detailRenderer: (p) => (
     <div>
-      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, '#8b5cf6')}
+      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, entityAccent.procedure.accent)}
       {detailGroup('Preparation', <>
         {p.description && detailSection('Description', p.description)}
         {p.preparation && detailSection('Preparation', p.preparation)}
@@ -324,7 +330,7 @@ export const imagingConfig: ReferenceViewConfig<ImagingItem> = {
   entityNameSingular: 'Imaging Study',
   entitySlug: 'imaging',
   icon: Scan,
-  accentColor: '#0ea5e9',
+  accentColor: entityAccent.imaging.accent,
   apiEndpoint: '/api/reference/imaging',
   getId: (i) => i.id,
   getDisplayName: (i) => i.name,
@@ -343,8 +349,8 @@ export const imagingConfig: ReferenceViewConfig<ImagingItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(i.name)}
         {i.isHighYield && highYieldBadge()}
-        {i.modality && badge(i.modality, '#e0f2fe', '#0369a1')}
-        {i.usesRadiation && badge('☢ Radiation', '#fef2f2', '#991b1b')}
+        {i.modality && badge(i.modality, entityAccent.imaging.badge.bg, entityAccent.imaging.badge.text)}
+        {i.usesRadiation && badge('☢ Radiation', warningBadgePair.bg, warningBadgePair.text)}
       </div>
       {!expanded && i.bodyRegion && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{i.bodyRegion}</p>
@@ -353,7 +359,7 @@ export const imagingConfig: ReferenceViewConfig<ImagingItem> = {
   ),
   detailRenderer: (i) => (
     <div>
-      {studyPanel(i.clinicalPearls, i.testQuestionTips, i.commonMistakes, undefined, i.boardYieldFacts, '#0ea5e9')}
+      {studyPanel(i.clinicalPearls, i.testQuestionTips, i.commonMistakes, undefined, i.boardYieldFacts, entityAccent.imaging.accent)}
       {i.description && detailSection('Description', i.description)}
       {detailList('Indications', i.indications)}
       {detailList('Classic Signs', i.classicSigns)}
@@ -391,7 +397,7 @@ export const ecgConfig: ReferenceViewConfig<ECGItem> = {
   entityNameSingular: 'ECG Pattern',
   entitySlug: 'ecg',
   icon: Activity,
-  accentColor: '#ef4444',
+  accentColor: entityAccent.ecg.accent,
   apiEndpoint: '/api/reference/ecg',
   getId: (e) => e.id,
   getDisplayName: (e) => e.displayName || e.name,
@@ -412,8 +418,8 @@ export const ecgConfig: ReferenceViewConfig<ECGItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(e.displayName || e.name)}
         {e.isHighYield && highYieldBadge()}
-        {e.isEmergency && badge('⚡ Emergency', '#fef2f2', '#991b1b')}
-        {e.category && badge(e.category, '#fee2e2', '#dc2626')}
+        {e.isEmergency && badge('⚡ Emergency', warningBadgePair.bg, warningBadgePair.text)}
+        {e.category && badge(e.category, entityAccent.ecg.badge.bg, entityAccent.ecg.badge.text)}
       </div>
       {!expanded && e.rhythm && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>Rhythm: {e.rhythm}</p>
@@ -422,7 +428,7 @@ export const ecgConfig: ReferenceViewConfig<ECGItem> = {
   ),
   detailRenderer: (e) => (
     <div>
-      {studyPanel(e.clinicalPearls, e.testQuestionTips, e.commonMistakes, e.mnemonics, e.boardYieldFacts, '#ef4444')}
+      {studyPanel(e.clinicalPearls, e.testQuestionTips, e.commonMistakes, e.mnemonics, e.boardYieldFacts, entityAccent.ecg.accent)}
       {e.pathognomonic && detailSection('Pathognomonic Finding', <strong>{e.pathognomonic}</strong>)}
       {detailGroup('Waveform Analysis', <>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
@@ -470,7 +476,7 @@ export const anatomyConfig: ReferenceViewConfig<AnatomyItem> = {
   entityNameSingular: 'Structure',
   entitySlug: 'anatomy',
   icon: Bone,
-  accentColor: '#f59e0b',
+  accentColor: entityAccent.anatomy.accent,
   apiEndpoint: '/api/reference/anatomy',
   getId: (a) => a.id,
   getDisplayName: (a) => a.name,
@@ -492,7 +498,7 @@ export const anatomyConfig: ReferenceViewConfig<AnatomyItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(a.name)}
         {a.isHighYield && highYieldBadge()}
-        {a.system && badge(a.system, '#fef3c7', '#92400e')}
+        {a.system && badge(a.system, entityAccent.anatomy.badge.bg, entityAccent.anatomy.badge.text)}
       </div>
       {!expanded && a.region && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{a.region}{a.type ? ` · ${a.type}` : ''}</p>
@@ -501,7 +507,7 @@ export const anatomyConfig: ReferenceViewConfig<AnatomyItem> = {
   ),
   detailRenderer: (a) => (
     <div>
-      {studyPanel(a.clinicalPearls, a.testQuestionTips, a.commonMistakes, a.mnemonics, a.boardYieldFacts, '#f59e0b')}
+      {studyPanel(a.clinicalPearls, a.testQuestionTips, a.commonMistakes, a.mnemonics, a.boardYieldFacts, entityAccent.anatomy.accent)}
       {detailGroup('Structure', <>
         {a.description && detailSection('Description', a.description)}
         {a.function && detailSection('Function', a.function)}
@@ -540,7 +546,7 @@ export const specialTestConfig: ReferenceViewConfig<SpecialTestItem> = {
   entityNameSingular: 'Special Test',
   entitySlug: 'special-tests',
   icon: TestTube2,
-  accentColor: '#10b981',
+  accentColor: entityAccent.specialTest.accent,
   apiEndpoint: '/api/reference/special-tests',
   getId: (t) => t.id,
   getDisplayName: (t) => t.displayName || t.name,
@@ -557,7 +563,7 @@ export const specialTestConfig: ReferenceViewConfig<SpecialTestItem> = {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(t.displayName || t.name)}
-        {t.region && badge(t.region, '#d1fae5', '#065f46')}
+        {t.region && badge(t.region, entityAccent.specialTest.badge.bg, entityAccent.specialTest.badge.text)}
       </div>
       {!expanded && (
         <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>
@@ -604,7 +610,7 @@ export const physiologyConfig: ReferenceViewConfig<PhysiologyItem> = {
   entityNameSingular: 'Physiology Concept',
   entitySlug: 'physiology',
   icon: Brain,
-  accentColor: '#6366f1',
+  accentColor: entityAccent.physiology.accent,
   apiEndpoint: '/api/reference/physiology',
   getId: (p) => p.id,
   getDisplayName: (p) => p.displayName || p.name,
@@ -625,7 +631,7 @@ export const physiologyConfig: ReferenceViewConfig<PhysiologyItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(p.displayName || p.name)}
         {p.isHighYield && highYieldBadge()}
-        {p.system && badge(p.system, '#e0e7ff', '#4338ca')}
+        {p.system && badge(p.system, entityAccent.physiology.badge.bg, entityAccent.physiology.badge.text)}
       </div>
       {!expanded && p.description && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
@@ -634,7 +640,7 @@ export const physiologyConfig: ReferenceViewConfig<PhysiologyItem> = {
   ),
   detailRenderer: (p) => (
     <div>
-      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, '#6366f1')}
+      {studyPanel(p.clinicalPearls, p.testQuestionTips, p.commonMistakes, p.mnemonics, p.boardYieldFacts, entityAccent.physiology.accent)}
       {p.description && detailSection('Description', p.description)}
       {p.mechanism && detailSection('Mechanism', p.mechanism)}
       {p.normalValues && detailSection('Normal Values', clinicalData(p.normalValues))}
@@ -671,7 +677,7 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
   entityNameSingular: 'Finding',
   entitySlug: 'findings',
   icon: Stethoscope,
-  accentColor: '#ec4899',
+  accentColor: entityAccent.findings.accent,
   apiEndpoint: '/api/reference/findings',
   getId: (f) => f.id,
   getDisplayName: (f) => f.eponymousName ? `${f.name} (${f.eponymousName})` : f.name,
@@ -693,7 +699,7 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(f.name)}
         {f.isHighYield && highYieldBadge()}
-        {f.system && badge(f.system, '#fce7f3', '#9d174d')}
+        {f.system && badge(f.system, entityAccent.findings.badge.bg, entityAccent.findings.badge.text)}
         {f.eponymousName && <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{f.eponymousName}</span>}
       </div>
       {!expanded && (
@@ -707,7 +713,7 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
   ),
   detailRenderer: (f) => (
     <div>
-      {studyPanel(f.clinicalPearls, f.testQuestionTips, f.commonMistakes, f.mnemonics, f.boardYieldFacts, '#ec4899')}
+      {studyPanel(f.clinicalPearls, f.testQuestionTips, f.commonMistakes, f.mnemonics, f.boardYieldFacts, entityAccent.findings.accent)}
       {detailGroup('Examination', <>
         {f.description && detailSection('Description', f.description)}
         {f.howToElicit && detailSection('How to Elicit', f.howToElicit)}
@@ -791,7 +797,7 @@ export const guidelinesConfig: ReferenceViewConfig<GuidelineItem> = {
   entityNameSingular: 'Guideline',
   entitySlug: 'guidelines',
   icon: BookOpen,
-  accentColor: '#14b8a6',
+  accentColor: entityAccent.guideline.accent,
   apiEndpoint: '/api/reference/guidelines',
   getId: (g) => g.id,
   getDisplayName: (g) => g.name,
@@ -803,8 +809,8 @@ export const guidelinesConfig: ReferenceViewConfig<GuidelineItem> = {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(g.name)}
-        {g.maxScore != null && badge(`Max: ${g.maxScore}`, '#ccfbf1', '#115e59')}
-        {g.components && Array.isArray(g.components) && badge(`${g.components.length} criteria`, '#ccfbf1', '#115e59')}
+        {g.maxScore != null && badge(`Max: ${g.maxScore}`, entityAccent.guideline.badge.bg, entityAccent.guideline.badge.text)}
+        {g.components && Array.isArray(g.components) && badge(`${g.components.length} criteria`, entityAccent.guideline.badge.bg, entityAccent.guideline.badge.text)}
       </div>
       {!expanded && g.clinicalContext && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.clinicalContext}</p>
@@ -853,7 +859,7 @@ export const historyConfig: ReferenceViewConfig<HistoryItem> = {
   entityNameSingular: 'History Component',
   entitySlug: 'history-components',
   icon: ClipboardList,
-  accentColor: '#f97316',
+  accentColor: entityAccent.history.accent,
   apiEndpoint: '/api/reference/history-components',
   getId: (h) => h.id,
   getDisplayName: (h) => h.displayName || h.name,
@@ -873,7 +879,7 @@ export const historyConfig: ReferenceViewConfig<HistoryItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(h.displayName || h.name)}
         {h.isHighYield && highYieldBadge()}
-        {h.category && badge(h.category, '#ffedd5', '#9a3412')}
+        {h.category && badge(h.category, entityAccent.history.badge.bg, entityAccent.history.badge.text)}
       </div>
       {!expanded && h.frameworkName && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>Framework: {h.frameworkName}</p>
@@ -882,7 +888,7 @@ export const historyConfig: ReferenceViewConfig<HistoryItem> = {
   ),
   detailRenderer: (h) => (
     <div>
-      {studyPanel(h.clinicalPearls, h.testQuestionTips, h.commonMistakes, h.mnemonics, h.boardYieldFacts, '#f97316')}
+      {studyPanel(h.clinicalPearls, h.testQuestionTips, h.commonMistakes, h.mnemonics, h.boardYieldFacts, entityAccent.history.accent)}
       {h.description && detailSection('Description', h.description)}
       {h.frameworkName && detailSection('Framework', h.frameworkName)}
       {detailList('Elements', h.elements)}
@@ -916,7 +922,7 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
   entityNameSingular: 'Lab Test',
   entitySlug: 'labs',
   icon: FlaskConical,
-  accentColor: '#0ea5e9',
+  accentColor: entityAccent.labTest.accent,
   apiEndpoint: '/api/reference/labs',
   getId: (l) => l.id,
   getDisplayName: (l) => l.name,
@@ -935,7 +941,7 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(l.name)}
         {l.isHighYield && highYieldBadge()}
-        {l.category && badge(l.category, '#e0f2fe', '#0369a1')}
+        {l.category && badge(l.category, entityAccent.labTest.badge.bg, entityAccent.labTest.badge.text)}
       </div>
       {!expanded && l.conventionalRange && (
         <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>
@@ -946,7 +952,7 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
   ),
   detailRenderer: (l) => (
     <div>
-      {studyPanel(l.clinicalPearls, l.testQuestionTips, l.commonMistakes, l.mnemonics, l.boardYieldFacts, '#0ea5e9')}
+      {studyPanel(l.clinicalPearls, l.testQuestionTips, l.commonMistakes, l.mnemonics, l.boardYieldFacts, entityAccent.labTest.accent)}
       {l.typicalUse && detailSection('Typical Use', l.typicalUse)}
       {l.conventionalRange && detailSection('Reference Range', clinicalData(`${l.conventionalRange}${l.siUnits ? ` ${l.siUnits}` : ''}`))}
       {l.siRange && detailSection('SI Range', clinicalData(l.siRange))}
@@ -986,7 +992,7 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
   entityNameSingular: 'Scoring System',
   entitySlug: 'scoring-systems',
   icon: Calculator,
-  accentColor: '#8b5cf6',
+  accentColor: entityAccent.scoringSystem.accent,
   apiEndpoint: '/api/reference/scoring-systems',
   getId: (s) => s.id,
   getDisplayName: (s) => s.displayName || s.name,
@@ -1005,7 +1011,7 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {cardTitle(s.displayName || s.name)}
         {s.isHighYield && highYieldBadge()}
-        {s.category && badge(s.category, '#ede9fe', '#5b21b6')}
+        {s.category && badge(s.category, entityAccent.scoringSystem.badge.bg, entityAccent.scoringSystem.badge.text)}
       </div>
       {!expanded && (
         <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>
@@ -1018,7 +1024,7 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
   ),
   detailRenderer: (s) => (
     <div>
-      {studyPanel(s.clinicalPearls, s.testQuestionTips, s.commonMistakes, s.mnemonics, s.boardYieldFacts, '#8b5cf6')}
+      {studyPanel(s.clinicalPearls, s.testQuestionTips, s.commonMistakes, s.mnemonics, s.boardYieldFacts, entityAccent.scoringSystem.accent)}
       {s.clinicalContext && detailSection('Clinical Context', s.clinicalContext)}
       {s.whenToUse && detailSection('When to Use', s.whenToUse)}
       {s.whenNotToUse && detailSectionCritical('When NOT to Use', s.whenNotToUse)}
@@ -1059,7 +1065,7 @@ export const scoringSystemConfig: ReferenceViewConfig<ScoringSystemItem> = {
       {s.ScoringSystemConditionLink?.length ? detailSection('Associated Conditions',
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {s.ScoringSystemConditionLink.map((link, i) => (
-            <span key={i}>{badge(link.condition.canonicalName, '#f3e8ff', '#7c3aed')}</span>
+            <span key={i}>{badge(link.condition.canonicalName, entityAccent.procedure.badge.bg, entityAccent.procedure.badge.text)}</span>
           ))}
         </div>
       ) : null}
