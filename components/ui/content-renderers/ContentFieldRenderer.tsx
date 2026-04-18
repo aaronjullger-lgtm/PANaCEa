@@ -12,11 +12,22 @@ import {
   type FieldRenderType,
 } from '@/types/medical-content';
 import { normalizeToStringArray } from '@/lib/utils/jsonParser';
+import { isSafetyCriticalField } from '@/lib/constants/safety-critical-fields';
+import { IncompleteFieldBadge } from '@/components/library/IncompleteFieldBadge';
 
 interface ContentFieldRendererProps {
   value: ContentFieldValue;
   className?: string;
   variant?: 'default' | 'clinical' | 'checklist';
+  /**
+   * Field key (e.g., "complications"). When provided AND the value is empty,
+   * the renderer checks SAFETY_CRITICAL_FIELDS and renders an
+   * IncompleteFieldBadge instead of silently returning null. Non-safety empty
+   * fields still render nothing (existing behavior preserved).
+   */
+  fieldKey?: string;
+  /** Human-readable label for the field, used in the incomplete badge. */
+  fieldLabel?: string;
 }
 
 /**
@@ -39,11 +50,20 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
   value,
   className = '',
   variant = 'default',
+  fieldKey,
+  fieldLabel,
 }) => {
   const renderType = getFieldRenderType(value);
 
   switch (renderType) {
     case 'empty':
+      // Safety gate: if this is a safety-critical field, we MUST surface the
+      // gap visibly rather than let the section disappear.
+      if (fieldKey && isSafetyCriticalField(fieldKey)) {
+        return (
+          <IncompleteFieldBadge fieldLabel={fieldLabel} className={className} />
+        );
+      }
       return null;
 
     case 'markdown':

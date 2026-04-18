@@ -12,14 +12,15 @@
 import React from 'react';
 import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { cardHoverVariants, springs } from '@/config/appViews';
+import { cardHoverVariants } from '@/config/appViews';
+import { shadow } from '@/lib/tokens';
 
-/* ---------- Ring-shadow value (single source of truth) ---------- */
-const RING_SHADOW = '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)';
+/* ---------- Ring-shadow value (sourced from canonical tokens) ---------- */
+const RING_SHADOW = shadow.card;
 
 /* ---------- Glassmorphism card style ---------- */
 const GLASS_CARD_STYLE: React.CSSProperties = {
-  boxShadow: '0 0 0 1px var(--color-glass-border, var(--color-border)), 0 4px 16px -4px var(--color-glass-shadow, rgba(0,0,0,0.12)), 0 2px 6px -2px rgba(0,0,0,0.04)',
+  boxShadow: shadow.cardGlass,
   backdropFilter: 'blur(16px) saturate(140%)',
   WebkitBackdropFilter: 'blur(16px) saturate(140%)',
   background: 'var(--color-card-bg, var(--color-bg-secondary))',
