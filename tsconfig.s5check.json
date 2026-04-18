@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "components/session/hooks/useQuizReplenishment.ts",
+    "components/session/hooks/useQuizReplenishment.test.ts",
+    "components/session/QuizView.tsx",
+    "services/core/mainSessionService.ts",
+    "services/client/questionApi.ts"
+  ]
+}
