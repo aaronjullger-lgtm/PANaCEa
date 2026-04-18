@@ -10,28 +10,11 @@
 import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { logger } from '../../_shared/secureLogger';
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withAuth,
-  withAdminRole,
-  withRateLimit,
-  withLogging,
-  type AuthenticatedContext,
-} from '../../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../../_shared/middleware';
 
-// Empty schema for GET with no query params
-const EmptySchema = z.object({});
-
-export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withAdminRole(),
-  withRateLimit({ requestsPerMinute: 60, endpointType: 'admin' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+export const onRequestGet = adminAuthenticatedEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
@@ -100,5 +83,6 @@ export const onRequestGet = withMiddleware(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 60 }
 );

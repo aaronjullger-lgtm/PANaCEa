@@ -138,7 +138,6 @@ async function fetchAndBuildScript(
       pathophysiology: true,
       overview: true,
       symptoms: true,
-      signs: true,
       physicalExam: true,
       diagnostics: true,
       gold_standard_dx: true,

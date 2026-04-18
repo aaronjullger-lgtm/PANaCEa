@@ -1,10 +1,25 @@
-// functions/api/gemini/stream.ts
-// Edge-compatible streaming endpoint for Gemini AI responses
-// Uses Web Streams API (not Node.js streams) for Cloudflare Pages Functions compatibility
+// functions/api/ai/chat/stream.ts
+// Edge-compatible streaming endpoint for Gemini AI responses.
+// Uses Web Streams API (not Node.js streams) for Cloudflare Pages Functions compatibility.
 //
-// NOTE: This endpoint uses buildGeminiUrl from ai-service.ts for URL construction
-// but keeps custom SSE parsing logic for thought signature extraction and detailed
-// error handling that streamGemini() doesn't support.
+// Auth / rate-limit / env stack is supplied by `aiStreamingEndpoint`:
+//   - 401 envelope on unauthenticated requests
+//   - 429 envelope + rate-limit headers on budget exhaustion (bucket: 'gemini')
+//   - 500 envelope on missing GEMINI_API_KEY or CLERK_SECRET_KEY
+//   - Passes a 2xx SSE Response through untouched so frames stream intact
+//
+// Sprint 5c migration notes (AI Gateway):
+//   - Direct `fetch` to `generativelanguage.googleapis.com` + manual URL /
+//     payload construction replaced by a single `gateway.stream()` call.
+//   - The gateway surfaces optional `tools`, `cachedContent`, `history` (with
+//     per-turn `thoughtSignature`), and `previousThoughtSignatures` — so this
+//     endpoint no longer needs to hand-roll a `contents` array.
+//   - Thought-signature extraction + the terminal `{ thoughtSignatures }` SSE
+//     frame stay endpoint-local: the gateway yields a raw SSE Response and has
+//     no opinion about what goes in or comes out of the wire. Same for token
+//     usage tracking, which reads the gateway's downstream SSE frames.
+//   - `GatewayError` is translated to the existing `AppError` envelope so the
+//     client-side error UI keeps working without changes.
 
 import {
   ApiError,
@@ -16,18 +31,17 @@ import {
   isAppError,
 } from '../../../../lib/errors/types';
 import { logError, addBreadcrumb } from '../../../../lib/errors/errorLogger';
-import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
-import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
-import { authenticateRequest } from '../../_shared/auth';
-import { getCorsHeaders, handleCorsPreflightSecure } from '../../_shared/cors';
+import { getCorsHeaders } from '../../_shared/cors';
 import { geminiStreamRequestSchema, enforcePayloadSize } from '../../_shared/zodSchemas';
 import { trackTokenUsage } from '../../_shared/tokenTracking';
-import { buildGeminiUrl, supportsThinking } from '../../_shared/ai-service';
+import { aiStreamingEndpoint } from '../../_shared/endpoint';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 
 interface Env {
   GEMINI_API_KEY: string;
   CLERK_SECRET_KEY?: string;
   RATE_LIMIT_KV?: unknown;
+  PANCE_BLUEPRINT_CACHE_NAME?: string;
 }
 
 const CATEGORY_TO_HTTP_STATUS: Record<string, number> = {
@@ -65,40 +79,51 @@ function errorToResponse(error: AppError, corsHeaders: Record<string, string> = 
 }
 
 /**
- * Build an AppError from a non-OK Gemini API response
+ * Translate a GatewayError to the AppError hierarchy this endpoint already
+ * speaks. Callers (client SDK, toast UI) expect `{ error, category, retryable,
+ * retryAfterMs }`, so we preserve that contract even though the gateway
+ * speaks its own failure vocabulary.
  */
-function geminiErrorFromResponse(
-  statusCode: number,
-  errorText: string,
-  geminiUrl: string
-): AppError {
-  if (statusCode === 429) {
-    return new RateLimitError('Gemini API rate limit exceeded', 60, {
-      service: 'gemini',
-      endpoint: geminiUrl,
-      statusCode,
-      response: errorText,
-    });
+function gatewayErrorToAppError(err: GatewayError): AppError {
+  const ctx = {
+    service: 'gemini' as const,
+    gatewayCode: err.code,
+    requestId: err.requestId,
+    traceId: err.traceId,
+    task: err.task,
+    ...(err.context ?? {}),
+  };
+  switch (err.code) {
+    case 'RATE_LIMITED':
+      return new RateLimitError('Gemini API rate limit exceeded', 60, ctx);
+    case 'TIMEOUT':
+      return new TimeoutError('Gemini API request timed out', 30000, ctx);
+    case 'SERVER_ERROR':
+    case 'ALL_PROVIDERS_FAILED':
+    case 'UNKNOWN':
+      return new ExternalServiceError(err.message, 'gemini', undefined, ctx);
+    case 'SAFETY_BLOCKED':
+      return new ExternalServiceError(err.message, 'gemini', 422, ctx);
+    case 'BAD_REQUEST':
+    case 'UNAUTHORIZED':
+    case 'MISSING_API_KEY':
+    case 'SCHEMA_INVALID_AFTER_REPAIR':
+      return new ApiError(err.message, 400, '/api/gemini/stream', ctx);
+    default:
+      return new ExternalServiceError(err.message, 'gemini', undefined, ctx);
   }
-  if (statusCode === 408) {
-    return new TimeoutError('Gemini API request timed out', 30000, {
-      service: 'gemini',
-      endpoint: geminiUrl,
-      statusCode,
-      response: errorText,
-    });
-  }
-  if (statusCode >= 500) {
-    return new ExternalServiceError(
-      `Gemini API server error: ${statusCode}`,
-      'gemini',
-      statusCode,
-      { endpoint: geminiUrl, response: errorText }
-    );
-  }
-  return new ApiError(`Gemini API error: ${statusCode}`, statusCode, geminiUrl, {
-    response: errorText,
-  });
+}
+
+/**
+ * Map client-supplied thinkingLevel (uppercase: MINIMAL|LOW|MEDIUM|HIGH) to
+ * the gateway's lowercase enum. The gateway's `thinkingBudget` helper converts
+ * the enum to a concrete token count downstream.
+ */
+function normalizeThinkingLevel(
+  level: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH' | undefined
+): 'minimal' | 'low' | 'medium' | 'high' | undefined {
+  if (!level) return undefined;
+  return level.toLowerCase() as 'minimal' | 'low' | 'medium' | 'high';
 }
 
 /**
@@ -207,317 +232,273 @@ async function processGeminiStream(
 }
 
 /**
- * Cloudflare Pages Function for streaming Gemini responses
- * Returns Server-Sent Events (SSE) stream
+ * Cloudflare Pages Function for streaming Gemini responses.
+ * Returns Server-Sent Events (SSE) stream. Auth + rate-limit + env checks run
+ * inside `aiStreamingEndpoint`; this handler is only reached for authenticated
+ * callers within budget.
  */
-export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
-  const { request, env } = context;
-  const corsHeaders = getCorsHeaders(request) || {};
+export const onRequestPost = aiStreamingEndpoint(
+  async (context) => {
+    const { request, auth } = context;
+    const env = context.env as Env;
+    const corsHeaders = getCorsHeaders(request) || {};
 
-  try {
-    // Require authentication (high-cost AI endpoint)
-    const auth = await authenticateRequest(request, env);
-    if (!auth) {
-      return new Response(
-        JSON.stringify({
-          error: 'Authentication required',
-          message: 'Please sign in to use AI features',
-          category: 'authentication',
-          retryable: false,
-          timestamp: new Date().toISOString(),
-        }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        }
-      );
-    }
-
-    // Validate required environment variables early (JSON 500 instead of HTML fallback)
     try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-    } catch (error) {
-      if (error instanceof MissingEnvError) {
-        return error.toResponse();
+      addBreadcrumb('Gemini stream request started', 'gemini-stream', 'info');
+
+      const rawBody = await request.text();
+      try {
+        enforcePayloadSize(rawBody, '/api/gemini/stream');
+      } catch (sizeError) {
+        const message = sizeError instanceof Error ? sizeError.message : 'Payload too large';
+        const validationError = new ValidationError(message, 'body', undefined, {
+          endpoint: '/api/gemini/stream',
+        });
+        logError(validationError, { endpoint: '/api/gemini/stream' });
+        return new Response(
+          JSON.stringify({
+            error: message,
+            category: 'validation',
+            retryable: false,
+            timestamp: new Date().toISOString(),
+          }),
+          {
+            status: 413,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          }
+        );
       }
-      throw error;
-    }
 
-    // Rate limit AI requests (user ID if available, else IP)
-    const identifier = getRateLimitIdentifier(request);
-    const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
-      env as Parameters<typeof withRateLimit>[0],
-      identifier,
-      'gemini'
-    );
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
-    // Add breadcrumb for request start
-    addBreadcrumb('Gemini stream request started', 'gemini-stream', 'info');
-
-    const rawBody = await request.text();
-    try {
-      enforcePayloadSize(rawBody, '/api/gemini/stream');
-    } catch (sizeError) {
-      const message = sizeError instanceof Error ? sizeError.message : 'Payload too large';
-      const validationError = new ValidationError(message, 'body', undefined, {
-        endpoint: '/api/gemini/stream',
-      });
-      logError(validationError, { endpoint: '/api/gemini/stream' });
-      return new Response(
-        JSON.stringify({
-          error: message,
-          category: 'validation',
-          retryable: false,
-          timestamp: new Date().toISOString(),
-        }),
-        {
-          status: 413,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    let body: unknown;
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      const validationError = new ValidationError('Invalid JSON body', 'body', undefined, {
-        endpoint: '/api/gemini/stream',
-      });
-      addBreadcrumb('Invalid JSON in stream request', 'gemini-stream', 'warning');
-      logError(validationError, { endpoint: '/api/gemini/stream' });
-      return errorToResponse(validationError, corsHeaders);
-    }
-
-    // For visual drills (ECG/imaging/derm), body can be extended with imageParts (inlineData base64)
-    // so the model can describe findings; keep request size within Edge limits (~4MB).
-
-    const parsed = geminiStreamRequestSchema.safeParse(body);
-    if (!parsed.success) {
-      const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
-      const validationError = new ValidationError(`Validation failed: ${issues}`, 'body', body, {
-        issues: parsed.error.issues,
-      });
-      addBreadcrumb('Stream request validation failed', 'gemini-stream', 'warning', {
-        issues: issues.slice(0, 200),
-      });
-      logError(validationError, {
-        endpoint: '/api/gemini/stream',
-        requestBody: { modelName: (body as { modelName?: string }).modelName },
-      });
-      return errorToResponse(validationError, corsHeaders);
-    }
-
-    const {
-      modelName,
-      prompt,
-      temperature,
-      cachedContent: clientCachedContent,
-      thinkingLevel = 'HIGH',
-      history,
-      previousThoughtSignatures,
-      systemInstruction: clientSystemInstruction,
-    } = parsed.data;
-    const apiKey = env.GEMINI_API_KEY;
-
-    // Context cache: prefer client-provided cachedContent, else env PANCE_BLUEPRINT_CACHE_NAME
-    const envCache =
-      typeof env === 'object' && env !== null && 'PANCE_BLUEPRINT_CACHE_NAME' in env
-        ? (env as { PANCE_BLUEPRINT_CACHE_NAME?: string }).PANCE_BLUEPRINT_CACHE_NAME
-        : undefined;
-    const cachedContent =
-      clientCachedContent ?? (typeof envCache === 'string' ? envCache : undefined);
-
-    addBreadcrumb('Request validated, calling Gemini API', 'gemini-stream', 'info', {
-      modelName,
-      promptLength: prompt.length,
-      temperature,
-      hasCachedContent: !!cachedContent,
-      hasHistory: !!history?.length,
-    });
-
-    // Build contents: multi-turn history + current user message (with thought signatures)
-    const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [];
-    if (history?.length) {
-      for (const turn of history) {
-        const parts: Array<Record<string, unknown>> = [{ text: turn.text }];
-        if (turn.role === 'model' && turn.thoughtSignature) {
-          parts.push({ thoughtSignature: turn.thoughtSignature });
-        }
-        contents.push({ role: turn.role, parts });
+      let body: unknown;
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        const validationError = new ValidationError('Invalid JSON body', 'body', undefined, {
+          endpoint: '/api/gemini/stream',
+        });
+        addBreadcrumb('Invalid JSON in stream request', 'gemini-stream', 'warning');
+        logError(validationError, { endpoint: '/api/gemini/stream' });
+        return errorToResponse(validationError, corsHeaders);
       }
-    }
-    const userParts: Array<Record<string, unknown>> = [{ text: prompt }];
-    if (previousThoughtSignatures?.length) {
-      for (const sig of previousThoughtSignatures) {
-        userParts.push({ thoughtSignature: sig });
+
+      // For visual drills (ECG/imaging/derm), body can be extended with imageParts (inlineData base64)
+      // so the model can describe findings; keep request size within Edge limits (~4MB).
+
+      const parsed = geminiStreamRequestSchema.safeParse(body);
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join('.')}: ${i.message}`)
+          .join('; ');
+        const validationError = new ValidationError(`Validation failed: ${issues}`, 'body', body, {
+          issues: parsed.error.issues,
+        });
+        addBreadcrumb('Stream request validation failed', 'gemini-stream', 'warning', {
+          issues: issues.slice(0, 200),
+        });
+        logError(validationError, {
+          endpoint: '/api/gemini/stream',
+          requestBody: { modelName: (body as { modelName?: string }).modelName },
+        });
+        return errorToResponse(validationError, corsHeaders);
       }
-    }
-    contents.push({ role: 'user', parts: userParts });
 
-    // System instruction: PANaCEa Deep Think tutor (differentials, pathophysiology of error)
-    const defaultSystemInstruction =
-      'You are PANaCEa. Before answering, internally rank the top 3 differentials. If the user is wrong, explain the pathophysiology of their error. Be concise but rigorous.';
-    const systemInstruction = clientSystemInstruction?.trim() || defaultSystemInstruction;
-
-    // Construct Gemini API URL for streaming (centralized via ai-service)
-    const geminiUrl = buildGeminiUrl(apiKey, modelName, 'streamGenerateContent') + '&alt=sse';
-    const geminiUrlRedacted = geminiUrl.replace(/key=[^&]+/, 'key=[REDACTED]');
-
-    const streamBody: Record<string, unknown> = {
-      contents,
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: {
+      const {
+        modelName,
+        prompt,
         temperature,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 2048,
-      },
-      // Gemini 3 reasoning: high thinking, do not include thought text in stream (only signatures)
-      thinkingConfig: { thinkingLevel, includeThoughts: false },
-    };
-    if (cachedContent) {
-      streamBody.cachedContent = cachedContent;
-    }
+        cachedContent: clientCachedContent,
+        thinkingLevel = 'HIGH',
+      } = parsed.data;
 
-    // Call Gemini with streaming enabled
-    let geminiResponse: Response;
-    try {
-      geminiResponse = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(streamBody),
-      });
-    } catch (fetchError) {
-      const networkError = new ExternalServiceError(
-        'Failed to connect to Gemini API',
-        'gemini',
-        undefined,
-        {
-          modelName,
-          url: geminiUrlRedacted,
-          originalError: fetchError instanceof Error ? fetchError.message : String(fetchError),
-        }
-      );
+      // Context cache: prefer client-provided cachedContent, else env PANCE_BLUEPRINT_CACHE_NAME.
+      // Env cache is set server-side at deploy time (pre-baked PANCE blueprint vector cache).
+      const envCache = env.PANCE_BLUEPRINT_CACHE_NAME;
+      const cachedContent =
+        clientCachedContent ?? (typeof envCache === 'string' ? envCache : undefined);
 
-      addBreadcrumb('Network error calling Gemini', 'gemini-stream', 'error', {
-        error: fetchError instanceof Error ? fetchError.message : String(fetchError),
-      });
+      // System instruction: PANaCEa Deep Think tutor (differentials, pathophysiology of error).
+      // The schema doesn't yet surface a client override, so this is a pure server-side prompt.
+      const systemInstruction =
+        'You are PANaCEa. Before answering, internally rank the top 3 differentials. If the user is wrong, explain the pathophysiology of their error. Be concise but rigorous.';
 
-      logError(networkError, {
-        endpoint: '/api/gemini/stream',
+      addBreadcrumb('Request validated, calling AI Gateway', 'gemini-stream', 'info', {
         modelName,
         promptLength: prompt.length,
+        temperature,
+        hasCachedContent: !!cachedContent,
+        thinkingLevel,
       });
 
-      return errorToResponse(networkError);
-    }
-
-    // Handle non-OK responses
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      const statusCode = geminiResponse.status;
-      const apiError = geminiErrorFromResponse(statusCode, errorText, geminiUrl);
-      addBreadcrumb(
-        'Gemini API error response',
-        'gemini-stream',
-        statusCode >= 500 ? 'error' : 'warning',
-        { statusCode }
-      );
-      logError(apiError, {
-        endpoint: '/api/gemini/stream',
-        modelName,
-        promptLength: prompt.length,
-        statusCode,
-        responseText: errorText.slice(0, 500),
-      });
-      return errorToResponse(apiError, corsHeaders);
-    }
-
-    // Verify stream exists
-    const geminiStream = geminiResponse.body;
-    if (!geminiStream) {
-      const serviceError = new ExternalServiceError(
-        'Gemini API returned no response stream',
-        'gemini',
-        200,
-        { endpoint: geminiUrlRedacted }
-      );
-
-      addBreadcrumb('No stream from Gemini', 'gemini-stream', 'error');
-
-      logError(serviceError, {
-        endpoint: '/api/gemini/stream',
-        modelName,
-      });
-
-      return errorToResponse(serviceError);
-    }
-
-    addBreadcrumb('Gemini stream started', 'gemini-stream', 'info');
-
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const encoder = new TextEncoder();
-    const streamPromise = processGeminiStream(geminiStream, writer, encoder);
-
-    // Track token usage after stream completes: structured log + DB persistence (non-blocking)
-    streamPromise.then((result) => {
-      trackTokenUsage(
-        { env, waitUntil: (context as any).waitUntil, auth },
-        {
+      // Route through the AI Gateway. The gateway returns a 2xx SSE Response
+      // on success (streamGemini pipes the original Gemini body through) or
+      // throws a GatewayError on a network/auth/rate-limit failure.
+      let streamResponse: Response;
+      try {
+        const gatewayResult = await gateway.stream(toGatewayContext(context), {
+          task: 'tutoring',
           endpoint: '/api/gemini/stream',
           model: modelName,
-          usage: result.usageMetadata,
-          statusCode: result.error ? 500 : 200,
-          cacheHit: false,
+          systemPrompt: systemInstruction,
+          userPrompt: prompt,
+          temperature,
+          maxOutputTokens: 2048,
+          thinkingBudget: normalizeThinkingLevel(thinkingLevel),
+          cachedContent,
+        });
+        streamResponse = gatewayResult.response;
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          const appError = gatewayErrorToAppError(err);
+          addBreadcrumb('Gateway error before stream start', 'gemini-stream', 'error', {
+            code: err.code,
+            requestId: err.requestId,
+          });
+          logError(appError, {
+            endpoint: '/api/gemini/stream',
+            modelName,
+            promptLength: prompt.length,
+            gatewayCode: err.code,
+          });
+          return errorToResponse(appError, corsHeaders);
         }
-      );
-    }).catch(() => {
-      // Tracking failure should not affect the stream
-    });
+        // Unknown shape — surface as an ExternalServiceError so the client
+        // still sees a structured envelope.
+        const networkError = new ExternalServiceError(
+          'Failed to reach Gemini via AI Gateway',
+          'gemini',
+          undefined,
+          {
+            modelName,
+            originalError: err instanceof Error ? err.message : String(err),
+          }
+        );
+        addBreadcrumb('Unexpected gateway error', 'gemini-stream', 'error', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        logError(networkError, {
+          endpoint: '/api/gemini/stream',
+          modelName,
+          promptLength: prompt.length,
+        });
+        return errorToResponse(networkError, corsHeaders);
+      }
 
-    // Return SSE stream to client (include CORS and rate limit headers)
-    return new Response(readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-        ...corsHeaders,
-        ...rateLimitHeaders,
-      },
-    });
-  } catch (error) {
-    // Catch-all for unexpected errors
-    const appError = isAppError(error)
-      ? error
-      : new ExternalServiceError('Unexpected error in streaming endpoint', 'gemini', undefined, {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
+      // The gateway's streamGemini swallows Gemini-side non-2xx responses and
+      // returns a JSON error body with the original status code. Detect that
+      // before we try to parse it as SSE.
+      if (!streamResponse.ok) {
+        let errorDetail = '';
+        try {
+          errorDetail = await streamResponse.text();
+        } catch {
+          /* ignore read failure */
+        }
+        const statusCode = streamResponse.status;
+        let apiError: AppError;
+        if (statusCode === 429) {
+          apiError = new RateLimitError('Gemini API rate limit exceeded', 60, {
+            service: 'gemini',
+            statusCode,
+            response: errorDetail.slice(0, 500),
+          });
+        } else if (statusCode >= 500) {
+          apiError = new ExternalServiceError(
+            `Gemini API server error: ${statusCode}`,
+            'gemini',
+            statusCode,
+            { response: errorDetail.slice(0, 500) }
+          );
+        } else {
+          apiError = new ApiError(
+            `Gemini API error: ${statusCode}`,
+            statusCode,
+            '/api/gemini/stream',
+            { response: errorDetail.slice(0, 500) }
+          );
+        }
+        addBreadcrumb('Gateway returned non-OK response', 'gemini-stream', 'error', {
+          statusCode,
+        });
+        logError(apiError, {
+          endpoint: '/api/gemini/stream',
+          modelName,
+          promptLength: prompt.length,
+          statusCode,
+        });
+        return errorToResponse(apiError, corsHeaders);
+      }
+
+      const geminiStream = streamResponse.body;
+      if (!geminiStream) {
+        const serviceError = new ExternalServiceError(
+          'Gemini API returned no response stream',
+          'gemini',
+          200,
+          { endpoint: '/api/gemini/stream' }
+        );
+        addBreadcrumb('No stream from Gemini', 'gemini-stream', 'error');
+        logError(serviceError, { endpoint: '/api/gemini/stream', modelName });
+        return errorToResponse(serviceError, corsHeaders);
+      }
+
+      addBreadcrumb('Gemini stream started', 'gemini-stream', 'info');
+
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const encoder = new TextEncoder();
+      const streamPromise = processGeminiStream(geminiStream, writer, encoder);
+
+      // Track token usage after stream completes: structured log + DB persistence (non-blocking)
+      streamPromise
+        .then((result) => {
+          trackTokenUsage(
+            {
+              env,
+              waitUntil: context.waitUntil,
+              auth: { userId: auth.userId, clerkId: auth.clerkId },
+            },
+            {
+              endpoint: '/api/gemini/stream',
+              model: modelName,
+              usage: result.usageMetadata,
+              statusCode: result.error ? 500 : 200,
+              cacheHit: false,
+            }
+          );
+        })
+        .catch(() => {
+          // Tracking failure should not affect the stream
         });
 
-    addBreadcrumb('Unexpected streaming error', 'gemini-stream', 'error', {
-      errorType: error instanceof Error ? error.name : typeof error,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    });
+      // Return SSE stream to client (include CORS headers)
+      return new Response(readable, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+          ...corsHeaders,
+        },
+      });
+    } catch (error) {
+      // Catch-all for unexpected errors
+      const appError = isAppError(error)
+        ? error
+        : new ExternalServiceError('Unexpected error in streaming endpoint', 'gemini', undefined, {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          });
 
-    logError(appError, {
-      endpoint: '/api/gemini/stream',
-      unexpected: true,
-    });
+      addBreadcrumb('Unexpected streaming error', 'gemini-stream', 'error', {
+        errorType: error instanceof Error ? error.name : typeof error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
 
-    return errorToResponse(appError, getCorsHeaders(context.request) || {});
+      logError(appError, {
+        endpoint: '/api/gemini/stream',
+        unexpected: true,
+      });
+
+      return errorToResponse(appError, corsHeaders);
+    }
   }
-}
-
-/**
- * OPTIONS handler for CORS preflight
- */
-export async function onRequestOptions(context: { request: Request; env: Env }): Promise<Response> {
-  return handleCorsPreflightSecure(context.request, context.env);
-}
+);

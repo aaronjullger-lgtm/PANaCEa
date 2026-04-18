@@ -7,6 +7,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
 import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
+import { toGatewayContext } from '../../../lib/ai/aiGateway';
 
 const GenerateQuestionSchema = z.object({
   taxonomyCode: z.string().min(2).max(10),
@@ -117,7 +118,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(
       const generatedQuestions = [];
       for (let i = 0; i < body.count; i++) {
         const question = await generateSingleQuestion(
-          apiKey,
+          toGatewayContext(context),
           conditionData,
           body.type
         );

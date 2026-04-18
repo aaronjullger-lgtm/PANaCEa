@@ -10,6 +10,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   analyzeLearner,
@@ -31,9 +32,17 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
   };
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const userId = auth.userId;
 
   try {
+    // Resolve Clerk id to internal User.id — all user-owned tables use the internal id.
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return Response.json(
+        { error: 'User not found', meta: { status: 'user_not_synced' } },
+        { status: 404 }
+      );
+    }
+
     // Parallel fetch all needed data
     const [phenotype, learningProfile, goal, recentAttempts, dailyAnalytics] =
       await Promise.all([

@@ -9,89 +9,85 @@
  * Also callable manually: POST /api/cron/generate-variants
  *
  * Sprint 1D — April 2026
+ *
+ * Migrated to canonical `cronEndpoint` wrapper (Sprint 9 follow-up):
+ *   - Replaces hand-rolled `Authorization: Bearer ${CRON_SECRET}` check with
+ *     timing-safe `cronEndpoint` verification (constant-time comparison,
+ *     structured logging, unified response envelope).
+ *   - Body params validated via Zod schema so the handler receives a typed,
+ *     sanitized payload instead of casting `unknown` fields.
  */
 
+import { z } from 'zod';
+import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   generateBatchVariants,
   assessPoolHealth,
 } from '../../../lib/services/batchVariantService';
 
-interface Env {
-  GEMINI_API_KEY?: string;
-  CRON_SECRET?: string;
-}
+/**
+ * Body schema for the cron trigger. All fields optional so the default
+ * scheduled run (no body) just falls through to service defaults.
+ * - `system`: optional organ-system filter (e.g. "Cardiovascular") to scope
+ *   variant generation during targeted catch-up runs.
+ * - `maxGenerations`: hard ceiling on API spend for this invocation; clamped
+ *   to a realistic range so a typo can't burn the whole Gemini budget.
+ */
+const GenerateVariantsBodySchema = z.object({
+  system: z.string().min(1).max(64).optional(),
+  maxGenerations: z.number().int().min(1).max(500).optional(),
+});
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const { env, request } = context;
-  // Auth: require cron secret for manual triggers
-  const authHeader = request.headers.get('Authorization');
-  const cronSecret = env.CRON_SECRET;
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+export const onRequestPost = cronEndpoint({
+  schema: GenerateVariantsBodySchema,
+  handler: async (context) => {
+    const env = context.env as Record<string, string | undefined>;
 
-  const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  let prisma;
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    // Parse optional body params
-    let systemFilter: string | undefined;
-    let maxGenerations = 50;
-    try {
-      const body = await request.json() as Record<string, unknown>;
-      systemFilter = body.system as string | undefined;
-      maxGenerations = (body.maxGenerations as number) || 50;
-    } catch {
-      // No body — use defaults
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return fail(ErrorCode.ENV_MISCONFIGURED, {
+        message: 'GEMINI_API_KEY not configured',
+        request: context.request,
+      });
     }
-    // Run batch generation
-    const result = await generateBatchVariants(prisma, apiKey, {
-      maxGenerations,
-      systemFilter,
-    });
 
-    // Also get current health snapshot for the response
-    const health = await assessPoolHealth(prisma);
+    const { system: systemFilter, maxGenerations = 50 } = context.validated;
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        generation: result,
-        poolHealth: {
-          totalConditions: health.totalConditions,
-          healthyConditions: health.healthyConditions,
-          thinConditions: health.thinConditions,
-          emptyConditions: health.emptyConditions,
-          coverageBySystem: health.coverageBySystem,
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL as string);
+
+      // Run batch generation
+      const result = await generateBatchVariants(prisma, apiKey, {
+        maxGenerations,
+        systemFilter,
+      });
+
+      // Also get current health snapshot for the response
+      const health = await assessPoolHealth(prisma);
+
+      return ok(
+        {
+          generation: result,
+          poolHealth: {
+            totalConditions: health.totalConditions,
+            healthyConditions: health.healthyConditions,
+            thinConditions: health.thinConditions,
+            emptyConditions: health.emptyConditions,
+            coverageBySystem: health.coverageBySystem,
+          },
         },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Batch variant generation failed:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Batch generation failed',
-        message: error instanceof Error ? error.message : String(error),
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
-  }
-};
+        { request: context.request }
+      );
+    } catch (error) {
+      console.error('[generate-variants] Batch variant generation failed:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: error instanceof Error ? error.message : 'Batch generation failed',
+        request: context.request,
+      });
+    } finally {
+      if (prisma) await safePrismaDisconnect(prisma);
+    }
+  },
+});

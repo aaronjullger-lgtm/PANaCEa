@@ -77,7 +77,16 @@ export type GeminiModelId = (typeof GeminiModel)[keyof typeof GeminiModel] | str
 
 export interface GeminiContent {
   role: 'user' | 'model';
-  parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+  parts: Array<{
+    text?: string;
+    inlineData?: { mimeType: string; data: string };
+    /**
+     * Gemini 3 reasoning signature. Round-trip these from prior model turns
+     * (or previousThoughtSignatures on the current user turn) to preserve the
+     * reasoning thread across streaming chat requests.
+     */
+    thoughtSignature?: string;
+  }>;
 }
 
 export interface GeminiGenerationConfig {

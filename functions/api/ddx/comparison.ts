@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { generateComparison } from '../../../services/core/comparisonGenerator';
@@ -16,8 +16,11 @@ export const onRequestOptions = withCors();
 /**
  * GET /api/ddx/comparison
  * Generate or retrieve a comparison table between two conditions
+ *
+ * Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): Gemini call to
+ * generate DDx comparison tables on cache miss. 25 rpm 'ai' bucket.
  */
-export const onRequestGet = authenticatedEndpoint(ComparisonSchema, async (context) => {
+export const onRequestGet = aiEndpoint(ComparisonSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/ddx/comparison');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

@@ -6,8 +6,7 @@
  */
 
 import { z } from 'zod';
-import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
-import type { AuthenticatedContext } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const BodySchema = z.object({
@@ -21,13 +20,10 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'spark' }),
-  async (context: AuthenticatedContext) => {
-    const { request, env } = context;
+export const onRequestPost = aiEndpoint(
+  BodySchema,
+  async (context) => {
+    const { env } = context;
     const log = createEndpointLogger('/api/spark/instant-calc', context.auth?.userId ?? 'system');
     const envTyped = env as Env;
 
@@ -41,18 +37,7 @@ export const onRequestPost = withMiddleware(
       );
     }
 
-    let body: z.infer<typeof BodySchema>;
-    try {
-      const raw = await request.json();
-      body = BodySchema.parse(raw);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid body. Expected { prompt: string, calcSlug?: string }' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { prompt } = body;
+    const { prompt } = context.validated;
     log.info('Instant calc requested', { promptLength: prompt.length });
 
     // Placeholder: real implementation would call GitHub Spark API to generate micro-app
@@ -67,5 +52,6 @@ export const onRequestPost = withMiddleware(
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
-  }
+  },
+  { requestsPerMinute: 30 }
 );

@@ -22,7 +22,23 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { withCors } from '../_shared/middleware';
+import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { trackTokenUsage } from '../_shared/tokenTracking';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+  type GatewayContext,
+} from '../../../lib/ai/aiGateway';
+
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `fetch` to Gemini with
+ * `gateway.callText()` using task='generation'. Priority systems map to
+ * tier='powerful' (gemini-2.5-pro) and standard systems to tier='balanced'
+ * (gemini-2.5-flash) — behaviour equivalent to the prior FRONTIER_MODEL /
+ * STANDARD_MODEL split. trackTokenUsage is preserved for the existing cost
+ * dashboard; gateway telemetry layers on top.
+ */
 
 export const onRequestOptions = withCors();
 
@@ -37,12 +53,13 @@ const MIN_QUESTIONS_PER_BUCKET = 20;
 /** Systems to prioritize (from CLAUDE.md: CV and PULM are underrepresented) */
 const PRIORITY_SYSTEMS = ['Cardiovascular', 'Pulmonary'];
 
-/** Use frontier model for underrepresented areas, medium model otherwise */
+/**
+ * Gateway tier mapping. Frontier (powerful) for underrepresented / priority
+ * systems; balanced (gemini-2.5-flash) elsewhere. Kept as model strings too
+ * so the audit log + trackTokenUsage payload retains human-readable names.
+ */
 const FRONTIER_MODEL = 'gemini-2.5-pro';
 const STANDARD_MODEL = 'gemini-2.5-flash';
-const HINT_MODEL = 'gemini-2.0-flash';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 
 /** PANCE task categories with exam weights */
 const TASK_CATEGORIES = [
@@ -152,11 +169,11 @@ async function computeBlueprintGaps(prisma: any): Promise<BlueprintGap[]> {
 // ── Question Generation ────────────────────────────────────────────────────
 
 async function generateQuestionBatch(
-  apiKey: string,
   gap: BlueprintGap,
   batchSize: number,
   context: { env: any; waitUntil?: (p: Promise<any>) => void }
 ): Promise<GenerationResult> {
+  const tier: 'powerful' | 'balanced' = gap.isPriority ? 'powerful' : 'balanced';
   const model = gap.isPriority ? FRONTIER_MODEL : STANDARD_MODEL;
   const result: GenerationResult = {
     system: gap.system,
@@ -202,56 +219,83 @@ Output ONLY a JSON array of objects:
   "cognitiveLevel": "LEVEL_3_APPLY"
 }]`;
 
-  const url = `${GEMINI_BASE}/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
   try {
     const startTime = Date.now();
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Generate ${batchSize} questions now.` }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-        },
-      }),
+    const gwCtx: GatewayContext = toGatewayContext(context as {
+      env: unknown;
+      waitUntil?: (p: Promise<unknown>) => void;
     });
 
-    const latencyMs = Date.now() - startTime;
+    let rawText = '';
+    let usageMetadata: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      totalTokenCount?: number;
+    } | null = null;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      result.errors.push(`Gemini ${response.status}: ${errorText.slice(0, 200)}`);
+    try {
+      const gatewayResult = await gateway.callText(gwCtx, {
+        mode: 'text',
+        task: 'generation',
+        tier,
+        endpoint: '/api/cron/batch-generate-questions',
+        systemPrompt,
+        userPrompt: `Generate ${batchSize} questions now.`,
+        temperature: 0.7,
+        maxOutputTokens: 8192,
+      });
+
+      if (gatewayResult.blocked) {
+        result.errors.push(
+          `Gemini blocked generation: ${gatewayResult.blockReason ?? 'unknown'}`
+        );
+        trackTokenUsage(context, {
+          endpoint: '/api/cron/batch-generate-questions',
+          model: gatewayResult.telemetry.modelUsed ?? model,
+          usage: null,
+          statusCode: 422,
+          latencyMs: Date.now() - startTime,
+        });
+        return result;
+      }
+
+      rawText = (gatewayResult.text ?? '').trim();
+      usageMetadata = {
+        promptTokenCount: gatewayResult.usage.inputTokens,
+        candidatesTokenCount: gatewayResult.usage.outputTokens,
+        totalTokenCount: gatewayResult.usage.totalTokens,
+      };
+
       trackTokenUsage(context, {
         endpoint: '/api/cron/batch-generate-questions',
-        model,
-        usage: null,
-        statusCode: response.status,
-        latencyMs,
+        model: gatewayResult.telemetry.modelUsed ?? model,
+        usage: usageMetadata,
+        statusCode: 200,
+        latencyMs: Date.now() - startTime,
       });
-      return result;
+
+      result.tokensUsed = gatewayResult.usage.totalTokens;
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        const status =
+          err.code === 'RATE_LIMITED'
+            ? 429
+            : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+              ? 401
+              : 502;
+        result.errors.push(`Gateway ${err.code}: ${err.message.slice(0, 200)}`);
+        trackTokenUsage(context, {
+          endpoint: '/api/cron/batch-generate-questions',
+          model,
+          usage: null,
+          statusCode: status,
+          latencyMs: Date.now() - startTime,
+        });
+        return result;
+      }
+      throw err;
     }
 
-    const data = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
-    };
-
-    // Track token usage
-    trackTokenUsage(context, {
-      endpoint: '/api/cron/batch-generate-questions',
-      model,
-      usage: data.usageMetadata,
-      statusCode: 200,
-      latencyMs,
-    });
-
-    result.tokensUsed = data.usageMetadata?.totalTokenCount ?? 0;
-
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawText) {
       result.errors.push('No text in Gemini response');
       return result;
@@ -326,132 +370,111 @@ function validateQuestion(q: any): boolean {
 
 // ── Main Handler ───────────────────────────────────────────────────────────
 
-export const onRequestPost: PagesFunction<any> = async (context) => {
-  const { env, request } = context;
+export const onRequestPost = cronEndpoint({
+  handler: async (context) => {
+    const env = context.env as Record<string, string | undefined>;
 
-  // Auth check
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
-
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const startTime = Date.now();
-
-    // Step 1: Compute blueprint gaps
-    const gaps = await computeBlueprintGaps(prisma);
-
-    if (gaps.length === 0) {
-      return new Response(JSON.stringify({
-        status: 'ok',
-        message: 'No blueprint gaps found — all buckets at minimum coverage',
-        gaps: 0,
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return fail(ErrorCode.ENV_MISCONFIGURED, {
+        message: 'GEMINI_API_KEY not configured',
+        request: context.request,
       });
     }
 
-    // Step 2: Generate questions for top gaps (budget-constrained)
-    const results: GenerationResult[] = [];
-    let totalGenerated = 0;
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-    for (const gap of gaps) {
-      if (totalGenerated >= MAX_QUESTIONS_PER_RUN) break;
-
-      const batchSize = Math.min(
-        gap.deficit,
-        5, // Max 5 questions per gap per run (spread coverage)
-        MAX_QUESTIONS_PER_RUN - totalGenerated
-      );
-
-      const result = await generateQuestionBatch(apiKey, gap, batchSize, context);
-      results.push(result);
-      totalGenerated += result.validated;
-
-      // Persist validated questions to staging table
-      // (In production, this would call the staging pipeline from staging-questions.ts)
-      // For now, we log the results and the next step would wire this to stageStagingQuestions()
-    }
-
-    const durationMs = Date.now() - startTime;
-    const totalTokens = results.reduce((sum, r) => sum + r.tokensUsed, 0);
-    const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
-
-    // Audit log
     try {
-      await prisma.auditLog.create({
-        data: {
-          id: crypto.randomUUID(),
-          action: 'BATCH_QUESTION_GENERATION',
-          performedBy: 'system:cron',
-          metadata: {
-            gapsAnalyzed: gaps.length,
-            totalGenerated,
-            totalValidated: results.reduce((sum, r) => sum + r.validated, 0),
-            totalFailed: results.reduce((sum, r) => sum + r.failed, 0),
-            totalHints: results.reduce((sum, r) => sum + r.hintsGenerated, 0),
-            totalTokens,
-            totalErrors,
-            durationMs,
-            results: results.map(r => ({
-              system: r.system,
-              taskCategory: r.taskCategory,
-              model: r.model,
-              generated: r.generated,
-              validated: r.validated,
-              failed: r.failed,
-              hints: r.hintsGenerated,
-            })),
+      prisma = createEdgePrismaClient(env.DATABASE_URL as string);
+      const startTime = Date.now();
+
+      // Step 1: Compute blueprint gaps
+      const gaps = await computeBlueprintGaps(prisma);
+
+      if (gaps.length === 0) {
+        return ok({
+          status: 'ok',
+          message: 'No blueprint gaps found — all buckets at minimum coverage',
+          gaps: 0,
+        }, { request: context.request });
+      }
+
+      // Step 2: Generate questions for top gaps (budget-constrained)
+      const results: GenerationResult[] = [];
+      let totalGenerated = 0;
+
+      for (const gap of gaps) {
+        if (totalGenerated >= MAX_QUESTIONS_PER_RUN) break;
+
+        const batchSize = Math.min(
+          gap.deficit,
+          5, // Max 5 questions per gap per run (spread coverage)
+          MAX_QUESTIONS_PER_RUN - totalGenerated
+        );
+
+        const result = await generateQuestionBatch(gap, batchSize, context);
+        results.push(result);
+        totalGenerated += result.validated;
+      }
+
+      const durationMs = Date.now() - startTime;
+      const totalTokens = results.reduce((sum, r) => sum + r.tokensUsed, 0);
+      const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
+
+      // Audit log
+      try {
+        await prisma.auditLog.create({
+          data: {
+            id: crypto.randomUUID(),
+            action: 'BATCH_QUESTION_GENERATION',
+            performedBy: 'system:cron',
+            metadata: {
+              gapsAnalyzed: gaps.length,
+              totalGenerated,
+              totalValidated: results.reduce((sum, r) => sum + r.validated, 0),
+              totalFailed: results.reduce((sum, r) => sum + r.failed, 0),
+              totalHints: results.reduce((sum, r) => sum + r.hintsGenerated, 0),
+              totalTokens,
+              totalErrors,
+              durationMs,
+              results: results.map(r => ({
+                system: r.system,
+                taskCategory: r.taskCategory,
+                model: r.model,
+                generated: r.generated,
+                validated: r.validated,
+                failed: r.failed,
+                hints: r.hintsGenerated,
+              })),
+            },
+            createdAt: new Date(),
           },
-          createdAt: new Date(),
-        },
+        });
+      } catch (auditErr) {
+        // Audit log failure shouldn't break the response — generation results were already returned
+        console.warn('[batch-generate-questions] Audit log write failed (non-critical):', auditErr instanceof Error ? auditErr.message : String(auditErr));
+      }
+
+      return ok({
+        status: 'ok',
+        durationMs,
+        gapsAnalyzed: gaps.length,
+        totalGenerated,
+        totalValidated: results.reduce((sum, r) => sum + r.validated, 0),
+        totalFailed: results.reduce((sum, r) => sum + r.failed, 0),
+        totalHintsGenerated: results.reduce((sum, r) => sum + r.hintsGenerated, 0),
+        totalTokens,
+        totalErrors,
+        results,
+      }, { request: context.request });
+    } catch (error) {
+      console.error('[batch-generate-questions] Error:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: error instanceof Error ? error.message : 'Batch generation failed',
+        request: context.request,
       });
-    } catch (auditErr) {
-      // Audit log failure shouldn't break the response — generation results were already returned
-      console.warn('[batch-generate-questions] Audit log write failed (non-critical):', auditErr instanceof Error ? auditErr.message : String(auditErr));
+    } finally {
+      if (prisma) await safePrismaDisconnect(prisma);
     }
-
-    return new Response(JSON.stringify({
-      status: 'ok',
-      durationMs,
-      gapsAnalyzed: gaps.length,
-      totalGenerated,
-      totalValidated: results.reduce((sum, r) => sum + r.validated, 0),
-      totalFailed: results.reduce((sum, r) => sum + r.failed, 0),
-      totalHintsGenerated: results.reduce((sum, r) => sum + r.hintsGenerated, 0),
-      totalTokens,
-      totalErrors,
-      results,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('[batch-generate-questions] Error:', error);
-    return new Response(JSON.stringify({
-      error: 'Batch generation failed',
-      message: error instanceof Error ? error.message : String(error),
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
-  }
-};
+  },
+});

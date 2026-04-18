@@ -16,6 +16,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
 
 const QuerySchema = z.object({
@@ -39,10 +40,24 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
   };
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const userId = auth.userId;
   const { system, limit } = validated;
 
   try {
+    // Resolve Clerk id to internal User.id — UserProgress.userId is the internal id.
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return Response.json(
+        {
+          nodes: [],
+          edges: [],
+          mastery: {},
+          summary: { totalNodes: 0, totalEdges: 0, avgMastery: 0 },
+          meta: { status: 'user_not_synced' },
+        },
+        { status: 404 }
+      );
+    }
+
     // 1. Fetch graph nodes (optionally filtered by system)
     const nodeWhere: Record<string, unknown> = {};
     if (system) {

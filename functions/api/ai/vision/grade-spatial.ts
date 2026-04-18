@@ -1,17 +1,34 @@
 /**
  * POST /api/vision/grade-spatial
  *
- * Spatial Verification: Grade student's drawn bounding box against the pathology.
- * Uses Gemini Vision when no cached coords; stores correct coords in MediaAsset for future cache hits.
+ * Spatial Verification: Grade a student's drawn bounding box against the
+ * pathology/finding in a medical image. Uses vision reasoning to identify
+ * the correct box when no cached coords exist; caches the result on
+ * MediaAsset.spatialAnswerCoords for future hits.
+ *
+ * Migrated to the unified AI Gateway (Sprint 4). All model access flows
+ * through `gateway.callVision()` — no direct callGemini, no regex code-fence
+ * stripping, no unvalidated JSON.parse on model output. The bounding box is
+ * validated against BoundingBoxSchema with a single schema-repair pass
+ * permitted before we give up and tell the caller we couldn't identify the
+ * pathology.
+ *
+ * Grading remains deterministic: IoU-style overlap between the student's
+ * box and the model's (or cached) correct box, threshold OVERLAP_THRESHOLD.
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint, withCors } from '../../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-import { callGemini, GeminiModel } from '../../_shared/ai-service';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
+import {
+  BoundingBoxSchema,
+  BOUNDING_BOX_DESCRIPTION,
+} from '@/lib/ai/schemas/extraction';
+
 const OVERLAP_THRESHOLD = 0.5;
 
 const BodySchema = z.object({
@@ -27,7 +44,7 @@ const BodySchema = z.object({
     }),
     /** MediaAsset ID for cache lookup/write */
     mediaAssetId: z.string().optional(),
-    /** Pathology to look for (e.g. "ST-elevation in V1-V4"); helps Gemini when generating */
+    /** Pathology to look for (e.g. "ST-elevation in V1-V4"); helps the model when no cache hit */
     pathology: z.string().max(500).optional(),
   }),
 });
@@ -64,68 +81,101 @@ function overlap(
   return minArea > 0 ? inter / minArea : 0;
 }
 
-async function callGeminiForCorrectBox(
-  env: Env,
+/**
+ * Ask the vision model to identify the primary pathology/finding and return
+ * a normalized [ymin, xmin, ymax, xmax] bounding box. Returns null when the
+ * model refuses, times out, or produces output that can't be coerced to a
+ * valid BoundingBox even after one repair pass.
+ *
+ * The endpoint treats null as "could not identify pathology" (502 to caller)
+ * — matching the prior graceful behavior. We never silently substitute a
+ * fabricated box.
+ */
+async function callModelForCorrectBox(
+  ctx: {
+    env: unknown;
+    auth?: { userId?: string } | null;
+    waitUntil?: (p: Promise<unknown>) => void;
+  },
   imageBase64: string,
   mimeType: string,
-  pathology?: string
+  pathology: string | undefined,
+  log: ReturnType<typeof createEndpointLogger>
 ): Promise<[number, number, number, number] | null> {
-  const prompt = pathology
-    ? `Identify the ${pathology} in this medical image. Return ONLY a JSON object: {"bounding_box": [ymin, xmin, ymax, xmax]} with coordinates normalized 0-1000.`
-    : `Identify the primary pathology/finding in this medical image. Return ONLY a JSON object: {"bounding_box": [ymin, xmin, ymax, xmax]} with coordinates normalized 0-1000.`;
+  const systemPrompt =
+    'You are a precise medical-imaging annotator. Return only the requested JSON object — no prose, no code fences.';
+
+  const userPrompt = pathology
+    ? `Identify the ${pathology} in this medical image.
+
+Return ONLY a JSON object conforming to this schema:
+${BOUNDING_BOX_DESCRIPTION}`
+    : `Identify the primary pathology/finding in this medical image.
+
+Return ONLY a JSON object conforming to this schema:
+${BOUNDING_BOX_DESCRIPTION}`;
 
   try {
-    const result = await callGemini({ env }, {
-      model: GeminiModel.PRO_2_5,
-      contents: [{
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: imageBase64 } },
-          { text: prompt },
-        ],
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 256,
-        responseMimeType: 'application/json',
-      },
+    const response = await gateway.callVision(toGatewayContext(ctx), {
+      mode: 'vision-structured',
+      task: 'extraction',
       endpoint: '/api/vision/grade-spatial',
+      tier: 'powerful',
+      schema: BoundingBoxSchema,
+      schemaDescription: BOUNDING_BOX_DESCRIPTION,
+      systemPrompt,
+      userPrompt,
+      temperature: 0.1,
+      maxOutputTokens: 256,
+      images: [{ mimeType, data: imageBase64 }],
     });
 
-    if (result.blocked || !result.text) return null;
-
-    const parsed = JSON.parse(
-      result.text
-        .replace(/^```json\s*/i, '')
-        .replace(/\s*```\s*$/i, '')
-        .trim()
-    ) as { bounding_box?: number[] };
-    const raw = parsed.bounding_box;
-    if (Array.isArray(raw) && raw.length >= 4) {
-      const n = raw.map(Number);
-      const ymin = n[0] ?? 0;
-      const xmin = n[1] ?? 0;
-      const ymax = n[2] ?? 0;
-      const xmax = n[3] ?? 0;
-      if (
-        Number.isFinite(ymin) &&
-        Number.isFinite(xmin) &&
-        Number.isFinite(ymax) &&
-        Number.isFinite(xmax)
-      ) {
-        return [ymin, xmin, ymax, xmax];
-      }
+    if (response.mode !== 'structured') {
+      log.warn('Vision gateway returned non-structured response', {
+        mode: response.mode,
+      });
+      return null;
     }
-  } catch {
-    /* callGemini throws GeminiError on non-OK; treat as no box found */
+
+    const [ymin, xmin, ymax, xmax] = response.data.bounding_box;
+    if (
+      typeof ymin !== 'number' ||
+      typeof xmin !== 'number' ||
+      typeof ymax !== 'number' ||
+      typeof xmax !== 'number' ||
+      !Number.isFinite(ymin) ||
+      !Number.isFinite(xmin) ||
+      !Number.isFinite(ymax) ||
+      !Number.isFinite(xmax)
+    ) {
+      log.warn('Bounding box contained non-finite values', {
+        bbox: response.data.bounding_box,
+      });
+      return null;
+    }
+
+    return [ymin, xmin, ymax, xmax];
+  } catch (error) {
+    if (error instanceof GatewayError) {
+      log.warn('Vision gateway failed for spatial grading', {
+        code: error.code,
+        requestId: error.requestId,
+        traceId: error.traceId,
+        message: error.message,
+      });
+    } else {
+      log.warn('Unexpected vision gateway error', { error });
+    }
+    return null;
   }
-  return null;
 }
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
-  const { request, env, validated, auth } = context as {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): vision-based spatial
+// grading hits multimodal Gemini (image + prompt). 25 rpm 'ai' bucket.
+export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
+  const { request, env, validated, auth } = context as unknown as {
     request: Request;
     env: Env;
     validated: z.infer<typeof BodySchema>;
@@ -152,6 +202,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
   let correctBox: [number, number, number, number] | null = null;
 
+  // Cache hit path — use pre-computed coords if we have them.
   if (mediaAssetId && env.DATABASE_URL) {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     try {
@@ -168,12 +219,14 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
     }
   }
 
+  // Cache miss — ask the vision model and write the result back for next time.
   if (!correctBox) {
-    correctBox = await callGeminiForCorrectBox(
-      env,
+    correctBox = await callModelForCorrectBox(
+      context,
       imageBase64,
       mimeType,
-      pathology
+      pathology,
+      log
     );
     if (correctBox && mediaAssetId && env.DATABASE_URL) {
       const prisma = createEdgePrismaClient(env.DATABASE_URL);

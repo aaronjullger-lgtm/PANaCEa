@@ -26,6 +26,7 @@ import {
 import type { KVNamespace } from '@cloudflare/workers-types';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
+import { toGatewayContext } from '../../../lib/ai/aiGateway';
 import {
   ANSWER_LETTERS,
   letterToIndex,
@@ -943,8 +944,12 @@ async function generateAndAddToPool(
 
   // Generate question
   try {
+    // Build a minimal GatewayContext from env. `generateAndAddToPool` is
+    // invoked from inside an authenticatedEndpoint handler, so env is the
+    // real Cloudflare env binding; auth/waitUntil aren't needed for the
+    // underlying gateway call (gateway.callText only reads env.GEMINI_API_KEY).
     const generatedQ = await generateSingleQuestion(
-      env.GEMINI_API_KEY,
+      toGatewayContext({ env }),
       transformedCondition,
       'mcq',
       null // textbookContext (optional)

@@ -11,6 +11,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   buildPatternProfile,
@@ -31,9 +32,28 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
   };
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const userId = auth.userId;
 
   try {
+    // Resolve Clerk id to internal User.id — QuestionAttempt.userId is the internal id.
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return Response.json(
+        {
+          patterns: {
+            totalAnalyzed: 0,
+            patternCounts: {},
+            dominantPattern: null,
+            topPatterns: [],
+            systemPatterns: {},
+            remediations: [],
+          },
+          attemptCount: 0,
+          meta: { status: 'user_not_synced' },
+        },
+        { status: 404 }
+      );
+    }
+
     const incorrectAttempts = await prisma.questionAttempt.findMany({
       where: { userId, wasCorrect: false },
       orderBy: { createdAt: 'desc' },

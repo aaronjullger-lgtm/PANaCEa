@@ -13,8 +13,7 @@
  */
 
 import { z } from 'zod';
-import { withMiddleware, withCors, withErrorHandling, withAuth, withRateLimit } from '../_shared/middleware';
-import type { AuthenticatedContext } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 interface Env {
@@ -48,12 +47,13 @@ export type PodcastGenerateRequest = z.infer<typeof PodcastGenerateJsonSchema>;
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 5, endpointType: 'api', keyPrefix: 'podcast' }),
-  async (context: AuthenticatedContext) => {
+// Use source:'query' with a permissive schema so the wrapper doesn't consume
+// the request body stream before the handler can dispatch on content-type
+// (JSON vs multipart). The JSON path performs its own Zod validation against
+// PodcastGenerateJsonSchema inside the handler.
+export const onRequestPost = aiEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const { request, env } = context;
     const log = createEndpointLogger('/api/podcast/generate', context.auth?.userId ?? 'system');
     const baseUrl = (env as Env).PODCAST_SERVICE_URL?.replace(/\/$/, '');
@@ -154,5 +154,6 @@ export const onRequestPost = withMiddleware(
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 5 }
 );

@@ -20,6 +20,7 @@
  */
 
 import { withCors } from '../_shared/middleware';
+import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { Prisma } from '@prisma/client/edge';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type { CloudflareEnv } from '../_shared/types';
@@ -38,11 +39,6 @@ export const onRequestOptions = withCors();
 type CronEnv = CloudflareEnv & {
   CRON_SECRET?: string;
 };
-
-type CronPagesFunction<E> = (context: {
-  request: Request;
-  env: E;
-}) => Response | Promise<Response>;
 
 type ContentQualityLoopPrisma = ReturnType<typeof createEdgePrismaClient> & {
   contentQualityFlag: {
@@ -223,18 +219,13 @@ async function loadQuestionWithAttempts(
   };
 }
 
-export const onRequestPost: CronPagesFunction<CronEnv> = async (context) => {
-  const authHeader = context.request.headers.get('Authorization');
-  const token = authHeader?.replace('Bearer ', '');
-  const cronEnv = context.env as CronEnv;
-  if (!token || token !== cronEnv.CRON_SECRET) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const onRequestPost = cronEndpoint({
+  handler: async (context) => {
+    const env = context.env as CronEnv;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL) as ContentQualityLoopPrisma;
+    const startTime = Date.now();
 
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL) as ContentQualityLoopPrisma;
-  const startTime = Date.now();
-
-  try {
+    try {
     const lookbackDate = new Date();
     lookbackDate.setDate(lookbackDate.getDate() - DEFAULT_CONTENT_QUALITY_CONFIG.lookbackDays);
 
@@ -422,23 +413,18 @@ export const onRequestPost: CronPagesFunction<CronEnv> = async (context) => {
 
     console.log('[contentQualityLoop] Summary', summary);
 
-    return Response.json({
-      success: true,
-      ...summary,
-    });
-  } catch (error) {
-    console.error('[contentQualityLoop] Cron failed:', error);
-    return Response.json(
-      {
-        error: 'Content quality loop failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-};
+    return ok(summary, { request: context.request });
+    } catch (error) {
+      console.error('[contentQualityLoop] Cron failed:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: error instanceof Error ? error.message : 'Content quality loop failed',
+        request: context.request,
+      });
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+});
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 

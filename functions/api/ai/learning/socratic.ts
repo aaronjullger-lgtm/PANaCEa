@@ -1,20 +1,26 @@
 /**
  * POST /api/intelligence/socratic-remediation
  *
- * Socratic Remediation: Returns a guiding question (NOT the answer) based on the
- * student's wrong answer. Used for "Tutor Me" in Review Mode when reviewing incorrect answers.
- * Forces the student to generate the logic and fix the knowledge gap.
+ * Socratic Remediation: Returns ONE guiding question (NOT the answer) based on
+ * the student's wrong answer. Used for "Tutor Me" in Review Mode.
  *
- * Migrated to unified ai-service.ts (Phase 5).
+ * Sprint 5 migration notes (AI Gateway):
+ *   - Primary/fallback cascade (aiGenerateText → callAIMultiProvider) replaced
+ *     by a single `gateway.tutor()` call. Same-provider tier-bump fallback is
+ *     the default for 'tutoring', so resilience is preserved without the
+ *     duplicate control flow here.
+ *   - Gateway handles MISSING_API_KEY internally → dropped validateFunctionEnv.
+ *   - Rate limiting moved from ad-hoc `withRateLimit` call to the `aiEndpoint`
+ *     wrapper (default 25 req/min per user, same bucket as other AI calls).
+ *   - Langfuse tracing stays layered on top — gateway telemetry is separate.
+ *   - FALLBACK_QUESTION is still surfaced when the gateway throws, so a failed
+ *     Socratic turn never blocks a Review Mode session.
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
-import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
-import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
+import { aiEndpoint, withCors } from '../../_shared/middleware';
 import { buildSystemPrompt } from '../../_shared/socraticZpd';
-import { callAIMultiProvider, GeminiModel } from '../../_shared/ai-service';
-import { aiGenerateText } from '@/lib/ai-sdk';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
 
 const BodySchema = z.object({
@@ -38,44 +44,28 @@ const BodySchema = z.object({
   }),
 });
 
-interface Env {
-  GEMINI_API_KEY: string;
-  RATE_LIMIT_KV?: KVNamespace;
-}
+const FALLBACK_QUESTION =
+  'What detail in the vignette suggests your answer might not fit this patient?';
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
-  const { request, env, validated, auth } = context as {
-    request: Request;
-    env: Env;
-    validated: z.infer<typeof BodySchema>;
-    auth: { userId: string };
-  };
+export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
+  const { validated, auth } = context;
+  const { vignette, question, correctAnswer, userWrongAnswer, options, history, fsrsState, turnNumber } =
+    validated.body;
 
-  try {
-    validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-  } catch (e) {
-    if (e instanceof MissingEnvError) return e.toResponse();
-    throw e;
-  }
-
-  const identifier = getRateLimitIdentifier(request);
-  const { response: rateLimitResponse } = await withRateLimit(
-    env as { RATE_LIMIT_KV?: KVNamespace },
-    identifier,
-    'gemini'
+  // Build ZPD-calibrated system prompt (Tier 3) or fall back to the simple prompt.
+  const systemPrompt = buildSystemPrompt(
+    fsrsState,
+    turnNumber ?? (history?.length ?? 0),
+    question.slice(0, 100),
   );
-  if (rateLimitResponse) return rateLimitResponse;
-
-  const { vignette, question, correctAnswer, userWrongAnswer, options, history, fsrsState, turnNumber } = validated.body;
-
-  // Build ZPD-calibrated system prompt (Tier 3) or fall back to simple prompt
-  const systemPrompt = buildSystemPrompt(fsrsState, turnNumber ?? (history?.length ?? 0), question.slice(0, 100));
 
   const historyBlock =
     history && history.length > 0
-      ? `\nPrior conversation:\n${history.map((h) => `${h.role === 'user' ? 'Student' : 'Tutor'}: ${h.text}`).join('\n')}\n\n`
+      ? `\nPrior conversation:\n${history
+          .map((h) => `${h.role === 'user' ? 'Student' : 'Tutor'}: ${h.text}`)
+          .join('\n')}\n\n`
       : '';
 
   const userPrompt = `Vignette:
@@ -87,81 +77,74 @@ Student's wrong answer: "${userWrongAnswer}"
 ${options?.length ? `All options: ${options.join(' | ')}` : ''}
 ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
 
-  const FALLBACK_QUESTION = 'What detail in the vignette suggests your answer might not fit this patient?';
-  const maxTokens = (turnNumber ?? 0) >= 3 ? 512 : 256;
+  const maxOutputTokens = (turnNumber ?? 0) >= 3 ? 512 : 256;
 
-  // ── Primary: Vercel AI SDK ──────────────────────────────────────────────
   try {
-    const aiSdkEnv = { GEMINI_API_KEY: env.GEMINI_API_KEY };
-    const result = await aiGenerateText(aiSdkEnv, {
-      model: 'gemini-2.5-flash',
-      system: systemPrompt,
-      prompt: userPrompt,
-      temperature: 0.5,
-      maxTokens,
+    const result = await gateway.tutor(toGatewayContext(context), {
       endpoint: '/api/intelligence/socratic-remediation',
+      systemPrompt,
+      userPrompt,
+      temperature: 0.5,
+      maxOutputTokens,
     });
 
-    // Langfuse tracing (fire-and-forget)
+    if (result.blocked) {
+      return { data: { guidingQuestion: FALLBACK_QUESTION } };
+    }
+
+    // Langfuse tracing (fire-and-forget — never block the tutor response).
     try {
-      const trace = createTrace(env as unknown as LangfuseEnv, {
+      const trace = createTrace(context.env as unknown as LangfuseEnv, {
         name: 'socratic-remediation',
         userId: auth.userId,
-        tags: ['ai-sdk', 'gemini-2.5-flash', 'socratic'],
-        metadata: { model: result.model, provider: result.provider, latencyMs: result.latencyMs },
+        tags: ['gateway', 'socratic', result.telemetry.modelUsed],
+        metadata: {
+          model: result.telemetry.modelUsed,
+          provider: result.telemetry.provider,
+          latencyMs: result.telemetry.latencyMs,
+          fallbackUsed: result.telemetry.fallbackUsed,
+        },
       });
       if (trace) {
         trace.generation({
           name: 'socratic-generation',
-          model: result.model,
+          model: result.telemetry.modelUsed,
           input: userPrompt.slice(0, 500),
           output: result.text.slice(0, 500),
-          usage: { promptTokens: result.usage.promptTokens, completionTokens: result.usage.completionTokens, totalTokens: result.usage.totalTokens },
-          modelParameters: { temperature: 0.5, maxTokens },
+          usage: {
+            promptTokens: result.usage.inputTokens,
+            completionTokens: result.usage.outputTokens,
+            totalTokens: result.usage.totalTokens,
+          },
+          modelParameters: { temperature: 0.5, maxTokens: maxOutputTokens },
         });
         const ctx = context as { waitUntil?: (p: Promise<unknown>) => void };
         if (ctx.waitUntil && trace.flush) ctx.waitUntil(trace.flush());
       }
-    } catch { /* Never block AI response for observability */ }
+    } catch {
+      /* observability must never block the tutor */
+    }
 
     return {
       data: {
         guidingQuestion: result.text.trim() || FALLBACK_QUESTION,
       },
     };
-  } catch (aiSdkErr: unknown) {
-    // ── Fallback: callAIMultiProvider (LangChain router) ────────────────
-    try {
-      const result = await callAIMultiProvider(
-        { env, auth },
-        {
-          langchainTask: 'socratic',
-          model: GeminiModel.FLASH_2_5,
-          systemInstruction: systemPrompt,
-          prompt: userPrompt,
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: maxTokens,
-          },
-          endpoint: '/api/intelligence/socratic-remediation',
-        }
-      );
-
-      if (result.blocked) {
-        return { data: { guidingQuestion: FALLBACK_QUESTION } };
-      }
-
-      return {
-        data: {
-          guidingQuestion: result.text.trim() || FALLBACK_QUESTION,
-        },
-      };
-    } catch (err: unknown) {
-      const status = (err as { status?: number })?.status;
-      if (status === 429) {
+  } catch (err) {
+    if (err instanceof GatewayError) {
+      console.error('[socratic-remediation] gateway failure', {
+        code: err.code,
+        requestId: err.requestId,
+        traceId: err.traceId,
+      });
+      if (err.code === 'RATE_LIMITED') {
         return { status: 429, error: 'Rate limit exceeded' };
       }
-      return { data: { guidingQuestion: FALLBACK_QUESTION } };
+    } else {
+      console.error('[socratic-remediation] unexpected failure:', err);
     }
+    // Keep review mode flowing: fall back to a generic guiding question rather
+    // than surfacing a 5xx. The student still gets a Socratic nudge.
+    return { data: { guidingQuestion: FALLBACK_QUESTION } };
   }
 });

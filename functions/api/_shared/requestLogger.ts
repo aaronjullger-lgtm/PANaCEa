@@ -67,14 +67,56 @@ function emitLog(entry: RequestLogEntry): void {
   console.log(JSON.stringify(entry));
 }
 
+/**
+ * Resolve a single stable requestId for this request and cache it on context.
+ *
+ * Resolution order (first match wins):
+ *   1. Already-cached id on context._requestId (set by earlier middleware)
+ *   2. Inbound `X-Request-ID` header (trusted proxy / client-generated trace)
+ *   3. First 32-hex segment of `sentry-trace` header (so Sentry trace and our
+ *      requestId are one and the same — cross-tool correlation for free)
+ *   4. `crypto.randomUUID()` as a last resort
+ *
+ * After this call, every downstream consumer (withRequestLogging, envelope
+ * helpers, handler-level spans) reads the same id via `getRequestId()`.
+ * This is the fix for the triple-requestId bug where middleware.ts,
+ * requestLogger.ts, and api-response.ts each generated their own UUID.
+ */
+export function resolveRequestId(context: CloudflareContext): string {
+  const cached = (context as any)?._requestId;
+  if (typeof cached === 'string' && cached.length > 0) {
+    return cached;
+  }
+
+  const headerId = context.request.headers.get('X-Request-ID');
+  if (headerId && headerId.length > 0) {
+    (context as any)._requestId = headerId;
+    return headerId;
+  }
+
+  const sentryTrace = context.request.headers.get('sentry-trace');
+  if (sentryTrace) {
+    const traceId = sentryTrace.split('-')[0];
+    if (traceId && /^[0-9a-f]{32}$/i.test(traceId)) {
+      (context as any)._requestId = traceId;
+      return traceId;
+    }
+  }
+
+  const generated = crypto.randomUUID();
+  (context as any)._requestId = generated;
+  return generated;
+}
+
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 /**
  * Composable middleware that logs request start/end with timing.
  * Place FIRST in the middleware chain to capture full request lifecycle.
  *
- * Reads requestId from X-Request-ID header if present (set by upstream proxy),
- * otherwise generates one. Stores requestId on context for downstream use.
+ * Uses `resolveRequestId` to read a single stable id shared with the outer
+ * composer and the response envelope — see resolveRequestId for resolution
+ * order.
  */
 export function withRequestLogging(): Middleware {
   return async (context, next) => {
@@ -82,12 +124,7 @@ export function withRequestLogging(): Middleware {
     const endpoint = extractEndpoint(context.request);
     const method = context.request.method;
 
-    // Use existing requestId from header or generate one
-    const requestId =
-      context.request.headers.get('X-Request-ID') ?? crypto.randomUUID();
-
-    // Attach requestId to context for downstream middleware/handlers
-    (context as any)._requestId = requestId;
+    const requestId = resolveRequestId(context);
 
     emitLog({
       event: 'request_start',

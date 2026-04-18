@@ -5,13 +5,21 @@
  *
  * PHASE 4: NEURO-SYMBOLIC INTEGRITY - Milestone 1
  * Now includes Chain of Verification (CoVe) to prevent AI hallucinations.
+ *
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai`
+ * SDK usage with `gateway.callText()`:
+ *   - Main generation: task='generation', tier='powerful' (gemini-2.5-pro,
+ *     same as before). Temperature = task default (0.75).
+ *   - CoVe verification wrapper (`geminiApiCall`): task='grading', tier='balanced'.
+ *     Verification is essentially a grading/fact-check task and benefits from
+ *     the lower default temperature (0.2) for deterministic answers.
+ * Gateway's same_provider fallback replaces the prior silent SDK failure mode.
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Question, SystemCode } from '../../../types';
 import {
   quickVerify,
@@ -19,7 +27,12 @@ import {
   type VerificationContext,
   type CoVeResult,
 } from '../../../lib/cove-verification';
-import { withTimeout } from '../_shared/timeout';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+  type GatewayContext,
+} from '../../../lib/ai/aiGateway';
 
 // ============================================================================
 // HELPER: Parse condition context string into structured verification data
@@ -163,7 +176,10 @@ const USE_FULL_COVE = true;
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerationRequestSchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): enhanced generation
+// with CoVe verification makes 2-3 Gemini calls (gemini-2.5-pro for draft,
+// gemini-2.5-flash for verify). 25 rpm 'ai' bucket matches the cost profile.
+export const onRequestPost = aiEndpoint(GenerationRequestSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/generate-enhanced');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -178,14 +194,39 @@ export const onRequestPost = authenticatedEndpoint(GenerationRequestSchema, asyn
       difficulty,
     } = validated.body;
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+    // AI Gateway: build GatewayContext once, reuse for all calls in this request.
+    const gwCtx: GatewayContext = toGatewayContext(context);
 
-    // Create Gemini API wrapper for CoVe verification calls
+    // Gemini API wrapper for CoVe verification calls — routes through gateway
+    // with task='grading' (lower default temperature, appropriate for
+    // deterministic fact-checking of the generated question).
     const geminiApiCall = async (prompt: string): Promise<string> => {
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      try {
+        const result = await gateway.callText(gwCtx, {
+          mode: 'text',
+          task: 'grading',
+          tier: 'balanced',
+          endpoint: '/api/questions/generate-enhanced#cove-verify',
+          userPrompt: prompt,
+        });
+        if (result.blocked) {
+          logger.warn('[CoVe] Verification call blocked by safety filter', {
+            reason: result.blockReason ?? 'unknown',
+          });
+          return '';
+        }
+        return result.text ?? '';
+      } catch (err) {
+        // CoVe wraps this in its own try/catch — surface the error cleanly.
+        if (err instanceof GatewayError) {
+          logger.warn('[CoVe] Gateway error during verification', {
+            code: err.code,
+            requestId: err.requestId,
+            traceId: err.traceId,
+          });
+        }
+        throw err;
+      }
     };
 
     // Parse condition context for verification
@@ -319,12 +360,41 @@ CRITICAL RULES:
 
       // Generate question with optional issue warnings
       const prompt = buildGenerationPrompt(previousIssues.length > 0 ? previousIssues : undefined);
-      const result = await withTimeout(
-        model.generateContent(prompt).then((r) => r.response.text()),
-        30000,
-        'Gemini generateContent timed out (30s)'
-      );
-      const responseText = result;
+      let responseText: string;
+      try {
+        const genResult = await gateway.callText(gwCtx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'powerful', // gemini-2.5-pro, matches prior endpoint model
+          endpoint: '/api/questions/generate-enhanced',
+          userPrompt: prompt,
+        });
+        if (genResult.blocked) {
+          logger.warn(`[CoVe] Attempt ${attempt}: Gemini blocked generation`, {
+            reason: genResult.blockReason ?? 'unknown',
+            userId: auth.userId,
+          });
+          previousIssues = [
+            `Generation was blocked by safety filter: ${genResult.blockReason ?? 'unknown'}. Rewrite to avoid any sensitive content while preserving clinical accuracy.`,
+          ];
+          continue;
+        }
+        responseText = genResult.text ?? '';
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          logger.warn(`[CoVe] Attempt ${attempt}: Gateway error`, {
+            code: err.code,
+            retryable: err.retryable,
+            requestId: err.requestId,
+            traceId: err.traceId,
+            userId: auth.userId,
+          });
+          // Non-retryable gateway errors abort the loop; retryable ones
+          // already exhausted the gateway's internal retry budget.
+          throw err;
+        }
+        throw err;
+      }
 
       // Parse JSON response
       try {

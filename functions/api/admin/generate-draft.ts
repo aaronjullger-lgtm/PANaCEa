@@ -3,6 +3,13 @@
  * POST /api/admin/generate-draft
  *
  * Generates AI-drafted medical content and saves it to the database with status='draft'
+ *
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai` SDK
+ * usage with `gateway.callText()` using task='generation', tier='fast'
+ * (gemini-2.0-flash — same model as before). This routes admin draft generation
+ * through the centralized gateway for telemetry, cost tracking, and standardized
+ * safety handling. GOOGLE_API_KEY fallback env var kept for early-fail check
+ * clarity (gateway itself reads GEMINI_API_KEY directly).
  */
 
 import { z } from 'zod';
@@ -10,7 +17,11 @@ import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+} from '../../../lib/ai/aiGateway';
 
 const GenerateDraftSchema = z.object({
   body: z.object({
@@ -73,16 +84,14 @@ export const onRequestPost = adminAuthenticatedEndpoint(GenerateDraftSchema, asy
       };
     }
 
-    // Initialize Gemini AI
+    // Early-fail check so admins get a clear error instead of a generic gateway
+    // MISSING_API_KEY. The gateway reads GEMINI_API_KEY from ctx.env directly;
+    // this also preserves the historical GOOGLE_API_KEY fallback for ops docs.
     const apiKey = env.GEMINI_API_KEY || (env as any).GOOGLE_API_KEY;
     if (!apiKey) {
       logger.error('AI service not configured', { userId });
       throw new Error('AI service not configured');
     }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    // Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     // Generate AI content
     const prompt = `You are a medical education expert. Generate comprehensive medical content for "${conditionName}" in the ${system} system.
@@ -106,9 +115,50 @@ Return a JSON object with the following structure:
 
 Ensure all information is accurate, concise, and suitable for PA students preparing for the PANCE exam.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    let text: string;
+    try {
+      const result = await gateway.callText(toGatewayContext(context), {
+        mode: 'text',
+        task: 'generation',
+        tier: 'fast', // gemini-2.0-flash — preserves prior endpoint model
+        endpoint: '/api/admin/generate-draft',
+        userPrompt: prompt,
+      });
+      if (result.blocked) {
+        logger.warn('Gemini generate-draft blocked by safety filter', {
+          reason: result.blockReason ?? 'unknown',
+          userId,
+        });
+        return {
+          data: { error: 'Generation blocked by safety filter' },
+          status: 422,
+        };
+      }
+      text = result.text ?? '';
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        logger.error('Gateway error during generate-draft', {
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+          traceId: err.traceId,
+          userId,
+        });
+        const status =
+          err.code === 'RATE_LIMITED'
+            ? 429
+            : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+              ? 500
+              : err.code === 'BAD_REQUEST'
+                ? 400
+                : 502;
+        return {
+          data: { error: `Generation failed: ${err.code}`, details: err.message.slice(0, 500) },
+          status,
+        };
+      }
+      throw err;
+    }
 
     // Parse AI response
     const cleanedText = cleanAIJsonResponse(text);

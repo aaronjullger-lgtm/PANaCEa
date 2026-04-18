@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -106,7 +106,10 @@ export const onRequestOptions = withCors();
 
 const StatusQuerySchema = z.object({});
 
-export const onRequestGet = authenticatedEndpoint(
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): polls Gemini Veo
+// long-running operation, downloads video on completion, uploads to Supabase.
+// Same 'ai' bucket as veo/generate since they share a session lifecycle.
+export const onRequestGet = aiEndpoint(
   StatusQuerySchema,
   async (context) => {
     const { request, env, auth } = context as {

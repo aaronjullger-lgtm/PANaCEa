@@ -1,13 +1,5 @@
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withEnvCheck,
-  withAuth,
-  withRateLimit,
-  withLogging,
-  type AuthenticatedContext,
-} from '../../_shared/middleware';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 /**
@@ -19,14 +11,9 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
  *
  * Response: { assignments: { [experimentId]: { variantName, config } } }
  */
-export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 60, endpointType: 'api', keyPrefix: 'ab-assignments' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+export const onRequestGet = authenticatedEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const clerkId = context.auth.userId;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
@@ -86,5 +73,6 @@ export const onRequestGet = withMiddleware(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 60 }
 );

@@ -16,7 +16,7 @@
 
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../_shared/adobeAllowlist';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -235,7 +235,10 @@ async function uploadToSupabase(
   return { storagePath, storageUrl };
 }
 
-export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): Anatomy Painter —
+// Adobe Firefly Image 3 generation + Gemini 2.5 Flash segmentation. Multi-call
+// AI pipeline, very expensive. 25 rpm 'ai' bucket.
+export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
     validated: z.infer<typeof GenerateBodySchema>;

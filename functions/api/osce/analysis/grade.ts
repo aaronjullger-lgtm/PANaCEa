@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 import { resolveSystem } from '../../_shared/inferSystem';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint, withCors } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -23,10 +23,19 @@ import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validati
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { IDSchema } from '../../_shared/schemas';
 import { scheduleConceptReview } from '../../ai/learning/profile-crud';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-// Stable: gemini-2.5-pro; use gemini-3-pro-preview when needed for latest reasoning.
-const GEMINI_GRADE_MODEL = 'gemini-2.5-pro';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+} from '@/lib/ai/aiGateway';
+import {
+  OsceAnalysisGradeSchema,
+  OSCE_ANALYSIS_GRADE_DESCRIPTION,
+  OsceSoftSkillsSchema,
+  OSCE_SOFT_SKILLS_DESCRIPTION,
+  type OsceAnalysisGrade,
+  type OsceSoftSkills,
+} from '@/lib/ai/schemas/grading';
 
 const GradeBodySchema = z.object({
   body: z.object({
@@ -41,44 +50,10 @@ interface Env {
   RATE_LIMIT_KV?: KVNamespace;
 }
 
-type ChecklistItem = { item: string; status: 'PASS' | 'FAIL'; feedback: string };
-type GradePayload = {
-  score: number;
-  checklist: ChecklistItem[];
-  redFlagsMissed: string[];
-  clinicalReasoningScore: number;
-  billingCodeSuggestion: string;
-  communicationScore?: number;
-  differentialScore?: number;
-};
-
-type SoftSkillsReport = {
-  empathy: { score: number; feedback: string };
-  professionalism: { score: number; feedback: string };
-  pacing: { score: number; feedback: string };
-};
-
-const SoftSkillsReportSchema = z.object({
-  empathy: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
-  professionalism: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
-  pacing: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
-});
-
-/** Validates a single grade checklist item from Gemini before persisting */
-const GRADE_CHECKLIST_ITEM = z.object({
-  item: z.string(),
-  status: z.enum(['PASS', 'FAIL']),
-  feedback: z.string(),
-});
-type GradeChecklistItem = z.infer<typeof GRADE_CHECKLIST_ITEM>;
-
-const GradePayloadSchema = z.object({
-  score: z.number().min(0).max(100),
-  checklist: z.array(GRADE_CHECKLIST_ITEM).default([]),
-  redFlagsMissed: z.array(z.string()).default([]),
-  clinicalReasoningScore: z.number().min(0).max(100),
-  billingCodeSuggestion: z.string().default('N/A'),
-});
+// Local wire-format aliases — kept for readability of the endpoint body.
+// The gateway returns `OsceAnalysisGrade`, which IS the canonical shape.
+type GradePayload = OsceAnalysisGrade;
+type SoftSkillsReport = OsceSoftSkills;
 
 
 // =============================================================================
@@ -131,26 +106,6 @@ function detectDangerousActions(diagnosis: string, transcript: unknown): Detecte
   return detected;
 }
 
-function validateGradeChecklist(
-  items: unknown[],
-  log?: (msg: string, meta?: object) => void
-): ChecklistItem[] {
-  if (!Array.isArray(items)) return [];
-  const validated: ChecklistItem[] = [];
-  for (let i = 0; i < items.length; i++) {
-    const result = GRADE_CHECKLIST_ITEM.safeParse(items[i]);
-    if (result.success) {
-      validated.push(result.data);
-    } else if (log) {
-      log('Dropped invalid checklist item from grade payload', {
-        index: i,
-        issues: result.error.issues,
-      });
-    }
-  }
-  return validated;
-}
-
 const RUBRIC_CHECKLIST_ITEM = z.object({
   item: z.string(),
   isRedFlag: z.boolean().optional(),
@@ -163,126 +118,6 @@ function parseRubricChecklist(checklist: unknown): RubricItem[] {
 }
 
 // System inference consolidated in _shared/inferSystem.ts — see resolveSystem import above
-
-async function callGeminiSoftSkills(
-  apiKey: string,
-  transcript: unknown
-): Promise<SoftSkillsReport | null> {
-  const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_GRADE_MODEL}:generateContent?key=${apiKey}`;
-  const systemPrompt = `You are a clinical educator evaluating bedside manner in a simulated patient encounter. Analyze the student's communication (Speaker A). Grade 1-5 (1=poor, 5=excellent) for: Empathy, Professionalism, Pacing. Provide brief specific feedback for each. Output ONLY a JSON object: {"empathy":{"score":number,"feedback":"..."},"professionalism":{"score":number,"feedback":"..."},"pacing":{"score":number,"feedback":"..."}}`;
-  const userPrompt = `Transcript (Speaker A = Student, Speaker B = Patient):\n${JSON.stringify(transcript)}\n\nOutput JSON only.`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 1024,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) return null;
-  try {
-    const parsed = JSON.parse(
-      text
-        .replace(/^```json\s*/i, '')
-        .replace(/\s*```\s*$/i, '')
-        .trim()
-    );
-    return SoftSkillsReportSchema.parse(parsed);
-  } catch {
-    return null;
-  }
-}
-
-async function callGeminiGrade(
-  apiKey: string,
-  systemPrompt: string,
-  userPrompt: string
-): Promise<string> {
-  const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_GRADE_MODEL}:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: {
-        temperature: 0.2,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Gemini returned no text');
-  return text;
-}
-
-function parseGradePayload(
-  rawText: string,
-  log?: (msg: string, meta?: object) => void
-): GradePayload {
-  const stripped = rawText
-    .replace(/^```json\s*/i, '')
-    .replace(/\s*```\s*$/i, '')
-    .trim();
-  const parsed = JSON.parse(stripped) as unknown;
-  
-  // Clean checklist and redFlagsMissed, preserving logging of dropped items
-  const rawChecklist = Array.isArray((parsed as any).checklist) ? (parsed as any).checklist : [];
-  const checklist = validateGradeChecklist(rawChecklist, log);
-  const rawRedFlags = Array.isArray((parsed as any).redFlagsMissed) ? (parsed as any).redFlagsMissed : [];
-  const redFlagsMissed = rawRedFlags.filter((x: unknown): x is string => typeof x === 'string');
-  
-  // Extract optional new scoring fields
-  const rawCommScore = Number((parsed as any).communicationScore);
-  const rawDiffScore = Number((parsed as any).differentialScore);
-
-  const cleaned = {
-    score: Number((parsed as any).score) || 0,
-    checklist,
-    redFlagsMissed,
-    clinicalReasoningScore: Number((parsed as any).clinicalReasoningScore) || 0,
-    billingCodeSuggestion: typeof (parsed as any).billingCodeSuggestion === 'string'
-      ? (parsed as any).billingCodeSuggestion
-      : 'N/A',
-  };
-
-  // Validate with Zod schema to enforce ranges and types
-  try {
-    const validated = GradePayloadSchema.parse(cleaned);
-    // Attach optional scores after Zod validation (not in schema since they're optional)
-    const result: GradePayload = { ...validated };
-    if (!isNaN(rawCommScore) && rawCommScore >= 0 && rawCommScore <= 100) {
-      result.communicationScore = Math.round(rawCommScore);
-    }
-    if (!isNaN(rawDiffScore) && rawDiffScore >= 0 && rawDiffScore <= 100) {
-      result.differentialScore = Math.round(rawDiffScore);
-    }
-    return result;
-  } catch (error) {
-    // If validation fails, log and rethrow (caller will handle)
-    if (log) {
-      log('Grade payload validation failed', { error, cleaned });
-    }
-    throw error;
-  }
-}
 
 interface SessionWithCase {
   id: string;
@@ -429,7 +264,10 @@ async function persistGradeAndConceptGap(
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GradeBodySchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): OSCE encounter
+// grading uses multimodal Gemini + runs a concept-gap writer in the same path.
+// 25 rpm 'ai' bucket matches the actual cost profile.
+export const onRequestPost = aiEndpoint(GradeBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;
@@ -598,47 +436,67 @@ ${JSON.stringify(transcript)}${telemetryContext}${differentialsSection}
 Output your grading as a single JSON object only.`;
 
   try {
-    let rawText: string;
-    try {
-      rawText = await callGeminiGrade(env.GEMINI_API_KEY, systemPrompt, userPrompt);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const is429 = msg.startsWith('Gemini 429');
-      log.warn('Gemini grading error', { msg: msg.slice(0, 200) });
-      return {
-        status: is429 ? 429 : 502,
-        error: is429 ? 'Rate limit exceeded' : 'Grading service failed',
-      };
-    }
-
+    // ── Primary grading call — structured JSON via the unified gateway ──
     let payload: GradePayload;
     try {
-      payload = parseGradePayload(rawText, (msg, meta) =>
-        log.warn(msg, meta as Record<string, unknown>)
-      );
-    } catch (error_) {
-      if (error_ instanceof z.ZodError) {
-        log.error('Gemini returned invalid grade payload', {
-          raw: rawText.slice(0, 300),
-          issues: error_.issues
+      const { data } = await gateway.grade(toGatewayContext(context), {
+        endpoint: '/api/osce/analysis/grade',
+        schema: OsceAnalysisGradeSchema,
+        schemaDescription: OSCE_ANALYSIS_GRADE_DESCRIPTION,
+        systemPrompt,
+        userPrompt,
+        tier: 'powerful', // OSCE grading needs pro-tier reasoning
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+      });
+      payload = data;
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        log.warn('OSCE gateway grading failed', {
+          code: err.code,
+          requestId: err.requestId,
+          traceId: err.traceId,
+          message: err.message.slice(0, 200),
         });
-        return {
-          status: 422,
-          error: 'Invalid grading response format',
-          details: error_.issues.map(issue => issue.message).join(', ')
-        };
+        if (err.code === 'RATE_LIMITED') {
+          return { status: 429, error: 'Rate limit exceeded' };
+        }
+        if (err.code === 'SCHEMA_INVALID_AFTER_REPAIR') {
+          return {
+            status: 422,
+            error: 'Invalid grading response format',
+            details: err.message.slice(0, 400),
+          };
+        }
+        return { status: 502, error: 'Grading service failed' };
       }
-      // JSON parse error or other unexpected error
-      log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
-      return { status: 502, error: 'Invalid grading response format' };
+      log.error('Unexpected OSCE grading error', err);
+      return { status: 502, error: 'Grading service failed' };
     }
 
-    // Ghost Listener: Bedside manner analysis (soft skills) - non-blocking, best-effort
+    // ── Ghost Listener: soft-skills analysis — non-blocking best-effort ──
     let softSkillsReport: SoftSkillsReport | null = null;
     try {
-      softSkillsReport = await callGeminiSoftSkills(env.GEMINI_API_KEY, transcript);
-    } catch {
-      log.warn('Soft skills analysis skipped or failed', { sessionId });
+      const { data } = await gateway.grade(toGatewayContext(context), {
+        endpoint: '/api/osce/analysis/grade#soft-skills',
+        schema: OsceSoftSkillsSchema,
+        schemaDescription: OSCE_SOFT_SKILLS_DESCRIPTION,
+        systemPrompt:
+          'You are a clinical educator evaluating bedside manner in a simulated patient encounter. Analyze the student (Speaker A). Scale: 1=poor, 5=excellent. Provide brief, specific feedback. Output JSON only.',
+        userPrompt: `Transcript (Speaker A = Student, Speaker B = Patient):\n${JSON.stringify(
+          transcript,
+        )}\n\nReturn ONLY a JSON object conforming to this schema:\n${OSCE_SOFT_SKILLS_DESCRIPTION}`,
+        tier: 'balanced',
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+      });
+      softSkillsReport = data;
+    } catch (err) {
+      // Soft skills are supplementary — never block the grade on them.
+      log.warn('Soft skills analysis skipped or failed', {
+        sessionId,
+        code: err instanceof GatewayError ? err.code : 'unknown',
+      });
     }
 
     // Safety net: keyword-based dangerous action detection catches anything Gemini missed

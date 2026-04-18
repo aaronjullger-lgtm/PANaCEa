@@ -14,6 +14,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
 import {
@@ -44,6 +45,22 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    // Resolve Clerk id to internal User.id — UserProgress.userId is the internal id.
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return {
+        data: {
+          message: 'User not found. Your account has not finished syncing.',
+          overallReadiness: 0,
+          projectedAtExam: 0,
+          systems: [],
+          riskLevel: 'critical',
+          meta: { status: 'user_not_synced' },
+        },
+        status: 404,
+      };
+    }
+
     // 1. Parse exam date
     let daysUntilExam: number | null = null;
     if (validated.examDate) {
@@ -55,7 +72,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
     // 2. Fetch UserProgress records (READINESS context)
     const progressRecords = await prisma.userProgress.findMany({
       where: {
-        userId: auth.userId,
+        userId,
         progressContext: 'READINESS',
       },
       select: {

@@ -24,6 +24,8 @@ import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
 import { withStructuredLogging } from './structuredLogger';
+import { envelopeFromHandlerResult, envelopeInternalError } from './api-response';
+import { resolveRequestId } from './requestLogger';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -91,7 +93,12 @@ export function withMiddleware<TContext extends CloudflareContext>(
     const handler = middlewareAndHandler[middlewareAndHandler.length - 1] as Handler<any>;
     const middleware = middlewareAndHandler.slice(0, -1) as Middleware<any>[];
 
-    const requestId = crypto.randomUUID();
+    // Resolve a single stable requestId at the top of the chain and cache it on
+    // context so downstream middleware (withRequestLogging) and the response
+    // envelope use the SAME id. Fixes the triple-requestId bug where each layer
+    // generated its own UUID and trace correlation broke across log lines and
+    // response headers.
+    const requestId = resolveRequestId(context);
 
     // Build middleware chain
     let index = 0;
@@ -115,68 +122,26 @@ export function withMiddleware<TContext extends CloudflareContext>(
       return toResponse(result, context.request, requestId);
     } catch (error) {
       logger.error('Middleware chain error', error);
-      return toResponse(
-        { status: 500, error: 'Internal server error' },
-        context.request,
-        requestId
-      );
+      return envelopeInternalError(context.request, requestId);
     }
   };
 }
 
 /**
- * Convert handler response to standard Response object
+ * Convert handler response to the unified API envelope Response.
+ * Delegates to api-response.ts — the single source of truth.
  */
 function toResponse(result: HandlerResponse, request: Request, requestId?: string): Response {
-  if (result instanceof Response) {
-    const headers = new Headers(result.headers);
-    if (requestId) headers.set('X-Request-ID', requestId);
-    const sentryTrace = request.headers.get('sentry-trace');
-    if (sentryTrace) headers.set('Sentry-Trace', sentryTrace);
-    return new Response(result.body, {
-      status: result.status,
-      statusText: result.statusText,
-      headers,
-    });
-  }
-
-  let status = result.status || 200;
-  let body: string;
   try {
-    body =
-      result.error != null
-        ? JSON.stringify({ error: result.error })
-        : JSON.stringify(result.data ?? result);
+    return envelopeFromHandlerResult(result, request, requestId);
   } catch (serializeError) {
     logger.error('Response serialization failed', serializeError);
-    status = 500;
-    body = JSON.stringify({
-      error: 'Internal server error',
-      details: 'Response could not be serialized to JSON',
-    });
+    return envelopeInternalError(
+      request,
+      requestId,
+      'Response could not be serialized to JSON'
+    );
   }
-
-  const headers = new Headers({ 'Content-Type': 'application/json' });
-  if (requestId) headers.set('X-Request-ID', requestId);
-
-  // Forward Sentry trace so failed requests can be found in Sentry by trace ID
-  const sentryTrace = request.headers.get('sentry-trace');
-  if (sentryTrace) headers.set('Sentry-Trace', sentryTrace);
-
-  const response = new Response(body, {
-    status,
-    headers,
-  });
-
-  // Add CORS headers
-  const corsHeaders = getCorsHeaders(request);
-  if (corsHeaders) {
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      (response.headers as Headers).set(key, value);
-    });
-  }
-
-  return response;
 }
 
 /** Extract Sentry trace ID from request (first segment of sentry-trace header) for logging/debugging */

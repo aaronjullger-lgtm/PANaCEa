@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_WS_PATH = 'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
@@ -112,7 +112,10 @@ const TOOLS = [
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): builds Gemini Live
+// API WebSocket config with dynamic persona/voice modulation and mints an
+// ephemeral auth token via generativelanguage.googleapis.com. 25 rpm 'ai' bucket.
+export const onRequestGet = aiEndpoint(
   QuerySchema,
   async (context) => {
     const { env, auth, validated } = context;

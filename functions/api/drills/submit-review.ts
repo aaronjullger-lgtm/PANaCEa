@@ -10,6 +10,34 @@ import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';
+import { getFromCache, setInCache, isKVAvailable } from '../_shared/cache';
+
+// Sprint S3 — Idempotency cache constants.
+// See lib/api/schemas/drills.ts → DrillSubmitReviewRequestSchema.idempotencyKey.
+const IDEM_TTL_SECONDS = 86400; // 24h
+const IDEM_KEY_PREFIX_SINGLE = 'idem:submit-review:';
+const IDEM_KEY_PREFIX_BATCH = 'idem:submit-reviews:';
+
+/** Shape of the payload we cache under an idempotency key (singular endpoint). */
+type CachedDrillResponse = Record<string, unknown>;
+
+/**
+ * Build the cache key used by the singular submit-review endpoint.
+ * Scoped by clerkId + key so different users cannot collide.
+ */
+function buildSingleIdemKey(clerkId: string, idempotencyKey: string): string {
+  return `${IDEM_KEY_PREFIX_SINGLE}${clerkId}:${idempotencyKey}`;
+}
+
+/**
+ * Build the cache key used by the batch submit-reviews endpoint (per-item).
+ * Scoped by clerkId + key so different users cannot collide.
+ */
+export function buildBatchIdemKey(clerkId: string, idempotencyKey: string): string {
+  return `${IDEM_KEY_PREFIX_BATCH}${clerkId}:${idempotencyKey}`;
+}
+
+export { IDEM_TTL_SECONDS };
 
 // Request schema — single source of truth lives in the shared library.
 // To change the /api/drills/submit-review contract, edit lib/api/schemas/drills.ts.
@@ -42,7 +70,28 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       wakeTimeHHMM,
       telemetry,
       sessionType,
+      idempotencyKey,
     } = validated;
+
+    // Sprint S3 — Idempotency short-circuit.
+    // If the caller supplied an idempotency key AND the KV cache is available,
+    // check whether we've already handled this exact submission. On hit, return
+    // the prior response without re-entering the FSRS pipeline. This prevents
+    // duplicate QuestionAttempt / ReviewLog rows when the client retries
+    // (offline sync replay, double-submit, flaky network).
+    if (idempotencyKey && isKVAvailable(env.CACHE)) {
+      const cached = await getFromCache<CachedDrillResponse>(
+        env.CACHE,
+        buildSingleIdemKey(auth.userId, idempotencyKey),
+      );
+      if (cached) {
+        logger.info('idempotency cache hit — returning prior response', {
+          questionId,
+          idempotencyKey,
+        });
+        return { data: cached };
+      }
+    }
 
     // Create pipeline tracer for structured observability across the entire review pipeline.
     // Pass the endpoint logger so tracer output flows through SecureLogger's redaction layer
@@ -234,14 +283,27 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       }
     }
 
-    return {
-      data: {
-        ...result,
-        isRapidGuess,
-        nextReview,
-        drillFeedback,
-      },
+    const responseData = {
+      ...result,
+      isRapidGuess,
+      nextReview,
+      drillFeedback,
     };
+
+    // Sprint S3 — Cache the successful response under the idempotency key so
+    // retries with the same key short-circuit. Intentionally fire-and-forget:
+    // a cache write failure must not fail the user-visible request. 24h TTL
+    // covers worst-case offline-retry windows.
+    if (idempotencyKey && isKVAvailable(env.CACHE)) {
+      await setInCache(
+        env.CACHE,
+        buildSingleIdemKey(auth.userId, idempotencyKey),
+        responseData,
+        IDEM_TTL_SECONDS,
+      );
+    }
+
+    return { data: responseData };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const isDbError = errorMessage.includes('prisma') || errorMessage.includes('database') || errorMessage.includes('connection');

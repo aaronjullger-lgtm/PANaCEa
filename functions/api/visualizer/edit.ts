@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
@@ -53,7 +53,10 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(EditBodySchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): conversational image
+// editing via Gemini image model (Nano Banana / gemini-2.5-flash-image etc).
+// Multimodal image-in/image-out — expensive. 25 rpm 'ai' bucket.
+export const onRequestPost = aiEndpoint(EditBodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
     validated: z.infer<typeof EditBodySchema>;

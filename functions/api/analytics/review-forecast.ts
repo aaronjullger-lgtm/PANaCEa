@@ -1,23 +1,40 @@
 /**
  * Review Forecast API
- * GET /api/analytics/review-forecast
+ * GET /api/analytics/review-forecast?tz=America/Los_Angeles
  *
  * Returns a 7-day review load forecast from UserProgress.nextReviewAt.
- * Also returns count of overdue cards (nextReviewAt < now).
+ * Also returns count of overdue cards (nextReviewAt < start of user's local today).
  * Optionally breaks down by system for daily detail views.
+ *
+ * Timezone semantics:
+ *   Prior versions bucketed by UTC day. That silently lied to PT students
+ *   studying at 22:00 local — a card due 2026-04-19T02:00Z shows as
+ *   "tomorrow" by UTC but is actually "today" on the user's calendar. We
+ *   now accept a `?tz=` IANA string, fall back to the
+ *   UserPreferences.consolidationTimezone, and finally to UTC. Day buckets
+ *   and the overdue threshold are all computed on the *user's* calendar.
  *
  * @see components/dashboard/ReviewCalendar.tsx
  * @see hooks/useReviewForecast.ts
+ * @see lib/time/userTz.ts
  */
 
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
+import {
+  addDaysInTz,
+  formatLocalDay,
+  normalizeTz,
+  startOfLocalDay,
+  startOfLocalDayFromKey,
+} from '../../../lib/time/userTz';
 
 const querySchema = z.object({}).optional().default({});
 
 export interface ForecastDay {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD in user's local calendar
   count: number;
   /** Top systems with counts, for drill-down detail */
   systems?: { system: string; count: number }[];
@@ -28,6 +45,8 @@ export interface ReviewForecastResponse {
   today: number;
   forecast: ForecastDay[];
   totalActive: number;
+  /** IANA timezone used to bucket days. Surfaces so the client can audit. */
+  timezone: string;
 }
 
 export const onRequestGet = authenticatedEndpoint(
@@ -36,19 +55,51 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      const userId = context.auth.userId;
+      // Resolve Clerk id (context.auth.userId) to internal User.id.
+      // UserProgress.userId is the internal id — querying by Clerk id returns no rows.
+      const userId = await resolveUserId(prisma, context.auth.userId);
+      if (!userId) {
+        return Response.json(
+          {
+            data: {
+              overdue: 0,
+              today: 0,
+              forecast: [],
+              totalActive: 0,
+              timezone: 'UTC',
+              meta: { status: 'user_not_synced' },
+            },
+          },
+          { status: 404 }
+        );
+      }
+
+      // Timezone precedence: query param → UserPreferences → UTC.
+      // Query param wins because the browser's resolved zone is the most
+      // up-to-date signal (travel, laptop relocation); the stored pref is
+      // the fallback for cron or server-side contexts where there is no
+      // request origin.
+      const urlTz = new URL(context.request.url).searchParams.get('tz');
+      let tz = normalizeTz(urlTz);
+      if (tz === 'UTC') {
+        const prefs = await prisma.userPreferences.findUnique({
+          where: { userId },
+          select: { consolidationTimezone: true },
+        });
+        tz = normalizeTz(prefs?.consolidationTimezone);
+      }
+
       const now = new Date();
 
-      // Get the start of today (UTC)
-      const todayStart = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+      // Start of the user's local "today", expressed as a UTC instant.
+      const todayStart = startOfLocalDay(tz, now);
+      // End of the 7-day window = start of local day (today + 7).
+      const endDate = startOfLocalDayFromKey(
+        addDaysInTz(formatLocalDay(todayStart, tz), 7, tz),
+        tz
       );
 
-      // End of 7-day window
-      const endDate = new Date(todayStart);
-      endDate.setUTCDate(endDate.getUTCDate() + 7);
-
-      // Count overdue cards (nextReviewAt < start of today)
+      // Count overdue cards (nextReviewAt < start of *local* today)
       const overdueCount = await prisma.userProgress.count({
         where: {
           userId,
@@ -74,20 +125,19 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
-      // Aggregate by day
+      // Aggregate by user-local day. DST-safe: we derive each bucket key
+      // from `addDaysInTz`, which walks calendar days (not 86400 s nudges).
       const dayMap = new Map<string, { count: number; systems: Map<string, number> }>();
 
-      // Initialize all 7 days
+      const todayKey = formatLocalDay(todayStart, tz);
       for (let i = 0; i < 7; i++) {
-        const d = new Date(todayStart);
-        d.setUTCDate(d.getUTCDate() + i);
-        const key = d.toISOString().split('T')[0]!;
+        const key = addDaysInTz(todayKey, i, tz);
         dayMap.set(key, { count: 0, systems: new Map() });
       }
 
       for (const card of upcomingCards) {
         if (!card.nextReviewAt) continue;
-        const dateKey = card.nextReviewAt.toISOString().split('T')[0]!;
+        const dateKey = formatLocalDay(card.nextReviewAt, tz);
         const entry = dayMap.get(dateKey);
         if (!entry) continue;
 
@@ -97,7 +147,8 @@ export const onRequestGet = authenticatedEndpoint(
         entry.systems.set(system, (entry.systems.get(system) || 0) + 1);
       }
 
-      // Build forecast array
+      // Build forecast array — preserve Map iteration order (which matches
+      // insertion order, i.e. chronological).
       const forecast: ForecastDay[] = [];
       for (const [date, data] of dayMap) {
         const systems = Array.from(data.systems.entries())
@@ -120,7 +171,6 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
-      const todayKey = todayStart.toISOString().split('T')[0]!;
       const todayCount = dayMap.get(todayKey)?.count ?? 0;
 
       return Response.json({
@@ -129,6 +179,7 @@ export const onRequestGet = authenticatedEndpoint(
           today: todayCount,
           forecast,
           totalActive,
+          timezone: tz,
         } satisfies ReviewForecastResponse,
       });
     } finally {

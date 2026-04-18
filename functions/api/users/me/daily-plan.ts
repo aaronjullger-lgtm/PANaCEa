@@ -1,17 +1,13 @@
 import { z } from 'zod';
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withEnvCheck,
-  withAuth,
-  withRateLimit,
-  withLogging,
-  authenticatedEndpoint,
-  type AuthenticatedContext,
-} from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
+
+const DailyPlanGetQuerySchema = z.object({
+  // Loose string — passed straight to `new Date(...)`. Invalid dates fall back
+  // to `new Date()` (today) via downstream NaN handling.
+  date: z.string().min(1).max(64).optional(),
+});
 
 const DailyPlanCompleteSchema = z.object({
   body: z.object({
@@ -31,14 +27,10 @@ export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
  *
  * Optional query params:
  * - date: ISO date string (default: today)
- */export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+ */
+export const onRequestGet = authenticatedEndpoint(
+  DailyPlanGetQuerySchema,
+  async (context) => {
     const clerkId = context.auth.userId;
 
     const user = await prisma.user.findUnique({
@@ -50,8 +42,7 @@ export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
     }
 
     // Parse optional date param
-    const url = new URL(context.request.url);
-    const dateParam = url.searchParams.get('date');
+    const dateParam = context.validated.date;
     const targetDate = dateParam ? new Date(dateParam) : new Date();
     targetDate.setUTCHours(0, 0, 0, 0);
     // Get the plan for the specified date
@@ -79,8 +70,10 @@ export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
     }
 
     return { status: 200, data: formatPlanResponse(plan) };
-  }
+  },
+  { source: 'query', requestsPerMinute: 30 }
 );
+
 /**
  * POST /api/users/me/daily-plan/complete
  * Mark today's plan as completed

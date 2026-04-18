@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { buildRetrievabilityCurve } from '../../../lib/fsrs-retrievability';
 
 /** Type for SRS item from Prisma query */
 interface SRSItemRecord {
@@ -105,17 +106,9 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
         0
       ) / reviewedItems.length;
 
-    // FSRS v6 retrievability: R(t) = (1 + FACTOR · t / S)^DECAY
-    // FACTOR = 19/81, DECAY = -0.5 (do NOT use Ebbinghaus exp(-t/S))
-    const FSRS_FACTOR = 19 / 81;
-    const FSRS_DECAY = -0.5;
-    const decayCurveData = Array.from({ length: 31 }, (_, day) => ({
-      day,
-      retentionProb: Math.max(
-        0,
-        Math.min(100, Math.pow(1 + (FSRS_FACTOR * day) / avgStability, FSRS_DECAY) * 100)
-      ),
-    }));
+    // FSRS v6 retrievability curve via shared helper (lib/fsrs-retrievability.ts).
+    // Single source of truth for the (19/81, -0.5) formula across the app.
+    const decayCurveData = buildRetrievabilityCurve(avgStability, 30);
 
     const stabilityBuckets = [
       { bucket: '<1d', count: 0, color: 'var(--color-data-fail)' },

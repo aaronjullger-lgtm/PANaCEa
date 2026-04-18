@@ -200,5 +200,5 @@ export function withStructuredLogging(): Middleware {
 
 // ─── Re-exports for convenience ─────────────────────────────────────────────
 
-export { attachLogMeta, getRequestId } from './requestLogger';
+export { attachLogMeta, getRequestId, resolveRequestId } from './requestLogger';
 export { logger as secureLogger } from './secureLogger';

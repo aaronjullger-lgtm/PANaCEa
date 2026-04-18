@@ -46,14 +46,14 @@ export const onRequestGet = publicEndpoint(ContentSystemsSchema, async (context)
     // Only published content is surfaced to learners.
     const systemGroups = await prisma.medicalContent.groupBy({
       by: ['system'],
-      where: { status: 'published', system: { not: null } },
-      _count: { system: true },
-      orderBy: { _count: { system: 'desc' } },
+      where: { status: 'published', system: { not: null as unknown as string } },
+      _count: true,
+      orderBy: { system: 'asc' },
     });
 
     const systems = systemGroups
       .filter((g) => g.system)
-      .map((g) => ({ id: g.system!, label: g.system!, count: g._count.system }));
+      .map((g) => ({ id: g.system!, label: g.system!, count: g._count }));
 
     await setCached(env as { CACHE?: KVNamespace }, SYSTEMS_CACHE_KEY, systems, CACHE_TTL);
     logger.info('Systems fetched', { count: systems.length });

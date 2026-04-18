@@ -15,7 +15,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -36,7 +36,10 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): mints ephemeral
+// auth token for client-to-Gemini Live WebSocket (voice-to-voice OSCE).
+// 25 rpm 'ai' bucket.
+export const onRequestGet = aiEndpoint(
   EmptySchema,
   async (context) => {
     const { env, auth } = context as { env: Env; auth: { userId: string } };

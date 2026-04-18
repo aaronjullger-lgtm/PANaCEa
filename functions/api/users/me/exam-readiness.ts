@@ -1,15 +1,11 @@
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withEnvCheck,
-  withAuth,
-  withRateLimit,
-  withLogging,
-  type AuthenticatedContext,
-} from '../../_shared/middleware';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { getExamReadinessBySystem } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
+
+const ExamReadinessQuerySchema = z.object({
+  examType: z.enum(['PANCE', 'PANRE', 'EOR']).optional(),
+});
 
 /**
  * GET /api/users/me/exam-readiness
@@ -23,16 +19,11 @@ import { prisma } from '../../_shared/prisma-edge';
  * - Blueprint targets vs current coverage
  * - Critical gaps needing focus
  * - Days until exam
- */export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 60, endpointType: 'api', keyPrefix: 'exam-readiness' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
-    const url = new URL(context.request.url);
-    const examType = url.searchParams.get('examType') || 'PANCE';
+ */
+export const onRequestGet = authenticatedEndpoint(
+  ExamReadinessQuerySchema,
+  async (context) => {
+    const examType = context.validated.examType ?? 'PANCE';
     const userId = context.auth.userId;
 
     // Look up internal user ID from Clerk ID
@@ -135,5 +126,6 @@ import { prisma } from '../../_shared/prisma-edge';
         },
       },
     };
-  }
+  },
+  { source: 'query', requestsPerMinute: 60 }
 );

@@ -3,14 +3,24 @@
  * High-fidelity question generation using Deep Context (PANCE blueprint cache).
  * Uses cachedContent (cache_pance_master_v1 or provided name) so the model has
  * 1M+ tokens of depth; distractors are clinically relevant, not random.
+ *
+ * Sprint 7 (AI Gateway migration): Replaced direct `fetch` to
+ * `generativelanguage.googleapis.com` with `gateway.callText()` using
+ * task='generation', tier='balanced' (gemini-2.5-flash — same model as before)
+ * and the `cachedContent` field. Response-shape handling is unchanged;
+ * defensive markdown-fence stripping is added because the gateway's text path
+ * doesn't set `responseMimeType: application/json` (structured outputs would
+ * require a Zod schema — tracked separately).
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-const GENERATE_MODEL = 'gemini-2.5-flash';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+} from '../../../lib/ai/aiGateway';
 
 const GenerateDeepSchema = z.object({
   body: z.object({
@@ -29,7 +39,11 @@ const GenerateDeepSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerateDeepSchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory):
+// - Deep-context question generation hits Gemini + a 1M-token cache. The
+//   authenticated stack's 300 rpm default is a loaded-footgun here; aiEndpoint's
+//   25 rpm bucket (keyPrefix 'ai') is the correct shape for this hot path.
+export const onRequestPost = aiEndpoint(GenerateDeepSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/generate-deep');
 
@@ -88,47 +102,64 @@ Output valid JSON only, no markdown:
 }`;
 
   try {
-    const body: Record<string, unknown> = {
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
+    const normalizedCacheName = cacheName.startsWith('cachedContents/')
+      ? cacheName
+      : `cachedContents/${cacheName}`;
+
+    let rawText: string;
+    try {
+      const result = await gateway.callText(toGatewayContext(context), {
+        mode: 'text',
+        task: 'generation',
+        tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+        endpoint: '/api/questions/generate-deep',
+        userPrompt: prompt,
         temperature: 0.7,
         maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
-      cachedContent: cacheName.startsWith('cachedContents/')
-        ? cacheName
-        : `cachedContents/${cacheName}`,
-    };
-
-    const res = await fetch(
-      `${GEMINI_BASE}/v1beta/models/${GENERATE_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        cachedContent: normalizedCacheName,
+      });
+      if (result.blocked) {
+        logger.warn('Gemini generate-deep blocked by safety filter', {
+          reason: result.blockReason ?? 'unknown',
+        });
+        return new Response(
+          JSON.stringify({ error: 'Generation blocked by safety filter' }),
+          { status: 422, headers: { 'Content-Type': 'application/json' } }
+        );
       }
-    );
-
-    if (!res.ok) {
-      const text = await res.text();
-      logger.warn('Gemini generate-deep failed', { status: res.status, text: text.slice(0, 300) });
-      return new Response(
-        JSON.stringify({ error: `Generation failed: ${res.status}`, details: text.slice(0, 500) }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      rawText = (result.text ?? '').trim();
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        const status =
+          err.code === 'RATE_LIMITED'
+            ? 429
+            : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+              ? 500
+              : err.code === 'BAD_REQUEST'
+                ? 400
+                : 502;
+        logger.warn('Gateway error during generate-deep', {
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+          traceId: err.traceId,
+        });
+        return new Response(
+          JSON.stringify({ error: `Generation failed: ${err.code}`, details: err.message.slice(0, 500) }),
+          { status, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      throw err;
     }
 
-    const data = (await res.json()) as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
-      }>;
-    };
-    const text =
-      data.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text)
-        .filter(Boolean)
-        .join('')
-        ?.trim() ?? '';
+    // Strip markdown code fences if present — the gateway's text path does not
+    // force responseMimeType=application/json so the model may wrap JSON in
+    // ```json ... ``` fences depending on the prompt.
+    let jsonText = rawText;
+    if (jsonText.startsWith('```json')) jsonText = jsonText.slice(7);
+    else if (jsonText.startsWith('```')) jsonText = jsonText.slice(3);
+    if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3);
+    jsonText = jsonText.trim();
 
     let questions: Array<{
       question: string;
@@ -140,7 +171,7 @@ Output valid JSON only, no markdown:
     }> = [];
 
     try {
-      const parsed = JSON.parse(text) as { questions?: typeof questions };
+      const parsed = JSON.parse(jsonText) as { questions?: typeof questions };
       if (Array.isArray(parsed.questions)) {
         // Filter out malformed items before serving — a question with missing required
         // fields is worse than no question (undefined behaviour for downstream consumers).
@@ -167,7 +198,7 @@ Output valid JSON only, no markdown:
         questions = valid.slice(0, count);
       }
     } catch {
-      logger.warn('generate-deep JSON parse failed', { text: text.slice(0, 200) });
+      logger.warn('generate-deep JSON parse failed', { text: rawText.slice(0, 200) });
     }
 
     logger.info('Deep questions generated', {

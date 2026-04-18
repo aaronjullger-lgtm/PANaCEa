@@ -1,14 +1,19 @@
 /**
  * API Endpoint: /api/drills/contrastive/generate
  * Generates a contrastive learning question using Gemini AI
+ *
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai` SDK
+ * usage with `gateway.callText()` using task='generation', tier='balanced'
+ * (gemini-2.5-flash — same model as before). Routes contrastive distractor
+ * synthesis through the central gateway for telemetry + cost tracking +
+ * standardized safety handling.
  */
 
 import { z } from 'zod';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
-  authenticatedEndpoint,
+  aiEndpoint,
   withCors,
   AuthenticatedContext,
   ValidatedContext,
@@ -18,6 +23,12 @@ import {
   buildContrastivePrompt,
   GeneratedContrastiveQuestion,
 } from '../../../../lib/contrastiveDrillGenerator';
+import {
+  gateway,
+  GatewayError,
+  GatewayContext,
+  toGatewayContext,
+} from '../../../../lib/ai/aiGateway';
 
 const ContrastiveGenerateSchema = z.object({
   body: z.object({
@@ -31,20 +42,30 @@ type ContrastiveGenerateInput = z.infer<typeof ContrastiveGenerateSchema>;
 export const onRequestOptions = withCors();
 
 /**
- * Call Gemini to generate a contrastive question
+ * Call the AI gateway to generate a contrastive question.
+ * Returns `null` when generation was blocked by the safety filter so the caller
+ * can surface a 422; throws `GatewayError` for transport/provider failures so
+ * the outer handler can map to appropriate HTTP status codes.
  */
 async function generateWithGemini(
-  apiKey: string,
+  ctx: GatewayContext,
   prompt: string
-): Promise<GeneratedContrastiveQuestion> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+): Promise<GeneratedContrastiveQuestion | null> {
+  const result = await gateway.callText(ctx, {
+    mode: 'text',
+    task: 'generation',
+    tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+    endpoint: '/api/drills/contrastive/generate',
+    userPrompt: prompt,
+  });
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  const text = response.text();
+  if (result.blocked) {
+    return null;
+  }
 
-  // Clean up markdown code blocks if present
+  const text = result.text ?? '';
+  // Clean up markdown code blocks if present — the gateway's text path does
+  // not set responseMimeType=application/json so fences can slip through.
   const jsonStr = text
     .replace(/```json/g, '')
     .replace(/```/g, '')
@@ -58,7 +79,9 @@ async function generateWithGemini(
   }
 }
 
-export const onRequestPost = authenticatedEndpoint(
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): calls Gemini 2.5
+// flash to synthesize contrastive-learning distractors. 25 rpm 'ai' bucket.
+export const onRequestPost = aiEndpoint(
   ContrastiveGenerateSchema,
   async (context: AuthenticatedContext & ValidatedContext<ContrastiveGenerateInput>) => {
     const { env, auth, validated } = context;
@@ -135,9 +158,45 @@ export const onRequestPost = authenticatedEndpoint(
         targetCondition: nameForPrompt,
       });
 
-      const apiKey = env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
-      const generated = await generateWithGemini(apiKey, prompt);
+      let generated: GeneratedContrastiveQuestion | null;
+      try {
+        generated = await generateWithGemini(toGatewayContext(context), prompt);
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          logger.error('Gateway error during contrastive generation', {
+            code: err.code,
+            retryable: err.retryable,
+            requestId: err.requestId,
+            traceId: err.traceId,
+            userId: auth.userId,
+            setId,
+          });
+          const status =
+            err.code === 'RATE_LIMITED'
+              ? 429
+              : err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY'
+                ? 500
+                : err.code === 'BAD_REQUEST'
+                  ? 400
+                  : 502;
+          return {
+            status,
+            error: `Generation failed: ${err.code}`,
+          };
+        }
+        throw err;
+      }
+
+      if (!generated) {
+        logger.warn('Contrastive generation blocked by safety filter', {
+          userId: auth.userId,
+          setId,
+        });
+        return {
+          status: 422,
+          error: 'Generation blocked by safety filter',
+        };
+      }
 
       logger.info('Contrastive question generated successfully', {
         userId: auth.userId,

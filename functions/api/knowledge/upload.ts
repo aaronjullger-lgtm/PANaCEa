@@ -17,16 +17,8 @@
  *   - File-level shape checks (presence, non-empty) run after formData().
  */
 
-import {
-  withCors,
-  withMiddleware,
-  withAuth,
-  withErrorHandling,
-  withRateLimit,
-  withLogging,
-  withEnvCheck,
-  type AuthenticatedContext,
-} from '../_shared/middleware';
+import { z } from 'zod';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -83,14 +75,13 @@ async function uploadToGeminiFiles(
   return { fileUri, name };
 }
 
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck('FULL_STACK'),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 20, endpointType: 'api' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+// Uses source:'query' with a permissive schema so the wrapper doesn't consume
+// the multipart body before the handler can call request.formData(). Gemini
+// env validation stays inside the handler since the canonical wrapper's
+// env check covers DATABASE + AUTH but not GEMINI_API_KEY.
+export const onRequestPost = aiEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const { env, request } = context;
     const logger = createEndpointLogger('/api/knowledge/upload');
     try {
@@ -166,5 +157,6 @@ export const onRequestPost = withMiddleware(
         headers: { 'Content-Type': 'application/json' },
       });
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 20 }
 );
