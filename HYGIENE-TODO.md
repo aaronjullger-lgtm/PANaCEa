@@ -1,39 +1,80 @@
-# Repo Hygiene TODO — Claude's Autonomous Sweep (2026-04-17)
+# Repo Hygiene TODO — Claude's Autonomous Sweep
 
-File deletions are blocked by the sandbox Claude is running in; these are all
-safe deletes that need `git rm` locally.
+Original sweep: 2026-04-17. Refreshed after audit: 2026-04-18.
 
-## Tier 1 — Delete (zero active callers, 410 Gone tombstones)
+## Status
+
+- Tier 1 — DONE. Commit `44890508` chore(hygiene): delete tier-1 tombstones (review.ts, log-attempt.ts).
+- Tier 2 — DONE. Commit `685a93e2` chore(hygiene): delete tier-2 tombstones (301 redirects to /api/drills/*).
+- Tombstone file patterns (`*.todelete_*`, `*.local_preserve*`) — DONE. Zero matches in repo.
+
+## Tier 3 (re-audited 2026-04-18)
+
+### 3a. `lib/poolSelection.ts` — ORIGINAL AUDIT WAS WRONG
+
+The file is a **live utility** used by `functions/api/questions/pool.ts` for
+weighted PANCE-distribution selection (`selectByPanceDistribution`,
+`fisherYatesShuffle`). It internally already reads from
+`BLUEPRINT_PERCENT_BY_ABBREVIATION` — the migration the original audit asked
+for is already done.
+
+The real cleanup target is the deprecated re-export `PANCE_SYSTEM_PERCENTAGES`
+(line 12). Callers to migrate:
+
+- `components/quiz/SessionEndSummary.tsx`
+- `components/quiz/SessionStatsOverlay.tsx`
+- `services/ai/enhancedQuestionService.ts`
+- `services/ai/panceDistributionService.ts`
+- `services/domain/panceDistributionService.ts`
+- `services/domain/index.ts`
+- `tests/poolSelection.test.ts`
+- `lib/poolSelection.ts` (self-reference)
+
+Replace `import { PANCE_SYSTEM_PERCENTAGES } from '.../poolSelection'` →
+`import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '.../constants/blueprint'`,
+then delete the deprecated re-export.
+
+### 3b. `lib/sessionInterleaving.ts` — CAN BE DELETED (with its parent)
+
+Only real caller: `services/core/enhancedQuestionPool.ts`.
+But `enhancedQuestionPool.ts` is itself orphaned — its sole consumer
+`services/core/questionService.ts` has the import commented out (lines 65-68).
+
+Safe cleanup path:
 
 ```bash
-git rm functions/api/questions/review.ts        # 48 lines, 410 Gone
-git rm functions/api/drill/log-attempt.ts       # 28 lines, 410 Gone
+git rm lib/sessionInterleaving.ts
+git rm services/core/enhancedQuestionPool.ts
+# Then trim the imports from scripts/demo-question-sprint-b.ts OR delete the
+# demo script if it's no longer exercised (verify usage first).
 ```
 
-## Tier 2 — Verify no HTTP callers in last 30 days, then delete
+Note: `lib/nccpa-blueprint.ts` defines its OWN `validateInterleaving` (line
+218). It is NOT a consumer of `lib/sessionInterleaving.ts`.
 
-```bash
-# These are 301 redirects. Check Cloudflare logs for old-path traffic first.
-git rm functions/api/drill/contrastive-batch.ts  # 22 lines, 301 → /api/drills/...
-git rm functions/api/drill/overview.ts           # 17 lines, 301 → /api/drills/...
-git rm functions/api/drill/photo-batch.ts        # deprecated backup of /api/drills/media
-git rm functions/api/srs/sync.ts                 # legacy SM-2 sync endpoint
-```
+### 3c. `lib/toast.ts` — 15 CALLERS, LARGE MIGRATION
 
-## Tier 3 — Requires migration before delete
+Confirmed live callers (migrate each to `useToastStore` directly):
 
-1. **`lib/poolSelection.ts`** — `selectByPanceDistribution` + `fisherYatesShuffle`
-   - Caller: `functions/api/questions/pool.ts`
-   - Migrate to `BLUEPRINT_PERCENT_BY_ABBREVIATION` from `lib/constants/blueprint.ts`
+- `components/modes/PatientEncounterMode.tsx`
+- `components/osce/SOAPNoteTrainer.tsx`
+- `components/offline/OfflineSyncIndicator.tsx`
+- `components/modals/SettingsStatsModal.tsx`
+- `components/session/SrsFlashcardView.tsx`
+- `components/drill/ContrastiveDrillSession.tsx`
+- `components/layout/AppLayout.tsx`
+- `components/modes/MedicalWordleMode.tsx`
+- `components/external/MedicalDatabaseSearch.tsx`
+- `hooks/useSRSItems.ts`
+- `hooks/useDrillFSRS.ts`
+- `components/library/ClinicalReferenceLibrary.tsx`
+- `components/modes/BlueprintComplianceAuditorMode.tsx`
+- `contexts/CommuterContext.tsx`
 
-2. **`lib/sessionInterleaving.ts`** — `ensureInterleaving` + `validateInterleaving`
-   - Caller: `services/core/enhancedQuestionPool.ts`
-   - Replacement exists: `lib/services/mainSessionQuestionSelector.ts` (v2.0.0+)
+Defer until the current hotfix branch is stable — adding 15-file churn on top
+of the existing diff is risky.
 
-3. **`lib/toast.ts`** — deprecated imperative Toast API
-   - 15 active callers; migrate each to `useToastStore` directly.
-
-## Not safe to delete (Explore agent was wrong)
+## Not safe to delete (from original sweep — still valid)
 
 - `components/ui/ErrorState.tsx` — still exports `ErrorBoundaryFallback`,
   which is imported by `components/error/ErrorBoundary.tsx`. Keep as-is.
