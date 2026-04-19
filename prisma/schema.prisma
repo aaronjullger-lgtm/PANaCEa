@@ -3170,6 +3170,7 @@ model User {
   Card                      Card[]
   CohortMember              CohortMember[]
   ConceptGap                ConceptGap[]
+  ContentGap                ContentGap[]
   ConfusionPair             ConfusionPair[]
   ContrastiveDrillAttempt   ContrastiveDrillAttempt[]
   DailyStreak               DailyStreak[]
@@ -3178,6 +3179,7 @@ model User {
   GrandRoundsAttempt        GrandRoundsAttempt[]
   GrandRoundsHistory        GrandRoundsHistory[]
   KnowledgeCache            KnowledgeCache[]
+  NotificationLog           NotificationLog[]
   PatientEncounterSession   PatientEncounterSession[]
   PeerStatistic             PeerStatistic[]
   PerformanceRecord         PerformanceRecord[]
@@ -3497,6 +3499,54 @@ model PushSubscription {
   @@unique([userId, endpoint])
   @@index([userId])
   @@index([endpoint])
+}
+
+model ContentGap {
+  id            String    @id @default(cuid())
+  userId        String?
+  system        String
+  taskCategory  String?
+  conditionId   String?
+  topic         String
+  gapType       String
+  severity      Float     @default(0)
+  questionCount Int       @default(0)
+  avgAccuracy   Float?
+  lastReviewAt  DateTime?
+  detectedAt    DateTime  @default(now())
+  resolvedAt    DateTime?
+  metadata      Json?
+  User          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([system])
+  @@index([userId, system])
+  @@index([userId, resolvedAt])
+  @@index([gapType])
+  @@index([severity])
+}
+
+model NotificationLog {
+  id               String    @id @default(cuid())
+  userId           String
+  channel          String
+  notificationType String
+  title            String
+  body             String
+  actionUrl        String?
+  payload          Json?
+  endpoint         String?
+  status           String    @default("SENT")
+  errorDetail      String?
+  sentAt           DateTime  @default(now())
+  deliveredAt      DateTime?
+  openedAt         DateTime?
+  User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sentAt(sort: Desc)])
+  @@index([userId, notificationType, sentAt(sort: Desc)])
+  @@index([sentAt])
+  @@index([channel])
 }
 
 model UserProgress {

@@ -357,6 +357,17 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
 
         const accuracyTrend = computeAccuracyTrend(recentAttempts, now);
 
+        const h24ago = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const d7ago = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const [notificationsSent24h, notificationsSent7d] = await Promise.all([
+          prisma.notificationLog.count({
+            where: { userId: userPref.userId, sentAt: { gte: h24ago } },
+          }),
+          prisma.notificationLog.count({
+            where: { userId: userPref.userId, sentAt: { gte: d7ago } },
+          }),
+        ]);
+
         const habitProfile: HabitProfile = {
           preferredHours: derivePreferredHours(userPref.reminderTime),
           avgDailyQuestions: phenotype?.averageDailyLoad ?? 0,
@@ -367,8 +378,8 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
           cardsDueNext24h: dueNext24hCount,
           dailyGoal: userPref.dailyGoal || 20,
           questionsToday: todayAttempts,
-          notificationsSent24h: 0, // TODO: track via NotificationLog when migration ships
-          notificationsSent7d: 0,
+          notificationsSent24h,
+          notificationsSent7d,
           timezoneOffsetHours: getTimezoneOffsetHours(now, userPref.consolidationTimezone),
           systemStaleness,
           activeSystems,
