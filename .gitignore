@@ -352,3 +352,6 @@ __pycache__/
 /tsconfig.sprint*.json
 /PANaCEa_WIP.md
 /.claude/.write_test
+
+# Superpowers in-session plan docs (ephemeral working memory, not source)
+docs/superpowers/plans/
