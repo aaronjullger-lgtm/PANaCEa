@@ -375,13 +375,33 @@
 }
 
 .panacea-floating-chip--left {
+  /* Anchor above the console's top edge so the chip never overlaps the
+     "Every session shifts toward your highest-risk misses." heading that
+     lives inside the console header. Lifting it outside the console keeps
+     the decorative signal clearly separate from the live content. */
   left: -2.25rem;
-  top: 4rem;
+  top: -1.5rem;
 }
 
 .panacea-floating-chip--right {
+  /* Anchor just below the console bottom edge, clear of the
+     "Tonight's recommended block" panel. */
   right: -1.6rem;
-  bottom: 5.5rem;
+  bottom: -1.5rem;
+}
+
+/* On medium-desktop widths the 2-column hero grid is tight; keep the
+   floating chips visually clear of the console by pulling them further
+   out to the side. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .panacea-floating-chip--left {
+    left: -1rem;
+    top: -2rem;
+  }
+  .panacea-floating-chip--right {
+    right: -0.5rem;
+    bottom: -2rem;
+  }
 }
 
 .panacea-hero-console {
@@ -640,7 +660,12 @@
 
 @media (min-width: 1024px) {
   html.panacea-landing-scroll {
-    scroll-snap-type: y proximity;
+    /* scroll-padding-top anchors #features / #proof / #how-it-works
+       section jumps so the sticky header does not cover the target.
+       scroll-snap is intentionally NOT used — it interferes with
+       browser find-in-page, reduced-motion preferences, and
+       screen-reader navigation, and the landing is better as a free
+       continuous scroll than a slide-deck. */
     scroll-padding-top: 6rem;
   }
 }

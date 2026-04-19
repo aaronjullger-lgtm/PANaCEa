@@ -590,9 +590,9 @@ export function LandingPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
                       <BadgeCheck className="h-4 w-4 text-[var(--landing-accent)]" />
-                      Verified student feedback
+                      Early student feedback
                     </div>
-                    <div className="flex items-center gap-1 text-[var(--landing-gold)]">
+                    <div className="flex items-center gap-1 text-[var(--landing-gold)]" aria-hidden="true">
                       <Sparkles className="h-4 w-4" />
                       <Sparkles className="h-4 w-4" />
                       <Sparkles className="h-4 w-4" />

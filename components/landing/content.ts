@@ -84,20 +84,29 @@ export const FEATURE_PILLARS = [
   'The interface is designed for daily use during rotations, not just cram week.',
 ] as const;
 
+/**
+ * Landing metrics reframed around platform capability rather than an
+ * unverified user count. Three goals:
+ *   1. Every value must be defensible — either it's a design constant
+ *      baked into the platform, a blueprint fact, or a bounded claim.
+ *   2. Avoid social-proof numbers ("12K learners") until an audited count
+ *      can be cited.
+ *   3. Keep the animated reveal pattern so the section still feels alive.
+ */
 export const TRUST_METRICS = [
   {
-    value: 12000,
-    label: 'PA learners in active adaptive plans',
-    detail: 'Across foundational review, rotation drilling, and full-length simulation.',
+    value: 13,
+    label: 'NCCPA blueprint task domains covered',
+    detail: 'Every high-yield PANCE task area mapped to adaptive drills and review.',
     accent: '#c4b78a',
-    format: (current: number) => `${Math.max(1, Math.round(current / 1000))}K+`,
+    format: (current: number) => `${Math.round(current)}`,
   },
   {
-    value: 2800000,
-    label: 'adaptive question interactions modeled',
-    detail: 'Each session sharpens timing, accuracy, and retrieval confidence.',
+    value: 21,
+    label: 'FSRS v6 parameters driving every review',
+    detail: 'Stability, difficulty, and retrievability recalculated per question per session.',
     accent: '#728ba6',
-    format: (current: number) => `${(current / 1000000).toFixed(current >= 1000000 ? 1 : 1)}M`,
+    format: (current: number) => `${Math.round(current)}`,
   },
   {
     value: 94,
