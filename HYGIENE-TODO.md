@@ -17,7 +17,11 @@ Original sweep: 2026-04-17. Refreshed after audit: 2026-04-18.
   Note: `services/ai/panceDistributionService.ts` and `services/ai/enhancedQuestionService.ts` retain their own
   `PANCE_SYSTEM_PERCENTAGES` (full-name keys from `NCCPA_2025_BLUEPRINT_PERCENT`) — separate scope, separate plan.
 
-### 3b. `lib/sessionInterleaving.ts` — CAN BE DELETED (with its parent)
+### 3b. `lib/sessionInterleaving.ts` — DONE ✅
+
+- Tier 3b — DONE. Commits on `codex-study-session-prod-hotfix-v2` — deleted sessionInterleaving.ts, enhancedQuestionPool.ts, demo-question-sprint-b.ts. Removed commented-out block from questionService.ts.
+
+~~CAN BE DELETED (with its parent)~~
 
 Only real caller: `services/core/enhancedQuestionPool.ts`.
 But `enhancedQuestionPool.ts` is itself orphaned — its sole consumer
