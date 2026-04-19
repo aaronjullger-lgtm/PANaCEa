@@ -59,14 +59,6 @@ export {
   generateSessionPlan,
 } from '../ai/adaptiveQuestionEngine';
 
-// Enhanced question pool (Sprint A & B integration)
-// DISABLED: Server-only module with @prisma/client - use dynamic imports
-// export {
-//   getEnhancedQuestionBatch,
-//   getEnhancedQuestion as getEnhancedQuestionV2,
-//   getEnhancedPoolStatus,
-// } from './enhancedQuestionPool';
-
 // ============================================================================
 // Shared Types
 // ============================================================================
@@ -360,17 +352,6 @@ export async function getOptimalQuestions(
     userId,
     useEnhanced = true,
   } = options;
-
-  // NOTE: Enhanced pool with Sprint A & B utilities is SERVER-ONLY
-  // The browser build should not include imports of ./enhancedQuestionPool
-  // which contains @prisma/client. Use API endpoints instead.
-  if (useEnhanced && prisma && userId) {
-    // This code path is server-only (prisma client passed in)
-    // On the browser, prisma will always be undefined
-    console.warn(
-      '[Core QuestionService] Enhanced pool requires server-side execution. Use /api/questions/session endpoint.'
-    );
-  }
 
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
   if (useIntelligent && systemMastery.length > 0) {
