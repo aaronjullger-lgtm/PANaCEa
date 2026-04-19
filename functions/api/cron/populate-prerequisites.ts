@@ -16,7 +16,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import type { CloudflareEnv } from '../_shared/types';
 import {
@@ -42,7 +42,7 @@ type Env = CloudflareEnv & { CACHE?: KVNamespace };
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
+export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (context) => {
   const { env, validated } = context as {
     env: Env;
     validated: z.infer<typeof BodySchema>;
