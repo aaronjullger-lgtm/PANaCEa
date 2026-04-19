@@ -8,7 +8,9 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import { X, Edit2 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { UserGoal } from './GoalsDashboard';
+type GoalStatus = UserGoal['status'];
 
 interface GoalEditModalProps {
   goal: UserGoal;
@@ -47,7 +49,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
       const updates: Partial<UserGoal> = {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
-        status: formData.status as any,
+        status: formData.status as GoalStatus,
         currentValue: formData.currentValue,
         motivationNotes: formData.motivationNotes.trim() || undefined,
         rewardMessage: formData.rewardMessage.trim() || undefined,
@@ -160,7 +162,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
               <select
                 aria-label="Goal status"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as GoalStatus })}
                 className="w-full px-3 py-2 border border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
               >
                 <option value="active">Active</option>
@@ -234,12 +236,7 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
-                {isSubmitting && (
-                  <span
-                    className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-                    aria-hidden="true"
-                  />
-                )}
+                {isSubmitting && <InlineSpinner size="sm" />}
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>

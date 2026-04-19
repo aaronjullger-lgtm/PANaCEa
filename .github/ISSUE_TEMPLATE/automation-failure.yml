@@ -1,0 +1,102 @@
+name: Automation failure
+description: Report a failed PANaCEa scheduled workflow, manual rerun, or automation lane with incorrect runtime behavior.
+title: "[automation failure] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for the live automation portfolio defined in `docs/automation/SCHEDULE_MATRIX.md`.
+
+        Typical examples:
+        - a `sched-*` workflow failed
+        - a manual rerun produced the wrong result
+        - a workflow succeeded but the underlying automation outcome was wrong
+  - type: dropdown
+    id: workflow_name
+    attributes:
+      label: Workflow or automation surface
+      description: Choose the live workflow or adjacent automation surface affected.
+      options:
+        - sched-runtime-sanity.yml
+        - sched-reservoir-supply.yml
+        - sched-daily-learning-models.yml
+        - sched-daily-ops.yml
+        - sched-content-audit.yml
+        - sched-weekly-platform-report.yml
+        - sched-weekly-maintenance.yml
+        - sched-weekly-repo-hygiene.yml
+        - sched-monthly-deep-audit.yml
+        - cloud-agents.yml (manual or event-driven)
+        - package.json compatibility alias or manual wrapper
+        - other
+    validations:
+      required: true
+  - type: input
+    id: run_url
+    attributes:
+      label: Run URL
+      description: Paste the GitHub Actions run URL or the most relevant execution link.
+      placeholder: https://github.com/<owner>/<repo>/actions/runs/...
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - sev-1: production data risk or operator rollback needed now
+        - sev-2: scheduled automation failed or produced incorrect output
+        - sev-3: degraded report, partial failure, or false-positive alert
+        - sev-4: low-risk friction or readability problem
+    validations:
+      required: true
+  - type: dropdown
+    id: data_mutation
+    attributes:
+      label: Did production data mutation occur?
+      options:
+        - no
+        - yes, known mutation occurred
+        - yes, mutation may have occurred
+        - unclear
+    validations:
+      required: true
+  - type: dropdown
+    id: intervention
+    attributes:
+      label: Is rollback or manual intervention needed?
+      options:
+        - no
+        - manual intervention only
+        - rollback recommended
+        - unclear
+    validations:
+      required: true
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: What should this workflow or lane have done?
+      placeholder: The daily ops lane should have called all four production cron endpoints, uploaded HTTP logs, and failed on any non-2xx response.
+    validations:
+      required: true
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual behavior
+      description: Be concrete about the failure, artifact gaps, or misleading success state.
+      placeholder: The workflow completed green, but `generate-daily-insights` returned 500 and the HTTP artifact was missing.
+    validations:
+      required: true
+  - type: input
+    id: artifacts_checked
+    attributes:
+      label: Artifacts or logs checked
+      description: Optional but useful. Include artifact paths, summary sections, or endpoint log files you inspected.
+      placeholder: logs/daily-ops/, logs/automation-http/, step summary
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Optional context, suspected cause, or operator actions already taken.
+      placeholder: Manual rerun reproduced the issue. No rollback taken yet.

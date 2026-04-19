@@ -2,13 +2,13 @@ import React, { useMemo } from 'react';
 import {
   Activity,
   Brain,
-  Loader2,
   RefreshCw,
   Target,
   Timer,
   TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import {
   WorkspaceEmptyState,
   WorkspaceHeroStrip,
@@ -60,8 +60,12 @@ const ClinicalProfileDashboard: React.FC = () => {
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
           <WorkspaceSurface accent="#9a7f9a">
-            <div className="flex min-h-[16rem] items-center justify-center gap-3 text-[var(--color-text-secondary)]">
-              <Loader2 className="h-6 w-6 animate-spin" />
+            <div
+              className="flex min-h-[16rem] items-center justify-center gap-3 text-[var(--color-text-secondary)]"
+              role="status"
+              aria-live="polite"
+            >
+              <InlineSpinner size="lg" />
               <span>Loading clinical profile...</span>
             </div>
           </WorkspaceSurface>

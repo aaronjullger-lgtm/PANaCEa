@@ -99,15 +99,13 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
         systemCounts[system].userSeen += 1;
       }
       for (const system of SYSTEMS) {
-        systemCounts[system].userFresh = Math.max(
-          0,
-          systemCounts[system].total - systemCounts[system].userSeen
-        );
+        const counts = systemCounts[system]!;
+        counts.userFresh = Math.max(0, counts.total - counts.userSeen);
       }
     }
 
     // Identify systems that need more questions in the pool (per‑system thresholds)
-    const lowSystems = SYSTEMS.filter((s) => (systemCounts[s]?.total ?? 0) < systemThresholds[s]);
+    const lowSystems = SYSTEMS.filter((s) => (systemCounts[s]?.total ?? 0) < systemThresholds[s]!);
 
     logger.info('Pool status fetched', { userId: auth.userId, totalInPool, lowSystems });
 

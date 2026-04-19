@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   FileCheck,
@@ -52,6 +53,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     backToSelection,
   } = useGuidelineDrill();
 
+  const prefersReducedMotion = useReducedMotion();
   const [calculatedScore, setCalculatedScore] = useState(0);
   const [selectedCriteria, setSelectedCriteria] = useState<Set<string>>(new Set());
   const [hasStarted, setHasStarted] = useState(false);
@@ -183,7 +185,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
             <motion.div
-              initial={{ y: -20 }}
+              initial={prefersReducedMotion ? false : { y: -20 }}
               animate={{ y: 0 }}
               className="text-center mb-6 sm:mb-8"
             >
@@ -204,9 +206,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     {guidelines.map((g, index) => (
                       <motion.button
                         key={g.id}
-                        initial={{ y: 20 }}
+                        initial={prefersReducedMotion ? false : { y: 20 }}
                         animate={{ y: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
                         onClick={() => handleSelectGuideline(g.id)}
                         className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 group"
                       >
@@ -279,7 +281,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
           {/* Vignette */}
           <motion.div
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4 sm:p-6 mb-4"
           >
@@ -303,9 +305,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               {currentGuideline.components.map((criterion, index) => (
                 <motion.button
                   key={criterion.id}
-                  initial={{ x: -20 }}
+                  initial={prefersReducedMotion ? false : { x: -20 }}
                   animate={{ x: 0 }}
-                  transition={{ delay: index * 0.03 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.03 }}
                   onClick={() => toggleCriterion(criterion.id, criterion.pointValue)}
                   className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
                     selectedCriteria.has(criterion.id)
@@ -357,10 +359,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   if (status === 'feedback' && currentGuideline && currentVignette) {
     const feedbackFooter = (
       <motion.div
-        initial={{ y: 20 }}
+        initial={prefersReducedMotion ? false : { y: 20 }}
         animate={{ y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.2 }}
+        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
         className={`p-3 sm:p-4 ${
           isCorrect
             ? 'bg-data-pass border-t-2 border-data-pass'
@@ -414,7 +416,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
           {/* Result Card */}
           <motion.div
-            initial={{ scale: 0.9 }}
+            initial={prefersReducedMotion ? false : { scale: 0.9 }}
             animate={{ scale: 1 }}
             className={`p-6 rounded-xl border mb-4 ${
               isCorrect
@@ -491,10 +493,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               <AnimatePresence>
                 {showDeepDive && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
+                    initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                     className="overflow-hidden"
                   >
                     <div className="pt-3 text-sm text-[var(--color-text-secondary)]">

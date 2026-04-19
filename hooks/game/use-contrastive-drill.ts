@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 
 export interface ContrastiveSet {
@@ -16,6 +17,7 @@ export interface ContrastiveQuestion {
 }
 
 export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet | null) {
+  const { getToken } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [stats, setStats] = useState({ correct: 0, total: 0 });
   const [isDrillComplete, setIsDrillComplete] = useState(false);
@@ -41,9 +43,11 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
       setIsLoadingQuestion(true);
       setError(null);
       try {
+        const token = await getToken();
+        if (!token) throw new Error('Please sign in to use contrastive drills');
         const res = await fetch('/api/drills/contrastive/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ setId: set.id, conditionIndex: index }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -66,10 +70,12 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
       if (!drillId || !currentQuestion) return null;
 
       try {
+        const token = await getToken();
+        if (!token) throw new Error('Please sign in to submit answers');
         // Submit to existing contrastive endpoint
         const res = await fetch('/api/drills/contrastive/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             drillId,
             selectedCondition,

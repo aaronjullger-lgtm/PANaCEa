@@ -4,18 +4,19 @@ import type { PrismaClient } from '@prisma/client/edge';
 import type { PathGeneratorInput } from '@/types/study-path';
 
 // Mock Prisma client
+const mockTaxonomyMappingFindMany = vi.fn();
 const mockPrisma = {
   $connect: vi.fn(),
   $disconnect: vi.fn(),
   taxonomyMapping: {
-    findMany: vi.fn(),
+    findMany: mockTaxonomyMappingFindMany,
   },
-} as any as PrismaClient;
+} as unknown as PrismaClient;
 
 describe('Path Generator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockPrisma.taxonomyMapping.findMany.mockResolvedValue([]);
+    mockTaxonomyMappingFindMany.mockResolvedValue([]);
   });
 
   it('should generate a plan with basic input', async () => {

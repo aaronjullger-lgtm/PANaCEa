@@ -230,8 +230,9 @@ export async function getUserSpeedFactor(
     }).catch(() => { /* non-fatal */ });
 
     return profile.speedFactor;
-  } catch {
-    return 1.0; // Safe fallback
+  } catch (err) {
+    console.debug('[userTimingProfileService] speed factor lookup failed, using 1.0 fallback', err);
+    return 1.0;
   }
 }
 
@@ -433,8 +434,9 @@ export async function getUserBehavioralBaseline(
     }).catch(() => { /* non-fatal */ });
 
     return baseline;
-  } catch {
-    return null; // Safe fallback — use absolute thresholds
+  } catch (err) {
+    console.debug('[userTimingProfileService] behavioral baseline lookup failed', err);
+    return null;
   }
 }
 
@@ -520,7 +522,8 @@ export async function getUserBehavioralContext(
     }
 
     return { speedFactor, behavioralBaseline };
-  } catch {
+  } catch (err) {
+    console.debug('[userTimingProfileService] combined timing profile fetch failed', err);
     return { speedFactor: 1.0, behavioralBaseline: null };
   }
 }

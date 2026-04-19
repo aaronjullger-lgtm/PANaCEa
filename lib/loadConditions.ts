@@ -287,7 +287,7 @@ export function isMeaningfulContent(value?: unknown): boolean {
 
   // Structured sections (steps/grid)
   if (typeof value === 'object' && value !== null && 'type' in value) {
-    const typed = value as any;
+    const typed = value as { type: string; items: unknown };
     if (typed.type === 'steps') return Array.isArray(typed.items) && typed.items.length > 0;
     if (typed.type === 'grid')
       return typed.items && typeof typed.items === 'object' && Object.keys(typed.items).length > 0;

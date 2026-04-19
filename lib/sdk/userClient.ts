@@ -13,10 +13,18 @@
 import type { ApiClient } from './core';
 import type { UserProfile, UserStats, FSRSParams } from './types';
 
+export interface FSRSParamsResponse {
+  params: FSRSParams;
+  canOptimize: boolean;
+  reviewsNeeded: number;
+  message: string;
+  isDefault: boolean;
+}
+
 export interface UserClient {
   getProfile(): Promise<UserProfile>;
   getStats(): Promise<UserStats>;
-  getFSRSParams(): Promise<FSRSParams>;
+  getFSRSParams(): Promise<FSRSParamsResponse>;
   updatePreferences(prefs: Record<string, unknown>): Promise<{ success: boolean }>;
 }
 
@@ -29,7 +37,7 @@ export function createUserClient(api: ApiClient): UserClient {
       return api.get<UserStats>('/api/user/stats');
     },
     getFSRSParams() {
-      return api.get<FSRSParams>('/api/user/fsrs-params');
+      return api.get<FSRSParamsResponse>('/api/user/fsrs-params');
     },
     updatePreferences(prefs) {
       return api.put<{ success: boolean }>('/api/user/preferences', prefs);

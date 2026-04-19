@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   DndContext,
   DragEndEvent,
@@ -69,6 +70,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssign
 };
 
 export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({ question, onAnswer }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [startTime] = useState<number>(Date.now());
   const [unassignedFeatures, setUnassignedFeatures] = useState<DistinguisherFeature[]>([]);
   const [condition1Features, setCondition1Features] = useState<DistinguisherFeature[]>([]);
@@ -331,9 +333,10 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({ question, onAn
         <AnimatePresence>
           {result && (
             <motion.div
-              initial={{ y: -20 }}
+              initial={prefersReducedMotion ? false : { y: -20 }}
               animate={{ y: 0 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className={`
                 flex items-center gap-3 px-6 py-3 rounded-xl text-[var(--color-text-inverse)] font-semibold
                 ${result.correct === result.total ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-provisional)]'}

@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { useToastStore, type Toast, type ToastVariant } from '@/lib/stores/useToastStore';
 import { springs } from '@/config/appViews';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Re-export types and hook for backward compatibility
 export type { Toast, ToastVariant };
@@ -89,20 +90,21 @@ function ToastContainer({
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   const Icon = TOAST_ICONS[toast.variant];
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 40, x: 16, scale: 0.92, filter: 'blur(4px)' }}
-      animate={{ opacity: 1, y: 0, x: 0, scale: 1, filter: 'blur(0px)' }}
-      exit={{
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 40, x: 16, scale: 0.92, filter: 'blur(4px)' }}
+      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, x: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={prefersReducedMotion ? { opacity: 0, transition: { duration: 0 } } : {
         opacity: 0,
         x: 80,
         scale: 0.95,
         filter: 'blur(2px)',
         transition: { duration: 0.2, ease: [0.32, 0, 0.67, 0] },
       }}
-      transition={springs.bouncy}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.bouncy}
       className={`
         pointer-events-auto rounded-xl p-4 backdrop-blur-md
         ${TOAST_STYLES[toast.variant]}

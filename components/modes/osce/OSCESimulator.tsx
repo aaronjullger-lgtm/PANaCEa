@@ -17,6 +17,7 @@ import { getRandomEncounterCase, startOSCESession, saveOSCEChat } from '@/servic
 import { OSCEScoringEngine } from '@/services/domain/osceScoringEngine';
 import type { BodyRegion, ExamFinding, OSCEScoreReport, RapportMeter as RapportMeterState } from '@/types/osce-enhanced';
 import type { PatientEncounterCase } from '@/types/drill-modes';
+import { InlineSpinner } from '@/components/loading';
 
 interface OSCESimulatorProps {
   /** Time limit in seconds (default: 900s = 15 minutes) */
@@ -237,8 +238,10 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div role="status" aria-label="Loading OSCE station" className="text-center">
-          <div aria-hidden="true" className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <div role="status" aria-live="polite" aria-label="Loading OSCE station" className="text-center">
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+          </div>
           <p className="text-[var(--color-text-muted)]">Loading OSCE station…</p>
         </div>
       </div>
@@ -315,6 +318,7 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
                   onClick={toggleListening}
                   className={`p-3 rounded-full ${isListening ? 'bg-[var(--color-data-fail)]/20' : 'bg-[var(--color-accent)]/20'}`}
                   disabled={!speechRecognitionSupported}
+                  aria-label={isListening ? 'Stop listening' : 'Start listening'}
                 >
                   {isListening ? (
                     <MicOff className="w-5 h-5 text-[var(--color-data-fail)]" />

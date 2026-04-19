@@ -17,10 +17,10 @@ import {
   Check,
   X,
   AlertCircle,
-  Loader2,
   Filter,
   Layers,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from "@/config/topic-map";
 import type { SystemCode } from '../../types';
 import type {
@@ -149,8 +149,8 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading" className="flex items-center justify-center min-h-[400px]">
-        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
+      <div role="status" aria-live="polite" aria-label="Loading" className="flex items-center justify-center min-h-[400px]">
+        <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
       </div>
     );
   }

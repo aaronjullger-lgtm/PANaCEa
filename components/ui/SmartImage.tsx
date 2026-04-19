@@ -12,7 +12,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
-import { ImageOff, Loader2 } from 'lucide-react';
+import { ImageOff } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // Only include props that don't conflict with framer-motion
 type SafeImgProps = Pick<
@@ -155,7 +156,9 @@ export const SmartImage: React.FC<SmartImageProps> = ({
 
             {/* Loading spinner */}
             {showLoader && loadState === 'loading' && (
-              <Loader2 role="status" aria-label="Loading image" className="w-8 h-8 text-[var(--color-data-neutral)] animate-spin z-10" />
+              <span role="status" aria-label="Loading image" className="z-10 text-[var(--color-data-neutral)]">
+                <InlineSpinner size="lg" />
+              </span>
             )}
           </motion.div>
         )}

@@ -1,33 +1,23 @@
 /**
- * Standardized API Response helper for PANaCEa
+ * Legacy response helpers for PANaCEa.
  *
- * Format: { success, data?, error?, message?, timestamp }
- *
- * Usage:
- *   return jsonSuccess(myData);
- *   return jsonError('Not found', 404);
+ * These now delegate to `api-response.ts` — the single source of truth.
+ * New code should import `ok`, `fail`, `ErrorCode` from `./api-response`
+ * directly. These aliases exist so existing call sites keep compiling while
+ * the fleet migrates.
  */
 
-export interface APIResponseSuccess<T = unknown> {
-  success: true;
-  data: T;
-  message?: string;
-  timestamp: string;
-}
+import { ok, fail, type ApiSuccessEnvelope, type ApiErrorEnvelope } from './api-response';
+import { codeFromStatus, isKnownErrorCode, ErrorCode } from './error-catalog';
 
-export interface APIResponseError {
-  success: false;
-  error: string;
-  message: string;
-  timestamp: string;
-  code?: string;
-  details?: unknown;
-}
-
+// Re-export envelope types under the legacy names
+export type APIResponseSuccess<T = unknown> = ApiSuccessEnvelope<T>;
+export type APIResponseError = ApiErrorEnvelope;
 export type APIResponse<T = unknown> = APIResponseSuccess<T> | APIResponseError;
 
 /**
- * Create a successful JSON Response with standardized shape
+ * @deprecated Use `ok()` from `./api-response` instead.
+ * Wraps data in the unified envelope shape.
  */
 export function jsonSuccess<T>(
   data: T,
@@ -37,24 +27,12 @@ export function jsonSuccess<T>(
     headers?: Record<string, string>;
   }
 ): Response {
-  const body: APIResponseSuccess<T> = {
-    success: true,
-    data,
-    timestamp: new Date().toISOString(),
-  };
-  if (options?.message) body.message = options.message;
-
-  return new Response(JSON.stringify(body), {
-    status: options?.status ?? 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+  return ok(data, options);
 }
 
 /**
- * Create an error JSON Response with standardized shape
+ * @deprecated Use `fail(ErrorCode.*, ...)` from `./api-response` instead.
+ * Wraps an error message + status in the unified envelope shape.
  */
 export function jsonError(
   message: string,
@@ -65,19 +43,14 @@ export function jsonError(
     headers?: Record<string, string>;
   }
 ): Response {
-  const body: APIResponseError = {
-    success: false,
-    error: options?.code ?? 'ERROR',
-    message,
-    timestamp: new Date().toISOString(),
-  };
-  if (options?.details !== undefined) body.details = options.details;
+  const code: ErrorCode = options?.code && isKnownErrorCode(options.code)
+    ? options.code
+    : codeFromStatus(status);
 
-  return new Response(JSON.stringify(body), {
+  return fail(code, {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
+    message,
+    details: options?.details,
+    headers: options?.headers,
   });
 }

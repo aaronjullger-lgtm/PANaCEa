@@ -1,21 +1,19 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import { TASK_TYPES, TaskType } from './taskTypes';
-import { GEMINI_VARIANT_MODEL } from './constants/models';
-
-const variantSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    question: { type: SchemaType.STRING },
-    options: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-    },
-    correctAnswer: { type: SchemaType.STRING },
-    explanation: { type: SchemaType.STRING },
-    variantType: { type: SchemaType.STRING },
-  },
-  required: ['question', 'options', 'correctAnswer', 'explanation', 'variantType'] as string[],
-} as const;
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai`
+ * SDK usage with `gateway.callText()` — task='generation', tier='fast'
+ * (gemini-2.0-flash — matches the prior `GEMINI_VARIANT_MODEL` binding).
+ *
+ * Callers should pass a `GatewayContext` built from `toGatewayContext(ctx)`
+ * on the Edge side or a minimal `{ env: { GEMINI_API_KEY } }` object on the
+ * Node side. Falls back to `process.env.GEMINI_API_KEY` if no context is
+ * provided, for backward-compat with existing Node scripts and dev routes.
+ *
+ * Note: The prior implementation used Gemini `responseSchema` for structured
+ * output. `callText` does not force JSON mode, so we rely on prompt-level
+ * JSON instruction + defensive markdown fence stripping + safe parse.
+ * Downstream consumers already validate the returned shape.
+ */
+import { gateway, GatewayError, type GatewayContext } from './ai/aiGateway';
 
 /** A condition the student frequently confuses with the real answer */
 export interface ConfusionPairHint {
@@ -41,26 +39,37 @@ export interface VariantRequest {
   confusionPairs?: ConfusionPairHint[];
 }
 
+interface GeneratedVariant {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  variantType: string;
+}
+
+function buildContextFromEnv(): GatewayContext {
+  const apiKey = typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY ?? '' : '';
+  return { env: { GEMINI_API_KEY: apiKey } };
+}
+
 /**
- * Generate a question variant via Gemini.
- * apiKey: pass from Edge (context.env.GEMINI_API_KEY) or Node (process.env.GEMINI_API_KEY).
- * Omit in browser; returns null if no key.
+ * Generate a question variant via the AI gateway.
+ *
+ * @param request  Variant parameters (type, source question, optional confusion hints).
+ * @param ctx      Optional `GatewayContext`. If omitted, derives one from
+ *                 `process.env.GEMINI_API_KEY` (Node fallback). Returns `null`
+ *                 when no API key is available in either place.
  */
-export async function generateVariant(request: VariantRequest, apiKey?: string) {
-  const key = apiKey ?? (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ?? '';
-  if (!key) return null;
-  const genAI = new GoogleGenerativeAI(key);
-  const model = genAI.getGenerativeModel({
-    model: GEMINI_VARIANT_MODEL,
-    generationConfig: {
-      responseMimeType: 'application/json',
-      responseSchema: variantSchema,
-    },
-  });
+export async function generateVariant(
+  request: VariantRequest,
+  ctx?: GatewayContext
+): Promise<GeneratedVariant | null> {
+  const gatewayCtx = ctx ?? buildContextFromEnv();
+  if (!gatewayCtx.env?.GEMINI_API_KEY) return null;
 
   let prompt = `
     You are a medical education expert. create a "${request.targetType}" variant of the following multiple choice question.
-    
+
     Original Question: ${request.originalQuestion}
     Original Options: ${JSON.stringify(request.originalOptions)}
     Original Answer: ${request.originalAnswer}
@@ -87,16 +96,49 @@ export async function generateVariant(request: VariantRequest, apiKey?: string) 
     - different_scenario: Change patient demographics or context but test the exact same underlying guideline/concept.
     - remediation: The user has a specific misconception as evidenced by their wrong answer ("${request.userIncorrectAnswer}"). Create a variant that specifically targets this confusion. Explain *why* their wrong answer is wrong in the new explanation, while testing the core concept again.
     - decomposition: The original question involves a multi-step verification (e.g. Diagnosis -> Treatment). The user failed this. Identify the *prerequisite* step (e.g. Diagnosis) and generate a question that ONLY tests that prerequisite step to check if that is where the knowledge gap lies. Keep the vignette similar but change the question to ask for the intermediate step.
-    
+
     Ensure the new question is high-quality, unambiguous, and accurate.
+
+    OUTPUT FORMAT — return ONLY valid JSON (no markdown), matching this shape:
+    {
+      "question": "string",
+      "options": ["string", "string", "string", "string"],
+      "correctAnswer": "string",
+      "explanation": "string",
+      "variantType": "${request.targetType}"
+    }
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    return JSON.parse(text);
+    const result = await gateway.callText(gatewayCtx, {
+      mode: 'text',
+      task: 'generation',
+      tier: 'fast', // matches prior GEMINI_VARIANT_MODEL = gemini-2.0-flash
+      endpoint: 'lib/questionVariantGenerator',
+      userPrompt: prompt,
+    });
+
+    if (result.blocked) {
+      console.warn('Variant generation blocked by safety filter');
+      return null;
+    }
+
+    const text = (result.text ?? '').replace(/```json|```/g, '').trim();
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text) as GeneratedVariant;
+    } catch (parseError) {
+      console.error('Variant generation: JSON parse failed', parseError);
+      return null;
+    }
   } catch (error) {
+    if (error instanceof GatewayError) {
+      console.error(`Variant generation gateway error [${error.code}]: ${error.message}`);
+      return null;
+    }
     console.error('Variant generation failed:', error);
     return null;
   }
 }
+

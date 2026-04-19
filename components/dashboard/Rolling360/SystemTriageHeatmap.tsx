@@ -13,6 +13,7 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Circle } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import NCCPA_BLUEPRINT from '../../../lib/nccpa-blueprint';
@@ -138,6 +139,7 @@ function TriagePillList({
   cells: TriageCell[];
   onSystemClick?: (system: string) => void;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   // Sort by accuracy (worst first)
   const sortedCells = [...cells].sort((a, b) => a.accuracy - b.accuracy);
 
@@ -150,10 +152,10 @@ function TriagePillList({
           return (
             <motion.button
               key={cell.system}
-              initial={{ x: -20 }}
+              initial={prefersReducedMotion ? false : { x: -20 }}
               animate={{ x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.05 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, x: 20 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
               onClick={() => onSystemClick?.(cell.system)}
               className={cn(
                 'w-full flex items-center gap-3 p-3 rounded-lg border',
@@ -181,9 +183,9 @@ function TriagePillList({
               {/* Progress Bar */}
               <div className="w-20 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                 <motion.div
-                  initial={{ width: 0 }}
+                  initial={prefersReducedMotion ? false : { width: 0 }}
                   animate={{ width: `${cell.accuracy}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, delay: index * 0.05 }}
                   className={cn(
                     'h-full rounded-full',
                     config.bg.replace('/20', '').replace('/30', '')
@@ -208,14 +210,15 @@ function TriagePillList({
 // =============================================================================
 
 function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void }) {
+  const prefersReducedMotion = useReducedMotion();
   const config = STATUS_CONFIG[cell.status];
   const sizeClass = getTileSize(cell.weight);
 
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
       className={cn(
         'relative p-3 rounded-xl border-2 transition-all',
         'hover:shadow-lg cursor-pointer',
@@ -241,9 +244,9 @@ function TriageTile({ cell, onClick }: { cell: TriageCell; onClick?: () => void 
       {/* Progress Bar */}
       <div className="w-full h-1.5 bg-[var(--color-bg-tertiary)] rounded-full mt-2 overflow-hidden">
         <motion.div
-          initial={{ width: 0 }}
+          initial={prefersReducedMotion ? false : { width: 0 }}
           animate={{ width: `${cell.accuracy}%` }}
-          transition={{ duration: 0.8 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.8 }}
           className={cn('h-full rounded-full', config.bg.replace('/20', '').replace('/30', ''))}
         />
       </div>

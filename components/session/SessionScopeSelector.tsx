@@ -25,8 +25,8 @@ import {
   ChevronLeft,
   Play,
   Info,
-  Loader2,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { MIN_SESSION_SIZE, MAX_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
@@ -472,8 +472,8 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
             {step === 'system' && (
               <motion.div key="system" {...animProps} className="space-y-2 max-h-[400px] overflow-y-auto">
                 {loadingSystems ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[var(--color-accent)]" />
+                  <div className="flex items-center justify-center py-12" role="status" aria-live="polite" aria-label="Loading systems">
+                    <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   </div>
                 ) : systems.length === 0 ? (
                   // Fallback: show all 15 systems without counts
@@ -573,8 +573,8 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
             {step === 'condition' && (
               <motion.div key="condition" {...animProps} className="space-y-2 max-h-[400px] overflow-y-auto">
                 {loadingConditions ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[var(--color-accent)]" />
+                  <div className="flex items-center justify-center py-12" role="status" aria-live="polite" aria-label="Loading conditions">
+                    <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   </div>
                 ) : conditions.length === 0 ? (
                   <p className="text-center text-[var(--color-text-secondary)] py-8">

@@ -94,7 +94,7 @@ function extractJSON(raw: string): unknown {
   // Strategy 1: Extract from ```json ... ``` fences
   const fenceMatch = trimmed.match(/```json?\s*\n?([\s\S]*?)\n?\s*```/i);
   if (fenceMatch) {
-    return JSON.parse(fenceMatch[1].trim());
+    return JSON.parse(fenceMatch[1]!.trim());
   }
 
   // Strategy 2: Find the first top-level { } block via brace counting

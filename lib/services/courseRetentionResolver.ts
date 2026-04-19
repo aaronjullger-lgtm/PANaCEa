@@ -60,8 +60,8 @@ export async function resolveRetention(
     }
 
     return DEFAULT_RETENTION;
-  } catch {
-    // Non-fatal — use default
+  } catch (err) {
+    console.debug('[courseRetentionResolver] lookup failed, using default retention', err);
     return DEFAULT_RETENTION;
   }
 }

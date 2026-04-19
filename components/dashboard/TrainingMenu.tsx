@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { staggerContainer, staggerItem, cardHoverVariants, springs } from '@/config/appViews';
 import {
   Brain,
@@ -122,6 +123,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   growthAreasCount = 0,
   modeProgress = {},
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { careerStage } = useUserContext();
   const isPracticing = careerStage === 'practicing';
   const { stage } = useResolvedBlueprint();
@@ -476,10 +478,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       <motion.button
         type="button"
         key={mode.id}
-        variants={staggerItem}
-        whileHover={!isDisabled ? { scale: 1.015, y: -3, boxShadow: '0 12px 40px -8px rgba(0, 0, 0, 0.4), 0 0 20px -4px rgba(196, 183, 138, 0.12)' } : undefined}
-        whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-        transition={springs.snappy}
+        variants={prefersReducedMotion ? undefined : staggerItem}
+        whileHover={prefersReducedMotion || isDisabled ? undefined : { scale: 1.015, y: -3, boxShadow: '0 12px 40px -8px rgba(0, 0, 0, 0.4), 0 0 20px -4px rgba(196, 183, 138, 0.12)' }}
+        whileTap={prefersReducedMotion || isDisabled ? undefined : { scale: 0.98 }}
+        transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
         aria-label={`Open ${mode.label}`}
@@ -597,8 +599,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* Desktop: Standard 3-column grid with staggered entrance */}
         <motion.div
           className="hidden md:grid grid-cols-3 gap-4"
-          variants={staggerContainer}
-          initial="hidden"
+          variants={prefersReducedMotion ? undefined : staggerContainer}
+          initial={prefersReducedMotion ? false : "hidden"}
           whileInView="animate"
           viewport={{ once: true, margin: '-40px' }}
         >

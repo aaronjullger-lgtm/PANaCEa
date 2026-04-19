@@ -14,6 +14,7 @@ import { useAuth } from '@clerk/clerk-react';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import { Download, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface ReviewExportData {
   id: string;
@@ -28,7 +29,7 @@ interface ReviewExportData {
 }
 
 export const DataExport: React.FC = () => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<{
     type: 'success' | 'error' | null;
@@ -41,8 +42,11 @@ export const DataExport: React.FC = () => {
   const fetchReviewHistory = async (): Promise<ReviewExportData[]> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
+    const token = await getToken();
+    if (!token) throw new Error('Authentication required');
     const response = await fetch(`/api/user/review-history?userId=${userId}&limit=10000`, {
       signal: controller.signal,
+      headers: { Authorization: `Bearer ${token}` },
     });
     clearTimeout(timeout);
 
@@ -372,7 +376,7 @@ export const DataExport: React.FC = () => {
       {/* Loading State */}
       {isExporting && (
         <div role="status" aria-live="polite" className="flex items-center justify-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
-          <div aria-hidden="true" className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-accent)]"></div>
+          <InlineSpinner size="md" className="text-[var(--color-accent)]" />
           <p className="text-sm text-[var(--color-accent)]">Preparing export...</p>
         </div>
       )}

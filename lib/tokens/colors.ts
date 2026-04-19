@@ -1,0 +1,179 @@
+/**
+ * PANaCEa Color Tokens — canonical
+ *
+ * Single source of truth for color usage in TypeScript. All values are
+ * CSS custom-property references defined in `index.css` (light + .dark).
+ *
+ * No raw hex values belong in this file. If a value is missing, add it to
+ * index.css first, then expose it here.
+ *
+ * Two flavors are exported for each token:
+ *   - `color.xxx`          → string like `var(--color-data-pass)` for inline styles
+ *   - `colorClass.xxx.bg`  → Tailwind class for className use
+ */
+
+/* ---------- 1. Raw CSS var references (for inline styles) ---------- */
+
+export const color = {
+  // Backgrounds
+  bg: {
+    primary:   'var(--color-bg-primary)',
+    secondary: 'var(--color-bg-secondary)',
+    tertiary:  'var(--color-bg-tertiary)',
+    card:      'var(--color-card-bg)',
+    overlay:   'var(--color-overlay)',
+    glass:     'var(--color-glass-bg)',
+  },
+
+  // Text
+  text: {
+    primary:   'var(--color-text-primary)',
+    secondary: 'var(--color-text-secondary)',
+    muted:     'var(--color-text-muted)',
+    tertiary:  'var(--color-text-tertiary)',
+    inverse:   'var(--color-text-inverse)',
+  },
+
+  // Borders
+  border: {
+    default: 'var(--color-border)',
+    light:   'var(--color-border-light)',
+    glass:   'var(--color-glass-border)',
+  },
+
+  // Accent / action
+  accent: {
+    default:      'var(--color-accent)',
+    hover:        'var(--color-accent-hover)',
+    secondary:    'var(--color-accent-secondary)',
+    light:        'var(--color-accent-light)',
+    focusRing:    'var(--color-focus-ring)',
+  },
+
+  // Data-viz / state semantics
+  data: {
+    pass:        'var(--color-data-pass)',
+    fail:        'var(--color-data-fail)',
+    provisional: 'var(--color-data-provisional)',
+    neutral:     'var(--color-data-neutral)',
+    neutralBg:   'var(--color-data-neutral-bg)',
+  },
+
+  // Status aliases (same values as data.* — use the name that reads best)
+  status: {
+    success: 'var(--color-success)',
+    error:   'var(--color-error)',
+    warning: 'var(--color-warning)',
+    info:    'var(--color-info)',
+  },
+
+  // Shadows
+  shadow: {
+    soft: 'var(--color-shadow-soft)',
+  },
+
+  // Category accents (per major hub / reference config)
+  category: {
+    toolkit:     'var(--color-category-toolkit)',
+    command:     'var(--color-category-command)',
+    visual:      'var(--color-category-visual)',
+    practice:    'var(--color-category-practice)',
+    specialty:   'var(--color-category-specialty)',
+    simulation:  'var(--color-category-simulation)',
+  },
+
+  // Knowledge-graph node accents
+  node: {
+    condition: 'var(--color-node-condition)',
+    finding:   'var(--color-node-finding)',
+    drug:      'var(--color-node-drug)',
+    procedure: 'var(--color-node-procedure)',
+    system:    'var(--color-node-system)',
+    anatomy:   'var(--color-node-anatomy)',
+    labTest:   'var(--color-node-lab-test)',
+    imaging:   'var(--color-node-imaging)',
+    vitalSign: 'var(--color-node-vital-sign)',
+    other:     'var(--color-node-other)',
+  },
+} as const;
+
+/* ---------- 2. Tailwind class shortcuts ---------- */
+
+export const colorClass = {
+  bg: {
+    primary:   'bg-[var(--color-bg-primary)]',
+    secondary: 'bg-[var(--color-bg-secondary)]',
+    tertiary:  'bg-[var(--color-bg-tertiary)]',
+  },
+  text: {
+    primary:   'text-[var(--color-text-primary)]',
+    secondary: 'text-[var(--color-text-secondary)]',
+    muted:     'text-[var(--color-text-muted)]',
+    inverse:   'text-[var(--color-text-inverse)]',
+  },
+  border: {
+    default: 'border-[var(--color-border)]',
+  },
+  accent: {
+    bg:     'bg-[var(--color-accent)]',
+    text:   'text-[var(--color-accent)]',
+    border: 'border-[var(--color-accent)]',
+    ring:   'focus-visible:ring-[var(--color-accent)]',
+  },
+  data: {
+    passBg:        'bg-[var(--color-data-pass)]',
+    passText:      'text-[var(--color-data-pass)]',
+    failBg:        'bg-[var(--color-data-fail)]',
+    failText:      'text-[var(--color-data-fail)]',
+    provisionalBg:   'bg-[var(--color-data-provisional)]',
+    provisionalText: 'text-[var(--color-data-provisional)]',
+    neutralBg:     'bg-[var(--color-data-neutral)]',
+    neutralText:   'text-[var(--color-data-neutral)]',
+  },
+} as const;
+
+/* ---------- 3. Status bundle (bg + text + border + icon) ---------- */
+
+type StatusBundle = { bg: string; text: string; border: string; icon: string };
+
+export const statusColors = {
+  success: {
+    bg:     'bg-[var(--color-data-pass)]/10',
+    text:   'text-[var(--color-data-pass)]',
+    border: 'border-[var(--color-data-pass)]/30',
+    icon:   'text-[var(--color-data-pass)]',
+  },
+  error: {
+    bg:     'bg-[var(--color-data-fail)]/10',
+    text:   'text-[var(--color-data-fail)]',
+    border: 'border-[var(--color-data-fail)]/30',
+    icon:   'text-[var(--color-data-fail)]',
+  },
+  warning: {
+    bg:     'bg-[var(--color-data-provisional)]/10',
+    text:   'text-[var(--color-data-provisional)]',
+    border: 'border-[var(--color-data-provisional)]/30',
+    icon:   'text-[var(--color-data-provisional)]',
+  },
+  info: {
+    bg:     'bg-[var(--color-accent)]/10',
+    text:   'text-[var(--color-accent)]',
+    border: 'border-[var(--color-accent)]/30',
+    icon:   'text-[var(--color-accent)]',
+  },
+  neutral: {
+    bg:     'bg-[var(--color-bg-tertiary)]/60',
+    text:   'text-[var(--color-text-muted)]',
+    border: 'border-[var(--color-border)]',
+    icon:   'text-[var(--color-text-muted)]',
+  },
+} as const satisfies Record<string, StatusBundle>;
+
+export type StatusKey = keyof typeof statusColors;
+export const getStatusColors = (status: StatusKey): StatusBundle =>
+  statusColors[status] ?? statusColors.neutral;
+
+/* ---------- 4. Types ---------- */
+
+export type ColorToken = typeof color;
+export type ColorClassToken = typeof colorClass;

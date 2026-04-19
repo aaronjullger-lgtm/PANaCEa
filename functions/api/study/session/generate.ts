@@ -35,6 +35,7 @@ import {
   deriveScope,
 } from '../../../../lib/services/reservoir';
 import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
+import { resolveCorrectAnswerIndex } from '../../../../lib/answerLetterMap';
 import {
   buildGeneratedStudySessionRecord,
   normalizeSessionGenerateResult,
@@ -311,13 +312,33 @@ async function hydrateReservoirQuestions(
   const questionMap = new Map<string, any>();
   for (const q of preGenerated) {
     const data = q.questionData as any;
+    const opts = Array.isArray(data?.options) ? data.options : [];
+    const rawAns = data?.correctAnswer || data?.answer || '';
+    // Patient safety: never silently fall back to 0 (option A). Prefer the
+    // server-provided index; if missing/invalid, resolve from the correctAnswer
+    // string; otherwise emit -1 so the client normalizer surfaces the data bug.
+    let idx: number;
+    const providedIdx = typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
+    if (providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length) {
+      idx = providedIdx;
+    } else {
+      const resolved = resolveCorrectAnswerIndex(String(rawAns), opts);
+      if (resolved === null) {
+        console.error('[session/generate] pre-generated question has unresolvable correctAnswer', {
+          questionId: q.id,
+          correctAnswer: rawAns,
+          optionCount: opts.length,
+        });
+      }
+      idx = resolved ?? -1;
+    }
     questionMap.set(q.id, {
       id: q.id,
       question: data?.question || data?.stem || '',
       vignette: data?.vignette || null,
-      options: data?.options || [],
-      correctAnswer: data?.correctAnswer || data?.answer || '',
-      correctAnswerIndex: data?.correctAnswerIndex ?? 0,
+      options: opts,
+      correctAnswer: rawAns,
+      correctAnswerIndex: idx,
       explanation: data?.explanation || data?.rationale || null,
       system: q.system || data?.system || null,
       category: data?.subcategory || null,
@@ -327,13 +348,26 @@ async function hydrateReservoirQuestions(
     });
   }
   for (const q of standardQuestions) {
+    const opts = Array.isArray(q.options) ? q.options : [];
+    const rawAns = q.correctAnswer || '';
+    // Patient safety: standard questions carry correctAnswer as a string
+    // (e.g. "B" or the full option text). Resolve to an index; never default
+    // to 0 silently — that would grade every unresolved question as "A".
+    const resolved = resolveCorrectAnswerIndex(String(rawAns), opts);
+    if (resolved === null) {
+      console.error('[session/generate] standard question has unresolvable correctAnswer', {
+        questionId: q.id,
+        correctAnswer: rawAns,
+        optionCount: opts.length,
+      });
+    }
     questionMap.set(q.id, {
       id: q.id,
       question: q.question || '',
       vignette: q.vignette || null,
-      options: q.options || [],
-      correctAnswer: q.correctAnswer || '',
-      correctAnswerIndex: 0,
+      options: opts,
+      correctAnswer: rawAns,
+      correctAnswerIndex: resolved ?? -1,
       explanation: q.explanation || null,
       system: q.system || null,
       category: q.category || null,

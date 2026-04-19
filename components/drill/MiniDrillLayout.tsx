@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award, Zap, Clock } from 'lucide-react';
 import { useIsMobile } from '../../lib/utils/responsive';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface MiniDrillLayoutProps {
   /** Title for the header */
@@ -45,13 +46,12 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   footer,
 }) => {
   const isMobile = useIsMobile();
+  const prefersReducedMotion = useReducedMotion();
 
   // Animation variants
-  const flashVariants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  };
+  const flashVariants = prefersReducedMotion
+    ? { initial: {}, animate: {}, exit: {} }
+    : { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
 
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
@@ -88,7 +88,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
 
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Score - Hidden on very small screens */}
-          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] hidden xs:block">
+          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] hidden xs:block tabular-nums">
             <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
             <span className="text-[var(--color-text-muted)]">/{totalAttempts}</span>
           </div>
@@ -101,7 +101,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
               }`}
             />
             <span
-              className={`text-sm sm:text-base font-bold ${
+              className={`text-sm sm:text-base font-bold tabular-nums ${
                 streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-muted-foreground'
               }`}
             >
@@ -152,6 +152,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   subcategory,
   isLoading = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   if (isLoading) {
     return (
       <div className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6">
@@ -170,7 +171,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={prefersReducedMotion ? false : { y: 20 }}
       animate={{ y: 0 }}
       className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6"
     >
@@ -215,6 +216,7 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   isAnswered,
   onSelect,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   let buttonClasses =
     'w-full text-left p-4 min-h-[56px] rounded-lg sm:rounded-xl transition-all duration-200 border text-sm sm:text-base';
 
@@ -234,9 +236,9 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
 
   return (
     <motion.button
-      initial={{ x: -20 }}
+      initial={prefersReducedMotion ? false : { x: -20 }}
       animate={{ x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
       onClick={() => !isAnswered && onSelect(index)}
       disabled={isAnswered}
       className={buttonClasses}
@@ -289,11 +291,10 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
   isRapidGuess,
   nextReview,
 }) => {
-  const feedbackVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  };
+  const prefersReducedMotion = useReducedMotion();
+  const feedbackVariants = prefersReducedMotion
+    ? { initial: {}, animate: {}, exit: {} }
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
 
   return (
     <motion.div
@@ -435,12 +436,15 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   onClick,
   index,
 }) => {
-  const cardVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    hover: { scale: 1.02, y: -4 },
-    tap: { scale: 0.98 },
-  };
+  const prefersReducedMotion = useReducedMotion();
+  const cardVariants = prefersReducedMotion
+    ? { initial: {}, animate: {}, hover: {}, tap: {} }
+    : {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        hover: { scale: 1.02, y: -4 },
+        tap: { scale: 0.98 },
+      };
 
   return (
     <motion.button

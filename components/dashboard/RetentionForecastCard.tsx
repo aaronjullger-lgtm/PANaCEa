@@ -42,14 +42,13 @@ function buildChartData(decayCurveData: DecayPoint[]): Array<{
   withoutReview: number;
   afterReview: number;
 }> {
-  // After review: retention resets to 100% at day 0, then decays like the curve from day 1 onward
+  // No fabricated fallback — when the backend returns an empty curve
+  // (e.g. insufficient_data), render nothing and let the consumer show
+  // an explicit empty state. Inventing a decay rate is a dashboard lie.
   if (!decayCurveData?.length) {
-    return Array.from({ length: 31 }, (_, day) => ({
-      day,
-      withoutReview: Math.max(0, Math.min(100, Math.exp(-day / 5) * 100)),
-      afterReview: day === 0 ? 100 : Math.max(0, Math.min(100, Math.exp(-(day - 1) / 5) * 100)),
-    }));
+    return [];
   }
+  // After review: retention resets to 100% at day 0, then decays like the curve from day 1 onward
   return decayCurveData.map((d, i) => ({
     day: d.day,
     withoutReview: d.retentionProb,
@@ -119,6 +118,50 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
             Your retention curve is stable. New reviews will appear when they’re due.
           </p>
         </div>
+      </motion.div>
+    );
+  }
+
+  // Insufficient data — cards are due, but there's no review history yet
+  // to compute a real FSRS retrievability curve. Show an explicit empty
+  // state instead of fabricating a decay rate.
+  if (chartData.length === 0) {
+    return (
+      <motion.div
+        initial={prefersReducedMotion ? false : { y: 12, filter: 'blur(4px)' }}
+        animate={{ y: 0, filter: 'blur(0px)' }}
+        transition={prefersReducedMotion ? { duration: 0 } : { ...springs.snappy, filter: { duration: 0.3 } }}
+        className={`card-cinematic group p-6 transition-all duration-300 ${className}`}
+      >
+        <div className="flex items-center gap-3.5 mb-4">
+          <div
+            className="p-2.5 rounded-xl"
+            style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-tertiary) 88%)' }}
+          >
+            <Brain className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-h3 text-[var(--color-text-primary)]">
+              Retention Forecast
+            </h2>
+            <p className="text-caption text-[var(--color-text-secondary)]">
+              Not enough review history yet to plot a curve
+            </p>
+          </div>
+        </div>
+        <div className="text-center py-6 bg-[var(--color-bg-tertiary)] rounded-xl mb-4">
+          <p className="text-sm text-[var(--color-text-secondary)] font-medium">
+            <strong className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}>{dueCount}</strong> review{dueCount !== 1 ? 's' : ''} waiting.
+            Complete a few to start building your retention curve.
+          </p>
+        </div>
+        <button
+          onClick={onStartReview}
+          className="btn-cinematic w-full flex items-center justify-center gap-2.5 py-3.5 px-5 font-semibold text-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+        >
+          Start Review
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200 ease-premium" aria-hidden="true" />
+        </button>
       </motion.div>
     );
   }

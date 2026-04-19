@@ -1,0 +1,97 @@
+# purpose: Run the canonical hourly runtime sanity lane for PANaCEa platform checks and artifact-based observability.
+# owner: Platform / DevOps
+# trigger strategy: schedule + workflow_dispatch; keep hourly at 17 minutes past the hour and separate from app-native queue ownership.
+# secrets required: DATABASE_URL and GEMINI_API_KEY.
+# expected runtime: 10-15 minutes.
+# failure behavior: Fail hard on failed runtime checks, always append the latest markdown summary, and upload runtime sanity artifacts for operator follow-up.
+
+name: Sched - Runtime Sanity
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-runtime-sanity
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Runtime Sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Generate Prisma client
+        run: |
+          set -euo pipefail
+          npx prisma generate
+
+      - name: Run runtime sanity checks
+        id: runtime_sanity
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          npm run automation:hourly
+
+      - name: Append runtime sanity summary
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Runtime Sanity Workflow"
+            echo ""
+            echo "- Workflow file: sched-runtime-sanity.yml"
+            echo "- Run step outcome: ${{ steps.runtime_sanity.outcome }}"
+            echo "- Run step conclusion: ${{ steps.runtime_sanity.conclusion }}"
+            echo "- Artifact directory: logs/hourly/"
+            echo "- Artifact retention: 14 days"
+            echo "- Next action on failure: inspect the uploaded JSON and markdown artifacts before rerunning the hourly lane."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if ls logs/hourly/*.md >/dev/null 2>&1; then
+            latest_summary="$(ls -t logs/hourly/*.md | head -1)"
+            echo "" >> "${GITHUB_STEP_SUMMARY}"
+            cat "${latest_summary}" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            {
+              echo ""
+              echo "_No runtime sanity markdown summary was generated._"
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Upload runtime sanity artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-sanity-${{ github.run_number }}
+          path: |
+            logs/hourly/*.json
+            logs/hourly/*.md
+          if-no-files-found: error
+          retention-days: 14

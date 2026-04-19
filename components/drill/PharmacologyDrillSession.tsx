@@ -1,12 +1,24 @@
 /**
- * PharmacologyDrillSession - Drug-focused drill mode
+ * PharmacologyDrillSession — QuizView-based pharm practice mode.
  *
- * Allows users to practice pharmacology questions by drug class.
- * Uses /api/questions/pharmacology-drill endpoint for database-driven content.
+ * Architectural note: this is intentionally distinct from `PharmDrillSession.tsx`.
+ * They are NOT duplicates — they are two different drill modes for pharmacology.
+ *
+ * - `PharmacologyDrillSession` (this file): drug-class-driven practice using the
+ *   full `QuizView` pipeline. Pulls questions from `/api/questions/pharmacology-drill`
+ *   and submits via the main session FSRS path (sessionType='drill' routed through
+ *   the regular QuizView submission).
+ * - `PharmDrillSession`: lightweight "mini-drill" variant using the `usePharmDrill`
+ *   game hook, renders inside `MiniDrillLayout` + `EnhancedFeedbackPanel`. Category-
+ *   card UX (mechanism, side_effect, contraindication, antidote, etc.).
+ *
+ * Both are wired into `components/layout/DrillViewRouter.tsx` and
+ * `config/lazyComponents.tsx` — users can pick either mode for pharm practice.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Pill,
   X,
@@ -19,7 +31,6 @@ import {
   Syringe,
   ArrowRight,
   BarChart3,
-  Loader2,
   AlertTriangle,
 } from 'lucide-react';
 import { QuestionSkeleton } from '@/components/loading';
@@ -159,6 +170,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedDrugClass, setSelectedDrugClass] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [queue, setQueue] = useState<Question[]>([]);
@@ -450,8 +462,9 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-bold mb-2">Select Drug Class</h2>
@@ -461,8 +474,9 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         {/* "All Drug Classes" option */}
         <div className="max-w-6xl mx-auto mb-6">
           <motion.button
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             onClick={() => handleDrugClassSelect('all')}
             className="w-full p-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-700 text-[var(--color-text-inverse)] hover:shadow-lg transition-all group"
           >
@@ -488,9 +502,9 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
             return (
               <motion.button
                 key={drugClass.id}
-                initial={{ y: 20 }}
+                initial={prefersReducedMotion ? false : { y: 20 }}
                 animate={{ y: 0 }}
-                transition={{ delay: (index + 1) * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: (index + 1) * 0.05 }}
                 onClick={() => handleDrugClassSelect(drugClass.id)}
                 className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-data-pass hover:shadow-md transition-all text-left group"
               >

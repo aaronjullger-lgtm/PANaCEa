@@ -12,6 +12,7 @@ import {
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 import type { ProgressResponse } from '@/types';
 
 // ============================================================================
@@ -82,9 +83,13 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div
+        className="flex items-center justify-center h-64"
+        role="status"
+        aria-live="polite"
+      >
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
           <p className="mt-4 text-[var(--color-text-secondary)]">Loading progress projection...</p>
         </div>
       </div>

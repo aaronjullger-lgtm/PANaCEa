@@ -258,10 +258,10 @@ async function reportQualityFlags(stats: AutoAuthorStats): Promise<void> {
       }
 
       await prisma.$disconnect();
-    } catch {
-      // Silently skip if DB not available (e.g., dry run without DB)
+    } catch (err) {
+      console.debug('[AutoAuthor] skipping DB disconnect — dry run or unavailable', err);
     }
-  } catch {
-    // Skip quality flags reporting if Prisma not available
+  } catch (err) {
+    console.debug('[AutoAuthor] skipping quality flags reporting — Prisma unavailable', err);
   }
 }

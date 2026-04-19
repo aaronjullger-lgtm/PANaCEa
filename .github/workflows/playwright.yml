@@ -1,9 +1,27 @@
-name: Playwright Tests
+# purpose: Run the full Playwright end-to-end suite outside the lighter CI smoke lane.
+# owner: Platform / QA
+# trigger strategy: push, pull_request
+# secrets required: none
+# expected runtime: 20-60 minutes
+# failure behavior: Review the Playwright artifact and failing spec output, then rerun after fixing the UI or test regression.
+name: Playwright End-to-End Tests
+
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
 jobs:
   test:
     timeout-minutes: 60
@@ -12,7 +30,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Generate Prisma Client

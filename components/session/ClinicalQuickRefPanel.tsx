@@ -9,10 +9,12 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import {
   X, BookOpen, FlaskConical, Heart, Stethoscope,
-  ChevronDown, ChevronUp, Loader2,
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // ─── Types (mirrors clinicalQuickRefService) ─────────────────────────────────
 
@@ -83,6 +85,7 @@ function LabTable({ labs }: { labs: NormalLabRef[] }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditionId }: Props) {
+  const { getToken } = useAuth();
   const [data, setData] = useState<QuickRefData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -93,11 +96,17 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
       const params = new URLSearchParams();
       if (system) params.set('system', system);
       if (conditionId) params.set('conditionId', conditionId);
-      const res = await fetch(`/api/reference/quick-ref?${params}`);
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`/api/reference/quick-ref?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) setData(await res.json());
-    } catch { /* graceful fail */ }
+    } catch (refErr) {
+      console.warn('[ClinicalQuickRefPanel] Fetch failed', refErr);
+    }
     finally { setLoading(false); }
-  }, [system, conditionId]);
+  }, [system, conditionId, getToken]);
 
   useEffect(() => {
     if (isOpen) fetchRef();
@@ -119,8 +128,8 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {loading && (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-5 h-5 animate-spin text-[var(--color-text-muted)]" />
+          <div className="flex items-center justify-center p-8" role="status" aria-live="polite">
+            <InlineSpinner size="md" className="text-[var(--color-text-muted)]" />
           </div>
         )}
 
@@ -128,7 +137,7 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
           <>
             <CollapsibleSection title="Vital Ranges" icon={<Heart className="w-4 h-4 text-[var(--color-data-fail)]" />}>
               <div className="space-y-1">
-                {data.vitalRanges.map((v, i) => (
+                {(data.vitalRanges ?? []).map((v, i) => (
                   <div key={i} className="flex justify-between text-xs">
                     <span className="text-[var(--color-text-secondary)]">{v.name}</span>
                     <span className="text-[var(--color-text-muted)]">{v.normalRange} {v.unit}</span>
@@ -138,7 +147,7 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
             </CollapsibleSection>
 
             <CollapsibleSection title="Normal Labs" icon={<FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />}>
-              <LabTable labs={data.normalLabs} />
+              <LabTable labs={data.normalLabs ?? []} />
             </CollapsibleSection>
 
             {data.relevantPearls.length > 0 && (
@@ -153,14 +162,14 @@ export default function ClinicalQuickRefPanel({ isOpen, onClose, system, conditi
                 </ul>
               </CollapsibleSection>
             )}
-            {data.differentialFeatures.length > 0 && (
+            {(data.differentialFeatures ?? []).length > 0 && (
               <CollapsibleSection title="Differential Features" icon={<BookOpen className="w-4 h-4 text-[var(--color-text-secondary)]" />} defaultOpen={false}>
                 <div className="space-y-3">
-                  {data.differentialFeatures.map((ddx, i) => (
+                  {(data.differentialFeatures ?? []).map((ddx, i) => (
                     <div key={i}>
                       <p className="text-xs font-medium text-[var(--color-text-primary)]">{ddx.conditionName}</p>
                       <ul className="mt-1 space-y-0.5">
-                        {ddx.distinguishingFeatures.map((f, j) => (
+                        {(ddx.distinguishingFeatures ?? []).map((f, j) => (
                           <li key={j} className="text-xs text-[var(--color-text-secondary)] pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[var(--color-text-muted)]">
                             {f}
                           </li>

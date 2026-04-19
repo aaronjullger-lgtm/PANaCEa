@@ -9,7 +9,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Camera, Check, X, Clock, Zap } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { PhotoDrillQuestion } from '@/services/drill/photoDrill.service';
 
 interface PhotoDrillCardProps {
@@ -23,6 +25,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
   onAnswer,
   showFeedback = true,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [startTime] = useState<number>(Date.now());
@@ -116,8 +119,8 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
 
         {/* Loading Indicator */}
         {!imageLoaded && (
-          <div role="status" aria-label="Loading image" className="absolute inset-0 flex items-center justify-center">
-            <div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent" />
+          <div role="status" aria-label="Loading image" aria-live="polite" className="absolute inset-0 flex items-center justify-center">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
           </div>
         )}
 
@@ -125,9 +128,10 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
         <AnimatePresence>
           {isCorrect !== null && showFeedback && (
             <motion.div
-              initial={{ scale: 0.8 }}
+              initial={prefersReducedMotion ? false : { scale: 0.8 }}
               animate={{ scale: 1 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className={`absolute inset-0 flex items-center justify-center ${
                 isCorrect ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'
               } bg-opacity-90`}
@@ -152,8 +156,8 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
         {shuffledOptions.map((option, index) => (
           <motion.button
             key={index}
-            whileHover={!selectedAnswer ? { scale: 1.02 } : {}}
-            whileTap={!selectedAnswer ? { scale: 0.98 } : {}}
+            whileHover={!selectedAnswer && !prefersReducedMotion ? { scale: 1.02 } : {}}
+            whileTap={!selectedAnswer && !prefersReducedMotion ? { scale: 0.98 } : {}}
             onClick={() => handleSelectAnswer(option)}
             disabled={!!selectedAnswer}
             className={getOptionClassName(option)}

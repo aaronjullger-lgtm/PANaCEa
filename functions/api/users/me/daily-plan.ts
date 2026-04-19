@@ -1,15 +1,25 @@
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withEnvCheck,
-  withAuth,
-  withRateLimit,
-  withLogging,
-  type AuthenticatedContext,
-} from '../../_shared/middleware';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
+
+const DailyPlanGetQuerySchema = z.object({
+  // Loose string — passed straight to `new Date(...)`. Invalid dates fall back
+  // to `new Date()` (today) via downstream NaN handling.
+  date: z.string().min(1).max(64).optional(),
+});
+
+const DailyPlanCompleteSchema = z.object({
+  body: z.object({
+    // Accuracy expressed as a 0..1 decimal (matches `actualAccuracy` storage).
+    accuracy: z.number().min(0).max(1).optional(),
+    // Minutes spent; clamp to a realistic full-day range so malformed input
+    // can't pollute downstream analytics.
+    durationMinutes: z.number().int().min(0).max(24 * 60).optional(),
+  }),
+});
+
+export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
 
 /**
  * GET /api/users/me/daily-plan
@@ -17,14 +27,10 @@ import { prisma } from '../../_shared/prisma-edge';
  *
  * Optional query params:
  * - date: ISO date string (default: today)
- */export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+ */
+export const onRequestGet = authenticatedEndpoint(
+  DailyPlanGetQuerySchema,
+  async (context) => {
     const clerkId = context.auth.userId;
 
     const user = await prisma.user.findUnique({
@@ -36,8 +42,7 @@ import { prisma } from '../../_shared/prisma-edge';
     }
 
     // Parse optional date param
-    const url = new URL(context.request.url);
-    const dateParam = url.searchParams.get('date');
+    const dateParam = context.validated.date;
     const targetDate = dateParam ? new Date(dateParam) : new Date();
     targetDate.setUTCHours(0, 0, 0, 0);
     // Get the plan for the specified date
@@ -65,21 +70,19 @@ import { prisma } from '../../_shared/prisma-edge';
     }
 
     return { status: 200, data: formatPlanResponse(plan) };
-  }
+  },
+  { source: 'query', requestsPerMinute: 30 }
 );
+
 /**
  * POST /api/users/me/daily-plan/complete
  * Mark today's plan as completed
  */
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'daily-plan' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+export const onRequestPost = authenticatedEndpoint(
+  DailyPlanCompleteSchema,
+  async (context) => {
     const clerkId = context.auth.userId;
+    const { accuracy, durationMinutes } = context.validated.body;
 
     const user = await prisma.user.findUnique({
       where: { clerkId },
@@ -88,8 +91,6 @@ export const onRequestPost = withMiddleware(
     if (!user) {
       return { status: 404, error: 'User not found' };
     }
-
-    const body = await context.request.json() as { accuracy?: number; durationMinutes?: number };
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -112,15 +113,16 @@ export const onRequestPost = withMiddleware(
       where: { id: plan.id },
       data: {
         status: 'completed',
-        actualAccuracy: body.accuracy || undefined,
-        actualDurationMinutes: body.durationMinutes || undefined,
+        actualAccuracy: accuracy ?? undefined,
+        actualDurationMinutes: durationMinutes ?? undefined,
         completedAt: new Date(),
         updatedAt: new Date(),
       },
     });
 
     return { status: 200, data: formatPlanResponse(updatedPlan) };
-  }
+  },
+  { requestsPerMinute: 30 }
 );
 // ============================================
 // Helper functions

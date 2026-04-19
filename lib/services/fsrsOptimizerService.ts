@@ -504,7 +504,8 @@ export async function getCircadianOptimizedParameters(
       return getParametersForHour(circadianResult, hourOfDay);
     }
     return circadianResult.global.parameters;
-  } catch {
+  } catch (err) {
+    console.debug('[fsrsOptimizerService] circadian optimization failed, using defaults', err);
     return defaultParameters;
   }
 }

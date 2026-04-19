@@ -108,7 +108,7 @@ export async function createQuestionVersion(
       },
     });
 
-    console.log(`[Versioning] Created version ${nextVersion} for question ${questionId}`);
+    console.debug(`[Versioning] Created version ${nextVersion} for question ${questionId}`);
     return version;
   } catch (error) {
     console.error('[Versioning] Failed to create version:', error);
@@ -304,7 +304,7 @@ export async function rollbackQuestion(
       });
     }
 
-    console.log(`[Versioning] Rolled back question ${questionId} to version ${targetVersion}`);
+    console.debug(`[Versioning] Rolled back question ${questionId} to version ${targetVersion}`);
     return targetData;
   } catch (error) {
     console.error('[Versioning] Failed to rollback question:', error);

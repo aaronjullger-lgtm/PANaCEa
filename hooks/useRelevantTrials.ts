@@ -3,20 +3,29 @@
  *
  * Non-blocking hook that fetches relevant Phase III/IV trials from
  * ClinicalTrials.gov for display in the ExplanationPanel.
- * Silently no-ops on failure (clinical trials are supplementary content).
+ *
+ * Exposes both the trials array *and* a typed failure state so the UI can
+ * distinguish "no trials found for this condition" from "the evidence service
+ * is unavailable". PA students must never see a silently-empty references
+ * section when the underlying API is down — that violates PANaCEa's safety
+ * mandate that medical sections be complete or visibly marked incomplete.
  *
  * @see lib/services/question/trialEnricher.ts
+ * @see lib/services/enrichment/enrichmentResult.ts
  */
 
 import { useState, useEffect } from 'react';
 import {
-  fetchRelevantTrials,
+  fetchRelevantTrialsResult,
   type ClinicalTrialSummary,
 } from '@/lib/services/question/trialEnricher';
+import type { EnrichmentFailed } from '@/lib/services/enrichment/enrichmentResult';
 
 interface UseRelevantTrialsReturn {
   trials: ClinicalTrialSummary[];
   isLoading: boolean;
+  /** Populated when the upstream service failed; null on success. */
+  failure: EnrichmentFailed | null;
 }
 
 export function useRelevantTrials(
@@ -25,24 +34,41 @@ export function useRelevantTrials(
 ): UseRelevantTrialsReturn {
   const [trials, setTrials] = useState<ClinicalTrialSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [failure, setFailure] = useState<EnrichmentFailed | null>(null);
 
   useEffect(() => {
     if (!condition || condition.length < 3) {
       setTrials([]);
+      setFailure(null);
       return;
     }
 
     let cancelled = false;
     setIsLoading(true);
+    setFailure(null);
 
-    fetchRelevantTrials(condition, system)
-      .then((results) => {
-        if (!cancelled) {
-          setTrials(results);
+    fetchRelevantTrialsResult(condition, system)
+      .then((result) => {
+        if (cancelled) return;
+        if (result.status === 'ok') {
+          setTrials(result.data);
+          setFailure(null);
+        } else {
+          setTrials([]);
+          setFailure(result);
         }
       })
       .catch(() => {
-        // Silently fail — non-critical feature
+        // fetchRelevantTrialsResult never throws, but be defensive.
+        if (!cancelled) {
+          setTrials([]);
+          setFailure({
+            status: 'failed',
+            reason: 'unknown',
+            message: 'Unexpected error',
+            failedAt: new Date().toISOString(),
+          });
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -53,5 +79,5 @@ export function useRelevantTrials(
     };
   }, [condition, system]);
 
-  return { trials, isLoading };
+  return { trials, isLoading, failure };
 }

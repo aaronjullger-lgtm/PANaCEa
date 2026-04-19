@@ -15,7 +15,7 @@
  *   1. Identify active users (studied in last 7 days)
  *   2. For each user, compute metrics (accuracy by system, trends, FSRS stats)
  *   3. Generate natural-language summary via gemini-2.0-flash
- *   4. Cache in UserDailyInsight table (or DailyStudyPlan metadata)
+ *   4. Cache in UserDailyInsight table (one row per user per day)
  *   5. Dashboard reads from cache (zero AI cost at serve time)
  *
  * Auth: Requires CRON_SECRET bearer token.
@@ -23,6 +23,7 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { withCors } from '../_shared/middleware';
+import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { trackTokenUsage } from '../_shared/tokenTracking';
 
 export const onRequestOptions = withCors();
@@ -72,12 +73,12 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
     prisma.questionAttempt.aggregate({
       where: { userId, createdAt: { gte: sevenDaysAgo } },
       _count: { id: true },
-      _avg: { isCorrect: true },
+      _avg: { wasCorrect: true },
     }),
     prisma.questionAttempt.aggregate({
       where: { userId, createdAt: { gte: thirtyDaysAgo } },
       _count: { id: true },
-      _avg: { isCorrect: true },
+      _avg: { wasCorrect: true },
     }),
   ]);
 
@@ -86,22 +87,22 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
     by: ['system'],
     where: { userId, createdAt: { gte: sevenDaysAgo }, system: { not: null } },
     _count: { id: true },
-    _avg: { isCorrect: true },
+    _avg: { wasCorrect: true },
   });
 
   const sortedSystems = systemStats
     .filter((s: any) => s._count.id >= 3) // Need minimum attempts
-    .sort((a: any, b: any) => (b._avg?.isCorrect ?? 0) - (a._avg?.isCorrect ?? 0));
+    .sort((a: any, b: any) => (b._avg?.wasCorrect ?? 0) - (a._avg?.wasCorrect ?? 0));
 
   const strongestSystem = sortedSystems[0]?.system ?? null;
   const weakestSystem = sortedSystems[sortedSystems.length - 1]?.system ?? null;
 
-  // FSRS backlog (items due for review)
+  // FSRS backlog (items due for review; exclude new/unreviewed cards — state 0 = New in FSRS)
   const fsrsBacklog = await prisma.userProgress.count({
     where: {
       userId,
-      nextReviewDate: { lte: now },
-      fsrsState: { not: 'NEW' },
+      nextReviewAt: { lte: now },
+      fsrsState: { not: 0 },
     },
   });
 
@@ -141,11 +142,11 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
   const priorWeekStart = new Date(sevenDaysAgo.getTime() - 7 * 24 * 3600_000);
   const priorStats = await prisma.questionAttempt.aggregate({
     where: { userId, createdAt: { gte: priorWeekStart, lt: sevenDaysAgo } },
-    _avg: { isCorrect: true },
+    _avg: { wasCorrect: true },
   });
 
-  const current7dAccuracy = stats7d._avg?.isCorrect ?? 0;
-  const prior7dAccuracy = priorStats._avg?.isCorrect ?? 0;
+  const current7dAccuracy = stats7d._avg?.wasCorrect ?? 0;
+  const prior7dAccuracy = priorStats._avg?.wasCorrect ?? 0;
   const accuracyDelta = current7dAccuracy - prior7dAccuracy;
 
   let accuracyTrend: 'improving' | 'declining' | 'stable' = 'stable';
@@ -188,7 +189,7 @@ async function computeUserMetrics(prisma: any, userId: string): Promise<UserMetr
     totalAttempts7d: stats7d._count?.id ?? 0,
     accuracy7d: Math.round((current7dAccuracy) * 1000) / 10,
     totalAttempts30d: stats30d._count?.id ?? 0,
-    accuracy30d: Math.round((stats30d._avg?.isCorrect ?? 0) * 1000) / 10,
+    accuracy30d: Math.round((stats30d._avg?.wasCorrect ?? 0) * 1000) / 10,
     strongestSystem,
     weakestSystem,
     currentStreak,
@@ -256,30 +257,23 @@ Write the insights now. Keep total under 200 words.`;
 
 // ── Main Handler ───────────────────────────────────────────────────────────
 
-export const onRequestPost: PagesFunction<any> = async (context) => {
-  const { env, request } = context;
+export const onRequestPost = cronEndpoint({
+  handler: async (context) => {
+    const env = context.env as Record<string, string | undefined>;
 
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return fail(ErrorCode.ENV_MISCONFIGURED, {
+        message: 'GEMINI_API_KEY not configured',
+        request: context.request,
+      });
+    }
 
-  const apiKey = env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
-
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const startTime = Date.now();
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL as string);
+      const startTime = Date.now();
 
     // Find active users (studied in last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600_000);
@@ -303,35 +297,36 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
 
         const insights = await generateInsight(apiKey, metrics, context);
 
-        // Persist the insight (upsert into DailyStudyPlan or a dedicated table)
-        await prisma.dailyStudyPlan.upsert({
+        // Upsert into UserDailyInsight (dedicated insight-cache table).
+        // Using YYYY-MM-DD as a DATE so the unique(userId, insightDate) key
+        // collapses multiple intra-day re-runs into a single row.
+        const today = new Date(new Date().toISOString().slice(0, 10));
+        const nowIso = new Date();
+
+        await prisma.userDailyInsight.upsert({
           where: {
-            userId_date: {
+            userId_insightDate: {
               userId,
-              date: new Date(new Date().toISOString().slice(0, 10)),
+              insightDate: today,
             },
           },
           create: {
             id: crypto.randomUUID(),
             userId,
-            date: new Date(new Date().toISOString().slice(0, 10)),
-            planData: {
-              insights,
-              metricsSnapshot: metrics,
-              generatedAt: new Date().toISOString(),
-              model: INSIGHT_MODEL,
-            },
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            insightDate: today,
+            insights,
+            metricsSnapshot: metrics as unknown as any,
+            model: INSIGHT_MODEL,
+            generatedAt: nowIso,
+            createdAt: nowIso,
+            updatedAt: nowIso,
           },
           update: {
-            planData: {
-              insights,
-              metricsSnapshot: metrics,
-              generatedAt: new Date().toISOString(),
-              model: INSIGHT_MODEL,
-            },
-            updatedAt: new Date(),
+            insights,
+            metricsSnapshot: metrics as unknown as any,
+            model: INSIGHT_MODEL,
+            generatedAt: nowIso,
+            updatedAt: nowIso,
           },
         });
 
@@ -339,7 +334,7 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
           userId,
           insights,
           metricsSnapshot: metrics,
-          generatedAt: new Date(),
+          generatedAt: nowIso,
         });
       } catch (error) {
         errors++;
@@ -349,14 +344,15 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
 
     const durationMs = Date.now() - startTime;
 
-    // Audit log
+    // Audit log — AuditLog shape: (id, action, entityType, entityId?, details?, createdAt)
     try {
       await prisma.auditLog.create({
         data: {
           id: crypto.randomUUID(),
           action: 'DAILY_INSIGHT_GENERATION',
-          performedBy: 'system:cron',
-          metadata: {
+          entityType: 'SYSTEM',
+          entityId: 'cron:generate-daily-insights',
+          details: {
             activeUsers: activeUsers.length,
             insightsGenerated: results.length,
             errors,
@@ -369,28 +365,22 @@ export const onRequestPost: PagesFunction<any> = async (context) => {
       // Audit failure non-fatal
     }
 
-    return new Response(JSON.stringify({
-      status: 'ok',
-      activeUsers: activeUsers.length,
-      insightsGenerated: results.length,
-      skipped: activeUsers.length - results.length - errors,
-      errors,
-      durationMs,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('[daily-insights] Error:', error);
-    return new Response(JSON.stringify({
-      error: 'Insight generation failed',
-      message: error instanceof Error ? error.message : String(error),
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
-  }
-};
+      return ok({
+        status: 'ok',
+        activeUsers: activeUsers.length,
+        insightsGenerated: results.length,
+        skipped: activeUsers.length - results.length - errors,
+        errors,
+        durationMs,
+      }, { request: context.request });
+    } catch (error) {
+      console.error('[daily-insights] Error:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: error instanceof Error ? error.message : 'Insight generation failed',
+        request: context.request,
+      });
+    } finally {
+      if (prisma) await safePrismaDisconnect(prisma);
+    }
+  },
+});

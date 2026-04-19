@@ -32,6 +32,8 @@ import { normalizeMedicalContent, parseListField, parseTextField } from '@/lib/u
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 import { TopicMasteryBreakdown } from '@/components/dashboard/TopicMasteryBreakdown';
+import { isSafetyCriticalField } from '@/lib/constants/safety-critical-fields';
+import { IncompleteFieldBadge } from './IncompleteFieldBadge';
 
 interface ConditionDetailPanelProps {
   content: Partial<MedicalContentDisplay>;
@@ -122,15 +124,27 @@ const DetailSection: React.FC<{
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const Icon = section.icon;
 
-  // Check if section has any content
+  // Check if section has any content OR any missing safety-critical field.
+  // We keep the section visible whenever a safety field exists in it, even if
+  // empty — otherwise the "Needs clinical review" badge would be hidden inside
+  // a collapsed-and-removed section.
   const hasContent = section.fields.some((field) => {
     const value = data[field.key];
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === 'string') return value.trim() !== '';
     return value != null;
   });
+  const hasMissingSafetyField = section.fields.some((field) => {
+    if (!isSafetyCriticalField(field.key as string)) return false;
+    const value = data[field.key];
+    return (
+      value == null ||
+      (typeof value === 'string' && value.trim() === '') ||
+      (Array.isArray(value) && value.length === 0)
+    );
+  });
 
-  if (!hasContent) return null;
+  if (!hasContent && !hasMissingSafetyField) return null;
 
   return (
     <div className="border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-secondary)]/30">
@@ -162,7 +176,26 @@ const DetailSection: React.FC<{
           <div className="p-4 space-y-4">
             {section.fields.map((field) => {
               const value = data[field.key];
-              if (!value) return null;
+              const fieldKeyStr = field.key as string;
+              const isSafety = isSafetyCriticalField(fieldKeyStr);
+
+              // Empty value path: if safety-critical, render the explicit
+              // "Needs clinical review" badge — never silently drop.
+              const isEmpty =
+                value == null ||
+                (typeof value === 'string' && value.trim() === '') ||
+                (Array.isArray(value) && value.length === 0);
+              if (isEmpty) {
+                if (!isSafety) return null;
+                return (
+                  <div key={field.key as string}>
+                    <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
+                      {field.label}
+                    </h4>
+                    <IncompleteFieldBadge fieldLabel={field.label} />
+                  </div>
+                );
+              }
 
               // Special handling for buzzwords (pill badges)
               if (field.key === 'buzzwords') {

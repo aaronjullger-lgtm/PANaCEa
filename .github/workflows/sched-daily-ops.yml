@@ -1,0 +1,239 @@
+# purpose: Run the split daily operations lane for repo-hosted rollups plus safe production cron fanout for analytics, prescriptions, and insights.
+# owner: Analytics / Personalization
+# trigger strategy: schedule + workflow_dispatch; runs after the learning-model lane and excludes reminders, queue cleanup, and reservoir supply.
+# secrets required: DATABASE_URL, PRODUCTION_URL, CRON_SECRET
+# expected runtime: 10-35 minutes depending on whether repo rollups and both endpoint groups are enabled.
+# failure behavior: Fail fast on repo rollup or endpoint errors, upload JSON/markdown/http-log artifacts, and leave a step summary that identifies the failing segment.
+
+name: Sched - Daily Ops
+
+on:
+  schedule:
+    - cron: "27 4 * * *"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Default to repo rollups only unless you need production endpoint fanout.
+        required: false
+        default: repo-rollups-only
+        type: choice
+        options:
+          - repo-rollups-only
+          - analytics-only
+          - personalization-only
+          - full-lane
+      report_only:
+        description: Keep the manual run repo-hosted only and skip all production endpoint calls.
+        required: false
+        default: true
+        type: boolean
+      environment_guard:
+        description: Required before a manual run is allowed to call production cron endpoints.
+        required: false
+        default: report-only
+        type: choice
+        options:
+          - report-only
+          - allow-production-endpoints
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-daily-ops
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Daily Ops
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Validate manual dispatch inputs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ inputs.report_only }}" != "true" ] && [ "${{ inputs.environment_guard }}" != "allow-production-endpoints" ]; then
+            echo "Manual production endpoint fanout requires environment_guard=allow-production-endpoints." >&2
+            exit 1
+          fi
+
+      - name: Run repo-hosted daily ops rollups
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.target_scope == 'repo-rollups-only' || inputs.target_scope == 'full-lane' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          args=()
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.report_only || false }}" = "true" ]; then
+            args+=(--report-only)
+          fi
+
+          npm run automation:daily:ops -- "${args[@]}"
+
+      - name: Run analytics rollup endpoints
+        if: ${{ github.event_name != 'workflow_dispatch' || ((inputs.target_scope == 'analytics-only' || inputs.target_scope == 'full-lane') && !inputs.report_only) }}
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PRODUCTION_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "PRODUCTION_URL and CRON_SECRET are required for analytics rollups." >&2
+            exit 1
+          fi
+
+          mkdir -p logs/automation-http
+          stamp=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          log_file="logs/automation-http/daily-ops-analytics-${stamp}.log"
+          body_file=$(mktemp)
+          failures=0
+
+          run_endpoint() {
+            local method="$1"
+            local endpoint="$2"
+            local payload="$3"
+
+            echo "[${method}] ${endpoint}" | tee -a "${log_file}"
+
+            local status
+            status=$(curl -sS -o "${body_file}" -w "%{http_code}" \
+              -X "${method}" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              --data "${payload}" \
+              "${PRODUCTION_URL}${endpoint}")
+
+            echo "status=${status}" | tee -a "${log_file}"
+            cat "${body_file}" | tee -a "${log_file}"
+            echo "" | tee -a "${log_file}"
+
+            if [[ ! "${status}" =~ ^2 ]]; then
+              failures=$((failures + 1))
+              echo "::error title=Analytics rollup endpoint failed::${method} ${endpoint} returned HTTP ${status}"
+            fi
+          }
+
+          run_endpoint POST /api/cron/aggregate-analytics '{}'
+          run_endpoint POST /api/cron/aggregate-distributions '{}'
+
+          {
+            echo "### Daily Ops - Analytics Rollups"
+            echo ""
+            echo "- Failures: ${failures}"
+            echo "- Log: ${log_file}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ "${failures}" -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Run personalization rollup endpoints
+        if: ${{ github.event_name != 'workflow_dispatch' || ((inputs.target_scope == 'personalization-only' || inputs.target_scope == 'full-lane') && !inputs.report_only) }}
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PRODUCTION_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "PRODUCTION_URL and CRON_SECRET are required for personalization rollups." >&2
+            exit 1
+          fi
+
+          mkdir -p logs/automation-http
+          stamp=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          log_file="logs/automation-http/daily-ops-personalization-${stamp}.log"
+          body_file=$(mktemp)
+          failures=0
+
+          run_endpoint() {
+            local method="$1"
+            local endpoint="$2"
+            local payload="$3"
+
+            echo "[${method}] ${endpoint}" | tee -a "${log_file}"
+
+            local status
+            status=$(curl -sS -o "${body_file}" -w "%{http_code}" \
+              -X "${method}" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              --data "${payload}" \
+              "${PRODUCTION_URL}${endpoint}")
+
+            echo "status=${status}" | tee -a "${log_file}"
+            cat "${body_file}" | tee -a "${log_file}"
+            echo "" | tee -a "${log_file}"
+
+            if [[ ! "${status}" =~ ^2 ]]; then
+              failures=$((failures + 1))
+              echo "::error title=Personalization rollup endpoint failed::${method} ${endpoint} returned HTTP ${status}"
+            fi
+          }
+
+          run_endpoint POST /api/cron/daily-prescription '{}'
+          run_endpoint POST /api/cron/generate-daily-insights '{}'
+
+          {
+            echo "### Daily Ops - Personalization Rollups"
+            echo ""
+            echo "- Failures: ${failures}"
+            echo "- Log: ${log_file}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ "${failures}" -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload daily ops artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sched-daily-ops-${{ github.run_number }}
+          path: |
+            logs/daily-ops/*.json
+            logs/daily-ops/*.md
+            logs/automation-http/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Write workflow summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Workflow Summary"
+            echo ""
+            echo "- Workflow: sched-daily-ops.yml"
+            echo "- Node: ${NODE_VERSION}"
+            echo "- Target scope: ${{ github.event_name == 'workflow_dispatch' && inputs.target_scope || 'full-lane' }}"
+            echo "- Report only: ${{ github.event_name != 'workflow_dispatch' || inputs.report_only }}"
+            echo "- Artifact directories: logs/daily-ops/, logs/automation-http/"
+            echo "- Artifact retention: 14 days"
+            echo "- Next action on failure: inspect the uploaded HTTP log to identify the failing segment before rerunning; keep manual runs report-only unless production endpoint fanout is truly required."
+          } >> "${GITHUB_STEP_SUMMARY}"

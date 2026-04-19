@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   Heart,
@@ -17,6 +18,7 @@ import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './Min
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface FirstLineDrillSessionProps {
@@ -93,6 +95,8 @@ const CATEGORY_CARDS: Array<{
  * FirstLineDrillSession - First-line treatment quiz drill mode
  */
 const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentQuestion,
     score,
@@ -122,11 +126,44 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
   }
 
   const handleExit = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
     exitToMenu();
     if (onExit) {
       onExit();
     }
   };
+
+  const handleNewSession = () => {
+    setShowSummary(false);
+    reset();
+  };
+
+  // =========================================================================
+  // SUMMARY VIEW
+  // =========================================================================
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="First Line Treatment — Complete"
+        breadcrumb={['Drills', 'First Line', 'Results']}
+        onBackToHub={() => { exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="First Line Treatment"
+          icon={Pill}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleNewSession}
+          onExit={() => { exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
 
   // =========================================================================
   // MENU VIEW
@@ -141,9 +178,9 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
       >
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">

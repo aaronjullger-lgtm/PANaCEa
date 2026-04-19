@@ -1,10 +1,21 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai` SDK
+ * usage with `gateway.callText()` using task='generation', tier='balanced'
+ * (gemini-2.5-flash — matches the prior model binding).
+ *
+ * The constructor now accepts a `GatewayContext` instead of a raw API key so
+ * the same telemetry + fallback + cost pipeline services Edge, Node, and dev
+ * routes. Callers should pass `toGatewayContext(authenticatedContext)` or
+ * `buildNodeGatewayContext()` depending on runtime.
+ */
+import { gateway, GatewayError, type GatewayContext } from '../../ai/aiGateway';
 import { type MedicalContentData } from '../content/types';
 import { logger } from '../../logger';
 import type { ABAssignmentMap } from '../../middleware/abTestMiddleware';
 
 const LOG_SCOPE = 'QuestionGenerationService';
 const generationLogger = logger.scope(LOG_SCOPE);
+const ENDPOINT = 'lib/services/question/generationService';
 
 export interface GroundingSource {
   uri: string;
@@ -14,19 +25,18 @@ export interface GroundingSource {
 /** A/B-testable generation strategies */
 export type GenerationStrategy = 'single-pass' | 'self-refine' | 'rag-grounded';
 
-export class QuestionGenerationService {
-  private genAI: GoogleGenerativeAI;
-  private model: any;
-  private groundedModel: any;
+interface GatewayResultShape {
+  text?: string | null;
+  blocked?: boolean;
+  groundingMetadata?: unknown;
+  raw?: unknown;
+}
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    // Model with Google Search grounding enabled for evidence-backed generation
-    this.groundedModel = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      tools: [{ googleSearch: {} } as any],
-    });
+export class QuestionGenerationService {
+  private ctx: GatewayContext;
+
+  constructor(ctx: GatewayContext) {
+    this.ctx = ctx;
   }
 
   /**
@@ -111,34 +121,58 @@ Return ONLY valid JSON (no markdown):
       const strategy = this.resolveGenerationStrategy(abAssignments);
       generationLogger.debug('Generation strategy selected', { strategy });
 
-      let result: any;
-      let response: any;
+      let result: GatewayResultShape;
 
       if (strategy === 'single-pass') {
         // Direct generation without grounding — fastest path
-        result = await this.model.generateContent(prompt);
-        response = result.response;
+        result = await gateway.callText(this.ctx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced',
+          endpoint: ENDPOINT,
+          userPrompt: prompt,
+        });
       } else if (strategy === 'self-refine') {
         // Two-pass: generate then self-critique and refine
-        result = await this.model.generateContent(prompt);
-        response = result.response;
-        let parsed = this.parseResponse(response.text());
+        result = await gateway.callText(this.ctx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced',
+          endpoint: ENDPOINT,
+          userPrompt: prompt,
+        });
+        if (result.blocked) {
+          generationLogger.warn('Self-refine draft blocked by safety filter');
+          return null;
+        }
+        let parsed = this.parseResponse(result.text ?? '');
         if (parsed) {
           parsed = await this.selfRefine(parsed, prompt);
         }
         return parsed;
       } else {
-        // rag-grounded (default): use grounded model for evidence-backed generation
-        result = await this.groundedModel.generateContent(prompt);
-        response = result.response;
+        // rag-grounded (default): google-search grounded evidence-backed generation
+        result = await gateway.callText(this.ctx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced',
+          endpoint: ENDPOINT,
+          userPrompt: prompt,
+          tools: [{ googleSearch: {} }],
+        });
       }
 
-      const text = response.text();
+      if (result.blocked) {
+        generationLogger.warn('Generation blocked by safety filter', { strategy });
+        return null;
+      }
+
+      const text = result.text ?? '';
       const parsed = this.parseResponse(text);
 
       if (parsed && strategy === 'rag-grounded') {
-        // Extract grounding sources from response metadata
-        const groundingSources = this.extractGroundingSources(response);
+        // Extract grounding sources from response metadata (with raw fallback)
+        const groundingSources = this.extractGroundingSources(result);
         if (groundingSources.length > 0) {
           parsed.rationale = parsed.rationale || {};
           parsed.rationale.groundingSources = groundingSources;
@@ -147,12 +181,25 @@ Return ONLY valid JSON (no markdown):
 
       return parsed;
     } catch (error) {
-      // Fallback to ungrounded model if search grounding fails
-      generationLogger.warn('Grounded generation failed, falling back to standard', { error });
+      if (error instanceof GatewayError) {
+        generationLogger.warn('Grounded generation failed via gateway, falling back to standard', {
+          code: error.code,
+          message: error.message,
+        });
+      } else {
+        generationLogger.warn('Grounded generation failed, falling back to standard', { error });
+      }
+      // Fallback: ungrounded single-pass
       try {
-        const result = await this.model.generateContent(prompt);
-        const text = result.response.text();
-        return this.parseResponse(text);
+        const fallback = await gateway.callText(this.ctx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced',
+          endpoint: ENDPOINT,
+          userPrompt: prompt,
+        });
+        if (fallback.blocked) return null;
+        return this.parseResponse(fallback.text ?? '');
       } catch (fallbackError) {
         generationLogger.error('Generation failed completely', { error: fallbackError });
         return null;
@@ -185,32 +232,55 @@ If improvements are needed, return ONLY the improved JSON (no markdown).
 Return ONLY valid JSON with the same structure as the input.`;
 
     try {
-      const result = await this.model.generateContent(critiquePrompt);
-      const refined = this.parseResponse(result.response.text());
+      const result = await gateway.callText(this.ctx, {
+        mode: 'text',
+        task: 'generation',
+        tier: 'balanced',
+        endpoint: `${ENDPOINT}#selfRefine`,
+        userPrompt: critiquePrompt,
+      });
+      if (result.blocked) return draft;
+      const refined = this.parseResponse(result.text ?? '');
       if (refined && refined.vignette && refined.options) {
         return refined;
       }
       return draft;
-    } catch {
-      return draft; // Fallback to draft if self-refine fails
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        generationLogger.warn('self-refine gateway error, falling back to draft', {
+          code: err.code,
+          message: err.message,
+        });
+      } else {
+        generationLogger.warn('self-refine failed, falling back to draft', { error: err });
+      }
+      return draft;
     }
   }
 
   /**
-   * Extract Google Search grounding sources from the Gemini response.
-   * These provide evidence citations (URIs + titles) from real web sources.
+   * Extract Google Search grounding sources from the gateway response.
+   * Prefer the normalized `groundingMetadata` field, fall back to the raw
+   * candidate shape for older response envelopes.
    */
-  private extractGroundingSources(response: any): GroundingSource[] {
+  private extractGroundingSources(result: GatewayResultShape): GroundingSource[] {
     try {
-      const candidates = response?.candidates || [];
-      const firstCandidate = candidates[0];
-      const groundingMetadata = firstCandidate?.groundingMetadata;
-      if (!groundingMetadata?.groundingChunks) return [];
+      const metadata = result.groundingMetadata as
+        | { groundingChunks?: Array<{ web?: { uri?: string; title?: string } }> }
+        | undefined;
+
+      let chunks = metadata?.groundingChunks ?? [];
+      if (chunks.length === 0) {
+        const rawCandidates =
+          (result.raw as { candidates?: Array<{ groundingMetadata?: { groundingChunks?: any[] } }> } | undefined)
+            ?.candidates ?? [];
+        chunks = rawCandidates[0]?.groundingMetadata?.groundingChunks ?? [];
+      }
 
       const sources: GroundingSource[] = [];
       const seen = new Set<string>();
 
-      for (const chunk of groundingMetadata.groundingChunks) {
+      for (const chunk of chunks) {
         const uri = chunk?.web?.uri;
         const title = chunk?.web?.title;
         if (uri && title && !seen.has(uri)) {
@@ -220,7 +290,8 @@ Return ONLY valid JSON with the same structure as the input.`;
       }
 
       return sources.slice(0, 5); // Cap at 5 sources
-    } catch {
+    } catch (err) {
+      generationLogger.debug('grounding source extraction failed', { error: err });
       return [];
     }
   }

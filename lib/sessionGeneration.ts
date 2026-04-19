@@ -317,6 +317,17 @@ function normalizeOptions(options: unknown): string[] {
     .filter(isNonEmptyString);
 }
 
+/**
+ * Resolve the correct answer index from either a pre-computed numeric index or
+ * a raw correctAnswer string. Patient-safety critical: when input is unresolvable
+ * we return -1 rather than silently defaulting to 0 (option A). Returning -1
+ * means user selections (0..N-1) will never match, so the question is scored
+ * as always-wrong and the bug surfaces in analytics instead of penalizing /
+ * rewarding the student incorrectly.
+ *
+ * Callers downstream that index into `options[correctAnswerIndex]` must guard
+ * against -1.
+ */
 function deriveCorrectAnswerIndex(
   correctAnswerIndex: number | null | undefined,
   correctAnswer: string | null | undefined,
@@ -330,15 +341,19 @@ function deriveCorrectAnswerIndex(
 
   const normalizedCorrectAnswer = normalizeNullableString(correctAnswer);
   if (!normalizedCorrectAnswer || options.length === 0) {
-    return 0;
+    console.error(
+      '[sessionGeneration] Cannot resolve correctAnswerIndex: missing correctAnswer or empty options array',
+      { correctAnswer, optionsLength: options.length }
+    );
+    return -1;
   }
 
   const letterMatch = normalizedCorrectAnswer.trim().match(/^[A-E]$/i);
   if (letterMatch) {
-    return Math.min(
-      Math.max(0, letterMatch[0]!.toUpperCase().charCodeAt(0) - 65),
-      maxIndex
-    );
+    const letterIdx = letterMatch[0]!.toUpperCase().charCodeAt(0) - 65;
+    if (letterIdx >= 0 && letterIdx <= maxIndex) {
+      return letterIdx;
+    }
   }
 
   const directMatchIndex = options.findIndex(
@@ -351,7 +366,19 @@ function deriveCorrectAnswerIndex(
   const includesMatchIndex = options.findIndex((option) =>
     option.trim().toLowerCase().includes(normalizedCorrectAnswer.trim().toLowerCase())
   );
-  return includesMatchIndex >= 0 ? includesMatchIndex : 0;
+  if (includesMatchIndex >= 0) {
+    return includesMatchIndex;
+  }
+
+  // Patient-safety: do NOT silently fall back to 0 — that would mark wrong
+  // answers as right (or vice versa) without any signal to the student or
+  // admin. Return -1 so the question always scores as incorrect until the
+  // underlying data issue is fixed.
+  console.error(
+    '[sessionGeneration] correctAnswer unresolvable — cannot match letter, index, or option text',
+    { correctAnswer: normalizedCorrectAnswer, options }
+  );
+  return -1;
 }
 
 function normalizeRationale(rationale: unknown, explanation?: string | null): string {

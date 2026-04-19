@@ -20,11 +20,11 @@ import {
   Zap,
   BookOpen,
   Target,
-  Loader2,
 } from 'lucide-react';
 import { geminiService } from '@/services/ai';
 import { GEMINI_FLASH_MODEL } from "@/config/topic-map";
 import { EmptyState } from '@/components/ui/EmptyState';
+import { DrillLoadingState, InlineSpinner } from '@/components/loading';
 
 /**
  * HighYieldCondition interface - matches database API response
@@ -237,12 +237,12 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   // Guard: If currentQuestion is undefined during active play, show loading
   if (!isLoading && !loadError && !isComplete && !currentQuestion) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
-        <div role="status" aria-label="Loading question" className="text-center">
-          <Loader2 aria-hidden="true" className="w-12 h-12 animate-spin text-[var(--color-data-provisional)] mx-auto mb-4" />
-          <p className="text-[var(--color-text-secondary)]">Loading question...</p>
-        </div>
-      </div>
+      <DrillLoadingState
+        message="Loading question..."
+        variant="question"
+        showTimer
+        showProgress
+      />
     );
   }
 
@@ -282,8 +282,10 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
-        <div role="status" aria-label="Generating PANCE questions" className="text-center max-w-md mx-auto p-8">
-          <Loader2 aria-hidden="true" className="w-12 h-12 animate-spin text-[var(--color-data-provisional)] mx-auto mb-4" />
+        <div role="status" aria-live="polite" aria-label="Generating PANCE questions" className="text-center max-w-md mx-auto p-8">
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="xl" className="text-[var(--color-data-provisional)]" />
+          </div>
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
             Generating PANCE Questions
           </h2>

@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { getSystemAbbreviation } from '@/lib/constants/blueprint';
 export interface SystemStats {
   total: number;
@@ -98,6 +99,7 @@ export function BodyMapWidget({
   onSystemClick,
   className = '',
 }: BodyMapWidgetProps) {
+  const prefersReducedMotion = useReducedMotion();
   const weakestSet = new Set(weakestSystems);
   const systemsWithData = Object.entries(systemStats).filter(([, s]) => s.total >= 2);
   const [hoveredSystem, setHoveredSystem] = useState<string | null>(null);
@@ -162,12 +164,25 @@ export function BodyMapWidget({
             return (
               <motion.g
                 key={system}
-                initial={{ scale: 0.8 }}
+                initial={prefersReducedMotion ? false : { scale: 0.8 }}
                 animate={{ scale: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
                 onMouseEnter={() => setHoveredSystem(system)}
                 onMouseLeave={() => setHoveredSystem(null)}
+                role={onSystemClick ? 'button' : undefined}
+                tabIndex={onSystemClick ? 0 : undefined}
+                aria-label={tooltip}
+                onKeyDown={onSystemClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSystemClick(system); } } : undefined}
               >
+                <circle
+                  cx={region.cx}
+                  cy={region.cy}
+                  r={region.r}
+                  fill="transparent"
+                  stroke="transparent"
+                  strokeWidth={4}
+                  style={{ pointerEvents: 'all' }}
+                />
                 <circle
                   cx={region.cx}
                   cy={region.cy}

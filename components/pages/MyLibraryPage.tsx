@@ -13,7 +13,6 @@ import {
   Check,
   Info,
   Library,
-  Loader2,
   MessageSquare,
   Sparkles,
   Trash2,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import {
   WorkspaceEmptyState,
   WorkspaceMetricCard,
@@ -417,7 +417,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl">
                     <span className="inline-flex min-h-[36px] items-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-inverse)] shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)]">
                       {uploading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <InlineSpinner size="sm" />
                       ) : (
                         <Upload className="h-4 w-4" />
                       )}
@@ -452,8 +452,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
             >
               {loading ? (
                 <WorkspaceSurface accent="#728ba6">
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
+                  <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
+                    <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   </div>
                 </WorkspaceSurface>
               ) : caches.length === 0 ? (
@@ -505,7 +505,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                             disabled={deletingName === cache.geminiCacheName}
                           >
                             {deletingName === cache.geminiCacheName ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <InlineSpinner size="sm" />
                             ) : (
                               <Trash2 className="h-4 w-4" />
                             )}
@@ -589,7 +589,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   disabled={veoLoading}
                 >
                   {veoLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                   ) : (
                     <Video className="h-4 w-4" />
                   )}
@@ -703,7 +703,7 @@ Provide a concise, clinically focused answer (3-6 sentences).`;
                   }}
                 >
                   {libraryLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <InlineSpinner size="sm" />
                   ) : (
                     <MessageSquare className="h-4 w-4" />
                   )}

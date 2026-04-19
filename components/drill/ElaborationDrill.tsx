@@ -7,8 +7,9 @@
  * @see hooks/game/use-elaboration-drill.ts
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Lightbulb,
   Send,
@@ -21,8 +22,9 @@ import {
 } from 'lucide-react';
 import { useElaborationDrill } from '@/hooks/game/use-elaboration-drill';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading';
+import { QuestionSkeleton, InlineSpinner } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface ElaborationDrillProps {
@@ -44,6 +46,8 @@ const SCORE_LABELS: Record<number, string> = {
 };
 
 export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentFact,
     status,
@@ -61,8 +65,36 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
     reset,
   } = useElaborationDrill();
 
-  const handleBackToHub = onExit ?? (() => {});
+  const handleBackToHub = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
+    onExit?.();
+  };
   const breadcrumb = ['Practice', 'Elaborative Interrogation'];
+
+  // Summary
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Elaborative Interrogation — Complete"
+        breadcrumb={['Practice', 'Elaborative Interrogation', 'Results']}
+        onBackToHub={() => onExit?.()}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Elaborative Interrogation"
+          icon={Lightbulb}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak: 0 }}
+          onNewSession={() => { setShowSummary(false); reset(); startSession(); }}
+          onExit={() => onExit?.()}
+          newSessionLabel="Practice More"
+        />
+      </DrillShell>
+    );
+  }
 
   // Landing
   if (status === 'landing') {
@@ -104,15 +136,16 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
     >
       <div className="max-w-2xl mx-auto py-6 space-y-6">
         {/* Score bar */}
-        <div className="flex items-center justify-between text-xs" style={{ color: 'var(--color-text-muted)' }}>
+        <div className="flex items-center justify-between text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
           <span>Score: {score}/{totalAttempts}</span>
           <span>{currentFact.system}</span>
         </div>
 
         {/* Fact card */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="p-6 rounded-xl border"
           style={{
             backgroundColor: 'var(--color-bg-secondary)',
@@ -135,8 +168,9 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
         {/* Hint (rubric keywords) */}
         {hintUsed && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             className="p-3 rounded-lg border"
             style={{
               backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-secondary))',
@@ -207,8 +241,8 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
 
         {/* Grading spinner */}
         {status === 'grading' && (
-          <div className="text-center py-8">
-            <div className="inline-block w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent)', borderTopColor: 'transparent' }} />
+          <div className="text-center py-8" role="status" aria-live="polite">
+            <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
             <p className="text-sm mt-3" style={{ color: 'var(--color-text-muted)' }}>
               Grading your explanation...
             </p>
@@ -219,8 +253,9 @@ export default function ElaborationDrill({ onExit }: ElaborationDrillProps) {
         <AnimatePresence>
           {status === 'feedback' && gradeResult && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className="space-y-4"
             >
               {/* Score badge */}

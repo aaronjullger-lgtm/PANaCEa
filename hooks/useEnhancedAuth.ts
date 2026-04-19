@@ -60,7 +60,8 @@ export function useEnhancedAuth(): EnhancedAuthResult {
     try {
       const stored = localStorage.getItem(AUTH_RETRY_COUNT_KEY);
       return stored ? parseInt(stored, 10) : 0;
-    } catch {
+    } catch (err) {
+      console.debug('[useEnhancedAuth] failed to read auth retry count from localStorage', err);
       return 0;
     }
   });

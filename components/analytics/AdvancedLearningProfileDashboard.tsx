@@ -29,7 +29,6 @@ import {
   CheckCircle,
   XCircle,
   ChevronRight,
-  RefreshCw,
   Activity,
   Battery,
   BatteryLow,
@@ -51,6 +50,7 @@ import {
 import { fetchLearningProfile } from '@/services/analytics';
 import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { InlineSpinner } from '@/components/loading';
 import {
   getCognitiveState,
   getLearningVelocity,
@@ -230,9 +230,13 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[500px]">
+      <div
+        className="flex items-center justify-center min-h-[500px]"
+        role="status"
+        aria-live="polite"
+      >
         <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-10 h-10 text-[var(--color-accent)] animate-spin" />
+          <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
           <p className="text-[var(--color-text-muted)]">Analyzing your learning data...</p>
         </div>
       </div>

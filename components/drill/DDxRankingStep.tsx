@@ -8,6 +8,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   GripVertical,
   ChevronUp,
@@ -66,6 +67,7 @@ export function DDxRankingStep({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [result, setResult] = useState<RankingResult | null>(null);
   const [showReasoning, setShowReasoning] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Handle reorder via drag
   const handleReorder = useCallback(
@@ -211,10 +213,10 @@ export function DDxRankingStep({
                   ${getItemStyle(item, index)}
                   ${!disabled && !isSubmitted ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}
                 `}
-                whileDrag={{ scale: 1.02, boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}
-                initial={{ y: 20 }}
+                whileDrag={prefersReducedMotion ? undefined : { scale: 1.02, boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}
+                initial={prefersReducedMotion ? false : { y: 20 }}
                 animate={{ y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }}
               >
                 {/* Rank Number */}
                 <div
@@ -306,8 +308,9 @@ export function DDxRankingStep({
       {/* Result Feedback */}
       {isSubmitted && result && (
         <motion.div
-          initial={{ y: 20 }}
+          initial={prefersReducedMotion ? false : { y: 20 }}
           animate={{ y: 0 }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className={`
             mt-6 p-4 rounded-xl border-2
             ${

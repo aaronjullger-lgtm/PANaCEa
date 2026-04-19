@@ -1,0 +1,108 @@
+name: Automation drift
+description: Report stale docs, mismatched cron comments, policy drift, or workflow metadata that no longer matches PANaCEa's live automation system.
+title: "[automation drift] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when the live automation system and its documentation disagree.
+
+        Compare against:
+        - `docs/automation/SCHEDULE_MATRIX.md`
+        - `docs/automation/WORKFLOW_STANDARDS.md`
+  - type: dropdown
+    id: affected_surface
+    attributes:
+      label: Affected workflow or surface
+      options:
+        - sched-runtime-sanity.yml
+        - sched-reservoir-supply.yml
+        - sched-daily-learning-models.yml
+        - sched-daily-ops.yml
+        - sched-content-audit.yml
+        - sched-weekly-platform-report.yml
+        - sched-weekly-maintenance.yml
+        - sched-weekly-repo-hygiene.yml
+        - sched-monthly-deep-audit.yml
+        - cloud-agents.yml
+        - package.json automation alias
+        - docs/automation/*
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: drift_type
+    attributes:
+      label: Drift type
+      options:
+        - stale doc claim
+        - cron/comment mismatch
+        - header metadata mismatch
+        - schedule matrix mismatch
+        - package alias suggests the wrong owner
+        - workflow behavior no longer matches standards
+        - other
+    validations:
+      required: true
+  - type: input
+    id: file_path
+    attributes:
+      label: Exact file path
+      description: Cite the file or files that contain the drift.
+      placeholder: docs/automation/README.md or .github/workflows/sched-daily-ops.yml
+    validations:
+      required: true
+  - type: input
+    id: evidence_link
+    attributes:
+      label: Evidence link
+      description: Optional run URL, PR link, or discussion link showing why this is wrong.
+      placeholder: https://github.com/<owner>/<repo>/actions/runs/...
+  - type: textarea
+    id: expected_truth
+    attributes:
+      label: Expected truth
+      description: What should the repo say or do instead?
+      placeholder: The schedule matrix should describe `sched-reservoir-supply.yml` as the live transitional mutative exception.
+    validations:
+      required: true
+  - type: textarea
+    id: actual_text
+    attributes:
+      label: Actual text or behavior
+      description: Quote or summarize the stale or conflicting text or runtime behavior.
+      placeholder: The doc still says `automation-reservoir-supply.yml`, but the live file is `sched-reservoir-supply.yml`.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - sev-1: could cause unsafe or duplicate production automation
+        - sev-2: could cause operator error or incorrect remediation
+        - sev-3: docs or metadata inconsistency with moderate confusion risk
+        - sev-4: low-risk stale wording or naming mismatch
+    validations:
+      required: true
+  - type: dropdown
+    id: mutation_risk
+    attributes:
+      label: Could this drift cause unintended data mutation or duplicate execution?
+      options:
+        - no
+        - yes
+        - unclear
+    validations:
+      required: true
+  - type: dropdown
+    id: immediate_action
+    attributes:
+      label: Immediate action needed?
+      options:
+        - no, docs-only fix
+        - manual clarification before the next run
+        - disable or pause a workflow before the next run
+        - unclear
+    validations:
+      required: true

@@ -12,7 +12,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Search, X, ArrowRight, AlertTriangle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { MODE_REGISTRY } from '@/config/training-modes';
 import { NAV_RAIL_ITEMS } from '@/config/navigation';
 import { getRecentModeIds, recordRecentMode, MAX_RECENT_MODES } from '@/lib/recentModes';
@@ -325,7 +326,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Search Input */}
           <div className="flex items-center px-4 py-3 border-b border-[var(--color-border)]">
             {isSearching ? (
-              <Loader2 className="w-5 h-5 text-[var(--color-accent)] mr-3 animate-spin" />
+              <span className="mr-3 text-[var(--color-accent)]">
+                <InlineSpinner size="md" />
+              </span>
             ) : (
               <Search className="w-5 h-5 text-[var(--color-text-muted)] mr-3" />
             )}
@@ -361,8 +364,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Results */}
           <div ref={resultsRef} className="max-h-[60vh] overflow-y-auto py-2">
             {isSearching && query.trim().length >= 2 ? (
-              <div className="px-4 py-8 text-center text-[var(--color-text-muted)]">
-                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-[var(--color-accent)]" />
+              <div
+                className="px-4 py-8 text-center text-[var(--color-text-muted)]"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex justify-center mb-2">
+                  <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
+                </div>
                 <p>Searching medical content...</p>
               </div>
             ) : results.length === 0 ? (

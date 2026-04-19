@@ -503,7 +503,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
           error?: string;
           message?: string;
         };
-      } catch {
+      } catch (err) {
+        console.warn('[UserFriendlyStatsDisplay] Failed to parse analytics response', err);
         if (!response.ok) {
           const friendly =
             response.status === 503

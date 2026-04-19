@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Trophy,
   Users,
@@ -64,6 +65,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
   isMinimized = false,
   onExpand,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [showDetails, setShowDetails] = useState(false);
 
   const getDifficultyBadge = () => {
@@ -115,7 +117,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
   if (isMinimized) {
     return (
       <motion.button
-        initial={{ y: -10 }}
+        initial={prefersReducedMotion ? false : { y: -10 }}
         animate={{ y: 0 }}
         onClick={onExpand}
         className="w-full bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-3 mb-4 flex items-center justify-between hover:border-[var(--color-border)] transition-all group"
@@ -143,7 +145,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
 
   return (
     <motion.div
-      initial={{ y: -20 }}
+      initial={prefersReducedMotion ? false : { y: -20 }}
       animate={{ y: 0 }}
       className="relative w-full mb-6"
     >

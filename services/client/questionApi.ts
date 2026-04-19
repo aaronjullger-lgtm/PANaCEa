@@ -8,17 +8,27 @@
  */
 
 import type { SessionSettings, Question } from '../../types';
+import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
 
 /**
  * Fetch a pre-generated question from the API
  * Replaces the server-side getQuestion from questionService
+ *
+ * S5 — Accepts an optional `signal` so callers can cancel in-flight fetches
+ * on unmount. AbortError is re-thrown (not swallowed to null) so the caller
+ * can distinguish cancellation from a real failure. All other errors are
+ * still swallowed to null as before.
  */
 export async function getQuestionClient(
   sessionSettings: SessionSettings,
   growthAreas: string[],
-  getToken: () => Promise<string | null>
+  getToken: () => Promise<string | null>,
+  signal?: AbortSignal
 ): Promise<Question | null> {
   try {
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
     const token = await getToken();
     if (!token) {
       console.warn('[getQuestionClient] No auth token available');
@@ -50,6 +60,7 @@ export async function getQuestionClient(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
+      signal,
     });
 
     if (!response.ok) {
@@ -57,27 +68,67 @@ export async function getQuestionClient(
       return null;
     }
 
-    const data = await response.json();
+    const data = await response.json() as {
+      questions?: Array<{
+        id: string;
+        questionText: string;
+        answerOptions: string[];
+        correctAnswerIndex: number;
+        correctAnswer: string;
+        explanation: string;
+        topic: string;
+        system: string;
+        subcategory: string;
+        condition: string;
+        conditionId: string;
+        difficulty: string;
+      }>;
+      needsGeneration?: boolean;
+    };
 
     if (data.questions && data.questions.length > 0) {
-      const q = data.questions[0];
-      
+      const q = data.questions[0]!;
+      const opts = Array.isArray(q.answerOptions) ? q.answerOptions : [];
+
+      // Patient safety: never silently default correctAnswerIndex to 0 (option A).
+      // If the server-provided index is valid, use it; otherwise resolve from the
+      // correctAnswer string; otherwise return -1 so the UI surfaces the data bug
+      // instead of mis-grading the student as always-A-is-correct.
+      let idx: number;
+      const providedIdx =
+        typeof q.correctAnswerIndex === 'number' ? q.correctAnswerIndex : null;
+      if (providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length) {
+        idx = providedIdx;
+      } else {
+        const rawAns = typeof q.correctAnswer === 'string' ? q.correctAnswer : '';
+        const resolved = resolveCorrectAnswerIndex(rawAns, opts);
+        if (resolved === null) {
+          console.error('[getQuestionClient] correctAnswer unresolvable', {
+            questionId: q.id,
+            correctAnswer: rawAns,
+            providedIdx,
+            optionCount: opts.length,
+          });
+        }
+        idx = resolved ?? -1;
+      }
+
       // Transform PreGeneratedQuestion to Question format
       const question: Question = {
         id: q.id,
         question: q.questionText,
-        options: q.answerOptions || [],
-        correctAnswerIndex: q.correctAnswerIndex ?? 0,
+        options: opts,
+        correctAnswerIndex: idx,
         rationale: q.explanation || '',
         topic: q.topic || q.system || 'General',
-        system: q.system,
+        system: q.system as Question['system'],
         subcategory: q.subcategory,
         condition: q.condition,
         conditionId: q.conditionId,
-        difficulty: q.difficulty,
+        difficulty: q.difficulty as Question['difficulty'],
         pearls: [],
       };
-      
+
       return question;
     }
 
@@ -89,6 +140,11 @@ export async function getQuestionClient(
 
     return null;
   } catch (error) {
+    // S5 — Re-throw AbortError so callers can distinguish a cancelled fetch
+    // from a real failure. Everything else is still swallowed to null.
+    if ((error as { name?: string })?.name === 'AbortError' || signal?.aborted) {
+      throw error;
+    }
     console.error('[getQuestionClient] Error:', error);
     return null;
   }
@@ -121,7 +177,7 @@ export async function fetchPearlsClient(
       return [];
     }
 
-    const data = await response.json();
+    const data = await response.json() as { pearls?: string[] };
     return data.pearls || [];
   } catch (error) {
     console.error('[fetchPearlsClient] Error:', error);

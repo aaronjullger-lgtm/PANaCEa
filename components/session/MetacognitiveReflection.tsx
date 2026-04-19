@@ -15,6 +15,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Target, Lightbulb, CheckCircle, ChevronRight, Save } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SessionPerformance {
   totalQuestions: number;
@@ -71,6 +72,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
   onComplete,
   onSkip,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [patternsNoticed, setPatternsNoticed] = useState('');
   const [improvementPlan, setImprovementPlan] = useState('');
@@ -130,8 +132,9 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
       className="fixed inset-0 bg-[var(--color-bg-primary)]/90 flex items-center justify-center z-50 p-4"
     >
       <motion.div
-        initial={{ scale: 0.95, y: 20 }}
+        initial={prefersReducedMotion ? false : { scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
       >
         {/* Header */}
@@ -170,9 +173,10 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             {currentStep < REFLECTION_PROMPTS.length ? (
               <motion.div
                 key={currentStep}
-                initial={{ x: 20 }}
+                initial={prefersReducedMotion ? false : { x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, x: -20 }}
+                transition={prefersReducedMotion ? { duration: 0 } : undefined}
                 className="space-y-4"
               >
                 {(() => {
@@ -283,8 +287,9 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             ) : (
               /* Topics to Review */
               <motion.div
-                initial={{ x: 20 }}
+                initial={prefersReducedMotion ? false : { x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={prefersReducedMotion ? { duration: 0 } : undefined}
                 className="space-y-4"
               >
                 <div className="flex items-center gap-3 text-[var(--color-accent)]">

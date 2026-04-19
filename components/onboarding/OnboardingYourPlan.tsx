@@ -56,7 +56,8 @@ export function OnboardingYourPlan({
       } else {
         toast.error('Could not save exam date. Try again.');
       }
-    } catch {
+    } catch (err) {
+      console.warn('[OnboardingYourPlan] Failed to save exam date', err);
       toast.error('Could not save exam date. Try again.');
     } finally {
       setSavingExamDate(false);

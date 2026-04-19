@@ -114,8 +114,8 @@ export function QuestionReviewQueue({ baseUrl = '', onError }: QuestionReviewQue
         stats?: unknown;
       };
       setStats((data?.data?.stats ?? data?.stats ?? null) as typeof stats);
-    } catch {
-      // Stats are non-critical — fail silently
+    } catch (err) {
+      console.warn('[QuestionReviewQueue] Failed to fetch queue stats', err);
     }
   }, [baseUrl]);
 

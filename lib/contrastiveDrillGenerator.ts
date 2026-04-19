@@ -3,7 +3,15 @@
  *
  * Generates clinical vignettes for contrastive learning drills
  * where students must distinguish between similar conditions.
+ *
+ * Sprint 7 (AI Gateway migration): Replaced raw `fetch` calls to
+ * `generativelanguage.googleapis.com` with centralized `gateway.callText()`
+ * routing using task='generation', tier='balanced' (gemini-2.5-flash).
+ * The prior implementation targeted `gemini-2.0-flash-exp`; callers inherit
+ * the gateway's telemetry, fallback, and cost tracking pipeline.
  */
+
+import { gateway, GatewayError, type GatewayContext } from './ai/aiGateway';
 
 export interface ContrastiveQuestionRequest {
   symptom: string;
@@ -123,52 +131,51 @@ Return ONLY valid JSON, no additional text.`;
 }
 
 /**
- * Generate a contrastive question using Gemini (standalone version)
+ * Generate a contrastive question using the AI gateway (standalone version).
+ *
+ * @param request Vignette inputs (symptom, target condition, alternatives, distinguishers).
+ * @param ctx     `GatewayContext` — build via `toGatewayContext(authCtx)` on
+ *                the Edge side or `{ env: { GEMINI_API_KEY } }` on Node.
  */
 export async function generateContrastiveQuestion(
   request: ContrastiveQuestionRequest,
-  apiKey: string
+  ctx: GatewayContext
 ): Promise<ContrastiveQuestion | null> {
   const prompt = buildContrastivePromptStandalone(request);
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+    const result = await gateway.callText(ctx, {
+      mode: 'text',
+      task: 'generation',
+      tier: 'balanced',
+      endpoint: 'lib/contrastiveDrillGenerator',
+      userPrompt: prompt,
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    });
 
-    if (!response.ok) {
-      console.error('Gemini API error:', await response.text());
+    if (result.blocked) {
+      console.warn('Contrastive question generation blocked by safety filter');
       return null;
     }
 
-    const data = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
+    const text = (result.text ?? '').replace(/```json|```/g, '').trim();
     if (!text) {
-      console.error('No text in Gemini response');
+      console.error('No text in gateway response');
       return null;
     }
 
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text) as ContrastiveQuestion;
+    } catch (parseError) {
+      console.error('Contrastive question: JSON parse failed', parseError);
+      return null;
+    }
   } catch (error) {
+    if (error instanceof GatewayError) {
+      console.error(`Contrastive gateway error [${error.code}]: ${error.message}`);
+      return null;
+    }
     console.error('Failed to generate contrastive question:', error);
     return null;
   }
@@ -176,13 +183,13 @@ export async function generateContrastiveQuestion(
 
 /**
  * Generate multiple questions for a contrastive set
- * (one question per condition in the set)
+ * (one question per condition in the set).
  */
 export async function generateContrastiveSetQuestions(
   symptom: string,
   conditions: string[],
   distinguishers: Record<string, string[]>,
-  apiKey: string
+  ctx: GatewayContext
 ): Promise<ContrastiveQuestion[]> {
   const questions: ContrastiveQuestion[] = [];
 
@@ -196,7 +203,7 @@ export async function generateContrastiveSetQuestions(
         otherConditions,
         distinguishers,
       },
-      apiKey
+      ctx
     );
 
     if (question) {

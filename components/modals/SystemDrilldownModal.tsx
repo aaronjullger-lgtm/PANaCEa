@@ -149,7 +149,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
 
     for (const r of systemRecords) {
       const sub = r.subcategory || 'Unspecified';
-      const rawCond = (r as any).conditionName || r.condition || (r as any).conditionId || '';
+      const rawCond = r.condition || r.conditionId || '';
       const condName = cleanConditionName(rawCond || 'Unspecified');
 
       const id = `${sub}__${condName}`;

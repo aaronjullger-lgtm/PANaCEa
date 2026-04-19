@@ -1,0 +1,16 @@
+# PANaCEa CODEOWNERS template for automation governance.
+#
+# No active owners are set yet because the repo does not define stable GitHub
+# usernames or team handles in-repo. Replace the placeholder handles below with
+# real GitHub users or teams before relying on automatic review requests.
+#
+# Role guidance:
+# - See docs/automation/JOB_OWNERSHIP.md for the role-based owner map.
+# - Prefer two-owner coverage for shared workflow or mutative automation paths.
+#
+# Suggested activation blocks:
+#
+# /.github/workflows/**        @<platform-owner> @<backup-platform-owner>
+# /docs/automation/**          @<automation-doc-owner> @<backup-doc-owner>
+# /scripts/automation/**       @<automation-script-owner> @<backup-script-owner>
+# /scripts/cloud-agents/**     @<cloud-agent-owner> @<backup-cloud-agent-owner>

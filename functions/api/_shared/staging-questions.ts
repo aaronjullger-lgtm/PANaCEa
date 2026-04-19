@@ -1,4 +1,17 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai`
+ * SDK usage with `gateway.callText()` so the staging quality-check pipeline
+ * shares the same telemetry + fallback + cost tracking as other question
+ * generation endpoints.
+ *
+ * `runAdequacyCheck` — tier='fast' (gemini-2.0-flash; cheap accuracy check).
+ * `processStagingQueueWithCritic` — tier='balanced' (gemini-2.5-flash;
+ * scoring critic).
+ *
+ * Both call sites construct a minimal `GatewayContext` from `env` because the
+ * surrounding functions don't receive the full AuthenticatedContext object.
+ */
+import { gateway, GatewayError, type GatewayContext } from '../../../lib/ai/aiGateway';
 
 interface AdequacyCheckResult {
   isValid: boolean;
@@ -66,8 +79,9 @@ export async function runAdequacyCheck(
 
   if (env.GEMINI_API_KEY) {
     try {
-      const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const gatewayCtx: GatewayContext = {
+        env: { GEMINI_API_KEY: env.GEMINI_API_KEY as string },
+      };
 
       const prompt = `
 You are a medical accuracy checker. Review this question and explanation for any medical inaccuracies or errors.
@@ -86,16 +100,32 @@ Respond with JSON only:
 }
 `;
 
-      const result = await model.generateContent(prompt);
-      const response = result.response.text();
-      const sanitized = response.replace(/```json|```/g, '').trim();
-      const json = JSON.parse(sanitized);
+      const result = await gateway.callText(gatewayCtx, {
+        mode: 'text',
+        task: 'generation',
+        tier: 'fast', // cheap accuracy check — matches prior gemini-2.0-flash
+        endpoint: 'functions/api/_shared/staging-questions#runAdequacyCheck',
+        userPrompt: prompt,
+      });
 
-      hasMedicalErrors = json.hasMedicalErrors;
-      aiDetails = JSON.stringify(json.issues);
-      score = json.score || (hasMedicalErrors ? 0 : 1);
+      if (result.blocked) {
+        hasMedicalErrors = false;
+        aiDetails = 'Adequacy check blocked by safety filter';
+        score = 0.5;
+      } else {
+        const sanitized = (result.text ?? '').replace(/```json|```/g, '').trim();
+        const json = JSON.parse(sanitized);
+
+        hasMedicalErrors = json.hasMedicalErrors;
+        aiDetails = JSON.stringify(json.issues);
+        score = json.score || (hasMedicalErrors ? 0 : 1);
+      }
     } catch (error) {
-      console.error('Error running adequacy check:', error);
+      if (error instanceof GatewayError) {
+        console.error(`Adequacy check gateway error [${error.code}]:`, error.message);
+      } else {
+        console.error('Error running adequacy check:', error);
+      }
       // Fallback if AI fails
       hasMedicalErrors = false;
       aiDetails = 'AI check failed';
@@ -293,8 +323,9 @@ export async function processStagingQueueWithCritic(
     return results;
   }
 
-  const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const gatewayCtx: GatewayContext = {
+    env: { GEMINI_API_KEY: env.GEMINI_API_KEY as string },
+  };
 
   for (const question of pending) {
     try {
@@ -306,9 +337,20 @@ Explanation: ${question.explanation}
 
 Respond with JSON only: { "score": number 0-100, "briefReason": "string" }`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const sanitized = text.replace(/```json|```/g, '').trim();
+      const result = await gateway.callText(gatewayCtx, {
+        mode: 'text',
+        task: 'generation',
+        tier: 'balanced', // critic scoring — matches prior gemini-2.5-flash
+        endpoint: 'functions/api/_shared/staging-questions#processStagingQueueWithCritic',
+        userPrompt: prompt,
+      });
+
+      if (result.blocked) {
+        results.push({ id: question.id, status: 'skipped', error: 'Critic blocked by safety filter' });
+        continue;
+      }
+
+      const sanitized = (result.text ?? '').replace(/```json|```/g, '').trim();
       const json = JSON.parse(sanitized);
       const score = typeof json.score === 'number' ? Math.max(0, Math.min(100, json.score)) : 50;
 
@@ -331,7 +373,12 @@ Respond with JSON only: { "score": number 0-100, "briefReason": "string" }`;
         results.push({ id: question.id, status: 'flagged_for_review', score });
       }
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : String(error);
+      const errMsg =
+        error instanceof GatewayError
+          ? `gateway ${error.code}: ${error.message}`
+          : error instanceof Error
+            ? error.message
+            : String(error);
       results.push({ id: question.id, status: 'error', error: errMsg });
     }
   }

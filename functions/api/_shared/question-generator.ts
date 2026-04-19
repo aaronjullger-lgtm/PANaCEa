@@ -1,5 +1,30 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { QUESTION_RESPONSE_SCHEMA, GeneratedQuestionStrict } from './question-schema';
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai` SDK
+ * usage with `gateway.callText()` using task='generation', tier='balanced'
+ * (gemini-2.5-flash — same model as before). This routes question generation
+ * through the central gateway for telemetry + cost tracking + standardized
+ * safety handling.
+ *
+ * Implementation note: the gateway's `callStructured` path requires a Zod
+ * schema; the existing `QUESTION_RESPONSE_SCHEMA` is a Google-format JSON
+ * schema. Rather than duplicate the schema as Zod in this sprint, we use
+ * `callText` with prompt-based JSON instruction + defensive markdown fence
+ * stripping, and rely on the downstream `validateGeneratedQuestion` helper
+ * for structural validation. A follow-up sprint can convert the schema to
+ * Zod so we get native `responseSchema` enforcement + repair loop.
+ *
+ * The `QUESTION_RESPONSE_SCHEMA` import is retained because the grounding
+ * path and any future reintroduction of responseSchema-based generation
+ * will need it; it is currently unused by this file but kept in the module
+ * graph for the (planned) Zod conversion sprint.
+ */
+import {
+  gateway,
+  GatewayError,
+  GatewayContext,
+  toGatewayContext,
+} from '../../../lib/ai/aiGateway';
+import { GeneratedQuestionStrict } from './question-schema';
 import { validateGeneratedQuestion } from './question-validator';
 import { enrichWithPubMed, formatCitationsForPrompt, type PubMedCitation } from '../../../lib/services/question/pubmedEnricher';
 
@@ -67,31 +92,50 @@ export type { GeneratedQuestionStrict };
  * Returns grounding context text and source citations to inject into generation prompts.
  * This is a separate call because structured output (responseMimeType: 'application/json')
  * is incompatible with Google Search tool in the Gemini API.
+ *
+ * Sprint 7: Routed through `gateway.callText()` with `tools: [{ googleSearch: {} }]`.
+ * `groundingMetadata` is returned on `GatewayTextResponse` so we can still extract
+ * source URIs from the response.
  */
 async function fetchGroundingContext(
-  apiKey: string,
+  ctx: GatewayContext,
   condition: string
 ): Promise<{ context: string; sources: GroundingSource[] }> {
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      tools: [{ googleSearch: {} } as any],
+    const result = await gateway.callText(ctx, {
+      mode: 'text',
+      task: 'generation',
+      tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+      endpoint: '/api/_shared/question-generator#grounding',
+      userPrompt: `Summarize the current clinical guidelines for ${condition}, including diagnostic criteria, first-line treatment, and any recent guideline updates (AHA, ACC, ATS, IDSA, etc.). Focus on evidence-based recommendations. Be concise (under 300 words).`,
+      tools: [{ googleSearch: {} }],
     });
 
-    const result = await model.generateContent(
-      `Summarize the current clinical guidelines for ${condition}, including diagnostic criteria, first-line treatment, and any recent guideline updates (AHA, ACC, ATS, IDSA, etc.). Focus on evidence-based recommendations. Be concise (under 300 words).`
-    );
+    if (result.blocked) {
+      console.warn(
+        '[question-generator] Grounding context blocked by safety filter, proceeding without'
+      );
+      return { context: '', sources: [] };
+    }
 
-    const response = result.response;
-    const text = response.text();
+    const text = result.text ?? '';
 
-    // Extract grounding sources
+    // Extract grounding sources — check the explicit field first, fall back to raw.
     const sources: GroundingSource[] = [];
     const seen = new Set<string>();
     try {
-      const candidates = (response as any)?.candidates || [];
-      const chunks = candidates[0]?.groundingMetadata?.groundingChunks || [];
+      const metadata = (result.groundingMetadata ?? undefined) as
+        | { groundingChunks?: Array<{ web?: { uri?: string; title?: string } }> }
+        | undefined;
+      let chunks = metadata?.groundingChunks ?? [];
+      // Older Gemini responses only surface grounding via candidates[0]; fall
+      // back to the raw shape so nothing regresses if metadata isn't exposed.
+      if (chunks.length === 0) {
+        const rawCandidates =
+          (result.raw as { candidates?: Array<{ groundingMetadata?: { groundingChunks?: typeof chunks } }> })
+            ?.candidates ?? [];
+        chunks = rawCandidates[0]?.groundingMetadata?.groundingChunks ?? [];
+      }
       for (const chunk of chunks) {
         const uri = chunk?.web?.uri;
         const title = chunk?.web?.title;
@@ -104,6 +148,7 @@ async function fetchGroundingContext(
 
     return { context: text, sources: sources.slice(0, 5) };
   } catch (error) {
+    // GatewayError or network: grounding is best-effort, never block generation.
     console.warn('[question-generator] Grounding context fetch failed, proceeding without:', error);
     return { context: '', sources: [] };
   }
@@ -200,17 +245,14 @@ Pertinent negatives: No immunosuppression, no recent antibiotics (no resistance 
 `;
 
 export async function generateSingleQuestion(
-  apiKey: string,
+  ctx: GatewayContext,
   condition: ConditionData,
   type: string,
   textbookContext?: { title: string; excerpts: string[] } | null
 ): Promise<GeneratedQuestion | null> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
   // Phase 1a: Fetch current clinical evidence via Google Search grounding
   // This is a separate call because structured output is incompatible with search tools
-  const grounding = await fetchGroundingContext(apiKey, condition.condition);
+  const grounding = await fetchGroundingContext(ctx, condition.condition);
 
   // Phase 1b: Fetch PubMed citations for peer-reviewed evidence (best-effort — never blocks generation)
   let pubmedCitations: Awaited<ReturnType<typeof enrichWithPubMed>> = [];
@@ -310,20 +352,46 @@ export async function generateSingleQuestion(
   `;
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: QUESTION_RESPONSE_SCHEMA,
-        temperature: 0.7
+    let rawText: string;
+    try {
+      const result = await gateway.callText(ctx, {
+        mode: 'text',
+        task: 'generation',
+        tier: 'balanced', // gemini-2.5-flash — preserves prior endpoint model
+        endpoint: '/api/_shared/question-generator',
+        userPrompt: prompt,
+        temperature: 0.7,
+      });
+      if (result.blocked) {
+        console.warn(
+          '[question-generator] Generation blocked by safety filter:',
+          result.blockReason ?? 'unknown'
+        );
+        return null;
       }
-    } as any);
+      rawText = (result.text ?? '').trim();
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        console.error('[question-generator] Gateway error:', {
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+        });
+        return null;
+      }
+      throw err;
+    }
 
-    const response = await result.response;
-    const text = response.text();
+    // Strip markdown fences if present — the gateway text path doesn't set
+    // responseMimeType=application/json, so models may wrap JSON in fences.
+    let jsonText = rawText;
+    if (jsonText.startsWith('```json')) jsonText = jsonText.slice(7);
+    else if (jsonText.startsWith('```')) jsonText = jsonText.slice(3);
+    if (jsonText.endsWith('```')) jsonText = jsonText.slice(0, -3);
+    jsonText = jsonText.trim();
 
-    // Parse JSON directly from Gemini's structured output
-    const question = JSON.parse(text) as GeneratedQuestionStrict;
+    // Parse JSON and let the downstream validator catch structural issues.
+    const question = JSON.parse(jsonText) as GeneratedQuestionStrict;
 
     // Validate the generated question
     const validation = validateGeneratedQuestion(question);

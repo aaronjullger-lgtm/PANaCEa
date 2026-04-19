@@ -7,9 +7,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, BookOpen, Loader2, MessageCircle, Send, Sparkles } from 'lucide-react';
+import { AlertTriangle, BookOpen, MessageCircle, Send, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import { SmartPDFViewer, type CitationHighlight } from '@/components/library';
 import {
   WorkspaceHeroStrip,
@@ -317,8 +318,12 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                   </label>
 
                   {loadingResources ? (
-                    <div className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <div
+                      className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)]"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <InlineSpinner size="sm" />
                       Loading approved documents…
                     </div>
                   ) : (

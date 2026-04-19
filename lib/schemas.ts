@@ -158,14 +158,22 @@ export const QuestionTypeSchema = z.enum([
 export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 
 /**
- * FSRS rating (1-4 scale)
+ * FSRS rating — PANaCEa uses a binary Again/Good system at the API boundary.
+ *
+ * Historically 1=Again, 2=Hard, 3=Good, 4=Easy. PANaCEa deprecated Hard/Easy
+ * (see lib/fsrs.ts `normalizeRating`). To prevent the API from accepting a
+ * 4-value rating that downstream code collapses silently, we accept legacy
+ * 2/4 inputs and normalize them at the schema boundary: 2→1, 4→3. This keeps
+ * old clients working while guaranteeing the scheduler only ever sees {1, 3}.
  */
-export const FSRSRatingSchema = z.union([
-  z.literal(1), // Again
-  z.literal(2), // Hard
-  z.literal(3), // Good
-  z.literal(4), // Easy
-]);
+export const FSRSRatingSchema = z
+  .union([
+    z.literal(1), // Again
+    z.literal(2), // Hard (deprecated — normalized to 1)
+    z.literal(3), // Good
+    z.literal(4), // Easy (deprecated — normalized to 3)
+  ])
+  .transform((v) => (v === 2 ? 1 : v === 4 ? 3 : v) as 1 | 3);
 
 export type FSRSRating = z.infer<typeof FSRSRatingSchema>;
 

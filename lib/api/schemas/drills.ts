@@ -111,6 +111,25 @@ export const DrillSubmitReviewRequestSchema = z.object({
    * NOT part of this schema. FSRS ratings are 100% implicit, derived from telemetry.
    */
   sessionType: z.enum(['main', 'drill', 'cram', 'rapid_recall', 'targeted']).optional(),
+  /**
+   * Sprint S3 — Idempotency key (optional).
+   *
+   * Clients that retry submissions (offline sync, flaky networks, double-submit
+   * protection) should supply a stable unique string here. The Edge endpoint
+   * caches the successful response body under `idem:<endpoint>:<userId>:<key>`
+   * in the CACHE KV namespace for 24h. A retry with the same key returns the
+   * cached response without re-entering the FSRS pipeline — preventing
+   * duplicate QuestionAttempt / ReviewLog rows.
+   *
+   * Format is intentionally permissive (any 8–128 char string) so existing
+   * client-side queue IDs (e.g. `review-<ts>-<rand>` from syncManager) are
+   * accepted without a client migration. Uniqueness-per-submission is the
+   * caller's responsibility.
+   *
+   * Backward-compatible: omitting this field preserves pre-S3 behavior (every
+   * request runs the full pipeline; no cache check, no cache write).
+   */
+  idempotencyKey: z.string().min(8).max(128).optional(),
 });
 
 // =============================================================================

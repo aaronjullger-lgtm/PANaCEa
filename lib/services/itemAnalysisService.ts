@@ -176,7 +176,7 @@ export function analyzeItem(
     });
   }
 
-  if (discriminationIndex < 0) {
+  if (discriminationIndex < -1e-10) {
     flags.push({
       type: 'NEGATIVE_DISCRIMINATION',
       severity: 'critical',
@@ -190,7 +190,7 @@ export function analyzeItem(
     });
   }
 
-  if (pointBiserial < 0) {
+  if (pointBiserial < -1e-10) {
     flags.push({
       type: 'NEGATIVE_RPB',
       severity: 'critical',

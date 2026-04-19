@@ -21,8 +21,28 @@
 
 import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { fileURLToPath } from 'url';
+import * as path from 'path';
 import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
+
+interface EnrichmentOptions {
+  lookbackDays?: number;
+  batchSize?: number;
+  limit?: number;
+  dryRun?: boolean;
+  disconnectOnComplete?: boolean;
+}
+
+interface EnrichmentSummary {
+  activeUsersFound: number;
+  processedUsers: number;
+  wouldProcessUsers: number;
+  batchSize: number;
+  lookbackDays: number;
+  limit: number | null;
+  batches: number;
+  dryRun: boolean;
+}
 
 /**
  * Determine chronotype from performance by time of day
@@ -262,48 +282,113 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
 /**
  * Main job: Enrich all user profiles
  */
-export async function enrichAllUserProfiles(): Promise<void> {
+export async function enrichAllUserProfiles(
+  options: EnrichmentOptions = {}
+): Promise<EnrichmentSummary> {
+  const lookbackDays = options.lookbackDays ?? 90;
+  const batchSize = options.batchSize ?? 50;
+  const limit = options.limit && options.limit > 0 ? options.limit : null;
+  const dryRun = options.dryRun ?? false;
+
   try {
     console.log('🔄 Starting User Profile Enrichment Job...');
 
-    // Get all users with activity in last 90 days
+    // Get all users with activity in the configured lookback window
     const activeUsers = await prisma.questionAttempt.groupBy({
       by: ['userId'],
       where: {
         createdAt: {
-          gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000),
         },
       },
     });
 
-    console.log(`Found ${activeUsers.length} active users to enrich`);
+    const usersToProcess = limit ? activeUsers.slice(0, limit) : activeUsers;
 
-    // Process in batches of 50
-    const batchSize = 50;
-    for (let i = 0; i < activeUsers.length; i += batchSize) {
-      const batch = activeUsers.slice(i, i + batchSize);
+    console.log(`Found ${activeUsers.length} active users to enrich`);
+    if (limit) {
+      console.log(`Processing first ${usersToProcess.length} users due to --limit=${limit}`);
+    }
+
+    if (dryRun) {
+      console.log('Dry run enabled; skipping profile writes.');
+      return {
+        activeUsersFound: activeUsers.length,
+        processedUsers: 0,
+        wouldProcessUsers: usersToProcess.length,
+        batchSize,
+        lookbackDays,
+        limit,
+        batches: usersToProcess.length === 0 ? 0 : Math.ceil(usersToProcess.length / batchSize),
+        dryRun: true,
+      };
+    }
+
+    let processedUsers = 0;
+
+    for (let i = 0; i < usersToProcess.length; i += batchSize) {
+      const batch = usersToProcess.slice(i, i + batchSize);
 
       await Promise.all(batch.map(({ userId }) => enrichUserProfile(prisma, userId)));
+      processedUsers += batch.length;
 
       console.log(
-        `Processed ${Math.min(i + batchSize, activeUsers.length)} / ${activeUsers.length} users`
+        `Processed ${Math.min(i + batchSize, usersToProcess.length)} / ${usersToProcess.length} users`
       );
     }
 
     console.log('✅ User Profile Enrichment Job Complete');
+    return {
+      activeUsersFound: activeUsers.length,
+      processedUsers,
+      wouldProcessUsers: usersToProcess.length,
+      batchSize,
+      lookbackDays,
+      limit,
+      batches: usersToProcess.length === 0 ? 0 : Math.ceil(usersToProcess.length / batchSize),
+      dryRun: false,
+    };
   } catch (error) {
     console.error('❌ Error in User Profile Enrichment Job:', error);
     throw error;
   } finally {
-    await disconnectPrisma();
+    if (options.disconnectOnComplete ?? true) {
+      await disconnectPrisma();
+    }
   }
 }
 
 /**
  * CLI execution
  */
-if (require.main === module) {
-  enrichAllUserProfiles()
+function parseCliArgs(argv: string[]): EnrichmentOptions {
+  const options: EnrichmentOptions = {};
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '--limit' && argv[i + 1]) {
+      options.limit = Number(argv[i + 1]);
+      i += 1;
+    } else if (arg === '--batch-size' && argv[i + 1]) {
+      options.batchSize = Number(argv[i + 1]);
+      i += 1;
+    } else if (arg === '--lookback-days' && argv[i + 1]) {
+      options.lookbackDays = Number(argv[i + 1]);
+      i += 1;
+    } else if (arg === '--dry-run' || arg === '--report-only') {
+      options.dryRun = true;
+    }
+  }
+
+  return options;
+}
+
+const isDirectExecution =
+  process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  const cliOptions = parseCliArgs(process.argv.slice(2));
+  enrichAllUserProfiles(cliOptions)
     .then(() => {
       console.log('Job completed successfully');
       process.exit(0);

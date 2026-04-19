@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, ExternalLink, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Download, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import {
   generateStudyTasks,
   generateMissedQuestionTasks,
@@ -369,7 +370,9 @@ export default function TodoistExportModal({
             className="flex items-center px-4 py-2 bg-[var(--color-category-practice)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-category-practice)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <span className="mr-2">
+                <InlineSpinner size="sm" />
+              </span>
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}

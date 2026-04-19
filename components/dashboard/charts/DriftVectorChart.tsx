@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '../../../lib/utils';
 import type { DriftVector, DriftProjection } from '../../../lib/driftCalculator';
 import { getDriftMessage, getDriftStatusLabel } from '../../../lib/driftCalculator';
@@ -58,6 +59,7 @@ function scaleX(day: number, maxDays: number): number {
 // =============================================================================
 
 function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
+  const prefersReducedMotion = useReducedMotion();
   const { pathD, ghostPathD, minScore, maxScore, passingY } = useMemo(() => {
     if (projections.length === 0) {
       return { pathD: '', ghostPathD: '', minScore: 200, maxScore: 500, passingY: 0 };
@@ -159,9 +161,9 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         strokeWidth="2"
         strokeDasharray="6,4"
         strokeLinecap="round"
-        initial={{ pathLength: 0, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { pathLength: 0, opacity: 0 }}
         animate={{ pathLength: 1, opacity: 0.7 }}
-        transition={{ duration: 1.5, ease: 'easeOut' }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 1.5, ease: 'easeOut' }}
       />
 
       {/* Current Score Point */}
@@ -172,9 +174,9 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         fill="var(--color-accent)"
         stroke="var(--color-accent-hover)"
         strokeWidth="2"
-        initial={{ scale: 0 }}
+        initial={prefersReducedMotion ? false : { scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.3 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
       />
 
       {/* Day 7 Ghost Point */}
@@ -186,9 +188,9 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         stroke="var(--color-data-fail)"
         strokeWidth="2"
         opacity={0.7}
-        initial={{ scale: 0 }}
+        initial={prefersReducedMotion ? false : { scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.5 }}
       />
 
       {/* Day 14 Ghost Point */}
@@ -200,9 +202,9 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
         stroke="var(--color-data-fail)"
         strokeWidth="2"
         opacity={0.5}
-        initial={{ scale: 0 }}
+        initial={prefersReducedMotion ? false : { scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.8 }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.8 }}
       />
 
       {/* X-Axis Labels */}
@@ -278,6 +280,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
 // =============================================================================
 
 export function DriftVectorChart({ drift, className, showDetails = true }: DriftVectorChartProps) {
+  const prefersReducedMotion = useReducedMotion();
   const urgencyColors = URGENCY_COLORS[drift.urgency];
   const message = getDriftMessage(drift);
   const statusLabel = getDriftStatusLabel(drift);
@@ -339,7 +342,7 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
 
       {/* Alert Message */}
       <motion.div
-        initial={{ y: 10 }}
+        initial={prefersReducedMotion ? false : { y: 10 }}
         animate={{ y: 0 }}
         className={cn(
           'mt-3 p-2 rounded-lg text-sm',

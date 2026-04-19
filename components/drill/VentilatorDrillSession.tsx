@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Wind, X, ArrowRight, Activity, Droplets, Gauge } from 'lucide-react';
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
@@ -35,6 +36,7 @@ interface VentilatorDrillSessionProps {
 }
 
 const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
   const {
     currentCase,
     score,
@@ -131,8 +133,9 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             className="p-6 bg-[var(--color-bg-secondary)]"
           >
             <div className="max-w-6xl mx-auto">
@@ -140,7 +143,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                 What is the most appropriate action?
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" role="radiogroup" aria-label="Ventilator action options">
-                {currentCase?.options.map((option) => (
+                {currentCase?.options?.map((option) => (
                   <button
                     key={option}
                     onClick={() => submitAction(option)}
@@ -160,8 +163,9 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
         {status === 'feedback' && currentCase && (
           <motion.div
             key="feedback"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : undefined}
             className={`p-6 ${
               isCorrect
                 ? 'bg-data-pass border-t-2 border-data-pass'

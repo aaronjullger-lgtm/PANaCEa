@@ -542,6 +542,7 @@ model ConfusionPair {
   @@index([userId, correctConditionId])
   @@index([userId])
   @@index([userId, realCondition])
+  @@index([userId, count(sort: Desc), lastOccurrence(sort: Desc)])
 }
 
 model ContentAuditLog {
@@ -2269,6 +2270,8 @@ model PreGeneratedQuestion {
   @@index([taskCategory])
   @@index([usedAt])
   @@index([validationStatus])
+  @@index([validationStatus, qualityScore])
+  @@index([validationStatus, flagCount])
 }
 
 model Procedure {
@@ -2396,6 +2399,7 @@ model Question {
   @@index([qaStatus])
   @@index([contentHealthScore])
   @@index([conditionFamily, hierarchyLevel])
+  @@index([lifecycleStatus, contentHealthScore])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -2432,7 +2436,6 @@ model QuestionAttempt {
   @@index([system])
   @@index([userId, createdAt])
   @@index([userId, isMainSession, createdAt(sort: Desc)], map: "QuestionAttempt_userId_isMainSession_createdAt_desc_idx")
-  @@index([userId, isMainSession, createdAt])
   @@index([userId, mode, createdAt])
   @@index([userId, questionType, createdAt])
   @@index([userId, systemNormalized, createdAt])
@@ -2615,6 +2618,51 @@ model ReviewLog {
   @@index([userId, reviewedAt])
   @@index([userId, state, reviewedAt])
   @@index([userId, system, reviewedAt])
+}
+
+/// Shadow/offline calibration telemetry for FSRS scheduling evaluation.
+/// One row per ReviewLog emission — captures predicted retrievability at the
+/// moment of grading so Brier / log-loss / ECE can be computed against the
+/// *realized* outcome on the next review of the same (userId, questionId).
+/// NOT used by the scheduler. Fire-and-forget. Safe to truncate.
+model CalibrationLog {
+  id                       String      @id @default(cuid())
+  userId                   String
+  questionId               String?
+  conditionId              String?
+  /// FK (soft) to the ReviewLog that PRODUCED this prediction
+  reviewLogId              String?
+  /// FK (soft) to the prior ReviewLog whose scheduled retrievability was realized here
+  outcomeReviewLogId       String?
+  /// Predicted retrievability the scheduler would have assigned at this review's time
+  predictedRetrievability  Float
+  stabilityAtPrediction    Float
+  difficultyAtPrediction   Float
+  intervalDaysAtPrediction Float
+  /// Rating actually fed to FSRS (binary: 1=Again, 3=Good)
+  ratingFed                Int
+  elapsedDaysAtOutcome     Float
+  actualOutcome            Boolean
+  implicitConfidence       Float?
+  rapidGuess               Boolean     @default(false)
+  /// One of: 'indecision' | 'hint_assisted' | 'confidence_boost' | 'elimination_boost' | 'elimination_penalty' | 'none'
+  ghostGraderRule          String?
+  /// One of: 'full' | 'partial' | 'minimal'
+  telemetryQuality         String?
+  /// Wilson score lower bound (90% CI) of recency-weighted accuracy at time of review
+  wilsonLower              Float?
+  isMastered               Boolean?
+  /// True when the prior review was a high-confidence error AND this review was correct
+  hypercorrectionEligible  Boolean     @default(false)
+  sessionType              SessionType @default(MAIN)
+  fsrsVersion              String      @default("6.0")
+  createdAt                DateTime    @default(now())
+  User                     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, questionId])
+  @@index([conditionId, createdAt])
+  @@index([hypercorrectionEligible, createdAt])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -3118,9 +3166,11 @@ model User {
   deletionScheduledAt       DateTime?
   /// * FSRS v6 optimized weights (21 params). Empty = use defaults. Denormalized from PersonalizedFSRSParams.
   fsrs_weights              Float[]                     @default([])
+  CalibrationLog            CalibrationLog[]
   Card                      Card[]
   CohortMember              CohortMember[]
   ConceptGap                ConceptGap[]
+  ContentGap                ContentGap[]
   ConfusionPair             ConfusionPair[]
   ContrastiveDrillAttempt   ContrastiveDrillAttempt[]
   DailyStreak               DailyStreak[]
@@ -3129,6 +3179,7 @@ model User {
   GrandRoundsAttempt        GrandRoundsAttempt[]
   GrandRoundsHistory        GrandRoundsHistory[]
   KnowledgeCache            KnowledgeCache[]
+  NotificationLog           NotificationLog[]
   PatientEncounterSession   PatientEncounterSession[]
   PeerStatistic             PeerStatistic[]
   PerformanceRecord         PerformanceRecord[]
@@ -3168,6 +3219,7 @@ model User {
   mappingAuditLogs          MappingAuditLog[]
   UserStudyPhenotype        UserStudyPhenotype?
   DailyStudyPlan            DailyStudyPlan[]
+  UserDailyInsight          UserDailyInsight[]
   ExamOutcome               ExamOutcome[]
   ContentAuthor             ContentAuthor?
   StudentAbility            StudentAbility[]
@@ -3447,6 +3499,54 @@ model PushSubscription {
   @@unique([userId, endpoint])
   @@index([userId])
   @@index([endpoint])
+}
+
+model ContentGap {
+  id            String    @id @default(cuid())
+  userId        String?
+  system        String
+  taskCategory  String?
+  conditionId   String?
+  topic         String
+  gapType       String
+  severity      Float     @default(0)
+  questionCount Int       @default(0)
+  avgAccuracy   Float?
+  lastReviewAt  DateTime?
+  detectedAt    DateTime  @default(now())
+  resolvedAt    DateTime?
+  metadata      Json?
+  User          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([system])
+  @@index([userId, system])
+  @@index([userId, resolvedAt])
+  @@index([gapType])
+  @@index([severity])
+}
+
+model NotificationLog {
+  id               String    @id @default(cuid())
+  userId           String
+  channel          String
+  notificationType String
+  title            String
+  body             String
+  actionUrl        String?
+  payload          Json?
+  endpoint         String?
+  status           String    @default("SENT")
+  errorDetail      String?
+  sentAt           DateTime  @default(now())
+  deliveredAt      DateTime?
+  openedAt         DateTime?
+  User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sentAt(sort: Desc)])
+  @@index([userId, notificationType, sentAt(sort: Desc)])
+  @@index([sentAt])
+  @@index([channel])
 }
 
 model UserProgress {
@@ -4063,6 +4163,27 @@ model DailyStudyPlan {
   @@unique([userId, planDate])
   @@index([userId, planDate])
   @@index([userId, status])
+}
+
+/// Dashboard daily insight cache generated by `functions/api/cron/generate-daily-insights.ts`.
+/// One row per (user, date). Avoids overloading DailyStudyPlan (which is a
+/// planning/commitment table with required targets, not a reflection store).
+model UserDailyInsight {
+  id              String   @id @default(cuid())
+  userId          String
+  insightDate     DateTime @db.Date
+  insights        String   @db.Text
+  metricsSnapshot Json
+  model           String
+  generatedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, insightDate])
+  @@index([userId, insightDate(sort: Desc)])
+  @@index([insightDate])
 }
 
 model ExamOutcome {

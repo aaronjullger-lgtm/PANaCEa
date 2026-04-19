@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Loader2 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { cn } from '@/lib/utils';
 
 /* ---------- CVA variant definitions ---------- */
@@ -96,7 +96,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <span className="flex items-center gap-2" role="status" aria-live="polite">
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            <InlineSpinner size="sm" />
             {children}
           </span>
         ) : (

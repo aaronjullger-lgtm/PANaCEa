@@ -38,7 +38,8 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
         } else {
           setError('Unable to load topic mastery data.');
         }
-      } catch {
+      } catch (fetchErr) {
+        console.warn('[TopicMasteryBreakdown] Fetch failed', { conditionId, error: fetchErr });
         setError('Unable to load topic mastery data.');
       } finally {
         setLoading(false);

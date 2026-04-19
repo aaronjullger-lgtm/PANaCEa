@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
 import { logger } from '../../logger';
+import { gateway, GatewayError, type GatewayContext } from '../../ai/aiGateway';
 
 const LOG_SCOPE = 'SessionService';
 const MAX_RECENT_SEEN_IDS = 5_000;
@@ -805,14 +806,28 @@ export class SessionService {
         logger.warn(`[${LOG_SCOPE}] Skipping question ${q.id} - no valid options`);
         continue;
       }
-      const correctIndex = options.findIndex((opt) => opt === q.correctAnswer);
+
+      // Canonical resolver — handles letter ("A"), numeric ("0"), and full-text formats.
+      // Skip rows where correctAnswer cannot be resolved; silently falling back to
+      // index 0 would mark option A as correct regardless of truth.
+      if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+        logger.warn(`[${LOG_SCOPE}] Skipping question ${q.id} - missing correctAnswer`);
+        continue;
+      }
+      const correctIndex = resolveCorrectAnswerIndex(q.correctAnswer, options);
+      if (correctIndex === null) {
+        logger.warn(
+          `[${LOG_SCOPE}] Skipping question ${q.id} - correctAnswer "${q.correctAnswer}" does not match any option`
+        );
+        continue;
+      }
 
       questions.push({
         id: q.id,
         question: q.question,
         vignette: q.vignette || undefined,
         options,
-        correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+        correctAnswerIndex: correctIndex,
         rationale: q.explanation,
         system: q.system,
         conditionId: q.conditionId || undefined,
@@ -943,7 +958,8 @@ export class SessionService {
       if (stability < 2) return 'Use classic presentation, straightforward case (low mastery).';
       if (stability > 10) return 'Use atypical presentation, multiple comorbidities, or rare side effect (high mastery).';
       return '';
-    } catch {
+    } catch (err) {
+      console.debug('[sessionService] difficulty hint generation failed', err);
       return '';
     }
   }
@@ -953,13 +969,11 @@ export class SessionService {
     difficulty?: string,
     fsrsHint?: string
   ): Promise<EnrichedQuestion | null> {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
-    // Use flash model for mid-session generation (speed > depth; pro for batch generation)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: { temperature: 0.7 },
-    });
+    // Sprint 7: route through AI gateway (task='generation', tier='balanced'
+    // — gemini-2.5-flash, matches prior mid-session speed-over-depth choice).
+    const gatewayCtx: GatewayContext = {
+      env: { GEMINI_API_KEY: (this.env.GEMINI_API_KEY as string) ?? '' },
+    };
 
     // Pass findings-only context for vignette-building; withhold diagnosis/overview from vignette
     const findingsContext = [
@@ -1014,12 +1028,25 @@ Return ONLY valid JSON (PANCE uses 5 options):
 }`;
 
     try {
-      const result = await withTimeout(
-        model.generateContent(prompt).then((r) => r.response.text()),
+      const gatewayResult = await withTimeout(
+        gateway.callText(gatewayCtx, {
+          mode: 'text',
+          task: 'generation',
+          tier: 'balanced', // mid-session: speed > depth
+          endpoint: 'lib/services/session/sessionService#generateQuestionFromContent',
+          userPrompt: prompt,
+          temperature: 0.7,
+        }),
         8000,
         'Gemini generateContent timed out (8s mid-session)'
       );
-      const text = result;
+
+      if (gatewayResult.blocked) {
+        logger.warn(`[${LOG_SCOPE}] Mid-session generation blocked by safety filter`);
+        return null;
+      }
+
+      const text = gatewayResult.text ?? '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
 
@@ -1048,7 +1075,13 @@ Return ONLY valid JSON (PANCE uses 5 options):
         source: 'generated',
       };
     } catch (error) {
-      logger.error(`[${LOG_SCOPE}] AI generation failed`, { error });
+      if (error instanceof GatewayError) {
+        logger.error(`[${LOG_SCOPE}] AI gateway error [${error.code}]`, {
+          message: error.message,
+        });
+      } else {
+        logger.error(`[${LOG_SCOPE}] AI generation failed`, { error });
+      }
       return null;
     }
   }
@@ -1080,7 +1113,7 @@ Return ONLY valid JSON (PANCE uses 5 options):
       return {
         ...q,
         condition: q.condition || content.condition,
-        subcategory: q.subcategory || (content as any).subcategory,
+        subcategory: q.subcategory || content.subcategory,
         pearls: q.pearls.length > 0 ? q.pearls : content.clinical_pearls || [],
       };
     });

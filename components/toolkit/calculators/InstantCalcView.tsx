@@ -3,8 +3,9 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface InstantCalcViewProps {
   onBack: () => void;
@@ -106,7 +107,7 @@ export const InstantCalcView: React.FC<InstantCalcViewProps> = ({ onBack }) => {
               disabled={loading}
               className="flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {loading ? <InlineSpinner size="sm" /> : <Sparkles className="w-4 h-4" />}
               Generate
             </button>
           </div>

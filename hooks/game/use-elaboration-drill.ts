@@ -150,6 +150,12 @@ export function useElaborationDrill(): UseElaborationDrillReturn {
         isCorrect,
         timeSpentMs: Date.now() - questionStartTimeRef.current,
         hintViewed: hintUsed,
+      }).catch((err) => {
+        // useDrillFSRS already surfaces a toast + offline-queues the review; this
+        // .catch prevents an unhandled promise rejection bubbling up.
+        if (import.meta.env.DEV) {
+          console.warn('[use-elaboration-drill] submitAnswerFSRS error (already handled):', err);
+        }
       });
     } catch (err) {
       logger.error(`[${LOG_SCOPE}] Grading failed`, { error: err });

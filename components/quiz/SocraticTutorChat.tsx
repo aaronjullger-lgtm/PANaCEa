@@ -89,7 +89,8 @@ export function SocraticTutorChat({
             ? [...prev, { role: 'user', text: userReply }, { role: 'tutor', text }]
             : [{ role: 'tutor', text }]
         );
-      } catch {
+      } catch (err) {
+        console.warn('[SocraticTutorChat] Failed to fetch guiding question', err);
         setMessages((prev) => [
           ...prev,
           {

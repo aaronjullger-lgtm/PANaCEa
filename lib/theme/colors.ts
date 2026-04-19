@@ -1,9 +1,12 @@
 /**
- * Centralized Color System
+ * Centralized Color System — LEGACY SHIM.
  *
- * Provides a consistent color palette across the application.
- * Uses CSS custom properties that adapt to light/dark mode.
+ * The canonical color tokens live in `@/lib/tokens` (see `lib/tokens/colors.ts`).
+ * This file is kept for backward compatibility and re-exports the relevant
+ * bundles. New code should import from `@/lib/tokens` directly.
  */
+
+import { statusColors as canonicalStatusColors, getStatusColors as canonicalGetStatusColors } from '@/lib/tokens';
 
 /**
  * Theme color categories following Tailwind naming conventions
@@ -78,46 +81,14 @@ export function getThemeColors(theme: keyof typeof themeColors) {
 
 /**
  * Status color mappings for feedback UI
+ * Re-exported from the canonical tokens module.
  */
-export const statusColors = {
-  success: {
-    bg: 'bg-[var(--color-data-pass)]/10',
-    text: 'text-[var(--color-data-pass)]',
-    border: 'border-[var(--color-data-pass)]/30',
-    icon: 'text-[var(--color-data-pass)]',
-  },
-  error: {
-    bg: 'bg-[var(--color-data-fail)]/10',
-    text: 'text-[var(--color-data-fail)]',
-    border: 'border-[var(--color-data-fail)]/30',
-    icon: 'text-[var(--color-data-fail)]',
-  },
-  warning: {
-    bg: 'bg-[var(--color-data-provisional)]/10',
-    text: 'text-[var(--color-data-provisional)]',
-    border: 'border-[var(--color-data-provisional)]/30',
-    icon: 'text-[var(--color-data-provisional)]',
-  },
-  info: {
-    bg: 'bg-[var(--color-accent)]/10',
-    text: 'text-[var(--color-accent)]',
-    border: 'border-[var(--color-accent)]/30',
-    icon: 'text-[var(--color-accent)]',
-  },
-  neutral: {
-    bg: 'bg-[var(--color-bg-tertiary)]/60',
-    text: 'text-[var(--color-text-muted)]',
-    border: 'border-[var(--color-border)]',
-    icon: 'text-[var(--color-text-muted)]',
-  },
-};
+export const statusColors = canonicalStatusColors;
 
 /**
  * Get status color classes
  */
-export function getStatusColors(status: keyof typeof statusColors) {
-  return statusColors[status] || statusColors.neutral;
-}
+export const getStatusColors = canonicalGetStatusColors;
 
 /**
  * Generate gradient classes for visual appeal

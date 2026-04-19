@@ -60,7 +60,7 @@ export function validateEnvironment(): Env {
 
   if (result.success) {
     _env = result.data;
-    console.log('✓ Environment configuration validated');
+    console.debug('[env] Configuration validated');
     return _env;
   }
 

@@ -1,0 +1,106 @@
+# purpose: Run the weekly repo-only hygiene lane for dependency drift, workflow policy checks, and structural code audits without touching production data.
+# owner: Platform / DevEx
+# trigger strategy: schedule + workflow_dispatch; separate repo maintenance from app/data automation and keep this lane free of production runtime secrets.
+# secrets required: none beyond the default repository token for checkout.
+# expected runtime: 10-20 minutes depending on audit output volume.
+# failure behavior: Fail the run on workflow policy violations, dependency risk, or audit execution errors; upload JSON/markdown/log artifacts and preserve the operator summary.
+
+name: Sched - Weekly Repo Hygiene
+
+on:
+  schedule:
+    - cron: "23 8 * * 6"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Policy-only is a fast smoke check; full runs the entire repo-hygiene packet.
+        required: false
+        default: policy-only
+        type: choice
+        options:
+          - policy-only
+          - full
+      skip_expensive_steps:
+        description: Skip the dependency vulnerability snapshot during manual review.
+        required: false
+        default: false
+        type: boolean
+      report_only:
+        description: Repo hygiene is always read-only; this remains true for manual runs.
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-weekly-repo-hygiene
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Weekly Repo Hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Run weekly repo hygiene
+        run: |
+          set -euo pipefail
+          args=()
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.target_scope == 'policy-only' || false }}" = "true" ]; then
+            args+=(--policy-only)
+          elif [ "${{ github.event_name == 'workflow_dispatch' && inputs.skip_expensive_steps || false }}" = "true" ]; then
+            args+=(--skip-dependency-audit)
+          fi
+
+          npm run automation:weekly:repo-hygiene -- "${args[@]}"
+
+      - name: Upload weekly repo hygiene artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sched-weekly-repo-hygiene-${{ github.run_number }}
+          path: |
+            logs/repo-hygiene/*.json
+            logs/repo-hygiene/*.md
+            logs/repo-hygiene/*.log
+          if-no-files-found: ignore
+          retention-days: 21
+
+      - name: Write workflow summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Workflow Summary"
+            echo ""
+            echo "- Workflow: sched-weekly-repo-hygiene.yml"
+            echo "- Node: ${NODE_VERSION}"
+            echo "- Target scope: ${{ github.event_name == 'workflow_dispatch' && inputs.target_scope || 'full' }}"
+            echo "- Skip expensive steps: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_expensive_steps || false }}"
+            echo "- Scope: repository-only maintenance"
+            echo "- Artifact directory: logs/repo-hygiene/"
+            echo "- Artifact retention: 21 days"
+            echo "- Next action on failure: inspect the uploaded markdown and log artifacts before rerunning the repo-hygiene lane."
+          } >> "${GITHUB_STEP_SUMMARY}"

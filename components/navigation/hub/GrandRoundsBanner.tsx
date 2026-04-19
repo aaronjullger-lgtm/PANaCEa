@@ -26,8 +26,8 @@ export const GrandRoundsBanner: React.FC<{
     if (isDidactic) {
       try {
         sessionStorage.setItem('panceai_grand_rounds_targeted', '1');
-      } catch {
-        /* ignore */
+      } catch (err) {
+        console.debug('[GrandRoundsBanner] sessionStorage write failed', err);
       }
     }
     onStart();

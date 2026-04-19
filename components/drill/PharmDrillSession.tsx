@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   Beaker,
@@ -16,6 +17,7 @@ import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface PharmDrillSessionProps {
@@ -92,6 +94,8 @@ const CATEGORY_CARDS: Array<{
  * PharmDrillSession - Pharmacology quiz drill mode
  */
 const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
+  const [showSummary, setShowSummary] = useState(false);
   const {
     currentQuestion,
     score,
@@ -113,10 +117,43 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
+    if (totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
     exitToMenu();
     onExit?.();
   };
 
+  const handleNewSession = () => {
+    setShowSummary(false);
+    reset();
+  };
+
+
+  // =========================================================================
+  // SUMMARY VIEW
+  // =========================================================================
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Pharmacology — Complete"
+        breadcrumb={['Drills', 'Pharmacology', 'Results']}
+        onBackToHub={() => { exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Pharmacology"
+          icon={Pill}
+          accentColor="var(--color-accent)"
+          stats={{ correct: score, total: totalAttempts, streak }}
+          onNewSession={handleNewSession}
+          onExit={() => { exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
 
   if (isDataLoading) {
     return (
@@ -181,9 +218,9 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
       >
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">

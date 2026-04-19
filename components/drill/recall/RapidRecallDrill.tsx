@@ -1,17 +1,18 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   X,
   Flame,
   RotateCcw,
   ArrowRight,
-  Loader2,
   BadgeCheck,
   Zap,
   AlertTriangle,
 } from 'lucide-react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
+import { InlineSpinner } from '@/components/loading';
 import { buzzwordService } from '@/services/domain';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
 import { useTelemetryCollector } from '@/hooks/useTelemetryCollector';
@@ -39,6 +40,7 @@ interface PearlQuestion {
  * back to buzzword dictionary.
  */
 const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { getToken } = useAuth();
 
   // Telemetry collector for behavioral tracking (Phase 3 Milestone 3)
@@ -328,8 +330,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
 
   if (isLoading) {
     return (
-      <div role="status" aria-label="Loading drill" className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div aria-hidden="true" className="w-10 h-10 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      <div role="status" aria-label="Loading drill" aria-live="polite" className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
       </div>
     );
   }
@@ -354,11 +356,11 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
       <AnimatePresence>
         {status === 'feedback' && (
           <motion.div
-            variants={flashVariants}
-            initial="initial"
+            variants={prefersReducedMotion ? undefined : flashVariants}
+            initial={prefersReducedMotion ? false : "initial"}
             animate="animate"
-            exit="exit"
-            transition={{ duration: 0.15 }}
+            exit={prefersReducedMotion ? undefined : "exit"}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
             className={`absolute inset-0 z-0 pointer-events-none ${
               isCorrect ? 'bg-data-pass/20' : 'bg-data-fail/20'
             }`}
@@ -408,11 +410,11 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion}
-            variants={buzzwordVariants}
-            initial="initial"
+            variants={prefersReducedMotion ? undefined : buzzwordVariants}
+            initial={prefersReducedMotion ? false : "initial"}
             animate="animate"
-            exit="exit"
-            transition={{ duration: 0.3 }}
+            exit={prefersReducedMotion ? undefined : "exit"}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
             className="text-center max-w-4xl"
           >
             <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-4">
@@ -438,11 +440,11 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
           {status === 'playing' && (
             <motion.div
               key="playing-controls"
-              variants={feedbackVariants}
-              initial="initial"
+              variants={prefersReducedMotion ? undefined : feedbackVariants}
+              initial={prefersReducedMotion ? false : "initial"}
               animate="animate"
-              exit="exit"
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? undefined : "exit"}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className="p-4"
             >
               <div className="max-w-2xl mx-auto relative">
@@ -454,7 +456,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
                 />
                 {isValidating && (
                   <div role="status" aria-live="polite" className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[var(--color-text-secondary)]">
-                    <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
+                    <InlineSpinner size="sm" className="text-[var(--color-primary)]" />
                     <span className="text-xs font-medium">Verifying...</span>
                   </div>
                 )}
@@ -465,11 +467,11 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
           {status === 'feedback' && (
             <motion.div
               key="feedback-controls"
-              variants={feedbackVariants}
-              initial="initial"
+              variants={prefersReducedMotion ? undefined : feedbackVariants}
+              initial={prefersReducedMotion ? false : "initial"}
               animate="animate"
-              exit="exit"
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? undefined : "exit"}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className={`p-4 ${
                 isCorrect
                   ? 'bg-data-pass/50 border-t-2 border-data-pass'

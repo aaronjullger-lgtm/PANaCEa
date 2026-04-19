@@ -70,13 +70,13 @@ export function useConditionSearch(options: UseConditionSearchOptions = {}): Use
       const filters = { system, subcategory, limit };
       const searchResults = await searchConditions(searchQuery, filters);
       setResults(searchResults);
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
         // Ignore abort errors
         return;
       }
       console.error('Condition search failed:', err);
-      setError(err.message || 'Failed to search conditions');
+      setError(err instanceof Error ? err.message : 'Failed to search conditions');
       setResults([]);
     } finally {
       setIsLoading(false);

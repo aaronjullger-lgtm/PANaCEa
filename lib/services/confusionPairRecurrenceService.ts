@@ -127,7 +127,8 @@ export async function recordAndAnalyzeConfusion(
 
     const pairCount = existing?.count ?? 0;
     return analyzeConfusionRecurrence(pairCount);
-  } catch {
+  } catch (err) {
+    console.debug('[confusionPairRecurrenceService] lookup failed, assuming 0 pairs', err);
     return analyzeConfusionRecurrence(0);
   }
 }

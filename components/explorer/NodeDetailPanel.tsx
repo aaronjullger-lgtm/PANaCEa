@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { GraphNodeDetailResponse, GraphEdgeResponse } from '@/lib/types/graph';
 import { normalizeSystemName, getSystemWeight as blueprintGetSystemWeight } from '@/lib/constants/blueprint';
@@ -176,9 +177,13 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
+      <div
+        className="h-full flex items-center justify-center p-8"
+        role="status"
+        aria-live="polite"
+      >
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
           <p className="mt-4 text-muted-foreground">Loading node details…</p>
         </div>
       </div>

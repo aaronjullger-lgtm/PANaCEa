@@ -262,7 +262,8 @@ export function parseCritiqueResponse(rawJson: string): CritiqueResult | null {
       issues,
       feedbackForRewrite: parsed.feedbackForRewrite ?? '',
     };
-  } catch {
+  } catch (err) {
+    console.warn('[selfRefineService] critique parsing failed', err);
     return null;
   }
 }

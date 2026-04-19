@@ -206,7 +206,8 @@ export async function isIndexedDBAvailable(): Promise<boolean> {
   try {
     await getDB();
     _isAvailable = true;
-  } catch {
+  } catch (err) {
+    console.debug('[offlineStore] IndexedDB unavailable', err);
     _isAvailable = false;
   }
   return _isAvailable;

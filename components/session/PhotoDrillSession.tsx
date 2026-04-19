@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   usePhotoDrill,
   type CategoryType,
@@ -89,6 +90,7 @@ function resolveImageUrl(url: string | null | undefined): string {
 }
 
 const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterType }) => {
+  const prefersReducedMotion = useReducedMotion();
   const {
     currentCase,
     queue,
@@ -209,7 +211,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         mediaAssetId: currentCase.id,
         pathology: currentCase.correctDiagnosis,
       });
-    } catch {
+    } catch (spatialErr) {
+      console.warn('[PhotoDrillSession] submitReview failed', spatialErr);
       resetSpatial();
     }
   };
@@ -226,19 +229,19 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   };
 
   // Animation variants
-  const imageVariants = {
+  const imageVariants = prefersReducedMotion ? undefined : {
     initial: { opacity: 0, scale: 0.95 },
     animate: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.95 },
   };
 
-  const feedbackVariants = {
+  const feedbackVariants = prefersReducedMotion ? undefined : {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 },
   };
 
-  const cardVariants = {
+  const cardVariants = prefersReducedMotion ? undefined : {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     hover: { scale: 1.02, y: -4 },
@@ -268,9 +271,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center p-6">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-12"
           >
             <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -287,11 +290,11 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
               <motion.button
                 key={card.id}
                 variants={cardVariants}
-                initial="initial"
+                initial={prefersReducedMotion ? false : "initial"}
                 animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                whileHover={prefersReducedMotion ? undefined : "hover"}
+                whileTap={prefersReducedMotion ? undefined : "tap"}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: index * 0.1 }}
                 onClick={() => handleCategorySelect(card.id)}
                 className="relative p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-left shadow-lg hover:shadow-xl overflow-hidden group transition-all"
               >
@@ -394,10 +397,10 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
               <motion.div
                 key={`${currentCase.id}-${imageRevealed ? 'image' : 'chart'}`}
                 variants={imageVariants}
-                initial="initial"
+                initial={prefersReducedMotion ? false : "initial"}
                 animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
+                exit={prefersReducedMotion ? undefined : "exit"}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
                 className="w-full max-w-3xl flex flex-col items-center justify-center gap-4"
               >
                 {/* Clinical Presentation Mode: Show Patient Chart before image */}
@@ -670,10 +673,10 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
               <motion.div
                 key={drawModeActive ? 'draw-controls' : 'playing-controls'}
                 variants={feedbackVariants}
-                initial="initial"
+                initial={prefersReducedMotion ? false : "initial"}
                 animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2 }}
+                exit={prefersReducedMotion ? undefined : "exit"}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                 className="p-4"
               >
                 <div className="max-w-2xl mx-auto">
@@ -696,10 +699,10 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
               <motion.div
                 key="feedback-controls"
                 variants={feedbackVariants}
-                initial="initial"
+                initial={prefersReducedMotion ? false : "initial"}
                 animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2 }}
+                exit={prefersReducedMotion ? undefined : "exit"}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                 className={`p-4 ${
                   isCorrect
                     ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]'

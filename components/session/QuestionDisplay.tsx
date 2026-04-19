@@ -34,8 +34,9 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         span.className = 'user-highlight';
         range.surroundContents(span);
         selection.removeAllRanges();
-      } catch {
-        // Highlighting failed - clear selection
+      } catch (highlightErr) {
+        // Highlighting failed - clear selection (cross-element ranges can't be wrapped)
+        console.debug('[QuestionDisplay] user-highlight failed', highlightErr);
         window.getSelection()?.removeAllRanges();
       }
     };

@@ -33,8 +33,8 @@ export class ErrorBoundaryWithMonitoring extends Component<Props, State> {
     console.error(`[ErrorBoundary] ${this.props.viewName || 'Unknown view'}:`, error, errorInfo);
 
     // Report to monitoring service (e.g., Sentry) if available
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
+    if (typeof window !== 'undefined' && 'Sentry' in window) {
+      (window as unknown as { Sentry: { captureException: (e: Error, ctx: object) => void } }).Sentry.captureException(error, {
         contexts: {
           react: {
             componentStack: errorInfo.componentStack,

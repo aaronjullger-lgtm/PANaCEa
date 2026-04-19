@@ -3,11 +3,12 @@ import { computeConfidence, fetchConfidenceData } from './confidenceScorer';
 import type { PrismaClient } from '@prisma/client/edge';
 
 // Mock Prisma client
+const mockFindMany = vi.fn();
 const mockPrisma = {
   reviewLog: {
-    findMany: vi.fn(),
+    findMany: mockFindMany,
   },
-} as any as PrismaClient;
+} as unknown as PrismaClient;
 
 describe('Confidence Scorer', () => {
   beforeEach(() => {
@@ -123,7 +124,7 @@ describe('Confidence Scorer', () => {
       const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-      mockPrisma.reviewLog.findMany.mockResolvedValue([
+      mockFindMany.mockResolvedValue([
         { system: 'Cardiovascular', wasCorrect: true, reviewedAt: twoDaysAgo },
         { system: 'Cardiovascular', wasCorrect: false, reviewedAt: twoDaysAgo },
         { system: 'Cardiovascular', wasCorrect: true, reviewedAt: twoDaysAgo },
@@ -133,7 +134,7 @@ describe('Confidence Scorer', () => {
 
       const result = await fetchConfidenceData(mockPrisma, 'user123');
 
-      expect(mockPrisma.reviewLog.findMany).toHaveBeenCalledWith({
+      expect(mockFindMany).toHaveBeenCalledWith({
         where: {
           userId: 'user123',
           sessionType: 'MAIN',
@@ -157,9 +158,9 @@ describe('Confidence Scorer', () => {
       expect(result.reviewCounts.Pulmonary).toBe(2);
 
       // Variance for Cardiovascular: mean = 2/3 ≈ 0.666, variance = (0.666*(1-0.666))/3 ≈ 0.074
-      expect(result.accuracyVariances.Cardiovascular).toBeCloseTo(0.074, 2);
+      expect(result.accuracyVariances!.Cardiovascular).toBeCloseTo(0.074, 2);
       // Pulmonary: mean = 1, variance = 0
-      expect(result.accuracyVariances.Pulmonary).toBe(0);
+      expect(result.accuracyVariances!.Pulmonary).toBe(0);
 
       // Days since last review should be approximate
       expect(result.daysSinceLastReview.Cardiovascular).toBeLessThanOrEqual(3);
@@ -167,9 +168,9 @@ describe('Confidence Scorer', () => {
     });
 
     it('should filter by taxonomyCodes when provided', async () => {
-      mockPrisma.reviewLog.findMany.mockResolvedValue([]);
+      mockFindMany.mockResolvedValue([]);
       await fetchConfidenceData(mockPrisma, 'user123', ['Cardiovascular', 'Pulmonary']);
-      expect(mockPrisma.reviewLog.findMany).toHaveBeenCalledWith(
+      expect(mockFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             system: { in: ['Cardiovascular', 'Pulmonary'] },
@@ -179,7 +180,7 @@ describe('Confidence Scorer', () => {
     });
 
     it('should handle empty result set', async () => {
-      mockPrisma.reviewLog.findMany.mockResolvedValue([]);
+      mockFindMany.mockResolvedValue([]);
       const result = await fetchConfidenceData(mockPrisma, 'user123');
       expect(result.reviewCounts).toEqual({});
       expect(result.accuracyVariances).toEqual({});

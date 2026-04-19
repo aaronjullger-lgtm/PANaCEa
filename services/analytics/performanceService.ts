@@ -9,7 +9,43 @@
  */
 
 // ============================================================================
-// Re-exports from legacy services (façade pattern)
+// Imports (local bindings so default-export façade can reference synchronously)
+// ============================================================================
+
+import {
+  recordQuestionOutcome,
+  getHierarchicalStats,
+  clearPerformanceCache,
+} from '../performanceService';
+import type {
+  ConditionStats,
+  SubcategoryStats,
+  SystemStats,
+} from '../performanceService';
+
+import { PANCEScorePredictorService } from './panceScorePredictorService';
+import type {
+  PerformanceDataPoint,
+  SystemPerformance as ISystemPerformance,
+  PredictedScore as IrtPredictedScore,
+  HistoricalPrediction,
+} from './panceScorePredictorService';
+
+import {
+  predictPANCEScore,
+  updatePerformancePrediction,
+  getPrediction as getSessionPrediction,
+  getConfidenceInterval,
+  resetPrediction,
+  calculateTrend,
+} from './performancePredictionService';
+import type {
+  PredictionResult,
+  PerformanceSnapshot,
+} from './performancePredictionService';
+
+// ============================================================================
+// Re-exports (façade pattern)
 // ============================================================================
 
 // Base performance service (localStorage recording, hierarchical stats)
@@ -17,31 +53,28 @@ export {
   recordQuestionOutcome,
   getHierarchicalStats,
   clearPerformanceCache,
-  type ConditionStats,
-  type SubcategoryStats,
-  type SystemStats,
-} from '../performanceService';
+};
+export type { ConditionStats, SubcategoryStats, SystemStats };
 
 // Class-based PANCE predictor (more sophisticated)
-export {
-  PANCEScorePredictorService,
-  type PerformanceDataPoint,
-  type SystemPerformance as ISystemPerformance,
-  type PredictedScore as IrtPredictedScore,
-  type HistoricalPrediction,
-} from './panceScorePredictorService';
+export { PANCEScorePredictorService };
+export type {
+  PerformanceDataPoint,
+  ISystemPerformance,
+  IrtPredictedScore,
+  HistoricalPrediction,
+};
 
 // Session-scoped prediction (temporary session data)
 export {
   predictPANCEScore,
   updatePerformancePrediction,
-  getPrediction as getSessionPrediction,
+  getSessionPrediction,
   getConfidenceInterval,
   resetPrediction,
   calculateTrend,
-  type PredictionResult,
-  type PerformanceSnapshot,
-} from './performancePredictionService';
+};
+export type { PredictionResult, PerformanceSnapshot };
 
 // ============================================================================
 // Unified Types (consolidate duplicates)
@@ -357,23 +390,19 @@ function getInsufficientDataResult(questionsAnswered: number): ScorePrediction {
 
 export default {
   // Recording
-  recordQuestionOutcome: async (
-    ...args: Parameters<typeof import('../performanceService').recordQuestionOutcome>
-  ) => (await import('../performanceService')).recordQuestionOutcome(...args),
+  recordQuestionOutcome,
 
   // Stats
-  getHierarchicalStats: async () => (await import('../performanceService')).getHierarchicalStats(),
+  getHierarchicalStats,
 
   // Prediction (unified)
   predictScore,
 
   // Session prediction
-  getSessionPrediction: async () =>
-    (await import('./performancePredictionService')).getPrediction(),
+  getSessionPrediction,
 
   // Class-based predictor (for advanced use)
-  PANCEScorePredictorService: async () =>
-    (await import('./panceScorePredictorService')).PANCEScorePredictorService,
+  PANCEScorePredictorService,
 
   // Constants
   NCCPA_BLUEPRINT_WEIGHTS,

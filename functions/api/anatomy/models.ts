@@ -122,9 +122,9 @@ export const onRequestGet = publicEndpoint(AnatomyModelsSchema, async ({ env, va
       WHERE status = 'approved'
       GROUP BY system
       ORDER BY count DESC
-    `) as any[];
+    `) as Array<{ system: string; count: number }>;
 
-    const total = (totalQuery as any[])[0]?.count || 0;
+    const total = (totalQuery as Array<{ count: number }>)[0]?.count || 0;
 
     log.info('Anatomy models fetched successfully', {
       count: modelsQuery.length,

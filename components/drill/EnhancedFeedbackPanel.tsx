@@ -29,6 +29,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface RelatedReference {
   type: 'physiology' | 'anatomy' | 'lab' | 'procedure' | 'ecg' | 'finding' | 'imaging';
@@ -98,6 +99,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
   nextReview,
 }) => {
   const { getToken } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const [showDeepDive, setShowDeepDive] = useState(false);
   const [relatedData, setRelatedData] = useState<any>(null);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
@@ -175,11 +177,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
     fetchRelatedData();
   }, [showDeepDive, category, relatedConceptId, tags, getToken]);
 
-  const feedbackVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  };
+  const feedbackVariants = prefersReducedMotion
+    ? { initial: {}, animate: {}, exit: {} }
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
 
   return (
     <motion.div
@@ -235,9 +235,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {/* Rapid Guess Indicator */}
         {isRapidGuess && (
           <motion.div
-            initial={{ y: -10 }}
+            initial={prefersReducedMotion ? false : { y: -10 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className="flex items-center gap-2 p-2.5 mb-3 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg text-sm"
           >
             <Zap className="w-4 h-4 text-[var(--color-data-provisional)] flex-shrink-0" />
@@ -250,9 +250,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {/* Next Review Information */}
         {nextReview && (
           <motion.div
-            initial={{ y: -10 }}
+            initial={prefersReducedMotion ? false : { y: -10 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.2, delay: 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, delay: 0.1 }}
             className="flex items-start gap-3 p-3 mb-3 bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/30 rounded-lg"
           >
             <Clock className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
@@ -329,6 +329,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
           <div className="mt-3">
             <button
               onClick={() => setShowDeepDive(!showDeepDive)}
+              aria-expanded={showDeepDive}
               className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors text-sm"
             >
               <span className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
@@ -345,10 +346,10 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
             <AnimatePresence>
               {showDeepDive && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
+                  initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                   className="overflow-hidden"
                 >
                   <div className="pt-3 space-y-3">

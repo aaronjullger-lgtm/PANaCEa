@@ -9,9 +9,10 @@
  */
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { MessageCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { MessageCircle, AlertTriangle } from 'lucide-react';
 import type { AdobeDCViewPreviewConfig, AdobeDCViewerAPIs } from '@/types/adobe-pdf-embed';
 import { pdfBoundsToPercent } from '@/lib/utils/pdfCoordinates';
+import { InlineSpinner } from '@/components/loading';
 
 const ADOBE_VIEW_SDK_URL = 'https://documentcloud.adobe.com/view-sdk/main.js';
 const ADOBE_READY_EVENT = 'adobe_dc_view_sdk.ready';
@@ -361,8 +362,13 @@ export function SmartPDFViewer({
         style={{ minHeight, height }}
       >
         {!sdkReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--color-text-muted)]" aria-hidden />
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading PDF viewer"
+          >
+            <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />
           </div>
         )}
         <div

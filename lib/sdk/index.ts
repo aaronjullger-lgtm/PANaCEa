@@ -14,6 +14,10 @@
 // Core
 export { createApiClient, type ApiClient } from './core';
 
+// Contract-driven typed caller — the preferred entry point for new code.
+// Migrated call sites should import `callApi` + a contract directly.
+export { callApi, type CallApiOptions } from './callApi';
+
 // Domain clients
 export { createDrillsClient, type DrillsClient } from './drillsClient';
 export { createSessionsClient, type SessionsClient } from './sessionsClient';

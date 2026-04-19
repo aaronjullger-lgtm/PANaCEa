@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   useMiniLabDrill,
   type LabCategory,
@@ -181,6 +182,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     fsrsNextReview,
   } = useMiniLabDrill();
 
+  const prefersReducedMotion = useReducedMotion();
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
   const [isStarting, setIsStarting] = React.useState(false);
   const [totalAttempts, setTotalAttempts] = React.useState(0);
@@ -311,9 +313,9 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
       >
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
           <motion.div
-            initial={{ y: -20 }}
+            initial={prefersReducedMotion ? false : { y: -20 }}
             animate={{ y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4 }}
             className="text-center mb-8"
           >
             <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -328,12 +330,12 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             {CATEGORY_CARDS.map((card, index) => (
               <motion.button
                 key={card.id}
-                variants={cardVariants}
-                initial="initial"
+                variants={prefersReducedMotion ? undefined : cardVariants}
+                initial={prefersReducedMotion ? false : "initial"}
                 animate="animate"
-                whileHover="hover"
-                whileTap="tap"
-                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={prefersReducedMotion ? undefined : "hover"}
+                whileTap={prefersReducedMotion ? undefined : "tap"}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: index * 0.05 }}
                 onClick={() => handleCategorySelect(card.id)}
                 className={`relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
               >
@@ -362,10 +364,10 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className="p-4"
           >
             <div className="max-w-2xl mx-auto">
@@ -426,12 +428,12 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
             {/* Lab Panels */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {currentCase.panels.map((panel, index) => (
+              {(currentCase.panels ?? []).map((panel, index) => (
                 <motion.div
                   key={`${panel.name}-${index}`}
-                  initial={{ y: 20 }}
+                  initial={prefersReducedMotion ? false : { y: 20 }}
                   animate={{ y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }}
                 >
                   <LabPanelCard panel={panel} />
                 </motion.div>
@@ -441,9 +443,9 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             {/* Order Additional Tests Button */}
             {status === 'playing' && availableTests.length > 0 && (
               <motion.div
-                initial={{ y: 20 }}
+                initial={prefersReducedMotion ? false : { y: 20 }}
                 animate={{ y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.3 }}
                 className="mt-4"
               >
                 <button
@@ -456,9 +458,9 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
                 {showOrderTestMenu && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
+                    initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
                     className="mt-2 p-4 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)] max-h-64 overflow-y-auto"
                     role="menu"
                     aria-label="Available laboratory tests"

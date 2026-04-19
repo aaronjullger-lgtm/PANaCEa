@@ -2,13 +2,23 @@
  * Elaboration Drill — Grading Endpoint
  * POST /api/drills/elaboration/grade
  *
- * Uses Gemini to grade a student's free-text explanation of WHY a clinical
- * fact is true. Returns a 0-3 score with feedback and the model explanation.
+ * Grades a student's free-text explanation of WHY a clinical fact is true.
+ * Returns a 0-3 score with feedback and a model-generated reference
+ * explanation.
+ *
+ * Migrated to the unified AI Gateway (Sprint 4). All model access goes
+ * through `gateway.grade()` — no direct GoogleGenerativeAI, no regex JSON
+ * extraction, no JSON.parse on raw model output. Structured output is
+ * validated against ElaborationGradeSchema; one schema-repair pass is
+ * allowed before falling back to a graceful "couldn't grade" response.
  */
-
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { z } from 'zod';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
+import {
+  ElaborationGradeSchema,
+  ELABORATION_GRADE_DESCRIPTION,
+} from '@/lib/ai/schemas/grading';
 
 const gradeSchema = z.object({
   fact: z.string().min(5),
@@ -16,95 +26,80 @@ const gradeSchema = z.object({
   gradingRubric: z.array(z.string()),
 });
 
-export const onRequestPost = authenticatedEndpoint(gradeSchema, async (context) => {
-  const { fact, studentExplanation, gradingRubric } = context.validated;
-  const apiKey = context.env.GEMINI_API_KEY;
+const SYSTEM_PROMPT = `You grade Physician Assistant students' free-text explanations of clinical mechanisms.
 
-  if (!apiKey) {
-    return {
-      status: 500,
-      data: { error: 'Gemini API key not configured' },
-    };
-  }
+Score strictly against the rubric. Be specific and actionable in feedback. Do not add commentary outside the required JSON.`;
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: { temperature: 0.3 },
-    });
+function buildUserPrompt(args: {
+  fact: string;
+  studentExplanation: string;
+  gradingRubric: string[];
+}): string {
+  const rubricList = args.gradingRubric.map((r, i) => `${i + 1}. ${r}`).join('\n');
+  return `CLINICAL FACT: "${args.fact}"
 
-    const rubricList = gradingRubric.map((r, i) => `${i + 1}. ${r}`).join('\n');
+STUDENT'S EXPLANATION: "${args.studentExplanation}"
 
-    const prompt = `You are grading a PA student's explanation of a clinical mechanism.
-
-CLINICAL FACT: "${fact}"
-
-STUDENT'S EXPLANATION: "${studentExplanation}"
-
-GRADING RUBRIC — the explanation should address these key concepts:
+GRADING RUBRIC — the explanation should address these concepts:
 ${rubricList}
 
-SCORING (0-3):
-- 0: No relevant content or completely incorrect
-- 1: Partially correct — identifies the general topic but misses the mechanism
-- 2: Correct mechanism but missing important details from the rubric
-- 3: Complete — correctly explains the mechanism with clinical relevance
+SCORING (integer 0-3):
+- 0 = no relevant content or completely incorrect
+- 1 = partially correct — identifies the general topic but misses the mechanism
+- 2 = correct mechanism but missing important rubric details
+- 3 = complete — correct mechanism AND clinical relevance
 
-Respond ONLY with valid JSON:
-{
-  "score": <0-3>,
-  "feedback": "<2-3 sentence feedback for the student>",
-  "missingConcepts": ["<concept from rubric not addressed>", ...],
-  "modelExplanation": "<complete correct explanation in 3-5 sentences>"
-}`;
+Return ONLY a JSON object conforming to this schema:
+${ELABORATION_GRADE_DESCRIPTION}`;
+}
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): elaboration grading
+// uses gateway.grade() against Gemini. 25 rpm 'ai' bucket matches profile.
+export const onRequestPost = aiEndpoint(gradeSchema, async (context) => {
+  const { fact, studentExplanation, gradingRubric } = context.validated;
 
-    // Parse JSON from response (handle markdown code blocks)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return {
-        status: 200,
-        data: {
-          score: 1,
-          maxScore: 3,
-          feedback: 'Unable to grade — please try again.',
-          missingConcepts: [],
-          modelExplanation: '',
-        },
-      };
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as {
-      score: number;
-      feedback: string;
-      missingConcepts: string[];
-      modelExplanation: string;
-    };
-
-    // Clamp score to valid range
-    const score = Math.max(0, Math.min(3, Math.round(parsed.score)));
+  try {
+    const { data } = await gateway.grade(
+      toGatewayContext(context),
+      {
+        endpoint: '/api/drills/elaboration/grade',
+        schema: ElaborationGradeSchema,
+        schemaDescription: ELABORATION_GRADE_DESCRIPTION,
+        systemPrompt: SYSTEM_PROMPT,
+        userPrompt: buildUserPrompt({ fact, studentExplanation, gradingRubric }),
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+      },
+    );
 
     return {
       status: 200,
       data: {
-        score,
+        score: data.score,
         maxScore: 3,
-        feedback: parsed.feedback || 'No feedback available.',
-        missingConcepts: parsed.missingConcepts || [],
-        modelExplanation: parsed.modelExplanation || '',
+        feedback: data.feedback,
+        missingConcepts: data.missingConcepts,
+        modelExplanation: data.modelExplanation,
       },
     };
   } catch (error) {
-    console.error('[elaboration/grade] Gemini grading failed:', error);
+    if (error instanceof GatewayError) {
+      console.error('[elaboration/grade] gateway failure', {
+        code: error.code,
+        requestId: error.requestId,
+        traceId: error.traceId,
+        message: error.message,
+      });
+    } else {
+      console.error('[elaboration/grade] unexpected failure:', error);
+    }
+    // Graceful degradation — student's drill flow shouldn't break on AI outage.
     return {
       status: 200,
       data: {
         score: 0,
         maxScore: 3,
-        feedback: 'Grading failed — please try again.',
+        feedback: 'Grading temporarily unavailable — please try again.',
         missingConcepts: [],
         modelExplanation: '',
       },

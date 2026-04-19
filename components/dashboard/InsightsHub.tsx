@@ -12,10 +12,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import {
   AlertTriangle, TrendingUp, TrendingDown, Target,
-  Flame, Brain, ChevronRight, Loader2, RefreshCw,
+  Flame, Brain, ChevronRight, RefreshCw,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 // ─── Types (mirrors insightGenerationService) ────────────────────────────────
 
@@ -150,6 +152,7 @@ function ReadinessGauge({ readiness }: { readiness: ExamReadiness }) {
 
 export default function InsightsHub() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [data, setData] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,15 +161,24 @@ export default function InsightsHub() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/student/insights');
+      const token = await getToken();
+      if (!token) {
+        setError('Not authenticated');
+        setLoading(false);
+        return;
+      }
+      const res = await fetch('/api/student/insights', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error(`${res.status}`);
       setData(await res.json());
     } catch (err) {
+      console.warn('[InsightsHub] Fetch failed', err);
       setError('Failed to load insights');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getToken]);
 
   useEffect(() => { fetchInsights(); }, [fetchInsights]);
 
@@ -191,8 +203,13 @@ export default function InsightsHub() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
+      <div
+        className="flex items-center justify-center p-8"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading insights"
+      >
+        <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />
       </div>
     );
   }

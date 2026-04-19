@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 import RadialProgress, { MultiRadialProgress } from '../ui/RadialProgress';
 import TrendSparkline from '../ui/TrendSparkline';
 import ActivityHeatmap from '../analytics/ActivityHeatmap';
-import type { PerformanceRecord } from '@/types';
+import type { PerformanceRecord, SystemCode } from '@/types';
 import { Play, RefreshCw } from 'lucide-react';
 
 // Generate sample performance data for the last 90 days
@@ -31,7 +31,7 @@ const generateSampleData = (): PerformanceRecord[] => {
       conditionId: `cond-${Math.floor(Math.random() * 50)}`,
       condition: 'Sample Condition',
       topic: 'Sample Topic',
-      system: ['CV', 'DERM', 'ENDO', 'GI', 'RENAL'][Math.floor(Math.random() * 5)] as any,
+      system: ['CV', 'DERM', 'ENDO', 'GI', 'RENAL'][Math.floor(Math.random() * 5)] as SystemCode,
       subcategory: null,
       isCorrect,
       timeSpentMs: Math.floor(Math.random() * 60000) + 10000,

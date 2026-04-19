@@ -5,8 +5,9 @@ import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
-import { DrillSubmitReviewSchema } from './submit-review';
+import { DrillSubmitReviewSchema, buildBatchIdemKey, IDEM_TTL_SECONDS } from './submit-review';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
+import { getFromCache, setInCache, isKVAvailable } from '../_shared/cache';
 import { z } from 'zod';
 
 const BatchDrillSubmitReviewSchema = z.array(DrillSubmitReviewSchema);
@@ -60,6 +61,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
     });
 
     const results = [];
+    const kvAvailable = isKVAvailable(env.CACHE);
     for (const review of validated) {
       const {
         questionId,
@@ -72,9 +74,30 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         wakeTimeHHMM,
         telemetry,
         sessionType,
+        idempotencyKey,
       } = review;
 
       try {
+        // Sprint S3 — Per-item idempotency short-circuit.
+        // Each batch item carries its own idempotency key (the queued item's
+        // stable UUID from syncManager). A retry of the same batch after a
+        // flaky network short-circuits per-item, so items that already landed
+        // don't re-enter the FSRS pipeline and create duplicate rows.
+        if (idempotencyKey && kvAvailable) {
+          const cached = await getFromCache<Record<string, unknown>>(
+            env.CACHE,
+            buildBatchIdemKey(auth.userId, idempotencyKey),
+          );
+          if (cached) {
+            logger.info('batch idempotency cache hit — skipping pipeline', {
+              questionId,
+              idempotencyKey,
+            });
+            results.push({ questionId, success: true, data: cached, source: 'idempotent-cache' });
+            continue;
+          }
+        }
+
         const normalizedSelectedAnswer =
           typeof selectedAnswer === 'string' ? selectedAnswer : String(selectedAnswer);
         const { question, source } = await resolveReviewQuestion(prisma, {
@@ -136,6 +159,18 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
               user.id // pass userId so confusion pairs are injected into the variant prompt
             ).catch((e) => logger.warn("Background confusion processing failed", e));
           }
+        }
+
+        // Sprint S3 — Cache the successful per-item response so retries with
+        // the same idempotency key short-circuit. Fire-and-forget; a KV write
+        // failure must not fail the user request.
+        if (idempotencyKey && kvAvailable) {
+          await setInCache(
+            env.CACHE,
+            buildBatchIdemKey(auth.userId, idempotencyKey),
+            result,
+            IDEM_TTL_SECONDS,
+          );
         }
 
         results.push({ questionId, success: true, data: result, source });

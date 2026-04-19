@@ -17,7 +17,6 @@ import {
   CheckCircle,
   Crown,
   AlertCircle,
-  Loader2,
   Timer,
   Target,
   X,
@@ -27,6 +26,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { DrillLoadingState, InlineButtonSpinner } from '@/components/loading';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -341,7 +341,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         const json = (await res.json()) as { data?: { leaderboard?: unknown[] } };
         const list = json?.data?.leaderboard ?? [];
         if (!cancelled) setLeaderboard((Array.isArray(list) ? list : []) as LeaderboardEntry[]);
-      } catch {
+      } catch (lbErr) {
+        console.warn('[GrandRounds] leaderboard fetch failed', lbErr);
         if (!cancelled) setLeaderboardError('Failed to load leaderboard');
       } finally {
         if (!cancelled) setLeaderboardLoading(false);
@@ -522,7 +523,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       const list = json?.data?.review ?? [];
       setReviewData((Array.isArray(list) ? list : []) as ReviewEntry[]);
       setShowReview(true);
-    } catch {
+    } catch (reviewErr) {
+      console.warn('[GrandRounds] review fetch failed', reviewErr);
       setReviewError('Failed to load review');
     } finally {
       setReviewLoading(false);
@@ -571,12 +573,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Loading state
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
-        <div role="status" aria-label={`Loading ${modeLabel}`} className="text-center space-y-4">
-          <Loader2 aria-hidden="true" className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
-          <p className="text-xl text-[var(--color-text-muted)]">Loading {modeLabel}...</p>
-        </div>
-      </div>
+      <DrillLoadingState
+        message={`Loading ${modeLabel}...`}
+        variant="question"
+        showTimer
+        showProgress
+      />
     );
   }
 
@@ -699,7 +701,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               {reviewLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <InlineButtonSpinner />
                   Loading...
                 </>
               ) : (
@@ -883,12 +885,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     // Guard: If currentQuestion is undefined, show loading
     if (!currentQuestion) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
-            <p className="text-xl text-[var(--color-text-muted)]">Loading question...</p>
-          </div>
-        </div>
+        <DrillLoadingState
+          message="Loading question..."
+          variant="question"
+          showTimer
+          showProgress
+        />
       );
     }
 
@@ -1024,7 +1026,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <InlineButtonSpinner />
                       Submitting...
                     </>
                   ) : currentQuestionIndex === challengeData.questions.length - 1 ? (
@@ -1191,7 +1193,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             >
               {reviewLoading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <InlineButtonSpinner />
                   Loading...
                 </>
               ) : (

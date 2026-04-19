@@ -1,16 +1,40 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+/**
+ * Sprint 7 (AI Gateway migration): Replaced direct `@google/generative-ai` SDK
+ * usage with `gateway.callText()` using task='generation', tier='powerful'
+ * (gemini-2.5-pro — matches the prior `GEMINI_PRO_MODEL` binding).
+ *
+ * This module is Node-only (used by `services/core/noRepeatService`, test
+ * scripts, and the dev-only Express route handlers). It builds a minimal
+ * `GatewayContext` from `process.env` on each call so it can share the same
+ * telemetry + fallback + cost-tracking pipeline as the Cloudflare Edge
+ * endpoints — without forking logic between runtimes.
+ */
 import { v4 as uuidv4 } from 'uuid';
 import { ConditionData, GeneratedQuestion, QuestionType } from '../types/question';
 import { validateQuestion } from './questionValidator';
-import { GEMINI_PRO_MODEL } from "@/config/topic-map";
+import {
+  gateway,
+  GatewayError,
+  type GatewayContext,
+} from './ai/aiGateway';
 
-// Initialize Gemini (use pro model for heavy generation; allows env override via constants)
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
   console.warn('GEMINI_API_KEY environment variable is not set. Question generation will fail.');
 }
-const genAI = new GoogleGenerativeAI(API_KEY || '');
-const model = genAI.getGenerativeModel({ model: GEMINI_PRO_MODEL });
+
+/**
+ * Construct a minimal `GatewayContext` for Node-side callers. The gateway
+ * expects the Cloudflare env shape; we mimic it using process.env so the same
+ * gateway code path can service both runtimes.
+ */
+function buildNodeGatewayContext(): GatewayContext {
+  return {
+    env: {
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? '',
+    },
+  };
+}
 
 const SYSTEM_INSTRUCTION = `
 You are a strict medical education assistant for the PANaCEa platform. 
@@ -119,11 +143,24 @@ export async function generateSingleQuestion(
   `;
 
   try {
-    const result = await model.generateContent([SYSTEM_INSTRUCTION, prompt]);
-    const response = result.response;
-    const text = response.text();
+    const result = await gateway.callText(buildNodeGatewayContext(), {
+      mode: 'text',
+      task: 'generation',
+      tier: 'powerful', // matches prior GEMINI_PRO_MODEL = gemini-2.5-pro binding
+      endpoint: 'lib/questionGenerator',
+      systemPrompt: SYSTEM_INSTRUCTION,
+      userPrompt: prompt,
+    });
 
-    // Sanitize markdown code blocks if present
+    if (result.blocked) {
+      console.warn('Question generation blocked by safety filter');
+      return null;
+    }
+
+    const text = result.text ?? '';
+
+    // Sanitize markdown code blocks if present (gateway text path does not
+    // force responseMimeType: 'application/json', so fences may appear).
     const jsonString = text.replace(/```json|```/g, '').trim();
 
     let parsed;
@@ -152,13 +189,14 @@ export async function generateSingleQuestion(
 
     return question;
   } catch (error: any) {
-    const message =
-      error?.message?.includes('API key') || error?.status === 400
-        ? 'Gemini call failed. Verify GEMINI_API_KEY is valid for the selected model (' +
-          GEMINI_PRO_MODEL +
-          ') and has access to 2.5 Pro.'
-        : 'Error generating question';
-    console.error(`${message}:`, error);
+    if (error instanceof GatewayError) {
+      console.error(
+        `Gateway error during question generation [${error.code}]: ${error.message}`,
+        { endpoint: 'lib/questionGenerator', task: 'generation' }
+      );
+      return null;
+    }
+    console.error('Error generating question:', error);
     return null;
   }
 }

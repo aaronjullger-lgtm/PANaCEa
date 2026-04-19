@@ -1,9 +1,27 @@
+/**
+ * ContrastiveDrillSession — LOBBY LAYER for the Contrastive drill.
+ *
+ * Architectural note: this component is intentionally paired with
+ * `ContrastiveDrill.tsx`, which is the PLAY LAYER. They are NOT duplicates.
+ *
+ * - `ContrastiveDrillSession` (this file): fetches available sets from
+ *   `/api/drills/contrastive/sets`, renders the landing page / set picker /
+ *   summary card, and manages drill lifecycle state.
+ * - `ContrastiveDrill`: receives `{ set, drillId, onComplete }` and runs the
+ *   gameplay — uses `useContrastiveDrill` hook, submits to FSRS via the
+ *   canonical pipeline.
+ *
+ * FSRS submission happens via the child (`ContrastiveDrill`), not here.
+ * Wired into `components/layout/DrillViewRouter.tsx` and `config/lazyComponents.tsx`.
+ */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from './DrillLandingPage';
 import { ContrastiveDrill } from './ContrastiveDrill';
-import { Target, Loader2, ChevronRight } from 'lucide-react';
+import { Target, ChevronRight } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 import { toast } from '@/lib/toast';
 
@@ -33,6 +51,8 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
   const [isLoadingSets, setIsLoadingSets] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [showSetPicker, setShowSetPicker] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [lastStats, setLastStats] = useState<{ correct: number; total: number } | null>(null);
 
   // Fetch available contrastive sets on mount
   useEffect(() => {
@@ -102,9 +122,35 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
 
   const handleComplete = (stats: any) => {
     setIsPlaying(false);
+    if (stats && typeof stats.correct === 'number' && typeof stats.total === 'number') {
+      setLastStats({ correct: stats.correct, total: stats.total });
+      setShowSummary(true);
+    }
     setSelectedSet(null);
     setDrillId(null);
   };
+
+  // Summary view
+  if (showSummary && lastStats) {
+    return (
+      <DrillShell
+        title="Contrastive Learning — Complete"
+        breadcrumb={['Drills', 'Contrastive', 'Results']}
+        onBackToHub={onExit}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Contrastive Learning"
+          icon={Target}
+          accentColor="var(--color-accent)"
+          stats={{ correct: lastStats.correct, total: lastStats.total, streak: 0 }}
+          onNewSession={() => { setShowSummary(false); setLastStats(null); }}
+          onExit={onExit}
+          newSessionLabel="Practice More"
+        />
+      </DrillShell>
+    );
+  }
 
   // Set picker view
   if (showSetPicker) {
@@ -122,8 +168,8 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
           </p>
 
           {isLoadingSets ? (
-            <div role="status" aria-label="Loading study sets" className="flex items-center justify-center h-48">
-              <Loader2 aria-hidden="true" className="w-6 h-6 animate-spin text-data-neutral" />
+            <div role="status" aria-label="Loading study sets" aria-live="polite" className="flex items-center justify-center h-48">
+              <InlineSpinner size="lg" className="text-data-neutral" />
             </div>
           ) : availableSets.length === 0 ? (
             <div className="text-center text-data-neutral py-8">

@@ -12,6 +12,14 @@
  */
 
 import { logger } from '../../logger';
+import {
+  ok,
+  failed,
+  classifyError,
+  failedFromResponse,
+  dataOrEmpty,
+  type EnrichmentResult,
+} from '../enrichment/enrichmentResult';
 
 const LOG_SCOPE = 'PubMed';
 const pubmedLogger = logger.scope(LOG_SCOPE);
@@ -60,6 +68,25 @@ export async function enrichWithPubMed(
     maxResults?: number;
   }
 ): Promise<PubMedCitation[]> {
+  // Legacy shape preserved for callers that silently degrade (question-generator
+  // Edge path, dev generation service). New UI code should call
+  // `enrichWithPubMedResult` to render an explicit failure state.
+  return dataOrEmpty(await enrichWithPubMedResult(condition, options));
+}
+
+/**
+ * Result-returning variant of {@link enrichWithPubMed}. Returns a discriminated
+ * union so UI can distinguish "no citations found" (`ok` with empty data) from
+ * "evidence service is down" (`failed`). Never throws.
+ */
+export async function enrichWithPubMedResult(
+  condition: string,
+  options?: {
+    topic?: string;
+    ncbiApiKey?: string;
+    maxResults?: number;
+  }
+): Promise<EnrichmentResult<PubMedCitation[]>> {
   const { topic, ncbiApiKey, maxResults = MAX_CITATIONS } = options ?? {};
 
   try {
@@ -86,7 +113,7 @@ export async function enrichWithPubMed(
 
     if (!searchRes.ok) {
       pubmedLogger.warn(`Search failed: ${searchRes.status}`);
-      return [];
+      return failedFromResponse(searchRes, 'PubMed search');
     }
 
     const searchData = (await searchRes.json()) as {
@@ -113,10 +140,10 @@ export async function enrichWithPubMed(
           esearchresult?: { idlist?: string[] };
         };
         const broadPmids = broadData.esearchresult?.idlist ?? [];
-        if (broadPmids.length === 0) return [];
+        if (broadPmids.length === 0) return ok([]);
         pmids.push(...broadPmids.slice(0, maxResults));
       } else {
-        return [];
+        return failedFromResponse(broadRes, 'PubMed search (broad)');
       }
     }
 
@@ -134,7 +161,7 @@ export async function enrichWithPubMed(
 
     if (!summaryRes.ok) {
       pubmedLogger.warn(`Summary fetch failed: ${summaryRes.status}`);
-      return [];
+      return failedFromResponse(summaryRes, 'PubMed summary');
     }
 
     const summaryData = (await summaryRes.json()) as {
@@ -142,7 +169,7 @@ export async function enrichWithPubMed(
     };
 
     const result = summaryData.result;
-    if (!result) return [];
+    if (!result) return failed('invalid_response', 'PubMed summary had no result payload');
 
     // Step 3: Format citations
     const citations: PubMedCitation[] = [];
@@ -178,11 +205,12 @@ export async function enrichWithPubMed(
       });
     }
 
-    return citations.slice(0, maxResults);
+    return ok(citations.slice(0, maxResults));
   } catch (err) {
-    // Non-fatal — questions generate without PubMed if this fails
+    // Non-fatal for question generation — but callers using the *Result variant
+    // see the typed failure so the UI can render an explicit "unavailable" badge.
     pubmedLogger.warn('Enrichment failed', { error: err instanceof Error ? err.message : err });
-    return [];
+    return classifyError(err);
   }
 }
 

@@ -1,0 +1,144 @@
+# purpose: Run the daily learner-model refresh lane, currently centered on bounded user-profile enrichment ahead of prescription and insight generation.
+# owner: Learning / Personalization
+# trigger strategy: schedule + workflow_dispatch; runs before daily ops so derived learner state can feed later prescriptions and insights.
+# secrets required: DATABASE_URL
+# expected runtime: 10-30 minutes depending on active-user volume and manual batch-limit inputs.
+# failure behavior: Fail the run, upload learner-model report artifacts, and leave a step summary with the processed-user count or failure point.
+
+name: Sched - Daily Learning Models
+
+on:
+  schedule:
+    - cron: "13 3 * * *"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Use sample for a safe preview-sized run; use scheduled-default only when you intend the full lane shape.
+        required: false
+        default: sample
+        type: choice
+        options:
+          - sample
+          - scheduled-default
+      report_only:
+        description: Preview the eligible-user count without writing learner-model updates.
+        required: false
+        default: true
+        type: boolean
+      profile_limit:
+        description: Maximum active users to include. Leave at 25 for sample runs; set 0 only for the scheduled-default shape.
+        required: false
+        default: "25"
+        type: string
+      batch_size:
+        description: Batch size for profile enrichment.
+        required: false
+        default: "25"
+        type: string
+      lookback_days:
+        description: Active-user lookback window in days.
+        required: false
+        default: "30"
+        type: string
+      environment_guard:
+        description: Required before a manual run is allowed to write learner-model state.
+        required: false
+        default: report-only
+        type: choice
+        options:
+          - report-only
+          - allow-learning-model-writes
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-daily-learning-models
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Daily Learning Models
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Run daily learning-model refresh
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          limit="${{ github.event_name == 'workflow_dispatch' && inputs.profile_limit || '0' }}"
+          batch_size="${{ github.event_name == 'workflow_dispatch' && inputs.batch_size || '50' }}"
+          lookback_days="${{ github.event_name == 'workflow_dispatch' && inputs.lookback_days || '90' }}"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.target_scope }}" = "sample" ] && [ "${limit}" = "0" ]; then
+              limit="25"
+            fi
+
+            if [ "${{ inputs.report_only }}" != "true" ] && [ "${{ inputs.environment_guard }}" != "allow-learning-model-writes" ]; then
+              echo "Manual learner-model writes require environment_guard=allow-learning-model-writes." >&2
+              exit 1
+            fi
+          fi
+
+          args=(
+            --limit "${limit}"
+            --batch-size "${batch_size}"
+            --lookback-days "${lookback_days}"
+          )
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.report_only || false }}" = "true" ]; then
+            args+=(--report-only)
+          fi
+
+          npm run automation:daily:learning-models -- "${args[@]}"
+
+      - name: Upload learner-model artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sched-daily-learning-models-${{ github.run_number }}
+          path: |
+            logs/daily-learning-models/*.json
+            logs/daily-learning-models/*.md
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Write workflow summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Workflow Summary"
+            echo ""
+            echo "- Workflow: sched-daily-learning-models.yml"
+            echo "- Node: ${NODE_VERSION}"
+            echo "- Target scope: ${{ github.event_name == 'workflow_dispatch' && inputs.target_scope || 'scheduled-default' }}"
+            echo "- Report only: ${{ github.event_name != 'workflow_dispatch' || inputs.report_only }}"
+            echo "- Profile limit: ${{ github.event_name == 'workflow_dispatch' && inputs.profile_limit || '0' }}"
+            echo "- Batch size: ${{ github.event_name == 'workflow_dispatch' && inputs.batch_size || '50' }}"
+            echo "- Lookback days: ${{ github.event_name == 'workflow_dispatch' && inputs.lookback_days || '90' }}"
+            echo "- Artifact directory: logs/daily-learning-models/"
+            echo "- Artifact retention: 14 days"
+            echo "- Next action on failure: inspect the latest learner-model markdown artifact before rerunning; keep manual runs in report-only mode unless a full write is truly needed."
+          } >> "${GITHUB_STEP_SUMMARY}"

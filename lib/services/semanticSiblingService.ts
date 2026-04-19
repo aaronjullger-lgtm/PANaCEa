@@ -546,7 +546,8 @@ export function serializeBoostRecords(records: SiblingBoostRecord[]): string {
 export function deserializeBoostRecords(json: string): SiblingBoostRecord[] {
   try {
     return JSON.parse(json);
-  } catch {
+  } catch (err) {
+    console.debug('[semanticSiblingService] failed to deserialize boost records', err);
     return [];
   }
 }

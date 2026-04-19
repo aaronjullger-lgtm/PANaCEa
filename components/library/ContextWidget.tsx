@@ -7,7 +7,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Pill, Activity, AlertCircle, Loader2 } from 'lucide-react';
+import { Pill, Activity, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -73,8 +74,13 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
           <Icon className="w-5 h-5" style={{ color: iconColor }} />
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
         </div>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
+        <div
+          className="flex items-center justify-center py-8"
+          role="status"
+          aria-live="polite"
+          aria-label={`Loading ${title.toLowerCase()}`}
+        >
+          <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />
         </div>
       </div>
     );

@@ -15,84 +15,33 @@
 
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
-
-/** NCCPA 2025 Blueprint target weights (sum ≈ 1.0) */
-const NCCPA_TARGET: Record<string, number> = {
-  Cardiovascular: 0.11,
-  Pulmonary: 0.09,
-  Gastrointestinal: 0.09,
-  Musculoskeletal: 0.09,
-  HEENT: 0.08,
-  Reproductive: 0.08,
-  Neurological: 0.07,
-  Psychiatry: 0.07,
-  Endocrine: 0.06,
-  Dermatology: 0.05,
-  Genitourinary: 0.05,
-  Hematology: 0.04,
-  'Infectious Disease': 0.04,
-  Nephrology: 0.04,
-  'Emergency Medicine': 0.02,
-};
+import { NCCPA_2025_BLUEPRINT, normalizeSystemName } from '../../../lib/constants/blueprint';
 
 /**
- * Normalize raw system strings from the DB to canonical NCCPA names.
- * Handles abbreviations, case variations, and common aliases.
+ * NCCPA 2025 Blueprint target weights, excluding the "General" fallback
+ * category. Drives both the normalization allow-list and the output rows.
+ *
+ * Re-derived from canonical {@link NCCPA_2025_BLUEPRINT} so the dashboard
+ * heatmap and any other blueprint consumer stay in lock-step. This makes
+ * NCCPA weight drift a single-file change, not a whack-a-mole bug.
  */
-const SYSTEM_ALIASES: Record<string, string> = {
-  // Abbreviations used in BlueprintProgressBar and older data
-  cv: 'Cardiovascular',
-  cardiovascular: 'Cardiovascular',
-  cardiology: 'Cardiovascular',
-  pulm: 'Pulmonary',
-  pulmonary: 'Pulmonary',
-  respiratory: 'Pulmonary',
-  gi: 'Gastrointestinal',
-  gastrointestinal: 'Gastrointestinal',
-  'gastrointestinal/nutrition': 'Gastrointestinal',
-  msk: 'Musculoskeletal',
-  musculoskeletal: 'Musculoskeletal',
-  orthopedic: 'Musculoskeletal',
-  orthopedics: 'Musculoskeletal',
-  heent: 'HEENT',
-  eent: 'HEENT',
-  'head/neck/ent': 'HEENT',
-  repro: 'Reproductive',
-  reproductive: 'Reproductive',
-  'ob/gyn': 'Reproductive',
-  obgyn: 'Reproductive',
-  neuro: 'Neurological',
-  neurological: 'Neurological',
-  neurologic: 'Neurological',
-  neurology: 'Neurological',
-  psych: 'Psychiatry',
-  psychiatry: 'Psychiatry',
-  'psychiatry/behavioral': 'Psychiatry',
-  behavioral: 'Psychiatry',
-  endo: 'Endocrine',
-  endocrine: 'Endocrine',
-  endocrinology: 'Endocrine',
-  derm: 'Dermatology',
-  dermatology: 'Dermatology',
-  dermatologic: 'Dermatology',
-  gu: 'Genitourinary',
-  genitourinary: 'Genitourinary',
-  heme: 'Hematology',
-  hematology: 'Hematology',
-  hematologic: 'Hematology',
-  id: 'Infectious Disease',
-  'infectious disease': 'Infectious Disease',
-  'infectious diseases': 'Infectious Disease',
-  renal: 'Nephrology',
-  nephrology: 'Nephrology',
-  emergency: 'Emergency Medicine',
-  'emergency medicine': 'Emergency Medicine',
-};
+const NCCPA_TARGET: Record<string, number> = Object.fromEntries(
+  Object.entries(NCCPA_2025_BLUEPRINT).filter(([name]) => name !== 'General')
+);
 
+/**
+ * Normalize a raw DB system string to a canonical blueprint name, using the
+ * single source of truth in lib/constants/blueprint.ts. Returns null if the
+ * value does not map to a real blueprint system (e.g. "General" fallback or
+ * an unknown tag) so the caller can skip it cleanly.
+ */
 function normalizeSystem(raw: string | null): string | null {
   if (!raw) return null;
-  return SYSTEM_ALIASES[raw.toLowerCase().trim()] ?? null;
+  const canonical = normalizeSystemName(raw.trim());
+  if (!canonical || !(canonical in NCCPA_TARGET)) return null;
+  return canonical;
 }
 
 const querySchema = z.object({}).optional().default({});
@@ -122,11 +71,25 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
+      // Resolve Clerk id to internal User.id — QuestionAttempt/PerformanceRecord use the internal id.
+      const userId = await resolveUserId(prisma, context.auth.userId);
+      if (!userId) {
+        return {
+          data: {
+            systems: [],
+            totalAttempts: 0,
+            coverageScore: 0,
+            meta: { status: 'user_not_synced' },
+          },
+          status: 404,
+        };
+      }
+
       // Load the rows directly and aggregate in JS to stay aligned with the
       // current Prisma type surface.
       const attempts = await prisma.questionAttempt.findMany({
         where: {
-          userId: context.auth.userId,
+          userId,
           systemNormalized: { not: null },
         },
         select: {
@@ -155,7 +118,7 @@ export const onRequestGet = authenticatedEndpoint(
       if (totalAttempts === 0) {
         const perfRecords = await prisma.performanceRecord.findMany({
           where: {
-            userId: context.auth.userId,
+            userId,
             system: { not: null },
           },
           select: {

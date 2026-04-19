@@ -6,18 +6,19 @@
  *
  * Body: multipart/form-data with "file" field. Optional "displayName".
  * Max file size: 50MB (Edge limit).
+ *
+ * Validation model:
+ *   - Content-type gate (415) rejects non-multipart requests before formData()
+ *     materializes the body.
+ *   - Content-Length short-circuit (413) rejects oversized payloads before
+ *     materialization. A post-materialization file.size guard remains as
+ *     defense-in-depth for requests that omit or misreport Content-Length.
+ *   - MIME whitelist (ALLOWED_MIMES) enforces the file-type contract.
+ *   - File-level shape checks (presence, non-empty) run after formData().
  */
 
-import {
-  withCors,
-  withMiddleware,
-  withAuth,
-  withErrorHandling,
-  withRateLimit,
-  withLogging,
-  withEnvCheck,
-  type AuthenticatedContext,
-} from '../_shared/middleware';
+import { z } from 'zod';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -74,14 +75,13 @@ async function uploadToGeminiFiles(
   return { fileUri, name };
 }
 
-export const onRequestPost = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck('FULL_STACK'),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 20, endpointType: 'api' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+// Uses source:'query' with a permissive schema so the wrapper doesn't consume
+// the multipart body before the handler can call request.formData(). Gemini
+// env validation stays inside the handler since the canonical wrapper's
+// env check covers DATABASE + AUTH but not GEMINI_API_KEY.
+export const onRequestPost = aiEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const { env, request } = context;
     const logger = createEndpointLogger('/api/knowledge/upload');
     try {
@@ -90,6 +90,31 @@ export const onRequestPost = withMiddleware(
       if (e instanceof MissingEnvError) return e.toResponse();
       throw e;
     }
+
+    // Content-type gate: only multipart/form-data is supported.
+    // Rejecting before formData() avoids wasted work on misrouted traffic.
+    const contentType = request.headers.get('content-type') ?? '';
+    if (!contentType.includes('multipart/form-data')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Unsupported content-type. Expected multipart/form-data with a "file" field.',
+        }),
+        { status: 415, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Content-Length short-circuit: reject oversized payloads before formData()
+    // materializes the whole body into memory. The post-materialization
+    // file.size check below remains as a defense-in-depth safety net for
+    // requests that omit or misreport Content-Length.
+    const contentLength = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
+    if (Number.isFinite(contentLength) && contentLength > MAX_FILE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: `Payload too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB` }),
+        { status: 413, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     try {
       const formData = await request.formData();
       const file = formData.get('file') as File | null;
@@ -132,5 +157,6 @@ export const onRequestPost = withMiddleware(
         headers: { 'Content-Type': 'application/json' },
       });
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 20 }
 );

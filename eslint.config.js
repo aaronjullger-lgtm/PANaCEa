@@ -50,5 +50,45 @@ export default tseslint.config(
       'no-console': 'off', // Re-enable and replace with logger when ready
       'prefer-const': 'warn',
     },
-  }
+  },
+  /* ---------- Design-system guardrail ----------
+   * Block raw hex color literals anywhere in the source tree except:
+   *   - `lib/tokens/**`       — the canonical token layer
+   *   - `tailwind.config.js`  — the Tailwind palette source
+   *   - `index.css`           — the CSS-variable definition file
+   *   - test files            — fixtures often need raw values
+   *
+   * New colors MUST be added to `lib/tokens/` (CSS var + token export) and
+   * consumed from there. See `lib/tokens/safety.ts` for the sole pinned-hex
+   * exception (clinical safety reds).
+   */
+  {
+    files: ['**/*.{ts,tsx}'],
+    ignores: [
+      'lib/tokens/**',
+      'tailwind.config.js',
+      'index.css',
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+      'tests/**',
+      'vitest-mocks/**',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector:
+            "Literal[value=/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]",
+          message:
+            'Raw hex colors are not allowed outside `lib/tokens/`. Import from `@/lib/tokens` or add a CSS variable in `index.css` and expose it via the token layer.',
+        },
+        {
+          selector:
+            "TemplateElement[value.raw=/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})(?![0-9a-fA-F])/]",
+          message:
+            'Raw hex colors in template strings are not allowed outside `lib/tokens/`. Import from `@/lib/tokens`.',
+        },
+      ],
+    },
+  },
 );

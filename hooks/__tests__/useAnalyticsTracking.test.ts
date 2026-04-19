@@ -3,7 +3,13 @@ import { renderHook, act } from '@testing-library/react';
 
 // Mock dependencies before importing
 vi.mock('@/lib/logger', () => ({
-  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+  logger: {
+    warn: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    scope: vi.fn(() => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() })),
+  },
 }));
 
 vi.mock('@/services/analytics', () => ({

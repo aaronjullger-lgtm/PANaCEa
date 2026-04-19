@@ -1,0 +1,110 @@
+# purpose: Run bounded weekly housekeeping such as backup and historical background-job retention, separate from report-only work.
+# owner: Platform / Data Maintenance
+# trigger strategy: schedule + workflow_dispatch; keep this lane intentionally narrow and rerun-safe.
+# secrets required: DATABASE_URL.
+# expected runtime: 30-45 minutes depending on backup size and retention cleanup volume.
+# failure behavior: Fail the lane, inspect the maintenance report plus backup output, and rerun manually only after confirming the cleanup blast radius.
+
+name: Sched - Weekly Maintenance
+
+on:
+  schedule:
+    - cron: "47 7 * * 0"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Retention-cleanup is the safer first run; full-maintenance also includes the backup snapshot.
+        required: false
+        default: retention-cleanup
+        type: choice
+        options:
+          - retention-cleanup
+          - full-maintenance
+      report_only:
+        description: Keep the manual run preview-only by skipping the backup and forcing dry-run cleanup.
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: Preview retention cleanup without deleting historical jobs.
+        required: false
+        default: true
+        type: boolean
+      retention_days:
+        description: Retention period for completed or failed background jobs.
+        required: false
+        default: "30"
+        type: string
+      environment_guard:
+        description: Required before a manual run is allowed to perform live weekly maintenance work.
+        required: false
+        default: report-only
+        type: choice
+        options:
+          - report-only
+          - allow-weekly-maintenance-write
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-weekly-maintenance
+  cancel-in-progress: false
+
+jobs:
+  run:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/_automation-lane.yml
+    secrets: inherit
+    with:
+      lane_name: Weekly Maintenance
+      lane_slug: weekly-maintenance
+      shell_commands: |
+        set -euo pipefail
+        args=(--retention-days "${{ github.event_name == 'workflow_dispatch' && inputs.retention_days || '30' }}")
+
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          case "${{ inputs.target_scope }}" in
+            retention-cleanup|full-maintenance) ;;
+            *)
+              echo "Unknown target_scope for weekly maintenance." >&2
+              exit 1
+              ;;
+          esac
+
+          if [ "${{ inputs.report_only }}" != "true" ] && [ "${{ inputs.environment_guard }}" != "allow-weekly-maintenance-write" ]; then
+            echo "Manual live maintenance requires environment_guard=allow-weekly-maintenance-write." >&2
+            exit 1
+          fi
+
+          if [ "${{ inputs.report_only }}" = "true" ]; then
+            args+=(--skip-backup --dry-run)
+          else
+            if [ "${{ inputs.target_scope }}" = "retention-cleanup" ]; then
+              args+=(--skip-backup)
+            fi
+
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              args+=(--dry-run)
+            fi
+          fi
+
+          {
+            echo "### Weekly Maintenance Mode"
+            echo ""
+            echo "- Target scope: ${{ inputs.target_scope }}"
+            echo "- Report only: ${{ inputs.report_only }}"
+            echo "- Dry run: ${{ inputs.report_only || inputs.dry_run }}"
+            echo "- Retention days: ${{ inputs.retention_days }}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+        fi
+
+        npm run automation:weekly:maintenance -- "${args[@]}"
+      artifact_path: |
+        logs/weekly-maintenance/*.json
+        logs/weekly-maintenance/*.md
+        backups/**
+      artifact_retention_days: 14
+      timeout_minutes: 45
+      node_version: "22"

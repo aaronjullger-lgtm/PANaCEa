@@ -223,6 +223,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       try {
         return new Set(JSON.parse(saved) as SystemCode[]);
       } catch {
+        console.debug('[CommandCenterWorkspace] Failed to parse enabled systems from localStorage', err);
         return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
       }
     }
@@ -235,8 +236,8 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       if (!saved) return;
       try {
         setEnabledSystems(new Set(JSON.parse(saved) as SystemCode[]));
-      } catch {
-        /* ignore malformed storage */
+      } catch (err) {
+        console.debug('[CommandCenterWorkspace] Malformed enabled systems in storage', err);
       }
     };
     globalThis.addEventListener('panceai_enabled_systems_changed', handler);

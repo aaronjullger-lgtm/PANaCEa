@@ -32,7 +32,7 @@ function getUtcDateStart(d: Date): Date {
   return t;
 }
 
-function normalizeCorrectIndexFromAny(data: any): number {
+function normalizeCorrectIndexFromAny(data: Record<string, unknown>): number {
   const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5 };
 
   const maybeLetter =
@@ -93,7 +93,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       let correctIndex = 0;
       if (pre) {
-        correctIndex = normalizeCorrectIndexFromAny(pre.questionData as any);
+        correctIndex = normalizeCorrectIndexFromAny(pre.questionData as Record<string, unknown>);
       } else {
         const main = await prisma.question.findUnique({
           where: { id: attempt.questionId },
@@ -134,8 +134,8 @@ export const onRequestPost = authenticatedEndpoint(
           },
         },
       };
-    } catch (error: any) {
-      log.error('Targeted daily submit error', { error: error?.message ?? String(error) });
+    } catch (error: unknown) {
+      log.error('Targeted daily submit error', { error: error instanceof Error ? error.message : String(error) });
       return { status: 500, error: 'Failed to submit targeted daily question' };
     } finally {
       await safePrismaDisconnect(prisma);

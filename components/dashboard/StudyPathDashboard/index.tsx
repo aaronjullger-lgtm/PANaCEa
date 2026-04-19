@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import {
@@ -15,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InlineSpinner } from '@/components/loading';
 import {
   WorkspaceEmptyState,
   WorkspaceHeroStrip,
@@ -86,6 +88,7 @@ function formatFatigueLabel(level: StudyPlan['metadata']['fatigueRisk']) {
 }
 
 const StudyPathDashboard = () => {
+  const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -227,8 +230,12 @@ const StudyPathDashboard = () => {
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
           <WorkspaceSurface accent="#b39b6c">
-            <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-accent)] border-b-transparent" />
+            <div
+              className="flex min-h-[16rem] flex-col items-center justify-center gap-4 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Loading your personalized study path...
               </p>
@@ -508,9 +515,9 @@ const StudyPathDashboard = () => {
             {sortedSessions.map((session, index) => (
               <motion.div
                 key={session.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, delay: Math.min(index * 0.03, 0.24) }}
               >
                 <WorkspaceSurface accent={index % 2 === 0 ? '#c4b78a' : '#728ba6'}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

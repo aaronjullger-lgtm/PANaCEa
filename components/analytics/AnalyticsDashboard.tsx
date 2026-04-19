@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
 import { useAuth } from '@clerk/clerk-react';
-import { SkeletonLoader, SkeletonCard } from '@/components/loading';
+import { SkeletonLoader, SkeletonCard, InlineSpinner } from '@/components/loading';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
@@ -828,8 +828,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
               </div>
               {stabilityLoading && (
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex items-center gap-2" role="status" aria-live="polite">
+                  <InlineSpinner size="sm" className="text-[var(--color-accent)]" />
                   <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
                 </div>
               )}

@@ -1,14 +1,14 @@
-export const sectionTitleClass =
-  'text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)] sm:text-2xl';
+/**
+ * Legacy class-string tokens. Re-exported from `@/lib/tokens` so existing
+ * consumers (SectionHeader, EmptyState, ContentGrid) keep working while the
+ * canonical tokens live in a single place.
+ */
+import { textClass } from '@/lib/tokens';
 
-export const sectionHeadingClass =
-  'text-lg font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]';
-
-export const sectionSubtitleClass =
-  'text-sm leading-6 text-[var(--color-text-secondary)] sm:text-base';
-
-export const bodySupportClass =
-  'text-sm leading-6 text-[var(--color-text-secondary)]';
+export const sectionTitleClass = textClass.pageTitle;
+export const sectionHeadingClass = textClass.sectionTitle;
+export const sectionSubtitleClass = textClass.sectionSubtitle;
+export const bodySupportClass = textClass.bodySupport;
 
 export const sectionHeaderRowClass =
   'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between';

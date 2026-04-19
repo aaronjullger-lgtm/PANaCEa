@@ -286,6 +286,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                 <button
                   onClick={onExit}
                   className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  aria-label="Exit Clinical Eye mode"
                 >
                   <X className="w-5 h-5" />
                 </button>

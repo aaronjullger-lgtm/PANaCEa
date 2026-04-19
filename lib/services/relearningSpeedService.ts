@@ -97,7 +97,8 @@ export async function getOriginalLearningRt(
       select: { responseTimeMs: true },
     });
     return firstReview?.responseTimeMs ?? null;
-  } catch {
+  } catch (err) {
+    console.debug('[relearningSpeedService] original learning RT lookup failed', err);
     return null;
   }
 }

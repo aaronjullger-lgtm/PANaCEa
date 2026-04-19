@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { History, TrendingUp, Award, Loader, MessageSquare, AlertTriangle, Stethoscope } from 'lucide-react';
+import { History, TrendingUp, Award, MessageSquare, AlertTriangle, Stethoscope } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { InlineSpinner } from '@/components/loading';
 
 interface StatsData {
   totalEncounters: number;
@@ -54,8 +55,16 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
           throw new Error('Failed to fetch OSCE stats');
         }
 
+        // Middleware strips `{ data: ... }` at the HTTP layer, so stats
+        // live at the top level. Prior code read `json.data`, which was
+        // always undefined — the OSCE history panel showed "no data" for
+        // every user. Accept both shapes defensively.
         const json: any = await response.json();
-        setStats(json.data);
+        const payload =
+          json && typeof json === 'object' && 'totalEncounters' in json
+            ? json
+            : json?.data ?? null;
+        setStats(payload);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -92,8 +101,8 @@ const OSCEHistoryPanel: React.FC<OSCEHistoryPanelProps> = ({
   if (loading) {
     return (
       <div className="w-full max-w-2xl bg-data-neutral-bg border border-data-neutral rounded-lg p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Loader className="w-5 h-5 animate-spin text-data-neutral" />
+        <div className="flex items-center gap-2 mb-6" role="status" aria-live="polite">
+          <InlineSpinner size="md" className="text-data-neutral" />
           <h2 className="text-lg font-semibold text-data-neutral">
             Loading history...
           </h2>

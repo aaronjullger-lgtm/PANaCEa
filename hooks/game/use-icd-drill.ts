@@ -173,7 +173,9 @@ export function useICDDrill(): UseICDDrillReturn {
         setStreak(0);
       }
 
-      // Submit to FSRS
+      // Submit to FSRS (fire-and-forget, but guard against unhandled rejections —
+      // useDrillFSRS internally handles toast + offline queueing; we just need to
+      // ensure any remaining error doesn't bubble up to the browser as an uncaught promise.)
       const selectedOption = currentQuestion.options[answerIndex];
       submitAnswerFSRS({
         questionId: currentQuestion.id,
@@ -181,6 +183,11 @@ export function useICDDrill(): UseICDDrillReturn {
         correctAnswer: currentQuestion.correctCode,
         isCorrect: correct,
         timeSpentMs: Date.now() - questionStartTimeRef.current,
+      }).catch((err) => {
+        // Error already surfaced via useDrillFSRS toast; log for dev visibility.
+        if (import.meta.env.DEV) {
+          console.warn('[use-icd-drill] submitAnswerFSRS error (already handled):', err);
+        }
       });
     },
     [currentQuestion, userAnswerIndex, submitAnswerFSRS]

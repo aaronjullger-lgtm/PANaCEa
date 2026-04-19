@@ -1,0 +1,37 @@
+name = "panacea-cron-worker"
+main = "src/index.ts"
+compatibility_date = "2025-12-15"
+compatibility_flags = ["nodejs_compat"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cron Triggers — replaces the 3 GitHub Actions cron workflows.
+#
+# Pages Functions don't support cron triggers directly, but a separate Worker
+# can. This worker just POSTs to the /api/cron/* endpoints on the panacea
+# Pages project, using the CRON_SECRET bearer token the endpoints already
+# expect.
+#
+# Schedule syntax: https://developers.cloudflare.com/workers/configuration/cron-triggers/
+#
+# Schedules mirror the intent of the GH Actions workflows:
+#   hourly   — every hour on the hour         (hourly-automation.yml)
+#   daily    — 03:00 UTC                      (daily-automation.yml — 0 3 * * *)
+#   weekly   — Sunday 07:00 UTC               (weekly-automation.yml — 0 7 * * 0)
+#   every 2h — reservoir maintenance          (new — matches reservoir policy)
+# ─────────────────────────────────────────────────────────────────────────────
+[triggers]
+crons = [
+  "0 * * * *",      # hourly  — health checks + reservoir top-up
+  "0 */2 * * *",    # every 2h — reservoir maintenance
+  "0 3 * * *",      # daily   — aggregate analytics, daily prescriptions, pool replenish
+  "0 7 * * 0",      # weekly  — deep health checks + user reports
+  "0 */4 * * *",    # every 4h — push reminders
+]
+
+# Secrets (set via `npx wrangler secret put <name>`):
+#   CRON_SECRET     — same value as the Pages project's CRON_SECRET
+#   PRODUCTION_URL  — https://studypanacea.com
+
+[vars]
+# Optional overrides. PRODUCTION_URL and CRON_SECRET come from secrets.
+WORKER_LABEL = "panacea-cron"

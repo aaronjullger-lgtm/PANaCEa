@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import {
@@ -120,6 +121,7 @@ const PilotView = () => {
 };
 
 const UnifiedDashboard = () => {
+  const prefersReducedMotion = useReducedMotion();
   const { user } = useUser();
   const { getToken } = useAuth();
   const retentionFetcher = useCallback(createRetentionFetcher(getToken), [getToken]);
@@ -136,8 +138,9 @@ const UnifiedDashboard = () => {
   useEffect(() => {
     try {
       localStorage.setItem(DASHBOARD_VIEW_KEY, view);
-    } catch {
-      // ignore
+    } catch (storageErr) {
+      // Benign: storage quota, private-mode Safari, or disabled storage.
+      console.debug('[UnifiedDashboard] localStorage write rejected', storageErr);
     }
   }, [view]);
 
@@ -161,9 +164,9 @@ const UnifiedDashboard = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ===== HEADER SECTION - Enhanced with gradient text ===== */}
         <motion.div
-          initial={{ y: -20 }}
+          initial={prefersReducedMotion ? false : { y: -20 }}
           animate={{ y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
           className="pt-2"
         >
           <div className="flex items-center gap-3 mb-2">

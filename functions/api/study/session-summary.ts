@@ -101,7 +101,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Calculate fractions and accuracy
       for (const sys of Object.keys(sessionBreakdown)) {
-        const entry = sessionBreakdown[sys];
+        const entry = sessionBreakdown[sys]!;
         entry.fraction = totalReviews > 0 ? entry.count / totalReviews : 0;
         entry.accuracy = entry.count > 0 ? entry.correct / entry.count : 0;
       }
@@ -153,7 +153,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       if (weakSystems.length > 0) {
         recommendations.push(
-          `Review ${weakSystems[0][0]} — ${Math.round(weakSystems[0][1].accuracy * 100)}% accuracy this session`
+          `Review ${weakSystems[0]![0]} — ${Math.round(weakSystems[0]![1].accuracy * 100)}% accuracy this session`
         );
       }
 

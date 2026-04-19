@@ -14,7 +14,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const AllowedSystemSchema = z.enum([
@@ -57,7 +57,7 @@ function fnv1a32(input: string): number {
   return hash >>> 0;
 }
 
-function normalizeOptions(data: any): string[] {
+function normalizeOptions(data: Record<string, unknown>): string[] {
   const optionsData = data?.options || data?.answers || data?.choices;
   if (Array.isArray(optionsData)) return optionsData.filter(Boolean);
   if (optionsData && typeof optionsData === 'object') {
@@ -70,7 +70,7 @@ function normalizeOptions(data: any): string[] {
   return [];
 }
 
-async function fetchQuestionForId(prisma: any, questionId: string) {
+async function fetchQuestionForId(prisma: EdgePrismaClient, questionId: string) {
   // Prefer PreGeneratedQuestion
   const pre = await prisma.preGeneratedQuestion.findUnique({
     where: { id: questionId },
@@ -165,7 +165,7 @@ export const onRequestGet = authenticatedEndpoint(
             where: { userId_date: { userId: user.id, date: today } },
           });
         } else if (found.source === 'pre') {
-          const qd = found.record.questionData as any;
+          const qd = (found.record as { questionData: unknown }).questionData as Record<string, unknown> | null;
           const options = normalizeOptions(qd);
           return {
             data: {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   ArrowLeft,
   Activity,
@@ -214,6 +215,7 @@ const CATEGORY_INFO: Record<
 };
 
 const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDrill, onClose }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [selectedCategory, setSelectedCategory] = useState<DrillCategory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -252,7 +254,7 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
           <span>Back to Dashboard</span>
         </button>
 
-        <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
+        <motion.div initial={prefersReducedMotion ? false : { y: 20 }} animate={{ y: 0 }} transition={prefersReducedMotion ? { duration: 0 } : undefined}>
           <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-3">
             <Heart className="w-10 h-10 text-[var(--color-accent)]" />
             Diagnostic Drill Hub
@@ -325,9 +327,10 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             // Show all categories with their drills
             <motion.div
               key="all-categories"
-              initial={{ y: 20 }}
+              initial={prefersReducedMotion ? false : { y: 20 }}
               animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className="space-y-12"
             >
               {filteredDrills.length === 0 && searchQuery ? (
@@ -400,9 +403,10 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             // Show only selected category
             <motion.div
               key={selectedCategory}
-              initial={{ y: 20 }}
+              initial={prefersReducedMotion ? false : { y: 20 }}
               animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
+              transition={prefersReducedMotion ? { duration: 0 } : undefined}
               className="space-y-6"
             >
               <div className="flex items-center justify-between">
@@ -462,6 +466,7 @@ interface DrillCardProps {
 }
 
 const DrillCard: React.FC<DrillCardProps> = ({ drill, onSelect, getDifficultyColor }) => {
+  const prefersReducedMotion = useReducedMotion();
   const Icon = drill.icon;
 
   return (
@@ -473,8 +478,8 @@ const DrillCard: React.FC<DrillCardProps> = ({ drill, onSelect, getDifficultyCol
           ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-xl cursor-pointer'
           : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)] opacity-60 cursor-not-allowed'
       }`}
-      whileHover={drill.available ? { scale: 1.02 } : undefined}
-      whileTap={drill.available ? { scale: 0.98 } : undefined}
+      whileHover={drill.available && !prefersReducedMotion ? { scale: 1.02 } : undefined}
+      whileTap={drill.available && !prefersReducedMotion ? { scale: 0.98 } : undefined}
     >
       {/* Icon & Title */}
       <div className="flex items-start justify-between mb-4">

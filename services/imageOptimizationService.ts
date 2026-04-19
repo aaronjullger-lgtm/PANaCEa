@@ -11,6 +11,8 @@
  * - Image compression
  */
 
+import { useState, useEffect, useCallback } from 'react';
+
 export interface ImageOptimizationOptions {
   /** Source image URL */
   src: string;
@@ -294,7 +296,7 @@ export class ImageOptimizationService {
   /**
    * Determine best image format based on browser support and network conditions
    */
-  private getBestFormat(preferredFormat: string): string {
+  private getBestFormat(preferredFormat: string): ImageOptimizationOptions['format'] {
     // Check browser support
     const supportsAvif =
       typeof document !== 'undefined' &&

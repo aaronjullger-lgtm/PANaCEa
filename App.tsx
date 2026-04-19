@@ -16,6 +16,7 @@ import { Loader, LoadingProgress } from './components/loading';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './components/landing/LandingPage';
 import { inferTaskType } from './lib/taskTypes';
+import { resolveCorrectAnswerIndex } from './lib/answerLetterMap';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
@@ -34,6 +35,7 @@ import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './service
 import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
+import { IncidentBanner } from './components/error/IncidentBanner';
 
 // Lazy-loaded command palette (~cmdk + dialog, deferred until ⌘K)
 const LazyCommandPalette = React.lazy(() => import('@/components/command/CommandPalette'));
@@ -297,7 +299,15 @@ const App: React.FC = () => {
         if (data?.data?.profile?.hasCompletedOnboarding === true)
           saveUserProfile({ hasCompletedOnboarding: true });
       })
-      .catch(() => {})
+      .catch((err) => {
+        // Silent by design — we fall back to local hasCompletedOnboarding() in
+        // the .finally block, so the user still gets a correct prompt decision.
+        // But log in dev so regressions in the /api/user/profile endpoint are
+        // visible and don't look like a mysterious re-onboarding loop.
+        if (import.meta.env.DEV) {
+          console.warn('[App] onboarding profile hydration failed (falling back to local state):', err);
+        }
+      })
       .finally(() => {
         if (cancelled) return;
         const completed = hasCompletedOnboarding();
@@ -677,13 +687,36 @@ const App: React.FC = () => {
                     dueConceptKey: key,
                   } as QuizQuestion;
                 }
+                // Patient safety: if the flagged question's stored
+                // correctAnswerIndex is missing, try legacy `correctIndex`,
+                // then resolve from the `correctAnswer` string against options,
+                // and only then emit -1. Never silently fall back to 0.
+                const originalIdx = original.correctAnswerIndex;
+                const legacyIdx = (original as { correctIndex?: number }).correctIndex;
+                const originalAns = (original as { correctAnswer?: string }).correctAnswer ?? '';
+                const originalOpts = Array.isArray(original.options) ? original.options : [];
+                let fallbackIdx: number;
+                if (typeof originalIdx === 'number' && originalIdx >= 0 && originalIdx < originalOpts.length) {
+                  fallbackIdx = originalIdx;
+                } else if (typeof legacyIdx === 'number' && legacyIdx >= 0 && legacyIdx < originalOpts.length) {
+                  fallbackIdx = legacyIdx;
+                } else {
+                  const resolved = resolveCorrectAnswerIndex(originalAns, originalOpts);
+                  if (resolved === null && import.meta.env.DEV) {
+                    console.error('[App] flagged question correctAnswerIndex unresolvable', {
+                      questionId: original.id,
+                      correctAnswer: originalAns,
+                      optionCount: originalOpts.length,
+                    });
+                  }
+                  fallbackIdx = resolved ?? -1;
+                }
                 return {
                   ...original,
                   question: original.vignette
                     ? `${original.vignette}\n\n${original.question}`
                     : original.question,
-                  correctAnswerIndex:
-                    original.correctAnswerIndex ?? (original as { correctIndex?: number }).correctIndex ?? 0,
+                  correctAnswerIndex: fallbackIdx,
                 } as QuizQuestion;
               });
               if (queue.length > 0) {
@@ -692,8 +725,17 @@ const App: React.FC = () => {
                 setIsLoading(false);
                 return;
               }
-            } catch {
-              // Fall through to use originals
+            } catch (enrichmentError) {
+              // Fall through to use original flagged questions unenriched.
+              // Log in dev — silent failure here means the student sees stale
+              // versions of flagged items instead of the latest enriched copy,
+              // which is recoverable but worth surfacing for debugging.
+              if (import.meta.env.DEV) {
+                console.warn(
+                  '[App] flagged-question enrichment failed, falling back to originals:',
+                  enrichmentError
+                );
+              }
             }
           }
           setQuestionQueue(flaggedQuestions as QuizQuestion[]);
@@ -737,8 +779,12 @@ const App: React.FC = () => {
           }
           setQuestionQueue(initialQuestions);
           setView('quiz');
-          // Prefetch next batch in background so replenishment is faster
-          void prefetchQuestions(settings, token ?? null, 10).catch(() => {});
+          // Prefetch next batch in background so replenishment is faster. A failure
+          // here is non-fatal (next legitimate fetch will retry), but we log it so
+          // background staleness doesn't silently degrade the session experience.
+          void prefetchQuestions(settings, token ?? null, 10).catch((prefetchErr) => {
+            console.warn('[session] Background question prefetch failed', prefetchErr);
+          });
         }
       } catch (err: unknown) {
         const message =
@@ -1037,6 +1083,15 @@ const App: React.FC = () => {
   return (
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        {/*
+          System status ribbon — stays mounted at the top of every page so users
+          see the heads-up regardless of route. Renders nothing while healthy;
+          shows a dismissible warning when /api/health reports degraded or the
+          backend is unreachable. Mounted above the guest banner so an outage
+          message takes the top slot when both apply.
+        */}
+        <IncidentBanner />
+
         {/* Guest mode banner */}
         {showGuestModeBanner && (
           <div className="bg-[var(--color-data-provisional)]/10 border-b border-[var(--color-data-provisional)]/30">

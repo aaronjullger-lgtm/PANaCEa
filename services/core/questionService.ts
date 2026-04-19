@@ -10,12 +10,12 @@
  * - NCCPA blueprint weighting
  * - Question deduplication
  * - Adaptive difficulty
- * - Session interleaving
  *
  * @module services/core/questionService
  */
 
 import type { Question, SessionSettings } from '../../types';
+import { resolveCorrectAnswerIndex } from '../../lib/answerLetterMap';
 
 // ============================================================================
 // Re-exports from legacy services (will be inlined in Phase 6.2)
@@ -57,14 +57,6 @@ export {
   selectOptimalQuestions,
   generateSessionPlan,
 } from '../ai/adaptiveQuestionEngine';
-
-// Enhanced question pool (Sprint A & B integration)
-// DISABLED: Server-only module with @prisma/client - use dynamic imports
-// export {
-//   getEnhancedQuestionBatch,
-//   getEnhancedQuestion as getEnhancedQuestionV2,
-//   getEnhancedPoolStatus,
-// } from './enhancedQuestionPool';
 
 // ============================================================================
 // Shared Types
@@ -163,8 +155,10 @@ export const SYSTEM_NAME_TO_CODE: Record<string, string> = {
 // ============================================================================
 
 /**
- * Convert pool question format to app Question format
- * Previously duplicated in questionService.ts and intelligentQuestionService.ts
+ * Convert pool question format to app Question format.
+ * Returns null if the correctAnswer cannot be resolved against the options — callers
+ * must filter these out so users never see a silently-mis-indexed question.
+ * Previously duplicated in questionService.ts and intelligentQuestionService.ts.
  */
 export function convertPoolQuestion(poolQ: {
   id: string;
@@ -178,17 +172,21 @@ export function convertPoolQuestion(poolQ: {
   tags?: string[];
   source?: 'pool' | 'main';
   conditionId?: string;
-}): Question {
-  // Convert correctAnswer letter (A, B, C, D) to index
-  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
-
-  // If correctAnswer is not a letter, try to find it in options
-  if (correctIndex === undefined || isNaN(correctIndex)) {
-    correctIndex = poolQ.options.findIndex(
-      (opt) => opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
+}): Question | null {
+  if (!Array.isArray(poolQ.options) || poolQ.options.length === 0) {
+    console.warn('[core/questionService] Skipping question with no options:', poolQ.id);
+    return null;
+  }
+  if (typeof poolQ.correctAnswer !== 'string' || poolQ.correctAnswer.trim().length === 0) {
+    console.warn('[core/questionService] Skipping question with missing correctAnswer:', poolQ.id);
+    return null;
+  }
+  const correctIndex = resolveCorrectAnswerIndex(poolQ.correctAnswer, poolQ.options);
+  if (correctIndex === null) {
+    console.warn(
+      `[core/questionService] Skipping question ${poolQ.id} — correctAnswer "${poolQ.correctAnswer}" does not resolve to any option`,
     );
-    if (correctIndex === -1) correctIndex = 0;
+    return null;
   }
 
   // Derive condition name from tags or system
@@ -337,10 +335,6 @@ export async function getOptimalQuestions(
     systemMastery?: any[];
     previousQuestionIds?: string[];
     useIntelligent?: boolean;
-    // NEW: Sprint A & B integration options
-    prisma?: any;
-    userId?: string;
-    useEnhanced?: boolean;
   } = {}
 ): Promise<Question[]> {
   const {
@@ -349,21 +343,7 @@ export async function getOptimalQuestions(
     systemMastery = [],
     previousQuestionIds = [],
     useIntelligent = false,
-    prisma,
-    userId,
-    useEnhanced = true,
   } = options;
-
-  // NOTE: Enhanced pool with Sprint A & B utilities is SERVER-ONLY
-  // The browser build should not include imports of ./enhancedQuestionPool
-  // which contains @prisma/client. Use API endpoints instead.
-  if (useEnhanced && prisma && userId) {
-    // This code path is server-only (prisma client passed in)
-    // On the browser, prisma will always be undefined
-    console.warn(
-      '[Core QuestionService] Enhanced pool requires server-side execution. Use /api/questions/session endpoint.'
-    );
-  }
 
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
   if (useIntelligent && systemMastery.length > 0) {

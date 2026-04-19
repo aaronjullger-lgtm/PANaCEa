@@ -8,12 +8,17 @@
 
 import type { Question, SessionSettings } from '../types';
 import { parseJsonOrThrow } from '../lib/utils/safeJsonResponse';
+import { resolveCorrectAnswerIndex } from '../lib/answerLetterMap';
 import {
   getSystemsForRotation,
   ALL_SYSTEMS as ROTATION_ALL_SYSTEMS,
   isEorRotation,
 } from '../config/rotation-systems';
 import { loadUserProfile } from '@/services/analytics';
+// Hoisted from dynamic `await import()` below. enhancedQuestionService is already
+// statically pulled into the bundle via services/ai/index.ts barrel, so lazy-loading
+// it here produced Vite "dynamic+static" warnings without real code-split benefit.
+import { generateEnhancedQuestion } from './ai/enhancedQuestionService';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -57,17 +62,21 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
     return null;
   }
 
-  // Convert correctAnswer letter (A, B, C, D) to index
-  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-  let correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
-
-  // If correctAnswer is not a letter, try to find it in options
-  if (correctIndex === undefined) {
-    correctIndex = poolQ.options.findIndex(
-      (opt) => opt === poolQ.correctAnswer || opt.includes(poolQ.correctAnswer)
-    );
-    if (correctIndex === -1) correctIndex = 0;
+  // Canonical resolver — handles letter ("A"–"E"), numeric ("0"–"4"), and full-text
+  // formats. Skip the question if correctAnswer cannot be resolved; silently
+  // defaulting to index 0 would mark option A as correct regardless of truth.
+  if (typeof poolQ.correctAnswer !== 'string' || poolQ.correctAnswer.trim().length === 0) {
+    console.warn('[QuestionService] Skipping question with missing correctAnswer:', poolQ.id);
+    return null;
   }
+  const resolvedIndex = resolveCorrectAnswerIndex(poolQ.correctAnswer, poolQ.options);
+  if (resolvedIndex === null) {
+    console.warn(
+      `[QuestionService] Skipping question ${poolQ.id} - correctAnswer "${poolQ.correctAnswer}" does not resolve to any option`
+    );
+    return null;
+  }
+  const correctIndex = resolvedIndex;
 
   // Derive condition name from tags or system
   const condition = poolQ.tags?.[0] ?? poolQ.system ?? '';
@@ -902,7 +911,6 @@ export async function getEnhancedQuestion(
   enabledSystems?: Set<string>
 ): Promise<Question> {
   try {
-    const { generateEnhancedQuestion } = await import('./ai/enhancedQuestionService');
     const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems);
 
     if (question) {

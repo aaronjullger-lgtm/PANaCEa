@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 import { withCors, authenticatedEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const EmptySchema = z.object({}).optional();
@@ -31,7 +31,7 @@ export const onRequestGet = authenticatedEndpoint(
         headers: { 'Content-Type': 'application/json' },
       });
     } finally {
-      await prisma.$disconnect();
+      await safePrismaDisconnect(prisma);
     }
   },
 );

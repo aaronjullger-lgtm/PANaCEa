@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { AlertCircle, AlertTriangle, AlertOctagon, X, Lightbulb } from 'lucide-react';
 
 export type FatigueRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -66,6 +67,7 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
   onDismiss,
   compact = false
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [isDismissed, setIsDismissed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -88,9 +90,9 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
   if (compact) {
     return (
       <motion.div
-        initial={{ y: -10 }}
+        initial={prefersReducedMotion ? false : { y: -10 }}
         animate={{ y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
+        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -10 }}
         className="flex items-center gap-2 px-3 py-2 rounded-lg border"
         style={{
           borderColor: config.color,
@@ -116,9 +118,9 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
 
   return (
     <motion.div
-      initial={{ height: 0 }}
+      initial={prefersReducedMotion ? false : { height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
       className="rounded-xl border overflow-hidden"
       style={{
         borderColor: config.color,

@@ -24,6 +24,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronDown, GitBranch, Lightbulb, Zap } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { getChainSummary } from '@/lib/services/causalChainService';
 import type {
   CausalChain,
@@ -90,6 +91,7 @@ const ChainLinkNode: React.FC<ChainLinkNodeProps> = ({
   isLast,
   fontSizeAdjustment,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const showMechanism = displayLevel === 'full' || (displayLevel === 'collapsed' && isExpanded);
   const isClickable = displayLevel === 'collapsed';
 
@@ -122,7 +124,7 @@ const ChainLinkNode: React.FC<ChainLinkNodeProps> = ({
           {isClickable && (
             <motion.div
               animate={{ rotate: isExpanded ? 90 : 0 }}
-              transition={{ duration: 0.15 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
             >
               <ChevronRight size={12} className="text-[var(--color-text-muted)] shrink-0" />
             </motion.div>
@@ -144,10 +146,10 @@ const ChainLinkNode: React.FC<ChainLinkNodeProps> = ({
         <AnimatePresence>
           {showMechanism && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
+              initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               style={{ overflow: 'hidden' }}
             >
               <div
@@ -203,6 +205,7 @@ const BranchPointDisplay: React.FC<BranchPointDisplayProps> = ({
   branchPoint,
   fontSizeAdjustment,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -234,7 +237,7 @@ const BranchPointDisplay: React.FC<BranchPointDisplayProps> = ({
         </span>
         <motion.div
           animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.15 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
           className="ml-auto"
         >
           <ChevronDown size={14} className="text-[var(--color-text-muted)]" />
@@ -244,10 +247,10 @@ const BranchPointDisplay: React.FC<BranchPointDisplayProps> = ({
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
             style={{ overflow: 'hidden' }}
           >
             <p
@@ -442,7 +445,7 @@ export const CausalChainDisplay: React.FC<CausalChainDisplayProps> = ({
           </div>
 
           {/* Branch points */}
-          {chain.branchPoints.map((bp, index) => (
+          {(chain.branchPoints ?? []).map((bp, index) => (
             <BranchPointDisplay
               key={`bp-${index}`}
               branchPoint={bp}

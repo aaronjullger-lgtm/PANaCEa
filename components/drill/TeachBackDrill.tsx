@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import DrillShell from '@/components/drill/DrillShell';
+import DrillSummaryCard from '@/components/drill/DrillSummaryCard';
+import { ROUTES } from '@/config/routes';
 import {
   useTeachBackDrill,
   type TeachBackStatus,
@@ -47,6 +49,15 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
   const prefersReducedMotion = useReducedMotion();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showModelAnswer, setShowModelAnswer] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+
+  const handleExit = () => {
+    if (drill.sessionStats.topicsAttempted > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
+    onBackToHub();
+  };
 
   // Auto-focus textarea when topic is presented
   useEffect(() => {
@@ -59,11 +70,36 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
     ? {}
     : { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -10 } };
 
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Teach-Back — Complete"
+        breadcrumb={['Practice', 'Teach-Back', 'Results']}
+        onBackToHub={onBackToHub}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Teach-Back"
+          icon={GraduationCap}
+          accentColor="var(--color-accent)"
+          stats={{
+            correct: drill.sessionStats.topicsPassed,
+            total: drill.sessionStats.topicsAttempted,
+            streak: 0,
+          }}
+          onNewSession={() => { setShowSummary(false); drill.reset(); drill.startSession(); }}
+          onExit={onBackToHub}
+          newSessionLabel="Practice More"
+        />
+      </DrillShell>
+    );
+  }
+
   return (
     <DrillShell
       title="Teach-Back Mode"
       breadcrumb={['Practice', 'Teach-Back']}
-      onBackToHub={onBackToHub}
+      onBackToHub={handleExit}
       headerContent={
         drill.sessionStats.topicsAttempted > 0 ? (
           <div className="flex items-center gap-3 text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -274,7 +310,7 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
 
               {/* Category breakdown */}
               <div className="space-y-2 mb-4">
-                {drill.gradeResult.categories.map((cat) => (
+                {(drill.gradeResult.categories ?? []).map((cat) => (
                   <CategoryScoreRow key={cat.category} category={cat} />
                 ))}
               </div>
@@ -373,6 +409,7 @@ export function TeachBackDrill({ onBackToHub }: TeachBackDrillProps) {
                     borderColor: 'var(--color-border)',
                     color: 'var(--color-text-secondary)',
                   }}
+                  aria-label="Reset drill"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>

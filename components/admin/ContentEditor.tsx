@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { MedicalContent } from '../../types/admin-cms';
+import { InlineSpinner } from '@/components/loading';
 
 interface ContentEditorProps {
   content: MedicalContent | null;
@@ -214,7 +215,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[var(--color-text-inverse)] border-t-transparent rounded-full animate-spin" />
+                    <InlineSpinner size="sm" />
                     Saving...
                   </>
                 ) : (
@@ -232,7 +233,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
               >
                 {generating ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[var(--color-text-inverse)] border-t-transparent rounded-full animate-spin" />
+                    <InlineSpinner size="sm" />
                     Generating content…
                   </>
                 ) : (

@@ -4,13 +4,13 @@ import type { PrismaClient } from '@prisma/client/edge';
 
 // Mock Prisma client
 const mockReviewLogFindFirst = vi.fn();
-const mockUserProgressFindUnique = vi.fn();
+const mockUserProgressFindFirst = vi.fn();
 const mockPrisma = {
   reviewLog: {
     findFirst: mockReviewLogFindFirst,
   },
   userProgress: {
-    findUnique: mockUserProgressFindUnique,
+    findFirst: mockUserProgressFindFirst,
   },
 } as unknown as PrismaClient;
 
@@ -21,7 +21,7 @@ describe('Retention‑Aware Scheduler', () => {
 
   it('should return low‑confidence item when no review data', async () => {
     mockReviewLogFindFirst.mockResolvedValue(null);
-    mockUserProgressFindUnique.mockResolvedValue(null);
+    mockUserProgressFindFirst.mockResolvedValue(null);
 
     const gaps = [{ taxonomyCode: 'Cardiovascular', subcategory: null }];
     const scheduled = await scheduleReviews(mockPrisma, 'user123', gaps);
@@ -39,7 +39,7 @@ describe('Retention‑Aware Scheduler', () => {
       stability: 0.05,
       reviewedAt: lastReviewedAt,
     });
-    mockUserProgressFindUnique.mockResolvedValue({
+    mockUserProgressFindFirst.mockResolvedValue({
       fsrsParams: { w: [ /* not needed */ ] },
     });
 
@@ -60,7 +60,7 @@ describe('Retention‑Aware Scheduler', () => {
       stability: 10.0, // high stability
       reviewedAt: lastReviewedAt,
     });
-    mockUserProgressFindUnique.mockResolvedValue({
+    mockUserProgressFindFirst.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.0658 : i === 20 ? 0.1542 : 0) },
     });
 
@@ -83,7 +83,7 @@ describe('Retention‑Aware Scheduler', () => {
       stability: 5.0,
       reviewedAt: lastReviewedAt,
     });
-    mockUserProgressFindUnique.mockResolvedValue({
+    mockUserProgressFindFirst.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.1 : i === 20 ? 0.2 : 0) },
     });
 
@@ -99,7 +99,7 @@ describe('Retention‑Aware Scheduler', () => {
     mockReviewLogFindFirst
       .mockResolvedValueOnce({ stability: 1.0, reviewedAt: new Date() })
       .mockResolvedValueOnce({ stability: 20.0, reviewedAt: new Date() });
-    mockUserProgressFindUnique.mockResolvedValue({
+    mockUserProgressFindFirst.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0) },
     });
 
@@ -119,7 +119,7 @@ describe('Retention‑Aware Scheduler', () => {
       stability: 5.0,
       reviewedAt: lastReviewedAt,
     });
-    mockUserProgressFindUnique.mockResolvedValue({
+    mockUserProgressFindFirst.mockResolvedValue({
       fsrsParams: { w: [ /* only 19 elements */ ] },
     });
 

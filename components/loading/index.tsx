@@ -198,6 +198,92 @@ export const Loader: React.FC<LoaderProps> = ({
 };
 
 // ============================================================================
+// InlineSpinner — Scoped ring spinner (buttons, inline status text, container overlays)
+// ============================================================================
+
+export type InlineSpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
+
+export interface InlineSpinnerProps {
+  /**
+   * Size variant — maps to Tailwind `w-{n} h-{n}`:
+   *   - `sm` = w-4 h-4 (icon-next-to-text small buttons, 14–16 px glyphs)
+   *   - `md` = w-5 h-5 (primary/wide buttons, 18–20 px inline labels) — default
+   *   - `lg` = w-8 h-8 (container-centered overlays, ~32 px)
+   *   - `xl` = w-12 h-12 (large full-container "loading page" overlays, ~48 px)
+   */
+  size?: InlineSpinnerSize;
+  /** Extra Tailwind classes appended to the ring (color overrides, margin helpers, etc.). */
+  className?: string;
+}
+
+/**
+ * CANONICAL InlineSpinner - compact ring spinner for:
+ *   1. Disabled-during-submit buttons (pair with label text for a11y).
+ *   2. Inline status rows ("Searching…" + spinner next to text).
+ *   3. Container-centered loading overlays (e.g. absolute inset-0 flex-center).
+ *
+ * - Inherits `currentColor` via SVG `stroke="currentColor"` so it adapts to any
+ *   surrounding text color without a prop. Track ring at `opacity=0.3`, animated
+ *   head at full opacity.
+ * - SVG is chosen over CSS border tricks because `border-current/30` relies on
+ *   `color-mix(... currentColor ...)` support which is uneven across supported
+ *   browsers; SVG's `stroke-opacity` is universal.
+ * - Animation is Tailwind's `animate-spin`, which respects `prefers-reduced-motion`
+ *   via the user's media query.
+ * - `aria-hidden="true"` + `focusable="false"` — surrounding text (or parent's
+ *   `role="status"` / `aria-live`) announces the state; the spinner itself is
+ *   purely visual.
+ *
+ * For multi-line skeleton blocks prefer `ClinicalSkeleton`; for full-viewport
+ * overlays prefer `Loader`; for drill question layouts prefer `DrillLoadingState`.
+ */
+export const InlineSpinner: React.FC<InlineSpinnerProps> = ({
+  size = 'md',
+  className = '',
+}) => {
+  const sizeClass =
+    size === 'sm' ? 'w-4 h-4'
+    : size === 'lg' ? 'w-8 h-8'
+    : size === 'xl' ? 'w-12 h-12'
+    : 'w-5 h-5';
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`${sizeClass} inline-block animate-spin ${className}`}
+    >
+      {/* Track ring — low opacity, full circle */}
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeOpacity={0.3}
+        strokeWidth={3}
+      />
+      {/* Animated head — one-quarter arc at full opacity */}
+      <path
+        d="M22 12a10 10 0 0 1-10 10"
+        stroke="currentColor"
+        strokeWidth={3}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};
+
+/**
+ * Backward-compat alias. Existing call sites that reference `InlineButtonSpinner`
+ * keep working; new call sites should prefer the broader `InlineSpinner` name.
+ */
+export const InlineButtonSpinner = InlineSpinner;
+export type InlineButtonSpinnerSize = InlineSpinnerSize;
+export type InlineButtonSpinnerProps = InlineSpinnerProps;
+
+// ============================================================================
 // Skeleton Component — Base with gold shimmer
 // ============================================================================
 

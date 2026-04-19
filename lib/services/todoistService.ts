@@ -427,7 +427,8 @@ export async function isTodoistConnected(): Promise<boolean> {
       },
     });
     return response.ok;
-  } catch {
+  } catch (err) {
+    console.debug('[todoistService] connection check failed', err);
     return false;
   }
 }

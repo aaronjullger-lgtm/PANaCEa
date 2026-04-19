@@ -33,8 +33,8 @@ import {
   getSessionSummary,
   calculateDistributionDrift,
   resetSessionDistribution,
-  PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 
 // Session services
 import {
@@ -328,7 +328,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         correct: stats.correct,
         total: stats.total,
         accuracy: Math.round((stats.correct / stats.total) * 100),
-        targetPercent: PANCE_SYSTEM_PERCENTAGES[system] || 0,
+        targetPercent: BLUEPRINT_PERCENT_BY_ABBREVIATION[system] || 0,
         actualPercent:
           overallStats.total > 0 ? Math.round((stats.total / overallStats.total) * 100) : 0,
       }))
@@ -381,7 +381,8 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       const { callGeminiText } = await import('@/services/ai/geminiService');
       const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
       setAiSummary((text || '').trim());
-    } catch {
+    } catch (err) {
+      console.warn('[SessionEndSummary] AI summary generation failed', err);
       setAiSummary("We couldn't generate a summary right now. Try again in a moment.");
     } finally {
       setLoadingAiSummary(false);

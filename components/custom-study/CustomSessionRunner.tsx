@@ -16,8 +16,8 @@ import {
   AlertTriangle,
   Clock,
   Target,
-  Loader2,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { Question } from '../../types';
 import type { CustomSessionConfig, CustomSessionState } from '../../types/custom-session';
 import { customSessionService } from '@/services/core';
@@ -153,8 +153,8 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
 
   if (phase === 'loading') {
     return (
-      <div role="status" aria-label="Loading questions" className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
+      <div role="status" aria-live="polite" aria-label="Loading questions" className="flex flex-col items-center justify-center min-h-[400px]">
+        <InlineSpinner size="lg" className="text-[var(--color-accent)] mb-4" />
         <p className="text-[var(--color-text-secondary)]">Loading questions...</p>
       </div>
     );

@@ -13,10 +13,10 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  Loader2,
   Shield,
   Tag,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../config/routes';
 
@@ -229,8 +229,13 @@ export function SystemMappingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading system mappings"
+        className="flex items-center justify-center min-h-screen"
+      >
+        <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
         <span className="ml-2 text-lg">Loading system mappings...</span>
       </div>
     );
@@ -467,7 +472,7 @@ export function SystemMappingsPage() {
                 disabled={submitting}
                 className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
               >
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {submitting && <InlineSpinner size="sm" />}
                 {editingMapping ? 'Save Changes' : 'Create'}
               </button>
             </div>

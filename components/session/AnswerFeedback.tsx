@@ -13,7 +13,7 @@
  */
 
 import React, { memo } from 'react';
-import ExplanationPanel from '@/components/questions/ExplanationPanel';
+import ExplanationPanel, { type StructuredRationale } from '@/components/questions/ExplanationPanel';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import { CalibrationFeedbackBadge } from '@/components/session/CalibrationFeedbackBadge';
 import { CausalChainDisplay } from '@/components/session/CausalChainDisplay';
@@ -146,14 +146,14 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
         <ExplanationPanel
           rationale={(() => {
             const r = currentQuestion.rationale;
-            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as any;
+            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as StructuredRationale;
             if (typeof r === 'string') {
               try {
                 const parsed = JSON.parse(r) as unknown;
                 if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
-                  return parsed as any;
+                  return parsed as StructuredRationale;
               } catch {
-                /* not JSON */
+                /* not JSON — rationale is a plain string, not structured */
               }
               return r;
             }
@@ -172,15 +172,15 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           contentSource={currentQuestion.contentSource}
           contentSourceTitle={currentQuestion.contentSourceTitle}
           groundingSources={
-            (currentQuestion as any).groundingSources ||
+            currentQuestion.groundingSources ??
             (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as any).groundingSources
+              ? (currentQuestion.rationale as StructuredRationale).groundingSources
               : undefined)
           }
           pubmedCitations={
-            (currentQuestion as any).pubmedCitations ||
+            currentQuestion.pubmedCitations ??
             (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as any).pubmedCitations
+              ? (currentQuestion.rationale as StructuredRationale).pubmedCitations
               : undefined)
           }
         />

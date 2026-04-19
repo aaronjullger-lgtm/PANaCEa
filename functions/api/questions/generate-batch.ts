@@ -2,16 +2,34 @@
  * POST /api/questions/generate-batch
  * Background generation of questions to seed the pre-generated pool
  * Uses Gemini API to generate questions and stores them in PreGeneratedQuestion table
+ *
+ * Sprint 7 (AI Gateway migration): Replaced direct `fetchWithTimeout` calls to
+ * `generativelanguage.googleapis.com` with `gateway.callText()` using
+ * task='generation'. Behaviour preserved:
+ *   - `tier: 'fast'` pins the default model to gemini-2.0-flash (matches the
+ *     previous hard-coded endpoint). Cost profile unchanged for the batch path.
+ *   - `fallback: 'same_provider'` (task default) replaces the old 3-attempt
+ *     manual retry loop; the gateway handles transient 429/5xx + tier bumps
+ *     uniformly with other question-generation callers.
+ *   - `maxOutputTokens: 16384` preserved for large 10–50-question batches.
+ * Telemetry (requestId, traceId, modelUsed, costUsd) is now captured centrally
+ * by the gateway rather than being a blind spot on this endpoint.
  */
 
 import { z } from 'zod';
 import { PANCE_TASK_CATEGORY_PERCENT } from '../../../lib/constants/blueprint';
 import { validateDistractors } from '../../../lib/distractorValidation';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { fetchWithTimeout } from '../_shared/timeout';
 import { computeSemanticHash } from '../../../lib/utils/semanticHash';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+  type GatewayContext,
+} from '../../../lib/ai/aiGateway';
 
 // Flattened schema for body parsing (no nested 'body' object)
 const GenerateBatchSchema = z.object({
@@ -43,7 +61,11 @@ const SYSTEMS = [
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory):
+// - Batch generation fans out 10-50 Gemini calls per invocation; the
+//   authenticated stack's 300 rpm default would let a client chew through a
+//   month of quota in minutes. aiEndpoint pins this to 25 rpm on the 'ai' bucket.
+export const onRequestPost = aiEndpoint(GenerateBatchSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/generate-batch');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -62,9 +84,9 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       throw new Error('Gemini API key not configured');
     }
 
-    // Generate questions using Gemini
+    // Generate questions using Gemini (via AI gateway)
     const generatedQuestions = await generateQuestionsWithGemini(
-      env.GEMINI_API_KEY,
+      toGatewayContext(context),
       selectedSystem ?? '',
       selectedCategory ?? '',
       selectedDifficulty,
@@ -83,12 +105,49 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       };
     }
 
-    // Normalize questions and convert correctAnswer letter to correctAnswerIndex
-    const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-    const normalizedQuestions = generatedQuestions.map((q) => ({
-      ...q,
-      correctAnswerIndex: letterToIndex[q.correctAnswer?.toUpperCase()] ?? 0,
-    }));
+    // Normalize questions: resolve correctAnswer letter/text to correctAnswerIndex.
+    // Critical: NEVER fall back to 0/A silently — malformed rows get persisted to the pool
+    // and served to every user, damaging FSRS trust. Skip unresolvable questions instead.
+    const normalizedQuestions = generatedQuestions
+      .map((q) => {
+        if (!Array.isArray(q.options) || q.options.length === 0) {
+          logger.warn('Skipping generated question with no options', {
+            system: selectedSystem,
+          });
+          return null;
+        }
+        if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+          logger.warn('Skipping generated question with missing correctAnswer', {
+            system: selectedSystem,
+          });
+          return null;
+        }
+        const correctAnswerIndex = resolveCorrectAnswerIndex(q.correctAnswer, q.options);
+        if (correctAnswerIndex === null) {
+          logger.warn(
+            'Skipping generated question — correctAnswer does not resolve to any option',
+            { system: selectedSystem, correctAnswer: q.correctAnswer },
+          );
+          return null;
+        }
+        return { ...q, correctAnswerIndex };
+      })
+      .filter((q): q is NonNullable<typeof q> => q !== null);
+
+    if (normalizedQuestions.length === 0) {
+      logger.info('All generated questions failed correctAnswer resolution', {
+        userId: auth.userId,
+        system: selectedSystem,
+        total: generatedQuestions.length,
+      });
+      return {
+        data: {
+          success: false,
+          message: 'No questions had resolvable correct answers',
+          generated: 0,
+        },
+      };
+    }
 
     // Sprint 9: Gate by distractor validation (score >= 70)
     const DISTRACTOR_THRESHOLD = 70;
@@ -186,7 +245,7 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
 });
 
 async function generateQuestionsWithGemini(
-  apiKey: string,
+  ctx: GatewayContext,
   system: string,
   category: string,
   difficulty: string,
@@ -326,87 +385,56 @@ Return ONLY a JSON array (no markdown, no code blocks):
   }
 ]`;
 
-  // Retry wrapper for transient Gemini failures (429 rate limit, 503 overload, timeouts).
-  // Max 3 attempts with exponential backoff capped at 6 seconds.
-  // Edge-safe: total worst-case wait is ~9 seconds before giving up.
-  const MAX_GEMINI_RETRIES = 3;
-  const RETRY_BASE_MS = 1500;
-
-  let response: Response | null = null;
-  for (let attempt = 1; attempt <= MAX_GEMINI_RETRIES; attempt++) {
-    try {
-      response = await fetchWithTimeout(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.8,
-              maxOutputTokens: 16384,
-            },
-          }),
-        },
-        30000
-      );
-
-      // Retry on 429 (rate limit) and 5xx (server errors)
-      if (response.status === 429 || response.status >= 500) {
-        const errorText = await response.text();
-        logger.warn('Gemini transient error, will retry', {
-          attempt,
-          status: response.status,
-          error: errorText.slice(0, 200),
-        });
-        if (attempt < MAX_GEMINI_RETRIES) {
-          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1); // 1.5s, 3s, 6s
-          await new Promise((r) => setTimeout(r, delay));
-          response = null;
-          continue;
-        }
-      }
-      break; // Success or non-retryable error
-    } catch (fetchErr) {
-      logger.warn('Gemini fetch threw, will retry', {
-        attempt,
-        error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+  // AI Gateway: task='generation' + tier='fast' pins gemini-2.0-flash (the
+  // prior behaviour of this endpoint). `same_provider` fallback is the task
+  // default and replaces the previous 3-attempt manual retry loop — the
+  // gateway transparently handles transient 429/5xx + tier bumps and
+  // standardizes telemetry across all question-generation callers.
+  let rawText: string;
+  let modelUsed: string;
+  try {
+    const result = await gateway.callText(ctx, {
+      mode: 'text',
+      task: 'generation',
+      tier: 'fast',
+      endpoint: '/api/questions/generate-batch',
+      userPrompt: prompt,
+      temperature: 0.8,
+      maxOutputTokens: 16384,
+    });
+    if (result.blocked) {
+      logger.error('Gemini blocked batch generation', {
+        reason: result.blockReason ?? 'unknown',
+        modelUsed: result.telemetry.modelUsed,
       });
-      if (attempt < MAX_GEMINI_RETRIES) {
-        const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
-        await new Promise((r) => setTimeout(r, delay));
-      }
+      return [];
     }
+    rawText = (result.text ?? '').trim();
+    modelUsed = result.telemetry.modelUsed;
+  } catch (error) {
+    if (error instanceof GatewayError) {
+      logger.error('Gateway error during batch generation', {
+        code: error.code,
+        retryable: error.retryable,
+        requestId: error.requestId,
+        traceId: error.traceId,
+      });
+    } else {
+      logger.error('Unexpected error during batch generation', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return [];
   }
 
   try {
-    if (!response) {
-      logger.error('Gemini API unreachable after all retries');
-      return [];
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('Gemini API error', { status: response.status, error: errorText });
-      return [];
-    }
-
-    const data = (await response.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-      }>;
-    };
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      logger.error('No text in Gemini response');
+    if (!rawText) {
+      logger.error('No text in Gemini response', { modelUsed });
       return [];
     }
 
     // Parse JSON from response (handle potential markdown wrapping)
-    let jsonText = text.trim();
+    let jsonText = rawText;
     if (jsonText.startsWith('```json')) {
       jsonText = jsonText.slice(7);
     } else if (jsonText.startsWith('```')) {
@@ -420,7 +448,7 @@ Return ONLY a JSON array (no markdown, no code blocks):
     const questions = JSON.parse(jsonText);
 
     if (!Array.isArray(questions)) {
-      logger.error('Invalid questions format - not an array');
+      logger.error('Invalid questions format - not an array', { modelUsed });
       return [];
     }
 
@@ -438,8 +466,9 @@ Return ONLY a JSON array (no markdown, no code blocks):
       );
     });
   } catch (error) {
-    logger.error('Error generating questions with Gemini', {
+    logger.error('Error parsing questions from Gemini', {
       error: error instanceof Error ? error.message : String(error),
+      modelUsed,
     });
     return [];
   }

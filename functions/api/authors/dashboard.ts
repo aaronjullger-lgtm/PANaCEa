@@ -1,13 +1,5 @@
-import {
-  withMiddleware,
-  withCors,
-  withErrorHandling,
-  withEnvCheck,
-  withAuth,
-  withRateLimit,
-  withLogging,
-  type AuthenticatedContext,
-} from '../_shared/middleware';
+import { z } from 'zod';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { prisma } from '../_shared/prisma-edge';
 
 /**
@@ -21,14 +13,10 @@ import { prisma } from '../_shared/prisma-edge';
  * - Recent submissions and their status
  * - Impact metrics (users studied, accuracy, exam correlation)
  * - Suggested content gaps to fill
- */export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 30, endpointType: 'api', keyPrefix: 'author-dashboard' }),
-  withLogging(),
-  async (context: AuthenticatedContext) => {
+ */
+export const onRequestGet = authenticatedEndpoint(
+  z.object({}).passthrough(),
+  async (context) => {
     const clerkId = context.auth.userId;
 
     const user = await prisma.user.findUnique({
@@ -201,5 +189,6 @@ import { prisma } from '../_shared/prisma-edge';
         },
       },
     };
-  }
+  },
+  { source: 'query', requestsPerMinute: 30 }
 );

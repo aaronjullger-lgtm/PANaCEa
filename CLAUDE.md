@@ -345,13 +345,23 @@ npm run orchestrate:full     # Full automation pipeline
 
 ---
 
-## Current Priorities (2026-04-13)
+## Current Priorities (2026-04-18)
 
 1. Generate questions for under-represented PANCE blueprint areas (CV, PULM)
 2. Finish/resume the parked QuizView refactor on `wip/quizview-refactor-parked` (currently 192 TS errors — state + button primitives need rewiring)
 3. Resolve drill routing split (DrillShell vs. useDrillFSRS) — decide which drill types consolidate
-4. Pending Prisma migrations: `ContentGap` model (Sprint 15), `banditState` on `UserPreferences` (Sprint 16), `PushSubscription` + `NotificationLog` (Sprint 18) — all need Aaron's approval
-5. Production dependency: `web-push` npm package for notification cron (Sprint 18) — needs Aaron's approval
+4. Pending Prisma migrations — awaiting approval to apply:
+   - `UserDailyInsight` model (daily-insights cron cache) — DDL proposal at `prisma/audit/proposed_migration_user_daily_insight.sql`. Schema.prisma already updated with the model.
+   - Missing foreign keys on `QuestionAttempt`, `ReviewLog.conditionId`, `Card.questionId`, `StudentReservoirItem` (userId + questionId), `ItemDifficulty.cardId` — DDL proposal at `prisma/audit/proposed_migration_add_missing_fks.sql`. Orphan probe returned 0 orphans on 2026-04-17; free to apply (no cleanup required).
+   - Missing composite indexes: PreGen `(validationStatus, qualityScore)`, PreGen `(validationStatus, flagCount)`, Question `(lifecycleStatus, contentHealthScore)`, ConfusionPair `(userId, count DESC, lastOccurrence DESC)` — DDL proposal at `prisma/audit/proposed_migration_missing_composite_indexes.sql`. Schema.prisma already updated with the matching `@@index` directives.
+   - `ContentGap` model (Sprint 15) — migration drafted at `prisma/migrations/20260418120000_add_content_gap/migration.sql`; schema.prisma still needs the corresponding model declaration before `prisma generate` will type the client.
+   - `NotificationLog` model (Sprint 18) — migration drafted at `prisma/migrations/20260418120100_add_notification_log/migration.sql`; schema.prisma still needs the corresponding model declaration. `PushSubscription` is already in schema (line 3487) — do NOT re-add.
+   - `banditState` field on `UserPreferences` (Sprint 16) — not yet drafted.
+5. Production dependency: `web-push` npm package for notification cron (Sprint 18) — needs Aaron's approval.
+6. Applied via Supabase MCP on 2026-04-17, registered as Prisma migration files in this branch (resolve with `npx prisma migrate resolve --applied <dir>` when pulling):
+   - `20260418000000_enable_rls_student_reservoir_item`
+   - `20260418000100_drop_redundant_indexes` (removed `MC_buzzwords_gin_idx`, `idx_user_question_seen_user_last`, `idx_ubm_user_created`, `Drug_drugClass_idx`)
+   - `20260418000200_question_embedding_ivfflat_to_hnsw` (re-tunes to repo standard m=24, ef_construction=200)
 
 ### Recently Completed (2026-04-13 Integration Session)
 - ✅ KB content loading — SmartConditionView already has comprehensive error/loading/retry states

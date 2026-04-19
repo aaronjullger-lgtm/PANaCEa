@@ -82,7 +82,7 @@ import {
 } from '@/services/ai';
 import { streamGeminiText } from '@/lib/utils/streamingClient';
 import { Sparkline } from '@/components/ui/Sparkline';
-import { ChatSkeleton } from '@/components/loading';
+import { ChatSkeleton, InlineButtonSpinner } from '@/components/loading';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAgeShort } from '@/lib/utils/ageFormatter';
 
@@ -107,10 +107,9 @@ import { ContextBanner } from '@/components/shared/ContextBanner';
 import { PatientAVEngine } from '@/services/av/patientAVEngine';
 import type { PatientAVStateMachine, AVState } from '@/types/patient-av-state-machine';
 
-import { syncManager } from '@/lib/services/sync/syncManager';
-
-// Gemini API Key (from environment or config)
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+// Gemini access is server-side only — the browser bundle no longer carries
+// any model API key. The scribe calls /api/scribe/soap/extract with a Clerk
+// Bearer token instead (see useRealtimeSOAP / soapNoteService).
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
@@ -189,7 +188,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     finalize: finalizeSOAP,
   } = useRealtimeSOAP({
     sessionId: session?.id || null,
-    geminiApiKey: GEMINI_API_KEY,
+    getToken,
     enabled: viewState === 'active',
   });
 
@@ -244,8 +243,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             trend: (d.trend || []).map((t: any) => t.score as number),
           });
         }
-      } catch {
-        // silent — stats are optional
+      } catch (statsErr) {
+        console.debug('[PatientEncounter] stats fetch failed (optional)', statsErr);
       }
     })();
   }, [viewState, getToken]);
@@ -256,8 +255,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     try {
       setDueConditions(getDueConditions());
       setConditionStats(getConditionStats());
-    } catch {
-      // localStorage-based — silent on error
+    } catch (lsErr) {
+      console.debug('[PatientEncounter] localStorage condition stats failed', lsErr);
     }
   }, [viewState]);
 
@@ -675,8 +674,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
             }
           })
-          .catch(() => {
-            // Swallow to keep queue alive — toast already shown if saveOSCEChat returned false
+          .catch((err) => {
+            console.debug('[PatientEncounterMode] Chat save queue error', err);
           });
       }
     } catch (error) {
@@ -1005,26 +1004,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       if (rubricResult) {
         setGradeResult(rubricResult);
 
-        // Sync OSCE performance to FSRS scheduling via attempt endpoint
-        // Derive correctness from rubric score (pass threshold: 60%)
-        const osceScore = rubricResult.score ?? 0;
-        const scorePct = osceScore / 100;
-        const isPass = scorePct >= 0.6;
-
+        // OSCE performance feeds the condition-level spaced repetition schedule.
+        // We intentionally do NOT emit a QuestionAttempt record here — a session
+        // id is not a legitimate question id, and pushing it through the main
+        // sync queue would pollute FSRS/analytics with semantically wrong rows.
+        // OSCE results are already persisted via completeOSCESession() +
+        // gradeOSCESession() above.
         if (currentCase) {
-          syncManager.queueAnswer({
-            questionId: sessionId,
-            selectedAnswer: 0,
-            isCorrect: isPass,
-            timeSpentMs: Date.now() - (session?.startTime || Date.now()),
-            system: undefined,
-            conditionId: undefined,
-            isMainSession: false,
-            rating: isPass ? 3 : 1, // FSRS: Good(3) if pass, Again(1) if fail
-          });
-
-          // Update OSCE condition-level spaced repetition schedule
           try {
+            const osceScore = rubricResult.score ?? 0;
             updateConditionSchedule(
               currentCase.id,
               currentCase.correctDiagnosis || 'Unknown',
@@ -1036,8 +1024,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 hadDangerousActions: (rubricResult.dangerousActionsDetected?.length ?? 0) > 0,
               }
             );
-          } catch {
-            // Non-critical — don't block results
+          } catch (dashErr) {
+            console.warn('[PatientEncounter] dashboard update failed (non-critical)', dashErr);
           }
         }
       }
@@ -1716,7 +1704,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 {isLoading ? (
                   <>
-                    <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <InlineButtonSpinner />
                     Generating Case...
                   </>
                 ) : (
@@ -2042,6 +2030,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowRapportMeter(!showRapportMeter)}
                   className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Rapport Meter"
+                  aria-label="Toggle Rapport Meter"
                 >
                   <Heart className="w-4 h-4" />
                 </button>
@@ -2049,6 +2038,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowExamPanel(!showExamPanel)}
                   className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Physical Exam Panel"
+                  aria-label="Toggle Physical Exam Panel"
                 >
                   <StethoscopeIcon className="w-4 h-4" />
                 </button>
@@ -2056,6 +2046,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   onClick={() => setShowOrderPanel(!showOrderPanel)}
                   className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                   title="Toggle Order Panel"
+                  aria-label="Toggle Order Panel"
                 >
                   <ClipboardList className="w-4 h-4" />
                 </button>
@@ -2574,6 +2565,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowRapportMeter(!showRapportMeter)}
                       className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Rapport Meter"
+                      aria-label="Toggle Rapport Meter"
                     >
                       <Heart className="w-4 h-4" />
                     </button>
@@ -2581,6 +2573,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowExamPanel(!showExamPanel)}
                       className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Physical Exam Panel"
+                      aria-label="Toggle Physical Exam Panel"
                     >
                       <StethoscopeIcon className="w-4 h-4" />
                     </button>
@@ -2588,6 +2581,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={() => setShowOrderPanel(!showOrderPanel)}
                       className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
                       title="Toggle Order Panel"
+                      aria-label="Toggle Order Panel"
                     >
                       <ClipboardList className="w-4 h-4" />
                     </button>
@@ -2626,7 +2620,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       aria-label="Order Diagnostic Test"
                     >
                       {isLoading ? (
-                        <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <InlineButtonSpinner />
                       ) : (
                         <Activity className="w-5 h-5" />
                       )}
@@ -2732,7 +2726,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   >
                     {isLoading ? (
                       <>
-                        <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <InlineButtonSpinner size="sm" />
                         Evaluating...
                       </>
                     ) : (
@@ -2785,7 +2779,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       >
                         {isLoading ? (
                           <>
-                            <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <InlineButtonSpinner size="sm" />
                             Evaluating...
                           </>
                         ) : (
@@ -2803,7 +2797,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     >
                       {isLoading ? (
                         <>
-                          <div aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <InlineButtonSpinner size="sm" />
                           Consulting Preceptor...
                         </>
                       ) : (
@@ -2841,6 +2835,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <Button
                   variant="ghost"
                   onClick={onExit}
+                  aria-label="Exit debrief"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -2878,6 +2873,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <Button
                   variant="ghost"
                   onClick={onExit}
+                  aria-label="Exit debrief"
                 >
                   <X className="w-5 h-5" />
                 </Button>

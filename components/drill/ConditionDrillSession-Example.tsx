@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DrillSetup, type DrillConfiguration } from './DrillSetup';
 import { Brain, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import type { SystemCode } from '../../types';
@@ -28,6 +29,7 @@ interface QuestionData {
 }
 
 const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit }) => {
+  const prefersReducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<DrillPhase>('setup');
   const [config, setConfig] = useState<DrillConfiguration | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -154,7 +156,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
           {/* Question Card */}
           <motion.div
             key={currentQuestionIndex}
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-8 mb-6"
           >
@@ -213,7 +215,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             {/* Next Button */}
             {showResult && (
               <motion.button
-                initial={{ y: 10 }}
+                initial={prefersReducedMotion ? false : { y: 10 }}
                 animate={{ y: 0 }}
                 onClick={handleNext}
                 className="w-full mt-6 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
@@ -250,7 +252,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
         <motion.div
-          initial={{ scale: 0.9 }}
+          initial={prefersReducedMotion ? false : { scale: 0.9 }}
           animate={{ scale: 1 }}
           className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-8 text-center"
         >

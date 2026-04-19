@@ -20,6 +20,7 @@
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import { sanitizeEnvValue } from './env-validation';
+import { withPrismaSpan } from './prismaSpan';
 
 /**
  * Prisma Accelerate Cache Strategy Configuration
@@ -160,8 +161,14 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
       log: ['warn', 'error'], // Add logging for debugging
     });
 
-    // Apply Accelerate extension for edge runtime HTTP-based queries
-    const extendedClient = client.$extends(withAccelerate()) as EdgePrismaClient & {
+    // Apply Accelerate extension for edge runtime HTTP-based queries, then
+    // layer the span extension on top so every query emits a structured
+    // `prisma_span` log line (and `prisma_slow_query` for >500ms outliers).
+    // The span extension runs AFTER Accelerate so its timings include the
+    // Accelerate HTTP round-trip, which is the thing we actually want to measure.
+    const extendedClient = client
+      .$extends(withAccelerate())
+      .$extends(withPrismaSpan()) as EdgePrismaClient & {
       __isSingleton?: boolean;
     };
     (extendedClient as { __isSingleton?: boolean }).__isSingleton = true;

@@ -19,6 +19,25 @@ import {
 } from '@/lib/loadConditions';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { getConditionsBySystem, getAllConditions } from '../conditionService';
+// Hoisted from dynamic `await import()` calls below. The service is already
+// statically pulled into the bundle via services/core/index.ts barrel, so
+// lazy-loading it here produced Vite "dynamic+static" warnings without real
+// code-split benefit. Unifying on static import.
+import {
+  fetchConditionContent,
+  hasCompleteContent,
+  buildDatabaseContext,
+} from '../conditionContentService';
+// streamingClient is statically imported by components/modes/PatientEncounterMode.tsx,
+// so the prior dynamic `await import()` here produced Vite "dynamic+static" warnings
+// with no real code-split benefit. The stale "circular dependency" comment was a
+// false alarm — streamingClient.ts does not import from geminiService. Hoisting to
+// a static import eliminates the warning and removes the need for defensive
+// try/catch around the import (static imports resolve at module init, not runtime).
+import { streamGeminiText, type StreamHistoryTurn } from '@/lib/utils/streamingClient';
+// Re-export for backward compatibility — services/ai/index.ts re-exports this type
+// from geminiService. The canonical definition lives in streamingClient.ts.
+export type { StreamHistoryTurn };
 
 // ============================================================================
 // CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
@@ -554,12 +573,8 @@ export async function callGeminiText(
  * });
  * ```
  */
-/** Single turn for Deep Think multi-turn (history + thoughtSignature). */
-export interface StreamHistoryTurn {
-  role: 'user' | 'model';
-  text: string;
-  thoughtSignature?: string;
-}
+// StreamHistoryTurn is now imported from '@/lib/utils/streamingClient' (see top of file)
+// and re-exported for backward compatibility. The canonical definition lives there.
 
 export async function callGeminiTextStreaming(
   modelName: string = 'gemini-3-flash-preview',
@@ -641,56 +656,16 @@ export async function callGeminiTextStreaming(
   try {
     console.log(`[callGeminiTextStreaming] Starting streaming request with model: ${modelName}`);
 
-    // Dynamic import to avoid circular dependency
-    type StreamingClientModule = {
-      streamGeminiText: (
-        prompt: string,
-        options: {
-          modelName: string;
-          temperature: number;
-          cachedContent?: string;
-          token?: string | null;
-          thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
-          history?: StreamHistoryTurn[];
-          previousThoughtSignatures?: string[];
-          systemInstruction?: string;
-          onChunk?: (chunk: string) => void;
-          onComplete?: (fullText: string) => void;
-          onError?: (error: Error) => void;
-          onThoughtSignatures?: (signatures: string[]) => void;
-          signal?: AbortSignal;
-        }
-      ) => Promise<string>;
-    };
-
-    let streamingModule: StreamingClientModule;
-
-    try {
-      streamingModule = (await import('@/lib/utils/streamingClient')) as StreamingClientModule;
-    } catch (importError) {
-      const error = new Error(
-        `[callGeminiTextStreaming] Failed to load streaming client module: ${importError instanceof Error ? importError.message : String(importError)}`
-      );
-      console.error(error.message, importError);
-      options.onError?.(error);
-      throw error;
-    }
-
-    // Validate that the imported function exists
-    if (
-      !streamingModule.streamGeminiText ||
-      typeof streamingModule.streamGeminiText !== 'function'
-    ) {
-      const error = new Error(
-        '[callGeminiTextStreaming] streamGeminiText function not found in streaming client module'
-      );
-      console.error(error.message);
-      options.onError?.(error);
-      throw error;
-    }
+    // streamGeminiText is now statically imported at the top of this file
+    // (see import from '@/lib/utils/streamingClient'). Previously this used a
+    // dynamic `await import()` wrapped in try/catch with a stale comment about
+    // "circular dependency" — streamingClient does not import from geminiService.
+    // Because streamingClient is statically imported by PatientEncounterMode.tsx,
+    // the dynamic import here triggered a Vite "dynamic+static" mixed-import
+    // warning without any code-split benefit.
 
     const token = options.getToken ? await options.getToken() : null;
-    const result = await streamingModule.streamGeminiText(prompt, {
+    const result = await streamGeminiText(prompt, {
       modelName,
       temperature,
       cachedContent: options.cachedContent,
@@ -932,8 +907,6 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
 
       // Load database content via API (browser-safe)
       try {
-        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-          await import('../conditionContentService');
         const dbContent = await fetchConditionContent(settings.conditionName);
 
         if (dbContent && hasCompleteContent(dbContent)) {
@@ -988,8 +961,6 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
 
         // Load database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(
             safeString(selectedConditionMeta.condition)
           );
@@ -1219,8 +1190,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       ) {
         // Fetch database content via API (browser-safe)
         try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('../conditionContentService');
           const dbContent = await fetchConditionContent(safeString(chosenConditionMeta.condition));
 
           if (dbContent && hasCompleteContent(dbContent)) {

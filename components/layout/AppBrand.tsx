@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useThemeContext } from '@/contexts/ThemeContext';
 
 const LOGO_LIGHT = '/Favicon.svg';
@@ -42,6 +43,7 @@ export const AppBrand: React.FC<AppBrandProps> = ({
   className = '',
   animate = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { wrapper: logoClass, text: textClass } = sizeClasses[size];
   // Use theme context for reliable dark/light logo swap — avoids dependence on
   // Tailwind's `hidden` / `dark:block` utilities which can be unreliable if the
@@ -81,8 +83,8 @@ export const AppBrand: React.FC<AppBrandProps> = ({
         type: 'button' as const,
         className: `${baseClass} hover:opacity-80 transition-opacity cursor-pointer`,
         style: brandFlexStyle,
-        whileHover: { scale: 1.02 },
-        whileTap: { scale: 0.98 },
+        whileHover: prefersReducedMotion ? undefined : { scale: 1.02 },
+        whileTap: prefersReducedMotion ? undefined : { scale: 0.98 },
         'aria-label': 'Return to Dashboard' as const,
       }
     : {

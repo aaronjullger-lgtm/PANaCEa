@@ -11,12 +11,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
+import { toGatewayContext } from '../../../lib/ai/aiGateway';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
 
@@ -196,7 +197,9 @@ const GenerateQuestionSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): primary AI
+// generation entry point. 25 rpm ceiling prevents runaway cost under misuse.
+export const onRequestPost = aiEndpoint(
   GenerateQuestionSchema,
   async (context) => {
   const { env, auth, validated } = context;
@@ -326,7 +329,7 @@ export const onRequestPost = authenticatedEndpoint(
           });
 
           const generatedQ = await generateSingleQuestion(
-            env.GEMINI_API_KEY,
+            toGatewayContext(context),
             transformedCondition,
             questionType,
             textbookContext

@@ -28,13 +28,13 @@ import {
   ChevronRight,
   CornerDownLeft,
   Hammer,
-  Loader2,
   RefreshCw,
   Sparkles,
   User,
   Wrench,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { InlineSpinner } from '@/components/loading';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 // ─── Types (mirror server AgentRunResult / AgentStep) ──────────────────────
@@ -389,7 +389,7 @@ const AgentChat: React.FC<AgentChatProps> = ({ onExit, userContext }) => {
               aria-label="Send message"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <InlineSpinner size="sm" />
               ) : (
                 <CornerDownLeft className="h-4 w-4" />
               )}
@@ -501,8 +501,12 @@ const LoadingBubble: React.FC = () => (
     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]">
       <Bot className="h-4 w-4" />
     </div>
-    <div className="flex items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-      <Loader2 className="h-4 w-4 animate-spin text-[var(--color-accent)]" />
+    <div
+      className="flex items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 text-sm text-[var(--color-text-secondary)]"
+      role="status"
+      aria-live="polite"
+    >
+      <InlineSpinner size="sm" className="text-[var(--color-accent)]" />
       Thinking, searching, and checking your progress…
     </div>
   </div>

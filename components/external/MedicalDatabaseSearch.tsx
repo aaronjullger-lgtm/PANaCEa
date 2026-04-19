@@ -23,6 +23,7 @@ import {
   Filter,
   Download,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface MedicalDatabaseSearchProps {
   initialQuery?: string;
@@ -349,9 +350,15 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
             )}
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
+              <div
+                className="flex items-center justify-center py-8"
+                role="status"
+                aria-live="polite"
+              >
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-category-practice)] mx-auto mb-2"></div>
+                  <div className="flex justify-center mb-2">
+                    <InlineSpinner size="lg" className="text-[var(--color-category-practice)]" />
+                  </div>
                   <p className="text-sm text-[var(--color-text-muted)]">
                     Searching {getDatabaseName(selectedDatabase)}...
                   </p>

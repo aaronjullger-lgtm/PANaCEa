@@ -1,6 +1,7 @@
 // components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useShortcut } from '@/contexts/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 import { useCommuter } from '@/contexts/CommuterContext';
@@ -76,7 +77,7 @@ import {
 import { useUnifiedKinetics } from '@/hooks/useUnifiedKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 // ErrorTagger moved to AnswerFeedback component
-import { DrillLoadingState } from '@/components/loading';
+import { DrillLoadingState, InlineSpinner } from '@/components/loading';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
 import { SessionStatsOverlay } from '@/components/quiz/SessionStatsOverlay';
@@ -131,7 +132,7 @@ import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
-import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
+import { useAnalyticsTracking, type QuestionMeta } from '@/hooks/useAnalyticsTracking';
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 import { computeScore } from '@/lib/scoring/computeScore';
 
@@ -216,8 +217,9 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         span.className = 'user-highlight';
         range.surroundContents(span);
         selection.removeAllRanges();
-      } catch {
-        // Highlighting failed - clear selection
+      } catch (highlightErr) {
+        // Highlighting failed - clear selection (cross-element ranges can't be wrapped)
+        console.debug('[QuizView] user-highlight failed', highlightErr);
         window.getSelection()?.removeAllRanges();
       }
     };
@@ -353,6 +355,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   totalQuestions,
   modeLabel,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Validate required callback props at runtime
   useEffect(() => {
     const requiredCallbacks = {
@@ -435,12 +438,15 @@ const QuizView: React.FC<QuizViewProps> = ({
   const recoveredSessionScoreRef = useRef<{ correct: number; total: number } | null>(null);
 
   // ---- QUEUE REPLENISHMENT (extracted hook) ----
+  // Note (S4): replenishQueue & isGeneratingQuestion are intentionally NOT
+  // destructured here. The hook runs its own proactive useEffect that fires
+  // replenishQueue() whenever queue.length < LOW_QUEUE_THRESHOLD. QuizView
+  // should never trigger replenishment directly — that's what previously
+  // created a render-phase side effect.
   const {
-    isGeneratingQuestion,
     replenishAttempts,
     replenishmentError,
     shouldEndlesslyReplenish,
-    replenishQueue,
     retryReplenishment,
   } = useQuizReplenishment({
     queue,
@@ -686,33 +692,44 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [currentQuestion, flaggedQuestions]);
 
   // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
+  // S5 — Uses AbortController so the fetch itself is cancelled on unmount /
+  // question change, not just its result discarded. Previously the response
+  // body still flowed over the wire and was JSON-parsed in the background.
   useEffect(() => {
     if (!isAnswered || !currentQuestion?.id || selectedAnswerIndex === null) {
       setAnswerDistribution(null);
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
+    const { signal } = controller;
     const fetchDistribution = async () => {
       try {
         const token = await getToken();
+        if (signal.aborted) return;
         const res = await fetch(
           `/api/analytics/peer-stats?questionId=${encodeURIComponent(currentQuestion?.id ?? '')}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            signal,
+          }
         );
-        if (!res.ok || cancelled) return;
+        if (!res.ok || signal.aborted) return;
         const json = (await res.json()) as {
           data?: { distribution?: { optionLetter: string; count: number; percent: number }[] };
         };
+        if (signal.aborted) return;
         const dist = json?.data?.distribution;
-        if (!cancelled && Array.isArray(dist)) setAnswerDistribution(dist);
-      } catch {
-        if (!cancelled) setAnswerDistribution(null);
+        if (Array.isArray(dist)) setAnswerDistribution(dist);
+      } catch (distErr) {
+        if ((distErr as { name?: string })?.name === 'AbortError') return;
+        console.warn('[QuizView] Failed to fetch answer distribution', distErr);
+        if (!signal.aborted) setAnswerDistribution(null);
       }
     };
     const timeoutId = setTimeout(fetchDistribution, 500);
     return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
+      controller.abort();
+      clearTimeout(timeoutId);
     };
   }, [isAnswered, currentQuestion?.id, selectedAnswerIndex, getToken]);
 
@@ -823,7 +840,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     queue,
     setParentQueue,
     shouldEndlesslyReplenish,
-    replenishQueue,
+    // S4: replenishQueue removed — proactive useEffect in useQuizReplenishment
+    // owns replenishment; showNextQuestion no longer triggers it directly.
     handleEndSession,
     setError,
     implicitMetrics,
@@ -880,6 +898,13 @@ const QuizView: React.FC<QuizViewProps> = ({
       quizLogger.error('Question missing correctAnswerIndex — cannot score answer', {
         id: currentQuestion.id,
       });
+      // Surface a user-facing error so the submit click isn't a black hole.
+      // Reset the answered state so the user isn't stuck on a frozen rationale panel.
+      setError(
+        'This question has corrupted scoring data and was skipped. Please flag it and move on.',
+      );
+      setIsAnswered(false);
+      submittingRef.current = false;
       setIsSubmitting(false);
       return;
     }
@@ -979,7 +1004,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       eliminatedCount: eliminatedAnswers.size,
       answerChangeCount: answerChangeCountRef.current,
       firstAnswer: firstSelectedAnswerRef.current,
-      question: currentQuestion as any,
+      question: currentQuestion as QuestionMeta,
     });
 
     // Sprint 4: Update performance prediction
@@ -1352,9 +1377,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           </div>
         );
       }
-      if (!isGeneratingQuestion) {
-        void replenishQueue();
-      }
+      // S4 — Intentionally NO render-phase `void replenishQueue()` here.
+      // useQuizReplenishment's proactive useEffect (queue.length < LOW_QUEUE_THRESHOLD
+      // && !isGeneratingQuestion) already covers the empty-queue case. Firing
+      // replenishQueue() during render violates React rules and double-fires under
+      // React 19 strict mode in dev.
       return (
         <DrillLoadingState
           message="Preparing your question..."
@@ -1442,10 +1469,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-                initial={{ y: 10, opacity: 0 }}
+                initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
                 {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
                 <div className="flex items-center gap-2 mb-2">
@@ -1532,9 +1559,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {/* SUBMIT BUTTON - Sticky on mobile with glass effect */}
           {!isAnswered && selectedAnswerIndex !== null && (
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="sticky bottom-0 z-10 mt-6 -mx-4 px-4 py-4 text-center space-y-2 md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4"
               style={{
                 background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',
@@ -1550,28 +1577,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               >
                 {isSubmitting ? (
                   <>
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      aria-hidden="true"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    <span role="status">Submitting...</span>
+                    <InlineSpinner size="md" />
+                    <span role="status" aria-live="polite">Submitting...</span>
                   </>
                 ) : (
                   'Submit Answer'
@@ -1632,9 +1639,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {isAnswered && !sessionWellness.onBreak && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="sticky bottom-0 z-10 mt-4 -mx-4 px-4 py-4 text-center md:static md:bg-transparent md:backdrop-blur-0 md:mx-0 md:px-0 md:py-0 md:mt-5"
               style={{
                 background: 'color-mix(in srgb, var(--color-bg-primary) 85%, transparent)',

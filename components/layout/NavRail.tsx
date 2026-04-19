@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
 import {
   ChevronLeft,
@@ -96,6 +97,7 @@ function BottomTabBar({
   pathname: string;
   search: string;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   // Take max 5 for the bottom bar
   const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
   const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 88%, transparent)';
@@ -156,10 +158,10 @@ function BottomTabBar({
               </span>
               {isActive && (
                 <motion.span
-                  layoutId="bottom-tab-indicator"
+                  layoutId={prefersReducedMotion ? undefined : "bottom-tab-indicator"}
                   className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
                   style={{ background: '#c4b78a', boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)' }}
-                  transition={springs.snappy}
+                  transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                 />
               )}
             </span>
@@ -204,6 +206,7 @@ export const NavRail: React.FC<NavRailProps> = ({
   quickActions = DEFAULT_QUICK_ACTIONS,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const commuterContext = useCommuter();
   const { status: pwaStatus, showInstallPrompt } = usePWAEnhancer();
   const isMobile = useIsMobile();
@@ -333,7 +336,7 @@ export const NavRail: React.FC<NavRailProps> = ({
             {isActive && (
               <>
                 <motion.div
-                  layoutId="active-nav-pill"
+                  layoutId={prefersReducedMotion ? undefined : "active-nav-pill"}
                   className="absolute inset-0 rounded-xl z-0"
                   style={{
                     background:
@@ -341,17 +344,17 @@ export const NavRail: React.FC<NavRailProps> = ({
                     boxShadow:
                       '0 0 12px color-mix(in srgb, #c4b78a 18%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
                   }}
-                  transition={springs.snappy}
+                  transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                   aria-hidden
                 />
                 <motion.span
-                  layoutId="active-nav-accent"
+                  layoutId={prefersReducedMotion ? undefined : "active-nav-accent"}
                   className={`absolute top-1/2 z-0 h-5 w-[3px] -translate-y-1/2 rounded-full ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1'}`}
                   style={{
                     background: 'linear-gradient(180deg, #c4b78a 0%, rgba(196, 183, 138, 0.4) 100%)',
                     boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)',
                   }}
-                  transition={springs.snappy}
+                  transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                   aria-hidden
                 />
               </>

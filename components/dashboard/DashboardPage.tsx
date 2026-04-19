@@ -62,6 +62,8 @@ import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 import type { UserProfile } from '@/types';
 import type { StudyHeatmapDatum } from '@/components/charts/StudyHeatmap';
+import { formatLocalDay, getBrowserTimezone, getLocalYear } from '@/lib/time/userTz';
+import { computeRotationWeek } from '@/lib/time/rotationWeek';
 
 // Lazy-loaded heavy chart — @nivo/calendar (~15-20 KB)
 const StudyHeatmap = React.lazy(() => import('@/components/charts/StudyHeatmap'));
@@ -309,8 +311,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   useEffect(() => {
     try {
       localStorage.setItem(DASHBOARD_VIEW_KEY, view);
-    } catch {
-      // ignore
+    } catch (storageErr) {
+      // Benign: storage quota, private-mode Safari, or disabled storage.
+      console.debug('[DashboardPage] localStorage write rejected', storageErr);
     }
   }, [view]);
 
@@ -449,15 +452,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return counts;
   }, [dbStats, performanceData]);
 
-  // Compute rotation week from rotationStartDate
-  const rotationWeek = useMemo(() => {
-    if (!userProfile?.rotationStartDate) return undefined;
-    const start = new Date(userProfile.rotationStartDate);
-    const now = new Date();
-    const diffMs = now.getTime() - start.getTime();
-    if (diffMs < 0) return 1; // hasn't started yet
-    return Math.floor(diffMs / (7 * 86400000)) + 1;
-  }, [userProfile?.rotationStartDate]);
+  // Compute rotation week from rotationStartDate.
+  // Uses the user's local timezone so DST transitions can't silently flip
+  // "Week 4" to "Week 5" an hour earlier than the calendar actually does.
+  // See lib/time/rotationWeek.ts for rules.
+  const rotationWeek = useMemo(
+    () => computeRotationWeek(userProfile?.rotationStartDate, getBrowserTimezone()),
+    [userProfile?.rotationStartDate]
+  );
 
   // Compute wellness state from real session history
   const wellnessState = useMemo(
@@ -466,23 +468,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   );
 
   const studyActivityData = useMemo<StudyHeatmapDatum[]>(() => {
+    // Timezone-aware: bucket by the user's *local* calendar day, and filter
+    // by the user's local year. UTC bucketing drops a 22:00 PT session into
+    // "tomorrow", making the heatmap stamp the wrong square.
+    const tz = getBrowserTimezone();
+    const currentYear = getLocalYear(new Date(), tz);
     const counts = new Map<string, number>();
-    const currentYear = new Date().getUTCFullYear();
 
     const addDay = (day: string, amount: number) => {
       if (!day.startsWith(`${currentYear}-`) || amount <= 0) return;
       counts.set(day, (counts.get(day) ?? 0) + amount);
     };
 
-    if ((performanceData?.length ?? 0) > 0) {
+    // Prefer server-side recentSessions when available — it's the source of
+    // truth for what sessions were actually committed. localStorage
+    // performanceData is a pre-sync fallback that can drift after offline
+    // flushes or device switches.
+    if (recentSessions && recentSessions.length > 0) {
+      for (const session of recentSessions) {
+        // session.date is already a YYYY-MM-DD string emitted by the server,
+        // in the user's tz as of the session; pass-through is safe.
+        addDay(session.date, Math.max(1, session.questionsCompleted || 0));
+      }
+    } else if ((performanceData?.length ?? 0) > 0) {
       for (const record of performanceData ?? []) {
         if (!record.timestamp) continue;
-        const day = new Date(record.timestamp).toISOString().slice(0, 10);
+        const day = formatLocalDay(new Date(record.timestamp), tz);
         addDay(day, 1);
-      }
-    } else {
-      for (const session of recentSessions) {
-        addDay(session.date, Math.max(1, session.questionsCompleted || 0));
       }
     }
 

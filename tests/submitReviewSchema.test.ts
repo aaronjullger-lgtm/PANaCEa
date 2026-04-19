@@ -237,6 +237,55 @@ describe('DrillSubmitReviewSchema: Range & Type Validation', () => {
   });
 });
 
+describe('DrillSubmitReviewSchema: Idempotency Key (S3)', () => {
+  it('accepts request without idempotencyKey (backward-compatible)', () => {
+    const { ...rest } = VALID_MINIMAL;
+    expect('idempotencyKey' in rest).toBe(false);
+    const result = DrillSubmitReviewSchema.safeParse(rest);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts syncManager-style queue id (review-<ts>-<rand>)', () => {
+    const result = DrillSubmitReviewSchema.safeParse({
+      ...VALID_MINIMAL,
+      idempotencyKey: 'review-1744934400000-abc123',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts UUID v4 as idempotencyKey', () => {
+    const result = DrillSubmitReviewSchema.safeParse({
+      ...VALID_MINIMAL,
+      idempotencyKey: '550e8400-e29b-41d4-a716-446655440000',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects idempotencyKey shorter than 8 chars', () => {
+    const result = DrillSubmitReviewSchema.safeParse({
+      ...VALID_MINIMAL,
+      idempotencyKey: 'abc',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects idempotencyKey longer than 128 chars', () => {
+    const result = DrillSubmitReviewSchema.safeParse({
+      ...VALID_MINIMAL,
+      idempotencyKey: 'x'.repeat(129),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-string idempotencyKey', () => {
+    const result = DrillSubmitReviewSchema.safeParse({
+      ...VALID_MINIMAL,
+      idempotencyKey: 12345,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('DrillSubmitReviewSchema: Telemetry Strict Mode', () => {
   it('rejects unknown fields in telemetry (strict schema)', () => {
     const result = DrillSubmitReviewSchema.safeParse({

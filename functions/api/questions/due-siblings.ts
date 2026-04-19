@@ -123,7 +123,11 @@ function parsePreGenToQuestion(q: {
   };
 }
 
-/** Build PreGenQuestionForVariant from a Question row for ensureDueVariant */
+/**
+ * Build PreGenQuestionForVariant from a Question row for ensureDueVariant.
+ * Returns null when the source row's correctAnswer can't be resolved against options,
+ * so callers don't silently seed a variant generator with option A marked correct.
+ */
 function questionToPreGenForVariant(q: {
   id: string;
   vignette: string;
@@ -147,7 +151,13 @@ function questionToPreGenForVariant(q: {
             )
       )
     : [];
-  const correctIndex = optionsArr.indexOf(q.correctAnswer);
+  if (optionsArr.length === 0) return null;
+  if (typeof q.correctAnswer !== 'string' || q.correctAnswer.trim().length === 0) {
+    return null;
+  }
+  // Reuse the local resolver that handles letter/numeric/text-match forms.
+  const correctIndex = resolveCorrectAnswerIndex({ correctAnswer: q.correctAnswer }, optionsArr);
+  if (correctIndex === null) return null;
   return {
     id: q.id,
     conditionId: q.conditionId,
@@ -159,7 +169,7 @@ function questionToPreGenForVariant(q: {
       vignette: q.vignette,
       options: optionsArr,
       correctAnswer: q.correctAnswer,
-      correctAnswerIndex: Math.max(0, correctIndex),
+      correctAnswerIndex: correctIndex,
       rationale: q.explanation,
       explanation: q.explanation,
       taskType: q.taskType ?? undefined,
@@ -225,13 +235,19 @@ async function tryGenerateAndFetchSibling(
     });
     if (questionOriginal) {
       const forVariant = questionToPreGenForVariant(questionOriginal);
-      await ensureDueVariant(
-        prisma,
-        forVariant,
-        apiKey,
-        { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
-        userId
-      );
+      if (forVariant) {
+        await ensureDueVariant(
+          prisma,
+          forVariant,
+          apiKey,
+          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+          userId
+        );
+      } else {
+        logger.warn('due-siblings skipped variant seed — unresolvable correctAnswer', {
+          originalQuestionId: item.originalQuestionId,
+        });
+      }
     }
   }
   const retryCandidates = await prisma.preGeneratedQuestion.findMany({

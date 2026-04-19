@@ -5,7 +5,7 @@
  * Enhanced with database-linked reference material in feedback panels.
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Activity } from 'lucide-react';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
@@ -13,6 +13,7 @@ import { DrillLandingPage } from './DrillLandingPage';
 import { usePhysiologyDrill } from '@/hooks/game/use-physiology-drill';
 import { getDrillLandingStats } from '@/services/analytics';
 import DrillShell from './DrillShell';
+import DrillSummaryCard from './DrillSummaryCard';
 import { ROUTES } from '@/config/routes';
 
 interface PhysiologyDrillSessionProps {
@@ -24,8 +25,18 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
   onExit,
   onNavigateToReference,
 }) => {
+  const [showSummary, setShowSummary] = useState(false);
   const drill = usePhysiologyDrill();
   const stats = getDrillLandingStats('physiology_drill');
+
+  const handleExit = useCallback(() => {
+    if (drill.totalAttempts > 0 && !showSummary) {
+      setShowSummary(true);
+      return;
+    }
+    drill.exitToMenu();
+    onExit?.();
+  }, [drill.totalAttempts, showSummary, drill.exitToMenu, onExit]);
 
   // Handler for deep dive into reference material
   const handleDeepDive = useCallback(
@@ -37,13 +48,35 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
     [onNavigateToReference]
   );
 
+  // Summary
+  if (showSummary) {
+    return (
+      <DrillShell
+        title="Physiology Review — Complete"
+        breadcrumb={['Drills', 'Physiology', 'Results']}
+        onBackToHub={() => { drill.exitToMenu(); onExit?.(); }}
+        backTo={ROUTES.PRACTICE}
+      >
+        <DrillSummaryCard
+          drillName="Physiology Review"
+          icon={Activity}
+          accentColor="var(--color-accent)"
+          stats={{ correct: drill.score, total: drill.totalAttempts, streak: drill.streak }}
+          onNewSession={() => { setShowSummary(false); drill.reset(); drill.startSession(); }}
+          onExit={() => { drill.exitToMenu(); onExit?.(); }}
+          newSessionLabel="Play Again"
+        />
+      </DrillShell>
+    );
+  }
+
   // Landing page
   if (drill.status === 'landing') {
     return (
       <DrillShell
         title="Physiology Review"
         breadcrumb={['Drills', 'Physiology']}
-        onBackToHub={() => onExit?.()}
+        onBackToHub={handleExit}
         backTo={ROUTES.PRACTICE}
         hideBreadcrumb
       >
@@ -54,7 +87,7 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
           accentColor="purple"
           stats={stats}
           onStart={drill.startSession}
-          onExit={onExit}
+          onExit={handleExit}
           instructions={[
             'Review fundamental physiology concepts',
             'Cover all major organ systems',
@@ -83,7 +116,7 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
       streak={drill.streak}
       isFeedback={isFeedback}
       isCorrect={drill.isCorrect}
-      onExit={drill.exitToMenu}
+      onExit={handleExit}
       onReset={drill.reset}
       footer={
         isFeedback && drill.currentQuestion ? (

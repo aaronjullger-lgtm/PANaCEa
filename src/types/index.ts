@@ -24,6 +24,16 @@ export interface StructuredRationale {
   clinicalPearl?: string;
   highYieldImageOrTable?: string;
   commonPitfalls?: string[];
+  /** Grounding sources extracted by AI generation (PubMed, textbooks, guidelines) */
+  groundingSources?: GroundingSource[];
+  /** PubMed citations extracted during question generation */
+  pubmedCitations?: GroundingSource[];
+}
+
+/** A source reference attached to AI-generated content for provenance tracking. */
+export interface GroundingSource {
+  uri: string;
+  title: string;
 }
 
 export interface Question {
@@ -80,6 +90,10 @@ export interface Question {
   fromStaging?: boolean;
   /** Optional image/ECG/imaging URL for multi-modal questions */
   imageUrl?: string;
+  /** Grounding sources attached by AI generation (provenance tracking) */
+  groundingSources?: GroundingSource[];
+  /** PubMed citations extracted during question generation */
+  pubmedCitations?: GroundingSource[];
 }
 
 /** Alias for Question used in quiz/session flows (preferred in new code). */

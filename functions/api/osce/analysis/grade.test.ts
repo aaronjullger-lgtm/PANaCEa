@@ -3,6 +3,7 @@ import { onRequestPost } from './grade';
 import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv } from '../../_shared/env-validation';
 import { withRateLimit } from '../../_shared/rateLimiter';
+import { gateway } from '@/lib/ai/aiGateway';
 
 const mockPrisma = {
   patientEncounterSession: {
@@ -22,20 +23,31 @@ const mockPrisma = {
   },
 };
 
-vi.mock('../../_shared/middleware', () => ({
-  authenticatedEndpoint: vi.fn((_schema, handler) => async (context: any) => {
-    const result = await handler(context);
-    if (result instanceof Response) return result;
-    const status = result.status || 200;
-    const body =
-      result.error != null ? JSON.stringify({ error: result.error }) : JSON.stringify(result.data ?? result);
-    return new Response(body, {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }),
-  withCors: vi.fn(() => () => new Response(null, { status: 204 })),
-}));
+vi.mock('../../_shared/middleware', () => {
+  // Inlined inside the factory so vi.mock's hoisted evaluation has access
+  // to it. Declaring it as a top-level `const` fails because `vi.mock` is
+  // hoisted above all other top-level statements.
+  const wrapEndpoint =
+    (_schema: unknown, handler: (context: any) => Promise<any>) =>
+    async (context: any) => {
+      const result = await handler(context);
+      if (result instanceof Response) return result;
+      const status = result.status || 200;
+      const body =
+        result.error != null
+          ? JSON.stringify({ error: result.error })
+          : JSON.stringify(result.data ?? result);
+      return new Response(body, {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+  return {
+    authenticatedEndpoint: vi.fn(wrapEndpoint),
+    aiEndpoint: vi.fn(wrapEndpoint),
+    withCors: vi.fn(() => () => new Response(null, { status: 204 })),
+  };
+});
 
 vi.mock('../../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => mockPrisma),
@@ -75,6 +87,19 @@ vi.mock('../../_shared/inferSystem', () => ({
 vi.mock('../../ai/learning/profile-crud', () => ({
   scheduleConceptReview: vi.fn(),
 }));
+
+vi.mock('@/lib/ai/aiGateway', async () => {
+  // The endpoint only uses `gateway.grade(...)`, `GatewayError`, and
+  // `toGatewayContext(...)`. Everything else on the real module can stay.
+  const actual = await vi.importActual<typeof import('@/lib/ai/aiGateway')>('@/lib/ai/aiGateway');
+  return {
+    ...actual,
+    gateway: {
+      grade: vi.fn(),
+    },
+    toGatewayContext: vi.fn(() => ({ env: {}, auth: { userId: 'clerk_user_1' } })),
+  };
+});
 
 describe('POST /api/osce/analysis/grade', () => {
   const baseContext = {
@@ -129,14 +154,20 @@ describe('POST /api/osce/analysis/grade', () => {
   it('maps Gemini 429 to endpoint 429', async () => {
     mockPrisma.patientEncounterSession.findFirst.mockResolvedValue(completedSession);
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        new Response('Rate limited', {
-          status: 429,
-          statusText: 'Too Many Requests',
-        })
-      )
+    // The endpoint now delegates to `gateway.grade(...)`. The gateway
+    // throws a `GatewayError` with code 'RATE_LIMITED' on upstream 429,
+    // which the endpoint maps to a 429 response.
+    // Use the same module that the endpoint imports so `instanceof` matches.
+    const { GatewayError } = await import('@/lib/ai/aiGateway');
+    (gateway.grade as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new GatewayError({
+        code: 'RATE_LIMITED',
+        message: 'Upstream rate limit',
+        retryable: true,
+        requestId: 'req_test',
+        traceId: 'trace_test',
+        task: 'grade',
+      }),
     );
 
     const response = await onRequestPost(baseContext as any);
@@ -152,57 +183,27 @@ describe('POST /api/osce/analysis/grade', () => {
       .mockResolvedValueOnce({ id: 'result_1' }); // persistGradeAndConceptGap: verify saved
     mockPrisma.osceResult.create.mockResolvedValue({ id: 'result_1' });
 
-    vi.stubGlobal(
-      'fetch',
-      vi
-        .fn()
-        .mockResolvedValueOnce(
-          new Response(
-            JSON.stringify({
-              candidates: [
-                {
-                  content: {
-                    parts: [
-                      {
-                        text: JSON.stringify({
-                          score: 88,
-                          checklist: [{ item: 'Ask onset and severity', status: 'PASS', feedback: 'Good' }],
-                          redFlagsMissed: [],
-                          clinicalReasoningScore: 82,
-                          billingCodeSuggestion: 'I20.0',
-                        }),
-                      },
-                    ],
-                  },
-                },
-              ],
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-          )
-        )
-        .mockResolvedValueOnce(
-          new Response(
-            JSON.stringify({
-              candidates: [
-                {
-                  content: {
-                    parts: [
-                      {
-                        text: JSON.stringify({
-                          empathy: { score: 4, feedback: 'Supportive' },
-                          professionalism: { score: 5, feedback: 'Appropriate tone' },
-                          pacing: { score: 4, feedback: 'Well-paced' },
-                        }),
-                      },
-                    ],
-                  },
-                },
-              ],
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-          )
-        )
-    );
+    // The gateway is called twice: once for the graded payload, once for
+    // the soft-skills payload. Both return the parsed & validated objects.
+    (gateway.grade as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        data: {
+          score: 88,
+          checklist: [
+            { item: 'Ask onset and severity', status: 'PASS', feedback: 'Good' },
+          ],
+          redFlagsMissed: [],
+          clinicalReasoningScore: 82,
+          billingCodeSuggestion: 'I20.0',
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          empathy: { score: 4, feedback: 'Supportive' },
+          professionalism: { score: 5, feedback: 'Appropriate tone' },
+          pacing: { score: 4, feedback: 'Well-paced' },
+        },
+      });
 
     const response = await onRequestPost(baseContext as any);
     expect(response.status).toBe(200);

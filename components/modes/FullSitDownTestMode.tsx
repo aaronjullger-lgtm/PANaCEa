@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { QuizView } from '@/components/session/QuizView';
 import type { ErrorTag, PerformanceRecord, Question, SessionSettings } from '@/types';
 import { mapLaunchModeToSessionRequestMode } from '@/lib/sessionGeneration';
+import { InlineSpinner } from '@/components/loading';
 
 interface FullSitDownTestModeProps {
   /** Callback to navigate back to the menu */
@@ -128,8 +129,10 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div role="status" aria-label="Loading exam session" className="text-center">
-          <div aria-hidden="true" className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div role="status" aria-live="polite" aria-label="Loading exam session" className="text-center">
+          <div className="flex justify-center">
+            <InlineSpinner size="xl" className="text-primary" />
+          </div>
           <p className="mt-4 text-lg">Generating 300‑question exam session…</p>
           <p className="text-sm text-muted-foreground">This may take a moment.</p>
         </div>

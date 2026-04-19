@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
@@ -37,6 +38,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
     validDiagnoses,
   } = usePhotoDrill();
 
+  const prefersReducedMotion = useReducedMotion();
   const [imageRevealed, setImageRevealed] = useState<boolean>(false);
 
   // Auto-start Derm-only mode
@@ -105,9 +107,9 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -20 }}
             className="p-4"
           >
             <div className="max-w-2xl mx-auto">
@@ -122,7 +124,7 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
         {status === 'feedback' && currentCase && (
           <motion.div
             key="feedback-controls"
-            initial={{ y: 20 }}
+            initial={prefersReducedMotion ? false : { y: 20 }}
             animate={{ y: 0 }}
             className={`p-4 ${isCorrect ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]/10 border-t-2 border-[var(--color-data-fail)]'}`}
           >

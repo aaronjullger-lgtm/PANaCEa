@@ -16,10 +16,10 @@ import {
   Pill,
   Info,
   Brain,
-  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
+import { InlineSpinner } from '@/components/loading';
 
 interface PolypharmacyPuzzleModeProps {
   onExit?: () => void;
@@ -202,9 +202,16 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
         );
 
         if (response.ok) {
-          const data: any = await response.json();
-          if (data.data?.cases?.[0]) {
-            setCurrentCase(data.data.cases[0] as PolypharmacyCase);
+          // Middleware strips the `{ data: ... }` envelope at the HTTP layer,
+          // so `cases` lives at the top level of response.json(). The old check
+          // for `data.data.cases` matched neither shape and silently fell
+          // through to SAMPLE_CASES[0] — every student got the demo case
+          // instead of a real generated one. Handle both shapes defensively
+          // in case some deployed version still double-wraps.
+          const json: any = await response.json();
+          const cases = json?.cases ?? json?.data?.cases;
+          if (Array.isArray(cases) && cases[0]) {
+            setCurrentCase(cases[0] as PolypharmacyCase);
           } else {
             setCurrentCase(SAMPLE_CASES[0]!);
           }
@@ -372,8 +379,10 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
   if (loading || !currentCase) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div role="status" aria-label="Loading medication case" className="text-center">
-          <Loader2 aria-hidden="true" className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+        <div role="status" aria-live="polite" aria-label="Loading medication case" className="text-center">
+          <div className="flex justify-center mb-4">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+          </div>
           <p className="text-[var(--color-text-muted)]">Loading medication case...</p>
         </div>
       </div>
@@ -508,8 +517,12 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
               {currentCase.medicationList.medications.map((med) => (
                 <motion.div
                   key={med.id}
+                  role="checkbox"
+                  aria-checked={selectedDrugs.has(med.id)}
+                  tabIndex={0}
                   onClick={() => toggleDrugSelection(med.id)}
                   onDoubleClick={() => checkContraindication(med.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDrugSelection(med.id); } }}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                     selectedDrugs.has(med.id)
                       ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'

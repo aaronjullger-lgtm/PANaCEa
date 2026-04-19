@@ -90,11 +90,18 @@ export function getPoolStatus(): PoolStatus | null {
 
 /**
  * Fetch questions for a study session
+ *
+ * S5 — Accepts an optional external `AbortSignal` so callers (e.g. the
+ * replenishment hook) can cancel on unmount or route change. The external
+ * signal composes with the internal 15-second timeout controller: either
+ * firing aborts the in-flight request. AbortError short-circuits the retry
+ * loop — we never retry a cancelled request.
  */
 export async function fetchSessionQuestions(
   settings: SessionSettings,
   token?: string | null,
-  count: number = 10
+  count: number = 10,
+  signal?: AbortSignal
 ): Promise<SessionResponse> {
   // Map frontend settings to API params
   const params = new URLSearchParams();
@@ -149,9 +156,21 @@ export async function fetchSessionQuestions(
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Add timeout to prevent hanging
+      // If caller already cancelled before we even start this attempt, bail
+      // immediately with a proper AbortError so the outer catch can detect it.
+      if (signal?.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
+      // Add timeout to prevent hanging — composed with the optional external
+      // signal. Either the 15 s timeout OR the caller aborting will cancel
+      // the in-flight fetch.
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
+      const onExternalAbort = () => controller.abort();
+      if (signal) {
+        signal.addEventListener('abort', onExternalAbort);
+      }
       let response: Response;
       try {
         response = await fetch(`/api/questions/session?${params.toString()}`, {
@@ -161,6 +180,9 @@ export async function fetchSessionQuestions(
         });
       } finally {
         clearTimeout(timeoutId);
+        if (signal) {
+          signal.removeEventListener('abort', onExternalAbort);
+        }
       }
 
       if (!response.ok) {
@@ -215,6 +237,14 @@ export async function fetchSessionQuestions(
       };
     } catch (error) {
       lastError = error as Error;
+      // S5 — Never retry a cancelled fetch. If the caller (or the internal
+      // 15 s timeout composed with an external abort) cancelled us, rethrow
+      // immediately so the caller can handle it as a silent cancellation.
+      const isAbort =
+        (error as { name?: string })?.name === 'AbortError' || signal?.aborted === true;
+      if (isAbort) {
+        throw error;
+      }
       console.warn(`[SessionService] API fetch attempt ${attempt} failed:`, error);
       if (attempt < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));

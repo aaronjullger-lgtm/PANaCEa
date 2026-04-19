@@ -254,13 +254,13 @@ export interface RawPhysicalFinding {
 
 export interface RawLabFinding {
   name: string;
-  commonAbnormalities?: string | null;
+  commonAbnormalities?: string[] | null;
   isHighYield?: boolean;
 }
 
 export interface RawImagingFinding {
   name: string;
-  classicSigns?: string | null;
+  classicSigns?: string[] | null;
   isHighYield?: boolean;
 }
 
@@ -413,8 +413,9 @@ export function buildConsequences(
 
   // Lab findings
   for (const lf of labFindings) {
+    const abnormStr = lf.commonAbnormalities?.length ? lf.commonAbnormalities.join(', ') : '';
     consequences.push({
-      finding: lf.name + (lf.commonAbnormalities ? `: ${lf.commonAbnormalities}` : ''),
+      finding: lf.name + (abnormStr ? `: ${abnormStr}` : ''),
       type: 'lab_finding',
       diagnosticStrength: 'moderate',
       isClassic: false,
@@ -424,11 +425,12 @@ export function buildConsequences(
 
   // Imaging findings
   for (const imf of imagingFindings) {
+    const signsStr = imf.classicSigns?.length ? imf.classicSigns.join(', ') : '';
     consequences.push({
-      finding: imf.name + (imf.classicSigns ? `: ${imf.classicSigns}` : ''),
+      finding: imf.name + (signsStr ? `: ${signsStr}` : ''),
       type: 'imaging_finding',
-      diagnosticStrength: imf.classicSigns ? 'strong' : 'moderate',
-      isClassic: !!imf.classicSigns,
+      diagnosticStrength: imf.classicSigns?.length ? 'strong' : 'moderate',
+      isClassic: (imf.classicSigns?.length ?? 0) > 0,
       isHighYield: imf.isHighYield ?? false,
     });
   }

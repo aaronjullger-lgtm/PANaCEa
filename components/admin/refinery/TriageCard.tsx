@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Image, HelpCircle, Check, X, Loader2 } from 'lucide-react';
+import { BookOpen, Image, HelpCircle, Check, X } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 
 export type RefineryItemType = 'content' | 'media' | 'question';
@@ -71,7 +72,8 @@ function formatDate(ts: string): string {
       hour: '2-digit',
       minute: '2-digit',
     });
-  } catch {
+  } catch (err) {
+    console.debug('[TriageCard] Failed to format date', err);
     return String(ts);
   }
 }
@@ -181,7 +183,8 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
         } else {
           setImageLoadError(true);
         }
-      } catch {
+      } catch (err) {
+        console.warn('[TriageCard] Failed to load signed image URL', err);
         if (!cancelled) setImageLoadError(true);
       }
     })();
@@ -204,7 +207,8 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
       setConditionSearchResults(
         list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition }))
       );
-    } catch {
+    } catch (err) {
+      console.warn('[TriageCard] Condition search failed', err);
       setConditionSearchResults([]);
     }
   }, []);
@@ -248,7 +252,7 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
         </span>
       );
     }
-    return <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" aria-hidden />;
+    return <InlineSpinner size="lg" className="text-[var(--color-text-muted)]" />;
   }
 
   return (

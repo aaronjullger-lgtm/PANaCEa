@@ -165,7 +165,7 @@ export function getSafeAnimation<T extends object>(animation: T, fallback: Parti
     return {
       ...animation,
       ...fallback,
-      transition: { duration: 0.01 } as any,
+      transition: { duration: 0.01 } as T extends { transition?: infer Tr } ? Tr : { duration: number },
     };
   }
   return animation;

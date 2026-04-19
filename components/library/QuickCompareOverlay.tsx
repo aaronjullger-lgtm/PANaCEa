@@ -27,8 +27,8 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
     },
     {
       label: 'Best Initial Test',
-      hovered: (hoveredCondition as any).best_initial_test,
-      selected: (selectedCondition as any).best_initial_test,
+      hovered: hoveredCondition.best_initial_test,
+      selected: selectedCondition.best_initial_test,
       icon: <FlaskConical className="w-4 h-4 text-[var(--color-category-practice)]" />,
     },
   ];

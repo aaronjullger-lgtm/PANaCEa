@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs, skeletonLineVariants, widgetEntrance } from '@/config/appViews';
 import { ShimmerOverlay } from '@/components/loading';
 import { useMetacognitiveStats } from '@/hooks/useMetacognitiveStats';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const { data, isLoading, error } = useMetacognitiveStats(days);
 
   if (isLoading) {
@@ -37,8 +39,8 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
             <motion.div
               key={i}
               custom={i}
-              variants={skeletonLineVariants}
-              initial="hidden"
+              variants={prefersReducedMotion ? undefined : skeletonLineVariants}
+              initial={prefersReducedMotion ? false : "hidden"}
               animate="visible"
               className="relative h-48 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] overflow-hidden"
             >
@@ -62,9 +64,9 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
           Metacognitive Mirror
         </h2>
         <motion.p
-          initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 8, filter: 'blur(4px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={springs.gentle}
+          transition={prefersReducedMotion ? { duration: 0 } : springs.gentle}
           className="text-sm text-[var(--color-text-muted)]"
         >
           {error || 'Unable to load behavioral insights.'}
@@ -75,9 +77,9 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
 
   return (
     <motion.section
-      initial={{ y: 12, filter: 'blur(4px)' }}
+      initial={prefersReducedMotion ? false : { y: 12, filter: 'blur(4px)' }}
       animate={{ y: 0, filter: 'blur(0px)' }}
-      transition={springs.snappy}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
       className="space-y-4"
     >
       <div className="flex items-baseline justify-between">
@@ -98,8 +100,8 @@ export const MetacognitiveMirror: React.FC<Props> = ({ days = 30 }) => {
         ] as React.ReactElement[]).map((widget, i) => (
           <motion.div
             key={widget.key}
-            variants={widgetEntrance}
-            initial="hidden"
+            variants={prefersReducedMotion ? undefined : widgetEntrance}
+            initial={prefersReducedMotion ? false : "hidden"}
             animate="visible"
             custom={i}
           >

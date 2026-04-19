@@ -11,7 +11,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs, cardHoverVariants } from '@/config/appViews';
-import { Library, Search, Star, X, ChevronRight, Clock, RefreshCw } from 'lucide-react';
+import { Library, Search, Star, X, ChevronRight, Clock } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import GenericReferenceView from './GenericReferenceView';
 import type { ReferenceViewConfig } from './GenericReferenceView';
 import {
@@ -200,7 +201,8 @@ export default function ReferenceHub() {
           const json = await res.json();
           const arr = normalizeApiItems(json);
           return { slug: config.entitySlug, items: arr.slice(0, 5) };
-        } catch {
+        } catch (crossErr) {
+          console.warn('[ReferenceHub] cross-search fetch failed', crossErr);
           return { slug: config.entitySlug, items: [] };
         }
       });
@@ -323,8 +325,12 @@ export default function ReferenceHub() {
       {globalSearch.length >= 3 && (
         <div style={{ marginBottom: 20 }}>
           {crossSearching ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}>
-              <RefreshCw size={14} className="animate-spin" />
+            <div
+              role="status"
+              aria-live="polite"
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}
+            >
+              <InlineSpinner size="sm" />
               Searching across all reference types...
             </div>
           ) : crossSearchResults.length > 0 ? (
@@ -435,8 +441,12 @@ export default function ReferenceHub() {
 
       {/* Loading / error state */}
       {countsLoading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}>
-          <RefreshCw size={14} className="animate-spin" />
+        <div
+          role="status"
+          aria-live="polite"
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', color: 'var(--color-text-secondary)', fontSize: 13 }}
+        >
+          <InlineSpinner size="sm" />
           Loading reference library...
         </div>
       )}

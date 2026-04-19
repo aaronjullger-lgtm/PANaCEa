@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -116,7 +116,12 @@ function resolvePrompt(body: z.infer<typeof GenerateBodySchema>): string {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (context) => {
+// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): Gemini Veo video
+// generation (long-running op). In addition to the advisory 25 rpm 'ai' bucket
+// below, the endpoint keeps a stricter dedicated 'veo' rate-limiter inside the
+// handler because Veo tokens are an order of magnitude more expensive than a
+// standard Gemini text call.
+export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;

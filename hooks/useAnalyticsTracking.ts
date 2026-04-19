@@ -14,7 +14,7 @@ import type { BehaviorSignals } from '@/services/analytics';
 const LOG_SCOPE = 'useAnalyticsTracking';
 const analyticsLogger = logger.scope(LOG_SCOPE);
 
-interface QuestionMeta {
+export interface QuestionMeta {
   id?: string;
   system?: string | null;
   subcategory?: string | null;

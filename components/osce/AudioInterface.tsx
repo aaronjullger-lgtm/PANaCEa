@@ -11,7 +11,8 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Mic, MicOff, VolumeX, Loader2, AlertCircle } from 'lucide-react';
+import { Mic, MicOff, VolumeX, AlertCircle } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 
 const SAMPLE_RATE = 16000;
 const CHANNELS = 1;
@@ -62,7 +63,11 @@ export function AudioInterface({
       mediaStreamRef.current = null;
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => {});
+      // AudioContext.close() can reject if the context is already closed or
+      // in a transitional state; this is non-fatal, but log for debugging.
+      audioContextRef.current.close().catch((closeErr) => {
+        console.debug('[AudioInterface] AudioContext close rejected', closeErr);
+      });
       audioContextRef.current = null;
     }
     // Only update React state if still mounted
@@ -200,8 +205,12 @@ export function AudioInterface({
       )}
 
       {status === 'connecting' && (
-        <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
-          <Loader2 className="w-5 h-5 animate-spin" />
+        <div
+          className="flex items-center gap-2 text-[var(--color-text-muted)]"
+          role="status"
+          aria-live="polite"
+        >
+          <InlineSpinner size="md" />
           Connecting...
         </div>
       )}

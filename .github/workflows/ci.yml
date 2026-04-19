@@ -1,3 +1,9 @@
+# purpose: Validate PANaCEa builds, critical tests, and secret hygiene on pushes, pull requests, and manual runs.
+# owner: Platform / DevEx
+# trigger strategy: push, pull_request, workflow_dispatch
+# secrets required: GITHUB_TOKEN
+# expected runtime: 10-25 minutes
+# failure behavior: Review the failing job, fix the regression locally, and rerun CI before merge or deploy.
 name: CI
 
 on:
@@ -6,6 +12,13 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '22'

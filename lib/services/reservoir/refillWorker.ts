@@ -24,7 +24,11 @@ import { RESERVOIR_POLICY, type RefillResult } from './reservoirPolicy';
 import { bulkInsertReservoirItems, type InsertReservoirItemInput } from './reservoirService';
 import { ALLOWED_VALIDATION_STATUSES } from '../mainSessionQuestionSelector';
 import { boostReservoirItems } from './confusionPairBoost';
-import { NCCPA_2025_BLUEPRINT_PERCENT, normalizeSystemName } from '../../constants/blueprint';
+import {
+  NCCPA_2025_BLUEPRINT_PERCENT,
+  normalizeSystemName,
+  getSystemAbbreviation,
+} from '../../constants/blueprint';
 import { computeAdjacencyPriority, getAdjacencyMultiplier } from '../../constants/clinicalAdjacency';
 
 type PrismaClientLike = {
@@ -335,8 +339,6 @@ export async function executeRefill(
 
     if (systemQuotas) {
       // Blueprint-weighted: fetch per system in proportion to NCCPA weights
-      // Import abbreviation mapper
-      const { getSystemAbbreviation } = await import('../../constants/blueprint');
       for (const [blueprintSystem, quota] of Object.entries(systemQuotas)) {
         if (quota <= 0 || poolQueued >= newTarget) continue;
 

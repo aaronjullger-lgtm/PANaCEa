@@ -10,8 +10,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Star, RefreshCw, ChevronDown, ChevronRight,
+  ArrowLeft, Star, ChevronDown, ChevronRight,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { ReferenceViewConfig } from './GenericReferenceView';
 import { allReferenceConfigs } from './referenceConfigs';
 
@@ -162,7 +163,7 @@ export default function HighYieldSummary({ onBack }: HighYieldSummaryProps) {
                   {group.config.entityName}
                 </span>
                 {group.loading ? (
-                  <RefreshCw size={14} className="animate-spin" style={{ color: 'var(--color-text-secondary)' }} />
+                  <InlineSpinner size="sm" className="text-[var(--color-text-secondary)]" />
                 ) : (
                   <span style={{
                     fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 9999,

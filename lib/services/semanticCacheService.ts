@@ -5,6 +5,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '../prisma';
 import { geminiLogger } from '../logger';
 
 const LOG_SCOPE = 'SemanticCache';
@@ -106,7 +107,6 @@ export async function findSimilarCachedQuestion(query: CacheQuery): Promise<Cach
       return null;
     }
 
-    const { prisma } = await import('../prisma');
 
     // Normalize and tokenize query
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
@@ -184,7 +184,6 @@ export async function cacheGeneratedQuestion(
       return;
     }
 
-    const { prisma } = await import('../prisma');
 
     // Store normalized query for better future matches
     const normalizedQuery = normalizeMedicalTerms(query.queryText);
@@ -227,7 +226,6 @@ export async function getCacheStats(): Promise<{
       };
     }
 
-    const { prisma } = await import('../prisma');
 
     const entries = await prisma.semanticCache.findMany({
       select: {
@@ -288,7 +286,6 @@ export async function pruneCache(
       return 0;
     }
 
-    const { prisma } = await import('../prisma');
 
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAge);

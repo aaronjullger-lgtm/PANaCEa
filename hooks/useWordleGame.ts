@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import type { MedicalWordleGame } from '@/types';
 
 export type WordleStatus = 'playing' | 'won' | 'lost';
@@ -60,6 +61,7 @@ const fetchWordleResource = async (url: string, options?: RequestInit) => {
 };
 
 export function useWordleGame() {
+  const { getToken } = useAuth();
   const [game, setGame] = useState<MedicalWordleGame | null>(null);
   const [guesses, setGuesses] = useState<string[]>([]);
   const [status, setStatus] = useState<WordleStatus>('playing');
@@ -81,8 +83,10 @@ export function useWordleGame() {
     setError(null);
 
     try {
+      const token = await getToken();
+      if (!token) throw new Error('Please sign in to play Wordle');
       const payload = await fetchWordleResource('/api/games/wordle/daily', {
-        credentials: 'include',
+        headers: { Authorization: `Bearer ${token}` },
       });
       updateFromPayload(payload);
     } catch (err) {
@@ -91,7 +95,7 @@ export function useWordleGame() {
     } finally {
       setLoading(false);
     }
-  }, [updateFromPayload]);
+  }, [getToken, updateFromPayload]);
 
   useEffect(() => {
     loadDailyWord();
@@ -100,10 +104,11 @@ export function useWordleGame() {
   const submitGuess = useCallback(
     async (guess: string) => {
       try {
+        const token = await getToken();
+        if (!token) throw new Error('Please sign in to submit guesses');
         const payload = await fetchWordleResource('/api/games/wordle/guess', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ guess }),
         });
         updateFromPayload(payload);
@@ -113,7 +118,7 @@ export function useWordleGame() {
         throw new Error(message);
       }
     },
-    [updateFromPayload]
+    [getToken, updateFromPayload]
   );
 
   return {

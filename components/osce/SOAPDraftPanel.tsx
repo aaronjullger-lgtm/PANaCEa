@@ -6,7 +6,8 @@
  */
 
 import React from 'react';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { SOAPNote } from '@/types/smart-scribe-system';
 
 interface SOAPDraftPanelProps {
@@ -26,7 +27,7 @@ export function SOAPDraftPanel({ draftNote, isGenerating, className = '' }: SOAP
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Draft SOAP Note
           </h3>
-          {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-[var(--color-accent)]" />}
+          {isGenerating && <InlineSpinner size="sm" className="text-[var(--color-accent)]" />}
         </div>
         <p className="text-sm text-[var(--color-text-muted)]">
           Note will appear as you interview the patient...
@@ -86,7 +87,7 @@ export function SOAPDraftPanel({ draftNote, isGenerating, className = '' }: SOAP
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Draft SOAP Note
           </h3>
-          {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-[var(--color-accent)]" />}
+          {isGenerating && <InlineSpinner size="sm" className="text-[var(--color-accent)]" />}
         </div>
         <div className="text-xs text-[var(--color-text-muted)]">{completeness}% complete</div>
       </div>

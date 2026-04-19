@@ -18,7 +18,6 @@
  */
 
 import { PrismaClient } from '@prisma/client/edge';
-import { computeRetrievability, computeDecayFactor } from '@/lib/fsrs';
 
 export interface ScheduledReview {
   taxonomyCode: string;            // e.g., "Cardiovascular"
@@ -195,7 +194,7 @@ async function getUserFSRSParameters(
   prisma: PrismaClient,
   userId: string
 ): Promise<{ w19: number; w20: number }> {
-  const userProgress = await prisma.userProgress.findUnique({
+  const userProgress = await prisma.userProgress.findFirst({
     where: { userId },
     select: { fsrsParams: true },
   });

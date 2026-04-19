@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { InlineSpinner } from '@/components/loading';
 
 interface QuestionFlag {
   id: string;
@@ -352,8 +353,13 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 text-[var(--color-accent)] animate-spin" />
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label="Loading flagged questions"
+          className="flex items-center justify-center py-12"
+        >
+          <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
         </div>
       )}
 
@@ -522,7 +528,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                                     className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
                                   >
                                     {resolving === flag.id ? (
-                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                      <InlineSpinner size="sm" />
                                     ) : (
                                       <CheckCircle2 className="w-4 h-4" />
                                     )}

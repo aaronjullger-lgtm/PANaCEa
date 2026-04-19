@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/config/appViews';
 import { Link } from 'react-router-dom';
 import { useNavRailContext } from '@/hooks/useNavRailContext';
 import { X, Pill, Beaker, BookOpen } from 'lucide-react';
 
 export const ContextNavRail = () => {
+  const prefersReducedMotion = useReducedMotion();
   const { currentContext, relatedModules, clearContext } = useNavRailContext();
 
   if (!currentContext) {
@@ -14,10 +16,10 @@ export const ContextNavRail = () => {
 
   return (
     <motion.div
-      initial={{ x: '100%' }}
+      initial={prefersReducedMotion ? false : { x: '100%' }}
       animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={springs.snappy}
+      exit={prefersReducedMotion ? undefined : { x: '100%' }}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
       className="fixed top-0 right-0 h-full bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] w-72 z-40"
       style={{ top: 'var(--header-height)', height: 'calc(100vh - var(--header-height))' }}
     >

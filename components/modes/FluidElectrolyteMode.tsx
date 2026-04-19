@@ -20,6 +20,7 @@ import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 import { useTheme } from '@/hooks/useTheme';
 import { submitDrillResult } from '@/services/core';
+import { InlineSpinner } from '@/components/loading';
 
 interface FluidElectrolyteModeProps {
   onExit?: () => void;
@@ -340,7 +341,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               >
                 {(viewState as string) === 'loading' ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <InlineSpinner size="md" />
                     Loading Case...
                   </>
                 ) : (
@@ -361,8 +362,10 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   if (viewState === 'loading') {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral flex items-center justify-center">
-        <div role="status" aria-label="Loading case" className="text-center space-y-4">
-          <div aria-hidden="true" className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
+        <div role="status" aria-live="polite" aria-label="Loading case" className="text-center space-y-4">
+          <div className="flex justify-center">
+            <InlineSpinner size="xl" className="text-[var(--color-accent)]" />
+          </div>
           <p className="text-lg font-medium text-data-neutral">Loading case...</p>
         </div>
       </div>

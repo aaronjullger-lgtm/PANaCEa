@@ -1,0 +1,134 @@
+name: Automation change request
+description: Request a new automation lane, cadence change, manual-only conversion, or a move out of GitHub cron for PANaCEa.
+title: "[automation change] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for practical changes to the PANaCEa automation system.
+
+        Good fits:
+        - a missing scheduled workflow with clear repo value
+        - a job that should become manual-only
+        - a task that should move to app-native scheduling or queue ownership
+        - a request for dead-man-switch alerting or backup restore verification
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: Request type
+      options:
+        - add a new scheduled workflow
+        - change cadence of an existing workflow
+        - split a current workflow
+        - merge overlapping automation
+        - convert a task to manual-only
+        - move work out of GitHub cron into app-native or queue ownership
+        - add observability or safety coverage
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: target_surface
+    attributes:
+      label: Target workflow or surface
+      options:
+        - sched-runtime-sanity.yml
+        - sched-reservoir-supply.yml
+        - sched-daily-learning-models.yml
+        - sched-daily-ops.yml
+        - sched-content-audit.yml
+        - sched-weekly-platform-report.yml
+        - sched-weekly-maintenance.yml
+        - sched-weekly-repo-hygiene.yml
+        - sched-monthly-deep-audit.yml
+        - cloud-agents.yml
+        - package.json compatibility alias or manual wrapper
+        - new workflow not yet in portfolio
+        - other
+    validations:
+      required: true
+  - type: input
+    id: proposed_name
+    attributes:
+      label: Proposed workflow or job name
+      description: Required if you are proposing a new workflow or manual-only job.
+      placeholder: sched-daily-restore-verification.yml
+  - type: dropdown
+    id: operational_category
+    attributes:
+      label: Operational category
+      options:
+        - runtime sanity
+        - daily ops
+        - learning models
+        - content audit
+        - weekly maintenance
+        - weekly reporting
+        - repo hygiene
+        - monthly deep audit
+        - cloud agents
+        - queue or runtime-owned work
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: desired_cadence
+    attributes:
+      label: Desired cadence
+      options:
+        - hourly
+        - every 2 hours
+        - daily
+        - weekly
+        - monthly
+        - manual-only
+        - event-driven only
+        - move out of GitHub cron
+        - unclear
+    validations:
+      required: true
+  - type: dropdown
+    id: mutation_profile
+    attributes:
+      label: Expected data mutation profile
+      options:
+        - read-only or report-only
+        - derived-data writes only
+        - mutates operational state
+        - high-risk or destructive
+        - unclear
+    validations:
+      required: true
+  - type: dropdown
+    id: intervention
+    attributes:
+      label: If this runs or changes behavior, is rollback or manual intervention likely?
+      options:
+        - no
+        - yes, operator review only
+        - yes, rollback path required
+        - unclear
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or gap
+      description: What is missing, unsafe, duplicated, or too manual today?
+      placeholder: The repo has no dead-man-switch alert when a scheduled workflow silently stops running.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and success criteria
+      description: Explain what should happen, why this repo needs it, and how we should know it worked.
+      placeholder: Add a weekly read-only alerting workflow that fails if any `sched-*` lane missed its expected run window and posts a concise artifact for operator review.
+    validations:
+      required: true
+  - type: input
+    id: related_paths
+    attributes:
+      label: Related workflow, doc, or script paths
+      description: Optional but useful. Cite exact files when you can.
+      placeholder: docs/automation/SCHEDULE_MATRIX.md, scripts/automation/monthlyGovernance.ts

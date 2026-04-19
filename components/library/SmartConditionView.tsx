@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/loading';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { ImageGallery } from './SmartImage';
+import { LastReviewedBadge } from './LastReviewedBadge';
 import { parseListField, parseTextField } from '@/lib/utils/normalization';
 
 type TabId = 'highyield' | 'presentation' | 'diagnostics' | 'management';
@@ -1157,30 +1158,12 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                   {data.subcategory && ` • ${data.subcategory}`}
                 </Badge>
               )}
-              {/* Freshness indicator */}
-              {data.updatedAt && (() => {
-                const ageMs = Date.now() - new Date(data.updatedAt).getTime();
-                const ageDays = ageMs / (1000 * 60 * 60 * 24);
-                const color =
-                  ageDays <= 30
-                    ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/20'
-                    : ageDays <= 90
-                      ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/20'
-                      : 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/20';
-                const label =
-                  ageDays <= 1
-                    ? 'Updated today'
-                    : ageDays <= 30
-                      ? `Updated ${Math.round(ageDays)}d ago`
-                      : ageDays <= 90
-                        ? `Updated ${Math.round(ageDays / 7)}w ago`
-                        : `Updated ${Math.round(ageDays / 30)}mo ago`;
-                return (
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${color}`}>
-                    {label}
-                  </span>
-                );
-              })()}
+              {/* Freshness indicator — single source of truth lives in
+                  lib/constants/content-freshness.ts. Always rendered, including
+                  when updatedAt is null, so students never assume absence of a
+                  badge means fresh content. */}
+              <LastReviewedBadge lastReviewedAt={data.updatedAt ?? null} />
+
             </div>
           )}
 

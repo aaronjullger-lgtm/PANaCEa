@@ -2,31 +2,43 @@
  * Real-Time SOAP Note Hook
  *
  * Provides real-time SOAP note generation during OSCE sessions.
- * Automatically forwards transcript to SOAP generator and polls for updates.
+ * Automatically forwards transcript to the SOAP generator and polls for
+ * updates from the server-side extractor.
+ *
+ * Sprint 4 migration notes:
+ *   - The hook no longer accepts a Gemini API key. The browser bundle is
+ *     now key-free; all model calls go through the authenticated
+ *     `/api/scribe/soap/extract` endpoint.
+ *   - Callers must supply a Clerk `getToken` function (or any async
+ *     `() => Promise<string | null>` producer).
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { createSOAPNoteService } from '@/services/scribe/soapNoteService';
+import { createSOAPNoteService, type TokenProvider } from '@/services/scribe/soapNoteService';
 import type { SOAPNote } from '@/types/smart-scribe-system';
 
 interface UseRealtimeSOAPOptions {
   sessionId: string | null;
-  geminiApiKey: string;
+  /** Clerk token provider — typically `useAuth().getToken`. */
+  getToken?: TokenProvider;
   updateInterval?: number;
   enabled?: boolean;
 }
 
 export function useRealtimeSOAP({
   sessionId,
-  geminiApiKey,
+  getToken,
   updateInterval = 5000,
   enabled = true,
 }: UseRealtimeSOAPOptions) {
   const [draftNote, setDraftNote] = useState<SOAPNote | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Create service instance once
-  const service = useMemo(() => createSOAPNoteService(geminiApiKey), [geminiApiKey]);
+  // Create service instance once per token-provider identity. The token
+  // provider itself is a function reference (stable across renders for
+  // Clerk's `getToken`) — using it as the memo key avoids rebuilding the
+  // service on every render while still letting callers swap providers.
+  const service = useMemo(() => createSOAPNoteService(getToken), [getToken]);
 
   // Start generation when session begins
   useEffect(() => {

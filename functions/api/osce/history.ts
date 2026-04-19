@@ -11,14 +11,7 @@
  */
 
 import { z } from 'zod';
-import {
-  withCors,
-  withMiddleware,
-  withAuth,
-  withRateLimit,
-  withErrorHandling,
-  withLogging,
-} from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
@@ -32,37 +25,15 @@ const OSCEHistoryQuerySchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = withMiddleware(
-  withCors(),
-  withErrorHandling(),
-  withAuth(),
-  withRateLimit({ requestsPerMinute: 60, endpointType: 'api', keyPrefix: 'osce-history' }),
-  withLogging(),
-  async (context: any) => {
+export const onRequestGet = authenticatedEndpoint(
+  OSCEHistoryQuerySchema,
+  async (context) => {
     const { env, auth } = context;
     const log = createEndpointLogger('/api/osce/history', auth.userId);
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const url = new URL(context.request.url);
-      const queryParams = Object.fromEntries(url.searchParams);
-      const sessionIdParam = queryParams.sessionId ?? '';
-      const limitParam = queryParams.limit ?? '100';
-
-      const validation = OSCEHistoryQuerySchema.safeParse({
-        sessionId: sessionIdParam,
-        limit: limitParam,
-      });
-
-      if (!validation.success) {
-        log.warn('Validation failed', { errors: validation.error.issues });
-        return {
-          status: 400,
-          error: `Validation failed: ${validation.error.issues.map((e) => e.message).join('; ')}`,
-        };
-      }
-
-      const { sessionId: validSessionId, limit } = validation.data;
+      const { sessionId: validSessionId, limit } = context.validated;
       log.info('Fetching OSCE history', { sessionId: validSessionId, limit });
 
       // Ensure the session belongs to the authenticated user
@@ -97,5 +68,6 @@ export const onRequestGet = withMiddleware(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { source: 'query', requestsPerMinute: 60 }
 );

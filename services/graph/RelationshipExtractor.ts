@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { GraphEdgeType } from '@prisma/client';
 import type { GraphEdgeData } from './types';
+import type { Prisma } from '@prisma/client';
 
 export class RelationshipExtractor {
   /**
@@ -92,7 +93,7 @@ export class RelationshipExtractor {
             targetId: sourceNodeId,
             edgeType: GraphEdgeType.ASSOCIATED,
             weight: 0.8,
-            description: `${drug.name} treats condition`,
+            description: `${drug.displayName ?? drug.brandName ?? 'Drug'} treats condition`,
             evidenceCount: 1,
           });
         }
@@ -168,7 +169,7 @@ export class RelationshipExtractor {
               weight: edge.weight,
               description: edge.description,
               evidenceCount: edge.evidenceCount,
-              metadata: edge.metadata,
+              metadata: edge.metadata as Prisma.InputJsonValue,
               updatedAt: new Date(),
             },
             create: {
@@ -179,7 +180,7 @@ export class RelationshipExtractor {
               weight: edge.weight,
               description: edge.description,
               evidenceCount: edge.evidenceCount,
-              metadata: edge.metadata,
+              metadata: edge.metadata as Prisma.InputJsonValue,
             },
           }),
         ),

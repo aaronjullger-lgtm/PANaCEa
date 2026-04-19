@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/services/sync/syncManager.ts",
+    "components/offline/OfflineSyncIndicator.tsx",
+    "tests/syncManager.test.ts"
+  ]
+}

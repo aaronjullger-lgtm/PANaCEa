@@ -13,6 +13,8 @@ import { getBrowserTimezone } from '@/lib/circadian';
 import { useSession } from '@/contexts/SessionContext';
 import type { SubmitReviewResponse } from '@/services/analytics';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { resolveCorrectAnswerIndex } from '@/lib/answerLetterMap';
+import { logger } from '@/lib/logger';
 
 export type ConditionDrillStatus =
   | 'landing'
@@ -103,8 +105,26 @@ export interface UseConditionDrillReturn {
 const INITIAL_QUEUE_SIZE = 3;
 const MAX_RECENT_CONDITIONS = 20;
 
-function mapDtoToConditionQuestion(dto: QuestionDTO): ConditionQuestion {
-  const correctIndex = dto.options.indexOf(dto.correctAnswer);
+function mapDtoToConditionQuestion(dto: QuestionDTO): ConditionQuestion | null {
+  // Canonical resolver — handles letter ("A"–"E"), numeric, and full-text formats.
+  // Returning null (vs. silently using index 0) prevents the UI from marking option
+  // A as correct when the stored correctAnswer is malformed or unmatched.
+  if (!Array.isArray(dto.options) || dto.options.length === 0) {
+    logger.warn('[ConditionDrill] Skipping question with no options', { id: dto.id });
+    return null;
+  }
+  if (typeof dto.correctAnswer !== 'string' || dto.correctAnswer.trim().length === 0) {
+    logger.warn('[ConditionDrill] Skipping question with missing correctAnswer', { id: dto.id });
+    return null;
+  }
+  const correctIndex = resolveCorrectAnswerIndex(dto.correctAnswer, dto.options);
+  if (correctIndex === null) {
+    logger.warn(
+      '[ConditionDrill] Skipping question — correctAnswer does not resolve to any option',
+      { id: dto.id, correctAnswer: dto.correctAnswer }
+    );
+    return null;
+  }
   // Cast to any to access optional extended properties from API
   const extendedDto = dto as QuestionDTO & {
     condition?: string;
@@ -117,7 +137,7 @@ function mapDtoToConditionQuestion(dto: QuestionDTO): ConditionQuestion {
     type: 'diagnosis',
     question: dto.vignette || dto.question,
     options: dto.options,
-    correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+    correctAnswerIndex: correctIndex,
     explanation: dto.explanation,
     conditionName: extendedDto.condition || dto.system,
     conditionId: extendedDto.conditionId,
@@ -284,9 +304,9 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
           throw new Error('Invalid response from server');
         }
 
-        const mappedQuestions = data.questions.map((q: QuestionDTO) =>
-          mapDtoToConditionQuestion(q)
-        );
+        const mappedQuestions = data.questions
+          .map((q: QuestionDTO) => mapDtoToConditionQuestion(q))
+          .filter((q): q is ConditionQuestion => q !== null);
         return mappedQuestions;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load questions';

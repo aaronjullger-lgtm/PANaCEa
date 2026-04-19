@@ -1,10 +1,22 @@
 /**
  * SOAP Note Service
  *
- * Real-time SOAP note generation using gemini-dictation during OSCE sessions.
- * Provides automated "gold standard" notes and comparison with student notes.
+ * Real-time SOAP note generation during OSCE / patient encounter sessions.
+ * The browser no longer holds a Gemini API key — all model access goes
+ * through the authenticated `/api/scribe/soap/extract` edge endpoint, which
+ * is itself backed by the unified AI Gateway.
  *
- * Features:
+ * Sprint 4 migration notes:
+ *   - Dropped `geminiApiKey` from the service config. Its removal closes the
+ *     long-standing `VITE_GEMINI_API_KEY` browser-bundle leak.
+ *   - `extractSOAPElements()` now POSTs `{ context, currentNote }` to the
+ *     server and receives a Zod-validated partial SOAPNote back. Merging
+ *     logic is unchanged so the draft-note mutation behavior is identical.
+ *   - A `TokenProvider` is accepted at service construction so the service
+ *     can work with either a pre-fetched Clerk token or the Clerk `getToken`
+ *     function itself.
+ *
+ * Features (unchanged from the previous implementation):
  * - Background note drafting during encounter
  * - Element-by-element tracking with confidence scores
  * - Side-by-side comparison (student vs. AI)
@@ -20,24 +32,44 @@ import type {
   RealtimeSOAPGenerator,
   SOAPComparison,
   HPIElement,
-  GeminiDictationRequest,
-  GeminiDictationResponse,
 } from '@/types/smart-scribe-system';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
+
+/**
+ * Pre-fetched token OR an async getter (e.g. Clerk's `getToken`). Keeping
+ * the service transport-agnostic means callers can pass either shape.
+ */
+export type TokenProvider = string | null | (() => Promise<string | null>);
 
 interface SOAPNoteServiceConfig {
-  geminiApiKey: string;
-  apiEndpoint?: string;
+  /** Clerk token source. When omitted the server middleware will 401. */
+  tokenProvider?: TokenProvider;
+  /** Poll cadence for the real-time draft generator. Defaults to 5 s. */
   updateInterval?: number;
+  /** Confidence threshold for including AI-inferred elements. */
   confidenceThreshold?: number;
 }
 
+async function resolveToken(provider: TokenProvider | undefined): Promise<string | null> {
+  if (!provider) return null;
+  if (typeof provider === 'function') {
+    try {
+      return await provider();
+    } catch {
+      return null;
+    }
+  }
+  return provider;
+}
+
 export class SOAPNoteService {
-  private config: SOAPNoteServiceConfig;
+  private config: Required<Omit<SOAPNoteServiceConfig, 'tokenProvider'>> & {
+    tokenProvider?: TokenProvider;
+  };
   private activeGenerators: Map<string, RealtimeSOAPGenerator> = new Map();
 
-  constructor(config: SOAPNoteServiceConfig) {
+  constructor(config: SOAPNoteServiceConfig = {}) {
     this.config = {
-      apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta',
       updateInterval: 5000, // 5 seconds
       confidenceThreshold: 0.7,
       ...config,
@@ -58,8 +90,8 @@ export class SOAPNoteService {
       status: 'listening',
       lastUpdateAt: new Date().toISOString(),
       config: {
-        updateInterval: this.config.updateInterval!,
-        confidenceThreshold: this.config.confidenceThreshold!,
+        updateInterval: this.config.updateInterval,
+        confidenceThreshold: this.config.confidenceThreshold,
         enableStreaming: true,
       },
     };
@@ -372,10 +404,17 @@ export class SOAPNoteService {
 
     generator.status = 'generating';
 
-    // Build context for Gemini
+    // Build context for the server-side extractor
     const context = this.buildContext(generator);
 
-    // Call Gemini to extract SOAP elements
+    // Skip the network round-trip when there's nothing to extract from —
+    // this happens during the first poll before any transcript has arrived.
+    if (!context.trim()) {
+      generator.status = 'listening';
+      return;
+    }
+
+    // Call the authenticated edge endpoint to extract SOAP elements
     const updatedNote = await this.extractSOAPElements(context, generator.draftNote);
 
     generator.draftNote = updatedNote;
@@ -384,7 +423,7 @@ export class SOAPNoteService {
   }
 
   /**
-   * Build context for Gemini extraction.
+   * Build context for the extraction model.
    */
   private buildContext(generator: RealtimeSOAPGenerator): string {
     let context = '';
@@ -415,56 +454,51 @@ export class SOAPNoteService {
   }
 
   /**
-   * Extract SOAP elements using Gemini.
+   * Extract SOAP elements via the authenticated edge endpoint. Returns the
+   * current note unchanged if the server call fails — the real-time loop is
+   * best-effort and must never crash an in-progress encounter.
    */
   private async extractSOAPElements(context: string, currentNote: SOAPNote): Promise<SOAPNote> {
-    const prompt = `You are a medical scribe. Extract SOAP note elements from this clinical encounter.
-
-${context}
-
-Current SOAP note (update as needed):
-${JSON.stringify(currentNote, null, 2)}
-
-Instructions:
-1. Extract all HPI elements (onset, duration, character, etc.)
-2. Document vital signs and physical exam findings
-3. Formulate assessment and differential diagnoses
-4. Create a comprehensive plan
-5. Return updated SOAP note in JSON format
-
-Important: Only include information that is explicitly stated or can be confidently inferred.`;
+    const endpoint = getApiEndpoint('/api/scribe/soap/extract');
+    const authToken = await resolveToken(this.config.tokenProvider);
 
     try {
-      const response = await fetch(
-        `${this.config.apiEndpoint}/models/gemini-2.5-flash:generateContent?key=${this.config.geminiApiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.2, // Low temp for factual extraction
-              responseMimeType: 'application/json',
-            },
-          }),
-        }
-      );
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({
+          context,
+          currentNote,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error(`Gemini API error: ${response.statusText}`);
+        // Log once per failure; the loop will retry on the next tick.
+        let serverMessage: string | undefined;
+        try {
+          const errBody = (await response.json()) as { error?: string };
+          serverMessage = errBody?.error;
+        } catch {
+          /* ignore JSON parse failure on error body */
+        }
+        console.warn('[SOAPNoteService] extract endpoint returned non-OK', {
+          status: response.status,
+          serverMessage,
+        });
+        return currentNote;
       }
 
-      const data = (await response.json()) as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      };
-      const extractedNote = JSON.parse(
-        data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
-      );
+      const envelope = (await response.json()) as { data?: Partial<SOAPNote> };
+      const extractedNote = envelope.data ?? {};
 
-      // Merge with current note
+      // Merge with current note (identical merge rules to the pre-migration
+      // implementation so downstream comparison logic stays unchanged).
       return this.mergeNotes(currentNote, extractedNote);
     } catch (error) {
-      console.error('Error extracting SOAP elements:', error);
+      console.error('[SOAPNoteService] extract call failed:', error);
       return currentNote;
     }
   }
@@ -473,7 +507,7 @@ Important: Only include information that is explicitly stated or can be confiden
    * Merge extracted note with current note.
    */
   private mergeNotes(currentNote: SOAPNote, extractedNote: Partial<SOAPNote>): SOAPNote {
-    // Deep merge logic (simplified)
+    // Deep merge logic (simplified — matches the pre-migration behavior)
     return {
       ...currentNote,
       ...extractedNote,
@@ -599,8 +633,10 @@ Important: Only include information that is explicitly stated or can be confiden
 }
 
 /**
- * Factory function.
+ * Factory function. Accepts a Clerk token provider (either a pre-fetched
+ * token or the `getToken` function itself). Passing `null`/`undefined` is
+ * allowed for test environments — the server will just 401.
  */
-export function createSOAPNoteService(geminiApiKey: string): SOAPNoteService {
-  return new SOAPNoteService({ geminiApiKey });
+export function createSOAPNoteService(tokenProvider?: TokenProvider): SOAPNoteService {
+  return new SOAPNoteService({ tokenProvider });
 }

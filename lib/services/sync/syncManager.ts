@@ -42,6 +42,8 @@ export interface OfflineAnswer {
   synced: boolean;
   syncAttempts: number;
   lastSyncError?: string;
+  /** Sprint S1: True once this item exhausted MAX_SYNC_ATTEMPTS. Excluded from pending, surfaced to UI for user-driven recovery. */
+  deadLettered?: boolean;
 }
 
 export interface OfflinePearlAction {
@@ -51,6 +53,9 @@ export interface OfflinePearlAction {
   timestamp: number;
   synced: boolean;
   syncAttempts: number;
+  lastSyncError?: string;
+  /** Sprint S1: True once this item exhausted MAX_SYNC_ATTEMPTS. Excluded from pending, surfaced to UI for user-driven recovery. */
+  deadLettered?: boolean;
   // For review_later, track the scheduled date
   scheduledReviewDate?: string;
 }
@@ -71,6 +76,8 @@ export interface OfflineReview {
   synced: boolean;
   syncAttempts: number;
   lastSyncError?: string;
+  /** Sprint S1: True once this item exhausted MAX_SYNC_ATTEMPTS. Excluded from pending, surfaced to UI for user-driven recovery. */
+  deadLettered?: boolean;
 }
 
 export interface SyncStatus {
@@ -78,12 +85,25 @@ export interface SyncStatus {
   pendingAnswers: number;
   pendingPearlActions: number;
   pendingReviews: number;
+  /** Sprint S1: Items that exhausted MAX_SYNC_ATTEMPTS and need user-driven recovery. */
+  deadLetteredAnswers: number;
+  deadLetteredPearlActions: number;
+  deadLetteredReviews: number;
   lastSyncTime: number | null;
   lastSyncError: string | null;
   isSyncing: boolean;
 }
 
-type SyncEventType = 'online' | 'offline' | 'sync-start' | 'sync-complete' | 'sync-error';
+type SyncEventType =
+  | 'online'
+  | 'offline'
+  | 'sync-start'
+  | 'sync-complete'
+  | 'sync-error'
+  /** Sprint S1: An item transitioned to dead-letter state (exhausted MAX_SYNC_ATTEMPTS). */
+  | 'dead-letter'
+  /** Sprint S2: localStorage quota exceeded; IndexedDB fallback is active for new writes. */
+  | 'storage-full';
 type SyncEventCallback = (status: SyncStatus) => void;
 
 // ============================================================================
@@ -98,13 +118,77 @@ const STORAGE_KEYS = {
   SYNC_ERROR: 'panceai_sync_error',
 } as const;
 
+/**
+ * Sprint S1: Maximum sync attempts before an item is marked dead-lettered.
+ * Dead-lettered items are excluded from auto-retry and require explicit user action
+ * (retry via `retryDeadLettered()` or discard via `discardDeadLettered()`).
+ */
+const MAX_SYNC_ATTEMPTS = 5;
+
+/** Structural shape shared by OfflineAnswer / OfflineReview / OfflinePearlAction for predicates. */
+interface SyncableItem {
+  synced: boolean;
+  syncAttempts: number;
+  deadLettered?: boolean;
+}
+
+/** True if item is eligible for automatic sync retry. */
+function isPendingItem<T extends SyncableItem>(item: T): boolean {
+  return !item.synced && item.syncAttempts < MAX_SYNC_ATTEMPTS && item.deadLettered !== true;
+}
+
+/**
+ * True if item has exhausted automatic retries and needs user-driven recovery.
+ * Also catches legacy items written before the deadLettered field existed (syncAttempts >= MAX).
+ */
+function isDeadLetteredItem<T extends SyncableItem>(item: T): boolean {
+  return !item.synced && (item.deadLettered === true || item.syncAttempts >= MAX_SYNC_ATTEMPTS);
+}
+
+/**
+ * Sprint S2: Detect QuotaExceededError across browsers.
+ * Chrome/Edge/Safari throw DOMException with name 'QuotaExceededError';
+ * Firefox uses code 1014 ('NS_ERROR_DOM_QUOTA_REACHED').
+ */
+function isQuotaError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { name?: string; code?: number; message?: string };
+  if (e.name === 'QuotaExceededError') return true;
+  if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') return true;
+  if (e.code === 22 || e.code === 1014) return true;
+  if (typeof e.message === 'string' && /quota/i.test(e.message)) return true;
+  return false;
+}
+
+/**
+ * Best-effort filter of `synced === true` items out of a JSON-serialized array.
+ * Used by safeSetItem's quota-retry path to ensure we don't overwrite the
+ * post-prune localStorage state with the caller's pre-prune array. Falls back
+ * to the original value on any parse/shape surprise — correctness of the write
+ * matters more than the extra bytes reclaimed.
+ */
+function pruneSyncedFromJsonValue(value: string): string {
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return value;
+    const filtered = parsed.filter(
+      (item: unknown) =>
+        !item || typeof item !== 'object' || (item as { synced?: boolean }).synced !== true,
+    );
+    if (filtered.length === parsed.length) return value;
+    return JSON.stringify(filtered);
+  } catch {
+    return value;
+  }
+}
+
 async function parseSyncErrorMessage(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as { error?: string; message?: string; details?: string };
     const message = payload?.error || payload?.message || payload?.details;
     if (message) return message;
-  } catch {
-    // Non-JSON error payloads (e.g., proxy HTML) fall back to HTTP status.
+  } catch (err) {
+    console.debug('[SyncManager] non-JSON error payload, falling back to HTTP status', err);
   }
   return `HTTP ${response.status}`;
 }
@@ -200,9 +284,13 @@ class SyncManager {
 
     return {
       isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-      pendingAnswers: answers.filter((a) => !a.synced).length,
-      pendingPearlActions: pearlActions.filter((p) => !p.synced).length,
-      pendingReviews: reviews.filter((r) => !r.synced).length,
+      // Sprint S1: pending excludes dead-lettered items so UI doesn't spin forever on exhausted items.
+      pendingAnswers: answers.filter(isPendingItem).length,
+      pendingPearlActions: pearlActions.filter(isPendingItem).length,
+      pendingReviews: reviews.filter(isPendingItem).length,
+      deadLetteredAnswers: answers.filter(isDeadLetteredItem).length,
+      deadLetteredPearlActions: pearlActions.filter(isDeadLetteredItem).length,
+      deadLetteredReviews: reviews.filter(isDeadLetteredItem).length,
       lastSyncTime,
       lastSyncError,
       isSyncing: this.isSyncing,
@@ -258,14 +346,16 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_ANSWERS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline answers from localStorage', err);
       return [];
     }
   }
 
   private saveOfflineAnswers(answers: OfflineAnswer[]): void {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.OFFLINE_ANSWERS, JSON.stringify(answers));
+    // Sprint S2: quota-aware write — on QuotaExceededError, prune synced items across
+    // all three stores and retry once. IndexedDB dual-write still captures the record.
+    this.safeSetItem(STORAGE_KEYS.OFFLINE_ANSWERS, JSON.stringify(answers));
   }
 
   // ===========================================================================
@@ -305,14 +395,14 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline pearl actions from localStorage', err);
       return [];
     }
   }
 
   private saveOfflinePearlActions(actions: OfflinePearlAction[]): void {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS, JSON.stringify(actions));
+    this.safeSetItem(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS, JSON.stringify(actions));
   }
 
   private removePearlAction(id: string): void {
@@ -365,14 +455,14 @@ class SyncManager {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_REVIEWS);
       return stored ? JSON.parse(stored) : [];
-    } catch {
+    } catch (err) {
+      console.debug('[SyncManager] failed to parse offline reviews from localStorage', err);
       return [];
     }
   }
 
   private saveOfflineReviews(reviews: OfflineReview[]): void {
-    if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.OFFLINE_REVIEWS, JSON.stringify(reviews));
+    this.safeSetItem(STORAGE_KEYS.OFFLINE_REVIEWS, JSON.stringify(reviews));
   }
 
   // ===========================================================================
@@ -406,10 +496,11 @@ class SyncManager {
       // If some items failed (partial sync), increment the counter so backoff
       // increases on the next retry — this covers per-item failures inside
       // syncAnswers/syncReviews/syncPearlActions that don't throw at syncAll level.
+      // Sprint S1: use isPendingItem to exclude dead-lettered items from partial-failure detection.
       const hadPartialFailure =
-        this.getOfflineAnswers().some((a) => !a.synced && a.syncAttempts > 0 && a.syncAttempts < 5) ||
-        this.getOfflineReviews().some((r) => !r.synced && r.syncAttempts > 0 && r.syncAttempts < 5) ||
-        this.getOfflinePearlActions().some((p) => !p.synced && p.syncAttempts > 0 && p.syncAttempts < 5);
+        this.getOfflineAnswers().some((a) => isPendingItem(a) && a.syncAttempts > 0) ||
+        this.getOfflineReviews().some((r) => isPendingItem(r) && r.syncAttempts > 0) ||
+        this.getOfflinePearlActions().some((p) => isPendingItem(p) && p.syncAttempts > 0);
       if (hadPartialFailure) {
         this.consecutiveFailures++;
       } else {
@@ -443,7 +534,7 @@ class SyncManager {
   private async syncAnswers(token?: string | null): Promise<number> {
     const resolvedToken = await this.resolveToken(token);
     const answers = this.getOfflineAnswers();
-    const pending = answers.filter((a) => !a.synced && a.syncAttempts < 5);
+    const pending = answers.filter(isPendingItem);
 
     if (pending.length === 0) return 0;
 
@@ -489,6 +580,7 @@ class SyncManager {
           const message = await parseSyncErrorMessage(response);
           answer.syncAttempts++;
           answer.lastSyncError = message;
+          this.maybeDeadLetter(answer);
           this.setLastSyncError(message);
           this.scheduleRetry();
         }
@@ -496,6 +588,7 @@ class SyncManager {
         const message = error instanceof Error ? error.message : 'Network error';
         answer.syncAttempts++;
         answer.lastSyncError = message;
+        this.maybeDeadLetter(answer);
         this.setLastSyncError(message);
         this.scheduleRetry();
       }
@@ -513,7 +606,7 @@ class SyncManager {
   private async syncPearlActions(token?: string | null): Promise<number> {
     const resolvedToken = await this.resolveToken(token);
     const actions = this.getOfflinePearlActions();
-    const pending = actions.filter((a) => !a.synced && a.syncAttempts < 5);
+    const pending = actions.filter(isPendingItem);
 
     if (pending.length === 0) return 0;
 
@@ -554,11 +647,23 @@ class SyncManager {
           action.synced = true;
           synced++;
         } else {
+          const message = await parseSyncErrorMessage(response);
           action.syncAttempts++;
+          action.lastSyncError = message;
+          this.maybeDeadLetter(action);
           this.scheduleRetry();
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Network error';
         action.syncAttempts++;
+        action.lastSyncError = message;
+        this.maybeDeadLetter(action);
+        // Log at debug so repeated transient failures don't flood, but the error
+        // isn't invisible when a pearl sync genuinely breaks for every action.
+        syncLog.debug('Pearl action sync attempt failed', {
+          error,
+          attempts: action.syncAttempts,
+        });
         this.scheduleRetry();
       }
     }
@@ -575,11 +680,16 @@ class SyncManager {
   private async syncReviews(token?: string | null): Promise<number> {
     const resolvedToken = await this.resolveToken(token);
     const reviews = this.getOfflineReviews();
-    const pending = reviews.filter((r) => !r.synced && r.syncAttempts < 5);
+    const pending = reviews.filter(isPendingItem);
 
     if (pending.length === 0) return 0;
 
-    // Map to batch payload
+    // Map to batch payload.
+    //
+    // Sprint S3 — each item carries its queued `id` as the idempotencyKey.
+    // The Edge endpoint caches successful per-item responses under this key,
+    // so a retry of the same batch after a transient failure will short-circuit
+    // items that already landed instead of creating duplicate FSRS rows.
     const batch = pending.map((r) => ({
       questionId: r.questionId,
       selectedAnswer: r.selectedAnswer,
@@ -591,6 +701,7 @@ class SyncManager {
       wakeTimeHHMM: r.wakeTimeHHMM,
       telemetry: r.telemetry,
       sessionType: r.sessionType,
+      idempotencyKey: r.id,
     }));
 
     let synced = 0;
@@ -646,6 +757,7 @@ class SyncManager {
             } else {
               review.syncAttempts++;
               review.lastSyncError = result?.error || 'Batch failure';
+              this.maybeDeadLetter(review);
             }
           });
         }
@@ -655,6 +767,7 @@ class SyncManager {
         pending.forEach((review) => {
           review.syncAttempts++;
           review.lastSyncError = message;
+          this.maybeDeadLetter(review);
         });
         this.setLastSyncError(message);
         this.scheduleRetry();
@@ -664,6 +777,7 @@ class SyncManager {
       pending.forEach((review) => {
         review.syncAttempts++;
         review.lastSyncError = message;
+        this.maybeDeadLetter(review);
       });
       this.setLastSyncError(message);
       this.scheduleRetry();
@@ -731,6 +845,209 @@ class SyncManager {
   private clearLastSyncError(): void {
     if (typeof localStorage === 'undefined') return;
     localStorage.removeItem(STORAGE_KEYS.SYNC_ERROR);
+  }
+
+  // ===========================================================================
+  // SPRINT S1: DEAD-LETTER TRANSITION
+  // ===========================================================================
+
+  /**
+   * Mark an item as dead-lettered if it has reached MAX_SYNC_ATTEMPTS.
+   * Emits a 'dead-letter' event so UI can surface the recovery affordance.
+   * Idempotent: safe to call repeatedly on the same item.
+   */
+  private maybeDeadLetter<T extends SyncableItem>(item: T): void {
+    if (item.synced) return;
+    if (item.deadLettered === true) return;
+    if (item.syncAttempts < MAX_SYNC_ATTEMPTS) return;
+
+    item.deadLettered = true;
+    syncLog.warn('Item exhausted retries and is now dead-lettered', {
+      attempts: item.syncAttempts,
+    });
+    // Defer the status snapshot until listeners run — the caller is mid-loop
+    // and will save the updated array before returning.
+    this.emit('dead-letter', this.getStatus());
+  }
+
+  // ===========================================================================
+  // SPRINT S2: QUOTA-AWARE LOCALSTORAGE WRITES
+  // ===========================================================================
+
+  /**
+   * Set a key in localStorage with QuotaExceededError recovery.
+   * On quota error: prune synced items across all three stores and retry once.
+   * If retry still fails, emit 'storage-full' so the UI can warn the user —
+   * IndexedDB dual-write still holds the record, so no data is lost.
+   */
+  private safeSetItem(key: string, value: string): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(key, value);
+    } catch (err) {
+      if (!isQuotaError(err)) {
+        syncLog.warn('localStorage.setItem failed with non-quota error', { error: err, key });
+        throw err;
+      }
+      syncLog.warn('localStorage quota exceeded; pruning synced items and retrying', { key });
+      const pruned = this.pruneSyncedItems();
+      syncLog.debug(`Pruned ${pruned} synced items to reclaim space`);
+      // Filter synced items out of the caller-supplied value too — otherwise the
+      // retry would overwrite the just-pruned localStorage with the full unpruned
+      // array that the caller built from a pre-prune in-memory snapshot.
+      const retryValue = pruneSyncedFromJsonValue(value);
+      try {
+        localStorage.setItem(key, retryValue);
+      } catch (retryErr) {
+        if (!isQuotaError(retryErr)) {
+          syncLog.warn('localStorage.setItem retry failed with non-quota error', {
+            error: retryErr,
+            key,
+          });
+          throw retryErr;
+        }
+        // Still full after pruning — persist-to-IndexedDB path already captured the record,
+        // so we surface a warning instead of crashing the session.
+        syncLog.error('localStorage remains full after pruning; record persisted to IndexedDB only', {
+          key,
+        });
+        this.emit('storage-full', this.getStatus());
+      }
+    }
+  }
+
+  /**
+   * Drop all items across answers/reviews/pearl-actions that are already synced.
+   * Called on quota-exceeded to reclaim space before retrying a write.
+   * Returns the total number of items pruned.
+   */
+  private pruneSyncedItems(): number {
+    if (typeof localStorage === 'undefined') return 0;
+    let pruned = 0;
+
+    const pruneKey = <T extends { synced: boolean }>(key: string): number => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return 0;
+        const items = JSON.parse(raw) as T[];
+        if (!Array.isArray(items)) return 0;
+        const before = items.length;
+        const kept = items.filter((item) => !item.synced);
+        if (kept.length === before) return 0;
+        // Use direct setItem — we're already inside a quota-recovery path,
+        // and JSON.stringify of a smaller array is guaranteed to fit if the
+        // original did plus at minimum one extra item.
+        localStorage.setItem(key, JSON.stringify(kept));
+        return before - kept.length;
+      } catch (err) {
+        syncLog.debug('pruneSyncedItems key failed', { key, error: err });
+        return 0;
+      }
+    };
+
+    pruned += pruneKey<OfflineAnswer>(STORAGE_KEYS.OFFLINE_ANSWERS);
+    pruned += pruneKey<OfflineReview>(STORAGE_KEYS.OFFLINE_REVIEWS);
+    pruned += pruneKey<OfflinePearlAction>(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS);
+    return pruned;
+  }
+
+  // ===========================================================================
+  // SPRINT S1: DEAD-LETTER RECOVERY API (public)
+  // ===========================================================================
+
+  /**
+   * Return all dead-lettered items (answers, reviews, pearl actions) for UI display.
+   * Users can inspect these, then call retryDeadLettered() or discardDeadLettered().
+   */
+  public getDeadLetteredItems(): {
+    answers: OfflineAnswer[];
+    reviews: OfflineReview[];
+    pearlActions: OfflinePearlAction[];
+  } {
+    return {
+      answers: this.getOfflineAnswers().filter(isDeadLetteredItem),
+      reviews: this.getOfflineReviews().filter(isDeadLetteredItem),
+      pearlActions: this.getOfflinePearlActions().filter(isDeadLetteredItem),
+    };
+  }
+
+  /**
+   * Reset all dead-lettered items back to pending (syncAttempts=0, deadLettered=false)
+   * and trigger a fresh sync. If the underlying issue is still present, they will
+   * be re-flagged after MAX_SYNC_ATTEMPTS.
+   */
+  public async retryDeadLettered(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
+    const answers = this.getOfflineAnswers();
+    answers.forEach((a) => {
+      if (isDeadLetteredItem(a)) {
+        a.syncAttempts = 0;
+        a.deadLettered = false;
+        a.lastSyncError = undefined;
+      }
+    });
+    this.saveOfflineAnswers(answers);
+
+    const reviews = this.getOfflineReviews();
+    reviews.forEach((r) => {
+      if (isDeadLetteredItem(r)) {
+        r.syncAttempts = 0;
+        r.deadLettered = false;
+        r.lastSyncError = undefined;
+      }
+    });
+    this.saveOfflineReviews(reviews);
+
+    const pearlActions = this.getOfflinePearlActions();
+    pearlActions.forEach((p) => {
+      if (isDeadLetteredItem(p)) {
+        p.syncAttempts = 0;
+        p.deadLettered = false;
+        p.lastSyncError = undefined;
+      }
+    });
+    this.saveOfflinePearlActions(pearlActions);
+
+    // Reset consecutive failure counter so backoff starts fresh.
+    this.consecutiveFailures = 0;
+    this.clearLastSyncError();
+
+    return this.syncAll(token);
+  }
+
+  /**
+   * Permanently discard all dead-lettered items. Caller should confirm with the user
+   * first — this data will not reach the server.
+   */
+  public discardDeadLettered(): { answers: number; reviews: number; pearlActions: number } {
+    const counts = { answers: 0, reviews: 0, pearlActions: 0 };
+
+    const answers = this.getOfflineAnswers();
+    const keptAnswers = answers.filter((a) => !isDeadLetteredItem(a));
+    counts.answers = answers.length - keptAnswers.length;
+    if (counts.answers > 0) this.saveOfflineAnswers(keptAnswers);
+
+    const reviews = this.getOfflineReviews();
+    const keptReviews = reviews.filter((r) => !isDeadLetteredItem(r));
+    counts.reviews = reviews.length - keptReviews.length;
+    if (counts.reviews > 0) this.saveOfflineReviews(keptReviews);
+
+    const pearlActions = this.getOfflinePearlActions();
+    const keptActions = pearlActions.filter((p) => !isDeadLetteredItem(p));
+    counts.pearlActions = pearlActions.length - keptActions.length;
+    if (counts.pearlActions > 0) this.saveOfflinePearlActions(keptActions);
+
+    // Best-effort IndexedDB cleanup
+    isIndexedDBAvailable().then((available) => {
+      if (!available) return;
+      // IndexedDB doesn't track dead-letter flags; full clear is too aggressive,
+      // so we leave IDB records to fall out via the normal 24h cleanup window.
+      syncLog.debug('discardDeadLettered: localStorage pruned; IDB retains records');
+    }).catch(() => {});
+
+    if (counts.answers + counts.reviews + counts.pearlActions > 0) {
+      this.emit('sync-complete', this.getStatus());
+    }
+    return counts;
   }
 
   // ===========================================================================
@@ -850,6 +1167,10 @@ export function useSyncManager(tokenProvider?: () => Promise<string | null>) {
     const unsubStart = syncManager.on('sync-start', setStatus);
     const unsubComplete = syncManager.on('sync-complete', setStatus);
     const unsubError = syncManager.on('sync-error', setStatus);
+    // Sprint S1+S2: subscribe to dead-letter and storage-full so the UI updates
+    // immediately when an item exhausts retries or when localStorage fills up.
+    const unsubDeadLetter = syncManager.on('dead-letter', setStatus);
+    const unsubStorageFull = syncManager.on('storage-full', setStatus);
 
     return () => {
       unsubOnline();
@@ -857,6 +1178,8 @@ export function useSyncManager(tokenProvider?: () => Promise<string | null>) {
       unsubStart();
       unsubComplete();
       unsubError();
+      unsubDeadLetter();
+      unsubStorageFull();
     };
   }, []);
 
@@ -885,13 +1208,33 @@ export function useSyncManager(tokenProvider?: () => Promise<string | null>) {
     return syncManager.syncAll(token);
   }, []);
 
+  // Sprint S1: expose dead-letter recovery actions to UI.
+  const retryDeadLettered = useCallback((token?: string | null) => {
+    return syncManager.retryDeadLettered(token);
+  }, []);
+
+  const discardDeadLettered = useCallback(() => {
+    return syncManager.discardDeadLettered();
+  }, []);
+
+  const getDeadLetteredItems = useCallback(() => {
+    return syncManager.getDeadLetteredItems();
+  }, []);
+
+  const deadLetteredCount =
+    status.deadLetteredAnswers + status.deadLetteredPearlActions + status.deadLetteredReviews;
+
   return {
     status,
     isOnline: status.isOnline,
     pendingCount: status.pendingAnswers + status.pendingPearlActions + status.pendingReviews,
+    deadLetteredCount,
     queueAnswer,
     queuePearlAction,
     queueReview,
     syncNow,
+    retryDeadLettered,
+    discardDeadLettered,
+    getDeadLetteredItems,
   };
 }

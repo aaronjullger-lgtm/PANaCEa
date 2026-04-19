@@ -377,8 +377,8 @@ export function detectLearningStyle(data: LearningBehaviorData): LearningStylePr
   // Generate overall style and recommendations
   const overallStyle = generateOverallStyle(partialProfile);
   const recommendations = generateRecommendations({
-    ...(partialProfile as any),
-    overallStyle: (partialProfile as any).overallStyle || 'balanced',
+    ...partialProfile,
+    overallStyle: overallStyle,
   });
 
   // Calculate data points

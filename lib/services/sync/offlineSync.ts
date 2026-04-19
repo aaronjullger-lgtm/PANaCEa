@@ -266,8 +266,8 @@ export function debouncedSave(
           status: 'pending',
         },
         token
-      ).catch(() => {
-        // If fails, queue for retry
+      ).catch((err) => {
+        console.debug('[offlineSync] API call failed, queuing for retry', err);
         queueOperation(operation, data, token);
       });
     } else {

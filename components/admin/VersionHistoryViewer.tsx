@@ -15,6 +15,7 @@ import {
   User,
   FileText,
 } from 'lucide-react';
+import { InlineSpinner } from '@/components/loading';
 import type { ContentVersion, MedicalContent } from '../../types/admin-cms';
 
 interface VersionHistoryViewerProps {
@@ -123,8 +124,13 @@ export function VersionHistoryViewer({
       {/* Version Timeline */}
       <div className="divide-y divide-[var(--color-border)]">
         {loading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+          <div
+            role="status"
+            aria-live="polite"
+            aria-label="Loading version history"
+            className="flex items-center justify-center p-8"
+          >
+            <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
           </div>
         ) : versions.length === 0 ? (
           <div className="p-8 text-center text-[var(--color-text-muted)]">

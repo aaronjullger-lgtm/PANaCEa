@@ -36,8 +36,9 @@ export function SplitPaneDrillLayout({
     setLeftPercent(percent);
     try {
       globalThis.localStorage.setItem(StorageKeys.SPLIT_VIGNETTE_PERCENT, String(percent));
-    } catch {
-      /* ignore */
+    } catch (storageErr) {
+      // localStorage unavailable or quota exceeded — non-critical preference
+      console.debug('[SplitPaneDrillLayout] split-percent persist failed', storageErr);
     }
   }, []);
 
