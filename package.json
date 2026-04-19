@@ -89,7 +89,6 @@
     "stats:content": "tsx ./scripts/automation/jobs/contentStatistics.ts",
     "fix:condition-ids": "tsx ./scripts/fix-fake-condition-ids.ts",
     "demo:question-improvements": "tsx ./scripts/demo-question-improvements.ts",
-    "demo:question-sprint-b": "tsx ./scripts/demo-question-sprint-b.ts",
     "demo:question-sprint-c": "tsx ./scripts/demo-question-sprint-c.ts",
     "maintenance:weekly": "tsx ./scripts/weekly-maintenance.ts",
     "maintenance:weekly:dry-run": "tsx ./scripts/weekly-maintenance.ts --dry-run",

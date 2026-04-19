@@ -1,0 +1,109 @@
+# purpose: Run the monthly deep-audit packet for AI/content drift, search-vector coverage, linkage integrity, and media backlog visibility.
+# owner: Platform / Content Quality
+# trigger strategy: schedule + workflow_dispatch; keep this lane report-first and separate from unattended remediation or real-time user functionality.
+# secrets required: DATABASE_URL and optionally DIRECT_DATABASE_URL for deep database audits.
+# expected runtime: 20-40 minutes depending on the selected audit segments and database size.
+# failure behavior: Fail the run on audit execution errors, surface flagged findings as warnings in artifacts and step summaries, and preserve the monthly review packet.
+
+name: Sched - Monthly Deep Audit
+
+on:
+  schedule:
+    - cron: "29 9 1 * *"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Fast-review skips the longest segments; full-packet matches the scheduled monthly packet.
+        required: false
+        default: fast-review
+        type: choice
+        options:
+          - fast-review
+          - full-packet
+      skip_expensive_steps:
+        description: Skip the most expensive monthly audit segments during manual review.
+        required: false
+        default: true
+        type: boolean
+      report_only:
+        description: Monthly deep audit is report-first and read-only; this remains true for manual runs.
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-monthly-deep-audit
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Monthly Deep Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Run monthly deep audit packet
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+
+          args=()
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && (inputs.target_scope == 'fast-review' || inputs.skip_expensive_steps) || false }}" = "true" ]; then
+            args+=("--skip-media-audit")
+            args+=("--skip-ai-sample")
+          fi
+
+          npm run automation:monthly:deep-audit -- "${args[@]}"
+
+      - name: Upload monthly deep audit artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sched-monthly-deep-audit-${{ github.run_number }}
+          path: |
+            logs/monthly-deep-audit/*.json
+            logs/monthly-deep-audit/*.md
+            logs/monthly-deep-audit/*.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Write workflow summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Workflow Summary"
+            echo ""
+            echo "- Workflow: sched-monthly-deep-audit.yml"
+            echo "- Node: ${NODE_VERSION}"
+            echo "- Target scope: ${{ github.event_name == 'workflow_dispatch' && inputs.target_scope || 'full-packet' }}"
+            echo "- Skip expensive steps: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_expensive_steps || false }}"
+            echo "- Report only: true"
+            echo "- Artifact directory: logs/monthly-deep-audit/"
+            echo "- Artifact retention: 30 days"
+            echo "- Next action on failure: review the uploaded markdown audit packet before rerunning any monthly segment; fast-review is the preferred first manual rerun."
+          } >> "${GITHUB_STEP_SUMMARY}"

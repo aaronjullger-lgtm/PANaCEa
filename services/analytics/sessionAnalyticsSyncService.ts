@@ -84,19 +84,32 @@ export interface SessionAnalyticsPayload {
   browserName?: string;
 }
 
+export interface CollectSessionAnalyticsInput {
+  sessionId?: string | null;
+  sessionStartTime: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  bestStreak: number;
+  finalStreak: number;
+  mode?: string;
+  focus?: string;
+  difficulty?: string;
+}
+
 /**
  * Collect all session analytics from behavioral services
  */
-export function collectSessionAnalytics(
-  sessionStartTime: number,
-  totalQuestions: number,
-  correctAnswers: number,
-  bestStreak: number,
-  finalStreak: number,
-  mode?: string,
-  focus?: string,
-  difficulty?: string
-): SessionAnalyticsPayload {
+export function collectSessionAnalytics({
+  sessionId,
+  sessionStartTime,
+  totalQuestions,
+  correctAnswers,
+  bestStreak,
+  finalStreak,
+  mode,
+  focus,
+  difficulty,
+}: CollectSessionAnalyticsInput): SessionAnalyticsPayload {
   const endTime = Date.now();
   const totalTimeMs = endTime - sessionStartTime;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
@@ -129,7 +142,7 @@ export function collectSessionAnalytics(
   const timePressureMetrics = calculateTimePressureMetrics(behavioralInsights);
 
   return {
-    sessionId: generateSessionId(),
+    sessionId: sessionId ?? generateSessionId(),
     startedAt: new Date(sessionStartTime).toISOString(),
     endedAt: new Date(endTime).toISOString(),
 

@@ -1,261 +1,147 @@
+# purpose: Validate PANaCEa builds, critical tests, and secret hygiene on pushes, pull requests, and manual runs.
+# owner: Platform / DevEx
+# trigger strategy: push, pull_request, workflow_dispatch
+# secrets required: GITHUB_TOKEN
+# expected runtime: 10-25 minutes
+# failure behavior: Review the failing job, fix the regression locally, and rerun CI before merge or deploy.
 name: CI
-
-# Sprint 1: parallelised gates, advisory full-suite, blocking-aggregator.
-# Release-gate rationale documented in docs/CI-GATES.md (Sprint 6).
-#
-# Blocking jobs (must pass to merge):
-#   - lint          : eslint with --max-warnings 2000 (Sprint 7 will ratchet)
-#   - typecheck     : tsc --noEmit over tsconfig.ci.json (FSRS core only)
-#   - test-critical : npm run test:critical (FSRS math + store)
-#   - build-and-size: vite build + bundle-size budget enforcement
-#   - secret-scan   : gitleaks against .gitleaks.toml
-#
-# Advisory jobs (surface regressions without blocking):
-#   - test-full     : full Vitest suite — 8 known-failing files per CLAUDE.md
-#   - e2e-a11y      : axe-core regression via Playwright a11y project
-#
-# Aggregator:
-#   - all-gates-pass: single required-status-check target for branch protection.
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
   workflow_dispatch:
 
-# Cancel superseded runs on the same ref to save minutes.
+permissions:
+  contents: read
+
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  NODE_OPTIONS: --max-old-space-size=4096
-  CI: 'true'
-  # Disable Next-style telemetry where libs honour it.
-  DO_NOT_TRACK: '1'
+  NODE_VERSION: '22'
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────
-  # BLOCKING: Lint
-  # ─────────────────────────────────────────────────────────────────────────
-  lint:
-    name: Lint (blocking)
+  build-and-test:
+    name: Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 8
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run lint
+    timeout-minutes: 20
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # BLOCKING: Typecheck — FSRS core scope (tsconfig.ci.json)
-  # Full-tree typecheck has known errors; Sprint 7 broadens scope.
-  # ─────────────────────────────────────────────────────────────────────────
-  typecheck:
-    name: Typecheck — FSRS core (blocking)
-    runs-on: ubuntu-latest
-    timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run typecheck:ci
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # BLOCKING: Critical unit tests (FSRS math + study store)
-  # ─────────────────────────────────────────────────────────────────────────
-  test-critical:
-    name: Unit tests — critical paths (blocking)
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Generate Prisma client
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Generate Prisma Client
         run: npx prisma generate
-      - run: npm run test:critical
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # ADVISORY: Full Vitest suite
-  # CLAUDE.md: 205/213 files pass (8 known-failing). Demoted to advisory so
-  # the rest of the gate is actionable. Sprint 7 fixes or excludes those files
-  # and promotes this to blocking.
-  # ─────────────────────────────────────────────────────────────────────────
-  test-full:
-    name: Unit tests — full suite (advisory)
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Generate Prisma client
-        run: npx prisma generate
-      - name: Run full Vitest suite
-        run: npm test
-      - name: Upload test artefacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: vitest-results
-          path: |
-            coverage/
-            test-results/
-          if-no-files-found: ignore
-          retention-days: 14
+      - name: Core type check (FSRS logic + critical paths)
+        # typecheck:ci checks the FSRS core and key lib files strictly.
+        # Full-codebase TS debt is tracked separately.
+        run: npm run typecheck:ci
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # BLOCKING: Production build + bundle-size budget
-  # check-bundle-size.mjs enforces 1400 kB JS / 200 kB CSS / 350 kB max chunk.
-  # ─────────────────────────────────────────────────────────────────────────
-  build-and-size:
-    name: Build + bundle budget (blocking)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Generate Prisma client
-        run: npx prisma generate
-      - name: Build (production)
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
         run: npm run build
-      - name: Enforce bundle-size budget
+
+      - name: Check bundle size budget
         run: npm run build:check-size
-      - name: Upload build artefacts (dist/)
+
+      - name: Run Critical Algorithm Tests (gate)
+        run: npm run test:critical
+
+      - name: Run Unit Tests
+        run: npm test
+
+      - name: Run Coverage (critical subsystems)
+        run: npm run test:coverage -- --reporter=default
+        continue-on-error: true
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: dist
           path: dist/
-          if-no-files-found: error
           retention-days: 7
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # BLOCKING: Secret scan
-  # Uses repo's .gitleaks.toml ruleset.
-  # ─────────────────────────────────────────────────────────────────────────
   secret-scan:
-    name: Secret scan (blocking)
+    name: Secret Scan
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Run gitleaks
+
+      - name: Scan for hardcoded secrets
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # ADVISORY: Accessibility regression (axe-core via Playwright a11y project)
-  # Runs against `vite preview` (static) — avoids the wrangler/pg bundling
-  # issue that broke the previous e2e-smoke. Sprint 2 restores API-path E2E
-  # with nodejs_compat flag + backend-aware setup.
-  # ─────────────────────────────────────────────────────────────────────────
-  e2e-a11y:
-    name: E2E — a11y smoke (advisory)
+  e2e-smoke:
+    name: E2E Smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: build-and-size
+    timeout-minutes: 10
+    needs: build-and-test
+    # Non-blocking: wrangler pages dev fails to bundle pg (Node builtins)
+    # TODO: fix once nodejs_compat flag or edge adapter is configured
     continue-on-error: true
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - name: Download build artefacts
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-      - name: Install Playwright (chromium only)
-        run: npx playwright install --with-deps chromium
-      - name: Start vite preview server
-        run: |
-          npx vite preview --host 127.0.0.1 --port 4173 &
-          echo $! > .preview.pid
-          echo "Waiting for preview server..."
-          for i in $(seq 1 30); do
-            if curl -sf http://127.0.0.1:4173 >/dev/null 2>&1; then
-              echo "Preview server ready."
-              break
-            fi
-            [ "$i" -eq 30 ] && { echo "Preview server failed to start"; exit 1; }
-            sleep 1
-          done
-      - name: Run axe-core a11y project
-        env:
-          BASE_URL: http://127.0.0.1:4173
-        run: npx playwright test --project=a11y
-      - name: Stop preview server
-        if: always()
-        run: |
-          if [ -f .preview.pid ]; then
-            kill "$(cat .preview.pid)" || true
-          fi
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-a11y-report
-          path: playwright-report/
-          if-no-files-found: ignore
-          retention-days: 14
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # AGGREGATOR: Single required status check for branch protection.
-  # Branch protection should require ONLY this check; it transitively requires
-  # the five blocking jobs above without pinning protection to job renames.
-  # ─────────────────────────────────────────────────────────────────────────
-  all-gates-pass:
-    name: All blocking gates pass
-    if: always()
-    needs:
-      - lint
-      - typecheck
-      - test-critical
-      - build-and-size
-      - secret-scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: Verify all blocking gates succeeded
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E smoke (API health)
         run: |
-          echo "Blocking-gate results:"
-          echo "  lint:           ${{ needs.lint.result }}"
-          echo "  typecheck:      ${{ needs.typecheck.result }}"
-          echo "  test-critical:  ${{ needs.test-critical.result }}"
-          echo "  build-and-size: ${{ needs.build-and-size.result }}"
-          echo "  secret-scan:    ${{ needs.secret-scan.result }}"
-          if [ "${{ needs.lint.result }}" != "success" ] \
-             || [ "${{ needs.typecheck.result }}" != "success" ] \
-             || [ "${{ needs.test-critical.result }}" != "success" ] \
-             || [ "${{ needs.build-and-size.result }}" != "success" ] \
-             || [ "${{ needs.secret-scan.result }}" != "success" ]; then
-            echo "::error::One or more blocking gates failed."
-            exit 1
-          fi
-          echo "All blocking gates passed."
+          npx wrangler pages dev dist --port 8788 --compatibility-date=2024-01-01 &
+          sleep 15
+          BASE_URL=http://localhost:8788 npx playwright test e2e/api-health.spec.ts --project=chromium
+        env:
+          CI: true
+
+      - name: Run axe-core accessibility regression
+        run: |
+          # Dev server should still be running from previous step
+          BASE_URL=http://localhost:8788 npx playwright test e2e/a11y-regression.spec.ts --project=chromium
+        env:
+          CI: true

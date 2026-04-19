@@ -1,0 +1,210 @@
+# purpose: Reusable runner for PANaCEa scheduled and manual automation lanes.
+# owner: Platform / DevOps
+# trigger strategy: workflow_call; centralizes shared setup, artifact upload, and endpoint-fanout behavior for scheduled lanes.
+# secrets required: Depends on caller; current scheduled callers only expose the minimum shell/runtime secrets they need, typically DATABASE_URL, PRODUCTION_URL, and CRON_SECRET.
+# expected runtime: 5-60 minutes depending on the lane inputs.
+# failure behavior: Fail the lane, upload any generated artifacts, and write a step summary with artifact and endpoint context for operator follow-up.
+name: Reusable Automation Lane
+
+on:
+  workflow_call:
+    inputs:
+      lane_name:
+        description: Human-readable automation lane name.
+        required: true
+        type: string
+      lane_slug:
+        description: Stable slug used for artifact names and log files.
+        required: true
+        type: string
+      shell_commands:
+        description: Optional shell commands to run inside the checked-out repository.
+        required: false
+        default: ""
+        type: string
+      cron_endpoints:
+        description: Optional newline-delimited endpoint manifest in METHOD|PATH|JSON_BODY format.
+        required: false
+        default: ""
+        type: string
+      run_cron_endpoints:
+        description: Whether to execute the configured cron endpoint manifest.
+        required: false
+        default: true
+        type: boolean
+      install_dependencies:
+        description: Whether to run npm ci before shell commands.
+        required: false
+        default: true
+        type: boolean
+      setup_node:
+        description: Whether to install Node.js for shell commands.
+        required: false
+        default: true
+        type: boolean
+      prisma_generate:
+        description: Whether to run npx prisma generate after dependency installation.
+        required: false
+        default: false
+        type: boolean
+      node_version:
+        description: Node.js version to use when setup_node is enabled.
+        required: false
+        default: "22"
+        type: string
+      artifact_path:
+        description: Optional artifact path or newline-delimited paths.
+        required: false
+        default: ""
+        type: string
+      artifact_retention_days:
+        description: Artifact retention in days.
+        required: false
+        default: 14
+        type: number
+      timeout_minutes:
+        description: Job timeout in minutes.
+        required: false
+        default: 30
+        type: number
+
+jobs:
+  lane:
+    name: ${{ inputs.lane_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ inputs.setup_node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Install dependencies
+        if: ${{ inputs.install_dependencies }}
+        run: npm ci
+
+      - name: Generate Prisma client
+        if: ${{ inputs.prisma_generate }}
+        run: npx prisma generate
+
+      - name: Run lane shell commands
+        if: ${{ inputs.shell_commands != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          ${{ inputs.shell_commands }}
+
+      - name: Call production cron endpoints
+        if: ${{ inputs.cron_endpoints != '' && inputs.run_cron_endpoints }}
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PRODUCTION_URL:-}" ] || [ -z "${CRON_SECRET:-}" ]; then
+            echo "PRODUCTION_URL and CRON_SECRET are required when cron_endpoints is configured." >&2
+            exit 1
+          fi
+
+          mkdir -p logs/automation-http
+          stamp=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          manifest_file=/tmp/cron-endpoints.txt
+          body_file=$(mktemp)
+          summary_file="logs/automation-http/${{ inputs.lane_slug }}-${stamp}.log"
+
+          cat > "${manifest_file}" <<'EOF'
+          ${{ inputs.cron_endpoints }}
+          EOF
+
+          failures=0
+          total=0
+
+          while IFS='|' read -r method endpoint payload; do
+            method="${method//$'\r'/}"
+            endpoint="${endpoint//$'\r'/}"
+            payload="${payload//$'\r'/}"
+
+            if [ -z "${method}" ] || [[ "${method}" =~ ^# ]]; then
+              continue
+            fi
+
+            total=$((total + 1))
+            echo "[${total}] ${method} ${endpoint}" | tee -a "${summary_file}"
+
+            if [ "${method}" = "GET" ]; then
+              status=$(curl -sS -o "${body_file}" -w "%{http_code}" \
+                -X "${method}" \
+                -H "Authorization: Bearer ${CRON_SECRET}" \
+                -H "Accept: application/json" \
+                "${PRODUCTION_URL}${endpoint}")
+            else
+              request_body="${payload:-{}}"
+              status=$(curl -sS -o "${body_file}" -w "%{http_code}" \
+                -X "${method}" \
+                -H "Authorization: Bearer ${CRON_SECRET}" \
+                -H "Content-Type: application/json" \
+                -H "Accept: application/json" \
+                --data "${request_body}" \
+                "${PRODUCTION_URL}${endpoint}")
+            fi
+
+            echo "status=${status}" | tee -a "${summary_file}"
+            cat "${body_file}" | tee -a "${summary_file}"
+            echo "" | tee -a "${summary_file}"
+
+            if [[ ! "${status}" =~ ^2 ]]; then
+              failures=$((failures + 1))
+              echo "::error title=Cron endpoint failed::${method} ${endpoint} returned HTTP ${status}"
+            fi
+          done < "${manifest_file}"
+
+          {
+            echo "### ${{ inputs.lane_name }}"
+            echo ""
+            echo "- Endpoints attempted: ${total}"
+            echo "- Endpoint failures: ${failures}"
+            echo "- Endpoint log: ${summary_file}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ "${failures}" -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload lane artifacts
+        if: ${{ always() && inputs.artifact_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.lane_slug }}-${{ github.run_number }}
+          path: ${{ inputs.artifact_path }}
+          if-no-files-found: ignore
+          retention-days: ${{ inputs.artifact_retention_days }}
+
+      - name: Write lane summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Lane Summary"
+            echo ""
+            echo "- Lane: ${{ inputs.lane_name }}"
+            echo "- Workflow: ${{ github.workflow }}"
+            echo "- Ref: ${{ github.ref_name }}"
+            echo "- Run number: ${{ github.run_number }}"
+            echo "- Lane timeout (minutes): ${{ inputs.timeout_minutes }}"
+            echo "- Shell commands configured: ${{ inputs.shell_commands != '' }}"
+            echo "- Cron endpoint fanout configured: ${{ inputs.cron_endpoints != '' }}"
+            echo "- Cron endpoint fanout enabled for this run: ${{ inputs.cron_endpoints != '' && inputs.run_cron_endpoints }}"
+            echo "- Artifact upload configured: ${{ inputs.artifact_path != '' }}"
+            echo "- Artifact retention (days): ${{ inputs.artifact_path != '' && inputs.artifact_retention_days || 'n/a' }}"
+            echo "- Next action on failure: inspect the uploaded artifacts and any endpoint log before rerunning the lane."
+          } >> "${GITHUB_STEP_SUMMARY}"

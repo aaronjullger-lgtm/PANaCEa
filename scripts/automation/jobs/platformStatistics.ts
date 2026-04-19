@@ -15,6 +15,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { fileURLToPath } from 'url';
+import * as path from 'path';
 import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
 
 /**
@@ -420,8 +422,10 @@ export async function runPlatformStatisticsJob(targetDate: Date = new Date()) {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+const isDirectExecution =
+  process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
   runPlatformStatisticsJob()
     .then(() => {
       console.log('\n✅ Job completed successfully');

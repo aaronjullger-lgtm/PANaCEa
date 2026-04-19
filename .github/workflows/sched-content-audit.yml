@@ -1,0 +1,113 @@
+# purpose: Run the daily read-only content audit lane for content drift, media quality, and database-backed completeness/integrity reporting.
+# owner: Content Platform / Quality
+# trigger strategy: schedule + workflow_dispatch; runs after daily ops and keeps audit/report work separate from any auto-repair or content mutation.
+# secrets required: DATABASE_URL
+# expected runtime: 10-35 minutes depending on database audit depth and completeness export settings.
+# failure behavior: Fail the run when audit scripts fail or integrity monitoring reports critical issues, upload artifacts, and leave a summary pointing to the failing audit.
+
+name: Sched - Content Audit
+
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+    inputs:
+      target_scope:
+        description: Manual scope. Use fast-audit for a quick read-only smoke check; use full-audit for the scheduled shape.
+        required: false
+        default: fast-audit
+        type: choice
+        options:
+          - fast-audit
+          - full-audit
+      skip_expensive_steps:
+        description: Skip slower DB-backed audit steps and CSV export during manual review.
+        required: false
+        default: false
+        type: boolean
+      report_only:
+        description: Content audit is always read-only; this remains true for manual runs.
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sched-content-audit
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run:
+    name: Content Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Run daily content audit
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+
+          args=()
+
+          if [ "${{ github.event_name == 'workflow_dispatch' && (inputs.target_scope == 'fast-audit' || inputs.skip_expensive_steps) || false }}" = "true" ]; then
+            args+=("--skip-db-audits")
+            args+=("--skip-completeness-csv")
+          fi
+
+          if [ ${#args[@]} -eq 0 ]; then
+            npm run automation:daily:content-audit
+          else
+            npm run automation:daily:content-audit -- "${args[@]}"
+          fi
+
+      - name: Upload content audit artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sched-content-audit-${{ github.run_number }}
+          path: |
+            logs/content-audit/**/*.json
+            logs/content-audit/**/*.md
+            logs/content-audit/**/*.log
+            logs/content-audit/**/*.csv
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Write workflow summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "### Workflow Summary"
+            echo ""
+            echo "- Workflow: sched-content-audit.yml"
+            echo "- Node: ${NODE_VERSION}"
+            echo "- Target scope: ${{ github.event_name == 'workflow_dispatch' && inputs.target_scope || 'full-audit' }}"
+            echo "- Skip expensive steps: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_expensive_steps || false }}"
+            echo "- Report only: true"
+            echo "- Artifact directory: logs/content-audit/"
+            echo "- Artifact retention: 14 days"
+            echo "- Next action on failure: inspect the uploaded markdown report and any database audit log before rerunning."
+          } >> "${GITHUB_STEP_SUMMARY}"
