@@ -84,6 +84,10 @@ function makeFakePrisma(opts: FakePrismaOptions = {}) {
     userLearningProfile: {
       findUnique: vi.fn().mockResolvedValue(null),
     },
+    userPreferences: {
+      // review-forecast reads consolidationTimezone when tz=UTC was sent
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
     userGoal: {
       findFirst: vi.fn().mockResolvedValue(null),
     },
@@ -113,6 +117,11 @@ function baseContext() {
     env: { DATABASE_URL: 'postgresql://test' },
     auth: { userId: CLERK_ID },
     validated: {},
+    // Some endpoints (e.g. review-forecast) read query params off request.url.
+    // Provide a synthetic request so the context is a realistic shape.
+    request: new Request('http://localhost/api/analytics/review-forecast?tz=UTC', {
+      method: 'GET',
+    }),
   };
 }
 

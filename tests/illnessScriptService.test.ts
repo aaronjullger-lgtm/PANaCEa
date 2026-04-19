@@ -264,11 +264,13 @@ describe('buildConsequences', () => {
   });
 
   it('includes lab and imaging findings', () => {
+    // commonAbnormalities / classicSigns are string[] per the type — the
+    // service joins them with ', ' so the finding text is readable.
     const labs: RawLabFinding[] = [
-      { name: 'BNP', commonAbnormalities: 'Elevated >400 pg/mL', isHighYield: true },
+      { name: 'BNP', commonAbnormalities: ['Elevated >400 pg/mL'], isHighYield: true },
     ];
     const imaging: RawImagingFinding[] = [
-      { name: 'Chest X-ray', classicSigns: 'Cephalization, Kerley B lines', isHighYield: true },
+      { name: 'Chest X-ray', classicSigns: ['Cephalization', 'Kerley B lines'], isHighYield: true },
     ];
     const consequences = buildConsequences(CHF_CONTENT, [], labs, imaging);
     const bnp = consequences.find((c) => c.finding.includes('BNP'));
