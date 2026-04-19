@@ -22,8 +22,8 @@ import {
 import {
   getSessionSummary,
   normalizeSystemCode,
-  PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 import { ABBREVIATION_TO_TOPIC_MAP } from "@/config/topic-map";
 
 interface SessionStatsOverlayProps {
@@ -86,7 +86,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
   const systemBars: SystemBar[] = useMemo(() => {
     // Initialize counts for all PANCE systems
     const systemCounts: Record<string, number> = {};
-    Object.keys(PANCE_SYSTEM_PERCENTAGES).forEach((s) => (systemCounts[s] = 0));
+    Object.keys(BLUEPRINT_PERCENT_BY_ABBREVIATION).forEach((s) => (systemCounts[s] = 0));
 
     // Count occurrences per system from performanceData
     performanceData.forEach((p) => {
@@ -102,7 +102,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
     return Object.entries(systemCounts)
       .map(([system, count]) => {
         const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-        const target = PANCE_SYSTEM_PERCENTAGES[system] || 0;
+        const target = BLUEPRINT_PERCENT_BY_ABBREVIATION[system] || 0;
         return {
           system,
           name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
@@ -122,7 +122,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
   // Calculate drifts based on current performanceData to avoid stale closure
   // This ensures CV count and distribution always reflects what's shown in systemBars
   const drifts = useMemo(() => {
-    const allSystems = Object.keys(PANCE_SYSTEM_PERCENTAGES);
+    const allSystems = Object.keys(BLUEPRINT_PERCENT_BY_ABBREVIATION);
     const total = performanceData.length;
     
     if (total < 5) return [];
@@ -130,7 +130,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
     return allSystems.map((system) => {
       const count = systemBars.find(b => b.system === system)?.count || 0;
       const actualPercent = total > 0 ? (count / total) * 100 : 0;
-      const targetPercent = PANCE_SYSTEM_PERCENTAGES[system] || 0;
+      const targetPercent = BLUEPRINT_PERCENT_BY_ABBREVIATION[system] || 0;
       const driftPercent = actualPercent - targetPercent;
       
       return {
