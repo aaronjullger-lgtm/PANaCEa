@@ -10,7 +10,6 @@
  * - NCCPA blueprint weighting
  * - Question deduplication
  * - Adaptive difficulty
- * - Session interleaving
  *
  * @module services/core/questionService
  */
@@ -336,10 +335,6 @@ export async function getOptimalQuestions(
     systemMastery?: any[];
     previousQuestionIds?: string[];
     useIntelligent?: boolean;
-    // NEW: Sprint A & B integration options
-    prisma?: any;
-    userId?: string;
-    useEnhanced?: boolean;
   } = {}
 ): Promise<Question[]> {
   const {
@@ -348,9 +343,6 @@ export async function getOptimalQuestions(
     systemMastery = [],
     previousQuestionIds = [],
     useIntelligent = false,
-    prisma,
-    userId,
-    useEnhanced = true,
   } = options;
 
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
