@@ -184,8 +184,11 @@ export default defineConfig(({ mode }) => {
           // when the user clicks "Update now"
           // Clean old caches on activation
           cleanupOutdatedCaches: true,
-          // New cache namespace - "compat" strategy with interop mode
-          cacheId: 'panacea-v12-offline-first',
+          // New cache namespace — bumped to v13 after the integration landing
+          // so returning PWA users pick up the shipped UI + lib/tokens + cva
+          // Badge + lib/ai gateway work immediately instead of waiting for
+          // the default SW update cycle.
+          cacheId: 'panacea-v13-integration-landing',
           // Runtime caching strategies for offline-first experience
           runtimeCaching: [
             // =================================================================
