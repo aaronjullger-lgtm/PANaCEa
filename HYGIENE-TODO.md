@@ -10,29 +10,12 @@ Original sweep: 2026-04-17. Refreshed after audit: 2026-04-18.
 
 ## Tier 3 (re-audited 2026-04-18)
 
-### 3a. `lib/poolSelection.ts` — ORIGINAL AUDIT WAS WRONG
+### 3a. `lib/poolSelection.ts` — DONE ✅
 
-The file is a **live utility** used by `functions/api/questions/pool.ts` for
-weighted PANCE-distribution selection (`selectByPanceDistribution`,
-`fisherYatesShuffle`). It internally already reads from
-`BLUEPRINT_PERCENT_BY_ABBREVIATION` — the migration the original audit asked
-for is already done.
-
-The real cleanup target is the deprecated re-export `PANCE_SYSTEM_PERCENTAGES`
-(line 12). Callers to migrate:
-
-- `components/quiz/SessionEndSummary.tsx`
-- `components/quiz/SessionStatsOverlay.tsx`
-- `services/ai/enhancedQuestionService.ts`
-- `services/ai/panceDistributionService.ts`
-- `services/domain/panceDistributionService.ts`
-- `services/domain/index.ts`
-- `tests/poolSelection.test.ts`
-- `lib/poolSelection.ts` (self-reference)
-
-Replace `import { PANCE_SYSTEM_PERCENTAGES } from '.../poolSelection'` →
-`import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '.../constants/blueprint'`,
-then delete the deprecated re-export.
+- Tier 3a — DONE. Commits `b644d054`→`27db169e` refactor(constants): remove PANCE_SYSTEM_PERCENTAGES deprecated re-export.
+  All in-scope callers migrated to `BLUEPRINT_PERCENT_BY_ABBREVIATION` from `lib/constants/blueprint.ts`.
+  Note: `services/ai/panceDistributionService.ts` and `services/ai/enhancedQuestionService.ts` retain their own
+  `PANCE_SYSTEM_PERCENTAGES` (full-name keys from `NCCPA_2025_BLUEPRINT_PERCENT`) — separate scope, separate plan.
 
 ### 3b. `lib/sessionInterleaving.ts` — CAN BE DELETED (with its parent)
 
