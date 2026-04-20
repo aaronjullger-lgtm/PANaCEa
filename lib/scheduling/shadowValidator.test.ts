@@ -18,6 +18,7 @@ import {
   reliabilityBins,
   expectedCalibrationError,
   computeCalibrationReport,
+  stratifiedReport,
   type CalibrationSample,
 } from './shadowValidator';
 
@@ -264,5 +265,71 @@ describe('computeCalibrationReport', () => {
     expect(r.overallAccuracy).toBeCloseTo(0.5, 2);
     // gap between belief and reality is visible in ECE
     expect(r.ece).toBeGreaterThan(0.3);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// stratifiedReport
+// ────────────────────────────────────────────────────────────────────────────
+
+describe('stratifiedReport', () => {
+  const makeSample = (p: number, actual: boolean): CalibrationSample => ({
+    predictedRetrievability: p,
+    actualOutcome: actual,
+  });
+
+  it('overall report equals computeCalibrationReport on the same samples', () => {
+    const samples = [makeSample(0.8, true), makeSample(0.4, false), makeSample(0.9, true)];
+    const { overall } = stratifiedReport(samples, () => 'any');
+    const direct = computeCalibrationReport(samples);
+    expect(overall.n).toBe(direct.n);
+    expect(overall.brier).toBeCloseTo(direct.brier, 6);
+    expect(overall.overallAccuracy).toBeCloseTo(direct.overallAccuracy, 6);
+  });
+
+  it('splits samples into correct strata by key', () => {
+    // Tag each sample via a sentinel field on the extended type
+    type TaggedSample = CalibrationSample & { tag: string };
+    const all: TaggedSample[] = [
+      { predictedRetrievability: 0.8, actualOutcome: true, tag: 'full' },
+      { predictedRetrievability: 0.85, actualOutcome: true, tag: 'full' },
+      { predictedRetrievability: 0.3, actualOutcome: false, tag: 'minimal' },
+    ];
+
+    const { strata } = stratifiedReport(all, (s) => (s as TaggedSample).tag, 10);
+
+    expect(strata.has('full')).toBe(true);
+    expect(strata.has('minimal')).toBe(true);
+    expect(strata.get('full')?.n).toBe(2);
+    expect(strata.get('minimal')?.n).toBe(1);
+  });
+
+  it('returns empty strata map for empty input', () => {
+    const { overall, strata } = stratifiedReport([], () => 'key');
+    expect(overall.n).toBe(0);
+    expect(strata.size).toBe(0);
+  });
+
+  it('stratum reports are independent — different brier scores per group', () => {
+    type KeyedSample = CalibrationSample & { group: string };
+    // Group A: well-calibrated (high p → correct)
+    // Group B: overconfident (high p → wrong)
+    const samples: KeyedSample[] = [
+      { predictedRetrievability: 0.95, actualOutcome: true, group: 'A' },
+      { predictedRetrievability: 0.9, actualOutcome: false, group: 'B' },
+    ];
+    const { strata } = stratifiedReport(samples, (s) => (s as KeyedSample).group);
+
+    const brierA = strata.get('A')?.brier ?? -1;
+    const brierB = strata.get('B')?.brier ?? -1;
+    expect(brierA).toBeLessThan(brierB);
+  });
+
+  it('single-stratum result matches overall', () => {
+    const samples = [makeSample(0.7, true), makeSample(0.6, false)];
+    const { overall, strata } = stratifiedReport(samples, () => 'only');
+    const onlyStratum = strata.get('only');
+    expect(onlyStratum?.n).toBe(overall.n);
+    expect(onlyStratum?.brier).toBeCloseTo(overall.brier, 6);
   });
 });

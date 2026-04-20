@@ -158,6 +158,7 @@ desktop.ini
 *.temp
 .cache/
 .tmp/
+.tmp.drivedownload/
 .tmp.driveupload/
 temp/
 _test_write

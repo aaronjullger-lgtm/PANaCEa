@@ -144,6 +144,7 @@
     "test:coverage": "vitest run --coverage",
     "test:critical": "vitest run tests/fsrs.test.ts tests/fsrs-optimizer-bridge.test.ts tests/retrievability.test.ts tests/fsrs-eor-scheduler.test.ts tests/lib/fsrs-canonical-verification.test.ts tests/store/useStudyStore.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:a11y": "playwright test --config=playwright.ci-a11y.config.ts",
     "verify:health": "playwright test e2e/api-health.spec.ts",
     "test:e2e:wrangler": "playwright test --config=playwright.wrangler.config.ts",
     "test:e2e:ui": "playwright test --ui",

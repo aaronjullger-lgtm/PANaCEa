@@ -48,9 +48,9 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Core type check (FSRS logic + critical paths)
-        # typecheck:ci checks the FSRS core and key lib files strictly.
-        # Full-codebase TS debt is tracked separately.
+      - name: Core type check (FSRS + critical paths)
+        # tsconfig.ci.json covers FSRS core + drillReviewService + confidence pipeline + _shared auth.
+        # Full-codebase TS debt (parked QuizView refactor) is tracked separately.
         run: npm run typecheck:ci
 
       - name: Lint
@@ -97,13 +97,66 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
 
-  e2e-smoke:
-    name: E2E Smoke
+  # ─── Blocking A11y gate ───────────────────────────────────────────────────────
+  # Runs axe-core against the built SPA via `vite preview` (no wrangler, no API).
+  # Does not require auth — Clerk redirects to landing/sign-in which axe scans.
+  # This gate blocks merges. Promote to branch-protection via all-gates-pass below.
+  e2e-a11y:
+    name: A11y Gate (axe-core)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: build-and-test
-    # Non-blocking: wrangler pages dev fails to bundle pg (Node builtins)
-    # TODO: fix once nodejs_compat flag or edge adapter is configured
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install Playwright browsers (chromium only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run A11y gate (axe-core via vite preview)
+        # vite preview serves the built SPA on port 4173 without needing the API runtime.
+        # Playwright config playwright.ci-a11y.config.ts targets this port.
+        run: npm run test:e2e:a11y
+        env:
+          CI: true
+          BASE_URL: http://localhost:4173
+
+      - name: Upload a11y report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: a11y-report
+          path: playwright-report/
+          retention-days: 14
+
+  # ─── Advisory API smoke ───────────────────────────────────────────────────────
+  # Verifies the Cloudflare Pages Functions runtime via wrangler pages dev.
+  # Advisory (continue-on-error) until the wrangler pg/Node-builtins issue is
+  # fully resolved — see TODO in CI-GATES.md.
+  e2e-api-smoke:
+    name: API Smoke (Wrangler, advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-test
     continue-on-error: true
 
     steps:
@@ -128,20 +181,52 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Install Playwright browsers
+      - name: Install Playwright browsers (chromium only)
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E smoke (API health)
+      - name: Run API health smoke (wrangler pages dev)
         run: |
-          npx wrangler pages dev dist --port 8788 --compatibility-date=2024-01-01 &
-          sleep 15
+          npx wrangler pages dev dist --port 8788 \
+            --compatibility-date=2024-01-01 \
+            --compatibility-flags=nodejs_compat &
+          sleep 20
           BASE_URL=http://localhost:8788 npx playwright test e2e/api-health.spec.ts --project=chromium
         env:
           CI: true
 
-      - name: Run axe-core accessibility regression
+  # ─── Gate aggregator ─────────────────────────────────────────────────────────
+  # Single status check to pin branch protection to.
+  # See docs/CI-GATES.md: "Do not pin branch protection to individual job names."
+  all-gates-pass:
+    name: All Blocking Gates Pass
+    if: always()
+    needs: [build-and-test, secret-scan, e2e-a11y]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Verify all blocking gates passed
         run: |
-          # Dev server should still be running from previous step
-          BASE_URL=http://localhost:8788 npx playwright test e2e/a11y-regression.spec.ts --project=chromium
-        env:
-          CI: true
+          results=(
+            "build-and-test=${{ needs.build-and-test.result }}"
+            "secret-scan=${{ needs.secret-scan.result }}"
+            "e2e-a11y=${{ needs.e2e-a11y.result }}"
+          )
+          failed=0
+          for entry in "${results[@]}"; do
+            name="${entry%%=*}"
+            result="${entry##*=}"
+            if [[ "$result" != "success" ]]; then
+              echo "FAILED: $name → $result"
+              failed=1
+            else
+              echo "OK:     $name → $result"
+            fi
+          done
+          if [[ $failed -eq 1 ]]; then
+            echo ""
+            echo "One or more blocking gates failed. Fix the regression and re-run."
+            exit 1
+          fi
+          echo ""
+          echo "All blocking gates passed."

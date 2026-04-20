@@ -100,6 +100,12 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       },
     });
 
+    // 5. User exam date for readiness warnings
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { examDate: true },
+    });
+
     // 5. Active blueprint systems
     const allSystems = [
       ...new Set(progressRecords.map((p) => p.system).filter((system): system is string => !!system)),
@@ -200,12 +206,22 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       sessionsPrior21Days: sessionsPrior21,
       burnoutRisk: phenotype?.burnoutRisk ?? 0,
       engagementTrend: engagementTrend - 0.5, // center around 0
-      daysUntilExam: null, // TODO: fetch from UserGoal when exam date tracking ships
+      daysUntilExam: (() => {
+        if (!user?.examDate) return null;
+        const ms = new Date(user.examDate).getTime() - now;
+        return ms > 0 ? Math.ceil(ms / (1000 * 60 * 60 * 24)) : null;
+      })(),
       projectedReadiness: recentAccuracy, // simple proxy for now
       requiredReadiness: 0.75,
       systemLastReviewed,
       activeBlueprintSystems: allSystems,
-      responseTimeTrend: 0, // TODO: compute from recent vs baseline dwell times
+      responseTimeTrend: (() => {
+        const withRT = recentAttempts.filter(a => (a.timeSpentMs ?? 0) > 0);
+        if (withRT.length < 20) return 0;
+        const avgRecent = withRT.slice(0, 10).reduce((s, a) => s + (a.timeSpentMs ?? 0), 0) / 10;
+        const avgOlder = withRT.slice(10, 20).reduce((s, a) => s + (a.timeSpentMs ?? 0), 0) / 10;
+        return avgOlder > 0 ? (avgRecent - avgOlder) / avgOlder : 0;
+      })(),
     };
 
     // ── Run analysis ──

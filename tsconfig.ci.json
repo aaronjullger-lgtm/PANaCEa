@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "include": [
+    // ─── FSRS core ────────────────────────────────────────────────────────────
     "lib/fsrs.ts",
     "lib/fsrs-optimizer-bridge.ts",
     "lib/fsrs-optimizer.ts",
@@ -9,6 +10,27 @@
     "lib/fsrs/simulator.ts",
     "lib/eorFsrsScheduler.ts",
     "lib/fsrsQuestionLinking.ts",
+
+    // ─── Sprint 7: deploy-critical paths ─────────────────────────────────────
+    // Behavioral rating (upstream of every FSRS update)
+    "lib/implicit-metrics.ts",
+    // Main submission pipeline (803-line path from answer submit → DB write)
+    "lib/services/drillReviewService.ts",
+    // 8-step confidence pipeline
+    "lib/confidence/bayesianAccumulator.ts",
+    "lib/confidence/desirableDifficultyBonus.ts",
+    "lib/confidence/difficultyModulator.ts",
+    "lib/confidence/exGaussianRT.ts",
+    "lib/confidence/interferenceDetector.ts",
+    "lib/confidence/trendDetector.ts",
+    // Edge auth + Prisma singleton (every API request runs through these)
+    "functions/api/_shared/auth.ts",
+    "functions/api/_shared/prisma-edge.ts",
+    "functions/api/_shared/error-handler.ts",
+    "functions/api/_shared/env-validation.ts",
+    "functions/api/_shared/middleware.ts",
+
+    // ─── Test files for the above ─────────────────────────────────────────────
     "tests/fsrs.test.ts",
     "tests/fsrs-optimizer-bridge.test.ts",
     "tests/fsrs-eor-scheduler.test.ts",

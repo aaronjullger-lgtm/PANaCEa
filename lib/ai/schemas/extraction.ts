@@ -131,3 +131,31 @@ export const BOUNDING_BOX_DESCRIPTION = `{
   "bounding_box": [ymin, xmin, ymax, xmax]
 }
 All four coordinates are integers 0-1000 (normalized to the image). ymin < ymax, xmin < xmax. Return ONLY this JSON — no prose, no code fence.`;
+
+// ─── Clinical-eye vision analysis ─────────────────────────────────────────
+
+/**
+ * Used by /api/vision/analyze (clinical-eye pathology detection).
+ * bounding_box is optional: some images (e.g. derm photos) may not
+ * have a discrete localizable lesion.
+ */
+export const VisionAnalysisSchema = z.object({
+  diagnosis: z.string().min(1).max(500),
+  reasoning: z.string().min(1).max(2000),
+  bounding_box: z
+    .tuple([
+      z.number().min(0).max(1000),
+      z.number().min(0).max(1000),
+      z.number().min(0).max(1000),
+      z.number().min(0).max(1000),
+    ])
+    .optional(),
+});
+export type VisionAnalysis = z.infer<typeof VisionAnalysisSchema>;
+
+export const VISION_ANALYSIS_DESCRIPTION = `{
+  "diagnosis": string (primary pathology or finding, ≤500 chars),
+  "reasoning": string (clinical reasoning, ≤2000 chars),
+  "bounding_box": [ymin, xmin, ymax, xmax] normalized 0-1000 (omit if no discrete lesion)
+}
+Return ONLY this JSON object — no markdown, no code fence, no prose.`;

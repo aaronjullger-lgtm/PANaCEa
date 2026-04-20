@@ -68,11 +68,11 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       }),
     ]);
 
-    // Compute recent accuracy
+    // Compute recent accuracy (null when no attempts — don't invent a default)
     const correctCount = recentAttempts.filter((a) => a.wasCorrect).length;
     const recentAccuracy = recentAttempts.length > 0
       ? correctCount / recentAttempts.length
-      : 0.7; // optimistic default
+      : null;
 
     // Days until exam
     let daysUntilExam: number | null = null;
@@ -83,7 +83,9 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
 
     const profile: LearnerLoadProfile = {
       historicalDailyAvg: phenotype?.avgDailyQuestions ?? 20,
-      recentAccuracy,
+      // Fallback to neutral 0.7 for the recommendation algorithm only.
+      // The actual null is returned to the client so the widget can show "—".
+      recentAccuracy: recentAccuracy ?? 0.7,
       currentStreak: phenotype?.currentStreak ?? 0,
       burnoutRiskScore: phenotype?.burnoutRisk ?? 0,
       dueReviewCount,
@@ -100,7 +102,7 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       profile: {
         dueReviews: dueReviewCount,
         streak: phenotype?.currentStreak ?? 0,
-        accuracy: Math.round(recentAccuracy * 100),
+        accuracy: recentAccuracy !== null ? Math.round(recentAccuracy * 100) : null,
         daysUntilExam,
       },
     });

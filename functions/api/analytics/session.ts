@@ -41,80 +41,76 @@ export const onRequestPost = authenticatedEndpoint(
 
     try {
       const data = context.validated;
-
       const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
 
-      // Create session analytics record
-      const session = await prisma.studySession.create({
-        data: {
-          id: data.sessionId || uuidv4(),
-          userId,
-          startedAt: new Date(data.startedAt),
-          endedAt: new Date(data.endedAt),
+      // Determine session ID: use provided one or generate a fallback
+      const sessionId = data.sessionId || uuidv4();
 
-          // Core metrics
-          totalQuestions: data.totalQuestions,
-          correctAnswers: data.correctAnswers || 0,
-          accuracy: data.accuracy || 0,
-          totalTimeMs: data.totalTimeMs || 0,
-          avgTimePerQuestion: data.avgTimePerQuestion,
+      // Ownership check: if caller supplied an existing session ID, verify they own it
+      if (data.sessionId) {
+        const existing = await prisma.studySession.findUnique({
+          where: { id: data.sessionId },
+          select: { id: true, userId: true },
+        });
+        if (existing && existing.userId !== userId) {
+          return {
+            status: 403,
+            error: 'You do not have permission to update this session.',
+          };
+        }
+      }
 
-          // Streak data
-          bestStreak: data.bestStreak || 0,
-          finalStreak: data.finalStreak || 0,
-          avgStreak: data.avgStreak,
-          errorClusters: data.errorClusters || 0,
+      const sessionFields = {
+        startedAt: new Date(data.startedAt),
+        endedAt: new Date(data.endedAt),
+        totalQuestions: data.totalQuestions,
+        correctAnswers: data.correctAnswers || 0,
+        accuracy: data.accuracy || 0,
+        totalTimeMs: data.totalTimeMs || 0,
+        avgTimePerQuestion: data.avgTimePerQuestion,
+        bestStreak: data.bestStreak || 0,
+        finalStreak: data.finalStreak || 0,
+        avgStreak: data.avgStreak,
+        errorClusters: data.errorClusters || 0,
+        peakMomentum: data.peakMomentum,
+        avgMomentum: data.avgMomentum,
+        momentumTrend: data.momentumTrend,
+        totalAnswerChanges: data.totalAnswerChanges || 0,
+        helpfulChanges: data.helpfulChanges || 0,
+        harmfulChanges: data.harmfulChanges || 0,
+        firstInstinctAccuracy: data.firstInstinctAccuracy,
+        avgInferredConfidence: data.avgInferredConfidence,
+        highConfidenceAccuracy: data.highConfidenceAccuracy,
+        lowConfidenceAccuracy: data.lowConfidenceAccuracy,
+        calibrationScore: data.calibrationScore,
+        questionsUnderPar: data.questionsUnderPar || 0,
+        questionsOverPar: data.questionsOverPar || 0,
+        rushingAccuracy: data.rushingAccuracy,
+        deliberateAccuracy: data.deliberateAccuracy,
+        early10Accuracy: data.early10Accuracy,
+        late10Accuracy: data.late10Accuracy,
+        staminaFade: data.staminaFade,
+        distributionScore: data.distributionScore,
+        systemsCovered: data.systemsCovered || [],
+        predictedScore: data.predictedScore,
+        scoreConfidence: data.scoreConfidence,
+        passLikelihood: data.passLikelihood,
+        mode: data.mode,
+        focus: data.focus,
+        difficulty: data.difficulty,
+        deviceType: data.deviceType,
+        browserName: data.browserName,
+        updatedAt: new Date(),
+      };
 
-          // Momentum metrics
-          peakMomentum: data.peakMomentum,
-          avgMomentum: data.avgMomentum,
-          momentumTrend: data.momentumTrend,
-
-          // Behavioral signals
-          totalAnswerChanges: data.totalAnswerChanges || 0,
-          helpfulChanges: data.helpfulChanges || 0,
-          harmfulChanges: data.harmfulChanges || 0,
-          firstInstinctAccuracy: data.firstInstinctAccuracy,
-
-          // Confidence calibration
-          avgInferredConfidence: data.avgInferredConfidence,
-          highConfidenceAccuracy: data.highConfidenceAccuracy,
-          lowConfidenceAccuracy: data.lowConfidenceAccuracy,
-          calibrationScore: data.calibrationScore,
-
-          // Time pressure analysis
-          questionsUnderPar: data.questionsUnderPar || 0,
-          questionsOverPar: data.questionsOverPar || 0,
-          rushingAccuracy: data.rushingAccuracy,
-          deliberateAccuracy: data.deliberateAccuracy,
-
-          // Fatigue indicators
-          early10Accuracy: data.early10Accuracy,
-          late10Accuracy: data.late10Accuracy,
-          staminaFade: data.staminaFade,
-
-          // PANCE distribution
-          distributionScore: data.distributionScore,
-          systemsCovered: data.systemsCovered || [],
-
-          // Predicted score
-          predictedScore: data.predictedScore,
-          scoreConfidence: data.scoreConfidence,
-          passLikelihood: data.passLikelihood,
-
-          // Session settings
-          mode: data.mode,
-          focus: data.focus,
-          difficulty: data.difficulty,
-
-          // Device info
-          deviceType: data.deviceType,
-          browserName: data.browserName,
-          updatedAt: new Date(),
-        },
+      // Upsert study session — idempotent for retry/double-submit cases
+      const session = await prisma.studySession.upsert({
+        where: { id: sessionId },
+        create: { id: sessionId, userId, ...sessionFields },
+        update: sessionFields,
       });
 
-      // Create SessionAnalytics row for aggregated session-level analytics (enables dashboards without re-querying StudySession)
+      // Upsert SessionAnalytics row — enables dashboards without re-querying StudySession
       const totalDurationMinutes =
         data.totalTimeMs != null ? Math.round(data.totalTimeMs / 60000) : undefined;
       const systemDistribution =
@@ -124,19 +120,21 @@ export const onRequestPost = authenticatedEndpoint(
               return acc;
             }, {})
           : undefined;
-      await prisma.sessionAnalytics.create({
-        data: {
-          id: `analytics_${session.id}`,
-          userId,
-          sessionId: session.id,
-          totalDurationMinutes: totalDurationMinutes ?? undefined,
-          avgResponseTime: data.avgTimePerQuestion ?? undefined,
-          systemDistribution: systemDistribution ?? undefined,
-          wasCompleted: true,
-        },
+      const analyticsFields = {
+        userId,
+        sessionId: session.id,
+        totalDurationMinutes: totalDurationMinutes ?? undefined,
+        avgResponseTime: data.avgTimePerQuestion ?? undefined,
+        systemDistribution: systemDistribution ?? undefined,
+        wasCompleted: true,
+      };
+      await prisma.sessionAnalytics.upsert({
+        where: { sessionId: session.id },
+        create: { id: `analytics_${session.id}`, ...analyticsFields },
+        update: analyticsFields,
       });
 
-      // Update user learning profile (upsert)
+      // Update user learning profile
       await updateUserLearningProfile(prisma, userId, data);
 
       return {

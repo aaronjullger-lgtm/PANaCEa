@@ -604,6 +604,76 @@ describe('useDrillFSRS Hook', () => {
   });
 
   // =========================================================================
+  // isSubmitting resilience — finally-block guarantee
+  // =========================================================================
+  describe('isSubmitting resilience', () => {
+    it('should reset isSubmitting to false after SDK error', async () => {
+      vi.useRealTimers();
+      mockSubmitReview.mockRejectedValueOnce(new Error('Server error'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-err',
+          selectedAnswer: 'a',
+          timeSpentMs: 1000,
+        });
+      });
+
+      // The finally block must fire even on error — session must never stay locked.
+      expect(result.current.isSubmitting).toBe(false);
+      vi.useFakeTimers();
+    });
+
+    it('should reset isSubmitting to false after network TypeError', async () => {
+      vi.useRealTimers();
+      mockSubmitReview.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'pharm' }));
+
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({
+          questionId: 'q-net',
+          selectedAnswer: 'b',
+          timeSpentMs: 2000,
+        });
+      });
+
+      expect(result.current.isSubmitting).toBe(false);
+      vi.useFakeTimers();
+    });
+
+    it('should allow subsequent submission after a failed one', async () => {
+      vi.useRealTimers();
+      mockSubmitReview
+        .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        .mockResolvedValueOnce(mockCorrectResponse());
+
+      const { result } = renderHook(() => useDrillFSRS({ drillType: 'condition' }));
+
+      // First submit — fails
+      await act(async () => {
+        result.current.startQuestion();
+        await result.current.submitAnswer({ questionId: 'q-1', selectedAnswer: 'a', timeSpentMs: 1000 });
+      });
+      expect(result.current.isSubmitting).toBe(false);
+
+      // Second submit — succeeds (would be blocked forever if isSubmitting stayed true)
+      let response: DrillFSRSResponse | null = null;
+      await act(async () => {
+        result.current.startQuestion();
+        response = await result.current.submitAnswer({ questionId: 'q-2', selectedAnswer: 'b', timeSpentMs: 2000 });
+      });
+      expect(result.current.isSubmitting).toBe(false);
+      expect(response).not.toBeNull();
+      vi.useFakeTimers();
+    });
+  });
+
+  // =========================================================================
   // reset
   // =========================================================================
   describe('reset', () => {

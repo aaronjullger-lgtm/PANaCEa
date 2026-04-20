@@ -182,11 +182,13 @@ function computeAccuracyTrend(
  * Note: This sends a basic push without VAPID JWT signing.
  * For production deployments, set VAPID_PRIVATE_KEY and use proper signing.
  */
+type PushStatus = 'SENT' | 'EXPIRED' | 'FAILED';
+
 async function sendPushNotification(
   subscription: { endpoint: string; p256dh: string; auth: string },
   payload: PushPayload,
   _env: { VAPID_PUBLIC_KEY?: string; VAPID_PRIVATE_KEY?: string }
-): Promise<boolean> {
+): Promise<PushStatus> {
   try {
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
@@ -198,20 +200,20 @@ async function sendPushNotification(
     });
 
     if (response.status === 201 || response.status === 200) {
-      return true;
+      return 'SENT';
     }
 
     // 410 Gone = subscription expired, should be cleaned up
     if (response.status === 410) {
       console.log(`[push-reminders] Subscription expired: ${subscription.endpoint.slice(0, 50)}...`);
-      return false;
+      return 'EXPIRED';
     }
 
     console.warn(`[push-reminders] Push failed: HTTP ${response.status}`);
-    return false;
+    return 'FAILED';
   } catch (err) {
     console.error('[push-reminders] Push send error:', err);
-    return false;
+    return 'FAILED';
   }
 }
 
@@ -410,17 +412,33 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
 
         // Send to all subscriptions
         for (const sub of subscriptions.slice(0, maxPerDay)) {
-          const success = await sendPushNotification(
+          const pushStatus = await sendPushNotification(
             sub,
             payload,
             context.env as Record<string, string>
           );
 
-          if (success) {
+          if (pushStatus === 'SENT') {
             notificationsSent++;
-          } else {
+          } else if (pushStatus === 'EXPIRED') {
             expiredEndpoints.push(sub.endpoint);
           }
+
+          // Write audit row — fire-and-forget, never fail the send loop
+          prisma.notificationLog.create({
+            data: {
+              userId: sub.userId,
+              channel: 'PUSH',
+              notificationType: bestNotification.type,
+              title: bestNotification.title,
+              body: bestNotification.body,
+              actionUrl: bestNotification.actionUrl || null,
+              endpoint: sub.endpoint,
+              status: pushStatus,
+            },
+          }).catch((err: unknown) => {
+            console.warn('[push-reminders] NotificationLog write failed (table may not exist yet):', err);
+          });
         }
       }
 

@@ -46,7 +46,7 @@ const clinicalBadgeVariants = cva(
         pass: 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30',
         fail: 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
         'high-yield':
-          'bg-[var(--color-data-provisional)] text-[var(--color-data-provisional)] border-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/30 dark:text-[var(--color-data-provisional)] dark:border-[var(--color-data-provisional)]/50',
+          'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30',
       },
     },
     defaultVariants: {

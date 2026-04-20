@@ -61,6 +61,8 @@ import {
   DEFAULT_DECAY_LAMBDA as WILSON_DECAY_LAMBDA,
   type WilsonMasteryResult,
 } from './wilsonMasteryService';
+// Sprint 3.5 — hypercorrection detection (extracted pure function)
+import { detectHypercorrection } from '../scheduling/hypercorrectionDetector';
 
 /** Active A/B test experiment IDs wired into the review pipeline */
 const AB_EXPERIMENTS = [
@@ -1389,6 +1391,7 @@ export async function submitDrillReview(
 
         // DEV-002 FIX: Store full telemetry with server_computed key
         logger?.debug?.('Creating normal ReviewLog with full telemetry');
+        let createdReviewLogId: string | null = null;
         try {
           const reviewDate = new Date();
           const hoverOscillations =
@@ -1401,7 +1404,8 @@ export async function submitDrillReview(
             undefined;
 
           logger?.debug?.('About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
-          await prisma.reviewLog.create({
+          const createdLog = await prisma.reviewLog.create({
+            select: { id: true },
             data: {
               userId,
               conditionId: question.conditionId,
@@ -1495,6 +1499,7 @@ export async function submitDrillReview(
               },
             },
           });
+          createdReviewLogId = createdLog.id;
         } catch (reviewLogError) {
           logger?.error?.('ReviewLog creation failed', { error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError) });
           logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
@@ -1528,20 +1533,7 @@ export async function submitDrillReview(
             },
           });
 
-          // Hypercorrection: check the single most recent prior (index 0 since
-          // ordered desc). High-confidence wrong → correct now.
-          if (isCorrect && priorReviews.length > 0) {
-            const mostRecentPrior = priorReviews[0];
-            if (mostRecentPrior) {
-              const priorConfidence =
-                typeof mostRecentPrior.implicit_confidence === 'number'
-                  ? mostRecentPrior.implicit_confidence
-                  : 0;
-              if (mostRecentPrior.wasCorrect === false && priorConfidence >= 0.7) {
-                hypercorrectionEligible = true;
-              }
-            }
-          }
+          hypercorrectionEligible = detectHypercorrection(isCorrect, priorReviews);
 
           // Reverse to oldest-first (Wilson expects ascending by time), then
           // append the current review which is the newest.
@@ -1575,9 +1567,7 @@ export async function submitDrillReview(
             userId,
             questionId,
             conditionId: question.conditionId,
-            // reviewLogId is unknown here (we did not capture the created id above);
-            // outcomeReviewLogId is wired in Sprint 3.2 via a join in the validator.
-            reviewLogId: null,
+            reviewLogId: createdReviewLogId,
             outcomeReviewLogId: null,
             predictedRetrievability: fsrs.calculateRetrievability(
               currentCard.elapsed_days,

@@ -1,15 +1,17 @@
 /**
  * POST /api/vision/analyze
- * "Clinical Eye" (Phase 2) Visual Diagnostics: bounding box detection and code execution.
+ * "Clinical Eye" (Phase 2) Visual Diagnostics: pathology detection with
+ * bounding box and optional code execution for ECG analysis.
  *
- * Student benefit: Trains the eye to spot pathologies in X-rays, ECGs, and derm photos
- * without "cheating" by reading the report. PANCE: Dermatology (4%), Musculoskeletal (8%).
+ * Sprint 8 (AI Gateway migration): Replaced direct callGemini() with
+ * gateway.callVision() (vision-structured mode). Benefits:
+ *   - VisionAnalysisSchema Zod validation + single repair pass on malformed JSON
+ *   - Telemetry (requestId, traceId, modelUsed, costUsd) captured centrally
+ *   - Standardised GatewayError → HTTP status translation
+ *   - No more manual regex fence stripping or unvalidated JSON.parse
  *
- * Cursor Implementation Plan (Phase 2):
- * 1. Bounding Box: Use Gemini to detect pathology; request box_2d / bounding_box [ymin, xmin, ymax, xmax] normalized 0-1000.
- * 2. Coordinate Mapping: Map Gemini 0-1000 to frontend image pixels via useBoundingBox (toCSS → top/left/width/height %, toPixels for overlay).
- * 3. Code Execution (ECGs): Enable tools: [{ code_execution: {} }] so the model uses Python (numpy/PIL) to compute R-R intervals and heart rate—no visual estimation.
- * Pedagogical note: Frontend should call analyze only after the student submits a guess; then show bounding box overlay.
+ * Model: gemini-2.5-pro (tier:'powerful', same capability tier as the prior
+ * hardcoded 'gemini-3-pro-preview' — use the stable production alias).
  */
 
 import { z } from 'zod';
@@ -17,17 +19,18 @@ import { aiEndpoint, withCors } from '../../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { createEndpointLogger } from '../../_shared/secureLogger';
-import { callGemini, type GeminiContent } from '../../_shared/ai-service';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
+import {
+  VisionAnalysisSchema,
+  VISION_ANALYSIS_DESCRIPTION,
+} from '@/lib/ai/schemas/extraction';
 
-/** Gemini 3 Pro for best spatial understanding; fallback to gemini-2.5-pro if 3 not available. */
-const VISION_MODEL = 'gemini-3-pro-preview';
 const MAX_IMAGE_BASE64 = 4 * 1024 * 1024;
 
 const AnalyzeBodySchema = z.object({
   body: z.object({
     imageBase64: z.string().min(1),
     mimeType: z.string().optional().default('image/png'),
-    /** Student question, e.g. "Where is the fracture?" Overrides default prompt when set. */
     studentQuery: z.string().min(1).max(2000).optional(),
     prompt: z
       .string()
@@ -37,9 +40,7 @@ const AnalyzeBodySchema = z.object({
       .default(
         'Detect the primary pathology. Return a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000.'
       ),
-    /** Set true for ECG images to enable code_execution (numpy/PIL for R-R intervals / HR). */
     isEcg: z.boolean().optional().default(false),
-    /** Override model; default gemini-3-pro-preview (spatial). Use gemini-2.5-pro if 3 unavailable. */
     modelName: z.string().min(1).max(64).optional(),
   }),
 });
@@ -47,46 +48,6 @@ const AnalyzeBodySchema = z.object({
 interface Env {
   GEMINI_API_KEY: string;
   RATE_LIMIT_KV?: KVNamespace;
-}
-
-function parseVisionResponse(text: string): {
-  diagnosis: string | undefined;
-  reasoning: string | undefined;
-  bounding_box: [number, number, number, number] | undefined;
-} {
-  let diagnosis: string | undefined;
-  let reasoning: string | undefined;
-  let bounding_box: [number, number, number, number] | undefined;
-  try {
-    const stripped = text.replaceAll(/```json|```/gi, '').trim();
-    const parsed = JSON.parse(stripped) as {
-      diagnosis?: string;
-      reasoning?: string;
-      bounding_box?: number[];
-      box_2d?: number[];
-    };
-    diagnosis = parsed.diagnosis;
-    reasoning = parsed.reasoning;
-    const raw = parsed.bounding_box ?? parsed.box_2d;
-    if (Array.isArray(raw) && raw.length >= 4) {
-      const n = raw.map(Number);
-      const ymin = n[0] ?? 0;
-      const xmin = n[1] ?? 0;
-      const ymax = n[2] ?? 0;
-      const xmax = n[3] ?? 0;
-      if (
-        Number.isFinite(ymin) &&
-        Number.isFinite(xmin) &&
-        Number.isFinite(ymax) &&
-        Number.isFinite(xmax)
-      ) {
-        bounding_box = [ymin, xmin, ymax, xmax];
-      }
-    }
-  } catch {
-    // optional parse
-  }
-  return { diagnosis, reasoning, bounding_box };
 }
 
 export const onRequestOptions = withCors();
@@ -115,18 +76,9 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
   );
   if (rateLimitResponse) return rateLimitResponse;
 
-  const {
-    imageBase64,
-    mimeType,
-    studentQuery,
-    prompt: defaultPrompt,
-    isEcg,
-    modelName: modelOverride,
-  } = validated.body;
-  const modelName = modelOverride ?? VISION_MODEL;
-  const prompt = studentQuery
-    ? `${studentQuery}\n\nReturn a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000 for overlay.`
-    : defaultPrompt;
+  const { imageBase64, mimeType, studentQuery, prompt: defaultPrompt, isEcg, modelName } =
+    validated.body;
+
   if (imageBase64.length > MAX_IMAGE_BASE64) {
     return new Response(JSON.stringify({ error: 'Image too large (max ~4MB base64)' }), {
       status: 400,
@@ -134,60 +86,83 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     });
   }
 
-  // Build contents with inline image data
-  const contents: GeminiContent[] = [
-    {
-      role: 'user',
-      parts: [
-        { inlineData: { mimeType: mimeType || 'image/png', data: imageBase64 } },
-        { text: prompt },
-      ],
-    },
-  ];
+  const userPrompt = studentQuery
+    ? `${studentQuery}\n\nReturn a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000 for overlay.`
+    : defaultPrompt;
 
   try {
-    const result = await callGemini(
-      { env, auth },
+    const result = await gateway.callVision<typeof VisionAnalysisSchema._type>(
+      toGatewayContext(context as Parameters<typeof toGatewayContext>[0]),
       {
+        mode: 'vision-structured',
+        task: 'extraction',
+        // Use caller's explicit model override, or tier:'powerful' (gemini-2.5-pro)
+        // for best spatial understanding without hardcoding a preview model name.
         model: modelName,
-        contents,
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-        },
-        tools: isEcg ? [{ code_execution: {} }] : undefined,
+        tier: modelName ? undefined : 'powerful',
         endpoint: '/api/vision/analyze',
+        userPrompt,
+        images: [{ mimeType: mimeType || 'image/png', data: imageBase64 }],
+        schema: VisionAnalysisSchema,
+        schemaDescription: VISION_ANALYSIS_DESCRIPTION,
+        temperature: 0.2,
+        maxOutputTokens: 8192,
+        tools: isEcg ? [{ code_execution: {} }] : undefined,
       }
     );
 
-    const parsed = parseVisionResponse(result.text);
+    // callVision returns text or structured response based on mode
+    if (result.mode === 'structured') {
+      return new Response(
+        JSON.stringify({
+          data: {
+            diagnosis: result.data.diagnosis,
+            reasoning: result.data.reasoning,
+            bounding_box: result.data.bounding_box ?? null,
+            model: result.telemetry.modelUsed,
+            usageMetadata: result.usage,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+      );
+    }
+
+    // Fallback: text mode (shouldn't happen with vision-structured, but be safe)
     return new Response(
       JSON.stringify({
         data: {
-          diagnosis: parsed.diagnosis,
-          reasoning: parsed.reasoning,
-          bounding_box: parsed.bounding_box,
-          model: modelName,
-          usageMetadata: result.usage,
+          diagnosis: undefined,
+          reasoning: result.text,
+          bounding_box: null,
+          model: result.telemetry.modelUsed,
         },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
     );
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    log.warn('Vision analyze error', { msg });
-
-    const isRateLimit = msg.includes('429');
-    return new Response(
-      JSON.stringify({
-        error: isRateLimit ? 'Rate limit exceeded' : 'Analysis failed',
-        details: msg.slice(0, 500),
-      }),
-      {
-        status: isRateLimit ? 429 : 502,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-      }
-    );
+  } catch (error) {
+    if (error instanceof GatewayError) {
+      log.warn('Vision analyze gateway failure', { code: error.code, requestId: error.requestId });
+      return new Response(
+        JSON.stringify({
+          error:
+            error.code === 'RATE_LIMITED'
+              ? 'Rate limit exceeded'
+              : error.code === 'SAFETY_BLOCKED'
+              ? 'Analysis blocked by safety filter'
+              : 'Analysis failed',
+        }),
+        {
+          status: error.code === 'RATE_LIMITED' ? 429 : 502,
+          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+        }
+      );
+    }
+    log.warn('Vision analyze unexpected error', {
+      msg: error instanceof Error ? error.message : String(error),
+    });
+    return new Response(JSON.stringify({ error: 'Analysis failed' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+    });
   }
 });

@@ -6,6 +6,8 @@ import {
   getSystemHealthSummary,
 } from '../_shared/contentHealthService';
 import { prisma } from '../_shared/prisma-edge';
+import { scoreSafetyCompleteness } from '@/lib/constants/safety-critical-fields';
+import { getFreshnessState, FRESHNESS_SLA_DAYS, AGING_SLA_DAYS } from '@/lib/constants/content-freshness';
 
 /**
  * Nightly cron job: Compute and persist content health scores
@@ -54,6 +56,96 @@ export default async function computeContentHealth(
     console.log('[contentHealth] Generating system health summary...');
     const systemHealth = await getSystemHealthSummary();
 
+    // Step 5: MedicalContent safety-field completeness + freshness audit
+    console.log('[contentHealth] Auditing MedicalContent safety completeness and freshness...');
+    const contentRecords = await prisma.medicalContent.findMany({
+      where: { status: 'published' },
+      select: {
+        id: true,
+        conditionId: true,
+        condition: true,
+        system: true,
+        complications: true,
+        first_line_rx: true,
+        best_initial_test: true,
+        gold_standard_dx: true,
+        differentialDiagnosis: true,
+        riskFactors: true,
+        content: true,
+        lastClinicalReviewAt: true,
+      },
+    });
+
+    let safetyFullyComplete = 0;
+    let safetyPartiallyComplete = 0;
+    let safetyMissingAll = 0;
+    const safetyMissingByField: Record<string, number> = {};
+    let freshnessStale = 0;
+    let freshnessAging = 0;
+    let freshnessFresh = 0;
+    let freshnessUnknown = 0;
+    const conditionsWithIncompleteSafety: string[] = [];
+
+    for (const record of contentRecords) {
+      // Flatten scalar fields + content JSON for the completeness check
+      const contentJson = (record.content && typeof record.content === 'object' && !Array.isArray(record.content))
+        ? record.content as Record<string, unknown>
+        : {};
+      const flattened: Record<string, unknown> = {
+        complications: record.complications,
+        first_line_rx: record.first_line_rx,
+        best_initial_test: record.best_initial_test,
+        gold_standard_dx: record.gold_standard_dx,
+        differentialDiagnosis: record.differentialDiagnosis,
+        riskFactors: record.riskFactors,
+        rx_side_effects: contentJson['rx_side_effects'] ?? null,
+      };
+
+      const { filled, total, missing } = scoreSafetyCompleteness(flattened);
+      if (filled === total) {
+        safetyFullyComplete++;
+      } else if (filled === 0) {
+        safetyMissingAll++;
+        conditionsWithIncompleteSafety.push(record.condition ?? record.conditionId);
+      } else {
+        safetyPartiallyComplete++;
+        if (filled < total - 2) {
+          conditionsWithIncompleteSafety.push(record.condition ?? record.conditionId);
+        }
+      }
+      for (const key of missing) {
+        safetyMissingByField[key] = (safetyMissingByField[key] ?? 0) + 1;
+      }
+
+      // Freshness
+      const freshness = getFreshnessState(record.lastClinicalReviewAt ?? null);
+      if (freshness.state === 'fresh') freshnessFresh++;
+      else if (freshness.state === 'aging') freshnessAging++;
+      else if (freshness.state === 'stale') freshnessStale++;
+      else freshnessUnknown++;
+    }
+
+    const contentAudit = {
+      totalPublished: contentRecords.length,
+      safety: {
+        fullyComplete: safetyFullyComplete,
+        partiallyComplete: safetyPartiallyComplete,
+        missingAll: safetyMissingAll,
+        missingByField: safetyMissingByField,
+        incompleteConditions: conditionsWithIncompleteSafety.slice(0, 20),
+      },
+      freshness: {
+        fresh: freshnessFresh,
+        aging: freshnessAging,
+        stale: freshnessStale,
+        unknown: freshnessUnknown,
+        freshSladays: FRESHNESS_SLA_DAYS,
+        agingSladays: AGING_SLA_DAYS,
+      },
+    };
+
+    console.log(`[contentHealth] Content audit: ${safetyFullyComplete}/${contentRecords.length} fully complete, ${freshnessStale} stale`);
+
     const snapshot = await prisma.contentHealthReport.create({
       data: {
         id: `snapshot-${Date.now()}`,
@@ -68,6 +160,7 @@ export default async function computeContentHealth(
           questionsBelow50: scores.filter((s) => s.score < 0.5).length,
           demotedCount: demoted,
           systemSummary: systemHealth,
+          contentAudit,
         },
       },
     });
@@ -90,6 +183,7 @@ export default async function computeContentHealth(
       demoted,
       duration_ms: duration,
       systemHealthSnapshot: systemHealth.slice(0, 3), // Top 3 worst systems
+      contentAudit,
     };
 
     console.log('[contentHealth] Completed successfully', summary);

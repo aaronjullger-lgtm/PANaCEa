@@ -331,6 +331,8 @@ model Card {
   last_review     DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime
+  ItemDifficulty  ItemDifficulty?
+  Question        Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
   User            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, progressContext])
@@ -472,7 +474,9 @@ model Condition {
   PreGeneratedQuestion                                        PreGeneratedQuestion[]
   ProcedureConditionLink                                      ProcedureConditionLink[]
   Question                                                    Question[]
+  QuestionAttempt                                             QuestionAttempt[]
   QuestionSeed                                                QuestionSeed[]
+  ReviewLog                                                   ReviewLog[]
   SavedQuestion                                               SavedQuestion[]
   ScoringSystem                                               ScoringSystem[]
   ScoringSystemConditionLink                                  ScoringSystemConditionLink[]
@@ -1681,6 +1685,7 @@ model MedicalContent {
   UserProgress                                                    UserProgress[]
   VitalSignConditionLink                                          VitalSignConditionLink[]
   WeaknessPattern                                                 WeaknessPattern[]
+  QuestionAttempt                                                 QuestionAttempt[]
   Structured                                                      MedicalContentStructured?    @relation("MedicalContentToStructured")
 
   @@index([canonicalName])
@@ -2254,9 +2259,10 @@ model PreGeneratedQuestion {
   validationStatus   String          @default("pending")
   questionOrder      String? // 'first' | 'second' | 'third' — Bloom's taxonomy order
   taskCategory       String? // PANCE task category (history_pe, diagnostics, diagnosis, management, etc.)
-  Condition          Condition?           @relation(fields: [conditionId], references: [id])
-  MedicalContent     MedicalContent?      @relation(fields: [medicalContentId], references: [id])
-  QuestionEmbedding  QuestionEmbedding?
+  Condition            Condition?              @relation(fields: [conditionId], references: [id])
+  MedicalContent       MedicalContent?         @relation(fields: [medicalContentId], references: [id])
+  QuestionEmbedding    QuestionEmbedding?
+  StudentReservoirItem StudentReservoirItem[]
 
   @@index([conditionId])
   @@index([difficulty])
@@ -2380,9 +2386,11 @@ model Question {
   // FIRe (Fractional Implicit Repetition) hierarchy fields
   conditionFamily    String? /// Clinical condition family grouping (e.g. 'SVT') — used for hierarchical credit propagation
   hierarchyLevel     Int?    /// 1=Pathophysiology, 2=Diagnosis/Recognition, 3=Management/Therapeutics
+  Card               Card[]
   Condition          Condition?              @relation(fields: [conditionId], references: [id])
   MediaAsset         MediaAsset?             @relation(fields: [mediaAssetId], references: [id])
   MedicalContent     MedicalContent?         @relation(fields: [medicalContentId], references: [id])
+  QuestionAttempt    QuestionAttempt[]
   ReviewLog          ReviewLog[]
 
   @@index([category])
@@ -2426,6 +2434,10 @@ model QuestionAttempt {
   // Time-on-task cap fields — MAIN/TARGETED only (null for drill/cram/rapid_recall)
   effectiveTimeMs    Int?     // Time capped to session type max (main=120s, targeted=90s); null for non-analytics sessions
   BehaviorLog        BehaviorLog[]
+  Condition          Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  Question           Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  User               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([conditionId, createdAt])
   @@index([createdAt(sort: Desc)])
@@ -2604,6 +2616,7 @@ model ReviewLog {
   implicit_confidence       Float?
   blueprintExamType         String?
   blueprintStage            String?
+  Condition                 Condition?      @relation(fields: [conditionId], references: [id])
   MedicalContent            MedicalContent? @relation(fields: [medicalContentId], references: [id])
   Question                  Question?       @relation(fields: [questionFkId], references: [id])
   User                      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -3222,7 +3235,9 @@ model User {
   UserDailyInsight          UserDailyInsight[]
   ExamOutcome               ExamOutcome[]
   ContentAuthor             ContentAuthor?
+  QuestionAttempt           QuestionAttempt[]
   StudentAbility            StudentAbility[]
+  StudentReservoirItem      StudentReservoirItem[]
 
   @@index([clerkId])
   @@index([email])
@@ -4319,6 +4334,9 @@ model StudentReservoirItem {
   taskCategory  String? // diagnosis, management, etc.
   isReview      Boolean @default(false)
 
+  PreGeneratedQuestion  PreGeneratedQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  User                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, questionId])
   @@index([userId, status, priority])
   @@index([userId, scope, status])
@@ -4445,6 +4463,8 @@ model ItemDifficulty {
   /// Total student responses for this item
   responseCount   Int      @default(0)
   lastUpdated     DateTime @default(now())
+
+  Card            Card            @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
   @@index([eloDifficulty])
   @@index([responseCount])

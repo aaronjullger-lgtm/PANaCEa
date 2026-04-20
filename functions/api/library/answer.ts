@@ -17,6 +17,8 @@ const EMBED_MODEL = 'text-embedding-005';
 const EMBED_DIMS = 768;
 const ANSWER_MODEL = 'gemini-2.0-flash';
 const TOP_K = 3;
+const HNSW_EF_SEARCH = 100;
+const MIN_SIMILARITY = 0.25;
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 
 const BodySchema = z.object({
@@ -104,8 +106,10 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     const embedding = await getQueryEmbedding(query, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
 
+    await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = ${HNSW_EF_SEARCH}`);
+
     type Row = { medicalContentId: string; similarity: number };
-    const rows = await prisma.$queryRawUnsafe<Row[]>(
+    const allRows = await prisma.$queryRawUnsafe<Row[]>(
       `SELECT e."medicalContentId", (1 - (e.embedding <=> $1::vector))::float as similarity
        FROM "MedicalContentEmbedding" e
        ORDER BY e.embedding <=> $1::vector
@@ -113,6 +117,11 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       vectorStr,
       topK
     );
+
+    // Drop results below the minimum similarity threshold so the LLM is never
+    // grounded in irrelevant content (a cosine sim < 0.25 is essentially noise
+    // for 768-dim clinical embeddings).
+    const rows = allRows.filter((r) => r.similarity >= MIN_SIMILARITY);
 
     if (rows.length === 0) {
       return {

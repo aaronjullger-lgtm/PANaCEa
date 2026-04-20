@@ -5,9 +5,9 @@
  *
  *   import { color, fontFamily, radius, shadow, safetyRed } from '@/lib/tokens';
  *
- * Rule: no raw hex values outside `lib/tokens/safety.ts`. If you need a color
- * that isn't here, add the CSS var in `index.css` and expose it via
- * `lib/tokens/colors.ts`.
+ * Rule: no raw hex values outside `lib/tokens/safety.ts`, `lib/tokens/entityAccents.ts`,
+ * or `lib/tokens/workspacePalette.ts`. If you need a color that isn't here, add the
+ * CSS var in `index.css` and expose it via `lib/tokens/colors.ts`.
  */
 
 export * from './colors';
@@ -16,3 +16,4 @@ export * from './spacing';
 export * from './safety';
 export * from './entityAccents';
 export * from './dataViz';
+export * from './workspacePalette';

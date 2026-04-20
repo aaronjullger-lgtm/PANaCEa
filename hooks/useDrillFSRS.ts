@@ -174,7 +174,7 @@ export function useDrillFSRS(options: UseDrillFSRSOptions): UseDrillFSRSReturn {
         const api = createApiClient(getToken, {
           retryablePosts: ['/api/drills/submit-review'],
         });
-        const drills = createDrillsClient(api);
+        const drills = createDrillsClient(api, { getToken });
 
         const submitted = await drills.submitReview({
           questionId,

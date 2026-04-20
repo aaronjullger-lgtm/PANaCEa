@@ -4,15 +4,15 @@ import { ArrowLeft, ArrowRight, LucideIcon } from 'lucide-react';
 import { Button, type ButtonVariant } from '@/components/ui/button';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
+import {
+  workspaceAccent,
+  workspaceBadgeStyles,
+  workspaceHeroAccent,
+  workspacePageModeBackground,
+  type WorkspacePageMode,
+} from '@/lib/tokens';
 
-export type WorkspacePageMode =
-  | 'default'
-  | 'launch'
-  | 'analytics'
-  | 'reference'
-  | 'toolkit'
-  | 'challenge'
-  | 'error';
+export type { WorkspacePageMode };
 
 export type WorkspaceSurfaceRole =
   | 'panel'
@@ -54,58 +54,6 @@ export interface WorkspacePageMeta {
   actionPosition?: 'side' | 'under-title';
 }
 
-const BADGE_STYLES: Record<
-  NonNullable<WorkspacePageMeta['badgeTone']>,
-  { bg: string; text: string; border: string }
-> = {
-  gold: {
-    bg: 'rgba(196, 183, 138, 0.12)',
-    text: '#d8cca8',
-    border: 'rgba(196, 183, 138, 0.28)',
-  },
-  steel: {
-    bg: 'rgba(114, 139, 166, 0.12)',
-    text: '#a8bfd8',
-    border: 'rgba(114, 139, 166, 0.26)',
-  },
-  plum: {
-    bg: 'rgba(154, 127, 154, 0.12)',
-    text: '#c8a9c8',
-    border: 'rgba(154, 127, 154, 0.26)',
-  },
-  sage: {
-    bg: 'rgba(122, 143, 110, 0.12)',
-    text: '#bfd0b2',
-    border: 'rgba(122, 143, 110, 0.26)',
-  },
-  rose: {
-    bg: 'rgba(166, 127, 127, 0.12)',
-    text: '#d8b0b0',
-    border: 'rgba(166, 127, 127, 0.26)',
-  },
-  amber: {
-    bg: 'rgba(179, 155, 108, 0.12)',
-    text: '#d8c28e',
-    border: 'rgba(179, 155, 108, 0.26)',
-  },
-};
-
-const PAGE_MODE_BACKGROUNDS: Record<WorkspacePageMode, string> = {
-  default:
-    'radial-gradient(circle at 12% 12%, rgba(196,183,138,0.16), transparent 24%), radial-gradient(circle at 86% 10%, rgba(114,139,166,0.18), transparent 28%), radial-gradient(circle at 70% 100%, rgba(154,127,154,0.16), transparent 30%)',
-  launch:
-    'radial-gradient(circle at 10% 14%, rgba(196,183,138,0.22), transparent 26%), radial-gradient(circle at 82% 8%, rgba(114,139,166,0.18), transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 55%)',
-  analytics:
-    'radial-gradient(circle at 12% 14%, rgba(114,139,166,0.2), transparent 26%), radial-gradient(circle at 82% 10%, rgba(122,143,110,0.16), transparent 28%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 55%)',
-  reference:
-    'radial-gradient(circle at 8% 16%, rgba(114,139,166,0.22), transparent 28%), radial-gradient(circle at 84% 10%, rgba(154,127,154,0.18), transparent 28%), linear-gradient(180deg, rgba(255,255,255,0.03), transparent 62%)',
-  toolkit:
-    'radial-gradient(circle at 12% 16%, rgba(179,155,108,0.24), transparent 28%), radial-gradient(circle at 86% 10%, rgba(114,139,166,0.16), transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 58%)',
-  challenge:
-    'radial-gradient(circle at 10% 12%, rgba(154,127,154,0.22), transparent 26%), radial-gradient(circle at 84% 8%, rgba(196,183,138,0.18), transparent 26%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 60%)',
-  error:
-    'radial-gradient(circle at 12% 14%, rgba(166,127,127,0.22), transparent 26%), radial-gradient(circle at 84% 12%, rgba(179,155,108,0.12), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.015), transparent 58%)',
-};
 
 function resolveDensityClass(density: WorkspacePageMeta['density']) {
   switch (density) {
@@ -243,7 +191,7 @@ export function WorkspacePage({
       >
         <div
           className="absolute inset-0"
-          style={{ background: PAGE_MODE_BACKGROUNDS[mode] }}
+          style={{ background: workspacePageModeBackground[mode] }}
         />
         <div
           className="absolute inset-0 opacity-[0.16]"
@@ -267,7 +215,7 @@ export function WorkspacePageHeader({
   meta: WorkspacePageMeta;
   className?: string;
 }) {
-  const tone = BADGE_STYLES[meta.badgeTone ?? 'gold'];
+  const tone = workspaceBadgeStyles[meta.badgeTone ?? 'gold'];
   const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 10%, transparent)';
   const chromeFill =
     'color-mix(in srgb, var(--color-bg-secondary) 78%, var(--color-bg-primary) 22%)';
@@ -352,16 +300,7 @@ export function WorkspaceHeroStrip({
   accent?: string;
   tone?: 'default' | 'launch' | 'analytics' | 'reference' | 'toolkit' | 'challenge' | 'error';
 }>) {
-  const toneAccentMap: Record<typeof tone, string> = {
-    default: accent,
-    launch: '#c4b78a',
-    analytics: '#728ba6',
-    reference: '#728ba6',
-    toolkit: '#b39b6c',
-    challenge: '#9a7f9a',
-    error: '#a67f7f',
-  };
-  const resolvedAccent = toneAccentMap[tone];
+  const resolvedAccent = tone === 'default' ? accent : workspaceHeroAccent[tone];
 
   return (
     <WorkspaceSurface
@@ -537,7 +476,7 @@ export function WorkspaceFilterBar({
   return (
     <WorkspaceSurface
       className={cn('flex flex-col gap-4 sm:gap-5', className)}
-      accent="#728ba6"
+      accent={workspaceAccent.steel}
       role="action"
     >
       {children}
@@ -551,7 +490,7 @@ export function WorkspaceEmptyState({
   description,
   action,
   className,
-  accent = '#9a7f9a',
+  accent = workspaceAccent.plum,
 }: {
   icon: LucideIcon;
   title: string;

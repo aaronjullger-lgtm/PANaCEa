@@ -888,6 +888,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (submittingRef.current) return;
     submittingRef.current = true;
 
+    try {
     setIsSubmitting(true);
 
     setIsAnswered(true);
@@ -904,8 +905,6 @@ const QuizView: React.FC<QuizViewProps> = ({
         'This question has corrupted scoring data and was skipped. Please flag it and move on.',
       );
       setIsAnswered(false);
-      submittingRef.current = false;
-      setIsSubmitting(false);
       return;
     }
 
@@ -1149,9 +1148,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Sprint 3: Wellness check (delegated to hook)
     wellness.checkAfterAnswer();
 
-    // Clear submitting state (both ref and state)
-    submittingRef.current = false;
-    setIsSubmitting(false);
+    } finally {
+      // Always reset submitting state — prevents permanent session lock if any upstream call throws.
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   }, [
     selectedAnswerIndex,
     currentQuestion,

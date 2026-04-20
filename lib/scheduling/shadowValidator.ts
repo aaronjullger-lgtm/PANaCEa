@@ -250,3 +250,46 @@ export function computeCalibrationReport(
     binCount,
   };
 }
+
+/**
+ * Stratified calibration report — splits samples by a key function and
+ * returns a per-stratum report alongside the overall report.
+ *
+ * Useful for breaking down calibration by telemetry quality, session type,
+ * ghost-grader rule, or any other categorical dimension stored on the log.
+ *
+ * Example:
+ *   stratifiedReport(samples, s => s.telemetryQuality ?? 'unknown')
+ *   // → { overall: CalibrationReport, strata: Map<string, CalibrationReport> }
+ */
+export interface StratifiedCalibrationReport {
+  overall: CalibrationReport;
+  strata: Map<string, CalibrationReport>;
+}
+
+export function stratifiedReport(
+  samples: CalibrationSample[],
+  keyFn: (s: CalibrationSample) => string,
+  binCount: number = 10
+): StratifiedCalibrationReport {
+  const groups = new Map<string, CalibrationSample[]>();
+  for (const s of samples) {
+    const key = keyFn(s);
+    let bucket = groups.get(key);
+    if (!bucket) {
+      bucket = [];
+      groups.set(key, bucket);
+    }
+    bucket.push(s);
+  }
+
+  const strata = new Map<string, CalibrationReport>();
+  for (const [key, bucket] of groups) {
+    strata.set(key, computeCalibrationReport(bucket, binCount));
+  }
+
+  return {
+    overall: computeCalibrationReport(samples, binCount),
+    strata,
+  };
+}

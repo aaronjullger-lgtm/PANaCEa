@@ -258,7 +258,7 @@ export default function KnowledgeGraphWidget() {
             <Circle size={8} fill="var(--color-bg-tertiary)" stroke="none" /> Unseen
           </span>
         </div>
-        <span>Avg: {Math.round(data.summary.avgMastery * 100)}%</span>
+        <span>Avg (studied): {Math.round(data.summary.avgMastery * 100)}%</span>
       </div>
     </div>
   );

@@ -146,6 +146,8 @@ describe('useDrillFSRS — offline fallback (Lane 3)', () => {
         timeSpentMs: 2000,
         implicitMetrics: { rating: 3, gradeContinuous: 3.0, confidence: 0.9, latencyRatio: 0.4, answerSwitches: 0 },
         circadian: { phase: 'NEUTRAL', stabilityModifier: 1.0, localHour: 12 },
+        isRapidGuess: false,
+        nextReview: { stability: 14, difficulty: 5, intervalDays: 14, nextDueDate: '2026-05-04T00:00:00Z' },
       }),
     });
 

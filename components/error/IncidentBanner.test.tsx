@@ -8,7 +8,7 @@ vi.mock('@/lib/utils/apiConfig', () => ({
 }));
 
 function mockHealth(body: unknown, ok: boolean = true) {
-  return vi.spyOn(globalThis, 'fetch').mockImplementationOnce(
+  return vi.spyOn(globalThis, 'fetch').mockImplementation(
     async () =>
       ({
         ok,

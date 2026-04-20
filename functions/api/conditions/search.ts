@@ -167,7 +167,46 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       })
       .slice(0, limit);
 
-    return { data: results };
+    // Semantic fallback via MedicalContent full-text search (tsvector) when the
+    // Condition-table keyword pass yields few results. Catches synonym gaps like
+    // "heart attack" → "Myocardial Infarction" because search_vector indexes
+    // the synonyms JSON array alongside condition name and clinical text.
+    // Pure SQL — no Gemini call needed, so safe on a public endpoint.
+    const FALLBACK_THRESHOLD = 3;
+    if (results.length < FALLBACK_THRESHOLD) {
+      try {
+        type FTSRow = { id: string; condition: string; conditionId: string; system: string; subcategory: string | null; synonyms: unknown };
+        const ftsRows = await prisma.$queryRawUnsafe<FTSRow[]>(
+          `SELECT id, condition, "conditionId", system, subcategory, synonyms
+           FROM "MedicalContent"
+           WHERE status = 'published'
+             AND search_vector @@ websearch_to_tsquery('english', $1)
+             ${system ? `AND system = $2` : ''}
+           ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', $1)) DESC
+           LIMIT $${system ? 3 : 2}`,
+          ...(system ? [query, system, limit] : [query, limit])
+        );
+
+        const existingIds = new Set(results.map((r) => r.id));
+        for (const row of ftsRows) {
+          if (existingIds.has(row.id)) continue;
+          const aliases = Array.isArray(row.synonyms) ? (row.synonyms as string[]) : [];
+          results.push({
+            id: row.id,
+            condition: row.condition,
+            system: row.system,
+            subcategory: row.subcategory,
+            aliases,
+            score: 0.9, // FTS hit without string score — treated as high-relevance
+          });
+          existingIds.add(row.id);
+        }
+      } catch {
+        // FTS fallback is best-effort — never block the primary response
+      }
+    }
+
+    return { data: results.slice(0, limit) };
   } finally {
     await safePrismaDisconnect(prisma);
   }

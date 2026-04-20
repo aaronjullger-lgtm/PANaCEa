@@ -9,8 +9,9 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { resolveUserId } from '../_shared/user-resolver';
+import { retrievability } from '../../../lib/fsrs-retrievability';
 import { srsSummaryQuerySchema } from '../_shared/zodSchemas';
 import type { AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
 
@@ -43,6 +44,8 @@ interface SRSAnalyticsSummary {
   // Trend data (last 7 days)
   stabilityTrend: { date: string; avgStability: number }[];
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   srsSummaryQuerySchema,
@@ -78,20 +81,6 @@ export const onRequestGet = authenticatedEndpoint(
               condition: true,
             },
           },
-        },
-      });
-
-      // Fetch recent study sessions for trend data (StudySession has startedAt, totalQuestions, correctAnswers)
-      const recentSessions = await prisma.studySession.findMany({
-        where: {
-          userId,
-          startedAt: { gte: sevenDaysAgo },
-        },
-        orderBy: { startedAt: 'asc' },
-        select: {
-          startedAt: true,
-          totalQuestions: true,
-          correctAnswers: true,
         },
       });
 
@@ -158,10 +147,11 @@ export const onRequestGet = authenticatedEndpoint(
           recentNewCards++;
         }
 
-        // State distribution
+        // State distribution (clamp to valid range so out-of-spec values don't silently become 'new')
         const stateNames = ['new', 'learning', 'review', 'relearning'];
-        const stateName = stateNames[state] || 'new';
-        stateCounts[stateName] = (stateCounts[stateName] || 0) + 1;
+        const clampedState = Math.max(0, Math.min(state, stateNames.length - 1));
+        const stateName = stateNames[clampedState] ?? 'unknown';
+        stateCounts[stateName] = (stateCounts[stateName] ?? 0) + 1;
 
         // Stability distribution
         for (const bucket of stabilityBuckets) {
@@ -193,15 +183,13 @@ export const onRequestGet = authenticatedEndpoint(
       const avgStability = totalCards > 0 ? totalStability / totalCards : 0;
       const avgDifficulty = totalCards > 0 ? totalDifficulty / totalCards : 5;
 
-      // Calculate projected retention using FSRS formula
-      // R = (1 + t/S)^-1 where t is days since review, S is stability
+      // Calculate projected retention using the canonical FSRS v6 formula
+      // R(t) = (1 + FACTOR * t / S) ^ DECAY — same formula as fsrs-retrievability.ts
       const retentionSum = progressData.reduce((sum: number, card: (typeof progressData)[0]) => {
         const { stability: s } = getFsrsValues(card);
-        const stability = s || 1;
         const lastReview = card.lastReviewAt ? new Date(card.lastReviewAt) : now;
         const daysSinceReview = (now.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
-        const retention = Math.pow(1 + daysSinceReview / stability, -1);
-        return sum + retention;
+        return sum + retrievability(daysSinceReview, s || 1);
       }, 0);
       const projectedRetention = totalCards > 0 ? (retentionSum / totalCards) * 100 : 0;
 
@@ -228,37 +216,38 @@ export const onRequestGet = authenticatedEndpoint(
         .sort((a, b) => b.cardCount - a.cardCount)
         .slice(0, 10); // Top 10 systems
 
-      // Calculate stability trend from session data
+      // Build per-day stability trend from actual FSRS stability values on UserProgress.
+      // Group cards by the date their lastReviewAt falls in the last 7 days.
+      // Days with no reviews get avgStability = 0 (honest: no data that day).
       const stabilityTrend: { date: string; avgStability: number }[] = [];
       const dayMap = new Map<string, { total: number; count: number }>();
 
       for (let i = 0; i < 7; i++) {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toISOString().split('T')[0]!; // ISO strings always contain 'T'
+        const dateStr = date.toISOString().split('T')[0]!;
         dayMap.set(dateStr, { total: 0, count: 0 });
       }
 
-      // Use session data to estimate stability growth
-      for (const session of recentSessions) {
-        const dateStr = new Date(session.startedAt).toISOString().split('T')[0]!; // ISO strings always contain 'T'
-        if (dayMap.has(dateStr) && session.totalQuestions > 0) {
-          const entry = dayMap.get(dateStr)!;
-          // Estimate stability increase based on correct answers
-          const accuracy = session.correctAnswers / session.totalQuestions;
-          entry.total += accuracy * avgStability * (1 + accuracy * 0.1);
-          entry.count++;
-        }
+      for (const card of progressData) {
+        if (!card.lastReviewAt) continue;
+        const dateStr = new Date(card.lastReviewAt).toISOString().split('T')[0]!;
+        if (!dayMap.has(dateStr)) continue;
+        const { stability } = getFsrsValues(card);
+        if (stability <= 0) continue;
+        const entry = dayMap.get(dateStr)!;
+        entry.total += stability;
+        entry.count++;
       }
 
-      // Fill in stability trend
+      // Only include days that have actual review data — omitting days with no reviews
+      // is honest; emitting 0 would look like stability crashed to zero in the chart.
       for (const [date, data] of Array.from(dayMap.entries()).reverse()) {
-        stabilityTrend.push({
-          date,
-          avgStability:
-            data.count > 0
-              ? Math.round((data.total / data.count) * 10) / 10
-              : Math.round(avgStability * 10) / 10,
-        });
+        if (data.count > 0) {
+          stabilityTrend.push({
+            date,
+            avgStability: Math.round((data.total / data.count) * 10) / 10,
+          });
+        }
       }
 
       const summary: SRSAnalyticsSummary = {

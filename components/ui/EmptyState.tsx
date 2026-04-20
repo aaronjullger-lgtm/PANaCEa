@@ -223,7 +223,7 @@ export function EmptyState({
   return (
     <motion.div
       initial={{ y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {content}

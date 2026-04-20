@@ -93,3 +93,70 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify deployment health
+        # Belt-and-suspenders: confirm the deployed edge function responds correctly.
+        # Accepts 200 (healthy) and 503 (degraded but alive) — fails on 4xx/5xx/timeout.
+        # Wait 45s for Cloudflare edge propagation before polling.
+        run: |
+          echo "Waiting 45s for Cloudflare edge propagation..."
+          sleep 45
+          HTTP_STATUS=$(curl -sf -o /tmp/health.json -w "%{http_code}" \
+            --max-time 30 \
+            https://studypanacea.com/api/health || echo "000")
+          echo "HTTP status: $HTTP_STATUS"
+          if [ -f /tmp/health.json ]; then
+            cat /tmp/health.json
+          fi
+          if [[ "$HTTP_STATUS" == "200" || "$HTTP_STATUS" == "503" ]]; then
+            echo "Health check passed (status=$HTTP_STATUS)."
+          else
+            echo "ERROR: Unexpected health check status $HTTP_STATUS — deployment may have failed."
+            echo "See docs/ROLLBACK.md for rollback steps."
+            exit 1
+          fi
+
+  # ─── Advisory Lighthouse CI ─────────────────────────────────────────────────
+  # Runs after deploy against the live production URL.
+  # Advisory (continue-on-error) until three consecutive green baseline runs —
+  # see docs/CI-GATES.md ratchet plan step 5.
+  lighthouse-ci:
+    name: Lighthouse CI (Advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: deploy
+    continue-on-error: true
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Wait for Cloudflare CDN cache warm
+        # Lighthouse runs 3 consecutive audits per URL (see lighthouserc.prod.js).
+        # Give the edge 30s after deploy to warm before the first run.
+        run: sleep 30
+
+      - name: Run Lighthouse CI against production
+        run: npx lhci autorun --config=./lighthouserc.prod.js
+        env:
+          LHCI_URL: https://studypanacea.com/
+
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30

@@ -1,20 +1,26 @@
 /**
- * Shared "Ghost Grader" logic: call Gemini to infer recall confidence and implied FSRS rating
- * from behavioral telemetry. Used by /api/srs/analyze-behavior and /api/srs/submit.
+ * Ghost Grader — infer recall confidence and implied FSRS rating from behavioral
+ * telemetry via the AI gateway.
+ *
+ * Sprint 8 (AI Gateway migration): Replaced direct fetchWithTimeout call to
+ * generativelanguage.googleapis.com with gateway.grade(). The gateway owns
+ * model selection (tier:'fast' → gemini-2.0-flash, same model as before),
+ * JSON repair, Zod validation, telemetry, and the fallback chain.
+ *
+ * Fallback: GatewayError → deriveContinuousRating() (local Bayesian, no
+ * network) → static defaults. The student always gets a confidence score.
+ *
+ * Safety invariant: impliedRating is bounded 1–4 by BehaviorGradeSchema.
+ * Hard/Easy (2/4) are still allowed here — the caller normalises to
+ * Again(1)/Good(3) before writing to FSRS.
  */
 
-import { fetchWithTimeout } from './timeout';
+import { gateway, GatewayError, type GatewayContext } from '../../../lib/ai/aiGateway';
+import {
+  BehaviorGradeSchema,
+  BEHAVIOR_GRADE_DESCRIPTION,
+} from '../../../lib/ai/schemas/grading';
 import { deriveContinuousRating } from '../../../lib/implicit-metrics';
-import { z } from 'zod';
-
-const geminiBehaviorOutputSchema = z.object({
-  confidence: z.number().min(0).max(1),
-  impliedRating: z.number().int().min(1).max(4),
-});
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-// Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
-const BEHAVIOR_MODEL = 'gemini-2.0-flash';
 
 export interface BehaviorTelemetryInput {
   time_to_first_interaction_ms?: number | null;
@@ -33,6 +39,35 @@ export interface AnalyzeBehaviorResult {
   rawText?: string;
 }
 
+function buildBehaviorPrompt(params: {
+  rating: number;
+  wasCorrect?: boolean;
+  selectedAnswer?: string;
+  tti: number | null;
+  changes: number;
+  duration: number;
+  hovers: Record<string, number>;
+  rapidGuess: boolean;
+}): string {
+  return `You are a behavioral analyst for a medical education spaced-repetition system.
+Analyze the student's behavior on a multiple-choice question.
+
+Facts:
+- Time to first interaction (hesitation): ${params.tti != null ? `${params.tti}ms` : 'unknown'}
+- Answer change count: ${params.changes}
+- Total time on question: ${params.duration}ms
+- Hover duration per option (ms): ${JSON.stringify(params.hovers)}
+- Rapid guess (answered very fast): ${params.rapidGuess}
+- User's self-rated FSRS rating (1=Again, 2=Hard, 3=Good, 4=Easy): ${params.rating}
+- Was the answer correct: ${params.wasCorrect ?? 'unknown'}
+- Selected option: ${params.selectedAnswer ?? 'unknown'}
+
+Interpretation rules:
+- Long hesitation + many answer changes + long hover on wrong options → likely "Hard" or "Again" (low confidence).
+- Quick first interaction, few changes, little distractor hover → likely "Good" or "Easy" (high confidence).
+- If they self-rated "Easy" but hovered 10+ seconds on a wrong option, treat as "Good" or "Hard".`;
+}
+
 export async function analyzeBehaviorGemini(
   env: { GEMINI_API_KEY: string },
   params: {
@@ -47,91 +82,51 @@ export async function analyzeBehaviorGemini(
   const tti = t.time_to_first_interaction_ms ?? null;
   const changes = t.answer_change_count ?? t.answer_changes ?? 0;
   const duration = t.duration_ms ?? 0;
-  const hovers = t.mouse_hover_duration_ms ?? t.trajectory_metrics?.distractorHovers ?? {};
+  const hovers =
+    (t.mouse_hover_duration_ms as Record<string, number> | undefined) ??
+    (t.trajectory_metrics?.distractorHovers as Record<string, number> | undefined) ??
+    {};
   const rapidGuess = t.rapid_guess ?? false;
 
-  const prompt = `You are a behavioral analyst for a medical education spaced-repetition system.
-Analyze the student's behavior on a multiple-choice question.
+  const ctx: GatewayContext = { env };
 
-Facts:
-- Time to first interaction (hesitation): ${tti != null ? `${tti}ms` : 'unknown'}
-- Answer change count: ${changes}
-- Total time on question: ${duration}ms
-- Hover duration per option (ms): ${JSON.stringify(hovers)}
-- Rapid guess (answered very fast): ${rapidGuess}
-- User's self-rated FSRS rating (1=Again, 2=Hard, 3=Good, 4=Easy): ${rating}
-- Was the answer correct: ${wasCorrect ?? 'unknown'}
-- Selected option: ${selectedAnswer ?? 'unknown'}
-
-Interpretation rules:
-- Long hesitation + many answer changes + long hover on wrong options → likely "Hard" or "Again" (low confidence).
-- Quick first interaction, few changes, little distractor hover → likely "Good" or "Easy" (high confidence).
-- If they self-rated "Easy" but hovered 10+ seconds on a wrong option, treat as "Good" or "Hard".
-
-Respond with a JSON object only, no markdown:
-{"confidence": <number 0-1, 1=high confidence in recall>, "impliedRating": <1-4 FSRS rating>}`;
-
-  const url = `${GEMINI_BASE}/models/${BEHAVIOR_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
-  
   try {
-    const res = await fetchWithTimeout(
-      url,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 256,
-            responseMimeType: 'application/json',
-          },
-        }),
-      },
-      30000
-    );
+    const result = await gateway.grade<typeof BehaviorGradeSchema._type>(ctx, {
+      schema: BehaviorGradeSchema,
+      schemaDescription: BEHAVIOR_GRADE_DESCRIPTION,
+      endpoint: '/api/srs/analyze-behavior',
+      tier: 'fast',
+      temperature: 0.2,
+      maxOutputTokens: 256,
+      fallback: 'schema_repair_only',
+      userPrompt: buildBehaviorPrompt({
+        rating,
+        wasCorrect,
+        selectedAnswer,
+        tti,
+        changes,
+        duration,
+        hovers,
+        rapidGuess,
+      }),
+    });
 
-    if (!res.ok) {
-      throw new Error(`Gemini API responded with status: ${res.status}`);
-    }
-
-    const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    return {
+      confidence: Math.max(0, Math.min(1, result.data.confidence)),
+      impliedRating: Math.round(result.data.impliedRating),
+      rawText: result.rawText,
     };
-    const text =
-      data.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text)
-        .filter(Boolean)
-        .join('')
-        ?.trim() ?? '';
-
-    let confidence = 0.5;
-    let impliedRating = rating;
-    try {
-      const parsed = JSON.parse(text);
-      const result = geminiBehaviorOutputSchema.safeParse(parsed);
-      if (result.success) {
-        confidence = Math.max(0, Math.min(1, result.data.confidence));
-        impliedRating = Math.round(result.data.impliedRating);
-      } else {
-        // fallback to old logic for backward compatibility
-        if (typeof parsed.confidence === 'number')
-          confidence = Math.max(0, Math.min(1, parsed.confidence));
-        if (
-          typeof parsed.impliedRating === 'number' &&
-          parsed.impliedRating >= 1 &&
-          parsed.impliedRating <= 4
-        )
-          impliedRating = Math.round(parsed.impliedRating);
-      }
-    } catch {
-      // keep defaults
+  } catch (error) {
+    if (error instanceof GatewayError) {
+      console.warn(
+        '[AI_SAFETY] Ghost Grader gateway failure — using local fallback.',
+        error.code,
+        error.requestId
+      );
+    } else {
+      console.warn('[AI_SAFETY] Ghost Grader unexpected error — using local fallback.', error);
     }
 
-    return { confidence, impliedRating, rawText: text };
-  } catch (error) {
-    console.warn('[AI_SAFETY] Gemini API failed or timed out. Attempting local fallback.', error);
-    
     try {
       const fallbackMetrics = deriveContinuousRating({
         timeToFirstClick: tti ?? duration,
@@ -143,14 +138,14 @@ Respond with a JSON object only, no markdown:
         cursorEntropy: Object.keys(hovers).length > 2 ? 1.5 : 1.0,
         hoverOscillationCount: changes,
       });
-      
+
       return {
         confidence: fallbackMetrics.confidence,
         impliedRating: fallbackMetrics.discreteRating,
         rawText: 'fallback',
       };
     } catch (fallbackError) {
-      console.error('[AI_SAFETY] Local fallback also failed. Using default confidence.', fallbackError);
+      console.error('[AI_SAFETY] Local fallback also failed.', fallbackError);
       return {
         confidence: 0.5,
         impliedRating: rating,

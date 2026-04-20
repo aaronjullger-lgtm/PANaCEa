@@ -1,12 +1,14 @@
 /**
- * API Endpoint: /api/ai/generate-mnemonic
- * POST: Generate a mnemonic for a medical concept using Gemini.
+ * POST /api/ai/generate-mnemonic
+ * Generate a mnemonic for a medical concept.
  *
- * Request: { concept, context?, existingMnemonics? }
- * Response: { data: { mnemonic, explanation, type } }
- *
- * Refactored to use unified ai-service layer for Gemini API calls.
- * Semantic cache still handled locally (endpoint-specific concern).
+ * Sprint 8 (AI Gateway migration): Replaced callAIMultiProvider() + Vercel AI
+ * SDK dual-path with a single gateway.generate() call. Benefits:
+ *   - Zod-validated structured output (MnemonicOutputSchema) with repair pass
+ *   - Consistent telemetry (requestId, traceId, costUsd)
+ *   - Fallback chain: gemini-2.0-flash → gemini-2.5-flash (same_provider)
+ *   - No more manual JSON.parse or regex fence-stripping
+ *   - Semantic cache lookup/write preserved (endpoint-specific concern)
  */
 
 import { z } from 'zod';
@@ -16,9 +18,9 @@ import {
   findSimilarCachedQuestion,
   cacheGeneratedQuestion,
 } from '../../_shared/semantic-cache';
-import { trackTokenUsage } from '../../_shared/tokenTracking';
-import { callAIMultiProvider, GeminiModel, type GeminiError } from '../../_shared/ai-service';
-import { aiGenerateObject, type AIProviderEnv } from '@/lib/ai-sdk';
+import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
+
+// ─── Schemas ────────────────────────────────────────────────────────────────
 
 const GenerateMnemonicSchema = z.object({
   concept: z.string().min(1, 'Concept is required'),
@@ -26,41 +28,24 @@ const GenerateMnemonicSchema = z.object({
   existingMnemonics: z.array(z.string()).optional().default([]),
 });
 
-const MNEMONIC_TYPES = ['acronym', 'story', 'visual', 'rhyme'] as const;
-type MnemonicType = (typeof MNEMONIC_TYPES)[number];
-
-/** Zod schema for Vercel AI SDK structured output */
 const MnemonicOutputSchema = z.object({
-  mnemonic: z.string().describe('The mnemonic phrase or acronym'),
-  explanation: z.string().describe('Brief explanation of how the mnemonic maps to the concept'),
-  type: z.enum(['acronym', 'story', 'visual', 'rhyme']).describe('Type of mnemonic technique'),
+  mnemonic: z.string().min(1).max(500),
+  explanation: z.string().min(1).max(1000),
+  type: z.enum(['acronym', 'story', 'visual', 'rhyme']),
 });
+type MnemonicOutput = z.infer<typeof MnemonicOutputSchema>;
 
-function parseMnemonicResponse(text: string): {
-  mnemonic: string;
-  explanation: string;
-  type: MnemonicType;
-} {
-  const trimmed = text.trim();
-  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      const mnemonic = typeof parsed.mnemonic === 'string' ? parsed.mnemonic : trimmed;
-      const explanation =
-        typeof parsed.explanation === 'string' ? parsed.explanation : 'Generated mnemonic.';
-      const typeRaw = parsed.type;
-      const type: MnemonicType =
-        typeof typeRaw === 'string' && MNEMONIC_TYPES.includes(typeRaw as MnemonicType)
-          ? (typeRaw as MnemonicType)
-          : 'acronym';
-      return { mnemonic, explanation, type };
-    } catch {
-      // fall through to plain text
-    }
-  }
-  return { mnemonic: trimmed, explanation: 'Generated mnemonic.', type: 'acronym' };
+const MNEMONIC_OUTPUT_DESCRIPTION = `{
+  "mnemonic": string (the mnemonic phrase or acronym, ≤500 chars),
+  "explanation": string (how the mnemonic maps to the concept, ≤1000 chars),
+  "type": "acronym" | "story" | "visual" | "rhyme"
 }
+Return ONLY this JSON object — no markdown, no code fence, no prose.`;
+
+const MNEMONIC_SYSTEM_PROMPT =
+  'You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners.';
+
+// ─── Handler ────────────────────────────────────────────────────────────────
 
 export const onRequestOptions = withCors();
 
@@ -68,140 +53,83 @@ export const onRequestPost = aiEndpoint(
   GenerateMnemonicSchema,
   async (context) => {
     const { env, validated } = context as {
-      env: { GEMINI_API_KEY: string; DATABASE_URL?: string; [k: string]: any };
+      env: { GEMINI_API_KEY: string; DATABASE_URL?: string; [k: string]: unknown };
       validated: z.infer<typeof GenerateMnemonicSchema>;
     };
 
     const { concept, context: contextOpt, existingMnemonics = [] } = validated;
-    const model = GeminiModel.FLASH_2_0;
 
-    // ─── Semantic Cache Check ──────────────────────────────────────
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     try {
-      const cacheHit = await findSimilarCachedQuestion(prisma, {
-        queryText: concept,
-        questionType: 'mnemonic',
-        system: contextOpt,
-      });
-      if (cacheHit) {
-        trackTokenUsage(context as any, {
-          endpoint: '/api/ai/generate-mnemonic',
-          model,
-          usage: null,
-          statusCode: 200,
-          cacheHit: true,
+      // ── Semantic cache check ──────────────────────────────────────────────
+      try {
+        const cacheHit = await findSimilarCachedQuestion(prisma, {
+          queryText: concept,
+          questionType: 'mnemonic',
+          system: contextOpt,
         });
-        return { data: cacheHit.question };
-      }
-    } catch {
-      // Cache lookup failure should not block generation
-    }
-
-    // ─── Build Prompt ──────────────────────────────────────────────
-    const userPrompt = [
-      `Concept: ${concept}`,
-      contextOpt ? `Context: ${contextOpt}` : '',
-      existingMnemonics.length > 0
-        ? `Avoid repeating these: ${existingMnemonics.slice(-3).join('; ')}`
-        : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    // ─── Call AI ───────────────────────────────────────────────────
-    try {
-      let mnemonic: string;
-      let explanation: string;
-      let type: MnemonicType;
-
-      const systemPrompt = 'You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners.';
-
-      // Primary path: Vercel AI SDK with structured output (Zod schema validation)
-      const aiSdkEnv = env as unknown as AIProviderEnv;
-      const hasAiSdkKey = !!(aiSdkEnv.GOOGLE_GENERATIVE_AI_API_KEY || aiSdkEnv.GEMINI_API_KEY);
-
-      if (hasAiSdkKey) {
-        // Ensure the AI SDK can find the key (it expects GOOGLE_GENERATIVE_AI_API_KEY)
-        if (!aiSdkEnv.GOOGLE_GENERATIVE_AI_API_KEY && aiSdkEnv.GEMINI_API_KEY) {
-          (aiSdkEnv as any).GOOGLE_GENERATIVE_AI_API_KEY = aiSdkEnv.GEMINI_API_KEY;
+        if (cacheHit) {
+          return { data: cacheHit.question };
         }
+      } catch {
+        // Cache miss is fine; proceed to generation
+      }
 
-        try {
-          const aiResult = await aiGenerateObject(aiSdkEnv, {
-            model: 'gemini-2.0-flash',
-            system: systemPrompt,
-            prompt: userPrompt,
+      // ── Build prompt ──────────────────────────────────────────────────────
+      const userPrompt = [
+        `Concept: ${concept}`,
+        contextOpt ? `Context: ${contextOpt}` : '',
+        existingMnemonics.length > 0
+          ? `Avoid repeating these: ${existingMnemonics.slice(-3).join('; ')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      // ── Gateway call ──────────────────────────────────────────────────────
+      let output: MnemonicOutput;
+      try {
+        const result = await gateway.generate<MnemonicOutput>(
+          toGatewayContext(context as Parameters<typeof toGatewayContext>[0]),
+          {
             schema: MnemonicOutputSchema,
-            schemaName: 'Mnemonic',
-            schemaDescription: 'A medical mnemonic with explanation',
+            schemaDescription: MNEMONIC_OUTPUT_DESCRIPTION,
+            endpoint: '/api/ai/generate-mnemonic',
+            // tier:'fast' = gemini-2.0-flash — cheap for high-volume mnemonic gen
+            tier: 'fast',
+            fallback: 'same_provider',
+            systemPrompt: MNEMONIC_SYSTEM_PROMPT,
+            userPrompt,
             temperature: 0.8,
-            maxTokens: 512,
-            endpoint: '/api/ai/generate-mnemonic',
-          });
-
-          mnemonic = aiResult.object.mnemonic;
-          explanation = aiResult.object.explanation;
-          type = aiResult.object.type;
-
-          trackTokenUsage(context as any, {
-            endpoint: '/api/ai/generate-mnemonic',
-            model: aiResult.model,
-            usage: {
-              promptTokenCount: aiResult.usage.promptTokens,
-              candidatesTokenCount: aiResult.usage.completionTokens,
-              totalTokenCount: aiResult.usage.totalTokens,
-            },
-            latencyMs: aiResult.latencyMs,
-            statusCode: 200,
-            cacheHit: false,
-          });
-        } catch (aiSdkError) {
-          // Fall back to callAIMultiProvider if AI SDK fails
-          console.warn('[generate-mnemonic] AI SDK failed, falling back to multi-provider:', aiSdkError);
-          const result = await callAIMultiProvider(context as any, {
-            langchainTask: 'mnemonic',
-            model,
-            systemInstruction: systemPrompt + ' Respond with a JSON object only, no markdown: {"mnemonic": "...", "explanation": "brief explanation", "type": "acronym"|"story"|"visual"|"rhyme"}.',
-            prompt: userPrompt,
-            generationConfig: { temperature: 0.8, maxOutputTokens: 512 },
-            endpoint: '/api/ai/generate-mnemonic',
-          });
-
-          if (result.blocked) {
-            return { status: 400, error: `Content blocked: ${result.blockReason}` };
+            maxOutputTokens: 512,
           }
-          if (!result.text) {
-            return { status: 500, error: 'No response generated. Please try again.' };
+        );
+        output = result.data;
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          if (err.code === 'RATE_LIMITED') {
+            return { status: 429, error: 'Rate limit exceeded. Please try again shortly.' };
           }
-          ({ mnemonic, explanation, type } = parseMnemonicResponse(result.text));
+          if (err.code === 'SAFETY_BLOCKED') {
+            return { status: 400, error: 'Content blocked by safety filter.' };
+          }
+          return { status: 502, error: 'Mnemonic generation failed. Please try again.' };
         }
-      } else {
-        // No AI key available at all
-        return { status: 500, error: 'AI provider not configured' };
+        throw err;
       }
 
-      // Cache the result for future similar queries
+      // ── Cache write (best-effort) ─────────────────────────────────────────
       try {
         await cacheGeneratedQuestion(
           prisma,
           { queryText: concept, questionType: 'mnemonic', system: contextOpt },
-          { mnemonic, explanation, type }
+          output
         );
       } catch {
-        // Cache write failure should not block the response
+        // Cache write failure must not block the response
       }
 
-      return { data: { mnemonic, explanation, type } };
-    } catch (error) {
-      const geminiError = error as GeminiError;
-      if (geminiError.status) {
-        return {
-          status: geminiError.status === 429 ? 429 : geminiError.retryable ? 503 : 500,
-          error: geminiError.error,
-        };
-      }
-      console.error('[generate-mnemonic] Error:', error);
-      return { status: 500, error: 'Failed to process request. Please try again.' };
+      return { data: output };
     } finally {
       await safePrismaDisconnect(prisma);
     }

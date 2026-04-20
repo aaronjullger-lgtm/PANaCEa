@@ -267,6 +267,28 @@ export const OSCE_SOFT_SKILLS_DESCRIPTION = `{
 Scale: 1=poor, 2=below average, 3=average, 4=good, 5=excellent.
 Return ONLY this JSON object.`;
 
+// ─── Ghost Grader / behavioral confidence grading ─────────────────────────
+
+/**
+ * Behavioral telemetry → implicit confidence + FSRS rating.
+ * Used by analyzeBehaviorGemini (Ghost Grader) and /api/srs/analyze-behavior.
+ *
+ * Safety invariant: impliedRating MUST be an integer 1–4 and confidence MUST
+ * be 0–1. The schema bounds enforce this so callers can never pass a stale
+ * Hard/Easy value or a confidence above 1.0 to the FSRS engine.
+ */
+export const BehaviorGradeSchema = z.object({
+  confidence: z.number().min(0).max(1),
+  impliedRating: z.number().int().min(1).max(4),
+});
+export type BehaviorGrade = z.infer<typeof BehaviorGradeSchema>;
+
+export const BEHAVIOR_GRADE_DESCRIPTION = `{
+  "confidence": number 0-1 (1=certain recall, 0=complete confusion),
+  "impliedRating": integer 1-4 (FSRS: 1=Again, 2=Hard, 3=Good, 4=Easy)
+}
+Return ONLY this JSON object — no markdown, no code fence, no prose.`;
+
 // ─── Vision / spatial grading (e.g. anatomy identification) ───────────────
 
 export const VisionGradeSchema = z.object({

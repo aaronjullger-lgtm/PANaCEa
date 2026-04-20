@@ -34,7 +34,7 @@ interface DailyLoadResponse {
   profile: {
     dueReviews: number;
     streak: number;
-    accuracy: number;
+    accuracy: number | null;
     daysUntilExam: number | null;
   };
 }
@@ -158,7 +158,7 @@ export default function DailyLoadWidget() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2">
         <StatPill icon={Flame} label="Streak" value={profile.streak} color="text-[var(--color-data-provisional)]" />
-        <StatPill icon={TrendingUp} label="Accuracy" value={`${profile.accuracy}%`} color="text-[var(--color-data-pass)]" />
+        <StatPill icon={TrendingUp} label="Accuracy" value={profile.accuracy !== null ? `${profile.accuracy}%` : '—'} color="text-[var(--color-data-pass)]" />
         <StatPill icon={BookOpen} label="Due" value={profile.dueReviews} color="text-[var(--color-accent)]" />
       </div>
 

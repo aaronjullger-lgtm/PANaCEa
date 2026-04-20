@@ -141,6 +141,12 @@ export async function hybridSearchRRF(
 
   // Try single-query RRF in SQL
   try {
+    // Boost HNSW recall for 768-dim clinical embeddings (default ef_search=40
+    // loses ~5-10% recall vs exact scan; 100 recovers ≥95% at ~2x query cost).
+    // SET LOCAL is scoped to the current transaction/session; Prisma reuses the
+    // same pooled connection for the immediately following query.
+    await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = 100`);
+
     const results = await prisma.$queryRawUnsafe<
       Array<{
         id: string;
@@ -157,6 +163,7 @@ export async function hybridSearchRRF(
                ) as rank
         FROM "MedicalContent"
         WHERE search_vector @@ websearch_to_tsquery('english', $1)
+          AND status = 'published'
         LIMIT $3
       ),
       semantic AS (
@@ -165,6 +172,8 @@ export async function hybridSearchRRF(
                  ORDER BY e.embedding <=> $2::vector
                ) as rank
         FROM "MedicalContentEmbedding" e
+        JOIN "MedicalContent" mc ON mc.id = e."medicalContentId"
+        WHERE mc.status = 'published'
         LIMIT $3
       )
       SELECT
@@ -215,26 +224,30 @@ async function appLevelRRF(
   const limit = Math.min(requestedLimit ?? DEFAULT_LIMIT, MAX_LIMIT);
   const perList = Math.max(limit * 3, 50);
 
-  // Keyword search
+  // Keyword search (published content only)
   let keywordIds: string[] = [];
   try {
     const rows = await prisma.$queryRaw<Array<{ id: string }>>`
       SELECT id
       FROM "MedicalContent"
       WHERE search_vector @@ websearch_to_tsquery('english', ${query})
+        AND status = 'published'
       ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${query})) DESC
       LIMIT ${perList}
     `;
     keywordIds = rows.map((r) => r.id);
   } catch { /* empty */ }
 
-  // Semantic search
+  // Semantic search (published content only)
   let semanticIds: string[] = [];
   try {
     const vectorStr = `[${embedding.join(',')}]`;
+    await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = 100`);
     const rows = await prisma.$queryRawUnsafe<Array<{ medicalContentId: string }>>(
       `SELECT e."medicalContentId"
        FROM "MedicalContentEmbedding" e
+       JOIN "MedicalContent" mc ON mc.id = e."medicalContentId"
+       WHERE mc.status = 'published'
        ORDER BY e.embedding <=> $1::vector
        LIMIT $2`,
       vectorStr,
