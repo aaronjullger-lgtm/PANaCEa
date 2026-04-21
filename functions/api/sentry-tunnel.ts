@@ -39,35 +39,24 @@ function checkSentryRateLimit(ip: string): boolean {
   return bucket.count <= RATE_LIMIT_MAX;
 }
 
+import { fail, ErrorCode } from './_shared/endpoint';
+
 export async function onRequestPost(context: any) {
   const { request } = context;
 
   // Rate limit by IP to prevent abuse of unauthenticated tunnel
   const clientIp = request.headers.get('cf-connecting-ip') ?? 'unknown';
   if (!checkSentryRateLimit(clientIp)) {
-    return new Response(JSON.stringify({ error: 'Rate limited' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
-    });
+    return fail(ErrorCode.RATE_LIMITED, { message: 'Rate limited' });
   }
 
   try {
     // Get the raw envelope body
     const envelopeBody = await request.text();
 
-    const corsHeaders = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-
     if (!envelopeBody || envelopeBody.trim() === '') {
       console.warn('[Sentry Tunnel] Empty envelope body received');
-      return new Response(JSON.stringify({ error: 'Empty envelope body', reason: 'empty_body' }), {
-        status: 400,
-        headers: corsHeaders,
-      });
+      return fail(ErrorCode.VALIDATION_FAILED, { message: 'Empty envelope body' });
     }
 
     // Sentry envelopes are newline-delimited JSON; first line is the header (may contain dsn)
@@ -75,10 +64,7 @@ export async function onRequestPost(context: any) {
 
     if (pieces.length === 0) {
       console.warn('[Sentry Tunnel] Invalid envelope format - no lines');
-      return new Response(
-        JSON.stringify({ error: 'Invalid envelope format', reason: 'invalid_format' }),
-        { status: 400, headers: corsHeaders }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, { message: 'Invalid envelope format' });
     }
 
     // Parse the envelope header to extract DSN (optional in some envelope types)
@@ -90,10 +76,7 @@ export async function onRequestPost(context: any) {
         '[Sentry Tunnel] Failed to parse envelope header:',
         pieces[0]?.substring(0, 100)
       );
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse envelope header', reason: 'invalid_header' }),
-        { status: 400, headers: corsHeaders }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, { message: 'Failed to parse envelope header' });
     }
 
     // Extract and validate DSN
@@ -113,20 +96,14 @@ export async function onRequestPost(context: any) {
         dsnUrl = new URL(dsn);
       } catch (e) {
         console.warn('[Sentry Tunnel] Invalid DSN format:', dsn?.substring(0, 50));
-        return new Response(
-          JSON.stringify({ error: 'Invalid DSN format', reason: 'invalid_dsn' }),
-          { status: 400, headers: corsHeaders }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, { message: 'Invalid DSN format' });
       }
 
       projectId = dsnUrl.pathname.replace(/^\//, '').split('/')[0] || SENTRY_PROJECT_ID;
 
       if (projectId !== SENTRY_PROJECT_ID) {
         console.warn(`[Sentry Tunnel] Rejected envelope with wrong project ID: ${projectId}`);
-        return new Response(
-          JSON.stringify({ error: 'Invalid project ID', reason: 'project_mismatch' }),
-          { status: 403, headers: corsHeaders }
-        );
+        return fail(ErrorCode.FORBIDDEN, { message: 'Invalid project ID' });
       }
     }
 
@@ -144,35 +121,21 @@ export async function onRequestPost(context: any) {
       },
     });
 
-    // Return Sentry's response
+    // Proxy Sentry's response directly — do not wrap in ok() as this is raw binary/text
     const responseText = await sentryResponse.text();
-
     const contentType = sentryResponse.headers.get('Content-Type') || 'text/plain';
     return new Response(responseText, {
       status: sentryResponse.status,
       headers: {
-        ...corsHeaders,
+        'Access-Control-Allow-Origin': '*',
         'Content-Type': contentType,
       },
     });
   } catch (error) {
     console.error('[Sentry Tunnel] Error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Tunnel error',
-        reason: 'tunnel_error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, {
+      message: error instanceof Error ? error.message : 'Tunnel error',
+    });
   }
 }
 

@@ -5,7 +5,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -30,8 +31,6 @@ interface Env {
     put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
   };
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
@@ -62,10 +61,7 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
   const { imageBase64, mimeType, prompt, thinkingBudget } = validated;
 
   if (imageBase64.length > MAX_IMAGE_BASE64) {
-    return new Response(JSON.stringify({ error: 'Image too large (max ~4MB base64)' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.VALIDATION_FAILED, { message: 'Image too large (max ~4MB base64)' });
   }
 
   const apiKey = env.GEMINI_API_KEY;
@@ -106,14 +102,12 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     if (!res.ok) {
       const text = await res.text();
       log.warn('Clinical Eye Gemini error', { status: res.status, text: text.slice(0, 300) });
-      return new Response(
-        JSON.stringify({
-          error: res.status === 429 ? 'Rate limit exceeded' : 'Analysis failed',
-          details: text.slice(0, 500),
-        }),
+      return fail(
+        res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR,
         {
-          status: res.status === 429 ? 429 : 502,
-          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+          message: res.status === 429 ? 'Rate limit exceeded' : 'Analysis failed',
+          details: text.slice(0, 500),
+          headers: rateLimitHeaders as Record<string, string>,
         }
       );
     }
@@ -158,25 +152,17 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
       // ignore parse errors for optional bbox
     }
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          text: text || '(No text in response)',
-          reasoning: reasoning.length > 0 ? reasoning : undefined,
-          boundingBox: box2d && label ? { box_2d: box2d, label } : undefined,
-          usageMetadata: data.usageMetadata,
-        },
-      }),
+    return ok(
       {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-      }
+        text: text || '(No text in response)',
+        reasoning: reasoning.length > 0 ? reasoning : undefined,
+        boundingBox: box2d && label ? { box_2d: box2d, label } : undefined,
+        usageMetadata: data.usageMetadata,
+      },
+      { headers: rateLimitHeaders as Record<string, string> }
     );
   } catch (err) {
     log.error('Clinical Eye analyze error', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
   }
 });

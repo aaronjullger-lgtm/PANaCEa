@@ -14,7 +14,8 @@
  * generates actionable insights for improving study effectiveness.
  */
 
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -48,8 +49,6 @@ const AnalyzeSessionSchema = z.object({
     mode: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // Types
@@ -810,8 +809,8 @@ export const onRequestPost = authenticatedEndpoint(
             correctCount: totalCorrect,
           });
         }
-      } catch (dbError: any) {
-        log.warn('Failed to save session to database', { error: dbError.message });
+      } catch (dbError: unknown) {
+        log.warn('Failed to save session to database', { error: dbError instanceof Error ? dbError.message : String(dbError) });
         // Continue with analysis even if DB save fails
       }
 
@@ -851,22 +850,11 @@ export const onRequestPost = authenticatedEndpoint(
         },
       };
 
-      return new Response(JSON.stringify(response), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (error: any) {
-      log.error('Session analysis error', { error: error.message });
-      return new Response(
-        JSON.stringify({
-          error: 'Internal server error',
-          details: error.message || 'Unknown error',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return ok({ analysis: response.analysis });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      log.error('Session analysis error', { error: message });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to analyze session' });
     } finally {
       await safePrismaDisconnect(prisma);
     }
