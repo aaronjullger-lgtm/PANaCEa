@@ -6,7 +6,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
@@ -43,8 +44,6 @@ function buildRawTextFromContent(content: unknown): string {
   }
   return String(content);
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = aiEndpoint(
   StructuredSchema,
@@ -83,10 +82,7 @@ export const onRequestGet = aiEndpoint(
       });
 
       if (!row) {
-        return new Response(JSON.stringify({ error: 'Condition not found', identifier }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: `Condition not found: ${identifier}` });
       }
 
       let rawText = buildRawTextFromContent(row.content);
@@ -107,19 +103,17 @@ export const onRequestGet = aiEndpoint(
       }
 
       if (!rawText.trim()) {
-        return new Response(
-          JSON.stringify({
-            data: {
-              clinical_pearls: [],
-              history_key_features: [],
-              physical_exam_findings: [],
-              diagnostic_labs: [],
-              gold_standard: row.gold_standard_dx ?? '',
-              treatment_first_line: row.first_line_rx ?? '',
-            },
+        return ok(
+          {
+            clinical_pearls: [],
+            history_key_features: [],
+            physical_exam_findings: [],
+            diagnostic_labs: [],
+            gold_standard: row.gold_standard_dx ?? '',
+            treatment_first_line: row.first_line_rx ?? '',
             source: 'fallback',
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' } }
+          },
+          { headers: { 'Cache-Control': 'public, max-age=3600' } }
         );
       }
 
@@ -162,20 +156,15 @@ Output valid JSON only, no markdown.`;
           status: res.status,
           text: text.slice(0, 200),
         });
-        return new Response(
-          JSON.stringify({
-            data: {
-              clinical_pearls: [],
-              history_key_features: [],
-              physical_exam_findings: [],
-              diagnostic_labs: [],
-              gold_standard: row.gold_standard_dx ?? '',
-              treatment_first_line: row.first_line_rx ?? '',
-            },
-            source: 'fallback',
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+        return ok({
+          clinical_pearls: [],
+          history_key_features: [],
+          physical_exam_findings: [],
+          diagnostic_labs: [],
+          gold_standard: row.gold_standard_dx ?? '',
+          treatment_first_line: row.first_line_rx ?? '',
+          source: 'fallback',
+        });
       }
 
       const data = (await res.json()) as {
@@ -233,10 +222,7 @@ Output valid JSON only, no markdown.`;
         userId: auth.userId?.substring(0, 10),
       });
 
-      return new Response(JSON.stringify({ data: parsed, source: 'gemini' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
-      });
+      return ok({ ...parsed, source: 'gemini' }, { headers: { 'Cache-Control': 'public, max-age=3600' } });
     } catch (error) {
       logger.error('Structured condition error', {
         error: error instanceof Error ? error.message : String(error),

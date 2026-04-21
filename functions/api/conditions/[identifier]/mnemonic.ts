@@ -6,7 +6,8 @@
 
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../../_shared/adobeAllowlist';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const FIREFLY_GENERATE = 'https://firefly-api.adobe.io/v3/images/generate';
@@ -46,8 +47,6 @@ async function getAdobeToken(env: Env): Promise<string> {
   return data.access_token;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(
   MnemonicBodySchema,
   async (context) => {
@@ -58,10 +57,7 @@ export const onRequestPost = authenticatedEndpoint(
       params?.identifier ? decodeURIComponent(String(params.identifier)) : ''
     ).trim();
     if (!identifier) {
-      return new Response(JSON.stringify({ error: 'Missing identifier in path' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.MISSING_PARAMETER, { message: 'Missing identifier in path' });
     }
     const conditionName = identifier.replaceAll('-', ' ');
     const keySymptom = validated.keySymptom?.trim() ?? conditionName;
@@ -90,13 +86,10 @@ export const onRequestPost = authenticatedEndpoint(
       if (!res.ok) {
         const text = await res.text();
         logger.warn('Firefly mnemonic failed', { status: res.status, text: text.slice(0, 200) });
-        return new Response(
-          JSON.stringify({
-            error: 'Failed to generate mnemonic',
-            details: env.ADOBE_CLIENT_ID ? text.slice(0, 300) : 'Adobe credentials not configured',
-          }),
-          { status: 502, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.UPSTREAM_ERROR, {
+          message: 'Failed to generate mnemonic',
+          details: env.ADOBE_CLIENT_ID ? text.slice(0, 300) : 'Adobe credentials not configured',
+        });
       }
 
       const data = (await res.json()) as {
@@ -106,10 +99,7 @@ export const onRequestPost = authenticatedEndpoint(
       const imageUrl = img?.source?.url ?? (img?.uploadId ? `uploadId:${img.uploadId}` : null);
 
       if (!imageUrl) {
-        return new Response(JSON.stringify({ error: 'No image URL in Firefly response' }), {
-          status: 502,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.UPSTREAM_ERROR, { message: 'No image URL in Firefly response' });
       }
 
       logger.info('Condition mnemonic generated', {
@@ -117,24 +107,13 @@ export const onRequestPost = authenticatedEndpoint(
         userId: auth.userId?.substring(0, 10),
       });
 
-      return new Response(
-        JSON.stringify({
-          data: { imageUrl, prompt, conditionName, keySymptom },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok({ imageUrl, prompt, conditionName, keySymptom });
     } catch (error) {
       logger.error('Mnemonic error', {
         error: error instanceof Error ? error.message : String(error),
         identifier,
       });
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to generate mnemonic',
-          message: error instanceof Error ? error.message : String(error),
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Failed to generate mnemonic' });
     }
   },
   { source: 'params' }

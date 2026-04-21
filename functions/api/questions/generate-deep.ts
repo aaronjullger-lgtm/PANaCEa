@@ -14,7 +14,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   gateway,
@@ -37,8 +38,6 @@ const GenerateDeepSchema = z.object({
   }),
 });
 
-export const onRequestOptions = withCors();
-
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory):
 // - Deep-context question generation hits Gemini + a 1M-token cache. The
 //   authenticated stack's 300 rpm default is a loaded-footgun here; aiEndpoint's
@@ -48,10 +47,7 @@ export const onRequestPost = aiEndpoint(GenerateDeepSchema, async (context) => {
   const logger = createEndpointLogger('/api/questions/generate-deep');
 
   if (!env.GEMINI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'GEMINI_API_KEY not configured' });
   }
 
   const { condition, category, implicitDifficulty, cachedContent, count = 1 } = validated.body;
@@ -62,13 +58,9 @@ export const onRequestPost = aiEndpoint(GenerateDeepSchema, async (context) => {
       : null);
 
   if (!cacheName) {
-    return new Response(
-      JSON.stringify({
-        error:
-          'No cached content. Provide body.cachedContent or set CACHE_PANCE_MASTER_NAME (run admin knowledge ingest first).',
-      }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.VALIDATION_FAILED, {
+      message: 'No cached content. Provide body.cachedContent or set CACHE_PANCE_MASTER_NAME (run admin knowledge ingest first).',
+    });
   }
 
   const difficultyHint =
@@ -122,10 +114,7 @@ Output valid JSON only, no markdown:
         logger.warn('Gemini generate-deep blocked by safety filter', {
           reason: result.blockReason ?? 'unknown',
         });
-        return new Response(
-          JSON.stringify({ error: 'Generation blocked by safety filter' }),
-          { status: 422, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, { message: 'Generation blocked by safety filter' });
       }
       rawText = (result.text ?? '').trim();
     } catch (err) {
@@ -144,10 +133,12 @@ Output valid JSON only, no markdown:
           requestId: err.requestId,
           traceId: err.traceId,
         });
-        return new Response(
-          JSON.stringify({ error: `Generation failed: ${err.code}`, details: err.message.slice(0, 500) }),
-          { status, headers: { 'Content-Type': 'application/json' } }
-        );
+        const errorCode =
+          err.code === 'RATE_LIMITED' ? ErrorCode.RATE_LIMITED :
+          err.code === 'UNAUTHORIZED' || err.code === 'MISSING_API_KEY' ? ErrorCode.ENV_MISCONFIGURED :
+          err.code === 'BAD_REQUEST' ? ErrorCode.VALIDATION_FAILED :
+          ErrorCode.GEMINI_ERROR;
+        return fail(errorCode, { message: `Generation failed: ${err.code}`, details: err.message.slice(0, 500) });
       }
       throw err;
     }
@@ -207,10 +198,7 @@ Output valid JSON only, no markdown:
       userId: auth.userId?.substring(0, 10),
     });
 
-    return new Response(JSON.stringify({ data: { questions } }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok({ questions });
   } catch (error) {
     logger.error('generate-deep error', {
       error: error instanceof Error ? error.message : String(error),

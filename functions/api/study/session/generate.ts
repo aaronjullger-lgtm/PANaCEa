@@ -24,7 +24,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { selectSessionQuestions } from '../../../../lib/services/conceptQuestionSelector';
@@ -53,10 +54,6 @@ const SessionGenerateSchema = z.object({
   }),
 });
 
-// ─── CORS ───────────────────────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
-
 // ─── Handler ────────────────────────────────────────────────────────────────
 
 export const onRequestPost = authenticatedEndpoint(
@@ -72,22 +69,13 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Validate mode-specific requirements
       if (body.mode === 'system' && !body.system) {
-        return new Response(
-          JSON.stringify({ error: 'system is required for system mode' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, { message: 'system is required for system mode' });
       }
       if (body.mode === 'subcategory' && (!body.system || !body.subcategory)) {
-        return new Response(
-          JSON.stringify({ error: 'system and subcategory are required for subcategory mode' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, { message: 'system and subcategory are required for subcategory mode' });
       }
       if (body.mode === 'condition' && !body.conditionId) {
-        return new Response(
-          JSON.stringify({ error: 'conditionId is required for condition mode' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, { message: 'conditionId is required for condition mode' });
       }
 
       // Look up internal user ID + profile fields for phase inference
@@ -141,10 +129,10 @@ export const onRequestPost = authenticatedEndpoint(
             },
           };
         }
-      } catch (reservoirErr: any) {
+      } catch (reservoirErr: unknown) {
         // Reservoir failed — fall through to on-demand
         logger.info('Reservoir unavailable, falling back to on-demand', {
-          error: reservoirErr.message,
+          error: reservoirErr instanceof Error ? reservoirErr.message : String(reservoirErr),
         });
       }
 
@@ -243,19 +231,14 @@ export const onRequestPost = authenticatedEndpoint(
         reservoirHit: reservoirSource,
       });
 
-      return new Response(JSON.stringify(normalizedResult), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (err: any) {
+      return ok(normalizedResult);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Session generation failed';
       logger.error('Session generation failed', {
-        error: err.message,
+        error: message,
         mode: validated.body.mode,
       });
-      return new Response(
-        JSON.stringify({ error: err.message ?? 'Session generation failed' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.INTERNAL_ERROR, { message });
     } finally {
       await safePrismaDisconnect(prisma);
     }

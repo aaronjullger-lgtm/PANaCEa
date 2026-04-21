@@ -18,7 +18,7 @@ import {
   safePrismaDisconnect,
 } from '../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { getCorsConfig, getCorsHeaders } from '../_shared/cors';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
 import { scheduleReviews } from '@/services/optimizer/retentionAwareScheduler';
 import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalancedSelector';
@@ -61,24 +61,10 @@ const RegeneratePlanRequestSchema = z.object({
 // Request Handler
 // ============================================================================
 
-export const onRequestOptions = async (context: any) => {
-  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(context?.request, corsConfig) ?? {},
-  });
-};
-
 export const onRequestPost = authenticatedEndpoint(
   RegeneratePlanRequestSchema,
   async (context) => {
     const { env, auth, validated } = context;
-    const corsConfig = getCorsConfig(env);
-    const corsHeaders = getCorsHeaders(context.request, corsConfig) ?? {};
-    const jsonHeaders = {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    };
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     try {
@@ -105,10 +91,7 @@ export const onRequestPost = authenticatedEndpoint(
             cached: true,
             generatedAt: new Date(cachedPlan.generatedAt),
           };
-          return new Response(JSON.stringify(response, null, 2), {
-            status: 200,
-            headers: jsonHeaders,
-          });
+          return ok(response);
         }
       }
 
@@ -217,19 +200,10 @@ export const onRequestPost = authenticatedEndpoint(
         );
       }
 
-      return new Response(JSON.stringify(recommendation, null, 2), {
-        status: 200,
-        headers: jsonHeaders,
-      });
+      return ok(recommendation);
     } catch (error) {
       console.error('Study‑path regenerate endpoint error:', error);
-      return new Response(
-        JSON.stringify({ error: 'Unable to regenerate study plan. Please try again.' }),
-        {
-          status: 500,
-          headers: jsonHeaders,
-        }
-      );
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Unable to regenerate study plan. Please try again.' });
     } finally {
       await safePrismaDisconnect(prisma);
     }
