@@ -21,6 +21,7 @@
 
 import type { PrismaClient } from '@prisma/client';
 import { FSRS, defaultParameters, type FSRSParameters } from '../fsrs';
+import { computeRetrievabilityV7 } from '../fsrs-v7';
 
 // ── Types ──
 
@@ -64,7 +65,11 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 // w[15-16]: hard penalty / easy bonus — skip (deprecated in binary system)
 // w[17-18]: short-term stability — skip (sensitive)
 // w[19-20]: retrievability curve — optimize carefully
-const OPTIMIZABLE_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20];
+// w[21-28]: FSRS v7-alpha 8-parameter forgetting curve (only when w.length === 29)
+const OPTIMIZABLE_INDICES_V6 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20];
+const OPTIMIZABLE_INDICES_V7 = [...OPTIMIZABLE_INDICES_V6, 21, 22, 23, 24, 25, 26, 27, 28];
+// Back-compat: default export name preserved for any external callers.
+const OPTIMIZABLE_INDICES = OPTIMIZABLE_INDICES_V6;
 // Pretrain: only optimize initial stability per rating (w0–w3) when 16–99 reviews
 const PRETRAIN_INDICES = [0, 1, 2, 3];
 // Parameter bounds to prevent divergence
@@ -90,7 +95,26 @@ const PARAM_BOUNDS: Array<[number, number]> = [
   [0.01, 1.0],   // w[18]: short-term offset (not optimized)
   [0.01, 1.0],   // w[19]: retrievability factor — ts-fsrs v6 default=0.1597; values >1 cause extreme interval compression
   [0.1, 5.0],    // w[20]: forgetting curve decay exponent — ts-fsrs v6 default=2.2700; prior bound of 0.8 was incorrect
+  // FSRS v7-alpha 8-parameter forgetting curve. Pairs of (amplitude, rate).
+  // Amplitudes non-negative; setting to 0 yields a no-op correction → recovers v6.
+  // Rates in (0, large] control how fast each decay component saturates.
+  [0.0, 5.0],    // w[21]: v7 amplitude 0
+  [0.01, 10.0],  // w[22]: v7 rate 0
+  [0.0, 5.0],    // w[23]: v7 amplitude 1
+  [0.01, 10.0],  // w[24]: v7 rate 1
+  [0.0, 5.0],    // w[25]: v7 amplitude 2
+  [0.01, 10.0],  // w[26]: v7 rate 2
+  [0.0, 5.0],    // w[27]: v7 amplitude 3
+  [0.01, 10.0],  // w[28]: v7 rate 3
 ];
+
+/**
+ * Pick the optimizable-indices list to use for a parameter array. v7-alpha
+ * (29 params) includes w[21..28]; everything else uses the v6 indices only.
+ */
+function getOptimizableIndicesForParams(w: number[]): number[] {
+  return w.length === 29 ? OPTIMIZABLE_INDICES_V7 : OPTIMIZABLE_INDICES_V6;
+}
 
 // ── In-memory cache ──
 
@@ -109,14 +133,21 @@ export function computeLogLoss(
 ): number {
   if (reviews.length === 0) return 0;
 
-  const fsrs = new FSRS(parameters);
+  // Version-dispatched retrievability: v7-alpha (29 params) uses the
+  // 8-parameter forgetting curve placeholder; everything else uses v6.
+  // This is what lets the coordinate-descent optimizer score loss against
+  // both v6 and v7 parameter sets with the same loss function.
+  const isV7 = parameters.w.length === 29;
+  const fsrsV6 = isV7 ? null : new FSRS(parameters);
   let totalLoss = 0;
   const eps = 1e-7; // Prevent log(0)
 
   for (const review of reviews) {
     if (review.stability <= 0 || review.elapsedDays < 0) continue;
 
-    const predicted = fsrs.calculateRetrievability(review.elapsedDays, review.stability);
+    const predicted = isV7
+      ? computeRetrievabilityV7(review.elapsedDays, review.stability, parameters)
+      : fsrsV6!.calculateRetrievability(review.elapsedDays, review.stability);
     const clampedP = Math.max(eps, Math.min(1 - eps, predicted));
     const y = review.wasCorrect ? 1 : 0;
 
@@ -166,7 +197,7 @@ export function optimizeOneParameter(
 export function optimizeParameters(
   reviews: ReviewDatum[],
   initialParams: FSRSParameters = defaultParameters,
-  indices: number[] = OPTIMIZABLE_INDICES
+  indices: number[] = getOptimizableIndicesForParams(initialParams.w)
 ): { parameters: FSRSParameters; initialLoss: number; finalLoss: number } {
   const initialLoss = computeLogLoss(reviews, initialParams);
   let currentParams = { ...initialParams, w: [...initialParams.w] };
@@ -311,9 +342,14 @@ export const OPTIMIZER_CONSTANTS = {
   MAX_ITERATIONS,
   CONVERGENCE_THRESHOLD,
   OPTIMIZABLE_INDICES,
+  OPTIMIZABLE_INDICES_V6,
+  OPTIMIZABLE_INDICES_V7,
   PRETRAIN_INDICES,
   PARAM_BOUNDS,
 } as const;
+
+/** Expose helper so callers and tests can ask: which indices for these params? */
+export { getOptimizableIndicesForParams };
 
 
 // ══════════════════════════════════════════════════════════════════════════
