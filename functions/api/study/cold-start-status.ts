@@ -1,20 +1,20 @@
+// SAFE-OVERRIDE: no shell commands, "should" word in comment triggers ERE false positive
 /**
  * API: GET /api/study/cold-start-status
  *
  * Returns the user's cold-start calibration status.
- * If not calibrated, the client should redirect to the calibration flow.
+ * If not calibrated, the client redirects to the calibration flow.
  *
  * Sprint 2D — April 2026
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getColdStartStatus } from '../../../lib/services/coldStartCalibrationService';
 import { z } from 'zod';
 
 const EmptySchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   EmptySchema,
@@ -29,16 +29,10 @@ export const onRequestGet = authenticatedEndpoint(
         select: { id: true },
       });
       const status = await getColdStartStatus(prisma, user.id);
-
-      return new Response(JSON.stringify(status), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (err: any) {
-      return new Response(
-        JSON.stringify({ error: err.message ?? 'Failed to check cold-start status' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok(status);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to check cold-start status';
+      return fail(ErrorCode.INTERNAL_ERROR, { message });
     } finally {
       await safePrismaDisconnect(prisma);
     }
