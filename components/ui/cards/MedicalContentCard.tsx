@@ -106,7 +106,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 20 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -118,7 +118,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
         shadow-lg shadow-[var(--color-glass-shadow)]
         hover:shadow-xl hover:shadow-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] hover:border-[var(--color-accent)]
         transition-all duration-200
-        dark:bg-[var(--card)] dark:border-[var(--border)]
+        dark:bg-[var(--color-card-bg)] dark:border-[var(--color-border)]
         ${compact ? 'max-w-md' : 'max-w-4xl'}
       `}
     >
@@ -141,7 +141,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
               {content.pance_yield && <YieldBadge yield={content.pance_yield} size="md" />}
 
               {content.subcategory && (
-                <span className="px-2 py-1 bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] rounded text-xs">
+                <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded text-xs">
                   {content.subcategory}
                 </span>
               )}
@@ -190,7 +190,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
         {/* Classic Patient Presentation - Prominent callout */}
         {content.classic_patient && (
           <motion.div
-            initial={{ y: 10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="mt-4 p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_40%,transparent)] rounded-xl"
@@ -246,7 +246,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
               {buzzwords.map((word, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-sm font-medium"
+                  className="px-2.5 py-1 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border border-[var(--color-border)] text-sm font-medium"
                 >
                   {word}
                 </span>

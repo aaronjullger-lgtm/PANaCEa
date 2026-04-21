@@ -59,11 +59,34 @@ async function getQueryEmbedding(query: string, apiKey: string): Promise<number[
   return values;
 }
 
-/** Convert search results to CRAG documents for grading */
-function toCRAGDocs(results: Array<{ id: string; condition?: string | null; overview?: string | null; symptoms?: string | null; similarity: number }>): RetrievedDocument[] {
+/** Convert search results to CRAG documents for grading.
+ * Include all safety-critical fields so CRAG can assess relevance on the
+ * clinically important parts (e.g. first_line_rx, complications, differentialDx)
+ * rather than only overview text. Cap at 2000 chars — sufficient for all fields
+ * on a typical result without bloating the in-memory grader.
+ */
+function toCRAGDocs(results: Array<{
+  id: string;
+  condition?: string | null;
+  overview?: string | null;
+  symptoms?: string | null;
+  first_line_rx?: string | null;
+  gold_standard_dx?: string | null;
+  complications?: string | null;
+  differentialDiagnosis?: string | null;
+  similarity: number;
+}>): RetrievedDocument[] {
   return results.map((r) => ({
     id: r.id,
-    text: [r.condition, r.overview, r.symptoms].filter(Boolean).join(' ').slice(0, 1000),
+    text: [
+      r.condition,
+      r.overview,
+      r.symptoms,
+      r.first_line_rx,
+      r.gold_standard_dx,
+      r.complications,
+      r.differentialDiagnosis,
+    ].filter(Boolean).join(' ').slice(0, 2000),
     score: r.similarity,
     source: 'semantic-search',
   }));
@@ -144,7 +167,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
           buzzwords: true, gold_standard_dx: true, first_line_rx: true,
           overview: true, symptoms: true, pathophysiology: true,
           treatment: true, diagnostics: true, best_initial_test: true,
-          clinical_pearls: true,
+          clinical_pearls: true, lastClinicalReviewAt: true,
         },
       });
 
@@ -227,6 +250,7 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
         diagnostics: true,
         best_initial_test: true,
         clinical_pearls: true,
+        lastClinicalReviewAt: true,
       },
     });
 

@@ -67,6 +67,7 @@ export interface MedicalContentSearchResult {
   diagnostics: string | null;
   best_initial_test: string | null;
   clinical_pearls: Prisma.JsonValue | null;
+  lastClinicalReviewAt: Date | null;
   rrfScore: number;
 }
 
@@ -136,6 +137,7 @@ export async function searchMedicalContent(
       SELECT id, ts_rank(search_vector, websearch_to_tsquery('english', ${trimmed}))::float as rank
       FROM "MedicalContent"
       WHERE search_vector @@ websearch_to_tsquery('english', ${trimmed})
+        AND status = 'published'
       ORDER BY rank DESC
       LIMIT ${perListLimit}
     `;
@@ -192,6 +194,7 @@ export async function searchMedicalContent(
       diagnostics: true,
       best_initial_test: true,
       clinical_pearls: true,
+      lastClinicalReviewAt: true,
     },
   });
 
