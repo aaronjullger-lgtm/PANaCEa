@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors, aiEndpoint} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -30,7 +30,7 @@ interface Env {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(StudentContextBodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
     validated: z.infer<typeof StudentContextBodySchema>;

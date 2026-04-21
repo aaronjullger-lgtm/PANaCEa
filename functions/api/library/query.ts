@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors, aiEndpoint} from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -57,7 +57,7 @@ const CITATION_INSTRUCTION =
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(QueryBodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(QueryBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
     env: Env;

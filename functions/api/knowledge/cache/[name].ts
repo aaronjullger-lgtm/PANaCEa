@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors, aiEndpoint} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
@@ -19,7 +19,7 @@ const logger = createEndpointLogger('/api/knowledge/cache/[name]');
 
 export const onRequestOptions = withCors();
 
-export const onRequestDelete = authenticatedEndpoint(
+export const onRequestDelete = aiEndpoint(
   z.object({}).passthrough(),
   async (context) => {
     const { env, auth, params } = context;
