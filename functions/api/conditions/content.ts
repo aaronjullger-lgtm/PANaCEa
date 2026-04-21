@@ -51,6 +51,15 @@ export const onRequestGet = publicEndpoint(
         };
       }
 
+      // rx_side_effects is stored inside the content JSON blob, not as a top-level column.
+      // Extract it explicitly so callers don't have to know the blob shape.
+      const contentJson =
+        record.content && typeof record.content === 'object' && !Array.isArray(record.content)
+          ? (record.content as Record<string, unknown>)
+          : {};
+      const rxSideEffects =
+        typeof contentJson['rx_side_effects'] === 'string' ? contentJson['rx_side_effects'] : null;
+
       // Return structured content
       return {
         data: {
@@ -77,6 +86,7 @@ export const onRequestGet = publicEndpoint(
             firstLineTests: record.best_initial_test ?? undefined,
             goldStandardTest: record.gold_standard_dx ?? undefined,
             firstLineTreatment: record.first_line_rx ?? undefined,
+            rxSideEffects: rxSideEffects ?? undefined,
             patientEducation: record.patient_education ?? undefined,
           },
         },

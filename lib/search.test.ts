@@ -22,6 +22,7 @@ function makeRow(
     diagnostics: partial.diagnostics ?? null,
     best_initial_test: partial.best_initial_test ?? null,
     clinical_pearls: partial.clinical_pearls ?? null,
+    lastClinicalReviewAt: partial.lastClinicalReviewAt ?? null,
     rrfScore: partial.rrfScore ?? 0.01,
   };
 }
