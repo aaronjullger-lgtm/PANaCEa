@@ -134,7 +134,7 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
             <InlineSpinner size="xl" className="text-primary" />
           </div>
           <p className="mt-4 text-lg">Generating 300‑question exam session…</p>
-          <p className="text-sm text-muted-foreground">This may take a moment.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">This may take a moment.</p>
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
           {onExit && (
             <button
               onClick={onExit}
-              className="ml-2 px-4 py-2 bg-muted text-muted-foreground rounded-lg"
+              className="ml-2 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg"
             >
               Exit
             </button>

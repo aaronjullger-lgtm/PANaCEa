@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
 
@@ -28,6 +28,8 @@ export type DailyPlanCompleteRequest = z.infer<typeof DailyPlanCompleteSchema>;
  * Optional query params:
  * - date: ISO date string (default: today)
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   DailyPlanGetQuerySchema,
   async (context) => {

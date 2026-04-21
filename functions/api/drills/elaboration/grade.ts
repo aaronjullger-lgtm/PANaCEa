@@ -12,7 +12,7 @@
  * validated against ElaborationGradeSchema; one schema-repair pass is
  * allowed before falling back to a graceful "couldn't grade" response.
  */
-import { aiEndpoint } from '../../_shared/middleware';
+import { aiEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import {
@@ -55,6 +55,8 @@ ${ELABORATION_GRADE_DESCRIPTION}`;
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): elaboration grading
 // uses gateway.grade() against Gemini. 25 rpm 'ai' bucket matches profile.
+export const onRequestOptions = withCors();
+
 export const onRequestPost = aiEndpoint(gradeSchema, async (context) => {
   const { fact, studentExplanation, gradingRubric } = context.validated;
 

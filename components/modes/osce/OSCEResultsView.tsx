@@ -47,7 +47,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
   onNewCase,
 }) => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       {/* Header */}
       <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -104,7 +104,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           {diagnosisFeedback?.feedback && (
             <div className="mb-4 p-4 bg-card/50 rounded-lg border border-[var(--color-border)]/50">
               <p className="text-sm font-semibold mb-1 opacity-75">AI Feedback:</p>
-              <p className="text-muted-foreground italic">&ldquo;{diagnosisFeedback.feedback}&rdquo;</p>
+              <p className="text-[var(--color-text-muted)] italic">&ldquo;{diagnosisFeedback.feedback}&rdquo;</p>
             </div>
           )}
 
@@ -136,7 +136,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             className="bg-card rounded-xl p-6 text-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
             <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" aria-hidden="true" />
-            <p className="text-sm text-muted-foreground mb-1">Thoroughness</p>
+            <p className="text-sm text-[var(--color-text-muted)] mb-1">Thoroughness</p>
             <p className={`text-4xl font-bold tabular-nums ${getScoreColor(score.thoroughness)}`}>
               {Math.round(score.thoroughness)}%
             </p>
@@ -149,7 +149,7 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
             className="bg-card rounded-xl p-6 text-center shadow-[0_0_0_1px_var(--color-border),0_1px_2px_0_rgba(0,0,0,0.03)]"
           >
             <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" aria-hidden="true" />
-            <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
+            <p className="text-sm text-[var(--color-text-muted)] mb-1">Efficiency</p>
             <p className={`text-4xl font-bold tabular-nums ${getScoreColor(score.efficiency)}`}>
               {Math.round(score.efficiency)}%
             </p>

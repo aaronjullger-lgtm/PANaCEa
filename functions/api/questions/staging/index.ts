@@ -1,10 +1,12 @@
-import { adminEndpoint } from '../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 
 // Schema for staging question data
 const StagingQuestionSchema = z.object({
   questionData: z.record(z.string(), z.unknown()),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(StagingQuestionSchema, async ({ env, validated }) => {
   const { createEdgePrismaClient, safePrismaDisconnect } =

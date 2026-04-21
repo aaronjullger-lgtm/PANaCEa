@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { prisma } from '../_shared/prisma-edge';
 
 /**
@@ -14,6 +14,8 @@ import { prisma } from '../_shared/prisma-edge';
  * - Impact metrics (users studied, accuracy, exam correlation)
  * - Suggested content gaps to fill
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   z.object({}).passthrough(),
   async (context) => {

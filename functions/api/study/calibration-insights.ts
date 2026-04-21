@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   CALIBRATION_CONSTANTS,
@@ -25,6 +25,8 @@ import type { CalibrationReview } from '../../../lib/calibration/calibrationMath
 // Empty schema for GET endpoint with no parameters
 const emptySchema = z.object({});
 type EmptyQuery = z.infer<typeof emptySchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   emptySchema,

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../../_shared/secureLogger';
 import { normalizeSessionQuestion } from '../../../../../lib/sessionGeneration';
@@ -15,6 +15,8 @@ import { normalizeSessionQuestion } from '../../../../../lib/sessionGeneration';
 const ParamsSchema = z.object({
   sessionId: z.string().min(1, 'Missing session id'),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,

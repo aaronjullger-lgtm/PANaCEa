@@ -22,7 +22,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint } from '../_shared/middleware';
+import { aiEndpoint, withCors} from '../_shared/middleware';
 import { ok, fail } from '../_shared/api-response';
 import { ErrorCode } from '../_shared/error-catalog';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -39,6 +39,8 @@ interface Env {
 // No query params are required — the real payload is in the multipart body.
 // A permissive schema keeps validation middleware happy without consuming it.
 const querySchema = z.record(z.string(), z.string()).optional();
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   querySchema,

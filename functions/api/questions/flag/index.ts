@@ -1,8 +1,10 @@
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 
 // Shared schema — single source of truth for this endpoint's request contract.
 // To change the /api/questions/flag contract, edit lib/api/schemas/questions.ts.
 import { FlagQuestionRequestSchema as FlagQuestionSchema } from '../../../../lib/api/schemas/questions';
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   FlagQuestionSchema,

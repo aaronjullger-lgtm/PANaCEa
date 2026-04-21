@@ -6,7 +6,7 @@
  * Condition metadata is public curriculum content
  */
 
-import { publicEndpoint } from '../_shared/middleware';
+import { publicEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -67,6 +67,8 @@ function calculateRelevanceScore(query: string, conditionName: string, aliases: 
 
   return 0;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

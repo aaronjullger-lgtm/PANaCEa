@@ -11,7 +11,7 @@
  * Used by dashboard Calibration widget and FSRS-aware scheduling.
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 import { computeQuadrantCounts } from '../../../lib/calibrationQuadrants';
@@ -31,6 +31,8 @@ function getConfidence(row: {
   if (typeof fromJson === 'number' && !Number.isNaN(fromJson)) return fromJson;
   return null;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   z

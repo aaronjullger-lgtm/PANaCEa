@@ -13,7 +13,7 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { publicEndpoint, type ValidatedContext } from '../_shared/middleware';
+import { publicEndpoint, type ValidatedContext, withCors} from '../_shared/middleware';
 import { antibioticQuerySchema } from '../_shared/zodSchemas';
 import { logger } from '../_shared/secureLogger';
 import type { z } from 'zod';
@@ -24,6 +24,8 @@ type AntibioticQuery = z.infer<typeof antibioticQuerySchema>;
  * GET /api/drills/antibiotics
  * Returns antibiotic coverage guidelines with optional class filtering
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = publicEndpoint(
   antibioticQuerySchema,
   async (context: ValidatedContext<AntibioticQuery>) => {

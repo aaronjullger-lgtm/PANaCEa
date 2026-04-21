@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   eloUpdate,
@@ -36,6 +36,8 @@ const EloUpdateSchema = z.object({
 });
 
 type EloUpdateBody = z.infer<typeof EloUpdateSchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   EloUpdateSchema,

@@ -1,4 +1,4 @@
-import { adminEndpoint } from '../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 
 // Zod schema for assemble request
@@ -13,6 +13,8 @@ const AssembleRequestSchema = z.object({
     .default({}),
   count: z.number().int().min(1).max(100).optional().default(10),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(AssembleRequestSchema, async ({ env, validated }) => {
   const { createEdgePrismaClient, safePrismaDisconnect } =

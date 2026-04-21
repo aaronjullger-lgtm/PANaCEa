@@ -9,7 +9,7 @@
  * interrogation produces 2-3x better retention than passive review.
  */
 
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -32,6 +32,8 @@ const CLINICAL_FACTS = [
   { fact: 'SSRIs take 4-6 weeks to reach full therapeutic effect for depression', mechanism: 'SSRIs immediately block serotonin reuptake, but the therapeutic delay is due to 5-HT1A autoreceptor desensitization. Initially, increased serotonin activates presynaptic 5-HT1A autoreceptors, which reduce serotonin firing (negative feedback). Over weeks, these autoreceptors downregulate, allowing sustained serotonin neurotransmission. Downstream neuroplasticity changes (BDNF upregulation, hippocampal neurogenesis) also require time.', system: 'Psychiatry', rubric: ['5-HT1A autoreceptor desensitization', 'Negative feedback initially', 'BDNF/neuroplasticity changes'] },
   { fact: 'Psoriasis is characterized by well-demarcated erythematous plaques with silvery scales', mechanism: 'Psoriasis is a T-cell-mediated autoimmune disease where IL-17 and IL-23 drive hyperproliferation of keratinocytes (cell cycle reduced from 28 days to 3-4 days). The rapid turnover prevents normal maturation, producing parakeratotic scale (retained nuclei). The Auspitz sign (pinpoint bleeding when scale is removed) occurs because elongated rete ridges bring dermal capillaries close to the surface.', system: 'Dermatology', rubric: ['T-cell/IL-17/IL-23 pathway', 'Keratinocyte hyperproliferation', 'Auspitz sign mechanism'] },
 ];
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(generateSchema, async (context) => {
   const system = context.validated?.system;

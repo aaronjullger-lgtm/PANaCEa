@@ -31,7 +31,7 @@
  * @see hooks/game/use-teachback-drill.ts
  */
 
-import { aiEndpoint } from '../../_shared/middleware';
+import { aiEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import {
@@ -205,6 +205,8 @@ function gradeOffline(
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): teachback grading
 // invokes Gemini to score free-text clinical explanations. 25 rpm 'ai' bucket.
+export const onRequestOptions = withCors();
+
 export const onRequestPost = aiEndpoint(bodySchema, async (context) => {
   const {
     topic,

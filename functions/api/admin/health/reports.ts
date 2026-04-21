@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { cmsEndpoint } from '../../_shared/middleware';
+import { cmsEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { auditLog } from '../../_shared/auditLog';
 
@@ -22,6 +22,8 @@ const HealthReportsSchema = z.object({
     .transform((v) => v !== 'false'),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = cmsEndpoint(
   HealthReportsSchema,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { recordExamOutcome } from '../../_shared/outcomeOptimizationService';
 import { prisma } from '../../_shared/prisma-edge';
 
@@ -35,6 +35,8 @@ const ExamOutcomeSchema = z.object({
 });
 
 export type ExamOutcomeRequest = z.infer<typeof ExamOutcomeSchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   ExamOutcomeSchema,

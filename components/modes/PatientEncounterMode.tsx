@@ -1233,9 +1233,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       case 'unnecessary':
         return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10';
       case 'redundant':
-        return 'text-muted-foreground bg-muted border-[var(--color-border)]';
+        return 'text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
       default:
-        return 'text-muted-foreground bg-muted border-[var(--color-border)]';
+        return 'text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
     }
   };
 

@@ -7,7 +7,7 @@
  * Database-First: PostgreSQL is the ONLY source of truth for clinical content.
  */
 
-import { publicEndpoint } from '../_shared/middleware';
+import { publicEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -66,6 +66,8 @@ function extractPearl(clinicalPearls: unknown, overview: string | null): string 
   }
   return 'High-yield condition for PANCE';
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(HighYieldSchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

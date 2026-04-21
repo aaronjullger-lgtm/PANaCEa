@@ -509,7 +509,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
                 activeTab === 'home'
                   ? 'text-primary bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <Home className="w-5 h-5 mb-1" />
@@ -520,7 +520,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
                 activeTab === 'drills'
                   ? 'text-primary bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <Dumbbell className="w-5 h-5 mb-1" />
@@ -531,7 +531,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
                 activeTab === 'stats'
                   ? 'text-primary bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <BarChart3 className="w-5 h-5 mb-1" />
@@ -542,7 +542,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
                 activeTab === 'settings'
                   ? 'text-primary bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <User className="w-5 h-5 mb-1" />

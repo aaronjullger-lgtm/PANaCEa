@@ -9,11 +9,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, AuthenticatedContext, ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 const emptySchema = z.object({});
 type EmptyQuery = z.infer<typeof emptySchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   emptySchema,

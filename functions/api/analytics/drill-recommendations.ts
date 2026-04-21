@@ -11,7 +11,7 @@
  * @see lib/services/drillRecommendationEngine.ts
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -218,6 +218,8 @@ function generateDrillRecommendations(profile: WeaknessProfile, max = 5): DrillR
 }
 
 // ── Endpoint ──────────────────────────────────────────────────────────────
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   z.object({

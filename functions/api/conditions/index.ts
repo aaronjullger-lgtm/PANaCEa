@@ -6,7 +6,7 @@
  * Condition metadata is public curriculum content
  */
 
-import { publicEndpoint } from '../_shared/middleware';
+import { publicEndpoint, withCors} from '../_shared/middleware';
 import { ContentService } from '../../../lib/services/content/contentService';
 import { z } from 'zod';
 
@@ -15,6 +15,8 @@ const ConditionsListSchema = z.object({
   system: z.string().optional(),
   includeContent: z.enum(['true', 'false']).optional(),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   ConditionsListSchema,

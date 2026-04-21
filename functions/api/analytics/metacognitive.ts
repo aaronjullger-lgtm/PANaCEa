@@ -13,8 +13,9 @@
  * All metrics derived from existing QuestionAttempt + ReviewLog tables.
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { normalizeTz, formatLocalDay } from '../../../lib/time/userTz';
 import { z } from 'zod';
 
 const DEFAULT_DAYS = 30;
@@ -114,6 +115,22 @@ function getConfidence(row: {
   return typeof val === 'number' && !Number.isNaN(val) ? val : null;
 }
 
+/**
+ * Extract the local hour (0-23) of a Date in an IANA timezone.
+ * Cloudflare Workers run in UTC; `.getHours()` would always return UTC hours,
+ * making circadian data useless for non-UTC students.
+ */
+function getLocalHour(date: Date, tz: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour: 'numeric',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const raw = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  // h23 range is 0-23 but some engines return 24 for midnight; normalise.
+  return raw % 24;
+}
+
 function quantile(sorted: number[], q: number): number {
   if (sorted.length === 0) return 0;
   const pos = (sorted.length - 1) * q;
@@ -124,6 +141,8 @@ function quantile(sorted: number[], q: number): number {
 }
 
 // ── Handler ────────────────────────────────────────────────────────────────
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   z.object({
@@ -146,6 +165,20 @@ export const onRequestGet = authenticatedEndpoint(
 
       if (!user) {
         return { status: 404, data: { error: 'User not found' } };
+      }
+
+      // Resolve user's local timezone for circadian bucketing.
+      // Priority: ?tz= query param → UserPreferences.consolidationTimezone → UTC.
+      // Workers run in UTC; using getHours() would misreport study hours for
+      // students in non-UTC zones.
+      const urlTz = new URL(context.request.url).searchParams.get('tz');
+      let tz = normalizeTz(urlTz);
+      if (tz === 'UTC') {
+        const prefs = await prisma.userPreferences.findUnique({
+          where: { userId: user.id },
+          select: { consolidationTimezone: true },
+        });
+        tz = normalizeTz(prefs?.consolidationTimezone);
       }
 
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -191,7 +224,7 @@ export const onRequestGet = authenticatedEndpoint(
       const byDate = new Map<string, { totalMs: number; count: number }>();
       for (const a of attempts) {
         if (!a.timeSpentMs || a.timeSpentMs <= 0) continue;
-        const date = a.createdAt.toISOString().split('T')[0]!;
+        const date = formatLocalDay(a.createdAt, tz);
         const bucket = byDate.get(date) ?? { totalMs: 0, count: 0 };
         bucket.totalMs += a.timeSpentMs;
         bucket.count += 1;
@@ -243,7 +276,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       const byHour = new Map<number, { correct: number; total: number; totalMs: number }>();
       for (const a of attempts) {
-        const hour = a.createdAt.getHours();
+        const hour = getLocalHour(a.createdAt, tz);
         const bucket = byHour.get(hour) ?? { correct: 0, total: 0, totalMs: 0 };
         bucket.total++;
         if (a.wasCorrect) bucket.correct++;

@@ -16,7 +16,7 @@
  * @see functions/api/drills/teachback/grade.ts
  */
 
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -135,6 +135,8 @@ const TEACHBACK_TOPICS: TeachBackTopic[] = [
     difficulty: 'foundational',
   },
 ];
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   querySchema,

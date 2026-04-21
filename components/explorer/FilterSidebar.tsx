@@ -133,7 +133,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   return (
     <div className="h-full w-80 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] overflow-y-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-foreground">Graph Filters</h2>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Graph Filters</h2>
         <div className="flex items-center gap-2">
           {onApply && (
             <button
@@ -158,7 +158,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       {/* Organ Systems */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Organ Systems</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Organ Systems</h3>
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('systems')}
@@ -188,8 +188,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   onChange={() => handleSystemToggle(system)}
                   className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 />
-                <span className="flex-1 text-foreground">{system}</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="flex-1 text-[var(--color-text-primary)]">{system}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">
                   {Math.round(weight * 100)}%
                 </span>
               </label>
@@ -201,7 +201,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       {/* Edge Types */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Connection Types</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Connection Types</h3>
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('edgeTypes')}
@@ -229,7 +229,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 onChange={() => handleEdgeTypeToggle(edgeType)}
                 className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
-              <span className="flex-1 text-foreground">{edgeType.replace(/_/g, ' ')}</span>
+              <span className="flex-1 text-[var(--color-text-primary)]">{edgeType.replace(/_/g, ' ')}</span>
               <div
                 className="w-3 h-3 rounded-full"
                 style={{
@@ -244,7 +244,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       {/* Node Types */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold text-foreground">Node Types</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Node Types</h3>
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('nodeTypes')}
@@ -272,7 +272,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 onChange={() => handleNodeTypeToggle(nodeType)}
                 className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
-              <span className="flex-1 text-foreground">{nodeType.replace(/_/g, ' ')}</span>
+              <span className="flex-1 text-[var(--color-text-primary)]">{nodeType.replace(/_/g, ' ')}</span>
             </label>
           ))}
         </div>
@@ -280,9 +280,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
       {/* Weight Slider */}
       <section className="mb-8">
-        <h3 className="text-lg font-semibold text-foreground mb-3">Edge Weight</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Edge Weight</h3>
         <div className="space-y-4">
-          <div className="flex justify-between text-sm text-muted-foreground">
+          <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
             <span>Min: {filter.minWeight.toFixed(2)}</span>
             <span>Max: 1.00</span>
           </div>
@@ -295,7 +295,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             onChange={(e) => handleWeightChange(parseFloat(e.target.value), 1)}
             className="w-full h-2 bg-[var(--color-accent)]/15 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-[var(--color-text-muted)]">
             Show edges with weight ≥ {filter.minWeight.toFixed(2)}
           </div>
         </div>
@@ -303,9 +303,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
       {/* Depth Limit */}
       <section className="mb-8">
-        <h3 className="text-lg font-semibold text-foreground mb-3">Expansion Depth</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Expansion Depth</h3>
         <div className="space-y-4">
-          <div className="flex justify-between text-sm text-muted-foreground">
+          <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
             <span>Current: {filter.maxDepth}</span>
             <span>Max: 5</span>
           </div>
@@ -318,7 +318,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             onChange={(e) => handleDepthChange(parseInt(e.target.value, 10))}
             className="w-full h-2 bg-[var(--color-accent)]/15 rounded-lg appearance-none cursor-pointer"
           />
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-[var(--color-text-muted)]">
             Limit graph expansion to {filter.maxDepth} hop{filter.maxDepth !== 1 ? 's' : ''}
           </div>
         </div>
@@ -334,7 +334,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             minWeight: 0,
             maxDepth: 3,
           })}
-          className="w-full py-2 px-4 border border-[var(--color-border)] rounded-md text-foreground hover:bg-[var(--color-bg-secondary)] transition-colors"
+          className="w-full py-2 px-4 border border-[var(--color-border)] rounded-md text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           Reset All Filters
         </button>

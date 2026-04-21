@@ -69,7 +69,7 @@ interface InsightsData {
 function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
   if (bins.length === 0 || bins.every(b => b.count < 10)) {
     return (
-      <p className="text-sm text-muted-foreground italic py-4">
+      <p className="text-sm text-[var(--color-text-muted)] italic py-4">
         Not enough review data yet. Keep studying to unlock calibration.
       </p>
     );
@@ -79,7 +79,7 @@ function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-between text-xs text-muted-foreground mb-2">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-2">
         <span>Predicted</span>
         <span>Actual Recall</span>
       </div>
@@ -94,23 +94,23 @@ function CalibrationChart({ bins }: { bins: CalibrationBin[] }) {
 
         return (
           <div key={i} className="flex items-center gap-2 text-xs">
-            <span className="w-10 text-right text-muted-foreground">{predictedPct}%</span>
-            <div className="flex-1 h-3.5 bg-muted rounded overflow-hidden relative">
+            <span className="w-10 text-right text-[var(--color-text-muted)]">{predictedPct}%</span>
+            <div className="flex-1 h-3.5 bg-[var(--color-bg-tertiary)] rounded overflow-hidden relative">
               <div
                 className={`h-full ${barColor} rounded transition-all duration-500`}
                 style={{ width: `${barWidth}%` }}
               />
               <div
-                className="absolute top-0 h-full w-px bg-foreground/30"
+                className="absolute top-0 h-full w-px bg-[var(--color-text-primary)]/30"
                 style={{ left: `${bin.predictedCenter * 100}%` }}
               />
             </div>
-            <span className="w-10 text-foreground">{actualPct}%</span>
-            <span className="w-8 text-muted-foreground text-right">{bin.count}</span>
+            <span className="w-10 text-[var(--color-text-primary)]">{actualPct}%</span>
+            <span className="w-8 text-[var(--color-text-muted)] text-right">{bin.count}</span>
           </div>
         );
       })}
-      <div className="flex gap-3 text-xs text-muted-foreground mt-2">
+      <div className="flex gap-3 text-xs text-[var(--color-text-muted)] mt-2">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded bg-[var(--color-data-pass)]" /> Calibrated
         </span>
@@ -132,7 +132,7 @@ function DriftIndicator({ drift }: { drift: DriftData }) {
 
   const statusColor = drift.isDrifting
     ? drift.direction === 'improving' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
-    : 'text-muted-foreground';
+    : 'text-[var(--color-text-muted)]';
 
   const label = drift.isDrifting
     ? drift.direction === 'improving'
@@ -141,11 +141,11 @@ function DriftIndicator({ drift }: { drift: DriftData }) {
     : 'Recall is stable';
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
+    <div className="flex items-center gap-3 p-3 bg-[var(--color-bg-tertiary)]/50 rounded-lg border">
       <Icon className={`w-6 h-6 ${statusColor}`} />
       <div>
         <p className={`text-sm font-medium ${statusColor}`}>{label}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Recent: {(drift.shortWindowFactor * 100).toFixed(0)}%
           {' | '}Historical: {(drift.longWindowFactor * 100).toFixed(0)}%
         </p>
@@ -172,8 +172,8 @@ function CircadianPhases({ phases }: { phases: CircadianPhaseData[] }) {
       {phases.map(p => (
         <div key={p.phase} className="flex items-center gap-2">
           <span className="w-5">{phaseIcons[p.phase]}</span>
-          <span className="text-sm text-foreground w-20 capitalize">{p.phase}</span>
-          <div className="flex-1 h-3 bg-muted rounded overflow-hidden">
+          <span className="text-sm text-[var(--color-text-primary)] w-20 capitalize">{p.phase}</span>
+          <div className="flex-1 h-3 bg-[var(--color-bg-tertiary)] rounded overflow-hidden">
             <div
               className={`h-full rounded transition-all ${
                 p.phase === bestPhase?.phase ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-accent)]'
@@ -181,13 +181,13 @@ function CircadianPhases({ phases }: { phases: CircadianPhaseData[] }) {
               style={{ width: `${p.recallRate * 100}%` }}
             />
           </div>
-          <span className="text-xs text-muted-foreground w-20 text-right">
+          <span className="text-xs text-[var(--color-text-muted)] w-20 text-right">
             {(p.recallRate * 100).toFixed(0)}% ({p.reviewCount})
           </span>
         </div>
       ))}
       {bestPhase && (
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">
           Best performance:{' '}
           <span className="text-[var(--color-data-pass)] capitalize">{bestPhase.phase}</span>
           {bestPhase.phase === 'morning' && ' — consistent with cortisol-driven encoding peaks'}
@@ -210,10 +210,10 @@ function SystemBreakdown({ systems }: { systems: SystemCalibration[] }) {
           : deviation < 0.2 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]';
         return (
           <div key={s.system} className="flex justify-between text-sm">
-            <span className="text-foreground">{s.system}</span>
+            <span className="text-[var(--color-text-primary)]">{s.system}</span>
             <span className={color}>
               {s.factor > 1 ? '+' : ''}{((s.factor - 1) * 100).toFixed(0)}%
-              <span className="text-muted-foreground ml-1">({s.reviewCount})</span>
+              <span className="text-[var(--color-text-muted)] ml-1">({s.reviewCount})</span>
             </span>
           </div>
         );
@@ -265,8 +265,8 @@ export default function CalibrationInsightsDashboard() {
   if (loading) {
     return (
       <div className="animate-pulse space-y-3 p-4">
-        <div className="h-4 bg-muted rounded w-1/3" />
-        <div className="h-32 bg-muted rounded" />
+        <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/3" />
+        <div className="h-32 bg-[var(--color-bg-tertiary)] rounded" />
       </div>
     );
   }
@@ -281,7 +281,7 @@ export default function CalibrationInsightsDashboard() {
 
   if (!data || data.totalReviews < 50) {
     return (
-      <div className="p-4 text-sm text-muted-foreground italic">
+      <div className="p-4 text-sm text-[var(--color-text-muted)] italic">
         Complete at least 50 reviews to unlock calibration insights.
       </div>
     );
@@ -290,10 +290,10 @@ export default function CalibrationInsightsDashboard() {
   return (
     <div className="space-y-6 p-4">
       <div>
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-1">
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2 mb-1">
           <Activity className="w-5 h-5" /> Calibration Insights
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[var(--color-text-muted)]">
           How well FSRS predicts your recall — based on {data.totalReviews.toLocaleString()} reviews
         </p>
       </div>
@@ -301,7 +301,7 @@ export default function CalibrationInsightsDashboard() {
       <DriftIndicator drift={data.drift} />
 
       <div>
-        <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-2">
+        <h4 className="text-sm font-medium text-[var(--color-text-primary)] flex items-center gap-1.5 mb-2">
           <BarChart3 className="w-4 h-4" /> Predicted vs Actual Recall
         </h4>
         <CalibrationChart bins={data.bins} />
@@ -309,7 +309,7 @@ export default function CalibrationInsightsDashboard() {
 
       {data.circadianPhases.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">
+          <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
             Study Time Performance
           </h4>
           <CircadianPhases phases={data.circadianPhases} />
@@ -318,14 +318,14 @@ export default function CalibrationInsightsDashboard() {
 
       {data.systemCalibrations.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-foreground mb-2">
+          <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
             By Body System
           </h4>
           <SystemBreakdown systems={data.systemCalibrations} />
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-[var(--color-text-muted)]">
         Last updated: {new Date(data.lastUpdated).toLocaleDateString()}
       </p>
     </div>

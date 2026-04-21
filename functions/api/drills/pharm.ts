@@ -5,8 +5,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import {
   authenticatedEndpoint,
   AuthenticatedContext,
-  ValidatedContext,
-} from '../_shared/middleware';
+  ValidatedContext,, withCors} from '../_shared/middleware';
 import { pharmDrillQuerySchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
@@ -59,6 +58,8 @@ interface Drug {
  * - count: Number of questions to generate (default: 10, max: 50)
  * - category: Question type filter (optional)
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   pharmDrillQuerySchema,
   async (context: AuthenticatedContext & ValidatedContext<PharmDrillQuery>) => {

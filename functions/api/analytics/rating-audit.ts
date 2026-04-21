@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getRatingDistributionAudit } from '../../../lib/services/ratingDistributionAuditService';
 
@@ -23,6 +23,8 @@ const QuerySchema = z.object({
 });
 
 type QueryParams = z.infer<typeof QuerySchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   QuerySchema,

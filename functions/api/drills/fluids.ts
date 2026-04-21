@@ -13,7 +13,7 @@
  * Security: Public reference data endpoint with validation
  */
 
-import { publicEndpoint, ValidatedContext } from '../_shared/middleware';
+import { publicEndpoint, ValidatedContext, withCors} from '../_shared/middleware';
 import { fluidsQuerySchema } from '../_shared/zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
@@ -27,6 +27,8 @@ type FluidsQuery = z.infer<typeof fluidsQuerySchema>;
 // ============================================================================
 // MAIN HANDLER
 // ============================================================================
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   fluidsQuerySchema,

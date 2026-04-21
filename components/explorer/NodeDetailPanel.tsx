@@ -89,7 +89,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
   // getSystemWeight is imported as blueprintGetSystemWeight
 
   const renderSystemBadges = (systemCodes: string[]) => {
-    if (!systemCodes.length) return <span className="text-muted-foreground">None</span>;
+    if (!systemCodes.length) return <span className="text-[var(--color-text-muted)]">None</span>;
     return (
       <div className="flex flex-wrap gap-2">
         {systemCodes.map((code) => {
@@ -103,7 +103,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
             >
               {code}
               {weight && (
-                <span className="ml-1 text-muted-foreground">
+                <span className="ml-1 text-[var(--color-text-muted)]">
                   {Math.round(weight * 100)}%
                 </span>
               )}
@@ -116,11 +116,11 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
 
   const renderEdgeList = (edges: GraphEdgeResponse[], direction: 'outgoing' | 'incoming') => (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold text-foreground">
+      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
         {direction === 'outgoing' ? 'Outgoing Connections' : 'Incoming Connections'} ({edges.length})
       </h4>
       {edges.length === 0 ? (
-        <p className="text-sm text-muted-foreground">None</p>
+        <p className="text-sm text-[var(--color-text-muted)]">None</p>
       ) : (
         <ul className="space-y-1">
           {edges.slice(0, 10).map((edge) => (
@@ -136,10 +136,10 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
                   />
                   <span className="font-medium text-sm">{edge.edgeType.replace(/_/g, ' ')}</span>
                   {edge.weight && (
-                    <span className="text-xs text-muted-foreground">weight: {edge.weight.toFixed(2)}</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">weight: {edge.weight.toFixed(2)}</span>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-xs text-[var(--color-text-muted)] mt-1">
                   {direction === 'outgoing' ? '→' : '←'} {direction === 'outgoing' ? edge.targetId : edge.sourceId}
                   {edge.description && <span className="ml-2">– {edge.description}</span>}
                 </div>
@@ -152,7 +152,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
             </li>
           ))}
           {edges.length > 10 && (
-            <li className="text-xs text-muted-foreground italic">
+            <li className="text-xs text-[var(--color-text-muted)] italic">
               +{edges.length - 10} more connections
             </li>
           )}
@@ -166,8 +166,8 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
       <div className="h-full flex items-center justify-center p-8 text-center">
         <div className="max-w-sm">
           <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Select a Node</h3>
-          <p className="text-muted-foreground">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Select a Node</h3>
+          <p className="text-[var(--color-text-muted)]">
             Click on any node in the graph to see its detailed information here.
           </p>
         </div>
@@ -184,7 +184,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
       >
         <div className="text-center">
           <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
-          <p className="mt-4 text-muted-foreground">Loading node details…</p>
+          <p className="mt-4 text-[var(--color-text-muted)]">Loading node details…</p>
         </div>
       </div>
     );
@@ -195,8 +195,8 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <div className="mb-4 flex justify-center"><AlertTriangle className="w-10 h-10 text-[var(--color-text-muted)]" /></div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Could not load node</h3>
-          <p className="text-muted-foreground mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Could not load node</h3>
+          <p className="text-[var(--color-text-muted)] mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
@@ -221,12 +221,12 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
     <div className="h-full overflow-y-auto p-6 bg-[var(--color-bg-primary)]">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">{label}</h2>
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">{label}</h2>
           <div className="flex items-center gap-3 mt-2">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
               {nodeType}
             </span>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-[var(--color-text-muted)]">
               Source: {sourceType} ({sourceId})
             </span>
           </div>
@@ -246,8 +246,8 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {/* Description */}
         {description && (
           <section>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
-            <p className="text-foreground bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Description</h3>
+            <p className="text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
               {description}
             </p>
           </section>
@@ -256,16 +256,16 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {/* Taxonomy */}
         {taxonomyCode && (
           <section>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Taxonomy</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Taxonomy</h3>
             <div className="bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
               <code className="font-mono text-sm bg-[var(--color-accent)]/15 px-2 py-1 rounded">
                 {taxonomyCode}
               </code>
               {taxonomyName && (
-                <p className="mt-2 text-foreground">{taxonomyName}</p>
+                <p className="mt-2 text-[var(--color-text-primary)]">{taxonomyName}</p>
               )}
               {taxonomyDescription && (
-                <p className="mt-1 text-sm text-muted-foreground">{taxonomyDescription}</p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">{taxonomyDescription}</p>
               )}
             </div>
           </section>
@@ -273,16 +273,16 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
 
         {/* System Codes */}
         <section>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Organ Systems</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Organ Systems</h3>
           {renderSystemBadges(systemCodes)}
         </section>
 
         {/* Metadata */}
         {metadata && Object.keys(metadata).length > 0 && (
           <section>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Metadata</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Metadata</h3>
             <div className="bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
-              <pre className="text-xs text-foreground overflow-x-auto">
+              <pre className="text-xs text-[var(--color-text-primary)] overflow-x-auto">
                 {JSON.stringify(metadata, null, 2)}
               </pre>
             </div>
@@ -296,7 +296,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         </div>
 
         {/* Footer note */}
-        <div className="pt-4 border-t border-[var(--color-border)] text-xs text-muted-foreground">
+        <div className="pt-4 border-t border-[var(--color-border)] text-xs text-[var(--color-text-muted)]">
           Node ID: <code className="bg-[var(--color-accent)]/15 px-1 py-0.5 rounded">{nodeData.id}</code>
           <span className="mx-2">•</span>
           Last updated: {new Date().toLocaleDateString()}

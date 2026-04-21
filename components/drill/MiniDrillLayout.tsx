@@ -97,12 +97,12 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
           <div className="flex items-center gap-1 min-h-[44px]">
             <Flame
               className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-muted-foreground'
+                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'
               }`}
             />
             <span
               className={`text-sm sm:text-base font-bold tabular-nums ${
-                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-muted-foreground'
+                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'
               }`}
             >
               {streak}

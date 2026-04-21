@@ -19,7 +19,7 @@
  * @see lib/time/userTz.ts
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
@@ -48,6 +48,8 @@ export interface ReviewForecastResponse {
   /** IANA timezone used to bucket days. Surfaces so the client can audit. */
   timezone: string;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   querySchema,

@@ -12,13 +12,15 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getDailyStudyAllocation } from '../../../lib/services/dailyStudyAllocatorService';
 
 // GET endpoint — no request body needed
 const EmptySchema = z.object({});
 type EmptyQuery = z.infer<typeof EmptySchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   EmptySchema,

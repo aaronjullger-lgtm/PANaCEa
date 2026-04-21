@@ -10,7 +10,7 @@
  * @see functions/api/cron/push-reminders.ts — scheduled notification sender
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -23,6 +23,8 @@ const subscribeSchema = z.object({
     auth: z.string().min(1),
   }),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   subscribeSchema,

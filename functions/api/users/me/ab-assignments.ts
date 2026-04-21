@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 /**
@@ -11,6 +11,8 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
  *
  * Response: { assignments: { [experimentId]: { variantName, config } } }
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   z.object({}).passthrough(),
   async (context) => {

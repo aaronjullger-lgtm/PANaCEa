@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { getExamReadinessBySystem } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
 
@@ -20,6 +20,8 @@ const ExamReadinessQuerySchema = z.object({
  * - Critical gaps needing focus
  * - Days until exam
  */
+export const onRequestOptions = withCors();
+
 export const onRequestGet = authenticatedEndpoint(
   ExamReadinessQuerySchema,
   async (context) => {

@@ -16,7 +16,7 @@
  * Security: Public reference data endpoint with validation
  */
 
-import { publicEndpoint, ValidatedContext } from '../_shared/middleware';
+import { publicEndpoint, ValidatedContext, withCors} from '../_shared/middleware';
 import { codeBlueQuerySchema } from '../_shared/zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
@@ -60,6 +60,8 @@ function shuffleArray<T>(array: T[]): T[] {
 // ============================================================================
 // MAIN HANDLER
 // ============================================================================
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   codeBlueQuerySchema,

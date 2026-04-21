@@ -1,4 +1,4 @@
-import { adminEndpoint } from '../../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../../_shared/middleware';
 import { z } from 'zod';
 
 // Schema for resolving a flag (admin only)
@@ -6,6 +6,8 @@ const ResolveFlagSchema = z.object({
   reviewedBy: z.string().min(1).max(200),
   resolutionNote: z.string().min(1).max(2000),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(
   ResolveFlagSchema,

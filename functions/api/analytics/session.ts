@@ -8,7 +8,7 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { sessionAnalyticsSchema, sessionAnalyticsQuerySchema } from '../_shared/zodSchemas';
 import type { AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
 import { v4 as uuidv4 } from 'uuid';
@@ -30,6 +30,8 @@ type SessionAnalyticsQuery = z.infer<typeof sessionAnalyticsQuerySchema>;
 function getSessionAnalyticsCacheKey(userId: string, limit: number, includeProfile: boolean): string {
   return `${CACHE_CONFIG.PREFIX.USER_STATS}session_analytics:${userId}:${limit}:${includeProfile}`;
 }
+
+export const onRequestOptions = withCors();
 
 /**
  * POST: Record comprehensive session analytics

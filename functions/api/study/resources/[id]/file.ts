@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../../_shared/env-validation';
 import { createEndpointLogger } from '../../../_shared/secureLogger';
@@ -25,6 +25,8 @@ function pickHeader(headers: Headers, key: string): string | undefined {
   const v = headers.get(key);
   return v == null || v === '' ? undefined : v;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,

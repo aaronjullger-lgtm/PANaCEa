@@ -17,7 +17,7 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { publicEndpoint, ValidatedContext } from '../_shared/middleware';
+import { publicEndpoint, ValidatedContext, withCors} from '../_shared/middleware';
 import { mediaDrillQuerySchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 import { getMediaDrillCases } from '../../../services/drill/mediaDrillCases';
@@ -28,6 +28,8 @@ import type { DrillModality } from '../../../lib/mediaTypes';
 export type { PhotoCase, ClinicalContext };
 
 type QueryType = z.infer<typeof mediaDrillQuerySchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   mediaDrillQuerySchema,

@@ -5,7 +5,7 @@
  * NOTE: Uses deprecated Condition table - should migrate to MedicalContent
  */
 
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -14,6 +14,8 @@ const ExtendedConditionSchema = z.object({
     identifier: z.string().min(1, 'Identifier is required'),
   }),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ExtendedConditionSchema,

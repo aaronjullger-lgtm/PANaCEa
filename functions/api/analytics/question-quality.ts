@@ -11,8 +11,10 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { adminEndpoint } from '../_shared/middleware';
+import { adminEndpoint, withCors } from '../_shared/middleware';
 import { questionQualityQuerySchema } from '../_shared/zodSchemas';
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(questionQualityQuerySchema, async (context) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);

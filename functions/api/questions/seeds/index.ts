@@ -1,4 +1,4 @@
-import { adminEndpoint } from '../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 
 // Schema for creating a question seed
@@ -14,6 +14,8 @@ const QuestionSeedSchema = z.object({
   difficulty: z.string().min(1).max(50),
   system: z.string().max(100).optional(),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(QuestionSeedSchema, async ({ env, validated }) => {
   const { createEdgePrismaClient, safePrismaDisconnect } =

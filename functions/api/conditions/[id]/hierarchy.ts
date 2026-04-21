@@ -4,7 +4,7 @@
  * Returns condition hierarchy (parent, children, siblings)
  */
 
-import { authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -22,6 +22,8 @@ const HierarchySchema = z.object({
     id: z.string().uuid('Invalid condition ID format'),
   }),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(HierarchySchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

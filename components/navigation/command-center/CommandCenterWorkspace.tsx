@@ -56,6 +56,7 @@ import {
 } from '@/config/rotation-systems';
 import { ROUTES } from '@/config/routes';
 import { TO_REVIEW_LABEL } from '@/config/labels';
+import { workspaceAccent } from '@/lib/tokens';
 import type { ClinicalRotation, UserProfile, YearInProgram } from '@/types';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 
@@ -408,7 +409,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
     <WorkspacePage density="wide" mode="launch">
       {syncError && dismissedSyncError !== syncError ? (
         <WorkspaceReveal>
-          <WorkspaceSurface accent="#a67f7f">
+          <WorkspaceSurface accent={workspaceAccent.rose}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-data-provisional)]/25 bg-[var(--color-data-provisional)]/10">
@@ -485,7 +486,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
 
       {hasActiveSession && onResumeSession ? (
         <WorkspaceReveal delay={0.06}>
-          <WorkspaceSurface accent="#c4b78a">
+          <WorkspaceSurface accent={workspaceAccent.gold}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
@@ -537,7 +538,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                 ? `Recent accuracy ${stats.accuracy !== null ? `${stats.accuracy}%` : 'is still calibrating'}${stats.streak > 0 ? ` and ${stats.streak} study day${stats.streak === 1 ? '' : 's'} active.` : '.'}`
                 : 'Answer 5 to 10 questions to create a real targeting signal for the next block.'
             }
-            accent={stats.questionsToday > 0 ? '#728ba6' : '#9a7f9a'}
+            accent={stats.questionsToday > 0 ? workspaceAccent.steel : workspaceAccent.plum}
             icon={stats.questionsToday > 0 ? BarChart3 : Sparkles}
             variant={stats.questionsToday > 0 ? 'progress' : 'guidance'}
             action={
@@ -614,7 +615,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       : 'Run a mixed session tuned to current readiness and recall pressure.'
                   }
                   icon={dueCount > 0 ? Target : Brain}
-                  accent="#c4b78a"
+                  accent={workspaceAccent.gold}
                   onClick={() => {
                     if (dueCount > 0 && onNavigateToSrsReview) {
                       onNavigateToSrsReview();
@@ -636,7 +637,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       : 'Open practice mode when you want a tighter, searchable route instead of another dashboard.'
                   }
                   icon={stats.questionsToday === 0 ? Sparkles : Compass}
-                  accent="#728ba6"
+                  accent={workspaceAccent.steel}
                   onClick={() => navigate(ROUTES.PRACTICE)}
                   cta="Open practice"
                 />
@@ -644,7 +645,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
             </div>
 
             <div className="space-y-4">
-              <WorkspaceSurface accent="#728ba6" role="reference">
+              <WorkspaceSurface accent={workspaceAccent.steel} role="reference">
                 <div className="space-y-4">
                   <div>
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
@@ -683,7 +684,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
           title="Recommended next"
           subtitle="Keep the high-signal recommendation in view so you can act without opening another analytics page."
         >
-          <WorkspaceSurface accent="#c4b78a" role="action">
+          <WorkspaceSurface accent={workspaceAccent.gold} role="action">
             <RecommendationFeed
               className="mb-0"
               onNavigateToDrill={handleNavigateToRecommendation}
@@ -702,7 +703,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Knowledge"
               description="Open reference content first when you need context, differentials, or drug anchors before another question block."
               icon={BookOpen}
-              accent="#728ba6"
+              accent={workspaceAccent.steel}
               onClick={() => (onNavigateToReference ? onNavigateToReference() : navigate(ROUTES.STUDY_KNOWLEDGE))}
               cta="Open knowledge"
             />
@@ -710,7 +711,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Tools"
               description="Reach calculators and generators without leaving the same study surface."
               icon={Calculator}
-              accent="#b39b6c"
+              accent={workspaceAccent.amber}
               onClick={onNavigateToToolkit}
               cta="Open tools"
             />
@@ -718,7 +719,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Tutor"
               description="Use profile-aware reasoning help when you need a challenge, not more browsing."
               icon={MessageSquare}
-              accent="#9a7f9a"
+              accent={workspaceAccent.plum}
               onClick={() => onNavigateToTutorChat?.()}
               cta="Open tutor"
             />
@@ -726,7 +727,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="My library"
               description="Ground study chat and reference work in your uploaded material."
               icon={Library}
-              accent="#7a8f6e"
+              accent={workspaceAccent.sage}
               onClick={() => onNavigateToMyLibrary?.()}
               cta="Manage library"
             />
@@ -734,7 +735,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Study path"
               description="Review the adaptive plan when you want a longer horizon than today."
               icon={Compass}
-              accent="#c4b78a"
+              accent={workspaceAccent.gold}
               onClick={() => onNavigateToStudyPathDashboard?.()}
               cta="Open study path"
             />
@@ -752,7 +753,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Due review"
               description="Run the variant review queue that protects forgetting curves first."
               icon={Target}
-              accent="#c4b78a"
+              accent={workspaceAccent.gold}
               onClick={() => onNavigateToSrsReview?.()}
               cta={dueCount > 0 ? `Review ${dueCount}` : 'Open queue'}
             />
@@ -760,7 +761,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Grand Rounds"
               description="Drop into the daily challenge to stress-test reasoning outside your usual patterns."
               icon={Sparkles}
-              accent="#9a7f9a"
+              accent={workspaceAccent.plum}
               onClick={() => onNavigateToDrillMode('grand_rounds')}
               cta="Start challenge"
             />
@@ -768,7 +769,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Gap analysis"
               description="See what is costing the most points and what should be repaired next."
               icon={TrendingUp}
-              accent="#728ba6"
+              accent={workspaceAccent.steel}
               onClick={onNavigateToGapAnalysis}
               cta="Open gaps"
             />
@@ -776,7 +777,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Clinical profile"
               description="Inspect broader reasoning tendencies, timing patterns, and bias signals."
               icon={BarChart3}
-              accent="#7a8f6e"
+              accent={workspaceAccent.sage}
               onClick={() => onNavigateToClinicalProfile?.()}
               cta="Open profile"
             />
@@ -790,9 +791,9 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
             title="Clinical-year focus"
             subtitle="Preset the systems that matter for your current rotation and keep EOR timing visible in the same home workspace."
           >
-            <WorkspaceSurface accent="#9a7f9a" className="space-y-6" role="reference">
+            <WorkspaceSurface accent={workspaceAccent.plum} className="space-y-6" role="reference">
               <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
-                <WorkspaceSurface accent="#c4b78a" role="action" className="space-y-5">
+                <WorkspaceSurface accent={workspaceAccent.gold} role="action" className="space-y-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
@@ -879,7 +880,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       label="Mastery progress"
                       value={`${curriculumProgressPercent}%`}
                       detail="Systems with solid recent performance and enough volume."
-                      accent="#c4b78a"
+                      accent={workspaceAccent.gold}
                       icon={Target}
                       variant="progress"
                     />
@@ -887,7 +888,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       label="Enabled systems"
                       value={enabledSystems.size}
                       detail="Systems currently included in the study pool."
-                      accent="#728ba6"
+                      accent={workspaceAccent.steel}
                       icon={BookOpen}
                       variant="reference"
                     />
@@ -895,12 +896,12 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
                       label="Reference total"
                       value={DEFAULT_SYSTEM_PROGRESS_TOTAL}
                       detail="Baseline total used to normalize progress by system."
-                      accent="#7a8f6e"
+                      accent={workspaceAccent.sage}
                       icon={GraduationCap}
                       variant="reference"
                     />
                   </div>
-                  <WorkspaceSurface accent="#728ba6" role="reference" className="p-4">
+                  <WorkspaceSurface accent={workspaceAccent.steel} role="reference" className="p-4">
                     <CurriculumGrid
                       selectedSystems={enabledSystems}
                       onSystemToggle={handleToggleSystem}
@@ -925,7 +926,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="PANRE-LA simulator"
               description="Practice in the longitudinal assessment format with a dedicated recertification workflow."
               icon={Wand2}
-              accent="#9a7f9a"
+              accent={workspaceAccent.plum}
               onClick={() => onNavigateToDrillMode('panre_la')}
               cta="Start practice"
             />
@@ -943,7 +944,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Custom study"
               description="Define a more intentional session when you need tighter control over the pool."
               icon={Brain}
-              accent="#b39b6c"
+              accent={workspaceAccent.amber}
               onClick={() => onNavigateToCustomStudy?.()}
               cta="Build session"
             />
@@ -951,7 +952,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Pearl deck"
               description="Review saved pearls and rapid recall snippets without opening another navigation branch."
               icon={Sparkles}
-              accent="#728ba6"
+              accent={workspaceAccent.steel}
               onClick={() => onNavigateToPearlDeck?.()}
               cta="Open pearls"
             />
@@ -959,7 +960,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Clinical Eye"
               description="Use the image-analysis companion for visual review and interpretation."
               icon={Target}
-              accent="#7a8f6e"
+              accent={workspaceAccent.sage}
               onClick={() => onNavigateToClinicalEye?.()}
               cta="Open Clinical Eye"
             />
@@ -967,7 +968,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               title="Visualizer"
               description="Jump into anatomy and image-oriented visual segmentation workflows."
               icon={Compass}
-              accent="#9a7f9a"
+              accent={workspaceAccent.plum}
               onClick={() => onNavigateToVisualizer?.()}
               cta="Open visualizer"
             />

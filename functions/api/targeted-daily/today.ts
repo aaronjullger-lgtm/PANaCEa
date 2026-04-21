@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect, type EdgePrismaClient } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -100,6 +100,8 @@ async function fetchQuestionForId(prisma: EdgePrismaClient, questionId: string) 
 
   return null;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   TodaySchema,

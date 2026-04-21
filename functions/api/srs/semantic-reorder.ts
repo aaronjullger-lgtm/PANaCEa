@@ -20,7 +20,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 // ─── Inline pure functions (Edge can't import from lib/) ─────────
@@ -56,6 +56,8 @@ const SemanticReorderSchema = z.object({
 });
 
 type SemanticReorderBody = z.infer<typeof SemanticReorderSchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   SemanticReorderSchema,

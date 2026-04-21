@@ -13,7 +13,7 @@
  * @see components/session/AnswerFeedback.tsx — UI consumer
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -22,6 +22,8 @@ const querySchema = z.object({
 });
 
 const MIN_ATTEMPTS = 10;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   querySchema,

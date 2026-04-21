@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint } from '../_shared/middleware';
+import { adminEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -33,6 +33,8 @@ function getUtcDateFromIso(dateStr?: string): Date {
   d.setUTCHours(0, 0, 0, 0);
   return d;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(
   AdminTargetedDailyQuery,

@@ -20,7 +20,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint } from '../../_shared/middleware';
+import { aiEndpoint, withCors} from '../../_shared/middleware';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import {
   SoapBriefGradeSchema,
@@ -94,6 +94,8 @@ function reconcile(grade: SoapBriefGrade): SoapBriefGrade {
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): SOAP note grading
 // via gateway.grade() → Gemini. 25 rpm 'ai' bucket matches cost profile.
+export const onRequestOptions = withCors();
+
 export const onRequestPost = aiEndpoint(bodySchema, async (context) => {
   const { studentNote, caseContext } = context.validated;
 

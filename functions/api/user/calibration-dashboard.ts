@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   buildCalibrationDashboard,
@@ -24,6 +24,8 @@ type EmptyQuery = z.infer<typeof emptySchema>;
 
 /** Max reviews to pull for calibration analysis */
 const MAX_REVIEWS = 5000;
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   emptySchema,

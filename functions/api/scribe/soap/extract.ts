@@ -31,7 +31,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint } from '../../_shared/middleware';
+import { aiEndpoint, withCors} from '../../_shared/middleware';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import {
   SoapScribeExtractionSchema,
@@ -74,6 +74,8 @@ ${SOAP_SCRIBE_EXTRACTION_DESCRIPTION}`;
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): Smart Scribe SOAP
 // extraction goes through gateway.extract() → Gemini. 25 rpm 'ai' bucket.
+export const onRequestOptions = withCors();
+
 export const onRequestPost = aiEndpoint(
   bodySchema,
   async (context) => {

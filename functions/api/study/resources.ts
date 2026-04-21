@@ -6,13 +6,15 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const QuerySchema = z.object({
   resourceType: z.string().optional(),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   QuerySchema,

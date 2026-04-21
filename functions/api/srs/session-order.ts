@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   orderSessionCards,
@@ -32,6 +32,8 @@ const SessionOrderSchema = z.object({
 });
 
 type SessionOrderBody = z.infer<typeof SessionOrderSchema>;
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   SessionOrderSchema,

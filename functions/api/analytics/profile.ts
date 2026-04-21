@@ -8,10 +8,12 @@
  * Sprint: Security Hardening Sprint 4
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { profileRecomputeSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
+
+export const onRequestOptions = withCors();
 
 /**
  * GET: Retrieve user's learning profile with computed insights

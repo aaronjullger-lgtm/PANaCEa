@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint } from '../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { auditLog } from '../../_shared/auditLog';
 
@@ -19,6 +19,8 @@ const QuerySchema = z.object({
     .default('pending'),
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(
   QuerySchema,

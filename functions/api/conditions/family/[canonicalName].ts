@@ -5,7 +5,7 @@
  * Educational content accessible without authentication
  */
 
-import { publicEndpoint } from '../../_shared/middleware';
+import { publicEndpoint, withCors} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -14,6 +14,8 @@ const FamilySchema = z.object({
     canonicalName: z.string().min(1, 'Canonical name is required'),
   }),
 });
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(FamilySchema, async ({ env, validated }) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

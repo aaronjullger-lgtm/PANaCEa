@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -57,6 +57,8 @@ function normalizeCorrectIndexFromAny(data: Record<string, unknown>): number {
   // Default
   return 0;
 }
+
+export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   SubmitSchema,

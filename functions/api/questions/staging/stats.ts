@@ -1,8 +1,10 @@
-import { adminEndpoint } from '../../_shared/middleware';
+import { adminEndpoint, withCors} from '../../_shared/middleware';
 import { z } from 'zod';
 
 // Empty schema for GET endpoint
 const EmptySchema = z.object({});
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(EmptySchema, async ({ env }) => {
   const { createEdgePrismaClient, safePrismaDisconnect } =

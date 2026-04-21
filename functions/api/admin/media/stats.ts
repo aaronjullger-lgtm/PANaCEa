@@ -10,7 +10,9 @@
 import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { logger } from '../../_shared/secureLogger';
-import { adminAuthenticatedEndpoint } from '../../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors} from '../../_shared/middleware';
+
+export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   z.object({}).passthrough(),
