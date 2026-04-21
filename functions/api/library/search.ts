@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { hybridSearchRRF } from '@/lib/services/search/hybridSearch';
@@ -25,7 +25,7 @@ type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = aiEndpoint(
   SearchQuerySchema,
   async (context) => {
     const { env, validated } = context as {

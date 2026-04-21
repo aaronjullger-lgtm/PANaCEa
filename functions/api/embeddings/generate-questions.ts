@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 const EMBEDDING_MODEL = 'text-embedding-004';
@@ -95,7 +95,7 @@ async function embedText(
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   GenerateQuestionsSchema,
   async (context: AuthenticatedContext & ValidatedContext<GenerateQuestionsBody>) => {
     const { questionIds } = context.validated.body;

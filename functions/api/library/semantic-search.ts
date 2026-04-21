@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
@@ -114,7 +114,7 @@ async function applyCRAG(
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
+export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const { env, validated, auth } = context as {
     env: Env;
     validated: z.infer<typeof BodySchema>;

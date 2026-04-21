@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const InfographicBodySchema = z.object({
@@ -24,7 +24,7 @@ const InfographicBodySchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = aiEndpoint(
   InfographicBodySchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/smart-scribe/generate-infographic', auth.userId);
