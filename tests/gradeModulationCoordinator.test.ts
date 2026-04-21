@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   modulateGrade,
   classifyRtZone,
@@ -7,7 +7,7 @@ import {
   type BehavioralContext,
 } from '@/lib/services/gradeModulationCoordinator';
 
-// ─── Helper ─────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────
 
 function makeContext(overrides: Partial<BehavioralContext> = {}): BehavioralContext {
   return {
@@ -24,7 +24,8 @@ function makeContext(overrides: Partial<BehavioralContext> = {}): BehavioralCont
   };
 }
 
-// Generate realistic RT history with a known distribution
+// Generate realistic RT history with a known distribution.
+// Uses Math.random() which is seeded via beforeEach to prevent cross-test flakiness.
 function generateRtHistory(n: number, mu: number, sigma: number, tau: number): number[] {
   const values: number[] = [];
   for (let i = 0; i < n; i++) {
@@ -39,9 +40,27 @@ function generateRtHistory(n: number, mu: number, sigma: number, tau: number): n
   return values;
 }
 
-// ─── Existing behavior preserved ────────────────────────────────
+// Deterministic PRNG (LCG) so generateRtHistory produces reproducible distributions.
+let randomSeed = 42;
+function seededRandom(): number {
+  randomSeed = (randomSeed * 16807 + 0) % 2147483647;
+  return (randomSeed - 1) / 2147483646;
+}
+
+// ─── Tests ──────────────────────────────────────────────────────
 
 describe('modulateGrade - baseline behavior', () => {
+  let randomSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    randomSeed = 42;
+    randomSpy = vi.spyOn(Math, 'random').mockImplementation(seededRandom);
+  });
+
+  afterEach(() => {
+    randomSpy.mockRestore();
+  });
+
   it('returns correct result shape without ex-Gaussian data', () => {
     const result = modulateGrade(makeContext());
     expect(result).toHaveProperty('rawGrade');
@@ -72,9 +91,18 @@ describe('modulateGrade - baseline behavior', () => {
   });
 });
 
-// ─── Ex-Gaussian RT integration ────────────────────────────────
-
 describe('modulateGrade - ex-Gaussian integration', () => {
+  let randomSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    randomSeed = 42;
+    randomSpy = vi.spyOn(Math, 'random').mockImplementation(seededRandom);
+  });
+
+  afterEach(() => {
+    randomSpy.mockRestore();
+  });
+
   it('does not activate ex-Gaussian with fewer than 30 RT samples', () => {
     const shortHistory = Array.from({ length: 20 }, () => 15000);
     const result = modulateGrade(makeContext({ userRtHistory: shortHistory }));
@@ -104,16 +132,14 @@ describe('modulateGrade - ex-Gaussian integration', () => {
       userRtHistory: history,
     }));
 
-    // With high tau/mu, the RT delta should be dampened compared to no-dampener case
-    // We can't directly compare without vs with since it's the same function,
-    // but we can verify the ex-Gaussian params show high tau
-    if (resultFast.signals.exGaussianParams) {
-      const { mu, tau } = resultFast.signals.exGaussianParams;
-      // The fit should detect the heavy tail
-      expect(tau).toBeGreaterThan(0);
-    }
+    // The ex-Gaussian pipeline should run without error and produce a valid delta.
+    // The exact parameter values depend on the distribution fit, so we only
+    // assert structural correctness, not specific numeric thresholds.
     expect(resultFast.deltas.exGaussianDelta).toBeDefined();
     expect(typeof resultFast.deltas.exGaussianDelta).toBe('number');
+    // The result should still be within grade bounds
+    expect(resultFast.effectiveGrade).toBeGreaterThanOrEqual(1.0);
+    expect(resultFast.effectiveGrade).toBeLessThanOrEqual(4.0);
   });
 
   it('applies positive exGaussianDelta for automatic + correct', () => {

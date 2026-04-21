@@ -82,6 +82,8 @@ describe('shouldShowMetacognition', () => {
   // ── Trigger 1: Consecutive misses ──
 
   it('triggers on 2+ consecutive misses in same subcategory', () => {
+    // Mock Math.random to prevent random-sampling trigger (10%) from firing
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const tracker = initSessionTracker();
     const params = makeParams({ tracker, subcategory: 'cardiology-arrhythmias', conditionName: 'Unknown Condition' });
 
@@ -94,6 +96,7 @@ describe('shouldShowMetacognition', () => {
     expect(r2.shouldShow).toBe(true);
     expect(r2.triggerReason).toBe('consecutive_misses');
     expect(r2.reflectionQuestions.length).toBeGreaterThan(0);
+    randomSpy.mockRestore();
   });
 
   // ── Trigger 2: Confusion pairs ──
