@@ -76,33 +76,63 @@ Different question types weight signals differently because the behavioral patte
 
 These are in `QUESTION_TYPE_WEIGHTS` in `lib/implicit-metrics.ts`.
 
-## Confidence Scoring Pipeline (4-Step)
+## Confidence Scoring Pipeline (CONFIDENCE PIPELINE v4 — "18-step" in code)
 
-The confidence pipeline transforms raw behavioral signals into a stability multiplier:
+PANaCEa runs a multi-stage pipeline on every correct review. Authoritative
+source: the numbered `// Step N` / `// Wave N` comments in
+`lib/services/drillReviewService.ts`. This skill doc reflects what's there.
+If the code and this doc disagree, the code wins.
 
-### Step 1: Multi-Signal Weighted Confidence
-```
-confidence = Σ(wi × si) × hintFactor
-```
-Bounded to [0.3, 0.95]. For incorrect answers, confidence is fixed at 0.9 (high confidence the student got it wrong → aggressive rescheduling).
+Execution order in drillReviewService.ts:
 
-### Step 2: Bayesian Accumulation
-Blends current-review confidence with exponentially-decayed history of past reviews for the same card. Prior weight capped at 0.4. Quality-aware. See `lib/confidence/bayesianAccumulator.ts`.
+### Pre-confidence (behavioral signal collection)
+- **Wave 1A**: Lapse severity — amplify difficulty for severe lapses
+- **Wave 2**: Distractor chronometry & switch-direction analysis (from
+  `option_interactions` telemetry)
+- **Wave 3A** (read): Explanation engagement post-correct surprise detection
 
-### Step 3: Metacognitive Calibration
-Per-user dampener based on Brier score analysis. Overconfident students get dampened (factor < 1.0), underconfident get boosted (factor > 1.0). Range: 0.7–1.3×. Requires ≥30 review pairs. See `lib/services/calibrationService.ts`.
+### Core confidence math
+1. **Bayesian accumulation** — blend current confidence with decayed card
+   history. Prior weight ≤ 0.4. `lib/confidence/bayesianAccumulator.ts`.
+2. **Metacognitive calibration** — per-user Brier-slope dampener [0.7, 1.3].
+   Requires ≥100 review pairs. `lib/services/calibrationService.ts`.
+3. **Session fatigue dampener** (Warm 1984; Helton & Russell 2015).
+4. **Retrieval interference detection** (Anderson & Neely 1996).
+4b. **Session accuracy slope** (Sievertsen et al., 2016).
+4c. **Session regularity** (Wave 3B) — erratic study → noisier signals.
+5. **Fluency illusion dampener** — same-day review penalty
+   (Kornell & Bjork 2008): `dampener = 0.7 + 0.3 × clamp(elapsedDays, 0, 1)`.
 
-### Step 4: Fluency Illusion Dampener
-```
-dampener = 0.7 + 0.3 × clamp(elapsedDays, 0, 1)
-```
-Same-day reviews get 30% confidence reduction. Reviews ≥1 day apart → no adjustment. This prevents massed-repetition fluency from inflating stability (Kornell & Bjork, 2008).
+### Stability multiplier construction
+6. **Graduated stability multiplier** — sigmoid centered at 0.6:
+   `stabilityMult = 0.7 + 0.6 × σ((confidence - 0.6) × 5)`.
+   Range: [0.72, 1.28].
+6a. **RT trajectory** — implicit delayed JOL (Nelson & Dunlosky 1991).
+6b. **Interval deviation** — information-value weighting (Mozer et al. 2009).
+6b.1. **Explanation engagement stability modifier** (Wave 3A).
+6b.2. **Relearning speed** (Wave 3C) — Ebbinghaus savings, post-lapse only.
+6c. **Desirable difficulty bonus** (Bjork & Bjork 2011).
 
-### Final: Graduated Stability Multiplier
-```
-stabilityMult = 0.7 + 0.6 × σ((confidence - 0.6) × 5)
-```
-Sigmoid curve centered at 0.6. High confidence → up to ~1.28× stability. Low confidence → down to ~0.72× stability.
+### Cross-review signals
+7. **Cross-session trend detection** (Bjork 1999; Kornell et al. 2009).
+8. **Confidence-weighted difficulty modulation** (Metcalfe & Kornell 2005).
+
+### Post-FSRS post-persistence
+- **Wave 3D**: Confusion pair recurrence analysis (writes ConfusionPair rows).
+
+### Other signals NOT in this pipeline
+- **Ghost Grader** (`lib/srs/ghostGrader.ts`) — overrides discrete rating based
+  on behavioral biometrics. Runs BEFORE this pipeline and can force Again even
+  on a correct answer.
+- **Shadow calibration** (`lib/scheduling/calibrationLogger.ts`) — fire-and-
+  forget logger, reads predicted retrievability, does not modify scheduling.
+- **Wilson mastery**, **hypercorrection detection** — read-only signals
+  persisted to ReviewLog for offline analysis.
+
+**Multi-Signal Weighted Confidence** (the "Step 1" of the old 4-step doc)
+happens earlier, in `lib/implicit-metrics.ts deriveContinuousRating()`, before
+drillReviewService runs the pipeline above. It produces the `confidence`
+input that Step 1 (Bayesian accumulation) consumes.
 
 ## Rapid-Guess Filtering
 
