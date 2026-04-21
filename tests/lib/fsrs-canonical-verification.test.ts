@@ -26,18 +26,16 @@ import {
   defaultParameters,
 } from '../../lib/fsrs';
 
-// Default FSRS v6 parameters for reference
-const DEFAULT_W = [
-  0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722,
-  0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425,
-  0.0912, 0.0658, 0.1542,
-];
+// Default FSRS v6 parameters — sourced from the canonical defaultParameters
+// in lib/fsrs.ts so this test never drifts from the production defaults.
+const DEFAULT_W = defaultParameters.w;
 
 // w[19] and w[20] control the retrievability power-law curve.
 // In the formula R = (1 + factor * t / S) ^ (1/decay), decay is applied
 // as -w[20] internally (see computeDecayFactor in fsrs.ts).
-const FACTOR = DEFAULT_W[19]; // 0.0658
-const DECAY_RAW = DEFAULT_W[20]; // 0.1542 (positive; negated in computeDecayFactor)
+// ts-fsrs v6 official defaults: w[19]=0.1597, w[20]=2.2700.
+const FACTOR = DEFAULT_W[19]!; // 0.1597
+const DECAY_RAW = DEFAULT_W[20]!; // 2.2700 (positive; negated in computeDecayFactor)
 
 // Helper: Create a card in Review state
 function createReviewCard(overrides?: Partial<FSRSCard>): FSRSCard {
@@ -72,7 +70,7 @@ function createNewCard(): FSRSCard {
 const canonicalFormulas = {
   /**
    * FSRS v6 Retrievability formula: R = (1 + (w[19] * t) / S) ^ (-w[20])
-   * w[19] (FACTOR) = 0.0658, w[20] (DECAY_RAW) = 0.1542
+   * ts-fsrs v6 defaults: w[19] (FACTOR) = 0.1597, w[20] (DECAY_RAW) = 2.2700
    */
   retrievability: (t: number, S: number, factor = FACTOR, decay = DECAY_RAW): number => {
     if (S === 0 || t === 0) return 1;
@@ -123,12 +121,12 @@ const canonicalFormulas = {
 
   /**
    * Short-term stability (same-day review): S' = S^(-w[19]) * e^(w[17] * (G - 3 + w[18]))
-   * w[17] = 0.5425, w[18] = 0.0912, w[19] = 0.0658
+   * w[17] = 0.5425, w[18] = 0.0912, w[19] = 0.1597 (ts-fsrs v6 default)
    */
   shortTermStability: (S: number, rating: Rating): number => {
     const w17 = DEFAULT_W[17]; // 0.5425
     const w18 = DEFAULT_W[18]; // 0.0912
-    const w19 = DEFAULT_W[19]; // 0.0658
+    const w19 = DEFAULT_W[19]; // 0.1597 (ts-fsrs v6 default)
     const sinc = Math.pow(S, -w19) * Math.exp(w17 * (rating - 3 + w18));
     const maskedSinc = rating >= Rating.Hard ? Math.max(sinc, 1.0) : sinc;
     return Math.min(Math.max(S * maskedSinc, 0.001), 36500.0);

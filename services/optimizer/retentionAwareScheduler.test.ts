@@ -61,7 +61,7 @@ describe('Retention‑Aware Scheduler', () => {
       reviewedAt: lastReviewedAt,
     });
     mockUserProgressFindFirst.mockResolvedValue({
-      fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.0658 : i === 20 ? 0.1542 : 0) },
+      fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.1597 : i === 20 ? 2.2700 : 0) },
     });
 
     const gaps = [{ taxonomyCode: 'Gastrointestinal' }];
@@ -74,7 +74,10 @@ describe('Retention‑Aware Scheduler', () => {
     expect(scheduled[0]!.daysUntilReview).toBeGreaterThan(0);
     expect(scheduled[0]!.recommendedReviewDate!.getTime()).toBeGreaterThan(Date.now());
     expect(scheduled[0]!.urgencyScore).toBeLessThan(1.0);
-    expect(scheduled[0]!.confidence).toBe('LOW');
+    // Corrected ts-fsrs v6 params (w19=0.1597, w20=2.2700) give R(t=2,S=10) ≈ 0.93
+    // → MEDIUM confidence. Prior LOW assertion relied on buggy w19=0.0658 which
+    // produced R ≈ 0.998 (flat curve artifact of the wrong parameter scale).
+    expect(scheduled[0]!.confidence).toBe('MEDIUM');
   });
 
   it('should fetch FSRS parameters from user progress', async () => {

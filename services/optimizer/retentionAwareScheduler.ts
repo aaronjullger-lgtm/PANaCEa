@@ -79,8 +79,8 @@ export async function scheduleReviews(
     w20 = params.w20;
   }
   // Fallback to defaults if still missing
-  const factor = w19 ?? 0.0658;
-  const decay = -(w20 ?? 0.1542); // note: decay = -w20
+  const factor = w19 ?? 0.1597;
+  const decay = -(w20 ?? 2.2700); // note: decay = -w20 (ts-fsrs v6 default w20=2.2700)
 
   // Step 2: For each gap, retrieve current stability and last review date
   const scheduled: ScheduledReview[] = [];
@@ -199,8 +199,8 @@ async function getUserFSRSParameters(
     select: { fsrsParams: true },
   });
 
-  const defaultW19 = 0.0658;
-  const defaultW20 = 0.1542;
+  const defaultW19 = 0.1597;
+  const defaultW20 = 2.2700;
 
   if (!userProgress?.fsrsParams) {
     return { w19: defaultW19, w20: defaultW20 };

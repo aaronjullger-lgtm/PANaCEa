@@ -582,14 +582,18 @@ export class MainSessionQuestionSelector {
           up."conditionId",
           mc.system,
           -- FSRS v6: R = (1 + w[19] * elapsed_days / stability) ^ -w[20]
+          -- Using ts-fsrs v6 official defaults (w19=0.1597, w20=2.2700).
+          -- TODO: thread per-user fsrsParams through this query for accuracy.
+          -- Relative ordering is monotonic in elapsed_days/stability so ranking
+          -- is preserved even when the user has personalized w[19]/w[20].
           POWER(
             1.0 + (
-              0.0658 * (
+              0.1597 * (
                 EXTRACT(EPOCH FROM (NOW() - (up."fsrsCard"->>'last_review')::timestamp))
                 / 86400.0
               ) / GREATEST(COALESCE((up."fsrsCard"->>'stability')::float, 1.0), 0.1)
             ),
-            -0.1542
+            -2.2700
           )::float as current_r
         FROM "UserProgress" up
         JOIN "MedicalContent" mc ON up."conditionId" = mc."conditionId"

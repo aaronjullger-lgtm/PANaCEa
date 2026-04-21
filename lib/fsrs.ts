@@ -1,14 +1,81 @@
 /**
- * FSRS v6 Algorithm Implementation
- * Based on: https://github.com/open-spaced-repetition/fsrs.js
+ * PANaCEa FSRS v6 — Authoritative Implementation & Customization Spec
+ * ====================================================================
  *
- * FSRS v6 Enhancements over v5:
- * - 21 parameters (w[0]-w[20]) vs 19 in v5
- * - New short-term stability formula: S' = S * e^(w17 * (G - 3 + w18))
- * - New retrievability power curve: R = (1 + factor * t / S) ^ -w20
- * - Improved same-day review handling via short-term stability
+ * This file is the SINGLE SOURCE OF TRUTH for PANaCEa's FSRS scheduler.
+ * Any other file that computes retrievability, stability, or intervals
+ * MUST either import from here or explicitly document why it diverges.
+ *
+ * ---------------------------------------------------------------------
+ * Relationship to stock FSRS v6 (ts-fsrs / open-spaced-repetition)
+ * ---------------------------------------------------------------------
+ *
+ * STOCK FSRS v6 (what Anki, ts-fsrs, and the upstream spec provide):
+ *   - 21-parameter power-law curve (w[0]..w[20])
+ *   - User rates each card with Again / Hard / Good / Easy
+ *   - Confidence/difficulty inferred directly from the 1–4 rating
+ *   - One rating = one stability update
+ *
+ * PANACEA FSRS v6 (what this file implements, plus surrounding pipeline):
+ *   - Binary rating ONLY: Again(1) / Good(3). Hard/Easy are normalized out.
+ *     See normalizeRating() below. PANaCEa never exposes self-rating buttons.
+ *   - Rating is DERIVED from behavioral telemetry (response time, answer
+ *     switches, cursor entropy, hover oscillations, hint viewing) via
+ *     lib/implicit-metrics.ts → deriveContinuousRating().
+ *   - A multi-stage confidence pipeline (see drillReviewService.ts) modifies
+ *     the scheduler's stability multiplier beyond what stock FSRS does:
+ *        · Bayesian accumulation (prior reviews)
+ *        · Per-user metacognitive calibration (Brier-slope dampener)
+ *        · Fluency-illusion dampener (same-day review penalty)
+ *        · Ghost Grader behavioral-biometric override
+ *        · Rapid-guess MVRT filter (skip FSRS entirely below threshold)
+ *        · Desirable-difficulty bonus / interference / trend detectors
+ *   - A shadow-mode calibration logger (lib/scheduling/calibrationLogger.ts)
+ *     records predicted retrievability on every review so we can score
+ *     Brier / log-loss / ECE offline without affecting scheduling.
+ *   - A per-user coordinate-descent optimizer re-fits w[0..14], w[19], w[20]
+ *     from a user's own ReviewLog once ≥100 reviews are accumulated.
+ *     See lib/services/fsrsOptimizerService.ts. Until then, the defaults
+ *     below are used.
+ *
+ * The SCHEDULING CORE (this file) is the stock FSRS v6 math. The CUSTOMIZATION
+ * lives in what feeds into it (binary rating, implicit signals, confidence
+ * pipeline) and what reads off of it (shadow calibration, per-user optimizer).
+ * The core math is deliberately left un-customized so it remains comparable
+ * against published FSRS v6 benchmarks.
+ *
+ * ---------------------------------------------------------------------
+ * FSRS v6 formulas (stock) — reproduced here for grepability
+ * ---------------------------------------------------------------------
+ *   Retrievability:          R(t,S) = (1 + w[19] · t / S)^(-w[20])
+ *   Short-term stability:    S' = S · S^(-w[19]) · e^(w[17]·(G − 3 + w[18]))
+ *   Recall stability:        S' = S · (e^w[8] · (11 − D) · S^(-w[9]) · (e^(w[10]·(1 − R)) − 1) + 1)
+ *   Forget stability:        S' = w[11] · D^(-w[12]) · ((S + 1)^w[13] − 1) · e^(w[14]·(1 − R))
+ *   Interval (Review):       I = (S / w[19]) · (request_retention^(1/−w[20]) − 1)
+ *
+ * w[19] has a DUAL ROLE (both are per the v6 spec, not a PANaCEa custom):
+ *   1. Retrievability factor inside R(t,S)
+ *   2. Exponent on S in short-term stability
+ *
+ * ---------------------------------------------------------------------
+ * Canonical default parameters (see defaultParameters below)
+ * ---------------------------------------------------------------------
+ *   w[0..18]  — PANaCEa population training run (PA student question bank)
+ *   w[19..20] — ts-fsrs v6 official published defaults (0.1597, 2.2700)
+ *
+ *   With these defaults and request_retention=0.9: interval ≈ 0.298 · S.
+ *
+ * If you see any of these values elsewhere in the codebase — STALE, DELETE:
+ *   w[19] = 0.0658, w[20] = 0.1542  (pre-2026-04 wrong defaults; produced
+ *                                     34-day first-interval bug)
+ *   w[19] = 9,      w[20] = 1      (FSRS-4/5 convention; off by ~50×)
  *
  * @version 6.0.0
+ * @see lib/implicit-metrics.ts       — behavioral rating derivation
+ * @see lib/services/drillReviewService.ts  — full submission pipeline
+ * @see lib/services/fsrsOptimizerService.ts — per-user param optimizer
+ * @see lib/scheduling/calibrationLogger.ts  — shadow-mode logging
+ * @see lib/srs/ghostGrader.ts        — behavioral-biometric override
  */
 
 import { logger } from './logger';
@@ -402,7 +469,7 @@ export class FSRS {
     const w19Val = this.p.w[19];
     const w17 = w17Val ?? 0.5425;
     const w18 = w18Val ?? 0.0912;
-    const w19 = w19Val ?? 0.0658;
+    const w19 = w19Val ?? 0.1597;
 
     // FSRS v6 formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
     const sinc = Math.pow(stability, -w19) * Math.exp(w17 * (rating - 3 + w18));
