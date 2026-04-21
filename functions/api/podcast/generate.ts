@@ -13,7 +13,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { fail, ErrorCode } from '../_shared/endpoint';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 interface Env {
@@ -45,8 +46,6 @@ const MAX_MULTIPART_BYTES = 25 * 1024 * 1024;
 export const PodcastGenerateSchema = PodcastGenerateJsonSchema;
 export type PodcastGenerateRequest = z.infer<typeof PodcastGenerateJsonSchema>;
 
-export const onRequestOptions = withCors();
-
 // Use source:'query' with a permissive schema so the wrapper doesn't consume
 // the request body stream before the handler can dispatch on content-type
 // (JSON vs multipart). The JSON path performs its own Zod validation against
@@ -59,14 +58,13 @@ export const onRequestPost = aiEndpoint(
     const baseUrl = (env as Env).PODCAST_SERVICE_URL?.replace(/\/$/, '');
 
     if (!baseUrl) {
-      return new Response(
-        JSON.stringify({
-          error:
-            'Podcast generation is handled by the Node service. Set PODCAST_SERVICE_URL to proxy requests.',
-          hint: 'Deploy podcast-service (e.g. to Cloud Run) and set PODCAST_SERVICE_URL to its URL.',
-        }),
-        { status: 501, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.ENV_MISCONFIGURED, {
+        message:
+          'Podcast generation is handled by the Node service. Set PODCAST_SERVICE_URL to proxy requests.',
+        details:
+          'Deploy podcast-service (e.g. to Cloud Run) and set PODCAST_SERVICE_URL to its URL.',
+        status: 501,
+      });
     }
 
     const url = `${baseUrl}/generate`;
@@ -75,13 +73,11 @@ export const onRequestPost = aiEndpoint(
     const isJson = contentType.includes('application/json');
 
     if (!isMultipart && !isJson) {
-      return new Response(
-        JSON.stringify({
-          error:
-            'Unsupported content-type. Use application/json with { pdfUrl } or multipart/form-data with a PDF file.',
-        }),
-        { status: 415, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, {
+        message:
+          'Unsupported content-type. Use application/json with { pdfUrl } or multipart/form-data with a PDF file.',
+        status: 415,
+      });
     }
 
     try {
@@ -90,10 +86,7 @@ export const onRequestPost = aiEndpoint(
         try {
           rawBody = await request.json();
         } catch {
-          return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          });
+          return fail(ErrorCode.VALIDATION_FAILED, { message: 'Invalid JSON body' });
         }
 
         const parsed = PodcastGenerateJsonSchema.safeParse(rawBody);
@@ -101,13 +94,10 @@ export const onRequestPost = aiEndpoint(
           log.warn('Podcast JSON payload failed validation', {
             issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
           });
-          return new Response(
-            JSON.stringify({
-              error: 'Validation failed',
-              details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
-            }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } }
-          );
+          return fail(ErrorCode.VALIDATION_FAILED, {
+            message: 'Validation failed',
+            details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
+          });
         }
 
         const res = await fetch(url, {
@@ -126,12 +116,10 @@ export const onRequestPost = aiEndpoint(
       // parses the whole body into memory.
       const contentLength = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
       if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {
-        return new Response(
-          JSON.stringify({
-            error: `Payload too large. Max ${MAX_MULTIPART_BYTES} bytes.`,
-          }),
-          { status: 413, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: `Payload too large. Max ${MAX_MULTIPART_BYTES} bytes.`,
+          status: 413,
+        });
       }
 
       const formData = await request.formData();
@@ -146,13 +134,10 @@ export const onRequestPost = aiEndpoint(
       });
     } catch (e) {
       log.error('Podcast proxy error', e);
-      return new Response(
-        JSON.stringify({
-          error: 'Podcast service unavailable',
-          details: e instanceof Error ? e.message : 'Unknown',
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: 'Podcast service unavailable',
+        details: e instanceof Error ? e.message : 'Unknown',
+      });
     }
   },
   { source: 'query', requestsPerMinute: 5 }

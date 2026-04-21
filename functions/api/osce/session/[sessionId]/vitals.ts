@@ -4,7 +4,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint } from '../../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../../_shared/secureLogger';
 
@@ -15,8 +16,6 @@ const VitalsParamsSchema = z.object({
 interface Env {
   DATABASE_URL: string;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   VitalsParamsSchema,
@@ -36,10 +35,7 @@ export const onRequestGet = authenticatedEndpoint(
         select: { id: true },
       });
       if (!user) {
-        return new Response(JSON.stringify({ error: 'User not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
       }
 
       const session = await prisma.patientEncounterSession.findFirst({
@@ -47,10 +43,7 @@ export const onRequestGet = authenticatedEndpoint(
         select: { caseId: true },
       });
       if (!session) {
-        return new Response(JSON.stringify({ error: 'Session not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: 'Session not found' });
       }
 
       const caseData = await prisma.patientEncounterCase.findUnique({
@@ -70,24 +63,10 @@ export const onRequestGet = authenticatedEndpoint(
       const temp = vitals.temp ?? vitals.temperature ?? 98.6;
       const o2 = vitals.o2 ?? vitals.spo2 ?? 94;
 
-      return new Response(
-        JSON.stringify({
-          data: {
-            bp: String(bp),
-            hr: Number(hr),
-            rr: Number(rr),
-            temp: Number(temp),
-            o2: Number(o2),
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok({ bp: String(bp), hr: Number(hr), rr: Number(rr), temp: Number(temp), o2: Number(o2) });
     } catch (err) {
       log.error('OSCE vitals error', err);
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

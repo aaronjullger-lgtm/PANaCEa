@@ -10,7 +10,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -29,8 +30,6 @@ interface Env {
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (context) => {
   const { env, auth, validated } = context as {
@@ -59,10 +58,7 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
       select: { id: true, title: true, approvalStatus: true },
     });
     if (!resource) {
-      return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: `Resource not found: ${resourceId}` });
     }
 
     const storagePath = `extracts/${resourceId}/structuredData.json`;
@@ -85,13 +81,10 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
         status: uploadRes.status,
         error: errText.slice(0, 200),
       });
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to upload structuredData to storage',
-          details: errText.slice(0, 300),
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: 'Failed to upload structuredData to storage',
+        details: errText.slice(0, 300),
+      });
     }
 
     await prisma.educationalResource.update({
@@ -100,12 +93,7 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
     });
 
     log.info('Library ingest completed', { resourceId, storagePath });
-    return new Response(
-      JSON.stringify({
-        data: { resourceId, adobeDataPath: storagePath },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({ resourceId, adobeDataPath: storagePath });
   } finally {
     await safePrismaDisconnect(prisma);
   }

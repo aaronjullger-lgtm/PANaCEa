@@ -10,7 +10,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -33,8 +34,6 @@ const StudyChatSchema = z.object({
   resourceId: z.string().uuid('Invalid resource ID'),
   userQuery: z.string().min(1, 'Query is required').max(8000),
 });
-
-export const onRequestOptions = withCors();
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -365,17 +364,11 @@ export const onRequestPost = aiEndpoint(
       });
 
       if (!resource) {
-        return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: `Resource not found: ${resourceId}` });
       }
 
       if (resource.approvalStatus !== 'approved') {
-        return new Response(
-          JSON.stringify({ error: 'Resource not approved for use', resourceId }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.FORBIDDEN, { message: 'Resource not approved for use' });
       }
 
       const needsSupabase =
@@ -435,29 +428,23 @@ export const onRequestPost = aiEndpoint(
         env
       );
 
-      const payload = {
+      return ok({
         answer,
         citations,
         ...(citationsFallback ? { citationsFallback: true } : {}),
-      };
-
-      return new Response(JSON.stringify(payload), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
       });
     } catch (e) {
       if (e instanceof StudyChatError) {
         logger.warn('Study chat error', { status: e.status, message: e.message });
-        return new Response(JSON.stringify({ error: e.message }), {
-          status: e.status,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const errorCode =
+          e.status === 404 ? ErrorCode.NOT_FOUND :
+          e.status === 403 ? ErrorCode.FORBIDDEN :
+          e.status === 429 ? ErrorCode.RATE_LIMITED :
+          ErrorCode.UPSTREAM_ERROR;
+        return fail(errorCode, { message: e.message, status: e.status });
       }
       logger.error('Study chat unexpected error', e);
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

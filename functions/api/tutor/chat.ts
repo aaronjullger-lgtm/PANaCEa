@@ -18,7 +18,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -109,8 +110,6 @@ const SYSTEM_INSTRUCTION =
 
 // ─── Handler ────────────────────────────────────────────────────────────────
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = aiEndpoint(TutorChatBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
@@ -158,46 +157,38 @@ export const onRequestPost = aiEndpoint(TutorChatBodySchema, async (context) => 
 
     if (result.blocked) {
       log.warn('Tutor response blocked', { blockReason: result.blockReason });
-      return new Response(
-        JSON.stringify({ error: 'Content blocked. Please rephrase your question.' }),
-        { status: 422, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, {
+        message: 'Content blocked. Please rephrase your question.',
+        status: 422,
+        headers: rateLimitHeaders as Record<string, string>,
+      });
     }
 
     const thoughtSignatures = extractThoughtSignatures(result.raw);
     const groundingSources = extractGroundingSources(result.groundingMetadata);
+    const rlHeaders = rateLimitHeaders as Record<string, string>;
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          reply: result.text,
-          thoughtSignatures: thoughtSignatures.length > 0 ? thoughtSignatures : undefined,
-          model: result.telemetry.modelUsed,
-          usageMetadata: result.usage,
-          groundingSources,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+    return ok(
+      {
+        reply: result.text,
+        thoughtSignatures: thoughtSignatures.length > 0 ? thoughtSignatures : undefined,
+        model: result.telemetry.modelUsed,
+        usageMetadata: result.usage,
+        groundingSources,
+      },
+      { headers: rlHeaders }
     );
   } catch (error) {
+    const rlHeaders = rateLimitHeaders as Record<string, string>;
     if (error instanceof GatewayError) {
       log.warn('Tutor chat gateway failure', { code: error.code, requestId: error.requestId });
-      return new Response(
-        JSON.stringify({
-          error: error.code === 'RATE_LIMITED' ? 'Rate limit exceeded' : 'Tutor request failed',
-        }),
-        {
-          status: error.code === 'RATE_LIMITED' ? 429 : 502,
-          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-        }
-      );
+      const errorCode = error.code === 'RATE_LIMITED' ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR;
+      const message = error.code === 'RATE_LIMITED' ? 'Rate limit exceeded' : 'Tutor request failed';
+      return fail(errorCode, { message, headers: rlHeaders });
     }
     log.warn('Tutor chat unexpected error', {
       msg: error instanceof Error ? error.message : String(error),
     });
-    return new Response(JSON.stringify({ error: 'Tutor service unavailable' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Tutor service unavailable', headers: rlHeaders });
   }
 });

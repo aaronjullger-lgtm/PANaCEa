@@ -5,7 +5,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, aiEndpoint} from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -27,8 +28,6 @@ interface Env {
   DATABASE_URL: string;
   GEMINI_API_KEY: string;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context) => {
   const { env, validated, auth } = context as {
@@ -56,10 +55,7 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
       select: { id: true },
     });
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
     }
 
     const now = new Date();
@@ -72,16 +68,11 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
     });
 
     if (existing && existing.expiresAt >= minExpiry) {
-      return new Response(
-        JSON.stringify({
-          data: {
-            cachedContentName: existing.geminiCacheName,
-            expiresAt: existing.expiresAt.toISOString(),
-            reused: true,
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok({
+        cachedContentName: existing.geminiCacheName,
+        expiresAt: existing.expiresAt.toISOString(),
+        reused: true,
+      });
     }
 
     const [attempts, tutorContext] = await Promise.all([
@@ -149,20 +140,19 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
         status: res.status,
         text: text.slice(0, 300),
       });
-      return new Response(
-        JSON.stringify({ error: 'Failed to create student context cache', details: text }),
-        { status: res.status === 429 ? 429 : 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR, {
+        message: 'Failed to create student context cache',
+        details: text.slice(0, 500),
+      });
     }
 
     const data = (await res.json()) as { name?: string; expireTime?: string };
     const geminiCacheName = data.name;
     const expireTime = data.expireTime;
     if (!geminiCacheName || !expireTime) {
-      return new Response(
-        JSON.stringify({ error: 'Gemini cache response missing name or expireTime' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.GEMINI_ERROR, {
+        message: 'Gemini cache response missing name or expireTime',
+      });
     }
 
     if (existing) {
@@ -183,22 +173,10 @@ export const onRequestPost = aiEndpoint(StudentContextBodySchema, async (context
 
     log.info('Student context cache created', { userId: user.id, name: geminiCacheName });
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          cachedContentName: geminiCacheName,
-          expiresAt: expireTime,
-          reused: false,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({ cachedContentName: geminiCacheName, expiresAt: expireTime, reused: false });
   } catch (err) {
     log.error('Student context cache error', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
   } finally {
     await safePrismaDisconnect(prisma);
   }

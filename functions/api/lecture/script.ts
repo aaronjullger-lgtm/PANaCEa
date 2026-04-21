@@ -9,7 +9,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -45,8 +46,6 @@ Rules:
 - Do NOT add stage directions or meta-commentary.
 - End with a concise summary from the Attending.
 - Output a JSON object with keys: "script" (the dialogue text), "summary_points" (array of 3-5 key takeaways as strings).`;
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(ScriptBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
@@ -111,16 +110,11 @@ ${text.slice(0, 45000)}`;
     if (!res.ok) {
       const errText = await res.text();
       log.warn('Gemini script error', { status: res.status, text: errText.slice(0, 300) });
-      return new Response(
-        JSON.stringify({
-          error: res.status === 429 ? 'Rate limit exceeded' : 'Script generation failed',
-          details: errText.slice(0, 500),
-        }),
-        {
-          status: res.status === 429 ? 429 : 502,
-          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-        }
-      );
+      return fail(res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR, {
+        message: res.status === 429 ? 'Rate limit exceeded' : 'Script generation failed',
+        details: errText.slice(0, 500),
+        headers: rateLimitHeaders as Record<string, string>,
+      });
     }
 
     const data = (await res.json()) as {
@@ -143,28 +137,18 @@ ${text.slice(0, 45000)}`;
     }
 
     if (!script) {
-      return new Response(JSON.stringify({ error: 'No script generated' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      return fail(ErrorCode.GEMINI_ERROR, {
+        message: 'No script generated',
+        headers: rateLimitHeaders as Record<string, string>,
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          script,
-          summary_points: summaryPoints,
-          topic: topic ?? undefined,
-          targetMinutes,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+    return ok(
+      { script, summary_points: summaryPoints, topic: topic ?? undefined, targetMinutes },
+      { headers: rateLimitHeaders as Record<string, string> }
     );
   } catch (err) {
     log.error('Lecture script error', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
   }
 });

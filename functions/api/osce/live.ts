@@ -15,7 +15,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -61,8 +62,6 @@ interface Env {
   GEMINI_API_KEY: string;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestGet = aiEndpoint(
   QuerySchema,
   async (context) => {
@@ -100,31 +99,22 @@ export const onRequestGet = aiEndpoint(
           status: res.status,
           body: text.slice(0, 100),
         });
-        return new Response(
-          JSON.stringify({
-            error: 'Failed to create Live session token',
-            details: res.status === 401 ? 'Invalid or missing Gemini API key' : text.slice(0, 200),
-          }),
-          { status: 502, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.UPSTREAM_ERROR, {
+          message: 'Failed to create Live session token',
+          details: res.status === 401 ? 'Invalid or missing Gemini API key' : text.slice(0, 200),
+        });
       }
       const data = (await res.json()) as { name?: string };
       ephemeralTokenName = data?.name ?? '';
       if (!ephemeralTokenName) {
-        return new Response(JSON.stringify({ error: 'Invalid token response from Live API' }), {
-          status: 502,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.GEMINI_ERROR, { message: 'Invalid token response from Live API' });
       }
     } catch (err) {
       log.error('Gemini auth_tokens request error', err);
-      return new Response(
-        JSON.stringify({
-          error: 'Live session token service unavailable',
-          details: err instanceof Error ? err.message : 'Unknown',
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: 'Live session token service unavailable',
+        details: err instanceof Error ? err.message : 'Unknown',
+      });
     }
 
     const tools = [
@@ -136,27 +126,22 @@ export const onRequestGet = aiEndpoint(
       },
     ];
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          model: LIVE_MODEL,
-          wsUrl: WS_URL,
-          apiKey: ephemeralTokenName,
-          systemInstruction: DEFAULT_SYSTEM_INSTRUCTION,
-          tools,
-          getVitalsExample,
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceName: 'Aoede' },
-          /** Include in setup when reconnecting so the Patient remembers context (e.g. after WiFi drop). */
-          sessionResumptionHandle: validated.sessionResumptionHandle ?? null,
-          sessionResumptionHint:
-            'Store sessionResumptionUpdate.newHandle from server messages; on reconnect call GET /api/osce/live?sessionResumptionHandle=<handle> and pass handle in setup.sessionResumption.handle.',
-          toolHandlingHint:
-            'On server toolCall for get_vitals, GET /api/osce/session/:sessionId/vitals (with auth) and send toolResponse with functionResponses[{ id, response: { vitals } }].',
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({
+      model: LIVE_MODEL,
+      wsUrl: WS_URL,
+      apiKey: ephemeralTokenName,
+      systemInstruction: DEFAULT_SYSTEM_INSTRUCTION,
+      tools,
+      getVitalsExample,
+      responseModalities: ['AUDIO'],
+      speechConfig: { voiceName: 'Aoede' },
+      /** Include in setup when reconnecting so the Patient remembers context (e.g. after WiFi drop). */
+      sessionResumptionHandle: validated.sessionResumptionHandle ?? null,
+      sessionResumptionHint:
+        'Store sessionResumptionUpdate.newHandle from server messages; on reconnect call GET /api/osce/live?sessionResumptionHandle=<handle> and pass handle in setup.sessionResumption.handle.',
+      toolHandlingHint:
+        'On server toolCall for get_vitals, GET /api/osce/session/:sessionId/vitals (with auth) and send toolResponse with functionResponses[{ id, response: { vitals } }].',
+    });
   },
   { source: 'query' }
 );
