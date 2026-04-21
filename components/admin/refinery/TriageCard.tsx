@@ -239,7 +239,11 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
       return (
         <img
           src={signedImageUrl}
-          alt=""
+          alt={
+            [item.data.modality, item.data.correctDiagnosis ?? item.data.condition]
+              .filter(Boolean)
+              .join(' – ') || 'Clinical image'
+          }
           className="w-full h-full object-contain"
           onError={() => setImageLoadError(true)}
         />
