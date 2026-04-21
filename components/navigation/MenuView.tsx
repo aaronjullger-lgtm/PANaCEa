@@ -577,7 +577,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
               aria-label="Search conditions or medications"
-              className="w-full px-5 py-3.5 bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
+              className="w-full px-5 py-3.5 bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:scale-[1.01] transition-[color,box-shadow,transform] duration-300 placeholder:text-[var(--color-text-muted)]"
               style={{ boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
               autoComplete="off"
             />
@@ -745,7 +745,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToGapAnalysis && (
                     <motion.button
                       onClick={onNavigateToGapAnalysis}
-                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left relative overflow-hidden group"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left relative overflow-hidden group"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -765,7 +765,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
                   <motion.button
                     onClick={() => setShowQuickReview(true)}
-                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -778,7 +778,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
                   <motion.button
                     onClick={() => setShowBookmarks(true)}
-                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -791,7 +791,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
                   <motion.button
                     onClick={() => setShowStudyGuide(true)}
-                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -804,7 +804,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
                   <motion.button
                     onClick={() => setShowLeaderboard(true)}
-                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -818,7 +818,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToIntegrations && (
                     <motion.button
                       onClick={onNavigateToIntegrations}
-                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -834,7 +834,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToSocial && (
                     <motion.button
                       onClick={onNavigateToSocial}
-                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -852,7 +852,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToToolkit && (
                     <motion.button
                       onClick={onNavigateToToolkit}
-                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-shadow duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >

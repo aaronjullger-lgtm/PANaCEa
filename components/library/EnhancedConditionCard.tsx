@@ -209,19 +209,19 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
             {goldStandard && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
                 <Target className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
-                <span className="truncate max-w-[140px]">{goldStandard}</span>
+                <span className="truncate max-w-[140px]" title={goldStandard}>{goldStandard}</span>
               </span>
             )}
             {firstLineRx && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
                 <Pill className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
-                <span className="truncate max-w-[140px]">{firstLineRx}</span>
+                <span className="truncate max-w-[140px]" title={firstLineRx}>{firstLineRx}</span>
               </span>
             )}
             {bestInitialTest && !goldStandard && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] text-[11px] font-medium">
                 <FlaskConical className="w-3 h-3 flex-shrink-0 text-[var(--color-text-muted)]" />
-                <span className="truncate max-w-[140px]">{bestInitialTest}</span>
+                <span className="truncate max-w-[140px]" title={bestInitialTest}>{bestInitialTest}</span>
               </span>
             )}
           </div>

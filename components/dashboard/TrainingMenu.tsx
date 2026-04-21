@@ -673,7 +673,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             placeholder="Search modes (e.g., ECG, Antibiotics, Rapid)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="workspace-field w-full rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#c4b78a]/30 focus:border-[#c4b78a]/50"
+            className="workspace-field w-full rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)]/50"
             style={{
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',

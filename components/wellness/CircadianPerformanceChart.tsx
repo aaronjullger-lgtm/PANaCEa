@@ -108,7 +108,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
           {hoursWithData.map((stat) => (
             <motion.div
               key={stat.hour}
-              initial={{ x: -20 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: stat.hour * 0.02 }}
               className="flex items-center gap-3"

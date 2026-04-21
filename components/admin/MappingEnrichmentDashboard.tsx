@@ -378,7 +378,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
               {gaps.slice(0, 5).map((gap, index) => (
                 <motion.div
                   key={gap.taxonomyCode}
-                  initial={{ y: -10 }}
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="border border-[var(--color-border)] rounded-lg p-4"

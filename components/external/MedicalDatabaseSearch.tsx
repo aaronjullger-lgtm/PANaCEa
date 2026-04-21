@@ -382,7 +382,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 {formatResultsForDisplay().map((result, index) => (
                   <motion.div
                     key={result.id}
-                    initial={{ y: 10 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors"

@@ -64,7 +64,7 @@ const VisualizationDemoPage: React.FC = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.div
-          initial={{ y: -20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2"
         >
@@ -78,7 +78,7 @@ const VisualizationDemoPage: React.FC = () => {
 
         {/* Section 1: RadialProgress */}
         <motion.section
-          initial={{ y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
@@ -173,7 +173,7 @@ const VisualizationDemoPage: React.FC = () => {
 
         {/* Section 2: TrendSparkline */}
         <motion.section
-          initial={{ y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
@@ -261,7 +261,7 @@ const VisualizationDemoPage: React.FC = () => {
 
         {/* Section 3: ActivityHeatmap */}
         <motion.section
-          initial={{ y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 shadow-xl"
@@ -287,7 +287,7 @@ const VisualizationDemoPage: React.FC = () => {
 
         {/* Section 4: Combined Dashboard Example */}
         <motion.section
-          initial={{ y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="bg-gradient-to-br from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 rounded-2xl p-6 shadow-xl"

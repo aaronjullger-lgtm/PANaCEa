@@ -391,7 +391,8 @@ export function DailyChallengesHub() {
                 }}
               >
                 <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,#c4b78a,#728ba6,#9a7f9a)] transition-all duration-500"
+                  className="h-full rounded-full transition-[width] duration-500"
+                  style={{ background: 'linear-gradient(90deg, var(--color-accent), var(--color-category-knowledge), var(--color-category-practice))' }}
                   style={{ width: `${overallProgress}%` }}
                 />
               </div>

@@ -214,9 +214,9 @@ export function BulkApprovalPanel({
                   Automatically approve suggestions with confidence {'>'} 85%
                 </p>
                 <button
-                  className="w-full px-3 py-2 bg-data-provisional/20 text-data-provisional rounded-lg hover:bg-data-provisional/30 transition-colors text-sm font-medium"
-                  disabled={isLoading}
-                  onClick={() => toast.info('High-confidence approve is coming soon.')}
+                  className="w-full px-3 py-2 bg-data-provisional/20 text-data-provisional rounded-lg transition-colors text-sm font-medium opacity-50 cursor-not-allowed"
+                  disabled
+                  title="Not yet implemented"
                 >
                   Run auto-approval
                 </button>
@@ -230,9 +230,9 @@ export function BulkApprovalPanel({
                   Reject suggestions with confidence {'<'} 30% and send for manual review
                 </p>
                 <button
-                  className="w-full px-3 py-2 bg-data-fail/20 text-data-fail rounded-lg hover:bg-data-fail/30 transition-colors text-sm font-medium"
-                  disabled={isLoading}
-                  onClick={() => toast.info('Batch reject is coming soon.')}
+                  className="w-full px-3 py-2 bg-data-fail/20 text-data-fail rounded-lg transition-colors text-sm font-medium opacity-50 cursor-not-allowed"
+                  disabled
+                  title="Not yet implemented"
                 >
                   Reject low confidence
                 </button>
@@ -246,9 +246,9 @@ export function BulkApprovalPanel({
                   Ignore suggestions where taxonomy already has a mapping
                 </p>
                 <button
-                  className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-sm font-medium"
-                  disabled={isLoading}
-                  onClick={() => toast.info('Ignore duplicates is coming soon.')}
+                  className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg transition-colors text-sm font-medium opacity-50 cursor-not-allowed"
+                  disabled
+                  title="Not yet implemented"
                 >
                   Ignore duplicates
                 </button>
@@ -262,7 +262,7 @@ export function BulkApprovalPanel({
       <AnimatePresence>
         {(error || success) && (
           <motion.div
-            initial={{ y: -10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="mt-4"

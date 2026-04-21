@@ -7,6 +7,20 @@ const _capture = vi.hoisted(() => ({
 }));
 
 // ── Mock all external dependencies ─────────────────────────────────────────
+
+// Sprint S3 — idempotency cache helpers
+const mockGetFromCache = vi.fn();
+const mockSetInCache = vi.fn();
+const mockIsKVAvailable = vi.fn();
+vi.mock('../_shared/cache', () => ({
+  getFromCache: (...args: any[]) => mockGetFromCache(...args),
+  setInCache: (...args: any[]) => mockSetInCache(...args),
+  isKVAvailable: (...args: any[]) => mockIsKVAvailable(...args),
+  // Other exports are unused by submit-review
+  getConditionCacheKey: vi.fn(),
+  getQuestionPoolCacheKey: vi.fn(),
+}));
+
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(),
   safePrismaDisconnect: vi.fn(),
@@ -151,6 +165,11 @@ function makeContext(overrides: Partial<{
 describe('POST /api/drills/submit-review', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // KV unavailable by default — existing tests are unaffected by idempotency logic
+    mockIsKVAvailable.mockReturnValue(false);
+    mockGetFromCache.mockResolvedValue(null);
+    mockSetInCache.mockResolvedValue(undefined);
 
     // Default happy-path mocks
     const prisma = makePrisma();
@@ -374,5 +393,65 @@ describe('POST /api/drills/submit-review', () => {
     const result = await _capture.handler!(makeContext());
 
     expect(result.data.isRapidGuess).toBe(false);
+  });
+
+  // ── Sprint S3: idempotency cache ─────────────────────────────────────────
+
+  describe('idempotency cache (Sprint S3)', () => {
+    const CACHED_RESPONSE = {
+      isCorrect: true,
+      isRapidGuess: false,
+      nextReview: { intervalDays: 3, nextDueDate: '2026-04-10T00:00:00Z', stability: 4.5, difficulty: 0.3 },
+      drillFeedback: null,
+    };
+
+    it('returns cached response without calling submitDrillReview on cache hit', async () => {
+      mockIsKVAvailable.mockReturnValue(true);
+      mockGetFromCache.mockResolvedValue(CACHED_RESPONSE);
+
+      const result = await _capture.handler!(
+        makeContext({ validated: { idempotencyKey: 'review-idem-1' } })
+      );
+
+      expect(result.data).toEqual(CACHED_RESPONSE);
+      // Pipeline never entered — no DB call, no FSRS update
+      expect(submitDrillReview).not.toHaveBeenCalled();
+      expect(createEdgePrismaClient).not.toHaveBeenCalled();
+    });
+
+    it('calls submitDrillReview and writes cache on cache miss', async () => {
+      mockIsKVAvailable.mockReturnValue(true);
+      mockGetFromCache.mockResolvedValue(null); // cache miss
+
+      await _capture.handler!(makeContext({ validated: { idempotencyKey: 'review-idem-2' } }));
+
+      expect(submitDrillReview).toHaveBeenCalledTimes(1);
+      expect(mockSetInCache).toHaveBeenCalledTimes(1);
+      // Key format: idem:submit-review:<clerkId>:<idempotencyKey>
+      const [, key] = mockSetInCache.mock.calls[0] as [any, string, any, any];
+      expect(key).toContain('review-idem-2');
+      expect(key).toContain('clerk-user-1');
+    });
+
+    it('proceeds normally (no cache read/write) when idempotencyKey is absent', async () => {
+      mockIsKVAvailable.mockReturnValue(true);
+
+      const validated = { ...MOCK_VALIDATED };
+      // Explicitly no idempotencyKey field
+      await _capture.handler!({ ...makeContext(), validated });
+
+      expect(mockGetFromCache).not.toHaveBeenCalled();
+      expect(mockSetInCache).not.toHaveBeenCalled();
+      expect(submitDrillReview).toHaveBeenCalledTimes(1);
+    });
+
+    it('proceeds normally when KV is unavailable even if idempotencyKey is present', async () => {
+      mockIsKVAvailable.mockReturnValue(false); // KV binding absent
+
+      await _capture.handler!(makeContext({ validated: { idempotencyKey: 'review-idem-4' } }));
+
+      expect(mockGetFromCache).not.toHaveBeenCalled();
+      expect(submitDrillReview).toHaveBeenCalledTimes(1);
+    });
   });
 });

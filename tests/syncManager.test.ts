@@ -790,4 +790,102 @@ describe('SyncManager', () => {
       expect(storageFullListener).toHaveBeenCalled();
     });
   });
+
+  // --------------------------------------------------------------------------
+  // RECONNECT FLUSH (Lane 3)
+  //
+  // handleOnline() is a browser-event callback — void, fire-and-forget. Its
+  // only job is to emit 'online' and kick off syncAll(). These tests validate
+  // the syncAll() behavior that the reconnect flush relies on, plus one focused
+  // test that handleOnline() actually calls syncAll() when invoked.
+  // --------------------------------------------------------------------------
+
+  describe('reconnect flush', () => {
+    /**
+     * Seed a review directly into localStorage without triggering the immediate
+     * sync that queueReview() fires — lets us control state precisely.
+     */
+    const seedReview = (id: string) => {
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      stored.push({
+        id,
+        questionId: `q-${id}`,
+        selectedAnswer: 0,
+        timeSpentMs: 1000,
+        timestamp: Date.now(),
+        synced: false,
+        syncAttempts: 0,
+      });
+      localStorage.setItem('panceai_offline_reviews', JSON.stringify(stored));
+    };
+
+    it('syncAll flushes reviews accumulated while offline', async () => {
+      // Simulate reviews queued while offline
+      seedReview('rc-1');
+      seedReview('rc-2');
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            { questionId: 'q-rc-1', success: true },
+            { questionId: 'q-rc-2', success: true },
+          ],
+        }),
+      });
+
+      const result = await syncManager.syncAll();
+
+      expect(result.reviews).toBe(2);
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored.every((r: OfflineReview) => r.synced)).toBe(true);
+    });
+
+    it('syncAll emits sync-complete on successful reconnect flush', async () => {
+      seedReview('rc-3');
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [{ questionId: 'q-rc-3', success: true }] }),
+      });
+
+      const syncCompleteListener = vi.fn();
+      syncManager.on('sync-complete', syncCompleteListener);
+
+      await syncManager.syncAll();
+
+      expect(syncCompleteListener).toHaveBeenCalledTimes(1);
+      expect(syncCompleteListener.mock.calls[0]![0].isSyncing).toBe(false);
+      expect(syncCompleteListener.mock.calls[0]![0].pendingReviews).toBe(0);
+    });
+
+    it('syncAll leaves reviews pending and emits sync-error on network failure', async () => {
+      seedReview('rc-4');
+
+      mockFetch.mockRejectedValueOnce(new Error('Network down'));
+
+      const syncErrorListener = vi.fn();
+      syncManager.on('sync-error', syncErrorListener);
+
+      await expect(syncManager.syncAll()).rejects.toThrow('Network down');
+
+      expect(syncErrorListener).toHaveBeenCalledTimes(1);
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      expect(stored[0].synced).toBe(false);
+    });
+
+    it('handleOnline emits online event and triggers syncAll (no pending items)', async () => {
+      // handleOnline() is void/fire-and-forget. Verify it fires the 'online' event
+      // and delegates to syncAll (which returns early without fetching when empty).
+      const onlineListener = vi.fn();
+      syncManager.on('online', onlineListener);
+
+      // Spy on syncAll to confirm it's called by handleOnline
+      const syncAllSpy = vi.spyOn(syncManager, 'syncAll');
+      syncManager['handleOnline']();
+
+      expect(onlineListener).toHaveBeenCalledTimes(1);
+      expect(syncAllSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 });

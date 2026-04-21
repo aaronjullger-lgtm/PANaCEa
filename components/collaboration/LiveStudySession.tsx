@@ -642,7 +642,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'session' && (
                 <motion.div
                   key="session"
-                  initial={{ x: 20 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
@@ -699,7 +699,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'leaderboard' && (
                 <motion.div
                   key="leaderboard"
-                  initial={{ x: 20 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-3"
@@ -763,7 +763,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'chat' && (
                 <motion.div
                   key="chat"
-                  initial={{ x: 20 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="flex flex-col h-full"
@@ -883,7 +883,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'benchmark' && peerBenchmark && (
                 <motion.div
                   key="benchmark"
-                  initial={{ x: 20 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"

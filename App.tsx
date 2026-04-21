@@ -2,6 +2,7 @@
 // Decomposition roadmap: see docs/architecture/APP_DECOMPOSITION.md
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { User } from 'lucide-react';
 import { runStorageKeyMigration } from './lib/storage/storageRegistry';
 import { type View, DRILL_MODE_IDS, springs } from './config/appViews';
@@ -1081,6 +1082,7 @@ const App: React.FC = () => {
     new URLSearchParams(location.search).get('devAudit') === '1';
 
   return (
+    <MotionConfig reducedMotion="user">
     <AppProviders>
       <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
         {/*
@@ -1221,6 +1223,7 @@ const App: React.FC = () => {
         />
       </div>
     </AppProviders>
+    </MotionConfig>
   );
 };
 

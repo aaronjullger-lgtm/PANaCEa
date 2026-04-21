@@ -102,12 +102,12 @@ const DrillShell: React.FC<DrillShellProps> = ({
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
             {/* Breadcrumb Navigation */}
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-caption text-slate-400 mb-3">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-caption text-[var(--color-text-muted)] mb-3">
               {backTo !== undefined ? (
                 <BackLink
                   to={hubTarget}
                   label="Back to Practice"
-                  className="text-sm text-slate-300 hover:text-[#c4b78a] transition-colors duration-200"
+                  className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-200"
                 />
               ) : (
                 <Button
@@ -116,19 +116,19 @@ const DrillShell: React.FC<DrillShellProps> = ({
                   onClick={onBackToHub}
                   icon={<Home className="w-3.5 h-3.5" />}
                   aria-label="Back to hub"
-                  className="text-slate-300 hover:text-[#c4b78a] transition-colors duration-200"
+                  className="text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-200"
                 >
                   Hub
                 </Button>
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  <span className="text-slate-600 mx-0.5" aria-hidden="true">/</span>
+                  <span className="text-[var(--color-border)] mx-0.5" aria-hidden="true">/</span>
                   <span
                     className={
                       index === breadcrumb.length - 1
-                        ? 'text-[#c4b78a] font-semibold drop-shadow-lg'
-                        : 'text-slate-400 transition-colors duration-150 hover:text-[#c4b78a]'
+                        ? 'text-[var(--color-accent)] font-semibold drop-shadow-lg'
+                        : 'text-[var(--color-text-muted)] transition-colors duration-150 hover:text-[var(--color-accent)]'
                     }
                     {...(index === breadcrumb.length - 1 ? { 'aria-current': 'page' as const } : {})}
                   >
@@ -147,7 +147,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     size="icon"
                     onClick={onBack}
                     aria-label="Go back"
-                    className="rounded-xl transition-all duration-200 ease-premium text-slate-300 hover:text-[#c4b78a] hover:bg-[var(--color-bg-tertiary)]"
+                    className="rounded-xl transition-colors duration-200 ease-premium text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)]"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
@@ -155,7 +155,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                 <h1
                   className="text-h2 font-bold drop-shadow-xl"
                   style={{
-                    background: 'linear-gradient(135deg, #c4b78a 0%, #e6d9b5 100%)',
+                    background: 'linear-gradient(135deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 60%, white) 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',

@@ -247,7 +247,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
                   {normalized.system && <SystemBadge system={normalized.system} />}
                   <YieldBadge yield={normalized.pance_yield} size="md" />
                   {normalized.subcategory && (
-                    <span className="px-2 py-1 bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] rounded text-xs">
+                    <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] border border-[var(--color-border)] rounded text-xs">
                       {normalized.subcategory}
                     </span>
                   )}
