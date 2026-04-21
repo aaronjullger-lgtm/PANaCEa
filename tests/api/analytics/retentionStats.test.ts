@@ -180,8 +180,9 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
 
   it('uses the FSRS v6 retrievability formula (not Ebbinghaus) when reviewed items exist', async () => {
     // One reviewed item with stability = 10. avgStability = 10.
-    // FSRS v6: R(t) = (1 + (19/81) * t / S)^(-0.5)
-    //   Day 10:   (1 + (19/81) * 10/10)^(-0.5) * 100 ≈ 90.06%
+    // FSRS v6 (ts-fsrs canonical defaults w[19]=0.1597, w[20]=2.27):
+    //   R(t) = (1 + 0.1597 * t / S)^(-2.27)
+    //   Day 10:   (1 + 0.1597 * 10/10)^(-2.27) * 100 ≈ 71.44%
     //   Ebbinghaus: exp(-10/10) * 100 ≈ 36.79%  ← must NOT be this
     const prisma = makeFakePrisma({
       userFound: true,
@@ -202,12 +203,16 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
     expect(curve[0]?.day).toBe(0);
     expect(curve[0]?.retentionProb).toBeCloseTo(100, 5);
 
-    // Day 10 ≈ 90.06% for FSRS; definitely NOT 36.79% (Ebbinghaus)
+    // Day 10 ≈ 71.44% for FSRS v6; definitely NOT 36.79% (Ebbinghaus).
+    // Constants imported from the canonical source so the test tracks any
+    // future change to defaultParameters automatically.
     const day10 = curve.find((p) => p.day === 10);
     expect(day10).toBeDefined();
-    const FSRS_FACTOR = 19 / 81;
-    const FSRS_DECAY = -0.5;
-    const expectedDay10 = Math.pow(1 + (FSRS_FACTOR * 10) / 10, FSRS_DECAY) * 100;
+    const { FSRS_FACTOR_DEFAULT, FSRS_DECAY_DEFAULT } = await import('@/lib/fsrs-retrievability');
+    const expectedDay10 = Math.pow(
+      1 + (FSRS_FACTOR_DEFAULT * 10) / 10,
+      FSRS_DECAY_DEFAULT
+    ) * 100;
     expect(day10!.retentionProb).toBeCloseTo(expectedDay10, 5);
 
     // Regression guard: must not match the old Ebbinghaus formula

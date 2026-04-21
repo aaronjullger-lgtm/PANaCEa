@@ -39,11 +39,10 @@ const CLERK_ID = 'user_clerk_srs_summary';
 const INTERNAL_ID = 'internal-uuid-srs-0001';
 
 // ── FSRS constants (match lib/fsrs-retrievability.ts) ────────────────────────
-
-const FSRS_FACTOR = 19 / 81;
-const FSRS_DECAY = -0.5;
+// Imported directly so the test can never drift from the canonical defaults.
+import { FSRS_FACTOR_DEFAULT, FSRS_DECAY_DEFAULT } from '@/lib/fsrs-retrievability';
 function fsrsR(t: number, s: number): number {
-  return Math.pow(1 + (FSRS_FACTOR * t) / s, FSRS_DECAY);
+  return Math.pow(1 + (FSRS_FACTOR_DEFAULT * t) / s, FSRS_DECAY_DEFAULT);
 }
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -134,7 +133,8 @@ describe('GET /api/analytics/srs-summary — dashboard-trust reconciliation', ()
     expect(typeof reported).toBe('number');
     expect(isFinite(reported)).toBe(true);
 
-    // FSRS: R(7, 14) ≈ 91%
+    // FSRS v6 (canonical defaults): R(7, 14) ≈ 77%
+    //   R = (1 + 0.1597 * 7/14)^(-2.27) ≈ (1.0799)^(-2.27) ≈ 0.8386
     const expectedFSRS = fsrsR(7, 14) * 100;
     // Old wrong formula: R(7, 14) = (1 + 7/14)^-1 = (1.5)^-1 ≈ 66.7%
     const oldWrong = (1 / (1 + 7 / 14)) * 100;
@@ -156,7 +156,9 @@ describe('GET /api/analytics/srs-summary — dashboard-trust reconciliation', ()
       lastReviewAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
     });
     const { body } = await callEndpoint([card]);
-    const expectedFSRS = fsrsR(30, 10) * 100; // ≈ 56%
+    // FSRS v6 (canonical defaults): R(30, 10) ≈ 21%
+    //   R = (1 + 0.1597 * 30/10)^(-2.27) ≈ (1.4791)^(-2.27) ≈ 0.4198
+    const expectedFSRS = fsrsR(30, 10) * 100;
     expect(Math.abs(body.projectedRetention - expectedFSRS)).toBeLessThan(2);
   });
 

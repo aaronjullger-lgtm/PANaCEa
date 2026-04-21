@@ -110,9 +110,10 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
           : 30;
         const stability = p.fsrsStability ?? 1;
 
-        // Compute current R from FSRS v6 curve
-        const factor = 19 / 81;
-        const decay = -0.5;
+        // Compute current R from FSRS v6 curve — ts-fsrs v6 canonical defaults.
+        // Single source of truth: lib/fsrs-retrievability.ts (mirrors defaultParameters).
+        const factor = 0.1597;   // w[19]
+        const decay = -2.2700;   // -w[20]
         const retrievability = Math.pow(1 + factor * elapsedDays / stability, decay);
 
         return {

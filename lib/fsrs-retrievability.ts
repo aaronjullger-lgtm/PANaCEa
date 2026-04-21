@@ -4,23 +4,33 @@
  * Single source of truth for student-facing forgetting-curve math across the
  * app (retention.ts backend, RetentionForecastCard, DecayCurve, FSRSDecayVisualization).
  *
- * Formula (ts-fsrs v6 published defaults):
- *   R(t) = (1 + FACTOR * t / S) ^ DECAY
- *   FACTOR = 19 / 81
- *   DECAY  = -0.5
+ * Formula:  R(t) = (1 + FACTOR * t / S) ^ DECAY
  *
- * This matches the defaults used by the ts-fsrs library when personalized
- * w[19]/w[20] weights aren't available. The PANaCEa `FSRS` class in
- * `lib/fsrs.ts` uses per-user personalized weights; for generic student-facing
- * charts (where per-user weights aren't wired to the frontend) we use the
- * published defaults so every chart in the app agrees on the same curve.
+ * Defaults are sourced from lib/fsrs.ts `defaultParameters` (ts-fsrs v6
+ * published defaults: w[19]=0.1597, w[20]=2.2700) so this helper can never
+ * drift from the scheduler. Every chart in the app now shows the SAME curve
+ * that the scheduler uses to compute next-review intervals.
  *
- * DO NOT swap this for Ebbinghaus `exp(-t/S)` — that was the old bug.
+ * PRIOR BUG: this file previously used the FSRS-5 reference constants
+ * (FACTOR = 19/81 ≈ 0.2346, DECAY = -0.5) which were mis-labeled as
+ * "ts-fsrs v6 published defaults". Those values imply stability S = time to
+ * 90% retention. The actual v6 math implies S = time to ~75.4% retention,
+ * with the 90% target reached at ~0.3·S. Charts showed "R=90% at day S" while
+ * the scheduler reviewed at ~0.3·S — a user-visible trust issue.
+ *
+ * DO NOT swap this for Ebbinghaus `exp(-t/S)` — that was the original bug.
  * See: docs/dashboard-trust-audit.md §2 P0 #2 (Sprint 1).
+ *
+ * For per-user personalized weights (from UserProgress.fsrsParams), pass
+ * FSRSParameters via the optional retrievabilityWith() variant below.
  */
 
-export const FSRS_FACTOR_DEFAULT = 19 / 81;
-export const FSRS_DECAY_DEFAULT = -0.5;
+import { defaultParameters } from './fsrs';
+
+/** FSRS v6 retrievability factor — mirrors defaultParameters.w[19]. */
+export const FSRS_FACTOR_DEFAULT = defaultParameters.w[19] ?? 0.1597;
+/** FSRS v6 retrievability decay — negated w[20] per the spec (R = (1 + F·t/S)^DECAY). */
+export const FSRS_DECAY_DEFAULT = -(defaultParameters.w[20] ?? 2.2700);
 
 /**
  * FSRS v6 retrievability at `elapsedDays` given current `stability` (in days).

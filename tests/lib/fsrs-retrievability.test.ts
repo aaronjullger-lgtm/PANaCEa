@@ -17,9 +17,11 @@ import {
 } from '../../lib/fsrs-retrievability';
 
 describe('FSRS retrievability — constants', () => {
-  it('FACTOR and DECAY are the ts-fsrs v6 published defaults', () => {
-    expect(FSRS_FACTOR_DEFAULT).toBeCloseTo(19 / 81, 12);
-    expect(FSRS_DECAY_DEFAULT).toBe(-0.5);
+  it('FACTOR and DECAY mirror defaultParameters w[19]/w[20] (ts-fsrs v6 defaults)', () => {
+    // Sourced from lib/fsrs.ts defaultParameters: w[19]=0.1597, w[20]=2.2700.
+    // DECAY is negated because R = (1 + F·t/S)^DECAY uses the already-signed exponent.
+    expect(FSRS_FACTOR_DEFAULT).toBeCloseTo(0.1597, 6);
+    expect(FSRS_DECAY_DEFAULT).toBeCloseTo(-2.2700, 6);
   });
 });
 
@@ -30,21 +32,23 @@ describe('retrievability(elapsedDays, stability)', () => {
     expect(retrievability(0, 100)).toBe(1);
   });
 
-  it('matches the published FSRS v6 formula at day=10, S=10 (~0.9006)', () => {
-    // R = (1 + (19/81)*10/10)^-0.5 = (1 + 19/81)^-0.5 = (100/81)^-0.5 = 9/10
+  it('matches the ts-fsrs v6 formula at day=10, S=10 (~0.714)', () => {
+    // R = (1 + 0.1597·10/10)^(-2.27) = (1.1597)^(-2.27) ≈ 0.7144
+    // Under v6 semantics, stability S is the interval at R ≈ 75.4%; the 90%
+    // threshold is reached at ~0.3·S (about day 3 here). request_retention
+    // (default 0.9) is what the scheduler targets — NOT the R-at-S value.
     const r = retrievability(10, 10);
-    expect(r).toBeCloseTo(0.9, 6);
+    expect(r).toBeCloseTo(0.714, 2);
   });
 
   it('is NOT Ebbinghaus exp(-t/S) — would give ~0.3679 at day=10, S=10', () => {
     const r = retrievability(10, 10);
-    expect(r).not.toBeCloseTo(Math.exp(-1), 2); // guard against the old bug
-    expect(r).toBeGreaterThan(0.8);
+    expect(r).not.toBeCloseTo(Math.exp(-1), 2); // guard against the original bug
+    expect(r).toBeGreaterThan(0.6); // v6 gives ~0.714 at t=S
   });
 
   it('is NOT the ad-hoc (1 + t/S)^-1 — would give 0.5 at day=10, S=10', () => {
     const r = retrievability(10, 10);
-    // (1 + 10/10)^-1 = 0.5
     expect(r).not.toBeCloseTo(0.5, 2);
   });
 

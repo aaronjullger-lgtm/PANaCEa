@@ -27,11 +27,11 @@ describe('retrievability() — FSRS v6 canonical formula', () => {
     expect(retrievability(0, 100)).toBeCloseTo(1, 6);
   });
 
-  it('uses factor=19/81 and decay=-0.5 (not the old (1+t/S)^-1 form)', () => {
+  it('uses ts-fsrs v6 defaults (w[19]=0.1597, w[20]=2.27) — not the old (1+t/S)^-1 form', () => {
     const stability = 10;
     const elapsed = 5;
 
-    // Canonical FSRS v6
+    // Canonical FSRS v6 (sourced from defaultParameters via fsrs-retrievability.ts)
     const correct = Math.pow(
       1 + (FSRS_FACTOR_DEFAULT * elapsed) / stability,
       FSRS_DECAY_DEFAULT
@@ -45,14 +45,17 @@ describe('retrievability() — FSRS v6 canonical formula', () => {
     expect(Math.abs(correct - wrongFormula)).toBeGreaterThan(0.1);
   });
 
-  it('matches readiness-projection.ts inline constants (factor=19/81, decay=-0.5)', () => {
-    // readiness-projection.ts hardcodes: factor = 19 / 81, decay = -0.5
-    const factor = 19 / 81;
-    const decay = -0.5;
+  it('agrees with readinessProjectionService (which now imports the same constants)', () => {
+    // readinessProjectionService.ts used to hardcode factor=19/81, decay=-0.5 (FSRS-5 era).
+    // It now imports FSRS_FACTOR_DEFAULT / FSRS_DECAY_DEFAULT from fsrs-retrievability —
+    // which in turn read from lib/fsrs.ts defaultParameters. So the two paths converge.
     const stability = 14;
     const elapsed = 7;
 
-    const expected = Math.pow(1 + (factor * elapsed) / stability, decay);
+    const expected = Math.pow(
+      1 + (FSRS_FACTOR_DEFAULT * elapsed) / stability,
+      FSRS_DECAY_DEFAULT
+    );
     expect(retrievability(elapsed, stability)).toBeCloseTo(expected, 6);
   });
 

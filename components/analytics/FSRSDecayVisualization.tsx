@@ -51,8 +51,9 @@ interface FSRSDecayVisualizationProps {
  * Previously this used the wrong formula `R(t) = (1 + t/S)^(-1)`, which
  * under/overstated retention at every point and disagreed with the scheduler
  * actually grading the student. Now delegates to the shared `fsrsRetrievability`
- * helper that uses the ts-fsrs v6 published defaults (FACTOR=19/81, DECAY=-0.5),
- * matching retention.ts and RetentionForecastCard.
+ * helper that sources FACTOR/DECAY from lib/fsrs.ts defaultParameters
+ * (ts-fsrs v6 defaults: w[19]=0.1597, w[20]=2.2700), matching retention.ts,
+ * RetentionForecastCard, and the actual scheduler.
  *
  * Argument order preserved for minimal diff at call sites.
  */

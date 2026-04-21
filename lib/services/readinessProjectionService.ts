@@ -23,12 +23,18 @@ import {
   detectConfidenceTrend,
   type ConfidenceTrendResult,
 } from '@/lib/confidence/trendDetector';
+import {
+  FSRS_FACTOR_DEFAULT,
+  FSRS_DECAY_DEFAULT,
+} from '@/lib/fsrs-retrievability';
 
 // ─── FSRS v6 Forgetting Curve Constants ───────────────────────────
-/** FSRS v6 decay parameter (w[20] default) */
-const FSRS_DECAY = -0.5;
-/** Derived factor: 0.9^(1/DECAY) - 1 = 19/81 ≈ 0.2346 */
-const FSRS_FACTOR = 19 / 81;
+// Sourced from lib/fsrs-retrievability.ts (which reads defaultParameters from
+// lib/fsrs.ts) so projections use the SAME curve the scheduler uses. Do NOT
+// re-derive from 19/81 and -0.5 — those are FSRS-5 reference values, not
+// ts-fsrs v6 defaults.
+const FSRS_FACTOR = FSRS_FACTOR_DEFAULT;
+const FSRS_DECAY = FSRS_DECAY_DEFAULT;
 
 // ─── Types ────────────────────────────────────────────────────────
 

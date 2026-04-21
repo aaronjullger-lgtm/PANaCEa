@@ -36,8 +36,10 @@ const READINESS_DISCLAIMER =
   'This readiness indicator is based on your study patterns and is not a prediction of your PANCE score. ' +
   'Actual exam performance depends on many factors not captured here.';
 
-const FSRS_DECAY = -0.5;
-const FSRS_FACTOR = 19 / 81;
+// ts-fsrs v6 canonical defaults (mirrors lib/fsrs.ts defaultParameters.w[19]/w[20]).
+// Do NOT re-derive from 19/81 and -0.5 — those are FSRS-5 reference values, not v6.
+const FSRS_FACTOR = 0.1597;   // w[19]
+const FSRS_DECAY = -2.2700;   // -w[20]
 
 interface AttemptRow {
   system: string | null;
