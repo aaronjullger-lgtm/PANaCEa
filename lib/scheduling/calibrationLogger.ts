@@ -18,6 +18,8 @@
  */
 
 import type { SessionType } from '@prisma/client';
+import { computeRetrievabilityV7 } from '../fsrs-v7';
+import type { FSRSParameters } from '../fsrs';
 
 // Structural shape (matches Prisma.CalibrationLogCreateInput shape).
 // Keeping this as a local interface prevents a tight import on a model that
@@ -122,6 +124,74 @@ export async function writeCalibrationLog(
     // NEVER throw — this is pure telemetry.
     const msg = err instanceof Error ? err.message : String(err);
     logger?.warn?.('[CalibrationLog] write failed (non-fatal)', { error: msg });
+    return false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// FSRS v7-alpha shadow prediction
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * v7 shadow-prediction input. Takes the same review data as the v6 logger
+ * plus the 29-parameter v7 weights to use for the shadow prediction.
+ */
+export interface V7ShadowLogInput extends CalibrationLogInput {
+  /** 29-parameter v7-alpha weights used to compute `predictedRetrievability`. */
+  v7Params: FSRSParameters;
+  /** Time elapsed since the PREVIOUS review, in days — what v7 uses to predict R. */
+  elapsedDaysAtPrediction: number;
+}
+
+/**
+ * Emit a secondary CalibrationLog row tagged fsrsVersion='7-alpha' that
+ * carries the v7 retrievability prediction for the same review the v6
+ * scheduler just processed.
+ *
+ * Purpose: lets offline tooling (lib/scheduling/shadowValidator.ts →
+ * stratifiedReport) compute v6 vs v7 Brier/log-loss/ECE on the IDENTICAL
+ * review stream without ever letting v7 affect actual scheduling.
+ *
+ * Non-schema-breaking: uses the existing `fsrsVersion` column to stratify.
+ * Callers who are not in shadow-validation mode can skip calling this.
+ *
+ * Fire-and-forget. Never throws. Returns false if the v7 params are not
+ * the v7-alpha shape (29 params) — a safety guard against accidentally
+ * shadowing v6 params as if they were v7.
+ */
+export async function writeV7ShadowPrediction(
+  prisma: unknown,
+  input: V7ShadowLogInput,
+  logger?: { warn?: (msg: string, meta?: Record<string, unknown>) => void }
+): Promise<boolean> {
+  try {
+    if (input.v7Params.w.length !== 29) {
+      logger?.warn?.('[V7Shadow] refusing to log — v7Params is not 29-length', {
+        paramCount: input.v7Params.w.length,
+      });
+      return false;
+    }
+
+    // Compute v7 retrievability from the same stability + elapsed-days as v6.
+    const predicted = computeRetrievabilityV7(
+      Math.max(0, input.elapsedDaysAtPrediction),
+      Math.max(0, input.stabilityAtPrediction),
+      input.v7Params
+    );
+
+    // Delegate to the generic writer with the v7 prediction substituted.
+    return await writeCalibrationLog(
+      prisma,
+      {
+        ...input,
+        predictedRetrievability: predicted,
+        fsrsVersion: '7-alpha',
+      },
+      logger
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger?.warn?.('[V7Shadow] write failed (non-fatal)', { error: msg });
     return false;
   }
 }
