@@ -15,7 +15,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -33,8 +34,6 @@ const EmptySchema = z.object({});
 interface Env {
   GEMINI_API_KEY: string;
 }
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): mints ephemeral
 // auth token for client-to-Gemini Live WebSocket (voice-to-voice OSCE).
@@ -78,47 +77,33 @@ export const onRequestGet = aiEndpoint(
           status: res.status,
           body: text.slice(0, 200),
         });
-        return new Response(
-          JSON.stringify({
-            error: 'Failed to create Live session token',
-            details: res.status === 401 ? 'Invalid or missing Gemini API key' : undefined,
-          }),
-          { status: 502, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.GEMINI_ERROR, {
+          message: res.status === 401
+            ? 'Invalid or missing Gemini API key'
+            : 'Failed to create Live session token',
+        });
       }
       const data = (await res.json()) as { name?: string };
       ephemeralTokenName = data?.name ?? '';
       if (!ephemeralTokenName) {
         log.warn('Gemini auth_tokens response missing name', { keys: Object.keys(data || {}) });
-        return new Response(JSON.stringify({ error: 'Invalid token response from Live API' }), {
-          status: 502,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.GEMINI_ERROR, { message: 'Invalid token response from Live API' });
       }
     } catch (err) {
       log.error('Gemini auth_tokens request error', err);
-      return new Response(
-        JSON.stringify({
-          error: 'Live session token service unavailable',
-          details: err instanceof Error ? err.message : 'Unknown',
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.GEMINI_ERROR, {
+        message: err instanceof Error ? err.message : 'Live session token service unavailable',
+      });
     }
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          model: LIVE_MODEL,
-          wsUrl: WS_URL,
-          apiKey: ephemeralTokenName,
-          /** Session Resumption: When Gemini sends sessionResumptionUpdate with newHandle, store it. On reconnect (e.g. WiFi drop), send setup with sessionResumption: { handle: storedHandle } so the "Patient" remembers context (e.g. chest pain). */
-          sessionResumptionHint:
-            'Store sessionResumptionUpdate.newHandle from server messages; pass as setup.sessionResumption.handle when reconnecting.',
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({
+      model: LIVE_MODEL,
+      wsUrl: WS_URL,
+      apiKey: ephemeralTokenName,
+      /** Session Resumption: store sessionResumptionUpdate.newHandle; pass as setup.sessionResumption.handle on reconnect. */
+      sessionResumptionHint:
+        'Store sessionResumptionUpdate.newHandle from server messages; pass as setup.sessionResumption.handle when reconnecting.',
+    });
   },
   { source: 'query' }
 );

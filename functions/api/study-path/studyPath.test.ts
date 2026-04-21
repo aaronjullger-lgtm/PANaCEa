@@ -133,13 +133,15 @@ describe('Study Path Recommendation Endpoint', () => {
     const response = await onRequestGet(contextWithAuth);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toHaveProperty('plan');
-    expect(body).toHaveProperty('alternatives');
-    expect(body).toHaveProperty('rationale');
-    expect(body).toHaveProperty('confidence');
-    expect(body).toHaveProperty('cached', false);
-    expect(body).toHaveProperty('generatedAt');
-    expect(body.plan).toHaveProperty('id', 'plan-123');
+    // Unified envelope: { success: true, data: { plan, alternatives, ... } }
+    expect(body.success).toBe(true);
+    expect(body.data).toHaveProperty('plan');
+    expect(body.data).toHaveProperty('alternatives');
+    expect(body.data).toHaveProperty('rationale');
+    expect(body.data).toHaveProperty('confidence');
+    expect(body.data).toHaveProperty('cached', false);
+    expect(body.data).toHaveProperty('generatedAt');
+    expect(body.data.plan).toHaveProperty('id', 'plan-123');
   });
 
   it('should return cached plan if available', async () => {
@@ -170,8 +172,9 @@ describe('Study Path Recommendation Endpoint', () => {
     const response = await onRequestGet(contextWithAuth);
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.cached).toBe(true);
-    expect(body.plan.id).toBe('cached-plan');
+    expect(body.success).toBe(true);
+    expect(body.data.cached).toBe(true);
+    expect(body.data.plan.id).toBe('cached-plan');
     // Should not have called the generator services
     expect(analyzePerformanceGaps).not.toHaveBeenCalled();
     expect(generateStudyPlan).not.toHaveBeenCalled();
@@ -187,6 +190,8 @@ describe('Study Path Recommendation Endpoint', () => {
     const response = await onRequestGet(contextWithAuth);
     expect(response.status).toBe(500);
     const body = await response.json();
-    expect(body).toHaveProperty('error', 'Unable to generate study plan. Please try again.');
+    // Unified envelope: { success: false, error: 'INTERNAL_ERROR', message: '...' }
+    expect(body.success).toBe(false);
+    expect(body.error).toBe('INTERNAL_ERROR');
   });
 });
