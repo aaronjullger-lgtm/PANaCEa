@@ -324,15 +324,20 @@ class SyncManager {
     // Dual-write to IndexedDB for Background Sync support
     this.writeToIndexedDB('answers', offlineAnswer);
 
-    // Try immediate sync if online
+    // Try immediate sync if online, but only when no sync is already in flight.
+    // The !isSyncing guard prevents a concurrent syncAnswers() from racing with
+    // a syncAll() that is mid-flight. If syncAll() is running, the newly queued
+    // item stays in localStorage and will be picked up on the next sync run.
     if (this.isOnline()) {
-      this.syncAnswers().catch((err) => {
-        const message = err instanceof Error ? err.message : 'Immediate answer sync failed';
-        this.setLastSyncError(message);
-        this.emit('sync-error', this.getStatus());
-        this.scheduleRetry();
-        syncLog.error('Immediate sync failed', { error: err });
-      });
+      if (!this.isSyncing) {
+        this.syncAnswers().catch((err) => {
+          const message = err instanceof Error ? err.message : 'Immediate answer sync failed';
+          this.setLastSyncError(message);
+          this.emit('sync-error', this.getStatus());
+          this.scheduleRetry();
+          syncLog.error('Immediate sync failed', { error: err });
+        });
+      }
     } else {
       // Register Background Sync so the SW retries when connectivity returns
       this.registerBackgroundSync('sync-answers');
@@ -433,15 +438,20 @@ class SyncManager {
     // Dual-write to IndexedDB for Background Sync support
     this.writeToIndexedDB('reviews', offlineReview);
 
-    // Try immediate sync if online
+    // Try immediate sync if online, but only when no sync is already in flight.
+    // The !isSyncing guard prevents a concurrent syncReviews() from racing with
+    // a syncAll() that is mid-flight. If syncAll() is running, the newly queued
+    // item stays in localStorage and will be picked up on the next sync run.
     if (this.isOnline()) {
-      this.syncReviews().catch((err) => {
-        const message = err instanceof Error ? err.message : 'Immediate review sync failed';
-        this.setLastSyncError(message);
-        this.emit('sync-error', this.getStatus());
-        this.scheduleRetry();
-        syncLog.error('Immediate sync failed (reviews)', { error: err });
-      });
+      if (!this.isSyncing) {
+        this.syncReviews().catch((err) => {
+          const message = err instanceof Error ? err.message : 'Immediate review sync failed';
+          this.setLastSyncError(message);
+          this.emit('sync-error', this.getStatus());
+          this.scheduleRetry();
+          syncLog.error('Immediate sync failed (reviews)', { error: err });
+        });
+      }
     } else {
       // Register Background Sync so the SW retries when connectivity returns
       this.registerBackgroundSync('sync-reviews');
@@ -839,7 +849,11 @@ class SyncManager {
 
   private setLastSyncError(error: string): void {
     if (typeof localStorage === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.SYNC_ERROR, error);
+    try {
+      localStorage.setItem(STORAGE_KEYS.SYNC_ERROR, error);
+    } catch {
+      // Best-effort write; quota or permissions error — status held in memory only
+    }
   }
 
   private clearLastSyncError(): void {
