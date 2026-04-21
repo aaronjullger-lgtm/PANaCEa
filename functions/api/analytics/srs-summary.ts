@@ -39,7 +39,7 @@ interface SRSAnalyticsSummary {
   // Recent activity
   recentReviews: number;
   recentNewCards: number;
-  learningVelocity: number; // cards mastered per day
+  learningVelocity: number; // cards reviewed per day (7-day rolling average)
 
   // Trend data (last 7 days)
   stabilityTrend: { date: string; avgStability: number }[];

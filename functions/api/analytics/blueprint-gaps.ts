@@ -13,7 +13,7 @@
  * @see components/dashboard/BlueprintGapHeatmap.tsx
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
@@ -61,6 +61,8 @@ export interface BlueprintGapsResponse {
   totalAttempts: number;
   coverageScore: number; // 0-100, how well-aligned with blueprint
 }
+
+export const onRequestOptions = withCors();
 
 /**
  * GET: Returns per-system gap analysis vs NCCPA Blueprint
