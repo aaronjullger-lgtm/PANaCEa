@@ -70,7 +70,7 @@ export interface TraversalOptions {
 const DDX_PATTERNS = /\b(differential|ddx|rule\s*out|distinguish|differentiate|vs\.?|versus)\b/i;
 const DRUG_INTERACTION_PATTERNS = /\b(interact\w*|contraindic\w*|combine|concomitant|co-administ\w*|drug.+drug)\b/i;
 const CAUSAL_PATTERNS = /\b(cause[sd]?|etiology|pathogenesis|leads?\s+to|results?\s+in|mechanism\w*)\b/i;
-const TREATMENT_PATTERNS = /\b(treat|therap|manage|first[- ]line|prescribe|medication|drug\s+of\s+choice)\b/i;
+const TREATMENT_PATTERNS = /\b(treat\w*|therap\w*|manag\w*|first[- ]line|prescrib\w*|medication|drug\s+of\s+choice)\b/i;
 
 /**
  * Classify query intent for graph traversal strategy.
