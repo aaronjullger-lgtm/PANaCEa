@@ -8,7 +8,7 @@
  * Security: publicEndpoint with Zod validation
  */
 
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -30,8 +30,6 @@ const FirstLineQuerySchema = z.object({
 // ============================================================================
 // OPTIONS HANDLER
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // GET HANDLER

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, getSentryTraceId } from '../_shared/middleware';
+import { authenticatedEndpoint, getSentryTraceId } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { withTimeout, TimeoutError } from '../_shared/timeout';
@@ -37,8 +37,6 @@ const EMPTY_STATE_RESPONSE = {
   message: 'Answer Main Session questions to build your Rolling 360 score.',
   questionsNeeded: 50, // Questions needed for "provisional" confidence
 };
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (context) => {
   const { env, auth, request } = context;

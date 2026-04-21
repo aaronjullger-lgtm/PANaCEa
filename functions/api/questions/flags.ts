@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -14,8 +14,6 @@ const FlagsSchema = z.object({
     priority: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(FlagsSchema, async (context) => {
   const { env, auth, validated } = context;

@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
@@ -22,8 +22,6 @@ const OSCEHistoryQuerySchema = z.object({
   sessionId: IDSchema,
   limit: z.coerce.number().int().min(1).max(500).default(100),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   OSCEHistoryQuerySchema,

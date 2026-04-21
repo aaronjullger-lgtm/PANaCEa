@@ -13,7 +13,7 @@
  */
 
 import { Prisma } from '@prisma/client';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -30,8 +30,6 @@ const MIN_ATTEMPTS = 10;
 interface DistributionMap {
   [optionLetter: string]: number;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = adminAuthenticatedEndpoint(
   bodySchema,

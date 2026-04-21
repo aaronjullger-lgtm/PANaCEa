@@ -26,7 +26,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -83,8 +83,6 @@ const MAX_BIN_COUNT = 50;
 // OOM and keeps p99 latency predictable. If a user exceeds this, we surface
 // totalAvailable so the caller knows the window is truncated.
 const ROW_HARD_CAP = 50_000;
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   CalibrationReportSchema,

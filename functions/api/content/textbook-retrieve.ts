@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -15,8 +15,6 @@ const TextbookRetrieveSchema = z.object({
   source: z.string().optional(),
   limit: z.string().optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   TextbookRetrieveSchema,

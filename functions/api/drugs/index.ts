@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -20,8 +20,6 @@ const DrugLibrarySchema = z.object({
   cursor: z.string().optional(), // Last drug ID for keyset pagination
   search: z.string().max(200).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   DrugLibrarySchema,

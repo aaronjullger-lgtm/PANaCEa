@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const QuerySchema = z.object({
@@ -34,8 +34,6 @@ BEHAVIOR RULES:
 4. PHYSICAL EXAMS: If the student says they want to examine you, return ONLY the findings for the SPECIFIC body system they named. If they say only "I do a physical exam" or "full exam" without specifying which body part, respond: "Sure, what part would you like to check? My heart, lungs, belly...?" Do NOT reveal findings from other body systems.
 5. VITALS AND LABS: When asked about vitals or labs, use the get_vitals tool to retrieve the simulated values and report them naturally in lay terms (e.g. "I think the nurse said it was high... like 160 something over 95").
 6. Keep answers brief and patient-like. Do NOT reveal the diagnosis or hint at the "correct" answer.`;
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   QuerySchema,

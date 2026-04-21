@@ -3,7 +3,7 @@
  * Complete an exam and generate score report
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -18,8 +18,6 @@ const CompleteExamSchema = z.object({
     attemptId: z.string().min(1, 'Attempt ID is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   CompleteExamSchema,

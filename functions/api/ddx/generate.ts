@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { callGeminiText } from '../../../services/ai/geminiService';
@@ -117,8 +117,6 @@ Return a single, valid JSON object with the following structure, and no other te
     correctDiagnosis: correctCondition.title,
   };
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = aiEndpoint(
   GenerateDdxSchema,

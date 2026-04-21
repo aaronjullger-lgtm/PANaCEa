@@ -14,7 +14,6 @@ import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
   aiEndpoint,
-  withCors,
   AuthenticatedContext,
   ValidatedContext,
 } from '../../_shared/middleware';
@@ -38,8 +37,6 @@ const ContrastiveGenerateSchema = z.object({
 });
 
 type ContrastiveGenerateInput = z.infer<typeof ContrastiveGenerateSchema>;
-
-export const onRequestOptions = withCors();
 
 /**
  * Call the AI gateway to generate a contrastive question.

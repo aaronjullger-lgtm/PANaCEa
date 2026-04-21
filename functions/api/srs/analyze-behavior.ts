@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -41,8 +41,6 @@ const AnalyzeBehaviorSchema = z.object({
       .optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(AnalyzeBehaviorSchema, async (context) => {
   const { env, auth, validated } = context;

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
@@ -14,8 +14,6 @@ import { resolveUserId } from '../_shared/user-resolver';
 const DailyPerformanceSchema = z.object({
   days: z.string().optional().default('30'),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   DailyPerformanceSchema,

@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -21,8 +21,6 @@ interface PagesContext {
     userId: string;
   };
 }
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch user's achievements

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { IDSchema } from '../_shared/schemas';
@@ -21,8 +21,6 @@ const CleanupQuerySchema = z.object({
 const CleanupBodySchema = z.object({
   sessionId: IDSchema.optional(),
 });
-
-export const onRequestOptions = withCors();
 
 // Shared cleanup handler
 async function handleCleanup(context: any) {

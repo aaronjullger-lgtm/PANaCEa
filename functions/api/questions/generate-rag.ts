@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
@@ -50,8 +50,6 @@ const BodySchema = z.object({
 });
 
 type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): RAG + self-refine
 // loop hits Gemini 2-3× per request (retrieve → generate → critique → rewrite).

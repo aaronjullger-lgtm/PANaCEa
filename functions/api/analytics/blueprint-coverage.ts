@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCoverageReport } from '../../../lib/services/blueprintCoverageService';
@@ -18,8 +18,6 @@ import { getCoverageReport } from '../../../lib/services/blueprintCoverageServic
 const BlueprintCoverageSchema = z.object({
   rotation: z.enum(['pance', 'family_medicine']).optional().default('pance'),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   BlueprintCoverageSchema,

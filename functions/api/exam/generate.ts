@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -27,8 +27,6 @@ const GenerateBodySchema = z.object({
 
 const DIFFICULTY_SPLIT = { hard: 0.2, medium: 0.6, easy: 0.2 } as const;
 const COGNITIVE_LEVELS = ['LEVEL_1_RECALL', 'LEVEL_2_CONCEPT', 'LEVEL_3_VIGNETTE'] as const;
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (context) => {
   const { env, validated, auth } = context;

@@ -18,7 +18,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { buildSystemPrompt } from '../../_shared/socraticZpd';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import { createTrace, type LangfuseEnv } from '@/lib/observability/langfuse';
@@ -46,8 +46,6 @@ const BodySchema = z.object({
 
 const FALLBACK_QUESTION =
   'What detail in the vignette suggests your answer might not fit this patient?';
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const { validated, auth } = context;

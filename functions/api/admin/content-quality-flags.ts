@@ -19,7 +19,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -47,8 +47,6 @@ const DetailParamSchema = z.object({
 const UpdateBodySchema = z.object({
   action: z.enum(['approve', 'reject', 'requeue']),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/content-quality-flags — List flags with filtering + pagination

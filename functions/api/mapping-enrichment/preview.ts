@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { simulateMappingImpact, MappingChange } from '@/services/domain/mappingEnrichment/previewService';
@@ -26,8 +26,6 @@ const PreviewSchema = z.object({
     message: 'Either changes or suggestionIds must be provided',
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   PreviewSchema,

@@ -9,13 +9,11 @@
  * @see docs/AUDIT_STREAK_FRAGILITY.md
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { isGoalDay, previousGoalDay, lastGoalDayOnOrBefore, type StreakGoalDays } from '../../../lib/streakCalc';
-
-export const onRequestOptions = withCors();
 
 function toMidnightUTC(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));

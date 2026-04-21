@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { aiGenerateText } from '@/lib/ai-sdk';
 import type { AIProviderEnv } from '@/lib/ai-sdk/providers';
@@ -48,8 +48,6 @@ interface Env {
   GEMINI_API_KEY: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (context) => {
   const { env, validated, auth } = context as {

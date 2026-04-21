@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const InfographicBodySchema = z.object({
@@ -21,8 +21,6 @@ const InfographicBodySchema = z.object({
     teachingPoints: z.array(z.string()).default([]),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   InfographicBodySchema,

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
@@ -166,8 +166,6 @@ const EnrichConditionSchema = z.object({
 const EnrichGetSchema = z.object({
   query: z.object({}).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 // GET returns usage info
 export const onRequestGet = adminEndpoint(EnrichGetSchema, async (context) => {

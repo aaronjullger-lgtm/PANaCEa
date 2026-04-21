@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 
@@ -15,8 +15,6 @@ const ConfusionPairsSchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).optional().default(50),
   }).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ConfusionPairsSchema, async (context) => {
   const { env, auth, validated } = context;

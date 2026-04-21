@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
@@ -194,8 +194,6 @@ const GenerateQuestionSchema = z.object({
   system: z.string().optional(),
   difficulty: z.string().optional(),
 });
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): primary AI
 // generation entry point. 25 rpm ceiling prevents runaway cost under misuse.

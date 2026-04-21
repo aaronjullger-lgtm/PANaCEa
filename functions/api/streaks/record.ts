@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { computeCurrentStreak, type StreakGoalDays } from '../../../lib/streakCalc';
@@ -17,8 +17,6 @@ import { calculateCoinsEarned, STREAK_FREEZE_CONFIG } from '../../../data/modes/
 // To change the /api/streaks/record contract, edit lib/api/schemas/streaks.ts.
 import { StreakRecordRequestSchema } from '../../../lib/api/schemas/streaks';
 const RecordStreakSchema = z.object({ body: StreakRecordRequestSchema });
-
-export const onRequestOptions = withCors();
 
 /**
  * POST: Record daily study activity; award coins; optionally award 1 freeze per 7-day streak

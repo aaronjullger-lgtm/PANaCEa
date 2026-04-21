@@ -8,7 +8,6 @@
  */
 
 import { publicEndpoint } from '../_shared/middleware';
-import { withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -26,8 +25,6 @@ const AnatomyModelsSchema = z.object({
     offset: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(AnatomyModelsSchema, async ({ env, validated }) => {
   const log = createEndpointLogger('/api/anatomy/models');

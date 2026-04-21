@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { buildRetrievabilityCurve } from '../../../lib/fsrs-retrievability';
@@ -22,8 +22,6 @@ interface SRSItemRecord {
 }
 
 const RetentionStatsSchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (context) => {
   const { env, auth } = context;

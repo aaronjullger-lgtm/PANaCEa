@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { detectGaps } from '@/services/domain/mappingEnrichment/gapDetector';
 
 const GapsSchema = z.object({
@@ -18,8 +18,6 @@ const GapsSchema = z.object({
     .optional()
     .default({}),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   GapsSchema,

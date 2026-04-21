@@ -5,7 +5,7 @@
  * Used by frontend geminiService to get enriched content context.
  */
 
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -13,8 +13,6 @@ import { z } from 'zod';
 const ContentSchema = z.object({
   name: z.string().min(1, 'Condition name is required'),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   ContentSchema,

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
@@ -50,8 +50,6 @@ interface Env {
   GEMINI_API_KEY: string;
   VISUALIZER_EDIT_MODEL?: string;
 }
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): conversational image
 // editing via Gemini image model (Nano Banana / gemini-2.5-flash-image etc).

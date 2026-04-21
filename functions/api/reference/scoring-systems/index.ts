@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../../_shared/middleware';
+import { publicEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -40,8 +40,6 @@ const ScoringSystemsQuerySchema = z.object({
 // ============================================================================
 // HANDLERS
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   ScoringSystemsQuerySchema,

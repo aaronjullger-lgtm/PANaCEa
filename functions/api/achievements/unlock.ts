@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getAchievementById } from '../../../config/achievements';
@@ -15,8 +15,6 @@ const UnlockAchievementSchema = z.object({
     progress: z.number().int().min(0).max(100).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * POST: Unlock an achievement for the authenticated user

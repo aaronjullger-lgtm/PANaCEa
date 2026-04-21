@@ -2,7 +2,7 @@
 // Admin CRUD endpoints for MedicalTaxonomy
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
@@ -16,8 +16,6 @@ const TaxonomySchema = z.object({
 });
 
 const UpdateTaxonomySchema = TaxonomySchema.partial().omit({ code: true });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/taxonomies

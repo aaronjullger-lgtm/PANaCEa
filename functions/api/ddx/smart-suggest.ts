@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { authenticateRequest } from '../_shared/auth';
@@ -36,8 +36,6 @@ interface SmartSuggestion {
   panceYield?: number;
   masteryLevel?: string;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) => {
   const { request, env, validated } = context;

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   analyzeMedicalContentCompliance,
@@ -19,8 +19,6 @@ import {
 const BlueprintComplianceSchema = z.object({
   type: z.enum(['medical', 'questions', 'both']).optional().default('medical'),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(BlueprintComplianceSchema, async (context) => {
   const { env, validated } = context;

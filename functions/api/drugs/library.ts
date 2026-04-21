@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -21,8 +21,6 @@ const DrugLibrarySchema = z.object({
     cursor: z.string().optional(), // Keyset pagination cursor
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (context) => {
   const { env, validated } = context;

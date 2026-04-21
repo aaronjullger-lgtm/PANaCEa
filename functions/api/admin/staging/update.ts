@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../../_shared/middleware';
+import { adminEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
@@ -18,8 +18,6 @@ const UpdateBodySchema = z.object({
     vignette: z.string().max(10000).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPatch = adminEndpoint(UpdateBodySchema, async (context) => {
   const { env, validated } = context;

@@ -5,7 +5,7 @@
  * GET /api/conditions/pearls?system={system}&random=true - Random pearls for RapidRecallDrill
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -30,8 +30,6 @@ const GetPearlsSchema = z.object({
     random: z.enum(['true', 'false']).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * POST /api/conditions/pearls

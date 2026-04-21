@@ -14,13 +14,11 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { RESERVOIR_POLICY } from '../../../lib/services/reservoir';
 
 const ReservoirHealthSchema = z.object({}).optional();
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   ReservoirHealthSchema,

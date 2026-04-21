@@ -15,7 +15,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
@@ -25,8 +25,6 @@ const logger = createEndpointLogger('/api/admin/check-access');
 const CheckAccessSchema = z.object({
   query: z.object({}).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: Check if current user has admin access.

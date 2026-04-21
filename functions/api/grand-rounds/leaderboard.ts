@@ -3,7 +3,7 @@
  * GET /api/grand-rounds/leaderboard?date={date}&limit={limit}
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -18,8 +18,6 @@ const LeaderboardSchema = z.object({
     limit: z.string().optional().default('100'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   LeaderboardSchema,

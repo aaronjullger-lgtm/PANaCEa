@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -80,8 +80,6 @@ interface SystemData {
   status: 'strength' | 'average' | 'weakness' | 'critical';
   isInsufficientData: boolean;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async (context) => {
   const { env, auth } = context;

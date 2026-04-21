@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { assessPoolHealth } from '../../../lib/services/batchVariantService';
 
@@ -22,8 +22,6 @@ const PoolHealthSchema = z.object({
     system: z.string().optional(),
   }).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   PoolHealthSchema,

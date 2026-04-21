@@ -12,7 +12,7 @@ import {
   safePrismaDisconnect,
   type EdgePrismaClient,
 } from './_shared/prisma-edge';
-import { publicEndpoint, authenticatedEndpoint, withCors } from './_shared/middleware';
+import { publicEndpoint, authenticatedEndpoint } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 
 // ============================================================================
@@ -133,4 +133,3 @@ export const onRequestPost = authenticatedEndpoint(PostPoolStatsSchema, async (c
 /**
  * OPTIONS handler for CORS preflight
  */
-export const onRequestOptions = withCors();

@@ -1,4 +1,4 @@
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
@@ -15,8 +15,6 @@ const RecommendationActionSchema = z.object({
     action: z.enum(['complete', 'dismiss']),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(RecommendationActionSchema, async (context) => {
   const { env, auth, validated } = context;

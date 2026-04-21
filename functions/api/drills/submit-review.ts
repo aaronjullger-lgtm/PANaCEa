@@ -1,5 +1,5 @@
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { attachLogMeta, getRequestId } from '../_shared/requestLogger';
 import { createSpan } from '../_shared/structuredLogger';
@@ -48,7 +48,6 @@ export const DrillSubmitReviewSchema = DrillSubmitReviewRequestSchema;
 // Browser OPTIONS requests never include Authorization headers,
 // so wrapping in authenticatedEndpoint silently broke all cross-origin
 // drill submissions (staging, preview deploys, etc.).
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, async (context) => {
   const { env, auth, validated } = context;

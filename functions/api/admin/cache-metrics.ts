@@ -2,7 +2,7 @@
 // Admin endpoint to view cache performance metrics
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCacheMetrics, isKVAvailable } from '../_shared/cache';
@@ -11,8 +11,6 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 const CacheMetricsSchema = z.object({
   query: z.object({}).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/cache-metrics

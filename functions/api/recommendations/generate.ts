@@ -1,4 +1,4 @@
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { generateRecommendations } from '../../../lib/recommendationEngine';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -11,8 +11,6 @@ interface Env {
 
 // Define Zod schema for request validation (empty for this endpoint)
 const RecommendationGenerationSchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   RecommendationGenerationSchema,

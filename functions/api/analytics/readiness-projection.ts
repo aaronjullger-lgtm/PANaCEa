@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
@@ -25,8 +25,6 @@ import {
 const QuerySchema = z.object({
   examDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) => {
   const { env, validated, auth } = context as {

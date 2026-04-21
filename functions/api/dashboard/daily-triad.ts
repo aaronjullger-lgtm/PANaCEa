@@ -4,7 +4,7 @@
  * directly from the database (no AI generation).
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -54,8 +54,6 @@ function extractPearl(clinicalPearls: unknown): string | null {
 
   return null;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(DailyTriadSchema, async ({ env, auth }) => {
   const log = createEndpointLogger('/api/dashboard/daily-triad', auth.userId);

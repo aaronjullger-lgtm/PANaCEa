@@ -22,11 +22,8 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { withCors } from '../_shared/middleware';
 import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { trackTokenUsage } from '../_shared/tokenTracking';
-
-export const onRequestOptions = withCors();
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const INSIGHT_MODEL = 'gemini-2.0-flash';

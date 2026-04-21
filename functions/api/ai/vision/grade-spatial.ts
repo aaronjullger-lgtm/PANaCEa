@@ -18,7 +18,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -169,8 +169,6 @@ ${BOUNDING_BOX_DESCRIPTION}`;
     return null;
   }
 }
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): vision-based spatial
 // grading hits multimodal Gemini (image + prompt). 25 rpm 'ai' bucket.

@@ -21,7 +21,6 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { withCors } from '../_shared/middleware';
 import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { trackTokenUsage } from '../_shared/tokenTracking';
 import {
@@ -39,8 +38,6 @@ import {
  * STANDARD_MODEL split. trackTokenUsage is preserved for the existing cost
  * dashboard; gateway telemetry layers on top.
  */
-
-export const onRequestOptions = withCors();
 
 // ── Configuration ──────────────────────────────────────────────────────────
 

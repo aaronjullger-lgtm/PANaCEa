@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -45,8 +45,6 @@ const SRSSubmitSchema = z.object({
     urgencyMultiplier: z.number().min(0).max(3).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (context) => {
   const { env, auth, validated } = context;

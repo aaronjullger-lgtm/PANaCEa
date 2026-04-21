@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { profileUpdateSchema } from '../_shared/zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -45,8 +45,6 @@ function buildProfileUpdateData(validated: ProfileUpdateValidated): Record<strin
     data.hasCompletedOnboarding = validated.hasCompletedOnboarding;
   return data;
 }
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/user/profile

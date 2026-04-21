@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { searchUMLS, mapToICD10, batchValidateTerms } from '@/lib/services/medical-apis/umls';
 
@@ -32,8 +32,6 @@ interface Env {
   UMLS_API_KEY?: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) => {
   const { request, env, validated } = context as {

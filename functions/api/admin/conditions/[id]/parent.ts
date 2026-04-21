@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import {
   adminEndpoint,
-  withCors,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../../../_shared/middleware';
@@ -37,8 +36,6 @@ type UpdateParentInput = z.infer<typeof UpdateParentSchema>;
 // ============================================================================
 // API HANDLER
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 export const onRequestPatch = adminEndpoint(
   UpdateParentSchema,

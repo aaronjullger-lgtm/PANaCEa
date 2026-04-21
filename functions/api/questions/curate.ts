@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -24,8 +24,6 @@ const CurationRequestSchema = z.object({
       .optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(CurationRequestSchema, async (context) => {
   const { env, auth, validated } = context;

@@ -5,15 +5,13 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const AdminStatsSchema = z.object({
   query: z.object({}).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch platform statistics (admin only)

@@ -9,11 +9,9 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { v4 as uuidv4 } from 'uuid';
-
-export const onRequestOptions = withCors();
 
 async function handleSaveToggle(context: any, shouldSave: boolean) {
   const { env, auth, params } = context;

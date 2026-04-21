@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 /**
@@ -19,8 +19,6 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 const ContextSchema = z.object({
   params: z.object({ questionId: z.string().min(1) }).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ContextSchema, async (context) => {
   const { env, auth } = context;

@@ -8,7 +8,6 @@
  */
 
 import { publicEndpoint } from '../_shared/middleware';
-import { withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -22,8 +21,6 @@ const AnatomyByIdSchema = z.object({
     id: z.string().min(1, 'Model ID is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(AnatomyByIdSchema, async ({ env, validated }) => {
   const log = createEndpointLogger('/api/anatomy/[id]');

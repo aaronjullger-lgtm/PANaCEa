@@ -5,7 +5,7 @@
  */
 
 import { correctAnswerToIndex } from '../../../lib/grandRoundsGrading';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -19,8 +19,6 @@ const ReviewSchema = z.object({
     challengeId: z.string().min(1, 'challengeId is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ReviewSchema,

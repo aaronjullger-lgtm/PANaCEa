@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,8 +21,6 @@ const UsefulSchema = z.object({
     .optional()
     .default({}),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   UsefulSchema,

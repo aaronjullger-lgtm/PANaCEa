@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
@@ -10,8 +10,6 @@ const ContrastiveSetsSchema = z.object({
     highYield: z.enum(['true', 'false']).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ContrastiveSetsSchema, async (context) => {
   const { env, auth, validated } = context;

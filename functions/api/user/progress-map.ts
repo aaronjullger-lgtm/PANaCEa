@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -15,8 +15,6 @@ const ProgressMapSchema = z.object({
   // Optional list of condition IDs to filter; if not provided, returns all user progress
   conditionIds: z.string().optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ProgressMapSchema, async (context) => {
   const { env, auth, validated } = context;

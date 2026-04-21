@@ -6,15 +6,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
+import { authenticatedEndpoint } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
 import { ConditionDetailsSchema } from '@/lib/schemas/medicalContent';
 
 const ParamsSchema = z.object({
   conditionId: z.string().min(1).max(200),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,

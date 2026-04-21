@@ -7,7 +7,7 @@
  * Security: authenticatedEndpoint with Zod validation
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -34,8 +34,6 @@ const FeedbackSubmitSchema = z.object({
 // ============================================================================
 // OPTIONS HANDLER
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // POST HANDLER

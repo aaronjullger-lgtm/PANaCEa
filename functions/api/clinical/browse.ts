@@ -7,7 +7,7 @@
  * AUTHENTICATED endpoint - requires valid auth token.
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -73,8 +73,6 @@ interface ClinicalBrowseResponse {
     }>;
   }>;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({ env, auth }) => {
   const log = createEndpointLogger('/api/clinical/browse', auth.userId);
