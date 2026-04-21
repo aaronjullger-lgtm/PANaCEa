@@ -108,8 +108,38 @@ PANaCEa uses a **fully implicit** spaced repetition system — no self-rated but
 4. **FSRS v6 update:** `lib/fsrs.ts` — 21 parameters, `schedulingStates()` → new stability, difficulty, interval
 5. **Persistence:** QuestionAttempt + ReviewLog + UserProgress written atomically
 
-### Confidence Pipeline (8 Steps)
-Bayesian accumulation → calibration dampener → fatigue → interference → fluency illusion dampener → graduated stability multiplier → desirable difficulty bonus → cross-session trend.
+### Confidence Pipeline (CONFIDENCE PIPELINE v4 — ~15 numbered stages + Wave 1/2/3 signals)
+
+Authoritative source: the `// Step N` / `// Wave N` comments in
+`lib/services/drillReviewService.ts`. If this list and the code disagree,
+the code wins (and this section should be updated).
+
+Pipeline stages on correct reviews:
+1. Bayesian accumulation — blend with card history (prior weight ≤ 0.4)
+2. Metacognitive calibration — per-user Brier-slope dampener [0.7, 1.3]
+3. Session fatigue dampener
+4. Retrieval interference detection
+4b. Session accuracy slope
+4c. Session regularity (Wave 3B)
+5. Fluency illusion dampener — same-day review → 30% confidence reduction
+6. Graduated stability multiplier — sigmoid centered at 0.6 ([0.72, 1.28])
+6a. RT trajectory — implicit delayed JOL
+6b. Interval deviation — information-value weighting
+6b.1. Explanation engagement stability modifier (Wave 3A)
+6b.2. Relearning speed (Wave 3C, post-lapse only)
+6c. Desirable difficulty bonus
+7. Cross-session trend detection
+8. Confidence-weighted difficulty modulation
+
+Adjacent to this pipeline (fire at other points in drillReviewService):
+- Wave 1A lapse severity — difficulty amplification on severe lapses
+- Wave 2 distractor chronometry — from `option_interactions` telemetry
+- Wave 3D confusion pair recurrence — post-persistence analysis
+- Ghost Grader (`lib/srs/ghostGrader.ts`) — behavioral-biometric rating
+  override. Runs BEFORE this pipeline; can force Again on a correct answer.
+- Shadow calibration logger (`lib/scheduling/calibrationLogger.ts`) — writes
+  predicted retrievability for offline analysis. Does NOT modify scheduling.
+- Wilson mastery + hypercorrection detection — read-only ReviewLog signals.
 
 **Key files:**
 - `lib/confidence/bayesianAccumulator.ts`
