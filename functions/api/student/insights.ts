@@ -8,7 +8,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   generateInsights,
@@ -17,8 +18,6 @@ import {
 } from '../../../lib/services/insightGenerationService';
 
 const EmptySchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   EmptySchema,
@@ -117,15 +116,10 @@ export const onRequestGet = authenticatedEndpoint(
       };
       const report = generateInsights(input);
 
-      return new Response(JSON.stringify(report), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (err: any) {
-      return new Response(
-        JSON.stringify({ error: err.message ?? 'Failed to generate insights' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok(report);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate insights';
+      return fail(ErrorCode.INTERNAL_ERROR, { message });
     } finally {
       await safePrismaDisconnect(prisma);
     }
