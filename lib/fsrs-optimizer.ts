@@ -190,8 +190,8 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     0.0, // w[16]: Easy bonus multiplier - min 0
     0.1, // w[17]: Short-term decay rate - min 0.1
     0.0, // w[18]: Grade offset for short-term - min 0
-    5.0, // w[19]: Retrievability factor - min 5
-    0.5, // w[20]: Retrievability decay exponent - min 0.5
+    0.01, // w[19]: Retrievability factor (ts-fsrs v6 default 0.1597) — aligned with fsrsOptimizerService
+    0.1,  // w[20]: Retrievability decay exponent (ts-fsrs v6 default 2.2700) — aligned with fsrsOptimizerService
   ],
   max: [
     2.0, // w[0]: Initial stability (Again) - max 2 days
@@ -213,8 +213,8 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     1.0, // w[16]: Easy bonus multiplier - max 1
     1.5, // w[17]: Short-term decay rate - max 1.5
     1.0, // w[18]: Grade offset for short-term - max 1
-    15.0, // w[19]: Retrievability factor - max 15
-    2.0, // w[20]: Retrievability decay exponent - max 2
+    1.0, // w[19]: Retrievability factor — aligned with fsrsOptimizerService [0.01, 1.0]
+    5.0, // w[20]: Retrievability decay exponent — aligned with fsrsOptimizerService [0.1, 5.0]
   ],
 };
 
@@ -234,8 +234,10 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
 export function computeRetrievability(elapsedDays: number, stability: number, w: number[]): number {
   if (stability <= 0 || elapsedDays < 0) return 0;
 
-  const factor = w[19] ?? 9;
-  const decay = w[20] ?? 1;
+  // ts-fsrs v6 defaults (matches lib/fsrs.ts defaultParameters).
+  // Prior fallbacks of 9 / 1 were FSRS-4/5 scale — incompatible with v6 bounds.
+  const factor = w[19] ?? 0.1597;
+  const decay = w[20] ?? 2.2700;
 
   return Math.pow(1 + (factor * elapsedDays) / stability, -decay);
 }
