@@ -1,118 +1,70 @@
-import { Request, Response } from '@cloudflare/workers-types';
-import { computeUserPhenotype, generateDailyPlan } from '../_shared/phenotypeService';
-import { prisma } from '../_shared/prisma-edge';
-
 /**
- * Nightly cron job: Generate personalized daily study plans
+ * POST /api/cron/generate-daily-plans
  *
- * For each active user:
- * 1. Compute/update their study phenotype (learning patterns, strengths, weaknesses)
- * 2. Generate personalized daily plan for tomorrow
- * 3. Create study recommendations based on their profile
+ * Nightly cron job: Generate personalized daily study plans.
+ * For each active user: compute study phenotype and generate daily plan for tomorrow.
  *
- * Scheduled to run in the evening so plans are ready for the next morning
+ * Auth: Requires CRON_SECRET bearer token (via cronEndpoint timing-safe check).
  */
-export default async function generateDailyPlans(
-  request: Request,
-  context: any
-): Promise<Response> {
-  const startTime = Date.now();
-  const env = context.env;
 
-  try {
-    // Verify request is from cron with CRON_SECRET
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
+import { cronEndpoint, ok } from '../_shared/endpoint';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { computeUserPhenotype, generateDailyPlan } from '../_shared/phenotypeService';
+
+export const onRequestPost = cronEndpoint({
+  handler: async (context) => {
+    const { env } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const startTime = Date.now();
+
+    try {
+      console.log('[dailyPlans] Starting daily plan generation job');
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const activeUserIds = await prisma.reviewLog.findMany({
+        where: { reviewedAt: { gte: sevenDaysAgo } },
+        distinct: ['userId'],
+        select: { userId: true },
       });
-    }
 
-    console.log('[dailyPlans] Starting daily plan generation job');
+      console.log(`[dailyPlans] Found ${activeUserIds.length} active users`);
 
-    // Get all active users (with study activity in last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const activeUserIds = await prisma.reviewLog.findMany({
-      where: {
-        reviewedAt: { gte: sevenDaysAgo },
-      },
-      distinct: ['userId'],
-      select: { userId: true },
-    });
+      const planResults = { created: 0, updated: 0, errors: 0 };
+      const batchSize = 50;
 
-    console.log(`[dailyPlans] Found ${activeUserIds.length} active users`);
-
-    // Generate plans for tomorrow
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const planResults = {
-      created: 0,
-      updated: 0,
-      errors: 0,
-    };
-
-    // Process users in batches to avoid overwhelming the system
-    const batchSize = 50;
-    for (let i = 0; i < activeUserIds.length; i += batchSize) {
-      const batch = activeUserIds.slice(i, i + batchSize);
-
-      await Promise.all(
-        batch.map(async (user) => {
-          try {
-            // Compute/update phenotype
-            await computeUserPhenotype(user.userId);
-
-            // Generate daily plan for tomorrow
-            const result = await generateDailyPlan(user.userId, tomorrow);
-
-            if (result.status === 'pending') {
-              planResults.created++;
-            } else {
-              planResults.updated++;
+      for (let i = 0; i < activeUserIds.length; i += batchSize) {
+        const batch = activeUserIds.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (user) => {
+            try {
+              await computeUserPhenotype(user.userId);
+              const result = await generateDailyPlan(user.userId, tomorrow);
+              if (result.status === 'pending') planResults.created++;
+              else planResults.updated++;
+            } catch (error) {
+              planResults.errors++;
+              console.warn(`[dailyPlans] Error processing user ${user.userId}:`, error instanceof Error ? error.message : String(error));
             }
-          } catch (error) {
-            planResults.errors++;
-            console.warn(
-              `[dailyPlans] Error processing user ${user.userId}:`,
-              error instanceof Error ? error.message : String(error)
-            );
-          }
-        })
-      );
-    }
-
-    console.log(`[dailyPlans] Generated plans summary:`, planResults);
-
-    // Compile summary statistics
-    const summary = {
-      timestamp: new Date().toISOString(),
-      usersProcessed: activeUserIds.length,
-      plansCreated: planResults.created,
-      plansUpdated: planResults.updated,
-      planErrors: planResults.errors,
-      durationMs: Date.now() - startTime,
-    };
-
-    return new Response(JSON.stringify({ success: true, summary }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[dailyPlans] Error:', errorMessage);
-
-    return new Response(
-      JSON.stringify({
-        error: 'Daily plan generation failed',
-        message: errorMessage,
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+          })
+        );
       }
-    );
-  }
-}
+
+      console.log('[dailyPlans] Generated plans summary:', planResults);
+
+      return ok({
+        usersProcessed: activeUserIds.length,
+        plansCreated: planResults.created,
+        plansUpdated: planResults.updated,
+        planErrors: planResults.errors,
+        durationMs: Date.now() - startTime,
+      });
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+});

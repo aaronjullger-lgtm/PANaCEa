@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, aiEndpoint} from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -54,8 +54,6 @@ function parsePageCitations(answer: string): number[] {
 
 const CITATION_INSTRUCTION =
   'Answer using only the cached content. Cite sources in this exact format so the frontend can highlight: {{Page:N}} for a single page or {{Pages:N-M}} for a range.';
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(QueryBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {

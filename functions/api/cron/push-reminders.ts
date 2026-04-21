@@ -20,19 +20,19 @@
  * @see lib/services/habitFormationService.ts — Pure scheduling logic
  * @see functions/api/push/subscribe.ts — subscription management
  * @see public/sw.js — push event handler
+ *
+ * Auth: Requires CRON_SECRET bearer token (via cronEndpoint timing-safe check).
  */
 
-import { withCors } from '../_shared/middleware';
+import { cronEndpoint, ok } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   generateCandidateNotifications,
   throttleNotifications,
-  detectMilestone,
   type HabitProfile,
   DEFAULT_NOTIFICATION_CONFIG,
 } from '../../../lib/services/habitFormationService';
 
-const MIN_DUE_CARDS = 5;
 const DEFAULT_MAX_PUSH_PER_DAY = 2;
 
 interface PushPayload {
@@ -40,18 +40,6 @@ interface PushPayload {
   body: string;
   url: string;
 }
-
-type CronPagesFunction<E = Record<string, unknown>> = (
-  context: {
-    env: E;
-    request: Request;
-    params: Record<string, string>;
-    waitUntil: (promise: Promise<unknown>) => void;
-    passThroughOnException: () => void;
-    next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
-    data: Record<string, unknown>;
-  }
-) => Promise<Response>;
 
 /**
  * Check if current time is within quiet hours for a given timezone.
@@ -217,27 +205,16 @@ async function sendPushNotification(
   }
 }
 
-export const onRequestOptions = withCors();
+export const onRequestPost = cronEndpoint({
+  handler: async (context) => {
+    const { env } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const now = new Date();
+    const todayStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
 
-export const onRequestPost: CronPagesFunction<any> = async (context) => {
-  const { env, request } = context;
-
-  // Auth check — requires CRON_SECRET bearer token (same as other cron endpoints)
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader || authHeader !== `Bearer ${env.CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const now = new Date();
-  const todayStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-  );
-
-  try {
+    try {
       // Find users with push enabled and active subscriptions
       const usersWithPush = await prisma.userPreferences.findMany({
         where: {
@@ -415,7 +392,7 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
           const pushStatus = await sendPushNotification(
             sub,
             payload,
-            context.env as Record<string, string>
+            env as Record<string, string>
           );
 
           if (pushStatus === 'SENT') {
@@ -449,16 +426,14 @@ export const onRequestPost: CronPagesFunction<any> = async (context) => {
         });
       }
 
-      return Response.json({
-        data: {
-          success: true,
-          notificationsSent,
-          usersProcessed: usersWithPush.length,
-          usersSkipped,
-          expiredSubscriptionsRemoved: expiredEndpoints.length,
-        },
+      return ok({
+        notificationsSent,
+        usersProcessed: usersWithPush.length,
+        usersSkipped,
+        expiredSubscriptionsRemoved: expiredEndpoints.length,
       });
     } finally {
       await safePrismaDisconnect(prisma);
     }
-};
+  },
+});
