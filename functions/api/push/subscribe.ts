@@ -10,7 +10,8 @@
  * @see functions/api/cron/push-reminders.ts — scheduled notification sender
  */
 
-import { authenticatedEndpoint, withCors} from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -29,7 +30,7 @@ export const onRequestOptions = withCors();
 export const onRequestPost = authenticatedEndpoint(
   subscribeSchema,
   async (context) => {
-    const { endpoint, keys } = context.data;
+    const { endpoint, keys } = context.validated;
     const userId = context.auth.userId;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
@@ -63,9 +64,7 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
-      return Response.json({
-        data: { success: true, message: 'Subscription stored' },
-      });
+      return ok({ message: 'Subscription stored' });
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -81,7 +80,7 @@ const unsubscribeSchema = z.object({
 export const onRequestDelete = authenticatedEndpoint(
   unsubscribeSchema,
   async (context) => {
-    const { endpoint } = context.data;
+    const { endpoint } = context.validated;
     const userId = context.auth.userId;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
@@ -104,9 +103,7 @@ export const onRequestDelete = authenticatedEndpoint(
         });
       }
 
-      return Response.json({
-        data: { success: true, message: 'Subscription removed' },
-      });
+      return ok({ message: 'Subscription removed' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

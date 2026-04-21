@@ -19,7 +19,8 @@
  * @see lib/time/userTz.ts
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
@@ -61,19 +62,14 @@ export const onRequestGet = authenticatedEndpoint(
       // UserProgress.userId is the internal id — querying by Clerk id returns no rows.
       const userId = await resolveUserId(prisma, context.auth.userId);
       if (!userId) {
-        return Response.json(
-          {
-            data: {
-              overdue: 0,
-              today: 0,
-              forecast: [],
-              totalActive: 0,
-              timezone: 'UTC',
-              meta: { status: 'user_not_synced' },
-            },
-          },
-          { status: 404 }
-        );
+        return ok({
+          overdue: 0,
+          today: 0,
+          forecast: [],
+          totalActive: 0,
+          timezone: 'UTC',
+          meta: { status: 'user_not_synced' },
+        }, { status: 404 });
       }
 
       // Timezone precedence: query param → UserPreferences → UTC.
@@ -175,15 +171,13 @@ export const onRequestGet = authenticatedEndpoint(
 
       const todayCount = dayMap.get(todayKey)?.count ?? 0;
 
-      return Response.json({
-        data: {
-          overdue: overdueCount,
-          today: todayCount,
-          forecast,
-          totalActive,
-          timezone: tz,
-        } satisfies ReviewForecastResponse,
-      });
+      return ok({
+        overdue: overdueCount,
+        today: todayCount,
+        forecast,
+        totalActive,
+        timezone: tz,
+      } satisfies ReviewForecastResponse);
     } finally {
       await safePrismaDisconnect(prisma);
     }
