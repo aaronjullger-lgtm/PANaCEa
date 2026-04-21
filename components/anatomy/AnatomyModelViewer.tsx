@@ -436,7 +436,7 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
           <AnimatePresence>
             {selectedStructure && (
               <motion.div
-                initial={{ y: 10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 className="absolute bottom-4 left-4 right-4 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-xl p-4"

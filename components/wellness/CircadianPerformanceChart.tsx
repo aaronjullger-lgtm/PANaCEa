@@ -174,7 +174,7 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
 
       {/* Recommendation Card */}
       <motion.div
-        initial={{ y: 20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-xl p-6 text-[var(--color-text-inverse)]"
       >

@@ -524,7 +524,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
             {/* Explanation */}
             {isAnswerSubmitted && currentQuestion.explanation && (
               <motion.div
-                initial={{ y: 10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg"
               >

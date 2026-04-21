@@ -33,7 +33,7 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)]"
     >

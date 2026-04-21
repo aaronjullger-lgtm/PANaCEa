@@ -274,7 +274,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
 
       {/* Recommendation Card */}
       <motion.div
-        initial={{ y: 20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-xl p-6 text-[var(--color-text-inverse)]"
       >

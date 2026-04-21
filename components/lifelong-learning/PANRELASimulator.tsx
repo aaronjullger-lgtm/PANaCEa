@@ -429,7 +429,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           <AnimatePresence>
             {showFeedback && (
               <motion.div
-                initial={{ y: 20 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className={`rounded-xl p-6 ${

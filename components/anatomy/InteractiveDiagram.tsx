@@ -376,7 +376,7 @@ export function InteractiveDiagram({
                   <AnimatePresence>
                     {(hoveredLabel === label.id || selectedLabel?.id === label.id) && (
                       <motion.div
-                        initial={{ y: 10 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-[var(--color-bg-primary)] text-[var(--color-text-inverse)] text-sm rounded-lg whitespace-nowrap shadow-lg"

@@ -227,7 +227,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
             {/* Watch Reminder */}
             {!hasWatchedOnce && (
               <motion.div
-                initial={{ y: -10 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] rounded-lg p-4"
               >
@@ -278,7 +278,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
         <AnimatePresence>
           {showFeedback && (
             <motion.div
-              initial={{ y: 20 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className={`rounded-xl p-6 ${

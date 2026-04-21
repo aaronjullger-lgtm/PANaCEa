@@ -435,7 +435,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-data-neutral"
     >

@@ -321,7 +321,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       {/* Teaching Points */}
       {isSubmitted && (
         <motion.div
-          initial={{ y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg"

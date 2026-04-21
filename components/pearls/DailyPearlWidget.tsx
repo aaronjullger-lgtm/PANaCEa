@@ -85,7 +85,7 @@ export const DailyPearlWidget: React.FC<DailyPearlWidgetProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] overflow-hidden ${className}`}
     >

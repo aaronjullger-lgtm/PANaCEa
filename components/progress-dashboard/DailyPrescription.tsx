@@ -135,7 +135,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 10 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-2xl bg-[var(--color-bg-secondary)] p-6 shadow-xl cursor-pointer group border border-data-neutral"
       onClick={() => onStartFocusSession(focusSystem.system)}
