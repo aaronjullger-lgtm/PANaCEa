@@ -16,7 +16,8 @@
  * @see functions/api/drills/teachback/grade.ts
  */
 
-import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -184,12 +185,10 @@ export const onRequestGet = authenticatedEndpoint(
       // Random selection from pool
       const selected = pool[Math.floor(Math.random() * pool.length)];
 
-      return Response.json({
-        data: {
-          topic: selected,
-          masteredSystems: Array.from(masteredSystemSet),
-          totalTopicsAvailable: pool.length,
-        },
+      return ok({
+        topic: selected,
+        masteredSystems: Array.from(masteredSystemSet),
+        totalTopicsAvailable: pool.length,
       });
     } finally {
       await safePrismaDisconnect(prisma);
