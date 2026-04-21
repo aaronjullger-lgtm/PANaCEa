@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -17,8 +18,6 @@ const CreateCacheSchema = z.object({
   // Optional MIME type from upload (defaults to application/pdf for backward compatibility)
   mimeType: z.string().min(1).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
   const { env, auth, validated } = context as {
@@ -40,10 +39,7 @@ export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
       select: { id: true },
     });
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
     }
     const { displayName, fileUri, ttlSeconds, systemInstruction, mimeType } = validated;
     const instruction =
@@ -68,19 +64,13 @@ export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
     if (!res.ok) {
       const text = await res.text();
       logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 200) });
-      return new Response(JSON.stringify({ error: `Failed to create cache: ${res.status}` }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.GEMINI_ERROR, { message: `Failed to create cache: ${res.status}` });
     }
     const data = (await res.json()) as { name?: string; expireTime?: string };
     const geminiCacheName = data.name;
     const expireTime = data.expireTime;
     if (!geminiCacheName || !expireTime) {
-      return new Response(JSON.stringify({ error: 'Invalid cache response' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.GEMINI_ERROR, { message: 'Invalid cache response from Gemini' });
     }
     const cache = await prisma.knowledgeCache.create({
       data: {
@@ -94,15 +84,12 @@ export const onRequestPost = aiEndpoint(CreateCacheSchema, async (context) => {
       },
     });
     logger.info('Knowledge cache created', { id: cache.id, displayName });
-    return new Response(
-      JSON.stringify({
-        id: cache.id,
-        name: geminiCacheName,
-        expireTime,
-        displayName,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({
+      id: cache.id,
+      name: geminiCacheName,
+      expireTime,
+      displayName,
+    });
   } finally {
     await safePrismaDisconnect(prisma);
   }

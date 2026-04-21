@@ -1,11 +1,12 @@
 /**
  * POST /api/graph/confidence
  * Retrieve confidence scores for a set of graph nodes based on learner performance.
- * Used by Cross‑System Integration Explorer performance overlay.
+ * Used by Cross-System Integration Explorer performance overlay.
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -34,8 +35,6 @@ export interface ConfidenceResponse {
     lastReviewedAt?: Date;
   }>;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   BodySchema,
@@ -70,15 +69,10 @@ export const onRequestPost = authenticatedEndpoint(
         averageConfidence: Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length || 0,
       });
 
-      return new Response(JSON.stringify(response), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return ok(response);
     } catch (error) {
       log.error('Failed to compute confidence scores', { error: error instanceof Error ? error.message : String(error) });
-      return new Response(
-        JSON.stringify({ error: 'Internal server error', code: 'CONFIDENCE_COMPUTE_FAILED' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to compute confidence scores' });
     } finally {
       await safePrismaDisconnect(prisma);
     }
