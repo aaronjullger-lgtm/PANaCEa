@@ -94,15 +94,28 @@ export interface FSRSParameters {
 }
 
 /**
- * Default FSRS v6 parameters
- * Calibrated from large-scale Anki dataset analysis
+ * Default FSRS v6 parameters.
+ * w[0]–w[18]: PANaCEa population training run (PA student question bank, 2025).
+ * w[19]–w[20]: ts-fsrs v6 published defaults from open-spaced-repetition/fsrs.js.
+ *
+ * Interval formula (Review state only):
+ *   interval = (S / w[19]) × (request_retention^(1 / -w[20]) − 1)
+ *
+ * With w[19]=0.1597, w[20]=2.27 and request_retention=0.9:
+ *   interval ≈ 0.298 × S  (e.g. S=3 → ~0.9 days; S=10 → ~3 days)
+ *
+ * IMPORTANT: w[19] has a dual role in FSRS v6 —
+ *   1. Retrievability:    R = (1 + w[19] × t / S)^(-w[20])
+ *   2. Short-term stability:  sinc = S^(-w[19]) × e^(w[17]×(G-3+w[18]))
+ * Both are in the official FSRS v6 spec. The naming "factor" in computeDecayFactor
+ * refers to role #1; the exponent in next_short_term_stability is role #2.
  */
 export const defaultParameters: FSRSParameters = {
   request_retention: 0.9,
   maximum_interval: 36500,
   w: [
     0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835,
-    0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542,
+    0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.1597, 2.2700,
   ],
 };
 
@@ -172,7 +185,7 @@ export class FSRS {
     // Ensure we have all 21 parameters for v6
     this.p = this.normalizeParameters(parameters);
     // Precompute decay factor for retrievability calculations
-    this.decayFactor = computeDecayFactor(this.p.w[19] ?? 9.0, this.p.w[20] ?? 0.1542);
+    this.decayFactor = computeDecayFactor(this.p.w[19] ?? 0.1597, this.p.w[20] ?? 2.2700);
   }
 
   /**
@@ -194,12 +207,15 @@ export class FSRS {
   private normalizeParameters(params: FSRSParameters): FSRSParameters {
     const w = [...params.w];
 
-    // Add v6 parameters if missing (v5 → v6 migration)
+    // Add v6 parameters if missing (v5 → v6 migration).
+    // Classic FSRS v5 formula: R = (1 + t/(9·S))^(-1) = (1 + (1/9)·t/S)^(-1)
+    // This maps to factor=1/9≈0.111, decay=-1 (i.e. w[19]≈0.111, w[20]=1.0).
+    // Using these values preserves relative scheduling behavior across the migration.
     if (w.length === 19) {
-      w.push(9.0); // w[19]: retrievability factor
-      w.push(1.0); // w[20]: retrievability decay exponent
+      w.push(0.111); // w[19]: retrievability factor (1/9 from classic v5 formula)
+      w.push(1.0);   // w[20]: retrievability decay exponent
     } else if (w.length === 20) {
-      w.push(1.0); // w[20]: retrievability decay exponent
+      w.push(1.0);   // w[20]: retrievability decay exponent
     }
     // Future: v6 → v7 migration (29 params, 8-parameter forgetting curve)
     // if (w.length === 21) { w.push(...FSRS7_DEFAULT_CURVE_PARAMS); }
@@ -629,12 +645,13 @@ export function migrateV5ToV6(v5Params: FSRSParameters): FSRSParameters {
 
   const v6Weights = [...v5Params.w];
 
-  // Add v6 parameters
+  // Add v6 parameters, preserving v5 scheduling semantics:
+  // R_v5 = (1 + t/(9·S))^(-1) → factor=0.111, decay=-1.0
   if (v6Weights.length === 19) {
-    v6Weights.push(9.0); // w[19]: retrievability factor
-    v6Weights.push(1.0); // w[20]: retrievability decay exponent
+    v6Weights.push(0.111); // w[19]: retrievability factor (1/9, classic v5)
+    v6Weights.push(1.0);   // w[20]: retrievability decay exponent
   } else if (v6Weights.length === 20) {
-    v6Weights.push(1.0); // w[20]: retrievability decay exponent
+    v6Weights.push(1.0);   // w[20]: retrievability decay exponent
   }
 
   return {

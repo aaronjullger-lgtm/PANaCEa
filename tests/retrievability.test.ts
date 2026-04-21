@@ -67,8 +67,8 @@ describe('computeRetrievability', () => {
 describe('computeRetrievabilityWithDefaults', () => {
   it('should use default FSRS v6 parameters', () => {
     const r = computeRetrievabilityWithDefaults(10, 5);
-    // Should match computeRetrievability with w19=0.0658, w20=0.1542
-    expect(r).toBeCloseTo(computeRetrievability(10, 5, 0.0658, 0.1542), 10);
+    // Should match computeRetrievability with ts-fsrs v6 defaults: w19=0.1597, w20=2.2700
+    expect(r).toBeCloseTo(computeRetrievability(10, 5, 0.1597, 2.2700), 10);
   });
 });
 
@@ -141,7 +141,7 @@ describe('computeConditionRetrievability', () => {
     const lastReviewAt = new Date(Date.now() - 10 * 86400 * 1000);
     const r = computeConditionRetrievability(stability, lastReviewAt);
     expect(r).toBeCloseTo(
-      computeConditionRetrievability(stability, lastReviewAt, 0.0658, 0.1542)!,
+      computeConditionRetrievability(stability, lastReviewAt, 0.1597, 2.2700)!,
       4
     );
   });

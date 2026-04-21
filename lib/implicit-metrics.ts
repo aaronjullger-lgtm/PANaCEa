@@ -807,6 +807,12 @@ export function serializeImplicitMetrics(data: ImplicitReviewData): Record<strin
 
   return base;
 }/**
+ * @deprecated NOT used in the production FSRS pipeline.
+ * The pipeline uses confidenceStabilityMultiplier(adjustedConfidence) — a sigmoid
+ * function over the multi-signal behavioral confidence score — rather than a linear
+ * modifier over the discrete grade. This function remains for backward-compatibility
+ * with tests that reference it; do not wire it into drillReviewService.
+ *
  * Stability modifier from continuous grade.
  * grade 3.0 → 1.0; grade < 3 → slightly lower S; grade > 3 → slightly higher S.
  */

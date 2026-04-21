@@ -44,7 +44,7 @@ export function computeRetrievability(
 
 /**
  * Compute retrievability percentage (0-100) with default FSRS v6 parameters.
- * Uses default w[19] = 0.0658, w[20] = 0.1542 from lib/fsrs defaultParameters.
+ * Uses ts-fsrs v6 official defaults: w[19] = 0.1597, w[20] = 2.2700.
  *
  * @param stability - Current stability value (S)
  * @param elapsedDays - Days since last review (t)
@@ -54,8 +54,8 @@ export function computeRetrievabilityWithDefaults(
   stability: number,
   elapsedDays: number
 ): number {
-  const defaultW19 = 0.0658;
-  const defaultW20 = 0.1542;
+  const defaultW19 = 0.1597;
+  const defaultW20 = 2.2700;
   return computeRetrievability(stability, elapsedDays, defaultW19, defaultW20);
 }
 
@@ -90,8 +90,8 @@ export function computeElapsedDays(
 export function computeConditionRetrievability(
   stability: number | null | undefined,
   lastReviewAt: string | Date | null | undefined,
-  w19: number = 0.0658,
-  w20: number = 0.1542
+  w19: number = 0.1597,
+  w20: number = 2.2700
 ): number | null {
   if (!stability || stability <= 0) {
     return null;

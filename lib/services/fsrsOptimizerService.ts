@@ -88,8 +88,8 @@ const PARAM_BOUNDS: Array<[number, number]> = [
   [1.0, 4.0],    // w[16]: easy bonus (not optimized)
   [0.01, 2.0],   // w[17]: short-term decay (not optimized)
   [0.01, 1.0],   // w[18]: short-term offset (not optimized)
-  [0.01, 1.0],   // w[19]: retrievability factor — tightened from [0.01, 20] per upstream guidance; values >1 cause extreme curves
-  [0.1, 0.8],    // w[20]: forgetting curve shape (FSRS-6) — bounded per Expertium; typical user <0.2, max 0.8
+  [0.01, 1.0],   // w[19]: retrievability factor — ts-fsrs v6 default=0.1597; values >1 cause extreme interval compression
+  [0.1, 5.0],    // w[20]: forgetting curve decay exponent — ts-fsrs v6 default=2.2700; prior bound of 0.8 was incorrect
 ];
 
 // ── In-memory cache ──

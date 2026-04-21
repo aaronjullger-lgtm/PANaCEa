@@ -67,6 +67,13 @@ const CONFIDENCE_BOOST_AMOUNT = 0.25;     // Lift grade_continuous when all sign
 const ELIM_BOOST_AMOUNT = 0.15;           // Additional lift for fast elimination
 const ELIM_PENALTY_AMOUNT = 0.10;         // Soft penalty for absent elimination
 const INDECISION_GRADE_CAP = 1.5;         // Cap grade_continuous when Ghost Grader fires
+/**
+ * Sentinel value returned as gradeContinuousAdjustment when INDECISION fires.
+ * The caller MUST check `result.rule === 'indecision'` and apply INDECISION_GRADE_CAP
+ * rather than adding this sentinel to gradeContinuous directly.
+ * Named here to make the convention explicit and grep-able.
+ */
+export const INDECISION_GRADE_SENTINEL = -99;
 // ── Types ──
 
 /** Per-user behavioral baseline for z-score normalization (Sprint 7) */
@@ -208,7 +215,7 @@ export function applyHonestRatingWithDetail(input: GhostGraderInput): GhostGrade
   if (signalCount > 0) {
     return {
       rating: Rating.Again,
-      gradeContinuousAdjustment: -99, // Signal to cap at INDECISION_GRADE_CAP
+      gradeContinuousAdjustment: INDECISION_GRADE_SENTINEL, // Sentinel — caller must cap at INDECISION_GRADE_CAP, not add directly
       rule: 'indecision',
       indecisionSignalCount: signalCount,
       confidenceBoostEligible: false,
