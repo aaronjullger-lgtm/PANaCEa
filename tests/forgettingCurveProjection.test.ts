@@ -48,9 +48,11 @@ describe('projectToExamDate', () => {
   });
 
   it('stop-studying score is <= current-pace score', () => {
+    // Use short-stability cards far from the exam so stop-vs-continue gap is unambiguous.
     const cards = [
-      makeCard({ stability: 20, elapsedDays: 5 }),
-      makeCard({ stability: 10, elapsedDays: 15 }),
+      makeCard({ stability: 3, elapsedDays: 2 }),
+      makeCard({ stability: 3, elapsedDays: 2 }),
+      makeCard({ stability: 3, elapsedDays: 2 }),
     ];
 
     const result = projectToExamDate(cards, 90);
@@ -114,9 +116,12 @@ describe('projectRetrievability', () => {
     expect(projectRetrievability(30, 0)).toBeCloseTo(1, 2);
   });
 
-  it('returns ~0.9 at t=S', () => {
+  it('returns ~0.71 at t=S (FSRS v6: S is NOT the 90%-retention point)', () => {
+    // With ts-fsrs v6 defaults (w19=0.1597, w20=2.27), R(t=S, S) ≈ 0.714.
+    // The 90%-retention point is at t ≈ 0.41*S, not t=S.
+    // See lib/fsrs-retrievability.ts for the derivation.
     const R = projectRetrievability(30, 30);
-    expect(R).toBeCloseTo(0.9, 1);
+    expect(R).toBeCloseTo(0.714, 1);
   });
 
   it('decays over time', () => {

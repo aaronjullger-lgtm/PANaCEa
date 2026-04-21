@@ -81,10 +81,12 @@ describe('harmonicMeanStability', () => {
 // ─── projectRetrievability ────────────────────────────────────────
 
 describe('projectRetrievability', () => {
-  it('returns ~0.9 at exactly one stability period', () => {
-    // R at t=S should be 0.9 (FSRS design target)
+  it('returns ~0.71 at exactly one stability period (FSRS v6 defaults)', () => {
+    // With ts-fsrs v6 defaults (w19=0.1597, w20=2.27), R(t=S,S) ≈ 0.714.
+    // FSRS v6 does NOT use S as the "time to 90% retention" — the 90% point
+    // is at t ≈ 0.41*S. See lib/fsrs-retrievability.ts for derivation.
     const r = projectRetrievability(30, 30, 0);
-    expect(r).toBeCloseTo(0.9, 2);
+    expect(r).toBeCloseTo(0.714, 2);
   });
 
   it('returns 1.0 at t=0', () => {
