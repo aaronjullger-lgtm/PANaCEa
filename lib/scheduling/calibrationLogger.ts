@@ -18,7 +18,6 @@
  */
 
 import type { SessionType } from '@prisma/client';
-import { computeRetrievabilityV7 } from '../fsrs-v7';
 import type { FSRSParameters } from '../fsrs';
 
 // Structural shape (matches Prisma.CalibrationLogCreateInput shape).
@@ -171,6 +170,10 @@ export async function writeV7ShadowPrediction(
       });
       return false;
     }
+
+    // Lazy import so module-load-time mocks of ../fsrs in unrelated tests
+    // don't need to know about the v7 transitive dependency.
+    const { computeRetrievabilityV7 } = await import('../fsrs-v7');
 
     // Compute v7 retrievability from the same stability + elapsed-days as v6.
     const predicted = computeRetrievabilityV7(
