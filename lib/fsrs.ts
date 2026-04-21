@@ -187,6 +187,65 @@ export const defaultParameters: FSRSParameters = {
 };
 
 /**
+ * Scale validation for loaded FSRS parameters.
+ *
+ * Context: before the April 2026 scale-alignment sweep, the batch L-BFGS
+ * optimizer at lib/fsrs-optimizer.ts optimized w[19]/w[20] on the FSRS-4/5
+ * scale (w[19] ∈ [5,15], default 9 — roughly 50× larger than the v6 scale).
+ * Any user who triggered optimization via the settings UI or hit the cron
+ * job would have saved these poisoned params to UserProgress.fsrsParams
+ * or PersonalizedFSRSParams.w. Reading them back and plugging them into
+ * the v6 scheduler produces catastrophically wrong intervals.
+ *
+ * This helper lets the scheduler detect and reject off-scale params at
+ * LOAD time without needing a schema migration. Called by the drill
+ * review pipeline and any code that instantiates FSRS with user params.
+ *
+ * @param w - 21-element parameter array loaded from DB
+ * @returns true iff w[19] and w[20] are within the canonical v6 scale
+ */
+export function isParamsOnCurrentScale(w: number[] | null | undefined): boolean {
+  if (!Array.isArray(w) || w.length < 21) return false;
+  const w19 = w[19];
+  const w20 = w[20];
+  if (w19 == null || w20 == null) return false;
+  if (!Number.isFinite(w19) || !Number.isFinite(w20)) return false;
+  // Canonical v6 bounds (matches PARAM_BOUNDS in both optimizers post-fix).
+  if (w19 < 0.01 || w19 > 1.0) return false;
+  if (w20 < 0.1 || w20 > 5.0) return false;
+  return true;
+}
+
+/**
+ * Load parameters safely from a DB-persisted `w` array, falling back to
+ * defaultParameters if the stored params are off-scale or malformed.
+ *
+ * This is the READ-SIDE recovery for the w[19]/w[20] scale bug. Existing
+ * users who were optimized against the buggy defaults will transparently
+ * fall back to canonical defaults on their next review; their next
+ * optimizer run will re-save params on the correct scale.
+ */
+export function loadParametersSafely(stored: unknown): FSRSParameters {
+  if (stored && typeof stored === 'object' && 'w' in stored) {
+    const w = (stored as { w?: unknown }).w;
+    if (isParamsOnCurrentScale(w as number[])) {
+      const record = stored as Partial<FSRSParameters>;
+      return {
+        request_retention: record.request_retention ?? defaultParameters.request_retention,
+        maximum_interval: record.maximum_interval ?? defaultParameters.maximum_interval,
+        w: [...(w as number[])],
+      };
+    }
+  }
+  // Off-scale / null / malformed → use canonical defaults.
+  return {
+    request_retention: defaultParameters.request_retention,
+    maximum_interval: defaultParameters.maximum_interval,
+    w: [...defaultParameters.w],
+  };
+}
+
+/**
  * FSRS v5 compatible parameters (for migration)
  * Use this if you need backward compatibility with existing v5 data
  */

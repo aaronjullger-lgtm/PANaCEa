@@ -20,7 +20,7 @@ import {
   summarizeOptimization,
   type PersonalizedFSRSParams,
 } from '../../../lib/fsrs-optimizer';
-import { defaultParameters, type ReviewSnapshot } from '../../../lib/fsrs';
+import { defaultParameters, isParamsOnCurrentScale, type ReviewSnapshot } from '../../../lib/fsrs';
 import {
   triggerFSRSOptimization,
   shouldUseSidecar,
@@ -89,10 +89,18 @@ export const onRequestGet = authenticatedEndpoint(
       }
       const userId = user.id;
 
-      // Fetch user's personalized params from dedicated table
-      const personalizedParams = await prisma.personalizedFSRSParams.findUnique({
+      // Fetch user's personalized params from dedicated table.
+      // Off-scale guard: if stored w[19]/w[20] are from the legacy L-BFGS
+      // optimizer (pre-2026-04), treat them as absent so the client sees
+      // canonical defaults and can trigger re-optimization.
+      const rawPersonalizedParams = await prisma.personalizedFSRSParams.findUnique({
         where: { userId },
       });
+      const personalizedParams = isParamsOnCurrentScale(
+        rawPersonalizedParams?.w as number[] | undefined
+      )
+        ? rawPersonalizedParams
+        : null;
 
       // Review count for optimization eligibility: Main Session (real) only.
       const reviewCount = await prisma.reviewLog.count({
@@ -242,7 +250,14 @@ export const onRequestPost = authenticatedEndpoint(
           where: { userId },
         });
 
-        if (existingParams) {
+        // Always re-optimize if the existing params are off-scale (legacy
+        // pre-2026-04 L-BFGS output). The recency throttle otherwise would
+        // trap such users on broken params for up to 24 hours.
+        const storedOnScale = isParamsOnCurrentScale(
+          existingParams?.w as number[] | undefined
+        );
+
+        if (existingParams && storedOnScale) {
           const hoursSinceOptimization = existingParams.lastOptimizedAt
             ? (Date.now() - existingParams.lastOptimizedAt.getTime()) / 3600000
             : Infinity;

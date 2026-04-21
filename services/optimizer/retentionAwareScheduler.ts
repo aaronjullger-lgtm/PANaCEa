@@ -189,6 +189,11 @@ export async function scheduleReviews(
 
 /**
  * Retrieve FSRS parameters (w[19], w[20]) from UserProgress.
+ *
+ * Uses loadParametersSafely() to reject any stored params that are off-scale
+ * (e.g. poisoned by the pre-2026-04 L-BFGS optimizer that wrote w[19]≈9 on
+ * the FSRS-4/5 scale). Off-scale params → canonical defaults, logged for
+ * observability. See lib/fsrs.ts isParamsOnCurrentScale().
  */
 async function getUserFSRSParameters(
   prisma: PrismaClient,
@@ -199,19 +204,9 @@ async function getUserFSRSParameters(
     select: { fsrsParams: true },
   });
 
-  const defaultW19 = 0.1597;
-  const defaultW20 = 2.2700;
-
-  if (!userProgress?.fsrsParams) {
-    return { w19: defaultW19, w20: defaultW20 };
-  }
-
-  const params = userProgress.fsrsParams as any;
-  const w = params.w;
-  if (Array.isArray(w) && w.length >= 21) {
-    return { w19: w[19] ?? defaultW19, w20: w[20] ?? defaultW20 };
-  }
-  return { w19: defaultW19, w20: defaultW20 };
+  const { loadParametersSafely } = await import('@/lib/fsrs');
+  const params = loadParametersSafely(userProgress?.fsrsParams);
+  return { w19: params.w[19]!, w20: params.w[20]! };
 }
 
 /**

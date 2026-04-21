@@ -61,11 +61,18 @@ export const onRequestGet = authenticatedEndpoint(ProgressMapSchema, async (cont
       },
     });
 
-    // Fetch personalized FSRS parameters for this user (if they exist)
-    const personalizedParams = await prisma.personalizedFSRSParams.findUnique({
+    // Fetch personalized FSRS parameters for this user (if they exist).
+    // Guard against off-scale legacy params (pre-2026-04 w[19]≈9 from the old
+    // L-BFGS optimizer). isParamsOnCurrentScale returns false for those, so
+    // the frontend falls back to defaults for projections.
+    const { isParamsOnCurrentScale } = await import('../../../lib/fsrs');
+    const rawPersonalizedParams = await prisma.personalizedFSRSParams.findUnique({
       where: { userId },
       select: { w: true },
     });
+    const personalizedParams = isParamsOnCurrentScale(rawPersonalizedParams?.w)
+      ? rawPersonalizedParams
+      : null;
 
     // Build map
     const progressMap: Record<string, {
