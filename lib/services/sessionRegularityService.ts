@@ -131,18 +131,17 @@ export function computeStreak(sessionDates: string[]): number {
   const lastDate = sessionDates[sessionDates.length - 1];
   if (lastDate !== todayStr && lastDate !== yesterdayStr) return 0;
 
+  // Anchor offset: 0 if today has a session, 1 if anchored at yesterday
+  const anchorOffset = lastDate === todayStr ? 0 : 1;
+
   for (let i = sessionDates.length - 1; i >= 0; i--) {
-    const expected = new Date(Date.now() - streak * 86400000).toISOString().slice(0, 10);
+    const expected = new Date(Date.now() - (streak + anchorOffset) * 86400000)
+      .toISOString()
+      .slice(0, 10);
     if (sessionDates[i] === expected) {
       streak++;
     } else {
-      // Also try yesterday as the anchor if today hasn't had a session yet
-      const expectedFromYesterday = new Date(Date.now() - (streak + 1) * 86400000).toISOString().slice(0, 10);
-      if (streak === 0 && sessionDates[i] === yesterdayStr) {
-        streak++;
-      } else {
-        break;
-      }
+      break;
     }
   }
 
