@@ -29,6 +29,7 @@ import {
   selectFSRS,
   inferVersion,
   isV7Alpha,
+  resolveVersion,
 } from '../lib/fsrs-version-selector';
 import {
   FSRS,
@@ -430,5 +431,43 @@ describe('isV7Alpha', () => {
 
   it('false when length is wrong', () => {
     expect(isV7Alpha({ ...defaultParameters, version: '7-alpha' })).toBe(false);
+  });
+});
+
+describe('resolveVersion — persisted tag + weights priority', () => {
+  const w21 = defaultParameters.w;
+  const w29 = v7AlphaDefaultParameters.w;
+
+  it('persisted "7-alpha" + 29-length weights → 7-alpha', () => {
+    expect(resolveVersion('7-alpha', w29)).toBe('7-alpha');
+  });
+
+  it('persisted "6" + 21-length weights → 6', () => {
+    expect(resolveVersion('6', w21)).toBe('6');
+  });
+
+  it('persisted tag disagrees with weights length → infer from weights', () => {
+    // Tag says 7-alpha but weights are v6 shape → trust weights
+    expect(resolveVersion('7-alpha', w21)).toBe('6');
+    // Tag says 6 but weights are v7 shape → trust weights
+    expect(resolveVersion('6', w29)).toBe('7-alpha');
+  });
+
+  it('null / undefined persisted tag → infer from weights', () => {
+    expect(resolveVersion(null, w21)).toBe('6');
+    expect(resolveVersion(undefined, w21)).toBe('6');
+    expect(resolveVersion(null, w29)).toBe('7-alpha');
+    expect(resolveVersion(undefined, w29)).toBe('7-alpha');
+  });
+
+  it('unknown persisted tag → infer from weights', () => {
+    expect(resolveVersion('future-v8', w21)).toBe('6');
+    expect(resolveVersion('', w29)).toBe('7-alpha');
+  });
+
+  it('malformed weights always yield "6" fallback', () => {
+    expect(resolveVersion('7-alpha', null)).toBe('6');
+    expect(resolveVersion('7-alpha', [])).toBe('6');
+    expect(resolveVersion('6', undefined)).toBe('6');
   });
 });

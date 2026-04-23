@@ -2056,6 +2056,13 @@ model PersonalizedFSRSParams {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   w                      Float[]
+  /// FSRS algorithm version tag. "6" = stock v6 (21 params). "7-alpha" =
+  /// PANaCEa v7-alpha with fractional intervals + 8-param forgetting curve
+  /// (29 params). Callers can still infer from w.length, but persisting the
+  /// tag lets admin tools distinguish users enrolled in v7-alpha shadow
+  /// validation from users whose optimizer has simply not run yet.
+  /// Paired migration: prisma/audit/proposed_migration_personalized_fsrs_params_version.sql
+  version                String    @default("6")
   User                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])

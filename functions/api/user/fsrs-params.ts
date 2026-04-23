@@ -345,7 +345,18 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
-      // Upsert personalized params to database
+      // Algorithm version tag derived from parameter shape (21 -> '6', 29 -> '7-alpha').
+      // Persisted to PersonalizedFSRSParams.version IF the column exists; otherwise
+      // silently dropped by Prisma (pre-migration state). Once the paired DDL at
+      // prisma/audit/proposed_migration_personalized_fsrs_params_version.sql is
+      // applied, this field becomes a source of truth for admin tooling.
+      const algoVersion: '6' | '7-alpha' =
+        optimizedParams.w.length === 29 ? '7-alpha' : '6';
+
+      // Upsert personalized params to database.
+      // `as any` casts guard against the pre-migration state where the `version`
+      // column does not yet exist in Postgres. Remove them after applying the
+      // migration and running `prisma generate`.
       await prisma.personalizedFSRSParams.upsert({
         where: { userId },
         create: {
@@ -360,7 +371,8 @@ export const onRequestPost = authenticatedEndpoint(
             optimizedParams.systemModifiers != null
               ? (JSON.parse(JSON.stringify(optimizedParams.systemModifiers)) as object)
               : undefined,
-        },
+          version: algoVersion,
+        } as any,
         update: {
           w: optimizedParams.w,
           sampleSize: optimizedParams.sampleSize,
@@ -372,7 +384,8 @@ export const onRequestPost = authenticatedEndpoint(
             optimizedParams.systemModifiers != null
               ? (JSON.parse(JSON.stringify(optimizedParams.systemModifiers)) as object)
               : undefined,
-        },
+          version: algoVersion,
+        } as any,
       });
 
       // Generate summary
