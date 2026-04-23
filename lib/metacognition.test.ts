@@ -18,7 +18,7 @@
  *   which are deterministic.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   initSessionTracker,
   shouldShowMetacognition,
@@ -27,6 +27,19 @@ import {
   CONFUSION_PAIRS,
   type SessionMissTracker,
 } from './metacognition';
+
+// Deterministic Math.random — the module has a 10% random_sample trigger that
+// fires on Math.random() < 0.1. Stubbing to 1.0 disables that branch so only
+// the deterministic triggers (consecutive_misses, confusion_pair, high_yield_miss)
+// can fire. Without this stub, consecutive_misses tests are flaky because the
+// random_sample trigger on the first miss bumps metacognitionRate > 0.3 and
+// causes early bailout on the second miss.
+beforeEach(() => {
+  vi.spyOn(Math, 'random').mockReturnValue(1.0);
+});
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
