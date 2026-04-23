@@ -169,7 +169,7 @@ describe('optimizeParameters — v6 vs v7 behavior', () => {
     const reviews = makeReviews(80);
     const { initialLoss, finalLoss } = optimizeParameters(reviews, v7AlphaDefaultParameters);
     expect(finalLoss).toBeLessThanOrEqual(initialLoss + 1e-9);
-  });
+  }, 30_000); // coord-descent over 25 v7 indices × 80 reviews × 50 iters is slow
 
   it('v7 optimizer can move w[21..28] from defaults when it helps', () => {
     // Construct data where the default v7 curve is mis-calibrated — all

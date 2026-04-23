@@ -133,7 +133,7 @@ describe('optimizeParameters (full coordinate descent)', () => {
     for (const idx of nonOptimizable) {
       expect(parameters.w[idx]).toBe(defaultParameters.w[idx]);
     }
-  });
+  }, 30_000); // full coord descent on 200 reviews × 17 indices × 50 iters
 
   it('all optimized params stay within bounds', () => {
     const reviews = generateReviews(200);
@@ -143,7 +143,7 @@ describe('optimizeParameters (full coordinate descent)', () => {
       expect(parameters.w[idx]).toBeGreaterThanOrEqual(bounds[0]);
       expect(parameters.w[idx]).toBeLessThanOrEqual(bounds[1]);
     }
-  });
+  }, 30_000);
 
   it('handles edge case of all-correct reviews', () => {
     const reviews = generateReviews(200, { correctRate: 1.0 });

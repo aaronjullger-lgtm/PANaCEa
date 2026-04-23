@@ -165,10 +165,11 @@ export const DEFAULT_LBFGS_CONFIG: LBFGSConfig = {
  * Based on empirical analysis of large-scale Anki datasets
  */
 // FSRS-7 Migration Note:
-// When FSRS-7 arrives (29 params), extend both min[] and max[] arrays with
-// bounds for w[21]..w[28] (the 8-parameter forgetting curve).
-// The bounds are unknown until the formulas are published.
-// Also update the validation loop at line ~795 to check 29 instead of 21.
+// Both min[] and max[] now have 29 entries. Callers passing 21-length w[]
+// (v6) are still supported — the bounds/validation loops use Math.min with
+// w.length to stay in-bounds. Callers passing 29-length w[] (v7-alpha) get
+// the full 8-parameter forgetting curve optimization surface.
+// Bounds for w[21..28] mirror fsrsOptimizerService PARAM_BOUNDS.
 export const PARAMETER_BOUNDS: ParameterBounds = {
   min: [
     0.1, // w[0]: Initial stability (Again) - min 0.1 days
@@ -192,6 +193,17 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     0.0, // w[18]: Grade offset for short-term - min 0
     0.01, // w[19]: Retrievability factor (ts-fsrs v6 default 0.1597) — aligned with fsrsOptimizerService
     0.1,  // w[20]: Retrievability decay exponent (ts-fsrs v6 default 2.2700) — aligned with fsrsOptimizerService
+    // FSRS v7-alpha 8-parameter forgetting curve. Pairs of (amplitude, rate).
+    // Amplitudes non-negative; 0 yields a no-op correction → recovers v6.
+    // Rates in (0, large] control how fast each decay component saturates.
+    0.0,  // w[21]: v7 amplitude 0
+    0.01, // w[22]: v7 rate 0
+    0.0,  // w[23]: v7 amplitude 1
+    0.01, // w[24]: v7 rate 1
+    0.0,  // w[25]: v7 amplitude 2
+    0.01, // w[26]: v7 rate 2
+    0.0,  // w[27]: v7 amplitude 3
+    0.01, // w[28]: v7 rate 3
   ],
   max: [
     2.0, // w[0]: Initial stability (Again) - max 2 days
@@ -215,6 +227,15 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     1.0, // w[18]: Grade offset for short-term - max 1
     1.0, // w[19]: Retrievability factor — aligned with fsrsOptimizerService [0.01, 1.0]
     5.0, // w[20]: Retrievability decay exponent — aligned with fsrsOptimizerService [0.1, 5.0]
+    // v7-alpha 8-parameter curve upper bounds (mirror fsrsOptimizerService).
+    5.0,  // w[21]: v7 amplitude 0
+    10.0, // w[22]: v7 rate 0
+    5.0,  // w[23]: v7 amplitude 1
+    10.0, // w[24]: v7 rate 1
+    5.0,  // w[25]: v7 amplitude 2
+    10.0, // w[26]: v7 rate 2
+    5.0,  // w[27]: v7 amplitude 3
+    10.0, // w[28]: v7 rate 3
   ],
 };
 
@@ -223,23 +244,51 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
 // ============================================================================
 
 /**
- * Compute retrievability (probability of recall) using FSRS v6 formula
- * R = (1 + factor * t / S) ^ -decay
+ * Compute retrievability (probability of recall).
+ *
+ * Dispatches on w.length:
+ *  - 21 (v6): R = (1 + w[19] * t / S) ^ (-w[20])
+ *  - 29 (v7-alpha): v6 baseline divided by the 8-parameter multi-scale
+ *    correction from lib/fsrs-v7. Reduces to v6 when w[21..28] are all 0.
+ *
+ * The v7 branch is what lets this L-BFGS optimizer fit 29-length parameter
+ * arrays against a user's ReviewLog. Without version dispatch, the gradient
+ * with respect to w[21..28] would be identically zero and the optimizer
+ * would silently leave them at their reference defaults.
  *
  * @param elapsedDays - Days since last review
  * @param stability - Current stability
- * @param w - FSRS parameters (needs w[19] and w[20])
+ * @param w - FSRS parameters (21 for v6, 29 for v7-alpha)
  * @returns Probability of recall (0-1)
  */
 export function computeRetrievability(elapsedDays: number, stability: number, w: number[]): number {
   if (stability <= 0 || elapsedDays < 0) return 0;
 
-  // ts-fsrs v6 defaults (matches lib/fsrs.ts defaultParameters).
-  // Prior fallbacks of 9 / 1 were FSRS-4/5 scale — incompatible with v6 bounds.
+  // v6 baseline — used directly for 21-length, used as the multiplier base for 29-length.
   const factor = w[19] ?? 0.1597;
   const decay = w[20] ?? 2.2700;
+  const x = elapsedDays / stability;
+  const baseR = Math.pow(1 + factor * x, -decay);
 
-  return Math.pow(1 + (factor * elapsedDays) / stability, -decay);
+  if (w.length !== 29) {
+    // v6 (21-length) or truncated v5 (19/20) — return baseline unchanged.
+    return baseR;
+  }
+
+  // v7-alpha 8-parameter correction. Identical math to computeRetrievabilityV7 in
+  // lib/fsrs-v7.ts; inlined here to avoid a circular module import from the
+  // optimizer into fsrs-v7 → fsrs → potentially back through logger tests.
+  let correction = 1;
+  for (let i = 0; i < 4; i++) {
+    const amplitude = Math.max(0, w[21 + 2 * i] ?? 0);
+    const rate = Math.max(0, w[22 + 2 * i] ?? 0);
+    if (amplitude === 0 || rate === 0) continue;
+    correction *= 1 + amplitude * (1 - Math.exp(-rate * x));
+  }
+  const r = baseR / correction;
+  if (r <= 0) return 0;
+  if (r >= 1) return 1;
+  return r;
 }
 
 /**
@@ -585,31 +634,38 @@ export function convertSnapshots(
  * @param userId - User identifier
  * @param reviews - User's review history as OptimizationReview[]
  * @param config - Optional L-BFGS configuration
+ * @param initialW - Optional starting parameter vector (21 for v6, 29 for
+ *                   v7-alpha). Defaults to v6 `defaultParameters.w`. Pass
+ *                   `v7AlphaDefaultParameters.w` from lib/fsrs-v7 to fit
+ *                   the 8-parameter forgetting curve.
  * @returns Personalized FSRS parameters
  */
 export function optimizeFSRSParameters(
   userId: string,
   reviews: OptimizationReview[],
-  config: LBFGSConfig = DEFAULT_LBFGS_CONFIG
+  config: LBFGSConfig = DEFAULT_LBFGS_CONFIG,
+  initialW?: number[]
 ): PersonalizedFSRSParams {
+  const seedW = initialW ? [...initialW] : [...defaultParameters.w];
+
   // Validate minimum sample size
   if (reviews.length < MIN_REVIEWS_FOR_OPTIMIZATION) {
-    // Return default parameters with no optimization
+    // Return seed parameters with no optimization
     return {
       userId,
-      w: [...defaultParameters.w],
+      w: seedW,
       sampleSize: reviews.length,
       lastOptimizedAt: new Date(),
       improvementOverDefault: 0,
-      brierScore: computeBrierScore(defaultParameters.w, reviews),
-      defaultBrierScore: computeBrierScore(defaultParameters.w, reviews),
+      brierScore: computeBrierScore(seedW, reviews),
+      defaultBrierScore: computeBrierScore(seedW, reviews),
       iterations: 0,
       systemModifiers: undefined,
     };
   }
 
-  // Compute Brier score with default parameters (baseline)
-  const defaultBrierScore = computeBrierScore(defaultParameters.w, reviews);
+  // Compute Brier score with seed parameters (baseline for improvement metric)
+  const defaultBrierScore = computeBrierScore(seedW, reviews);
 
   // Create objective function for L-BFGS
   const objective = (w: number[]) => {
@@ -619,7 +675,7 @@ export function optimizeFSRSParameters(
   };
 
   // Run L-BFGS optimization
-  const result = lbfgsOptimize(objective, [...defaultParameters.w], config, PARAMETER_BOUNDS);
+  const result = lbfgsOptimize(objective, seedW, config, PARAMETER_BOUNDS);
 
   // Compute improvement
   const improvement =
@@ -710,12 +766,15 @@ export function optimizeWithSystemModifiers(
  * @param userId - User identifier
  * @param reviewHistory - User's complete review history
  * @param systemCodes - Optional map of review index to system code
+ * @param initialW - Optional starting parameter vector. 21-length for v6,
+ *                   29-length for v7-alpha. When omitted, uses v6 defaults.
  * @returns Fully optimized parameters
  */
 export async function runFullOptimization(
   userId: string,
   reviewHistory: ReviewSnapshot[],
-  systemCodes?: Record<number, string>
+  systemCodes?: Record<number, string>,
+  initialW?: number[]
 ): Promise<PersonalizedFSRSParams> {
   // Convert snapshots to optimization format
   const allReviews = convertSnapshots(reviewHistory);
@@ -730,7 +789,7 @@ export async function runFullOptimization(
   }
 
   // Step 1: Optimize base parameters on all reviews
-  const baseParams = optimizeFSRSParameters(userId, allReviews);
+  const baseParams = optimizeFSRSParameters(userId, allReviews, DEFAULT_LBFGS_CONFIG, initialW);
 
   // Step 2: If we have system information, compute per-system modifiers
   if (systemCodes && Object.keys(systemCodes).length > 0) {
@@ -787,7 +846,13 @@ export function runFullOptimizationFromReviewLog(
 // ============================================================================
 
 /**
- * Validate that parameters are within acceptable bounds
+ * Validate that parameters are within acceptable bounds.
+ *
+ * Accepts:
+ *  - 21-length arrays (v6)
+ *  - 29-length arrays (v7-alpha)
+ * Anything else is rejected. Per-index bounds are applied over the full
+ * array length, covering w[21..28] when present.
  */
 export function validateParameters(w: number[]): {
   valid: boolean;
@@ -795,11 +860,12 @@ export function validateParameters(w: number[]): {
 } {
   const errors: string[] = [];
 
-  if (w.length < 21) {
-    errors.push(`Expected 21 parameters, got ${w.length}`);
+  if (w.length !== 21 && w.length !== 29) {
+    errors.push(`Expected 21 or 29 parameters, got ${w.length}`);
   }
 
-  for (let i = 0; i < Math.min(w.length, 21); i++) {
+  const upper = Math.min(w.length, PARAMETER_BOUNDS.min.length);
+  for (let i = 0; i < upper; i++) {
     const val = w[i];
     const min = PARAMETER_BOUNDS.min[i];
     const max = PARAMETER_BOUNDS.max[i];
