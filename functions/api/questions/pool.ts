@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client/edge';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { getSystemWeight, calculateTargetDistribution, getSystemAbbreviation } from '../../../lib/constants/blueprint';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -243,7 +243,7 @@ const PoolPostSchema = z.object({
   }),
 });
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = aiEndpoint(
   PoolGetSchema,
   async (context) => {
     const { env, auth, validated } = context;
@@ -489,7 +489,7 @@ export const onRequestGet = authenticatedEndpoint(
   { source: 'query' }
 );
 
-export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (context) => {
+export const onRequestPost = aiEndpoint(PoolPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/pool');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
@@ -260,7 +260,7 @@ async function tryGenerateAndFetchSibling(
     : null;
 }
 
-export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async (context) => {
+export const onRequestPost = aiEndpoint(DueSiblingsPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/due-siblings');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
