@@ -387,6 +387,7 @@ npm run orchestrate:full     # Full automation pipeline
    - `ContentGap` model (Sprint 15) — migration drafted at `prisma/migrations/20260418120000_add_content_gap/migration.sql`; schema.prisma still needs the corresponding model declaration before `prisma generate` will type the client.
    - `NotificationLog` model (Sprint 18) — migration drafted at `prisma/migrations/20260418120100_add_notification_log/migration.sql`; schema.prisma still needs the corresponding model declaration. `PushSubscription` is already in schema (line 3487) — do NOT re-add.
    - `banditState` field on `UserPreferences` (Sprint 16) — not yet drafted.
+   - `version String @default("6")` on `PersonalizedFSRSParams` (FSRS v7-alpha observability) — DDL proposal at `prisma/audit/proposed_migration_personalized_fsrs_params_version.sql`. Schema.prisma already updated with the field. POST handler at `functions/api/user/fsrs-params.ts` already persists via `as any` cast; read paths use `resolveVersion()` from `lib/fsrs-version-selector.ts` which prefers the persisted tag but falls back to `w.length` inference, so the app works correctly with or without this column.
 5. Production dependency: `web-push` npm package for notification cron (Sprint 18) — needs Aaron's approval.
 6. Applied via Supabase MCP on 2026-04-17, registered as Prisma migration files in this branch (resolve with `npx prisma migrate resolve --applied <dir>` when pulling):
    - `20260418000000_enable_rls_student_reservoir_item`
