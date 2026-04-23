@@ -95,10 +95,24 @@ describe('computeRetrievability — v6 vs v7 dispatch', () => {
 // ─── validateParameters ────────────────────────────────────────────────
 
 describe('validateParameters — v7 acceptance', () => {
-  // A 21-length all-in-bounds v6 array. Note: the actual defaultParameters.w
-  // in lib/fsrs.ts has some entries OUTSIDE these optimizer bounds
-  // (a pre-existing tension between "published v6 defaults" and "L-BFGS bounds").
-  // This fixture lets us test length acceptance without that noise.
+  // Invariant: the canonical v6 defaults in lib/fsrs.ts MUST live inside
+  // the optimizer's bounds. This was not always true (w[6], w[12], w[14],
+  // w[16] sat outside a tighter historical bounds region, forcing L-BFGS
+  // to clamp on the first iteration — silently discarding the published
+  // starting point). Widened on 2026-04; this test pins it.
+  it('canonical defaultParameters.w is entirely within L-BFGS bounds', () => {
+    const result = validateParameters(defaultParameters.w);
+    expect(result.errors).toEqual([]);
+    expect(result.valid).toBe(true);
+  });
+
+  it('canonical v7AlphaDefaultParameters.w is entirely within L-BFGS bounds', () => {
+    const result = validateParameters(v7AlphaDefaultParameters.w);
+    expect(result.errors).toEqual([]);
+    expect(result.valid).toBe(true);
+  });
+
+  // Helper fixtures for bounds-check tests below.
   const inBoundsV6 = PARAMETER_BOUNDS.min.slice(0, 21).map((lo, i) => {
     const hi = PARAMETER_BOUNDS.max[i]!;
     return (lo + hi) / 2; // midpoint — always valid

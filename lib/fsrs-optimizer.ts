@@ -184,7 +184,7 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     0.01, // w[9]: Stability decay exponent - min 0.01
     0.5, // w[10]: Retrievability growth factor - min 0.5
     0.5, // w[11]: Forget base - min 0.5
-    0.1, // w[12]: Forget difficulty factor - min 0.1
+    0.01, // w[12]: Forget difficulty factor — widened (v6 default 0.0614 was below prior 0.1 floor)
     0.1, // w[13]: Forget stability factor - min 0.1
     0.01, // w[14]: Forget retrievability factor - min 0.01
     0.5, // w[15]: Hard penalty - min 0.5
@@ -212,7 +212,7 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     60.0, // w[3]: Initial stability (Easy) - max 60 days
     10.0, // w[4]: Initial difficulty base - max 10
     2.0, // w[5]: Difficulty change per grade - max 2
-    3.0, // w[6]: Difficulty adjustment rate - max 3
+    5.0, // w[6]: Difficulty adjustment rate — widened (v6 default 3.0194 was above prior 3.0 cap)
     0.5, // w[7]: Mean reversion strength - max 0.5
     3.0, // w[8]: Base growth factor - max 3
     0.5, // w[9]: Stability decay exponent - max 0.5
@@ -220,9 +220,9 @@ export const PARAMETER_BOUNDS: ParameterBounds = {
     5.0, // w[11]: Forget base - max 5
     1.0, // w[12]: Forget difficulty factor - max 1
     2.0, // w[13]: Forget stability factor - max 2
-    0.5, // w[14]: Forget retrievability factor - max 0.5
+    5.0, // w[14]: Forget retrievability factor — widened (v6 default 1.6483 was above prior 0.5 cap)
     1.5, // w[15]: Hard penalty - max 1.5
-    1.0, // w[16]: Easy bonus multiplier - max 1
+    4.0, // w[16]: Easy bonus multiplier — widened (v6 default 1.8729 was above prior 1.0 cap)
     1.5, // w[17]: Short-term decay rate - max 1.5
     1.0, // w[18]: Grade offset for short-term - max 1
     1.0, // w[19]: Retrievability factor — aligned with fsrsOptimizerService [0.01, 1.0]
