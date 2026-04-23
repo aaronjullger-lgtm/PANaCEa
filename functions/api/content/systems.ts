@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCached, setCached } from '../_shared/kv-cache';
@@ -16,8 +16,6 @@ const ContentSystemsSchema = z.object({});
 // v2: now filters by status='published', old cache entries are stale
 const SYSTEMS_CACHE_KEY = 'content:systems:v2';
 const CACHE_TTL = 3600; // 1h
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(ContentSystemsSchema, async (context) => {
   const { env } = context;

@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 const SuggestionsQuerySchema = z.object({
@@ -26,8 +26,6 @@ const SuggestionsQuerySchema = z.object({
     .optional()
     .default({}),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminAuthenticatedEndpoint(
   SuggestionsQuerySchema,

@@ -16,7 +16,8 @@
 
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../_shared/adobeAllowlist';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -206,8 +207,6 @@ function parseSegmentationMasks(textPart: string): Array<{ mask?: string; label?
   }
 }
 
-export const onRequestOptions = withCors();
-
 /** Upload base64 image to Supabase Storage; returns storage path and public URL or null. */
 async function uploadToSupabase(
   env: Env,
@@ -248,10 +247,7 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
   const log = createEndpointLogger('/api/visualizer/generate', auth.userId);
 
   if (!env.GEMINI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'GEMINI_API_KEY not configured' });
   }
 
   let structureReferenceUrl = body.structureReferenceUrl ?? null;
@@ -279,24 +275,17 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
       }
     } catch (e) {
       log.error('Firefly error', e);
-      return new Response(
-        JSON.stringify({
-          error: 'Adobe Firefly error',
-          details: e instanceof Error ? e.message : 'Unknown',
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: 'Adobe Firefly error',
+        details: e instanceof Error ? e.message : 'Unknown',
+      });
     }
   }
 
   if (!imageBase64) {
-    return new Response(
-      JSON.stringify({
-        error:
-          'No image generated. Configure ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET (or ADOBE_ACCESS_TOKEN) for Firefly, or provide a base64 image in the request.',
-      }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.VALIDATION_FAILED, {
+      message: 'No image generated. Configure ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET (or ADOBE_ACCESS_TOKEN) for Firefly, or provide a base64 image in the request.',
+    });
   }
 
   const geminiUrl = `${GEMINI_BASE}/v1beta/models/${SEGMENTATION_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
@@ -326,10 +315,7 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
   if (!geminiRes.ok) {
     const text = await geminiRes.text();
     log.warn('Gemini segmentation failed', { status: geminiRes.status, text: text.slice(0, 200) });
-    return new Response(JSON.stringify({ error: 'Segmentation failed', details: text }), {
-      status: geminiRes.status,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.GEMINI_ERROR, { message: 'Segmentation failed', details: text.slice(0, 300) });
   }
 
   const geminiData = (await geminiRes.json()) as {
@@ -378,18 +364,13 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
     }
   }
 
-  return new Response(
-    JSON.stringify({
-      data: {
-        imageBase64: `data:${imageMime};base64,${imageBase64}`,
-        imageMime,
-        masks,
-        conditionId: conditionId ?? undefined,
-        contentClass,
-        storageUrl: storageUrl ?? undefined,
-        storagePath: storagePath ?? undefined,
-      },
-    }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
-  );
+  return ok({
+    imageBase64: `data:${imageMime};base64,${imageBase64}`,
+    imageMime,
+    masks,
+    conditionId: conditionId ?? undefined,
+    contentClass,
+    storageUrl: storageUrl ?? undefined,
+    storagePath: storagePath ?? undefined,
+  });
 });

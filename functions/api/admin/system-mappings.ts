@@ -2,7 +2,7 @@
 // Admin CRUD endpoints for SystemMapping
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
@@ -19,8 +19,6 @@ const SystemMappingSchema = z.object({
 });
 
 const UpdateSystemMappingSchema = SystemMappingSchema.partial().omit({ taxonomyCode: true, subcategory: true });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/system-mappings

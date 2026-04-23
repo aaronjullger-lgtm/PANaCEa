@@ -14,7 +14,8 @@
 
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../_shared/adobeAllowlist';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -109,8 +110,6 @@ function arrayBufferToBase64(buf: ArrayBuffer): string {
   return btoa(str);
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
@@ -169,10 +168,7 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
     if (!res.ok) {
       const text = await res.text();
       log.warn('Firefly generate-visual failed', { status: res.status, body: text.slice(0, 200) });
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate mnemonic image', details: text.slice(0, 300) }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Failed to generate mnemonic image', details: text.slice(0, 300) });
     }
 
     const data = (await res.json()) as {
@@ -181,18 +177,12 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
     const img = data.images?.[0]?.image;
     const imageUrl = img?.source?.url ?? img?.uploadId;
     if (!imageUrl?.startsWith('http')) {
-      return new Response(JSON.stringify({ error: 'No image URL in Firefly response' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.UPSTREAM_ERROR, { message: 'No image URL in Firefly response' });
     }
 
     const imgRes = await fetch(imageUrl);
     if (!imgRes.ok) {
-      return new Response(JSON.stringify({ error: 'Failed to fetch generated image' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Failed to fetch generated image' });
     }
     const buf = await imgRes.arrayBuffer();
     const imageBase64 = arrayBufferToBase64(buf);
@@ -204,31 +194,20 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
       conditionId: conditionId ?? undefined,
     });
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          imageBase64,
-          imageMime,
-          imageUrl,
-          front,
-          back,
-          style,
-          conditionId: conditionId ?? undefined,
-          questionId: questionId ?? undefined,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({
+      imageBase64,
+      imageMime,
+      imageUrl,
+      front,
+      back,
+      style,
+      conditionId: conditionId ?? undefined,
+      questionId: questionId ?? undefined,
+    });
   } catch (err) {
     log.error('SRS generate-visual error', {
       error: err instanceof Error ? err.message : String(err),
     });
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to generate visual mnemonic',
-        details: err instanceof Error ? err.message : 'Unknown',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to generate visual mnemonic' });
   }
 });

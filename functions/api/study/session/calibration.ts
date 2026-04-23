@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
   getColdStartStatus,
@@ -20,8 +20,6 @@ const CalibrationSchema = z.object({
     size: z.number().int().min(10).max(50).optional(),
   }).optional().default({}),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   CalibrationSchema,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -14,8 +14,6 @@ const HealthReportSchema = z.object({
     days: z.coerce.number().min(1).max(365).optional().default(7),
   }).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(HealthReportSchema, async (context) => {
   const { env, validated } = context;

@@ -5,15 +5,13 @@
  * Supports both UUID and slug formats for conditionId
  */
 
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
 const ConditionPearlsSchema = z.object({
   conditionId: z.string().min(1, 'Condition ID is required'),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ConditionPearlsSchema,

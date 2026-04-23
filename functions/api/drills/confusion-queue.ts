@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   getConfusionBasedDrillQueue,
@@ -26,8 +26,6 @@ const ConfusionQueueQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(25).optional().default(10),
   minCount: z.coerce.number().min(1).max(10).optional().default(2),
 }).passthrough();
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ConfusionQueueQuerySchema,

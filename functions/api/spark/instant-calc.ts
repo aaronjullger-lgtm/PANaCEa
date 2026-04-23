@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const BodySchema = z.object({
@@ -17,8 +17,6 @@ const BodySchema = z.object({
 interface Env {
   SPARK_API_KEY?: string;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   BodySchema,

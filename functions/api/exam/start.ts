@@ -3,7 +3,7 @@
  * Start a new PANCE/PANRE-LA exam attempt
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -19,8 +19,6 @@ const StartExamSchema = z.object({
     resumeAttemptId: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   StartExamSchema,

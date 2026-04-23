@@ -19,7 +19,6 @@
  * @see lib/services/selfRefineService.ts — Prompt construction
  */
 
-import { withCors } from '../_shared/middleware';
 import { cronEndpoint, ok, fail, ErrorCode } from '../_shared/endpoint';
 import { Prisma } from '@prisma/client/edge';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
@@ -33,8 +32,6 @@ import {
   type ContentQualityFlagRecord,
 } from '../../../lib/services/contentQualityLoop';
 import type { ItemAnalysis } from '../../../lib/services/itemAnalysisService';
-
-export const onRequestOptions = withCors();
 
 type CronEnv = CloudflareEnv & {
   CRON_SECRET?: string;

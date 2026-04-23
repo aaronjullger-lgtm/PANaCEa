@@ -20,7 +20,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
@@ -48,8 +48,6 @@ interface KVNamespace {
   get(key: string): Promise<string | null>;
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): RAG explanation
 // pipeline invokes Gemini + vector retrieval; 25 rpm 'ai' bucket is correct.

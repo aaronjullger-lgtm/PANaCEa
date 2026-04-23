@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { generateSuggestions } from '@/services/domain/mappingEnrichment/suggestionEngine';
 
@@ -19,8 +19,6 @@ const SuggestSchema = z.object({
     limit: z.number().int().min(1).max(50).optional().default(10),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = adminAuthenticatedEndpoint(
   SuggestSchema,

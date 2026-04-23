@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -40,8 +40,6 @@ const NODE_DRUG = 'drug';
 const NODE_ANATOMY = 'anatomy';
 const NODE_LAB = 'lab';
 const NODE_DIFFERENTIAL = 'differential';
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,

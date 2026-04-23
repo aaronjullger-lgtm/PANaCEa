@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -21,8 +21,6 @@ const StreakParamsSchema = z.object({
     userId: z.string().min(1, 'User ID is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: Fetch user's current streak (with freezes and weekend mode)

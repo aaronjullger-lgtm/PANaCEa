@@ -16,15 +16,13 @@
  */
 
 import { z } from 'zod';
-import { cmsEndpoint, withCors } from '../../_shared/middleware';
+import { cmsEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
 import { ContentListQuerySchema } from '../../_shared/schemas';
 
 const logger = createEndpointLogger('/api/admin/content/list');
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = cmsEndpoint(
   z.object({

@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
   runFullOptimization,
@@ -69,8 +69,6 @@ interface OptimizationResult {
 // ============================================================================
 // CORS Handler
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // GET: Retrieve User's FSRS Parameters

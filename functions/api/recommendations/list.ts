@@ -1,4 +1,4 @@
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
@@ -26,8 +26,6 @@ const RecommendationListSchema = z.object({
 function getRecommendationsCacheKey(userId: string, status: string): string {
   return `${CACHE_CONFIG.PREFIX.USER_STATS}recommendations:${userId}:${status}`;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   RecommendationListSchema,

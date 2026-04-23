@@ -18,7 +18,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -29,8 +30,6 @@ const ALLOWED_MIMES = [
   'text/plain',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
-
-export const onRequestOptions = withCors();
 
 async function uploadToGeminiFiles(
   fileBytes: ArrayBuffer,
@@ -95,12 +94,10 @@ export const onRequestPost = aiEndpoint(
     // Rejecting before formData() avoids wasted work on misrouted traffic.
     const contentType = request.headers.get('content-type') ?? '';
     if (!contentType.includes('multipart/form-data')) {
-      return new Response(
-        JSON.stringify({
-          error: 'Unsupported content-type. Expected multipart/form-data with a "file" field.',
-        }),
-        { status: 415, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, {
+        message: 'Unsupported content-type. Expected multipart/form-data with a "file" field.',
+        status: 415,
+      });
     }
 
     // Content-Length short-circuit: reject oversized payloads before formData()
@@ -109,53 +106,41 @@ export const onRequestPost = aiEndpoint(
     // requests that omit or misreport Content-Length.
     const contentLength = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
     if (Number.isFinite(contentLength) && contentLength > MAX_FILE_SIZE) {
-      return new Response(
-        JSON.stringify({ error: `Payload too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB` }),
-        { status: 413, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.VALIDATION_FAILED, {
+        message: `Payload too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        status: 413,
+      });
     }
 
     try {
       const formData = await request.formData();
       const file = formData.get('file') as File | null;
       if (!file || !(file instanceof File)) {
-        return new Response(JSON.stringify({ error: 'Missing or invalid "file" in form data' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: 'Missing or invalid "file" in form data',
         });
       }
       if (file.size > MAX_FILE_SIZE) {
-        return new Response(
-          JSON.stringify({ error: `File too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB` }),
-          { status: 413, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: `File too large. Max ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+          status: 413,
+        });
       }
       const mimeType = file.type || 'application/octet-stream';
       if (!ALLOWED_MIMES.includes(mimeType)) {
-        return new Response(
-          JSON.stringify({ error: `Unsupported type. Allowed: ${ALLOWED_MIMES.join(', ')}` }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.VALIDATION_FAILED, {
+          message: `Unsupported type. Allowed: ${ALLOWED_MIMES.join(', ')}`,
+        });
       }
       const fileBytes = await file.arrayBuffer();
       const apiKey = (env as { GEMINI_API_KEY: string }).GEMINI_API_KEY;
       const result = await uploadToGeminiFiles(fileBytes, mimeType, apiKey);
       logger.info('Knowledge upload success', { name: result.name, size: file.size });
-      return new Response(
-        JSON.stringify({
-          fileUri: result.fileUri,
-          name: result.name,
-          mimeType,
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return ok({ fileUri: result.fileUri, name: result.name, mimeType });
     } catch (err) {
       logger.error('Knowledge upload error', err);
       const message = err instanceof Error ? err.message : 'Upload failed';
-      return new Response(JSON.stringify({ error: message }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.UPSTREAM_ERROR, { message });
     }
   },
   { source: 'query', requestsPerMinute: 20 }

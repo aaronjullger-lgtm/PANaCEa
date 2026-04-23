@@ -14,7 +14,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, aiEndpoint} from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -54,8 +55,6 @@ function parsePageCitations(answer: string): number[] {
 
 const CITATION_INSTRUCTION =
   'Answer using only the cached content. Cite sources in this exact format so the frontend can highlight: {{Page:N}} for a single page or {{Pages:N-M}} for a range.';
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(QueryBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
@@ -107,10 +106,7 @@ export const onRequestPost = aiEndpoint(QueryBodySchema, async (context) => {
     log.warn('Library query fetch error', {
       msg: err instanceof Error ? err.message : String(err),
     });
-    return new Response(JSON.stringify({ error: 'Library query service unavailable' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Library query service unavailable', headers: rateLimitHeaders as Record<string, string> });
   }
 
   if (res.ok) {
@@ -121,31 +117,20 @@ export const onRequestPost = aiEndpoint(QueryBodySchema, async (context) => {
     const answer = typeof rawText === 'string' ? rawText.trim() : '';
     const pageNumbers = parsePageCitations(answer);
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          answer,
-          citations: pageNumbers.map((page) => ({ page })),
-          pageNumbers,
-        },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-      }
+    return ok(
+      { answer, citations: pageNumbers.map((page) => ({ page })), pageNumbers },
+      { headers: rateLimitHeaders as Record<string, string> }
     );
   }
 
   const text = await res.text();
   log.warn('Library query Gemini error', { status: res.status, text: text.slice(0, 300) });
-  return new Response(
-    JSON.stringify({
-      error: res.status === 429 ? 'Rate limit exceeded' : 'Query failed',
-      details: res.status === 429 ? undefined : text.slice(0, 500),
-    }),
+  return fail(
+    res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR,
     {
-      status: res.status === 429 ? 429 : 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      message: res.status === 429 ? 'Rate limit exceeded' : 'Query failed',
+      details: res.status === 429 ? undefined : text.slice(0, 500),
+      headers: rateLimitHeaders as Record<string, string>,
     }
   );
 });

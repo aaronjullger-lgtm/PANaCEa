@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -72,8 +72,6 @@ interface DeepConditionData {
   }>;
   linkedScoringSystem?: Array<{ name: string; category: string; whenToUse?: string }>;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
   const { env, validated } = context;

@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../ai/learning/profile-crud';
@@ -23,8 +23,6 @@ import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 // To change the /api/questions/attempt contract, edit lib/api/schemas/questions.ts.
 import { QuestionAttemptRequestSchema } from '../../../lib/api/schemas/questions';
 const AttemptSchema = z.object({ body: QuestionAttemptRequestSchema });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context) => {
   const { env, auth, validated } = context;

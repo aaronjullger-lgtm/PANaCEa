@@ -69,7 +69,9 @@ describe('POST /api/graph/confidence', () => {
     const response = await onRequestPost(mockContext as any);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual({
+    // Unified envelope: { success: true, data: { scores: {...} }, ... }
+    expect(data.success).toBe(true);
+    expect(data.data).toEqual({
       scores: {
         'node1': 0.75,
         'node2': 0.42,
@@ -97,7 +99,8 @@ describe('POST /api/graph/confidence', () => {
     const response = await onRequestPost(mockContext as any);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual({ scores: {} });
+    expect(data.success).toBe(true);
+    expect(data.data).toEqual({ scores: {} });
     expect(mockScoringEngine.computeConfidenceForNodes).toHaveBeenCalledWith(
       expect.anything(),
       'user123',
@@ -119,6 +122,8 @@ describe('POST /api/graph/confidence', () => {
     const response = await onRequestPost(mockContext as any);
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.error).toBe('Internal server error');
+    // Unified envelope: { success: false, error: 'INTERNAL_ERROR', message: '...', ... }
+    expect(data.success).toBe(false);
+    expect(data.error).toBe('INTERNAL_ERROR');
   });
 });

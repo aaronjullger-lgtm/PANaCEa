@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -60,8 +60,6 @@ interface UserAnalytics {
     avgInterval: number;
   };
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(AnalyticsSchema, async (context) => {
   const { env, auth, validated } = context;

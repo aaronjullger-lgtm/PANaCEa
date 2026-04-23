@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -42,9 +42,7 @@ const AnalyzeBehaviorSchema = z.object({
   }),
 });
 
-export const onRequestOptions = withCors();
-
-export const onRequestPost = authenticatedEndpoint(AnalyzeBehaviorSchema, async (context) => {
+export const onRequestPost = aiEndpoint(AnalyzeBehaviorSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/srs/analyze-behavior');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

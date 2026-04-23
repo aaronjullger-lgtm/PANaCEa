@@ -7,15 +7,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const QuerySchema = z.object({
   questionId: z.string().min(1, 'questionId is required'),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: Answer distribution for a question (count and percent per option A–D)

@@ -12,11 +12,8 @@
  */
 
 import { z } from 'zod';
-import {
-  adminAuthenticatedEndpoint,
-  withCors,
-} from '../_shared/middleware';
-import { getCorsConfig, getCorsHeaders } from '../_shared/cors';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
 import { scheduleReviews } from '@/services/optimizer/retentionAwareScheduler';
@@ -26,34 +23,16 @@ import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalanc
 // Request Handler
 // ============================================================================
 
-export const onRequestOptions = async (context: any) => {
-  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(context?.request, corsConfig) ?? {},
-  });
-};
-
 export const onRequestGet = adminAuthenticatedEndpoint(
   z.object({}), // No query/body parameters required
   async (context) => {
-    const { auth, env, request } = context;
+    const { auth, env } = context;
     const userId = auth.userId;
 
     // Production guard: disable unless explicitly enabled
     if (env.ENVIRONMENT === 'production' && env.ENABLE_DEBUG_ENDPOINTS !== 'true') {
-      return new Response(
-        JSON.stringify({ error: 'Debug endpoints are disabled in production' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.NOT_FOUND, { message: 'Debug endpoints are disabled in production' });
     }
-
-    const corsConfig = getCorsConfig(env);
-    const corsHeaders = getCorsHeaders(request, corsConfig) ?? {};
-    const jsonHeaders = {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    };
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     try {
@@ -110,22 +89,12 @@ export const onRequestGet = adminAuthenticatedEndpoint(
         blueprintBalanced: balanced,
       };
 
-      return new Response(JSON.stringify(debugOutput, null, 2), {
-        status: 200,
-        headers: jsonHeaders,
-      });
+      return ok(debugOutput);
     } catch (error) {
-      console.error('Study‑path debug endpoint error:', error);
-      return new Response(
-        JSON.stringify({
-          error: 'Internal server error',
-          details: error instanceof Error ? error.message : String(error),
-        }),
-        {
-          status: 500,
-          headers: jsonHeaders,
-        }
-      );
+      console.error('Study-path debug endpoint error:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: error instanceof Error ? error.message : 'Internal server error',
+      });
     } finally {
       await safePrismaDisconnect(prisma);
     }

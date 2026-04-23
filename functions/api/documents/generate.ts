@@ -7,7 +7,8 @@
 
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../_shared/adobeAllowlist';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { fail, ErrorCode } from '../_shared/endpoint';
 import {
   getPdfServicesToken,
   pollDocGenJobStatus,
@@ -38,8 +39,6 @@ interface Env {
   DOC_GEN_TEMPLATE_ASSET_ID?: string;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
@@ -49,10 +48,7 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
   const log = createEndpointLogger('/api/documents/generate', auth.userId);
 
   if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-    return new Response(JSON.stringify({ error: 'Adobe PDF Services not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'Adobe PDF Services not configured' });
   }
 
   const templateAssetId =
@@ -60,13 +56,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
     (validated.body.templateKey != null ? env.DOC_GEN_TEMPLATE_ASSET_ID : undefined);
 
   if (!templateAssetId) {
-    return new Response(
-      JSON.stringify({
-        error:
-          'Provide templateAssetId in body or set DOC_GEN_TEMPLATE_ASSET_ID and use templateKey: "study-guide" or "mock-exam"',
-      }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.VALIDATION_FAILED, {
+      message:
+        'Provide templateAssetId in body or set DOC_GEN_TEMPLATE_ASSET_ID and use templateKey: "study-guide" or "mock-exam"',
+    });
   }
 
   try {
@@ -85,22 +78,18 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
       const statusRes = await pollDocGenJobStatus(env, token, statusUrl);
 
       if (statusRes.status === 'failed') {
-        return new Response(
-          JSON.stringify({
-            error: statusRes.errorMessage ?? 'Document generation failed',
-            errorCode: statusRes.errorCode,
-          }),
-          { status: 502, headers: { 'Content-Type': 'application/json' } }
-        );
+        return fail(ErrorCode.UPSTREAM_ERROR, {
+          message: statusRes.errorMessage ?? 'Document generation failed',
+          details: statusRes.errorCode,
+        });
       }
 
       if (statusRes.status === 'done' && statusRes.downloadUri) {
         assertAdobeHostAllowed(statusRes.downloadUri);
         const res = await fetch(statusRes.downloadUri);
         if (!res.ok) {
-          return new Response(JSON.stringify({ error: 'Failed to download generated document' }), {
-            status: 502,
-            headers: { 'Content-Type': 'application/json' },
+          return fail(ErrorCode.UPSTREAM_ERROR, {
+            message: 'Failed to download generated document',
           });
         }
         const bytes = await res.arrayBuffer();
@@ -121,16 +110,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     }
 
-    return new Response(JSON.stringify({ error: 'Document generation timeout' }), {
-      status: 504,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message: 'Document generation timeout', status: 504 });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Document generation failed';
     log.warn('Document generation failed', { error: message });
-    return new Response(JSON.stringify({ error: message }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message });
   }
 });

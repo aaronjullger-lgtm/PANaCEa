@@ -4,7 +4,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, aiEndpoint} from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -20,9 +21,7 @@ interface Env {
   GEMINI_API_KEY?: string;
 }
 
-export const onRequestOptions = withCors();
-
-export const onRequestDelete = aiEndpoint(
+export const onRequestDelete = authenticatedEndpoint(
   DeleteParamsSchema,
   async (context) => {
     const { env, validated, auth } = context as {
@@ -47,10 +46,7 @@ export const onRequestDelete = aiEndpoint(
         select: { id: true },
       });
       if (!user) {
-        return new Response(JSON.stringify({ error: 'User not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
       }
 
       const record = await prisma.knowledgeCache.findFirst({
@@ -59,10 +55,7 @@ export const onRequestDelete = aiEndpoint(
       });
 
       if (!record) {
-        return new Response(JSON.stringify({ error: 'Cache not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.NOT_FOUND, { message: 'Cache not found' });
       }
 
       await prisma.knowledgeCache.delete({ where: { id: record.id } });
@@ -78,16 +71,10 @@ export const onRequestDelete = aiEndpoint(
         }
       }
 
-      return new Response(JSON.stringify({ data: { deleted: true, id: record.id } }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return ok({ deleted: true, id: record.id });
     } catch (err) {
       log.error('Knowledge cache delete error', err);
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

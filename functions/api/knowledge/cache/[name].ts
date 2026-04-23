@@ -9,15 +9,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, aiEndpoint} from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 
 const logger = createEndpointLogger('/api/knowledge/cache/[name]');
-
-export const onRequestOptions = withCors();
 
 export const onRequestDelete = aiEndpoint(
   z.object({}).passthrough(),

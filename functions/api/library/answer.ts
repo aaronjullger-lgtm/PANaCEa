@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
@@ -62,8 +62,6 @@ function buildExcerpt(item: {
   if (item.treatment) parts.push(`Treatment: ${item.treatment}`);
   return parts.join('\n');
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const { env, validated, auth } = context as {

@@ -18,7 +18,7 @@
  */
 
 import { z } from 'zod';
-import { cmsEndpoint, withCors } from '../../_shared/middleware';
+import { cmsEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
@@ -32,8 +32,6 @@ import {
 import { transitionStatus, type ContentStatus } from '../../../../lib/services/cms/contentService';
 
 const logger = createEndpointLogger('/api/admin/content/transition');
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = cmsEndpoint(
   z.object({

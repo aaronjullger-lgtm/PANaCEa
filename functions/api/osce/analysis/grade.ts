@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 import { resolveSystem } from '../../_shared/inferSystem';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -54,7 +54,6 @@ interface Env {
 // The gateway returns `OsceAnalysisGrade`, which IS the canonical shape.
 type GradePayload = OsceAnalysisGrade;
 type SoftSkillsReport = OsceSoftSkills;
-
 
 // =============================================================================
 // DANGEROUS ACTION DETECTION (inline for Edge compatibility)
@@ -261,8 +260,6 @@ async function persistGradeAndConceptGap(
   }
   return { resultId: savedResult.id, conceptGapCreated };
 }
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): OSCE encounter
 // grading uses multimodal Gemini + runs a concept-gap writer in the same path.

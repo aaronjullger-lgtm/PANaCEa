@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -36,8 +36,6 @@ function parseConceptKey(topic: string): { system: string; conditionId?: string 
     conditionId: parts[1] && parts[1] !== 'unknown' ? parts[1] : undefined,
   };
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ReviewQueueSchema, async (context) => {
   const { env, auth } = context;

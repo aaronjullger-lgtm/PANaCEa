@@ -10,7 +10,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -46,8 +46,6 @@ function computePredictedPassChance(osceScores: number[], quizAccuracy?: number)
 // ============================================================================
 // Handler
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) => {
   const { env, auth } = context;

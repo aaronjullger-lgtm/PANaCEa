@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 
@@ -29,8 +29,6 @@ const StateMachineBodySchema = z.object({
     patientSex: z.enum(['M', 'F']).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): OSCE state-machine
 // generation builds a multi-node dialogue graph via Gemini. 25 rpm 'ai' bucket.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { ALL_TASK_TYPES, getTaskTypeLabel } from '../../../../lib/taskTypes';
@@ -9,8 +9,6 @@ const TopicProgressSchema = z.object({
     conditionId: z.string().min(1),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/user/topic-progress/:conditionId

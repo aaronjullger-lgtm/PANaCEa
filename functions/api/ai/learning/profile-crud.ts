@@ -13,7 +13,7 @@
 
 import { z } from 'zod';
 import { resolveSystem } from '../../_shared/inferSystem';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -378,8 +378,6 @@ export async function scheduleConceptReview(
 // ============================================================================
 
 const ProfileSchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(ProfileSchema, async (context) => {
   const { env, auth } = context;

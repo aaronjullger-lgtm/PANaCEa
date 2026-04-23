@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import type { PolypharmacyCase, Medication } from '@/types/drill-modes';
@@ -217,7 +217,6 @@ const PolypharmacyDrillSchema = z.object({
  * - count: number of cases to return (default 1)
  * - difficulty: 'easy' | 'medium' | 'hard' (optional)
  */
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   PolypharmacyDrillSchema,

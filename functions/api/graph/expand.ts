@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import { GraphEdgeType } from '@prisma/client/edge';
 import type { GraphEdge, GraphNode } from '@prisma/client/edge';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -52,8 +52,6 @@ export interface GraphEdgeResponse {
 }
 
 type GraphEdgeWithRelations = GraphEdge & { source: GraphNode; target: GraphNode };
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   BodySchema,

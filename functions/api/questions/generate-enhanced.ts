@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import type { Question, SystemCode } from '../../../types';
@@ -173,8 +173,6 @@ const MAX_COVE_RETRIES = 3;
 
 // Whether to use full CoVe pipeline or quick verify (configurable via env)
 const USE_FULL_COVE = true;
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): enhanced generation
 // with CoVe verification makes 2-3 Gemini calls (gemini-2.5-pro for draft,

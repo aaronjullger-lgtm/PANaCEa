@@ -14,7 +14,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
@@ -30,8 +31,6 @@ const QuerySchema = z.object({
 
 type Env = CloudflareEnv;
 
-export const onRequestOptions = withCors();
-
 export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
@@ -46,7 +45,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
     // Resolve Clerk id to internal User.id — UserProgress.userId is the internal id.
     const userId = await resolveUserId(prisma, auth.userId);
     if (!userId) {
-      return Response.json(
+      return ok(
         {
           nodes: [],
           edges: [],
@@ -81,7 +80,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
     });
 
     if (nodes.length === 0) {
-      return Response.json({
+      return ok({
         nodes: [],
         edges: [],
         mastery: {},
@@ -185,7 +184,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
           ) / 100
         : 0;
 
-    return Response.json({
+    return ok({
       nodes: nodes.map((n: { id: string; nodeType: string; label: string; description: string | null; sourceType: string; sourceId: string; systemCodes: string[]; metadata: unknown }) => ({
         id: n.id,
         type: n.nodeType,
@@ -213,10 +212,7 @@ export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) =
     });
   } catch (err) {
     console.error('[knowledge-graph] Error:', err);
-    return Response.json(
-      { error: 'Failed to fetch knowledge graph' },
-      { status: 500 }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to fetch knowledge graph' });
   } finally {
     await safePrismaDisconnect(prisma);
   }

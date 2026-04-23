@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
   findSimilarCachedQuestion,
@@ -46,8 +46,6 @@ const MNEMONIC_SYSTEM_PROMPT =
   'You are a medical education assistant. Generate a single, concise mnemonic to help remember the given medical concept. Prefer acronyms, short phrases, or memorable one-liners.';
 
 // ─── Handler ────────────────────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   GenerateMnemonicSchema,

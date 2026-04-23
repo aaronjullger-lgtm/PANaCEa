@@ -3,7 +3,7 @@
  * GET /api/guidelines/[id] - Get a specific guideline by ID
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -17,8 +17,6 @@ const GuidelineByIdSchema = z.object({
     id: z.string().min(1, 'Guideline ID is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   GuidelineByIdSchema,

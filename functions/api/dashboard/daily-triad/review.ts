@@ -5,13 +5,11 @@
  * Can be extended later to store reviewed state (e.g. user_daily_triad table).
  */
 
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { z } from 'zod';
 
 const ReviewSchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   ReviewSchema,

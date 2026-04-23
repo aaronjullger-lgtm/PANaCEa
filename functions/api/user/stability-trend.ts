@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, getSentryTraceId } from '../_shared/middleware';
+import { authenticatedEndpoint, getSentryTraceId } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { withTimeout, TimeoutError } from '../_shared/timeout';
@@ -37,8 +37,6 @@ interface ReviewSnapshot {
   rating: number;
   state: number;
 }
-
-export const onRequestOptions = withCors();
 
 const EMPTY_TREND_RESPONSE = {
   data: [] as StabilityTrendDataPoint[],

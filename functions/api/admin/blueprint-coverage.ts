@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint } from '../_shared/middleware';
 import {
   analyzeBlueprintCoverage,
   getAvailableExamTypes,
@@ -33,8 +33,6 @@ const SetTargetsSchema = z.object({
     targets: z.record(z.string(), z.number().min(0).max(1)),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/blueprint-coverage

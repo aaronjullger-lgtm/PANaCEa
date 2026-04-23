@@ -3,7 +3,7 @@
  * GET /api/grand-rounds/rank?userId={userId}&date={date}
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -18,8 +18,6 @@ const RankSchema = z.object({
     date: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(RankSchema, async ({ env, validated, auth }) => {
   const log = createEndpointLogger('/api/grand-rounds/rank', auth.userId);

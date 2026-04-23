@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -21,8 +21,6 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 const ConditionDetailSchema = z.object({
   conditionId: z.string().min(1),
 });
-
-export const onRequestOptions = withCors();
 
 // Public so condition detail fetches from loadConditions/getConditionById work without auth (same as /api/content/all)
 export const onRequestGet = publicEndpoint(

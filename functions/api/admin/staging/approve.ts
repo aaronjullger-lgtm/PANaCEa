@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../../_shared/middleware';
+import { adminEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { promoteToLive } from '../../_shared/staging-questions';
@@ -16,8 +16,6 @@ const ApproveBodySchema = z.object({
     id: z.string().min(1),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = adminEndpoint(ApproveBodySchema, async (context) => {
   const { env, validated } = context;

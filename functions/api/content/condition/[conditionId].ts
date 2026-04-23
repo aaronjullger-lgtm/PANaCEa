@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../../_shared/middleware';
+import { publicEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
@@ -16,8 +16,6 @@ const ConditionContentSchema = z.object({
     conditionId: z.string().min(1).max(200),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(ConditionContentSchema, async (context) => {
   const { env, validated } = context;

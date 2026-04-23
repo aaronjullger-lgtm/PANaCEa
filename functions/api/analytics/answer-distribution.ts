@@ -11,7 +11,8 @@
  * @see components/session/AnswerFeedback.tsx — renders the data
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
@@ -58,9 +59,7 @@ export const onRequestGet = authenticatedEndpoint(
           }))
           .sort((a, b) => a.optionLetter.localeCompare(b.optionLetter));
 
-        return Response.json({
-          data: { distribution, totalAttempts: total } satisfies AnswerDistributionResponse,
-        });
+        return ok({ distribution, totalAttempts: total } satisfies AnswerDistributionResponse);
       }
 
       // Fallback: compute in real-time from QuestionAttempt
@@ -73,9 +72,7 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       if (attempts.length < MIN_ATTEMPTS) {
-        return Response.json({
-          data: { distribution: null, totalAttempts: attempts.length } satisfies AnswerDistributionResponse,
-        });
+        return ok({ distribution: null, totalAttempts: attempts.length } satisfies AnswerDistributionResponse);
       }
 
       // Aggregate
@@ -96,9 +93,7 @@ export const onRequestGet = authenticatedEndpoint(
         }))
         .sort((a, b) => a.optionLetter.localeCompare(b.optionLetter));
 
-      return Response.json({
-        data: { distribution, totalAttempts: total } satisfies AnswerDistributionResponse,
-      });
+      return ok({ distribution, totalAttempts: total } satisfies AnswerDistributionResponse);
     } finally {
       await safePrismaDisconnect(prisma);
     }

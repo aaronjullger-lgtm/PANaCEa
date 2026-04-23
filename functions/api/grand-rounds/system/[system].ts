@@ -10,7 +10,6 @@ import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import {
   authenticatedEndpoint,
-  withCors,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../../_shared/middleware';
@@ -31,8 +30,6 @@ type GrandRoundsSystemInput = z.infer<typeof GrandRoundsSystemSchema>;
 // ============================================================================
 // API HANDLER
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   GrandRoundsSystemSchema,

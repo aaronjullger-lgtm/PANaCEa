@@ -9,7 +9,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
 import type { CloudflareEnv } from '../_shared/types';
@@ -21,8 +22,6 @@ import {
 const EmptySchema = z.object({});
 
 type Env = CloudflareEnv;
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) => {
   const { env, auth } = context as {
@@ -37,21 +36,18 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     // Resolve Clerk id to internal User.id — QuestionAttempt.userId is the internal id.
     const userId = await resolveUserId(prisma, auth.userId);
     if (!userId) {
-      return Response.json(
-        {
-          patterns: {
-            totalAnalyzed: 0,
-            patternCounts: {},
-            dominantPattern: null,
-            topPatterns: [],
-            systemPatterns: {},
-            remediations: [],
-          },
-          attemptCount: 0,
-          meta: { status: 'user_not_synced' },
+      return ok({
+        patterns: {
+          totalAnalyzed: 0,
+          patternCounts: {},
+          dominantPattern: null,
+          topPatterns: [],
+          systemPatterns: {},
+          remediations: [],
         },
-        { status: 404 }
-      );
+        attemptCount: 0,
+        meta: { status: 'user_not_synced' },
+      }, { status: 404 });
     }
 
     const incorrectAttempts = await prisma.questionAttempt.findMany({
@@ -68,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
     });
 
     if (incorrectAttempts.length === 0) {
-      return Response.json({
+      return ok({
         patterns: {
           totalAnalyzed: 0,
           patternCounts: {},
@@ -121,16 +117,13 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
 
     const profile = buildPatternProfile(telemetry);
 
-    return Response.json({
+    return ok({
       patterns: profile,
       attemptCount: incorrectAttempts.length,
     });
   } catch (error) {
     console.error('Error analyzing error patterns:', error);
-    return Response.json(
-      { error: 'Failed to analyze error patterns' },
-      { status: 500 }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to analyze error patterns' });
   } finally {
     await safePrismaDisconnect(prisma);
   }

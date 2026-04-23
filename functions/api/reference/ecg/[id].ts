@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -31,8 +31,6 @@ const ECGDetailSchema = z.object({
 // ============================================================================
 // CORS HANDLER
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // GET HANDLER

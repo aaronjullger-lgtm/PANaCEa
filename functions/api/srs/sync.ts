@@ -11,13 +11,12 @@
  * Sprint: Security Hardening Sprint 3 - Middleware Pattern
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { SRSSyncSchema } from '../_shared/schemas';
 import { logger } from '../_shared/secureLogger';
 
 // Handle CORS preflight
-export const onRequestOptions = withCors();
 
 // POST handler with authentication + validation
 export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context) => {

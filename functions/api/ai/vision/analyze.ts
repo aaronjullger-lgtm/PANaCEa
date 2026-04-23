@@ -15,7 +15,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -50,8 +51,6 @@ interface Env {
   RATE_LIMIT_KV?: KVNamespace;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
@@ -80,10 +79,7 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     validated.body;
 
   if (imageBase64.length > MAX_IMAGE_BASE64) {
-    return new Response(JSON.stringify({ error: 'Image too large (max ~4MB base64)' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.VALIDATION_FAILED, { message: 'Image too large (max ~4MB base64)' });
   }
 
   const userPrompt = studentQuery
@@ -112,57 +108,38 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     );
 
     // callVision returns text or structured response based on mode
+    const rlHeaders = rateLimitHeaders as Record<string, string>;
     if (result.mode === 'structured') {
-      return new Response(
-        JSON.stringify({
-          data: {
-            diagnosis: result.data.diagnosis,
-            reasoning: result.data.reasoning,
-            bounding_box: result.data.bounding_box ?? null,
-            model: result.telemetry.modelUsed,
-            usageMetadata: result.usage,
-          },
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+      return ok(
+        {
+          diagnosis: result.data.diagnosis,
+          reasoning: result.data.reasoning,
+          bounding_box: result.data.bounding_box ?? null,
+          model: result.telemetry.modelUsed,
+          usageMetadata: result.usage,
+        },
+        { headers: rlHeaders }
       );
     }
 
     // Fallback: text mode (shouldn't happen with vision-structured, but be safe)
-    return new Response(
-      JSON.stringify({
-        data: {
-          diagnosis: undefined,
-          reasoning: result.text,
-          bounding_box: null,
-          model: result.telemetry.modelUsed,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+    return ok(
+      { diagnosis: undefined, reasoning: result.text, bounding_box: null, model: result.telemetry.modelUsed },
+      { headers: rlHeaders }
     );
   } catch (error) {
+    const rlHeaders = rateLimitHeaders as Record<string, string>;
     if (error instanceof GatewayError) {
       log.warn('Vision analyze gateway failure', { code: error.code, requestId: error.requestId });
-      return new Response(
-        JSON.stringify({
-          error:
-            error.code === 'RATE_LIMITED'
-              ? 'Rate limit exceeded'
-              : error.code === 'SAFETY_BLOCKED'
-              ? 'Analysis blocked by safety filter'
-              : 'Analysis failed',
-        }),
-        {
-          status: error.code === 'RATE_LIMITED' ? 429 : 502,
-          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-        }
-      );
+      const errorCode = error.code === 'RATE_LIMITED' ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR;
+      const message = error.code === 'RATE_LIMITED' ? 'Rate limit exceeded'
+        : error.code === 'SAFETY_BLOCKED' ? 'Analysis blocked by safety filter'
+        : 'Analysis failed';
+      return fail(errorCode, { message, headers: rlHeaders });
     }
     log.warn('Vision analyze unexpected error', {
       msg: error instanceof Error ? error.message : String(error),
     });
-    return new Response(JSON.stringify({ error: 'Analysis failed' }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    });
+    return fail(ErrorCode.GEMINI_ERROR, { message: 'Analysis failed', headers: rlHeaders });
   }
 });

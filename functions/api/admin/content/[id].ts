@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { cmsEndpoint, adminAuthenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { cmsEndpoint, adminAuthenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
@@ -18,8 +18,6 @@ import { updateContent } from '../../../../lib/services/cms/contentService';
 import { type UserRole } from '../../_shared/rbac';
 
 const logger = createEndpointLogger('/api/admin/content/[id]');
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/admin/content/[id] — editor+ can view content details

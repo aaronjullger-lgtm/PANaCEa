@@ -5,7 +5,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getAuditLogs, type AuditLogQuery } from '@/services/domain/audit/mappingAuditLogger';
@@ -23,35 +24,16 @@ const AuditLogsQuerySchema = z.object({
   }),
 });
 
-export const onRequestOptions = withCors();
-
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   AuditLogsQuerySchema,
   async (context) => {
-    const { env, auth, validated } = context;
+    const { env, validated } = context;
     const query = validated.query;
     const logger = createEndpointLogger('/api/mapping-enrichment/audit-logs');
 
     let prisma = null;
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-      // Optionally check admin role (same as other mapping-enrichment endpoints)
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { role: true, id: true },
-      });
-
-      if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-        logger.warn('Non-admin attempted to fetch audit logs', {
-          userId: auth.userId,
-          role: user?.role,
-        });
-        return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
-          status: 403,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
 
       const auditLogQuery: AuditLogQuery = {
         taxonomyCode: query.taxonomyCode,
@@ -65,17 +47,10 @@ export const onRequestGet = authenticatedEndpoint(
       };
 
       const { logs, total } = await getAuditLogs(prisma, auditLogQuery);
-
-      return new Response(JSON.stringify({ logs, total }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return ok({ logs, total });
     } catch (error) {
       logger.error('Failed to fetch audit logs', { error: error instanceof Error ? error.message : String(error) });
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
     } finally {
       if (prisma) {
         await safePrismaDisconnect(prisma);

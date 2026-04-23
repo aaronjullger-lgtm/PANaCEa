@@ -8,7 +8,7 @@
  */
 
 import { z } from 'zod';
-import { adminEndpoint, withCors } from '../../_shared/middleware';
+import { adminEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -23,8 +23,6 @@ const PendingMediaQuerySchema = z.object({
   offset: z.string().regex(/^\d+$/).transform(Number).optional(),
   includeStats: z.enum(['true', 'false']).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = adminEndpoint(
   PendingMediaQuerySchema,

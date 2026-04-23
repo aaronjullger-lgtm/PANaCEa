@@ -62,7 +62,6 @@ import {
   withLogging as originalWithLogging,
 } from './middleware';
 
-
 // ============================================================================
 // ENHANCED RATE LIMITING MIDDLEWARE
 // ============================================================================
@@ -654,8 +653,7 @@ export function getEndpointRateLimitConfig(endpoint: string): {
 // Re-export original middleware functions for compatibility
 export {
   originalWithEnvCheck as withEnvCheck,
-  originalWithCors as withCors,
-  originalWithAuth as withAuth,
+  originalWithCors as originalWithAuth as withAuth,
   originalWithAdminRole as withAdminRole,
   originalWithRefineryRole as withRefineryRole,
   originalWithValidation as withValidation,

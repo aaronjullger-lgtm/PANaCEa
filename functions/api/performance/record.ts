@@ -12,7 +12,6 @@
 
 import {
   authenticatedEndpoint,
-  withCors,
   type AuthenticatedContext,
   type ValidatedContext,
 } from '../_shared/middleware';
@@ -23,8 +22,6 @@ import { logger } from '../_shared/secureLogger';
 // To change the /api/performance/record contract, edit lib/api/schemas/performance.ts.
 import { PerformanceRecordRequestSchema as PerformanceRecordSchema } from '../../../lib/api/schemas/performance';
 import type { PerformanceRecordRequest as PerformanceRecordInput } from '../../../lib/api/schemas/performance';
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint<PerformanceRecordInput>(
   PerformanceRecordSchema,

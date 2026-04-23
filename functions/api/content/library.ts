@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { attachLogMeta } from '../_shared/requestLogger';
@@ -30,8 +30,6 @@ const LibraryQuerySchema = z.object({
   page: z.string().optional(),
   pageSize: z.string().optional(),
 });
-
-export const onRequestOptions = withCors();
 
 // Use { source: 'query' } to read from URL search params instead of body
 export const onRequestGet = authenticatedEndpoint(

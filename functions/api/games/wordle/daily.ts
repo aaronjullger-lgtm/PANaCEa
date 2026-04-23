@@ -3,14 +3,13 @@
  * Edge port of routes/games.ts
  */
 
-import { withCors, authenticatedEndpoint } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import {
   getDailyWordForUser,
   WordleServiceError,
 } from '../../../../services/core/wordleService';
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   undefined,
@@ -19,21 +18,13 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       const payload = await getDailyWordForUser(context.auth.userId);
-      return new Response(JSON.stringify(payload), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return ok(payload);
     } catch (error) {
       if (error instanceof WordleServiceError) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return fail(ErrorCode.VALIDATION_FAILED, { message: error.message });
       }
       log.error('Failed to fetch Wordle daily word', error);
-      return new Response(JSON.stringify({ error: 'Failed to load Wordle challenge' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to load Wordle challenge' });
     }
   },
 );

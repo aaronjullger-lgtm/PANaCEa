@@ -7,15 +7,14 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveBlueprint, checkRotationTransition } from '../../../lib/services/learnerStageBlueprint';
 
 // GET has no body — use empty schema
 const ResolveBlueprintSchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ResolveBlueprintSchema,
@@ -54,19 +53,14 @@ export const onRequestGet = authenticatedEndpoint(
         rotationTransition: transition.shouldTransition,
       });
 
-      return new Response(JSON.stringify({
+      return ok({
         ...blueprint,
         rotationTransition: transition.shouldTransition ? transition.message : null,
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
       });
-    } catch (err: any) {
-      logger.error('Blueprint resolution failed', { error: err.message });
-      return new Response(
-        JSON.stringify({ error: err.message ?? 'Internal error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Internal error';
+      logger.error('Blueprint resolution failed', { error: message });
+      return fail(ErrorCode.INTERNAL_ERROR, { message });
     } finally {
       await safePrismaDisconnect(prisma);
     }

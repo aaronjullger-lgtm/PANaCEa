@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -172,8 +172,6 @@ function pushSystemMessage(messages: unknown, text: string): unknown[] {
   });
   return arr;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(InterveneBodySchema, async (context) => {
   const { env, validated, auth } = context;

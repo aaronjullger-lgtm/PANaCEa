@@ -13,7 +13,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, type AuthenticatedContext, type ValidatedContext } from '../../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 // ─── Inlined blueprint weights (Edge can't import from lib/) ─────
@@ -137,8 +137,6 @@ function aggregateLapses(rows: Array<{ system: string | null }>): Map<string, nu
 const ReadinessSchema = z.object({});
 
 // ─── CORS ────────────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
 
 // ─── Handler ─────────────────────────────────────────────────────
 

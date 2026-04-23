@@ -14,7 +14,7 @@ import {
   safePrismaDisconnect,
 } from '../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { getCorsConfig, getCorsHeaders } from '../_shared/cors';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
 import { scheduleReviews } from '@/services/optimizer/retentionAwareScheduler';
 import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalancedSelector';
@@ -125,24 +125,10 @@ function computeProgressProjections({
 // Request Handler
 // ============================================================================
 
-export const onRequestOptions = async (context: any) => {
-  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(context?.request, corsConfig) ?? {},
-  });
-};
-
 export const onRequestGet = authenticatedEndpoint(
   StudyPathConstraintsSchema,
   async (context) => {
     const { env, auth, validated } = context;
-    const corsConfig = getCorsConfig(env);
-    const corsHeaders = getCorsHeaders(context.request, corsConfig) ?? {};
-    const jsonHeaders = {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-    };
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     try {
@@ -326,19 +312,10 @@ export const onRequestGet = authenticatedEndpoint(
         },
       };
 
-      return new Response(JSON.stringify(response, null, 2), {
-        status: 200,
-        headers: jsonHeaders,
-      });
+      return ok(response);
     } catch (error) {
-      console.error('Study‑path progress endpoint error:', error);
-      return new Response(
-        JSON.stringify({ error: 'Unable to load progress data. Please try again.' }),
-        {
-          status: 500,
-          headers: jsonHeaders,
-        }
-      );
+      console.error('Study-path progress endpoint error:', error);
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Unable to load progress data. Please try again.' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

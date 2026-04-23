@@ -9,7 +9,7 @@
  * Question source: Question table only (unified with submit grading).
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -34,8 +34,6 @@ function normalizeOptions(options: unknown): string[] {
   }
   return [];
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, auth }) => {
   const log = createEndpointLogger('/api/grand-rounds/today', auth.userId);

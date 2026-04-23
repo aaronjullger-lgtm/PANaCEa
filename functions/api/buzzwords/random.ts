@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -8,8 +8,6 @@ const BuzzwordsRandomSchema = z.object({
     count: z.string().regex(/^\d+$/, 'Count must be a positive integer').default('10'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(BuzzwordsRandomSchema, async (context) => {
   const { env, validated } = context;

@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -17,8 +17,6 @@ const DrugSearchSchema = z.object({
   q: z.string().min(1).max(200).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   DrugSearchSchema,

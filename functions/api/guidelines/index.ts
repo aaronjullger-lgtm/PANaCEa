@@ -8,7 +8,7 @@
  * - conditionId: Filter by associated condition
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -24,8 +24,6 @@ const GuidelinesListSchema = z.object({
     conditionId: z.string().optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   GuidelinesListSchema,

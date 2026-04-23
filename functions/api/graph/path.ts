@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -35,8 +35,6 @@ export interface GraphPathResponse {
   depth: number;
   visitedCount: number;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   BodySchema,

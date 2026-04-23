@@ -6,10 +6,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
-
-export const onRequestOptions = withCors();
 
 // GET: Fetch procedure workflow
 export const onRequestGet = authenticatedEndpoint(z.object({}), async ({ env, auth }) => {

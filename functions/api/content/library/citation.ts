@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -89,8 +89,6 @@ function searchStructuredData(
 
   return results;
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   CitationQuerySchema,

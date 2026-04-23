@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getQuickRef } from '../../../lib/services/clinicalQuickRefService';
 
@@ -17,8 +17,6 @@ const QuickRefQuerySchema = z.object({
   system: z.string().optional(),
   conditionId: z.string().optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   QuickRefQuerySchema,

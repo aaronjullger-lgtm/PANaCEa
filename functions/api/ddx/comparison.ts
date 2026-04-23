@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { generateComparison } from '../../../services/core/comparisonGenerator';
@@ -10,8 +10,6 @@ const ComparisonSchema = z.object({
     selectedId: z.string().min(1),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * GET /api/ddx/comparison

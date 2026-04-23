@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client/edge';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { getSystemWeight, calculateTargetDistribution, getSystemAbbreviation } from '../../../lib/constants/blueprint';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -242,8 +242,6 @@ const PoolPostSchema = z.object({
     tags: z.array(z.string()).optional(),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   PoolGetSchema,

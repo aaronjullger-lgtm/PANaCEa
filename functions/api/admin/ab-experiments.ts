@@ -14,7 +14,6 @@
 import { z } from 'zod';
 import {
   adminAuthenticatedEndpoint,
-  withCors,
 } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -85,8 +84,6 @@ const ResultsQuerySchema = z.object({
 // ============================================================================
 // Handlers
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 /**
  * GET: List all experiments (with optional status filter)

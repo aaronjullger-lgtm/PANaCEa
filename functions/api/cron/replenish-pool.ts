@@ -3,22 +3,20 @@
  * Monitors question pool levels and flags systems needing more questions
  *
  * Called by: Cloudflare Scheduled Handler at 3 AM UTC
+ *
+ * Auth: Requires CRON_SECRET bearer token (via cronEndpoint timing-safe check).
  */
 
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { validateRequest } from '../_shared/schemas';
 import { z } from 'zod';
+import { cronEndpoint, ok } from '../_shared/endpoint';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
-// Zod schema for cron request (empty - triggered by scheduler)
-const CronRequestSchema = z
-  .object({
-    system: z.string().optional(), // Optional: check specific system only
-  })
-  .optional()
-  .default({});
+const BodySchema = z.object({
+  system: z.string().optional(),
+}).optional().default({});
 
-const MIN_POOL_SIZE = 50; // Minimum questions per system
-const TARGET_POOL_SIZE = 100; // Target questions per system
+const MIN_POOL_SIZE = 50;
+const TARGET_POOL_SIZE = 100;
 
 const ORGAN_SYSTEMS = [
   'cardiovascular',
@@ -38,101 +36,68 @@ const ORGAN_SYSTEMS = [
   'emergency_medicine',
 ];
 
-export async function onRequestPost(context: any) {
-  const { request, env } = context;
+export const onRequestPost = cronEndpoint({
+  schema: BodySchema,
+  handler: async (context) => {
+    const { env } = context;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  // Verify cron secret
-  const auth = request.headers.get('Authorization');
-  if (auth !== `Bearer ${env.CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+    try {
+      const poolStats: Record<string, { count: number; status: 'healthy' | 'low' | 'critical'; needed: number }> = {};
+      const systemsNeedingReplenishment: string[] = [];
 
-  // Validate request body (optional for cron jobs)
-  const validation = await validateRequest(request, CronRequestSchema);
-  if (validation.success === false) {
-    return validation.response;
-  }
+      for (const system of ORGAN_SYSTEMS) {
+        const count = await prisma.question.count({ where: { system } });
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+        let status: 'healthy' | 'low' | 'critical' = 'healthy';
+        let needed = 0;
 
-  try {
-    const poolStats: Record<
-      string,
-      {
-        count: number;
-        status: 'healthy' | 'low' | 'critical';
-        needed: number;
+        if (count < MIN_POOL_SIZE / 2) {
+          status = 'critical';
+          needed = TARGET_POOL_SIZE - count;
+          systemsNeedingReplenishment.push(system);
+        } else if (count < MIN_POOL_SIZE) {
+          status = 'low';
+          needed = TARGET_POOL_SIZE - count;
+          systemsNeedingReplenishment.push(system);
+        }
+
+        poolStats[system] = { count, status, needed };
       }
-    > = {};
 
-    const systemsNeedingReplenishment: string[] = [];
+      const [totalActive, totalPending] = await Promise.all([
+        prisma.question.count(),
+        prisma.preGeneratedQuestion.count({ where: { validationStatus: 'pending' } }),
+      ]);
 
-    // Check each system
-    for (const system of ORGAN_SYSTEMS) {
-      const count = await prisma.question.count({
-        where: { system },
+      const problematicQuestions = await prisma.$queryRaw<Array<{ id: string; flagCount: number }>>`
+        SELECT q.id, COUNT(f.id) as "flagCount"
+        FROM "Question" q
+        LEFT JOIN "QuestionFlag" f ON q.id = f."questionId"
+        GROUP BY q.id
+        HAVING COUNT(f.id) >= 3
+        LIMIT 10
+      `;
+
+      await prisma.auditLog.create({
+        data: {
+          action: 'POOL_REPLENISHMENT_CHECK',
+          entityType: 'SYSTEM',
+          details: {
+            timestamp: new Date().toISOString(),
+            totalActive,
+            totalPending,
+            systemsNeedingReplenishment,
+            systemStats: poolStats,
+            problematicQuestionsCount: problematicQuestions.length,
+          },
+        },
       });
 
-      let status: 'healthy' | 'low' | 'critical' = 'healthy';
-      let needed = 0;
+      const criticalCount = Object.values(poolStats).filter((s) => s.status === 'critical').length;
+      const lowCount = Object.values(poolStats).filter((s) => s.status === 'low').length;
 
-      if (count < MIN_POOL_SIZE / 2) {
-        status = 'critical';
-        needed = TARGET_POOL_SIZE - count;
-        systemsNeedingReplenishment.push(system);
-      } else if (count < MIN_POOL_SIZE) {
-        status = 'low';
-        needed = TARGET_POOL_SIZE - count;
-        systemsNeedingReplenishment.push(system);
-      }
-
-      poolStats[system] = { count, status, needed };
-    }
-
-    // Get total pool stats
-    const totalActive = await prisma.question.count();
-
-    const totalPending = await prisma.preGeneratedQuestion.count({
-      where: { validationStatus: 'pending' },
-    });
-
-    // Check for questions with high skip/flag rates
-    const problematicQuestions = await prisma.$queryRaw<Array<{ id: string; flagCount: number }>>`
-      SELECT q.id, COUNT(f.id) as "flagCount"
-      FROM "Question" q
-      LEFT JOIN "QuestionFlag" f ON q.id = f."questionId"
-      GROUP BY q.id
-      HAVING COUNT(f.id) >= 3
-      LIMIT 10
-    `;
-
-    // Log results
-    await prisma.auditLog.create({
-      data: {
-        action: 'POOL_REPLENISHMENT_CHECK',
-        entityType: 'SYSTEM',
-        details: {
-          timestamp: new Date().toISOString(),
-          totalActive,
-          totalPending,
-          systemsNeedingReplenishment,
-          systemStats: poolStats,
-          problematicQuestionsCount: problematicQuestions.length,
-        },
-      },
-    });
-
-    // If critical systems exist, could trigger generation here
-    // For now, just report the status
-    const criticalCount = Object.values(poolStats).filter((s) => s.status === 'critical').length;
-    const lowCount = Object.values(poolStats).filter((s) => s.status === 'low').length;
-
-    return new Response(
-      JSON.stringify({
-        success: true,
+      return ok({
         summary: {
           totalActive,
           totalPending,
@@ -143,25 +108,9 @@ export async function onRequestPost(context: any) {
         systemsNeedingReplenishment,
         poolStats,
         problematicQuestions: problematicQuestions.length,
-        timestamp: new Date().toISOString(),
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('[Cron] Pool replenishment check failed:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Check failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}
+      });
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+});

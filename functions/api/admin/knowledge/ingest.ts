@@ -7,7 +7,8 @@
  */
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
 
@@ -31,17 +32,12 @@ const IngestSchema = z.object({
   }),
 });
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/knowledge/ingest');
 
   if (!env.GEMINI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'GEMINI_API_KEY not configured' });
   }
 
   const { content, fileUri, category, displayName, ttlSeconds } = validated.body;
@@ -49,10 +45,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
   const hasFile = fileUri != null && fileUri.trim().length > 0;
 
   if (!hasContent && !hasFile) {
-    return new Response(
-      JSON.stringify({ error: 'Provide content (text) or fileUri (Gemini file)' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.VALIDATION_FAILED, { message: 'Provide content (text) or fileUri (Gemini file)' });
   }
 
   const ttl = ttlSeconds ?? TTL_24H;
@@ -92,13 +85,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
     if (!res.ok) {
       const text = await res.text();
       logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 300) });
-      return new Response(
-        JSON.stringify({
-          error: `Failed to create cache: ${res.status}`,
-          details: text.slice(0, 500),
-        }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return fail(ErrorCode.GEMINI_ERROR, {
+        message: `Failed to create cache: ${res.status}`,
+        details: text.slice(0, 500),
+      });
     }
 
     const data = (await res.json()) as {
@@ -110,10 +100,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
     const expireTime = data.expiration?.expireTime ?? data.expireTime;
 
     if (!cacheName) {
-      return new Response(JSON.stringify({ error: 'Invalid cache response: missing name' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.GEMINI_ERROR, { message: 'Invalid cache response: missing name' });
     }
 
     logger.info('PANCE knowledge cache created', {
@@ -129,17 +116,7 @@ export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (con
       ttl,
     });
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          cacheName,
-          displayName: name,
-          expireTime: expireTime ?? null,
-          ttlSeconds: ttl,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({ cacheName, displayName: name, expireTime: expireTime ?? null, ttlSeconds: ttl });
   } catch (error) {
     logger.error('Ingest error', {
       error: error instanceof Error ? error.message : String(error),

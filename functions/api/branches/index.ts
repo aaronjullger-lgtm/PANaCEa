@@ -5,7 +5,7 @@
  * AUTHENTICATED endpoint - requires valid auth token.
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -29,8 +29,6 @@ const CreateBranchSchema = z.object({
     createdBy: z.string().min(1, 'Creator ID is required'),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   ListBranchesSchema,

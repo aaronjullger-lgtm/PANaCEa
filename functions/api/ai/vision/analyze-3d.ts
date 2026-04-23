@@ -7,7 +7,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { createEndpointLogger } from '../../_shared/secureLogger';
@@ -61,8 +62,6 @@ function parse3DResponse(text: string): Array<{ label: string; box_3d: Box3D }> 
   return results;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = aiEndpoint(Analyze3DBodySchema, async (context) => {
   const { request, env, validated, auth } = context as {
     request: Request;
@@ -89,10 +88,7 @@ export const onRequestPost = aiEndpoint(Analyze3DBodySchema, async (context) => 
 
   const { imageBase64, mimeType, labels, prompt: customPrompt } = validated.body;
   if (imageBase64.length > MAX_IMAGE_BASE64) {
-    return new Response(JSON.stringify({ error: 'Image too large (max ~4MB base64)' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.VALIDATION_FAILED, { message: 'Image too large (max ~4MB base64)' });
   }
 
   const structureList = labels?.length
@@ -119,27 +115,14 @@ export const onRequestPost = aiEndpoint(Analyze3DBodySchema, async (context) => 
     });
 
     const boxes = parse3DResponse(result.text);
-    return new Response(
-      JSON.stringify({
-        data: {
-          boxes,
-          usageMetadata: result.usage,
-        },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
-    );
+    return ok({ boxes, usageMetadata: result.usage }, { headers: rateLimitHeaders as Record<string, string> });
   } catch (err: unknown) {
     const status = (err as { status?: number })?.status;
     const errMsg = (err as { error?: string })?.error ?? 'Unknown error';
     log.warn('Vision 3D Gemini error', { status, error: errMsg });
-    return new Response(
-      JSON.stringify({
-        error: status === 429 ? 'Rate limit exceeded' : '3D analysis failed',
-      }),
-      {
-        status: status === 429 ? 429 : 502,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-      }
+    return fail(
+      status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR,
+      { message: status === 429 ? 'Rate limit exceeded' : '3D analysis failed', headers: rateLimitHeaders as Record<string, string> }
     );
   }
 });

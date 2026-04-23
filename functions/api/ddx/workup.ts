@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { publicEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -30,8 +30,6 @@ interface WorkupStep {
   }[];
   cost?: 'low' | 'medium' | 'high';
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(WorkupSchema, async (context) => {
   const { env, validated } = context;

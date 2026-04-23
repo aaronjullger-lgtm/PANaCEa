@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -26,8 +26,6 @@ const UserStatsSchema = z.object({
   query: z.object({}).optional(), // No query params for this endpoint
 });
 const RECENT_ATTEMPT_LIMIT = 2_000;
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (context) => {
   const { env, auth } = context;

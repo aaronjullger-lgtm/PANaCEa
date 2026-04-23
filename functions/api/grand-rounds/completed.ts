@@ -4,7 +4,7 @@
  * Uses auth to resolve internal user; no query params required.
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -14,8 +14,6 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
 const CompletedSchema = z.object({ query: z.object({}) });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(CompletedSchema, async ({ env, auth }) => {
   const log = createEndpointLogger('/api/grand-rounds/completed', auth.userId);

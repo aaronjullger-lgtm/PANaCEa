@@ -19,7 +19,7 @@ import {
   safePrismaDisconnect,
   type EdgePrismaClient,
 } from './_shared/prisma-edge';
-import { authenticatedEndpoint, withCors } from './_shared/middleware';
+import { authenticatedEndpoint } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
 import { getFromCache, setInCache, isKVAvailable } from './_shared/cache';
 import { resolveOrCreateUserId } from './_shared/user-resolver';
@@ -722,4 +722,3 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 /**
  * OPTIONS handler for CORS preflight
  */
-export const onRequestOptions = withCors();

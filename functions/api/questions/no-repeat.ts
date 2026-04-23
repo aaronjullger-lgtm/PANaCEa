@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { fetchUnseenQuestions } from '../_shared/no-repeat';
@@ -23,8 +23,6 @@ const NoRepeatSchema = z.object({
     limit: z.number().int().min(1).max(100).optional().default(10),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(NoRepeatSchema, async (context) => {
   const { env, auth, validated } = context;

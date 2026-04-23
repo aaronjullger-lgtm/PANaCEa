@@ -19,7 +19,7 @@
 import { z } from 'zod';
 import { PANCE_TASK_CATEGORY_PERCENT } from '../../../lib/constants/blueprint';
 import { validateDistractors } from '../../../lib/distractorValidation';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { computeSemanticHash } from '../../../lib/utils/semanticHash';
@@ -58,8 +58,6 @@ const SYSTEMS = [
   'ID',
   'GU',
 ];
-
-export const onRequestOptions = withCors();
 
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory):
 // - Batch generation fans out 10-50 Gemini calls per invocation; the

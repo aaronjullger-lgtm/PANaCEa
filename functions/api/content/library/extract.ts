@@ -6,7 +6,8 @@
 import { unzipSync } from 'fflate';
 import { z } from 'zod';
 import { assertAdobeHostAllowed } from '../../_shared/adobeAllowlist';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import {
   createPdfAsset,
   downloadResultZip,
@@ -39,8 +40,6 @@ interface Env {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async (context) => {
   const { env, auth, validated } = context as {
     env: Env;
@@ -50,12 +49,9 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
   const log = createEndpointLogger('/api/content/library/extract', auth.userId);
 
   if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-    return new Response(
-      JSON.stringify({
-        error: 'Adobe PDF Services not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET)',
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return fail(ErrorCode.ENV_MISCONFIGURED, {
+      message: 'Adobe PDF Services not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET)',
+    });
   }
 
   const { resourceId, pdfUrl } = validated.body;
@@ -66,10 +62,7 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
       select: { id: true },
     });
     if (!resource) {
-      return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: `Resource not found: ${resourceId}` });
     }
   } finally {
     await safePrismaDisconnect(prisma);
@@ -78,17 +71,14 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
   try {
     const pdfRes = await fetch(pdfUrl);
     if (!pdfRes.ok) {
-      return new Response(JSON.stringify({ error: 'Failed to fetch PDF', status: pdfRes.status }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
+      return fail(ErrorCode.UPSTREAM_ERROR, {
+        message: `Failed to fetch PDF`,
+        details: String(pdfRes.status),
       });
     }
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
     if (pdfBytes.length > 100 * 1024 * 1024) {
-      return new Response(JSON.stringify({ error: 'PDF exceeds 100MB limit' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.VALIDATION_FAILED, { message: 'PDF exceeds 100MB limit' });
     }
 
     const token = await getPdfServicesToken(env);
@@ -100,22 +90,19 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
     const pollUrl = statusUrl.startsWith('http') ? statusUrl : `${PDF_SERVICES_BASE}${statusPath}`;
 
     log.info('Extract job started', { resourceId, jobId });
-    return new Response(
-      JSON.stringify({
+    return ok(
+      {
         jobId,
         resourceId,
         statusUrl: pollUrl,
         message: `Poll GET /api/content/library/extract?jobId=${jobId}&resourceId=${resourceId} for status.`,
-      }),
-      { status: 202, headers: { 'Content-Type': 'application/json' } }
+      },
+      { status: 202 }
     );
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Extract start failed';
     log.warn('Extract start failed', { error: message });
-    return new Response(JSON.stringify({ error: message }), {
-      status: 502,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.UPSTREAM_ERROR, { message });
   }
 });
 
@@ -137,10 +124,7 @@ export const onRequestGet = authenticatedEndpoint(
     const { jobId, resourceId } = validated;
 
     if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-      return new Response(JSON.stringify({ error: 'Adobe PDF Services not configured' }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.ENV_MISCONFIGURED, { message: 'Adobe PDF Services not configured' });
     }
 
     try {
@@ -168,14 +152,11 @@ export const onRequestGet = authenticatedEndpoint(
       last = statusRes;
 
       if (statusRes.status === 'failed') {
-        return new Response(
-          JSON.stringify({
-            status: 'failed',
-            errorCode: statusRes.errorCode,
-            errorMessage: statusRes.errorMessage ?? 'Extract job failed',
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+        return ok({
+          status: 'failed',
+          errorCode: statusRes.errorCode,
+          errorMessage: statusRes.errorMessage ?? 'Extract job failed',
+        });
       }
 
       if (statusRes.status === 'done' && statusRes.downloadUri) {
@@ -185,13 +166,7 @@ export const onRequestGet = authenticatedEndpoint(
         const jsonKey = Object.keys(unzipped).find((k) => k.endsWith('structuredData.json'));
         const jsonEntry = jsonKey ? unzipped[jsonKey] : undefined;
         if (!jsonEntry) {
-          return new Response(
-            JSON.stringify({
-              status: 'done',
-              error: 'structuredData.json not found in result zip',
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-          );
+          return ok({ status: 'done', error: 'structuredData.json not found in result zip' });
         }
         const structuredData = JSON.parse(new TextDecoder().decode(jsonEntry)) as Record<
           string,
@@ -216,10 +191,9 @@ export const onRequestGet = authenticatedEndpoint(
             status: uploadRes.status,
             error: errText.slice(0, 200),
           });
-          return new Response(
-            JSON.stringify({ status: 'done', error: 'Failed to upload structuredData to storage' }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-          );
+          return fail(ErrorCode.UPSTREAM_ERROR, {
+            message: 'Failed to upload structuredData to storage',
+          });
         }
 
         const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -233,23 +207,17 @@ export const onRequestGet = authenticatedEndpoint(
         }
 
         log.info('Extract completed and ingested', { resourceId, adobeDataPath: storagePath });
-        return new Response(JSON.stringify({ status: 'done', adobeDataPath: storagePath }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return ok({ status: 'done', adobeDataPath: storagePath });
       }
 
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     }
 
-    return new Response(
-      JSON.stringify({
-        status: 'in progress',
-        message: 'Polling timeout; call again to continue polling.',
-        lastStatus: last.status,
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return ok({
+      status: 'in progress',
+      message: 'Polling timeout; call again to continue polling.',
+      lastStatus: last.status,
+    });
   },
   { source: 'query' as const }
 );

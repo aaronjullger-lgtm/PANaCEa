@@ -2,7 +2,7 @@
 // Taxonomy‑driven question generation endpoint
 
 import { z } from 'zod';
-import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
@@ -15,8 +15,6 @@ const GenerateQuestionSchema = z.object({
   type: z.enum(['mcq', 'vignette', 'contrastive', 'simple']).default('vignette'),
   count: z.number().int().min(1).max(10).default(1),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * POST /api/admin/generate-question

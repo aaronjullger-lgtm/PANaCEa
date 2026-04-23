@@ -3,11 +3,10 @@
  * Edge port of routes/labs.ts
  */
 
-import { withCors, authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   undefined,
@@ -19,16 +18,10 @@ export const onRequestGet = authenticatedEndpoint(
       const tests = await prisma.labTest.findMany({
         orderBy: { name: 'asc' },
       });
-
-      return new Response(JSON.stringify(tests), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return ok(tests);
     } catch (error) {
       log.error('Failed to fetch lab tests', error);
-      return new Response(JSON.stringify({ error: 'Failed to fetch lab tests' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to fetch lab tests' });
     } finally {
       await safePrismaDisconnect(prisma);
     }

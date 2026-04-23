@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -30,8 +30,6 @@ const LabByIdSchema = z.object({
 // ============================================================================
 // HANDLERS
 // ============================================================================
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(LabByIdSchema, async ({ env, auth, params }) => {
   const log = createEndpointLogger('/api/reference/labs/[id]', auth.userId);

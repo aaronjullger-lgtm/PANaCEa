@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
@@ -41,8 +41,6 @@ const SessionPostSchema = z.object({
   /** Sprint 3: session lane — 'main' (blueprint-enforced) | 'eor' (rotation-specific) */
   sessionLane: z.enum(['main', 'eor', 'drill']).optional(),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   SessionGetSchema,

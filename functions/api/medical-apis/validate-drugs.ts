@@ -9,14 +9,12 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
 
 const ValidateDrugsSchema = z.object({
   drugs: z.array(z.string().min(1).max(200)).min(1).max(20),
 });
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(
   ValidateDrugsSchema,

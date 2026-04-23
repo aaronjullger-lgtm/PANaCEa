@@ -25,7 +25,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors, type AuthenticatedContext, type ValidatedContext } from '../../_shared/middleware';
+import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 // ─── Schema ──────────────────────────────────────────────────────
@@ -70,8 +70,6 @@ function getHierarchyLevel(questionOrder: string | null | undefined): number {
 }
 
 // ─── CORS ────────────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
 
 // ─── Handler ─────────────────────────────────────────────────────
 

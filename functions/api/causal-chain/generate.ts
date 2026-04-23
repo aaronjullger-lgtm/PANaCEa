@@ -18,7 +18,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
 import { callAIMultiProvider, GeminiModel, type GeminiError } from '../_shared/ai-service';
 
 // ─── Validation Schema ─────────────────────────────────────────────
@@ -212,8 +212,6 @@ function validateChainResponse(
 }
 
 // ─── CORS Preflight ────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
 
 // ─── POST Handler ──────────────────────────────────────────────────
 

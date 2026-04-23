@@ -11,11 +11,9 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../../_shared/middleware';
+import { publicEndpoint } from '../../_shared/middleware';
 import { authenticateRequest } from '../../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = publicEndpoint(
   z.object({}).passthrough(),

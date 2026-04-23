@@ -12,7 +12,8 @@
  * - Performance predictions
  */
 
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -117,12 +118,6 @@ interface LearningProfileResponse {
     nextSessionFocus: string[];
   };
 }
-
-// ============================================================================
-// CORS Handler
-// ============================================================================
-
-export const onRequestOptions = withCors();
 
 // ============================================================================
 // Main Handler
@@ -473,22 +468,10 @@ export const onRequestGet = authenticatedEndpoint(LearningProfileSchema, async (
       systemCount: systemMastery.length,
     });
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok({ profile: response.profile });
   } catch (error) {
     log.error('Error fetching learning profile', { error });
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to generate learning profile' });
   } finally {
     await safePrismaDisconnect(prisma);
   }

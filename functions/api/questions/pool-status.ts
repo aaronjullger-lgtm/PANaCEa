@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { getSystemWeight } from '../../../lib/constants/blueprint';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
@@ -40,8 +40,6 @@ const SYSTEMS = [
   'ID',
   'GU',
 ];
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (context) => {
   const { env, auth } = context;

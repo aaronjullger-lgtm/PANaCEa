@@ -9,7 +9,8 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../_shared/middleware';
+import { aiEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -114,8 +115,6 @@ function resolvePrompt(body: z.infer<typeof GenerateBodySchema>): string {
   return (PRESET_PROMPTS.parkinsonian_gait as string) ?? '';
 }
 
-export const onRequestOptions = withCors();
-
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): Gemini Veo video
 // generation (long-running op). In addition to the advisory 25 rpm 'ai' bucket
 // below, the endpoint keeps a stricter dedicated 'veo' rate-limiter inside the
@@ -143,23 +142,15 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
     const cachedUrl = await checkAtlasCache(env, preset);
     if (cachedUrl) {
       log.info('Veo atlas cache hit', { preset });
-      return new Response(
-        JSON.stringify({
-          data: {
-            status: 'ready',
-            videoUrl: cachedUrl,
-            preset,
-            fromCache: true,
-            disclaimer: 'AI-generated for education. Verify with clinical reference.',
-          },
-        }),
+      return ok(
         {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'private, max-age=86400',
-          },
-        }
+          status: 'ready',
+          videoUrl: cachedUrl,
+          preset,
+          fromCache: true,
+          disclaimer: 'AI-generated for education. Verify with clinical reference.',
+        },
+        { headers: { 'Cache-Control': 'private, max-age=86400' } }
       );
     }
   }
@@ -195,14 +186,12 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
     if (!res.ok) {
       const text = await res.text();
       log.warn('Veo predictLongRunning error', { status: res.status, text: text.slice(0, 300) });
-      return new Response(
-        JSON.stringify({
-          error: res.status === 429 ? 'Rate limit exceeded' : 'Failed to start video generation',
-          details: text.slice(0, 500),
-        }),
+      return fail(
+        res.status === 429 ? ErrorCode.RATE_LIMITED : ErrorCode.GEMINI_ERROR,
         {
-          status: res.status === 429 ? 429 : 502,
-          headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+          message: res.status === 429 ? 'Rate limit exceeded' : 'Failed to start video generation',
+          details: text.slice(0, 500),
+          headers: rateLimitHeaders as Record<string, string>,
         }
       );
     }
@@ -215,9 +204,9 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
         : null;
 
     if (!operationName) {
-      return new Response(JSON.stringify({ error: 'No operation name in Veo response' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      return fail(ErrorCode.GEMINI_ERROR, {
+        message: 'No operation name in Veo response',
+        headers: rateLimitHeaders as Record<string, string>,
       });
     }
 
@@ -227,30 +216,21 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
       ? `/api/veo/status?operation=${encodeURIComponent(operationName)}&preset=${encodeURIComponent(preset)}`
       : `/api/veo/status?operation=${encodeURIComponent(operationName)}`;
 
-    return new Response(
-      JSON.stringify({
-        data: {
-          operationName,
-          preset: preset ?? undefined,
-          status: 'pending',
-          pollUrl,
-          message: 'Video generation started. Poll the status URL for result.',
-        },
-      }),
+    return ok(
+      {
+        operationName,
+        preset: preset ?? undefined,
+        status: 'pending',
+        pollUrl,
+        message: 'Video generation started. Poll the status URL for result.',
+      },
       {
         status: 202,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store',
-          ...rateLimitHeaders,
-        },
+        headers: { 'Cache-Control': 'no-store', ...(rateLimitHeaders as Record<string, string>) },
       }
     );
   } catch (err) {
     log.error('Veo generate error', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
   }
 });

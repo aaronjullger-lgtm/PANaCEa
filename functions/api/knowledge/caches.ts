@@ -6,13 +6,12 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
+import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const EmptySchema = z.object({});
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) => {
   const { env, auth } = context as {
@@ -27,10 +26,7 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       select: { id: true },
     });
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
     }
     const now = new Date();
     const caches = await prisma.knowledgeCache.findMany({
@@ -63,10 +59,7 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
       })
     );
     logger.info('Knowledge caches listed', { userId: user.id, count: list.length });
-    return new Response(JSON.stringify({ caches: list }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok({ caches: list });
   } finally {
     await safePrismaDisconnect(prisma);
   }

@@ -14,7 +14,8 @@
  * are unique by system (one entry per system with sufficient attempts).
  */
 
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint } from '../../_shared/middleware';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -140,12 +141,6 @@ const GAP_TYPES: Record<string, GapTypeValue> = {
 };
 
 // ============================================================================
-// CORS Handler
-// ============================================================================
-
-export const onRequestOptions = withCors();
-
-// ============================================================================
 // Main Handler
 // ============================================================================
 
@@ -158,10 +153,7 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
     prisma = createEdgePrismaClient(env.DATABASE_URL);
     const userId = await resolveUserId(prisma, auth.userId);
     if (!userId) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
     }
 
     // Fetch question attempts for analysis
@@ -529,22 +521,10 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
       significantGaps,
     });
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok({ analysis: response.analysis });
   } catch (error) {
     log.error('Error fetching concept gaps', { error });
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return fail(ErrorCode.INTERNAL_ERROR, { message: 'Failed to analyze concept gaps' });
   } finally {
     await safePrismaDisconnect(prisma);
   }

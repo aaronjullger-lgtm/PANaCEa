@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -18,8 +18,6 @@ const StatisticsUpdateSchema = z.object({
     refreshTimingAggregates: z.boolean().optional().default(false),
   }),
 });
-
-export const onRequestOptions = withCors();
 
 /**
  * PATCH /api/user/statistics

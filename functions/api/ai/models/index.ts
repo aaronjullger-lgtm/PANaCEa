@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint, withCors } from '../../_shared/middleware';
+import { aiEndpoint } from '../../_shared/middleware';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { callGemini, GeminiModel, thinkingBudget, supportsThinking } from '../../_shared/ai-service';
 
@@ -31,7 +31,6 @@ const GeminiRequestSchema = z.object({
 });
 
 // Handle CORS preflight
-export const onRequestOptions = withCors();
 
 /**
  * POST /api/gemini

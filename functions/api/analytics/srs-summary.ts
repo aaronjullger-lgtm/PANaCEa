@@ -9,7 +9,7 @@
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint } from '../_shared/middleware';
 import { resolveUserId } from '../_shared/user-resolver';
 import { retrievability } from '../../../lib/fsrs-retrievability';
 import { srsSummaryQuerySchema } from '../_shared/zodSchemas';
@@ -44,8 +44,6 @@ interface SRSAnalyticsSummary {
   // Trend data (last 7 days)
   stabilityTrend: { date: string; avgStability: number }[];
 }
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   srsSummaryQuerySchema,
