@@ -154,10 +154,33 @@ export interface ReviewSnapshot {
  * w[19]: Retrievability factor (replaces hardcoded 9)
  * w[20]: Retrievability decay exponent (NEW in v6)
  */
+/**
+ * Algorithm version tag persisted alongside per-user parameters.
+ *
+ * '6' — stock FSRS v6. w.length === 21. Scheduler returns integer-day
+ *       intervals via `Math.max(I, 1)`. This is the current production
+ *       default. Most users are pinned to '6' until v7 stabilizes upstream.
+ *
+ * '7-alpha' — PANaCEa's v7-ready extension. w.length === 29. Scheduler
+ *       returns fractional intervals (down to `V7_MIN_INTERVAL_DAYS`).
+ *       Uses the 8-parameter forgetting curve defined in lib/fsrs-v7.ts.
+ *       NOTE: the exact v7 curve formula is NOT yet published upstream
+ *       (as of 2026-04). PANaCEa's implementation is a documented
+ *       placeholder that can be swapped for the canonical formula when
+ *       ts-fsrs ships v7. See lib/fsrs-v7.ts for the full disclosure.
+ *
+ * The version tag is how `loadParametersSafely()` decides which algorithm
+ * branch to construct. Params without a version field default to '6' for
+ * backward compatibility with existing DB rows.
+ */
+export type FSRSAlgorithmVersion = '6' | '7-alpha';
+
 export interface FSRSParameters {
   request_retention: number;
   maximum_interval: number;
   w: number[];
+  /** Algorithm version for this parameter set. Defaults to '6' if absent. */
+  version?: FSRSAlgorithmVersion;
 }
 
 /**
@@ -205,7 +228,9 @@ export const defaultParameters: FSRSParameters = {
  * @returns true iff w[19] and w[20] are within the canonical v6 scale
  */
 export function isParamsOnCurrentScale(w: number[] | null | undefined): boolean {
-  if (!Array.isArray(w) || w.length < 21) return false;
+  // Accepts v6 (21) and v7-alpha (29). Length outside these is malformed.
+  if (!Array.isArray(w)) return false;
+  if (w.length !== 21 && w.length !== 29) return false;
   const w19 = w[19];
   const w20 = w[20];
   if (w19 == null || w20 == null) return false;
@@ -213,7 +238,26 @@ export function isParamsOnCurrentScale(w: number[] | null | undefined): boolean 
   // Canonical v6 bounds (matches PARAM_BOUNDS in both optimizers post-fix).
   if (w19 < 0.01 || w19 > 1.0) return false;
   if (w20 < 0.1 || w20 > 5.0) return false;
+  // For v7-alpha (29 params), also verify w[21..28] are finite. No strict
+  // bounds yet because the 8-parameter curve is still an open research
+  // question; the optimizer enforces bounds at fit time.
+  if (w.length === 29) {
+    for (let i = 21; i < 29; i++) {
+      const v = w[i];
+      if (v == null || !Number.isFinite(v)) return false;
+    }
+  }
   return true;
+}
+
+/**
+ * Infer algorithm version from a parameter array length (when the `version`
+ * field wasn't persisted). 21 → '6'; 29 → '7-alpha'; anything else → '6' as
+ * a safe fallback (and the array will fail isParamsOnCurrentScale anyway).
+ */
+export function inferAlgorithmVersion(w: number[] | null | undefined): FSRSAlgorithmVersion {
+  if (Array.isArray(w) && w.length === 29) return '7-alpha';
+  return '6';
 }
 
 /**
@@ -230,18 +274,23 @@ export function loadParametersSafely(stored: unknown): FSRSParameters {
     const w = (stored as { w?: unknown }).w;
     if (isParamsOnCurrentScale(w as number[])) {
       const record = stored as Partial<FSRSParameters>;
+      // Persisted version wins; otherwise infer from length.
+      const version: FSRSAlgorithmVersion =
+        record.version ?? inferAlgorithmVersion(w as number[]);
       return {
         request_retention: record.request_retention ?? defaultParameters.request_retention,
         maximum_interval: record.maximum_interval ?? defaultParameters.maximum_interval,
         w: [...(w as number[])],
+        version,
       };
     }
   }
-  // Off-scale / null / malformed → use canonical defaults.
+  // Off-scale / null / malformed → use canonical v6 defaults (safest fallback).
   return {
     request_retention: defaultParameters.request_retention,
     maximum_interval: defaultParameters.maximum_interval,
     w: [...defaultParameters.w],
+    version: '6',
   };
 }
 
