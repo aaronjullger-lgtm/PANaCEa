@@ -16,7 +16,8 @@ import { auditLog } from '../../_shared/auditLog';
 import {
   adminEndpoint,
   type AuthenticatedContext,
-  type ValidatedContext,, withCors} from '../../_shared/middleware';
+  type ValidatedContext,
+} from '../../_shared/middleware';
 
 // Single approval schema
 const SingleApproveSchema = z.object({
@@ -36,8 +37,6 @@ type SingleApproveInput = z.infer<typeof SingleApproveSchema>;
 type BatchApproveInput = z.infer<typeof BatchApproveSchema>;
 
 // Single media approval
-export const onRequestOptions = withCors();
-
 export const onRequestPost = adminEndpoint(
   SingleApproveSchema,
   async (context: AuthenticatedContext & ValidatedContext<SingleApproveInput>) => {

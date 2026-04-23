@@ -9,7 +9,8 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import {
   authenticatedEndpoint,
   AuthenticatedContext,
-  ValidatedContext,, withCors} from '../_shared/middleware';
+  ValidatedContext,
+} from '../_shared/middleware';
 import { relatedContentSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
@@ -25,8 +26,6 @@ type RelatedContentQuery = z.infer<typeof relatedContentSchema>;
  * - conceptId: Specific concept ID to fetch (optional)
  * - limit: Maximum results (default: 5)
  */
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(
   relatedContentSchema,
   async (context: AuthenticatedContext & ValidatedContext<RelatedContentQuery>) => {

@@ -653,7 +653,8 @@ export function getEndpointRateLimitConfig(endpoint: string): {
 // Re-export original middleware functions for compatibility
 export {
   originalWithEnvCheck as withEnvCheck,
-  originalWithCors as originalWithAuth as withAuth,
+  originalWithCors as withCors,
+  originalWithAuth as withAuth,
   originalWithAdminRole as withAdminRole,
   originalWithRefineryRole as withRefineryRole,
   originalWithValidation as withValidation,

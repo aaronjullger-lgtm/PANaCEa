@@ -137,8 +137,6 @@ const TEACHBACK_TOPICS: TeachBackTopic[] = [
   },
 ];
 
-export const onRequestOptions = withCors();
-
 export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {

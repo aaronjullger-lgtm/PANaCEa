@@ -12,7 +12,8 @@ import {
   adminEndpoint,
   adminAuthenticatedEndpoint,
   type AuthenticatedContext,
-  type ValidatedContext,, withCors} from '../../_shared/middleware';
+  type ValidatedContext,
+} from '../../_shared/middleware';
 import { logger } from '../../_shared/secureLogger';
 import { auditLog } from '../../_shared/auditLog';
 
@@ -40,8 +41,6 @@ const MediaGetSchema = z.object({
 /**
  * GET /api/admin/media/[id] - Get a single media asset
  */
-export const onRequestOptions = withCors();
-
 export const onRequestGet = adminAuthenticatedEndpoint(
   MediaGetSchema,
   async (context: AuthenticatedContext & ValidatedContext<any> & { params: { id: string } }) => {

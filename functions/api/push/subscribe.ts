@@ -25,8 +25,6 @@ const subscribeSchema = z.object({
   }),
 });
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = authenticatedEndpoint(
   subscribeSchema,
   async (context) => {

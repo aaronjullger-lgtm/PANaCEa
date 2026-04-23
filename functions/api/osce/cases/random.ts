@@ -9,7 +9,8 @@ import { z } from 'zod';
 import {
   authenticatedEndpoint,
   type AuthenticatedContext,
-  type ValidatedContext,, withCors} from '../../_shared/middleware';
+  type ValidatedContext,
+} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { logger } from '../../_shared/secureLogger';
 
@@ -17,8 +18,6 @@ import { logger } from '../../_shared/secureLogger';
 const RandomCaseSchema = z.object({}).strict();
 
 type RandomCaseInput = z.infer<typeof RandomCaseSchema>;
-
-export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
   RandomCaseSchema,

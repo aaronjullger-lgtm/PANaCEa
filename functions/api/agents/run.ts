@@ -19,7 +19,8 @@ import { z } from 'zod';
 import {
   aiEndpoint,
   type AuthenticatedContext,
-  type ValidatedContext,, withCors} from '../_shared/middleware';
+  type ValidatedContext,
+} from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -109,8 +110,6 @@ interface AgentRunResponsePayload {
 }
 
 // ─── Handler ────────────────────────────────────────────────────────────────
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   AgentRunRequestSchema,

@@ -32,7 +32,8 @@ import { z } from 'zod';
 import {
   aiEndpoint,
   type AuthenticatedContext,
-  type ValidatedContext,, withCors} from '../../_shared/middleware';
+  type ValidatedContext,
+} from '../../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -327,8 +328,6 @@ function extractGroundingSources(groundingMetadata: unknown): GroundingSource[] 
 // -----------------------------------------------------------------------------
 // Main Handler
 // -----------------------------------------------------------------------------
-
-export const onRequestOptions = withCors();
 
 export const onRequestPost = aiEndpoint(
   TutorMessageSchema,

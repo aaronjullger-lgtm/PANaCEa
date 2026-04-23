@@ -39,8 +39,6 @@ const GenerateVariantsBodySchema = z.object({
   maxGenerations: z.number().int().min(1).max(500).optional(),
 });
 
-export const onRequestOptions = withCors();
-
 export const onRequestPost = cronEndpoint({
   schema: GenerateVariantsBodySchema,
   handler: async (context) => {

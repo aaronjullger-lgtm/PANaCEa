@@ -11,7 +11,8 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import {
   authenticatedEndpoint,
   AuthenticatedContext,
-  ValidatedContext,, withCors} from '../_shared/middleware';
+  ValidatedContext,
+} from '../_shared/middleware';
 import { labCasesQuerySchema, labCasesActionSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
@@ -437,8 +438,6 @@ function parseLabValue(
  * - limit: Max number of cases to return (default 20)
  * - shuffle: Whether to randomize order (default true)
  */
-export const onRequestOptions = withCors();
-
 export const onRequestGet = authenticatedEndpoint(
   labCasesQuerySchema,
   async (context: AuthenticatedContext & ValidatedContext<GetQueryType>) => {

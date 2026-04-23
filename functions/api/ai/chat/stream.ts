@@ -237,8 +237,6 @@ async function processGeminiStream(
  * inside `aiStreamingEndpoint`; this handler is only reached for authenticated
  * callers within budget.
  */
-export const onRequestOptions = withCors();
-
 export const onRequestPost = aiStreamingEndpoint(
   async (context) => {
     const { request, auth } = context;

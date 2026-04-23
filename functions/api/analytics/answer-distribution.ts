@@ -22,8 +22,6 @@ const querySchema = z.object({
 
 const MIN_ATTEMPTS = 10;
 
-export const onRequestOptions = withCors();
-
 export interface AnswerDistributionEntry {
   optionLetter: string;
   count: number;

@@ -24,8 +24,6 @@ const querySchema = z.object({
 
 const MIN_ATTEMPTS = 10;
 
-export const onRequestOptions = withCors();
-
 export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {

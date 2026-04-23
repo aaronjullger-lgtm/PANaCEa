@@ -50,8 +50,6 @@ export interface ReviewForecastResponse {
   timezone: string;
 }
 
-export const onRequestOptions = withCors();
-
 export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {
