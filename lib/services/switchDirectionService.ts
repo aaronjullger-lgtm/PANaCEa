@@ -106,8 +106,11 @@ export function analyzeSwitchDirections(
   let firstSwitchDirection: 'WR' | 'RW' | 'WW' | null = null;
 
   for (let i = 1; i < interactions.length; i++) {
-    const prevCorrect = interactions[i - 1].option_id === correctOptionId;
-    const currCorrect = interactions[i].option_id === correctOptionId;
+    const prev = interactions[i - 1];
+    const curr = interactions[i];
+    if (!prev || !curr) continue; // noUncheckedIndexedAccess: narrow
+    const prevCorrect = prev.option_id === correctOptionId;
+    const currCorrect = curr.option_id === correctOptionId;
 
     if (!prevCorrect && currCorrect) {
       wrongToRight++;

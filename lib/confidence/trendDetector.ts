@@ -85,14 +85,17 @@ export function linearTrendFit(values: number[]): {
 
   let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
   for (let i = 0; i < n; i++) {
+    // noUncheckedIndexedAccess: i < n guarantees defined under a dense array,
+    // but TS can't prove that without an explicit narrow.
+    const v = values[i] ?? 0;
     sumX += i;
-    sumY += values[i];
-    sumXY += i * values[i];
+    sumY += v;
+    sumXY += i * v;
     sumX2 += i * i;
   }
 
   const denom = n * sumX2 - sumX * sumX;
-  if (Math.abs(denom) < 1e-10) return { slope: 0, intercept: values[0], rSquared: 0 };
+  if (Math.abs(denom) < 1e-10) return { slope: 0, intercept: values[0] ?? 0, rSquared: 0 };
 
   const slope = (n * sumXY - sumX * sumY) / denom;
   const intercept = (sumY - slope * sumX) / n;
@@ -101,9 +104,10 @@ export function linearTrendFit(values: number[]): {
   const meanY = sumY / n;
   let ssRes = 0, ssTot = 0;
   for (let i = 0; i < n; i++) {
+    const v = values[i] ?? 0;
     const predicted = intercept + slope * i;
-    ssRes += (values[i] - predicted) ** 2;
-    ssTot += (values[i] - meanY) ** 2;
+    ssRes += (v - predicted) ** 2;
+    ssTot += (v - meanY) ** 2;
   }
   const rSquared = ssTot > 0 ? 1 - ssRes / ssTot : 0;
 

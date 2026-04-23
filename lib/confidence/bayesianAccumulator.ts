@@ -100,6 +100,8 @@ export function accumulateConfidence(
 
   for (let i = 0; i < trimmed.length; i++) {
     const review = trimmed[i];
+    // noUncheckedIndexedAccess: guard against hole reads from a trimmed slice.
+    if (!review) continue;
 
     // Exponential decay: newest = 1.0, older = decay^i
     const ageWeight = Math.pow(config.decayFactor, i);

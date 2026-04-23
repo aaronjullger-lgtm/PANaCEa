@@ -78,10 +78,14 @@ export function computeMedianRt(samples: RtSample[]): MedianRtResult | null {
   const mid = Math.floor(sorted.length / 2);
 
   // For even-length arrays, use the lower-middle element (floor median)
-  // This is simpler and consistent with the audit spec
+  // This is simpler and consistent with the audit spec.
+  // noUncheckedIndexedAccess: validRts.length >= 1 was guarded above, so
+  // sorted[mid] is always defined; fall back to 0 to keep TS happy.
+  const a = sorted[mid - 1] ?? 0;
+  const b = sorted[mid] ?? 0;
   const medianMs = sorted.length % 2 === 0
-    ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
-    : sorted[mid];
+    ? Math.round((a + b) / 2)
+    : b;
 
   return {
     medianMs,

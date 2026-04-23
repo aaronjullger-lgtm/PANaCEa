@@ -62,7 +62,9 @@ export async function applyAttemptToUserStatistics(
       ...derived,
     },
     create: {
+      id: crypto.randomUUID(),
       userId,
+      updatedAt: new Date(),
       ...updatedTotals,
       avgTimePerQuestion,
       systemStats: updatedSystemStats,
@@ -127,7 +129,9 @@ export async function updateTimingAggregates(
       ...(typeof avgSessionLength === 'number' ? { avgSessionLength } : {}),
     },
     create: {
+      id: crypto.randomUUID(),
       userId,
+      updatedAt: new Date(),
       totalQuestions: 0,
       correctAnswers: 0,
       systemStats: {},

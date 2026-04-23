@@ -167,16 +167,17 @@ export function optimizeOneParameter(
   learningRate: number
 ): { params: FSRSParameters; improved: boolean } {
   const currentLoss = computeLogLoss(reviews, currentParams);
-  const bounds = PARAM_BOUNDS[paramIndex] ?? [0.01, 10.0];
+  const bounds = (PARAM_BOUNDS[paramIndex] ?? [0.01, 10.0]) as [number, number];
+  const currW = currentParams.w[paramIndex] ?? 0;
   // Try positive perturbation
   const wPlus = [...currentParams.w];
-  wPlus[paramIndex] = Math.min(bounds[1], wPlus[paramIndex] + learningRate);
+  wPlus[paramIndex] = Math.min(bounds[1], currW + learningRate);
   const paramsPlus = { ...currentParams, w: wPlus };
   const lossPlus = computeLogLoss(reviews, paramsPlus);
 
   // Try negative perturbation
   const wMinus = [...currentParams.w];
-  wMinus[paramIndex] = Math.max(bounds[0], wMinus[paramIndex] - learningRate);
+  wMinus[paramIndex] = Math.max(bounds[0], currW - learningRate);
   const paramsMinus = { ...currentParams, w: wMinus };
   const lossMinus = computeLogLoss(reviews, paramsMinus);
 

@@ -83,7 +83,12 @@ export async function computeSessionRegularity(
   // Compute inter-session intervals in days
   const intervals: number[] = [];
   for (let i = 1; i < sessionDates.length; i++) {
-    const diff = (new Date(sessionDates[i]).getTime() - new Date(sessionDates[i - 1]).getTime()) / 86400000;
+    const curr = sessionDates[i];
+    const prev = sessionDates[i - 1];
+    // noUncheckedIndexedAccess: both indices are within bounds under a dense
+    // array but TS still requires the narrow before Date() can accept them.
+    if (curr === undefined || prev === undefined) continue;
+    const diff = (new Date(curr).getTime() - new Date(prev).getTime()) / 86400000;
     intervals.push(diff);
   }
 

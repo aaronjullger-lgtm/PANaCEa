@@ -1621,6 +1621,7 @@ export async function submitDrillReview(
               },
             },
             create: {
+              id: crypto.randomUUID(),
               userId,
               conditionId: question.conditionId,
               taskType,
@@ -1857,7 +1858,10 @@ export async function submitDrillReview(
         const reviewResult = {
           conceptId: question.conditionId!,
           grade: isCorrect ? 1 : 0,
-          stability: updatedCard?.stability ?? 1,
+          // updatedCard is block-scoped to the FSRS update branch above; use the
+          // already-exported schedule which carries the same stability value
+          // and is accessible in this outer scope.
+          stability: fsrsSchedule?.stability ?? 1,
         };
 
         fireCredits = fireModule.computeCredits(reviewResult, prereqEdges)

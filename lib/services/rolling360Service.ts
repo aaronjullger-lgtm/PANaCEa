@@ -279,6 +279,7 @@ export class Rolling360Service {
         if (!stats) {
           stats = await tx.userRolling360Stats.create({
             data: {
+              id: crypto.randomUUID(),
               userId,
               systemStats: {},
               weakestSystems: [],
@@ -348,12 +349,14 @@ export class Rolling360Service {
         } else {
           bufferSlot = await tx.rolling360Buffer.create({
             data: {
+              id: crypto.randomUUID(),
               userId,
               slotIndex: nextSlotIndex,
               attemptId,
               isCorrect,
               systemNormalized: normalizedSystem,
               answeredAt,
+              updatedAt: new Date(),
             },
           });
         }
@@ -663,6 +666,7 @@ export class Rolling360Service {
       // Create fresh stats record
       await tx.userRolling360Stats.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           systemStats: {},
           weakestSystems: [],
@@ -782,12 +786,14 @@ export class Rolling360Service {
     } else {
       await tx.rolling360Buffer.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           slotIndex: nextSlotIndex,
           attemptId,
           isCorrect,
           systemNormalized: normalizedSystem,
           answeredAt,
+          updatedAt: new Date(),
         },
       });
     }

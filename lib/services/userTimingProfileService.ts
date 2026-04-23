@@ -87,9 +87,11 @@ export function classifyComplexityTier(questionText: string): ComplexityTier {
 function median(sorted: number[]): number {
   if (sorted.length === 0) return 0;
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
+  // noUncheckedIndexedAccess: length > 0 means sorted[mid] is defined; guards are
+  // belt-and-suspenders to satisfy TS strict indexing.
+  const a = sorted[mid - 1] ?? 0;
+  const b = sorted[mid] ?? 0;
+  return sorted.length % 2 === 0 ? (a + b) / 2 : b;
 }
 
 /**

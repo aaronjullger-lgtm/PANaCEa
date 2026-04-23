@@ -234,9 +234,13 @@ export async function buildCalibrationPairs(
   const pairs: Array<{ confidence: number; wasCorrect: boolean }> = [];
   for (const [, conditionReviews] of byCondition) {
     for (let i = 0; i < conditionReviews.length - 1; i++) {
+      const curr = conditionReviews[i];
+      const next = conditionReviews[i + 1];
+      // noUncheckedIndexedAccess: both indices are within bounds but TS needs the narrow
+      if (!curr || !next) continue;
       pairs.push({
-        confidence: conditionReviews[i].confidence,
-        wasCorrect: conditionReviews[i + 1].wasCorrect,
+        confidence: curr.confidence,
+        wasCorrect: next.wasCorrect,
       });
     }
   }
