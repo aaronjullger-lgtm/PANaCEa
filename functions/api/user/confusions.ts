@@ -1,1 +1,1 @@
-export { onRequestGet, onRequestOptions } from './confusion';
+export { onRequestGet } from './confusion';

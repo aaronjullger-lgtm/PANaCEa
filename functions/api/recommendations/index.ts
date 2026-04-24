@@ -5,4 +5,4 @@
  * Cloudflare Pages Functions requires index.ts for /api/recommendations
  */
 
-export { onRequestGet, onRequestOptions } from './list';
+export { onRequestGet } from './list';
