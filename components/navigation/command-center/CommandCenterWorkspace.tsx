@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { ArrowRight, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,9 +42,18 @@ export interface CommandCenterHubProps {
   resumeContext?: { current: number; total: number; remaining: number };
   onResumeSession?: () => void;
   initialStudyToolsTab?: 'training' | 'resources' | 'analytics';
+  availableMinutes?: number;
 }
 
 type BriefingActionKind = 'resume' | 'baseline' | 'focused' | 'review' | 'fallback';
+export type DashboardPersonalizationState =
+  | 'active_session'
+  | 'new_user'
+  | 'review_debt_urgent'
+  | 'weak_pattern_detected'
+  | 'exam_soon'
+  | 'limited_time'
+  | 'fallback';
 type SignalTone = 'neutral' | 'positive' | 'attention' | 'risk';
 
 interface QuietSignal {
@@ -54,10 +63,12 @@ interface QuietSignal {
 }
 
 interface BriefingModel {
+  state: DashboardPersonalizationState;
   actionKind: BriefingActionKind;
   headline: string;
   targetTopic: string;
   questionCount: number;
+  workLabel: string;
   estimatedMinutes: number;
   impactLabel: string;
   rationale: string;
@@ -81,6 +92,9 @@ const TONIGHT_PLAN = [
   { label: 'Quick review', minutes: 12 },
   { label: 'Notes / reset', minutes: 5 },
 ];
+const REVIEW_DEBT_THRESHOLD = 18;
+const EXAM_SOON_DAYS = 21;
+const LIMITED_TIME_MINUTES = 15;
 
 function formatTopic(raw: string | null | undefined): string {
   if (!raw) return FALLBACK_TARGET;
@@ -98,6 +112,58 @@ function getTargetTopic(plan: TodayPlanData | null, growthAreas: string[]): stri
   if (system) return `${formatTopic(system)} diagnostic pattern`;
   if (growthAreas[0]) return `${formatTopic(growthAreas[0])} diagnostic pattern`;
   return FALLBACK_TARGET;
+}
+
+function getDaysUntil(dateValue: string | null | undefined): number | null {
+  if (!dateValue) return null;
+  const target = new Date(dateValue);
+  if (Number.isNaN(target.getTime())) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+
+  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function parseAvailableMinutes(search: string): number | null {
+  const params = new URLSearchParams(search);
+  const raw = params.get('minutes') ?? params.get('time');
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+export function selectDashboardPersonalizationState({
+  availableMinutes,
+  dueCount,
+  examDaysRemaining,
+  hasActiveSession,
+  hasBaseline,
+  hasWeakPattern,
+  retentionPriority,
+}: {
+  availableMinutes?: number | null;
+  dueCount: number;
+  examDaysRemaining?: number | null;
+  hasActiveSession: boolean;
+  hasBaseline: boolean;
+  hasWeakPattern: boolean;
+  retentionPriority?: number | null;
+}): DashboardPersonalizationState {
+  if (hasActiveSession) return 'active_session';
+  if (!hasBaseline) return 'new_user';
+  if (dueCount >= REVIEW_DEBT_THRESHOLD || (dueCount >= 10 && (retentionPriority ?? 0) >= 75)) {
+    return 'review_debt_urgent';
+  }
+  if (examDaysRemaining != null && examDaysRemaining >= 0 && examDaysRemaining <= EXAM_SOON_DAYS) {
+    return 'exam_soon';
+  }
+  if (availableMinutes != null && availableMinutes <= LIMITED_TIME_MINUTES) {
+    return 'limited_time';
+  }
+  if (hasWeakPattern) return 'weak_pattern_detected';
+  return 'fallback';
 }
 
 function recentAccuracy(records: PerformanceRecord[]): number | null {
@@ -173,6 +239,7 @@ function buildBriefingModel({
   planError,
   profile,
   resumeContext,
+  availableMinutes,
 }: {
   dueCount: number;
   examLabel: string;
@@ -189,11 +256,22 @@ function buildBriefingModel({
   planError: string | null;
   profile: { currentRotation?: string | null; eorTestDate?: string | null; examDate?: string | null } | null;
   resumeContext?: { current: number; total: number; remaining: number };
+  availableMinutes?: number | null;
 }): BriefingModel {
   const hasBaseline = performanceData.length >= 5;
   const targetTopic = getTargetTopic(plan, growthAreas);
   const questionCount = plan?.recommendedTargetedCount || 12;
   const focusSystem = dominantSystem(performanceData, growthAreas);
+  const examDaysRemaining = getDaysUntil(profile?.eorTestDate ?? profile?.examDate);
+  const state = selectDashboardPersonalizationState({
+    availableMinutes,
+    dueCount,
+    examDaysRemaining,
+    hasActiveSession,
+    hasBaseline,
+    hasWeakPattern: Boolean(plan?.targetedConditions?.length || growthAreas.length),
+    retentionPriority: plan?.retentionPriority ?? null,
+  });
   const detailRows = [
     {
       label: 'Risk map',
@@ -227,13 +305,15 @@ function buildBriefingModel({
     },
   ];
 
-  if (hasActiveSession && onResumeSession) {
+  if (state === 'active_session' && onResumeSession) {
     const remaining = resumeContext?.remaining;
     return {
+      state,
       actionKind: 'resume',
       headline: 'Finish the block already in motion:',
       targetTopic: 'current session',
       questionCount: remaining ?? 12,
+      workLabel: remaining === 1 ? 'question' : 'questions',
       estimatedMinutes: 15,
       impactLabel: 'High continuity',
       rationale:
@@ -257,17 +337,19 @@ function buildBriefingModel({
     };
   }
 
-  if (!hasBaseline) {
+  if (state === 'new_user') {
     return {
+      state,
       actionKind: 'baseline',
       headline: 'Set your baseline:',
       targetTopic: '10 mixed questions',
       questionCount: 10,
+      workLabel: 'mixed questions',
       estimatedMinutes: 12,
       impactLabel: 'Required signal',
       rationale: 'PANaCEa needs a short baseline before it can choose your highest-value repair target.',
       expectedResults: ['A usable first signal for personalization.', 'A cleaner next recommendation after the block.'],
-      primaryCta: 'Start 10-question baseline',
+      primaryCta: 'Set baseline',
       whyThis: [
         'There is not enough recent behavior to personalize safely.',
         'Ten mixed questions are enough to identify the first pattern.',
@@ -290,12 +372,121 @@ function buildBriefingModel({
     };
   }
 
+  if (state === 'review_debt_urgent') {
+    const reviewCount = Math.max(dueCount, REVIEW_DEBT_THRESHOLD);
+    return {
+      state,
+      actionKind: 'review',
+      headline: 'Clear review window:',
+      targetTopic: 'memory due now',
+      questionCount: reviewCount,
+      workLabel: reviewCount === 1 ? 'review' : 'reviews',
+      estimatedMinutes: 22,
+      impactLabel: 'Urgent recall',
+      rationale:
+        'Your review window is now the highest-value move because recall decay is competing with new learning.',
+      expectedResults: [
+        'Lower short-term forgetting risk before adding new material.',
+        'Reopen the focused repair block after the review window is cleared.',
+      ],
+      primaryCta: 'Clear review window',
+      whyThis: [
+        `${reviewCount} reviews are waiting.`,
+        'Memory protection is temporarily more valuable than another new block.',
+        'The dashboard will retarget after the window is cleared.',
+      ],
+      planSteps: [
+        { label: 'Clear review window', minutes: 22 },
+        { label: 'Missed pattern skim', minutes: 8 },
+        { label: 'Reset', minutes: 3 },
+      ],
+      quietSignals: [
+        { label: 'Readiness', value: plan ? `${plan.readinessPriority}%` : 'tracking', tone: 'neutral' },
+        { label: 'Review debt', value: `${reviewCount}`, tone: 'risk' },
+        { label: 'Reviews later', value: 'now', tone: 'risk' },
+        { label: 'Streak', value: `${calculateDayStreak(performanceData).current || 3}d`, tone: 'positive' },
+      ],
+      detailRows,
+    };
+  }
+
+  if (state === 'exam_soon') {
+    const daysLabel = examDaysRemaining === 0 ? 'today' : `${examDaysRemaining}d`;
+    return {
+      state,
+      actionKind: 'focused',
+      headline: 'Exam-risk repair block:',
+      targetTopic,
+      questionCount,
+      workLabel: 'questions',
+      estimatedMinutes: 30,
+      impactLabel: 'Exam risk',
+      rationale: `The exam window is close (${daysLabel}), so PANaCEa is prioritizing the repair target most likely to cost points.`,
+      expectedResults: [
+        `Reduce near-term ${examLabel} risk in ${dominantSystem(performanceData, growthAreas).toLowerCase()}.`,
+        'Convert recent misses into a focused final-review signal.',
+      ],
+      primaryCta: 'Exam-risk repair block',
+      whyThis: [
+        `${examLabel} timing is now inside the ${EXAM_SOON_DAYS}-day risk window.`,
+        `The current repair target is ${targetTopic}.`,
+        dueCount > 0 ? 'Review debt stays visible below, but exam-risk repair is first.' : 'No urgent review debt is competing with this block.',
+      ],
+      planSteps: [
+        { label: 'Exam-risk block', minutes: 30 },
+        { label: 'Error-pattern review', minutes: 10 },
+        { label: 'Reset', minutes: 5 },
+      ],
+      quietSignals: [
+        { label: 'Readiness', value: plan ? `${plan.readinessPriority}%` : '62%', tone: 'attention' },
+        { label: 'Exam window', value: daysLabel, tone: 'risk' },
+        { label: 'Reviews later', value: String(dueCount || 0), tone: dueCount > 0 ? 'attention' : 'neutral' },
+        { label: 'Streak', value: `${calculateDayStreak(performanceData).current || 3}d`, tone: 'positive' },
+      ],
+      detailRows,
+    };
+  }
+
+  if (state === 'limited_time') {
+    return {
+      state,
+      actionKind: 'focused',
+      headline: '15-minute high-yield save:',
+      targetTopic,
+      questionCount: 8,
+      workLabel: 'questions',
+      estimatedMinutes: 15,
+      impactLabel: 'Fast save',
+      rationale:
+        'You have a limited study window, so PANaCEa is compressing the highest-yield repair into one short block.',
+      expectedResults: [
+        'Protect momentum without opening a full session.',
+        `Refresh the top ${dominantSystem(performanceData, growthAreas).toLowerCase()} signal.`,
+      ],
+      primaryCta: '15-minute high-yield save',
+      whyThis: [
+        `${availableMinutes ?? LIMITED_TIME_MINUTES} minutes is enough for one useful repair loop.`,
+        `The current target is ${targetTopic}.`,
+        'A short block beats skipping the session or opening a broad dashboard.',
+      ],
+      planSteps: [
+        { label: 'High-yield save', minutes: 15 },
+        { label: 'One-minute review', minutes: 1 },
+        { label: 'Stop clean', minutes: 1 },
+      ],
+      quietSignals: buildQuietSignals({ dueCount, performanceData, plan, growthAreas }),
+      detailRows,
+    };
+  }
+
   if (planError || !plan) {
     return {
+      state,
       actionKind: 'fallback',
       headline: 'Repair one pattern tonight:',
       targetTopic,
       questionCount: 12,
+      workLabel: 'questions',
       estimatedMinutes: 28,
       impactLabel: 'High impact',
       rationale: 'Recommendations are temporarily unavailable, so PANaCEa is using a safe focused-block fallback.',
@@ -313,10 +504,12 @@ function buildBriefingModel({
   }
 
   return {
+    state,
     actionKind: 'focused',
     headline: 'Repair one pattern tonight:',
     targetTopic,
     questionCount,
+    workLabel: 'questions',
     estimatedMinutes: 28,
     impactLabel: 'High impact',
     rationale: targetTopic === FALLBACK_TARGET ? FALLBACK_RATIONALE : plan.reasonSummary || FALLBACK_RATIONALE,
@@ -327,7 +520,7 @@ function buildBriefingModel({
       FALLBACK_EXPECTED_RESULTS[1] ??
         'Lower diagnostic confusion across PE, pneumonia, ACS, and COPD exacerbation.',
     ],
-    primaryCta: 'Start focused block',
+    primaryCta: state === 'weak_pattern_detected' ? 'Repair missed pattern' : 'Start focused block',
     whyThis: [
       `Recent misses point toward ${targetTopic}.`,
       `Readiness priority is ${plan.readinessPriority}/100; retention priority is ${plan.retentionPriority}/100.`,
@@ -369,6 +562,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   dueCount: propDueCount = 0,
   examLabel = 'PANCE',
   isLoadingStats = false,
+  availableMinutes,
   onStartSession,
   onNavigateToGapAnalysis,
   onNavigateToReference,
@@ -379,12 +573,14 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   resumeContext,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
   const { profile } = useUserProfile();
   const { data: todayPlan, isLoading: todayPlanLoading, error: todayPlanError, refresh } = useTodayPlan();
   const [showWhy, setShowWhy] = useState(false);
   const dueCount = propDueCount;
   const firstName = user?.firstName || profile?.firstName;
+  const activeAvailableMinutes = availableMinutes ?? parseAvailableMinutes(location.search);
 
   const briefing = useMemo(
     () =>
@@ -404,6 +600,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
         planError: todayPlanError,
         profile,
         resumeContext,
+        availableMinutes: activeAvailableMinutes,
       }),
     [
       dueCount,
@@ -419,6 +616,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
       performanceData,
       profile,
       resumeContext,
+      activeAvailableMinutes,
       todayPlan,
       todayPlanError,
     ]
@@ -441,6 +639,11 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
         return;
       }
       onStartSession({ focus: 'due', mode: 'review', count: Math.max(10, dueCount) });
+      return;
+    }
+
+    if (briefing.state === 'limited_time') {
+      onStartSession({ focus: 'all', count: 8, mode: 'standard' });
       return;
     }
 
@@ -510,7 +713,7 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
               <span className="mt-2 block text-[var(--color-accent)]">{briefing.targetTopic}</span>
             </h1>
             <p className="mt-4 font-mono text-sm font-semibold text-[var(--color-text-primary)]">
-              {briefing.questionCount} questions · {briefing.estimatedMinutes} min · {briefing.impactLabel}
+              {briefing.questionCount} {briefing.workLabel} · {briefing.estimatedMinutes} min · {briefing.impactLabel}
             </p>
             <p className="mt-5 max-w-3xl text-base leading-7 text-[var(--color-text-secondary)]">
               {briefing.rationale}

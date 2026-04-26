@@ -35,6 +35,12 @@ function makePerformanceData(): PerformanceRecord[] {
   }));
 }
 
+function isoDaysFromNow(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString();
+}
+
 function renderDashboard(overrides: Partial<CommandCenterHubProps> = {}) {
   const props: CommandCenterHubProps = {
     performanceData: makePerformanceData(),
@@ -63,7 +69,7 @@ beforeEach(() => {
     profile: {
       firstName: 'Aaron',
       currentRotation: 'Psychiatry',
-      examDate: '2026-06-01',
+      examDate: isoDaysFromNow(60),
       eorTestDate: null,
     },
   });
@@ -96,6 +102,7 @@ describe('CommandCenterWorkspace clinical briefing', () => {
     expect(screen.getByText(/Details when you want them/i)).toBeTruthy();
     expect(screen.getAllByText(/PE vs pneumonia/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/12 questions · 28 min · High impact/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Repair missed pattern/i })).toBeTruthy();
     expect(screen.getAllByTestId('primary-study-action')).toHaveLength(1);
   });
 
@@ -111,7 +118,40 @@ describe('CommandCenterWorkspace clinical briefing', () => {
     renderDashboard({ performanceData: [] });
 
     expect(screen.getByText(/Set your baseline/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Start 10-question baseline/i })).toBeTruthy();
+    expect(screen.getByText(/10 mixed questions · 12 min/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Set baseline/i })).toBeTruthy();
+  });
+
+  it('uses the urgent review debt state when reviews are the highest-value move', () => {
+    renderDashboard({ dueCount: 18 });
+
+    expect(screen.getAllByText(/Clear review window/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/18 reviews · 22 min/i)).toBeTruthy();
+    expect(screen.getAllByTestId('primary-study-action')).toHaveLength(1);
+  });
+
+  it('uses the exam-soon state when the exam is inside the risk window', () => {
+    mockUseUserProfile.mockReturnValue({
+      profile: {
+        firstName: 'Aaron',
+        currentRotation: 'Emergency Medicine',
+        examDate: isoDaysFromNow(10),
+        eorTestDate: null,
+      },
+    });
+
+    renderDashboard({ dueCount: 2 });
+
+    expect(screen.getAllByText(/Exam-risk repair block/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('primary-study-action')).toHaveLength(1);
+  });
+
+  it('uses the limited-time state without exposing the other states', () => {
+    renderDashboard({ availableMinutes: 15, dueCount: 2 });
+
+    expect(screen.getAllByText(/15-minute high-yield save/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/8 questions · 15 min/i)).toBeTruthy();
+    expect(screen.getAllByTestId('primary-study-action')).toHaveLength(1);
   });
 
   it('shows calm recovery copy when recommendations are unavailable', () => {
