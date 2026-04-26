@@ -1008,6 +1008,8 @@ async function acquireImagesForCondition(
         // Create MediaAsset record
         await prisma.mediaAsset.create({
           data: {
+
+
             id: generateId(),
             type: mapCategoryToDbType(condition.category),
             filename,

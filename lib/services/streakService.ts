@@ -63,6 +63,7 @@ export async function recordDailyActivity(
       questionsAnswered,
       accuracyPercent,
       studyMinutes,
+      updatedAt: new Date(),
     },
   });
 }

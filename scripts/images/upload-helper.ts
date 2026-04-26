@@ -1028,6 +1028,8 @@ async function uploadSingleImage(
     console.log(`💾 Creating MediaAsset record...`);
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
+
+
         id: generateId(),
         conditionId: dbContent?.conditionId || null,
         type: category,
