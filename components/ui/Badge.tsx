@@ -1,10 +1,10 @@
 /**
- * Badge — Shared pill/tag component for consistent styling
+ * Badge - Shared pill/tag component for consistent styling
  *
  * Use for: mechanism, indications, test categories, "High Yield", system tags, etc.
  * Replaces ad-hoc pill classes across Condition Library, Pharmacopeia, Lab Reference.
  *
- * Uses Class Variance Authority (CVA) for type-safe variant definitions —
+ * Uses Class Variance Authority (CVA) for type-safe variant definitions -
  * matching the pattern used by button.tsx and clinical-badge.tsx. Sizes align
  * with SystemBadge / YieldBadge / clinical-badge so the whole badge family
  * shares one spacing scale.
@@ -36,11 +36,13 @@ const badgeVariants = cva(
         outline:
           'bg-transparent text-[var(--color-text-primary)] border-[var(--color-border)]',
         success:
-          'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30',
+          'bg-[var(--color-success)]/15 text-[var(--color-success)] border-[var(--color-success)]/30',
+        risk:
+          'bg-[var(--color-risk)]/15 text-[var(--color-risk)] border-[var(--color-risk)]/30',
         warning:
-          'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30',
+          'bg-[var(--color-risk)]/15 text-[var(--color-risk)] border-[var(--color-risk)]/30',
         danger:
-          'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
+          'bg-[var(--color-danger)]/15 text-[var(--color-danger)] border-[var(--color-danger)]/30',
       },
       size: {
         sm: 'px-2 py-0.5 text-[11px] gap-1',
@@ -69,7 +71,7 @@ export interface BadgeProps
 }
 
 /**
- * Badge — Pill-shaped label for mechanisms, indications, categories, etc.
+ * Badge - Pill-shaped label for mechanisms, indications, categories, etc.
  */
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ children, variant, size, className, truncate = false, maxWidth, ...rest }, ref) => (
@@ -88,6 +90,8 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ),
 );
 Badge.displayName = 'Badge';
+
+export const Pill = Badge;
 
 export { badgeVariants };
 export default Badge;
