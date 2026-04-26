@@ -210,6 +210,8 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   const [conditions, setConditions] = useState<ConditionOption[]>([]);
   const [loadingSystems, setLoadingSystems] = useState(false);
   const [loadingConditions, setLoadingConditions] = useState(false);
+  const [systemsError, setSystemsError] = useState<string | null>(null);
+  const [conditionsError, setConditionsError] = useState<string | null>(null);
 
   // Auto-scale session size based on urgency
   useEffect(() => {
@@ -225,9 +227,14 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   // Fetch system data when entering system selection
   const loadSystems = useCallback(async () => {
     setLoadingSystems(true);
+    setSystemsError(null);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        setSystems([]);
+        setSystemsError('You need to be signed in to load systems.');
+        return;
+      }
 
       // Primary: content-backed system list (labels + published counts)
       const res = await fetch('/api/content/systems', {
@@ -250,9 +257,15 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       if (fallback.ok) {
         const fallbackData = await fallback.json();
         setSystems(parseSystemOptions(fallbackData));
+        return;
       }
+
+      setSystems([]);
+      setSystemsError('No systems are available right now.');
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load systems:', err);
+      setSystems([]);
+      setSystemsError(err instanceof Error ? err.message : 'Failed to load systems.');
     } finally {
       setLoadingSystems(false);
     }
@@ -261,9 +274,14 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   // Fetch conditions when a subcategory is selected
   const loadConditions = useCallback(async (system: string, subcategory?: string) => {
     setLoadingConditions(true);
+    setConditionsError(null);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        setConditions([]);
+        setConditionsError('You need to be signed in to load conditions.');
+        return;
+      }
 
       const params = new URLSearchParams({ system });
       if (subcategory) params.set('subcategory', subcategory);
@@ -277,10 +295,12 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
         setConditions(parseConditionOptions(data));
       } else {
         setConditions([]);
+        setConditionsError('No conditions are available for this scope yet.');
       }
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load conditions:', err);
       setConditions([]);
+      setConditionsError(err instanceof Error ? err.message : 'Failed to load conditions.');
     } finally {
       setLoadingConditions(false);
     }
@@ -310,6 +330,12 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   // ── Mode Selection Handlers ──
   const handleModeSelect = (mode: SessionMode) => {
     setSelectedMode(mode);
+    setSelectedSystem(null);
+    setSelectedSubcategory(null);
+    setSelectedCondition(null);
+    setConditions([]);
+    setSystemsError(null);
+    setConditionsError(null);
     if (mode === 'adaptive') {
       setStep('size');
     } else {
@@ -320,6 +346,10 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
 
   const handleSystemSelect = (systemName: string) => {
     setSelectedSystem(systemName);
+    setSelectedSubcategory(null);
+    setSelectedCondition(null);
+    setConditions([]);
+    setConditionsError(null);
     if (selectedMode === 'system') {
       setStep('size');
     } else if (selectedMode === 'subcategory' || selectedMode === 'condition') {
@@ -328,6 +358,9 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
         setStep('subcategory');
       } else {
         // No subcategories — jump to size or conditions
+        if (selectedMode === 'condition') {
+          void loadConditions(systemName);
+        }
         setStep(selectedMode === 'condition' ? 'condition' : 'size');
       }
     }
@@ -359,7 +392,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
         setSelectedSubcategory(null);
         break;
       case 'condition':
-        setStep('subcategory');
+        setStep(selectedSubcategory ? 'subcategory' : 'system');
         setSelectedCondition(null);
         break;
       case 'size':
@@ -475,6 +508,16 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
                   <div className="flex items-center justify-center py-12" role="status" aria-live="polite" aria-label="Loading systems">
                     <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
                   </div>
+                ) : systemsError ? (
+                  <div className="py-8 text-center space-y-3">
+                    <p className="text-sm text-[var(--color-text-secondary)]">{systemsError}</p>
+                    <button
+                      onClick={() => void loadSystems()}
+                      className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 ) : systems.length === 0 ? (
                   // Fallback: show all 15 systems without counts
                   ALL_SYSTEM_NAMES
@@ -575,6 +618,20 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
                 {loadingConditions ? (
                   <div className="flex items-center justify-center py-12" role="status" aria-live="polite" aria-label="Loading conditions">
                     <InlineSpinner size="lg" className="text-[var(--color-accent)]" />
+                  </div>
+                ) : conditionsError ? (
+                  <div className="py-8 text-center space-y-3">
+                    <p className="text-sm text-[var(--color-text-secondary)]">{conditionsError}</p>
+                    <button
+                      onClick={() => {
+                        if (selectedSystem) {
+                          void loadConditions(selectedSystem, selectedSubcategory ?? undefined);
+                        }
+                      }}
+                      className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+                    >
+                      Retry
+                    </button>
                   </div>
                 ) : conditions.length === 0 ? (
                   <p className="text-center text-[var(--color-text-secondary)] py-8">

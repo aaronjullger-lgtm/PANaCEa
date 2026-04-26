@@ -93,27 +93,37 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      // Fetch full Question objects in the same order as questionIds
-      // Use a raw query to preserve order? Prisma's findMany does not guarantee order.
-      // We'll fetch and then sort manually.
-      const questions = await prisma.question.findMany({
+      const preGenerated = await prisma.preGeneratedQuestion.findMany({
         where: { id: { in: questionIds } },
-        include: {
-          Condition: {
-            select: {
-              id: true,
-              name: true,
-              system: true,
-            },
-          },
+        select: {
+          id: true,
+          questionData: true,
+          system: true,
+          difficulty: true,
+          conditionId: true,
         },
       });
 
-      // Map to preserve order
-      const questionMap = new Map(questions.map(q => [q.id, q]));
-      const orderedQuestions = questionIds
-        .map(id => questionMap.get(id))
-        .filter((q): q is NonNullable<typeof q> => q !== undefined);
+      const preGeneratedIds = new Set(preGenerated.map((question) => question.id));
+      const remainingIds = questionIds.filter((id) => !preGeneratedIds.has(id));
+      const standardQuestions = remainingIds.length
+        ? await prisma.question.findMany({
+            where: { id: { in: remainingIds } },
+            select: {
+              id: true,
+              question: true,
+              options: true,
+              correctAnswer: true,
+              explanation: true,
+              system: true,
+              difficulty: true,
+              conditionId: true,
+              category: true,
+              topic: true,
+              vignette: true,
+            },
+          })
+        : [];
 
       // Transform to match the shape expected by frontend (same as /api/questions/session)
       const formattedQuestions = orderedQuestions.map((q) =>

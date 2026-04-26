@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { bodySupportClass, tableRowClass } from '@/components/ui/system';
 
 const ROW_HEIGHT = 56;
 const OVERSCAN = 5;
@@ -43,7 +44,7 @@ export function VirtualizedTableBody<T>({
 
   if (items.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-[var(--color-text-muted)]">
+      <div className={`flex items-center justify-center py-12 ${bodySupportClass}`}>
         {emptyMessage ?? 'No data.'}
       </div>
     );
@@ -57,7 +58,7 @@ export function VirtualizedTableBody<T>({
         return (
           <div
             key={virtualRow.key}
-            className="hover:bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] grid items-center"
+            className={tableRowClass}
             style={{
               position: 'absolute',
               top: 0,

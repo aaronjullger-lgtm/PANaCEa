@@ -1,15 +1,3 @@
-/**
- * useTodayPlan — Fetches today's recommended study allocation.
- *
- * Returns the MAIN vs TARGETED split, priority systems, targeted conditions,
- * and a human-readable reason summary from the Daily Study Allocator.
- *
- * @see functions/api/study-plan/today.ts
- * @see lib/services/dailyStudyAllocatorService.ts
- * @see components/dashboard/TodayPlanCard.tsx
- */
-
-import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
@@ -52,18 +40,26 @@ export interface TodayPlanData {
 
 export function useTodayPlan() {
   const { getToken, isSignedIn } = useAuth();
-  const [data, setData] = useState<TodayPlanData | null>(null);
+  const [data, setData] = useState<StudyPlanDay | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPlan = useCallback(async () => {
+    if (!isSignedIn) {
+      setData(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
-      const endpoint = getApiEndpoint('/api/study-plan/today');
+      const endpoint = getApiEndpoint(API_ENDPOINTS.STUDY_PLAN_TODAY);
       const response = await fetch(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -81,12 +77,13 @@ export function useTodayPlan() {
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isSignedIn]);
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    fetchPlan();
-  }, [isSignedIn, fetchPlan]);
+    void fetchPlan();
+  }, [fetchPlan]);
 
   return { data, isLoading, error, refresh: fetchPlan };
 }
+
+export default useTodayPlan;

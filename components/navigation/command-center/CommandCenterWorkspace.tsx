@@ -672,6 +672,28 @@ export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
 
   const isLoading = todayPlanLoading || isLoadingStats;
 
+  const topFocusAreas = growthAreas.filter(Boolean).slice(0, 2);
+  const heroTitle =
+    hasActiveSession && onResumeSession
+      ? 'Resume the session already in motion.'
+      : dueCount > 0
+        ? 'Clear what is already due before opening something new.'
+        : 'Start one focused block, then let the rest wait.';
+  const heroDescription =
+    hasActiveSession && onResumeSession
+      ? 'You already have momentum. Finish the in-progress session before switching contexts or opening another study lane.'
+      : dueCount > 0
+        ? 'Review has the highest payoff right now. Once the queue is under control, use adaptive practice or a short fallback route for new work.'
+        : 'Nothing urgent is competing for attention. Use adaptive questions for the main block, or take the faster practice route if you only have a few minutes.';
+  const decisionSupportCopy =
+    dueCount > 0
+      ? `Due review is the best next move. ${weakestSystem ? `${weakestSystem} is still the weakest signal once the queue is clear.` : 'Use practice afterward if you still have time.'}`
+      : stats.questionsToday === 0
+        ? 'If today has not started yet, use a short practice block to establish a real targeting signal before browsing deeper tools.'
+        : weakestSystem
+          ? `${weakestSystem} is the weakest recent signal. Use a shorter block when you need a targeted reset instead of a full session.`
+          : 'Choose the block length that matches your available time and leave the secondary routes below the fold.';
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 px-1 pb-10 pt-2">
       <div className="sr-only" aria-live="polite">

@@ -19,6 +19,7 @@ export interface UseQuizReplenishmentParams {
   sessionSettings: SessionSettings;
   growthAreas: string[];
   getToken: () => Promise<string | null>;
+  queueStrategy?: 'auto' | 'finite' | 'continuous';
 }
 
 export interface UseQuizReplenishmentReturn {
@@ -47,6 +48,7 @@ export function useQuizReplenishment({
   sessionSettings,
   growthAreas,
   getToken,
+  queueStrategy = 'auto',
 }: UseQuizReplenishmentParams): UseQuizReplenishmentReturn {
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
   const [replenishAttempts, setReplenishAttempts] = useState(0);
@@ -74,7 +76,11 @@ export function useQuizReplenishment({
   }, []);
 
   const shouldEndlesslyReplenish =
-    sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
+    queueStrategy === 'continuous'
+      ? true
+      : queueStrategy === 'finite'
+        ? false
+        : sessionSettings.focus !== 'review' && sessionSettings.focus !== 'reviewFlagged';
 
   useEffect(() => {
     replenishAttemptsRef.current = replenishAttempts;

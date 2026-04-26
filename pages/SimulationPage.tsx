@@ -238,12 +238,12 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             badgeTone: examLabel === 'PANRE' ? 'sage' : 'steel',
             title:
               examLabel === 'PANRE'
-                ? 'Run focused maintenance sessions without losing exam-day discipline.'
-                : `Run a high-fidelity ${examLabel} simulation without leaving the workspace.`,
+                ? 'Run focused maintenance sessions with exam-day discipline.'
+                : `Run a high-fidelity ${examLabel} simulation.`,
             subtitle:
               examLabel === 'PANRE'
-                ? 'Use this surface for PANRE-LA check-ins, due-item maintenance, and blueprint-respecting refresh work.'
-                : 'Choose how strict or targeted the session should be, then launch directly into a blueprint-weighted simulation flow.',
+                ? 'PANRE-LA check-ins, due-item maintenance, and blueprint-respecting refresh work.'
+                : 'Choose how strict or targeted the session should be, then launch a blueprint-weighted flow.',
             backLabel: 'Back to Study',
             onBack,
             primaryAction: {

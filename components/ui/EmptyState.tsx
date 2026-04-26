@@ -189,7 +189,7 @@ export function EmptyState({
       {/* Actions */}
       {(action || secondaryAction) && (
         <div
-          className={cn('flex flex-col sm:flex-row items-center gap-3', compact ? 'mt-2' : 'mt-4')}
+          className={cn('flex flex-col items-center gap-3 sm:flex-row', compact ? 'mt-2' : 'mt-4')}
         >
           {action && (
             <Button

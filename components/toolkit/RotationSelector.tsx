@@ -123,15 +123,20 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+        aria-label={`Filter training modes by rotation. Current selection: ${currentOption.label}`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] transition-colors"
       >
-        <Stethoscope className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <Stethoscope className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
         <span className="text-sm font-medium text-[var(--color-text-primary)]">
           {currentOption.label}
         </span>
         <ChevronDown
           className={`w-4 h-4 text-[var(--color-text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          aria-hidden="true"
         />
       </button>
 
@@ -142,14 +147,19 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
             animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
+            role="listbox"
+            aria-label="Select a clinical rotation"
             className="absolute top-full mt-2 right-0 w-72 bg-[var(--color-bg-secondary)] rounded-lg shadow-xl border border-[var(--color-border)] overflow-hidden z-50"
           >
             <div className="max-h-96 overflow-y-auto">
               {ROTATION_OPTIONS.map((option) => (
                 <button
                   key={option.id}
+                  type="button"
+                  role="option"
+                  aria-selected={option.id === currentRotation}
                   onClick={() => handleSelect(option.id)}
-                  className={`w-full text-left px-4 py-3 hover:bg-[var(--color-bg-tertiary)] transition-colors border-b border-[var(--color-border)] last:border-b-0 ${
+                  className={`w-full text-left px-4 py-3 hover:bg-[var(--color-bg-tertiary)] focus-visible:outline-none focus-visible:bg-[var(--color-bg-tertiary)] transition-colors border-b border-[var(--color-border)] last:border-b-0 ${
                     option.id === currentRotation ? 'bg-[var(--color-accent)]/10' : ''
                   }`}
                 >

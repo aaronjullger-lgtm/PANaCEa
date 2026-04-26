@@ -73,8 +73,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('px-5 py-3.5', className)}
-      style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-glass-border, var(--color-border))', borderBottom: '1px solid transparent' }}
+      className={cn('border-b border-[var(--color-border)] px-5 py-4 sm:px-6', className)}
       {...props}
     />
   ),
@@ -89,7 +88,7 @@ const CardTitle = React.forwardRef<
 >(({ className, as: Tag = 'h3', ...props }, ref) => (
   <Tag
     ref={ref}
-    className={cn('text-base font-semibold text-[var(--color-text-primary)]', className)}
+    className={cn(sectionHeadingClass, className)}
     {...props}
   />
 ));
@@ -103,7 +102,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-[var(--color-text-muted)] mt-0.5', className)}
+    className={cn('mt-1', bodySupportClass, className)}
     {...props}
   />
 ));
@@ -113,7 +112,7 @@ CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('px-5 py-4', className)} {...props} />
+    <div ref={ref} className={cn(surfacePaddingClass, className)} {...props} />
   ),
 );
 CardContent.displayName = 'CardContent';
@@ -124,8 +123,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('px-5 py-3', className)}
-      style={{ boxShadow: 'inset 0 1px 0 0 var(--color-glass-border, var(--color-border))' }}
+      className={cn('border-t border-[var(--color-border)] px-5 py-4 sm:px-6', className)}
       {...props}
     />
   ),
@@ -147,8 +145,14 @@ const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
       initial="rest"
       whileHover={disableHover ? undefined : 'hover'}
       whileTap={disableHover ? undefined : 'tap'}
-      className={cn('rounded-xl', className)}
-      style={{ ...GLASS_CARD_STYLE, ...style }}
+      className={cn(
+        surfaceBaseClass,
+        surfaceInteractiveClass,
+        surfaceCompactPaddingClass,
+        'rounded-[1.25rem]',
+        className
+      )}
+      style={{ ...surfaceRaisedStyle, ...style }}
       {...props}
     />
   ),

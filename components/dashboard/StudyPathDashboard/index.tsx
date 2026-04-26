@@ -265,7 +265,7 @@ const StudyPathDashboard = () => {
               badgeTone: 'amber',
               title: 'Your study route is unavailable right now.',
               subtitle:
-                'The optimizer could not return a safe study recommendation from the current request, so this page is falling back instead of guessing.',
+                'The optimizer could not return a safe recommendation, so the plan is falling back instead of guessing.',
               backLabel: 'Back to Study',
               onBack: () => navigate(ROUTES.STUDY),
               primaryAction: {
@@ -274,7 +274,7 @@ const StudyPathDashboard = () => {
               },
               secondaryActions: [
                 {
-                  label: 'Open Practice',
+                  label: 'Open Practice instead',
                   onClick: () => navigate(ROUTES.PRACTICE),
                 },
               ],
@@ -283,47 +283,21 @@ const StudyPathDashboard = () => {
         </WorkspaceReveal>
         <WorkspaceReveal delay={0.05}>
           <WorkspaceSurface accent="#a67f7f" role="alert">
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="space-y-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-data-fail)]/25 bg-[var(--color-data-fail)]/10">
-                  <AlertTriangle className="h-5 w-5 text-[var(--color-data-fail)]" aria-hidden="true" />
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                    Study plan unavailable
-                  </h2>
-                  <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
-                    {safeMessage}
-                  </p>
-                  <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
-                    This usually means the optimizer did not have a safe enough signal, the request
-                    failed mid-flight, or the current inputs were incomplete.
-                  </p>
-                </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-data-fail)]/25 bg-[var(--color-data-fail)]/10">
+                <AlertTriangle className="h-5 w-5 text-[var(--color-data-fail)]" aria-hidden="true" />
               </div>
-
-              <WorkspaceSurface accent="#b39b6c" role="reference" className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                    Use a fallback route now
-                  </p>
-                  <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                    Do not wait on this page. Clear due review, open practice, or use the reference
-                    workspace while the study path recalculates.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" onClick={() => mutate()}>
-                    Try again
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.STUDY)}>
-                    Back to Study
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" onClick={() => navigate(ROUTES.STUDY_KNOWLEDGE)}>
-                    Open Knowledge
-                  </Button>
-                </div>
-              </WorkspaceSurface>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+                  Study plan unavailable
+                </h2>
+                <p className="text-sm leading-7 text-[var(--color-text-secondary)]">
+                  {safeMessage}
+                </p>
+                <p className="text-sm leading-7 text-[var(--color-text-muted)]">
+                  This usually means the optimizer lacked a safe enough signal or the request failed mid-flight. Retry above, or jump into Practice while the plan recalculates.
+                </p>
+              </div>
             </div>
           </WorkspaceSurface>
         </WorkspaceReveal>

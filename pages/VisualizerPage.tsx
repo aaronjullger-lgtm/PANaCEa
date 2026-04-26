@@ -220,9 +220,9 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           meta={{
             badge: 'Anatomy Visualizer',
             badgeTone: 'plum',
-            title: 'Generate anatomy visuals that feel study-ready, not stock-photo generic.',
+            title: 'Generate anatomy visuals built for recall.',
             subtitle:
-              'Create a fresh anatomy image, then review the segmented regions inside a workspace designed for learning and recall instead of one-off generation.',
+              'Create a fresh anatomy image and review segmented regions — designed for learning, not one-off generation.',
             backLabel: 'Back to Study',
             onBack,
           }}

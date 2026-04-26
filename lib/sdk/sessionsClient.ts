@@ -7,10 +7,15 @@
  */
 
 import type { ApiClient } from './core';
-import type { SessionGeneratePayload, SessionGenerateResult } from './types';
+import type {
+  SessionGeneratePayload,
+  SessionGenerateResult,
+  SessionQuestionsResult,
+} from './types';
 
 export interface SessionsClient {
   generate(opts?: SessionGeneratePayload): Promise<SessionGenerateResult>;
+  getQuestions(sessionId: string): Promise<SessionQuestionsResult>;
 }
 
 export function createSessionsClient(api: ApiClient): SessionsClient {
@@ -20,6 +25,9 @@ export function createSessionsClient(api: ApiClient): SessionsClient {
         '/api/study/session/generate',
         opts ?? ({} as SessionGeneratePayload)
       );
+    },
+    getQuestions(sessionId) {
+      return api.get<SessionQuestionsResult>(`/api/study/session/${sessionId}/questions`);
     },
   };
 }

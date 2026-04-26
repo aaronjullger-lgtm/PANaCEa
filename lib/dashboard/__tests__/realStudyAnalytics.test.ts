@@ -1,0 +1,167 @@
+import { describe, expect, it } from 'vitest';
+import { buildDashboardAnalyticsModel, type DashboardStatsPayload } from '@/lib/dashboard/realStudyAnalytics';
+
+const baseStats: DashboardStatsPayload = {
+  success: true,
+  stats: {
+    overall: {
+      totalAttempts: 120,
+      correctAttempts: 78,
+      accuracy: 65,
+      questionsSeenCount: 90,
+      currentStreak: 4,
+      totalStudyDays: 10,
+      avgTimeMs: 45000,
+      avgAnswerChanges: 0.4,
+      todayCount: 12,
+      todayTimeMs: 1200000,
+    },
+    bySystems: {
+      Cardiovascular: {
+        total: 24,
+        correct: 12,
+        accuracy: 50,
+        trend: 'declining',
+        avgTimeMs: 52000,
+        lastAttempt: '2026-04-14T10:00:00.000Z',
+      },
+      Pulmonary: {
+        total: 18,
+        correct: 14,
+        accuracy: 78,
+        trend: 'improving',
+        avgTimeMs: 41000,
+        lastAttempt: '2026-04-13T10:00:00.000Z',
+      },
+    },
+    byConditions: [],
+    weakAreas: [],
+    strongAreas: [],
+    weakConditions: [],
+    recentPerformance: {
+      last7Days: {
+        attempts: 40,
+        accuracy: 62,
+      },
+      previous7Days: {
+        attempts: 32,
+        accuracy: 70,
+      },
+      trend: 'declining',
+    },
+    recommendations: ['Focus on Cardiovascular - currently at 50% accuracy'],
+  },
+};
+
+describe('buildDashboardAnalyticsModel', () => {
+  it('computes overview, trend, and weak system ranking from real inputs', () => {
+    const model = buildDashboardAnalyticsModel({
+      stats: baseStats,
+      sessions: {
+        sessions: [
+          {
+            id: 's1',
+            startedAt: '2026-04-14T14:00:00.000Z',
+            endedAt: '2026-04-14T14:30:00.000Z',
+            totalQuestions: 20,
+            correctAnswers: 12,
+            accuracy: 60,
+            totalTimeMs: 1800000,
+            mode: 'main',
+          },
+          {
+            id: 's2',
+            startedAt: '2026-04-13T14:00:00.000Z',
+            endedAt: '2026-04-13T14:20:00.000Z',
+            totalQuestions: 10,
+            correctAnswers: 8,
+            accuracy: 80,
+            totalTimeMs: 1200000,
+            mode: 'rapid_recall',
+          },
+        ],
+      },
+      reviewForecast: {
+        overdue: 5,
+        today: 9,
+        totalActive: 70,
+        forecast: [],
+      },
+      blueprintGaps: {
+        totalAttempts: 42,
+        coverageScore: 71,
+        systems: [
+          {
+            system: 'Cardiovascular',
+            targetPercent: 11,
+            actualPercent: 5,
+            gapPercent: -6,
+            totalAttempts: 24,
+            correctAttempts: 12,
+            accuracy: 50,
+          },
+          {
+            system: 'Pulmonary',
+            targetPercent: 9,
+            actualPercent: 11,
+            gapPercent: 2,
+            totalAttempts: 18,
+            correctAttempts: 14,
+            accuracy: 78,
+          },
+        ],
+      },
+      confusionPairs: {
+        confusionPairs: [],
+        total: 0,
+      },
+    });
+
+    expect(model.overview.attemptsLast7Days).toBe(40);
+    expect(model.overview.dueToday).toBe(9);
+    expect(model.overview.studyMinutesLast7Days).toBe(50);
+    expect(model.trend.some((day) => day.attempts > 0)).toBe(true);
+    expect(model.heatmap.length).toBe(2);
+    expect(model.recentSessions[0]?.modeLabel).toBe('Main');
+    expect(model.weakSystems[0]?.system).toBe('Cardiovascular');
+    expect(model.weakSystems[0]?.label).toBe('needs-accuracy-work');
+  });
+
+  it('returns a clean empty model for new users', () => {
+    const model = buildDashboardAnalyticsModel({
+      stats: {
+        ...baseStats,
+        stats: {
+          ...baseStats.stats,
+          overall: {
+            ...baseStats.stats.overall,
+            totalAttempts: 0,
+            correctAttempts: 0,
+            accuracy: 0,
+            questionsSeenCount: 0,
+            currentStreak: 0,
+            totalStudyDays: 0,
+          },
+          bySystems: {},
+          byConditions: [],
+          weakConditions: [],
+          recentPerformance: {
+            last7Days: { attempts: 0, accuracy: null },
+            previous7Days: { attempts: 0, accuracy: null },
+            trend: 'insufficient_data',
+          },
+          recommendations: [],
+        },
+      },
+      sessions: { sessions: [] },
+      reviewForecast: null,
+      blueprintGaps: null,
+      confusionPairs: null,
+    });
+
+    expect(model.hasMeaningfulData).toBe(false);
+    expect(model.weakSystems).toEqual([]);
+    expect(model.recentSessions).toEqual([]);
+    expect(model.heatmap).toEqual([]);
+  });
+});

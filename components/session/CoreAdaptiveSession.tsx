@@ -105,11 +105,6 @@ interface DistributionCheckResponse {
   constraints?: DistributionConstraints;
 }
 
-interface GeneratedStudySessionResponse {
-  sessionId?: string | null;
-  questions?: QuizQuestion[];
-}
-
 interface SessionBreakdownEntry {
   count: number;
   accuracy: number;
@@ -278,8 +273,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         );
         if (cancelled) return;
 
-        setSessionId(session.sessionId ?? null);
-        setQuestions(session.questions ?? []);
+        const { generatedSession, runtime } = normalizeGeneratedStudySession(session, sessionRequest);
+        useStudyStore.getState().hydrateSession(runtime);
+
+        setSessionId(generatedSession.sessionId);
+        setQuestions(generatedSession.questions as QuizQuestion[]);
         setError(null);
       } catch (err: any) {
         if (!cancelled) {
@@ -298,6 +296,14 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   // ── Session end: fetch summary, then exit ──
   const [sessionSummary, setSessionSummary] = useState<SessionSummaryResponse | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+
+  const handleChangeScope = useCallback(() => {
+    setError(null);
+    setQuestions([]);
+    setSessionId(null);
+    setSessionScope(null);
+    setShowScopeSelector(true);
+  }, []);
 
   const handleSessionEnd = useCallback(async () => {
     if (!sessionId) {
@@ -361,7 +367,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   // ── Session settings for QuizView ──
   const sessionSettings = useMemo(() => ({
     mode: 'standard' as const,
-    focus: 'due' as const,
+    focus: 'all' as const,
     systems: Object.keys(blueprint.weights).filter(
       s => !blueprint.gatedSystems.includes(s)
     ),
@@ -419,6 +425,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
               Retry
             </button>
             <button
+              onClick={handleChangeScope}
+              className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            >
+              Change Scope
+            </button>
+            <button
               onClick={onExit}
               className="px-4 py-2 bg-[var(--color-data-fail)] text-[var(--color-data-fail)] rounded-lg hover:bg-[var(--color-data-fail)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
@@ -442,6 +454,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
               ? `Your current study plan covers ${Object.keys(blueprint.weights).length} systems. More content will unlock as you progress in your program.`
               : 'All questions have been reviewed recently. Check back later or try a different study mode.'}
           </p>
+          <button
+            onClick={handleChangeScope}
+            className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+          >
+            Change Scope
+          </button>
           <button
             onClick={onExit}
             className="px-4 py-2 bg-[var(--color-data-provisional)] text-[var(--color-data-provisional)] rounded-lg hover:bg-[var(--color-data-provisional)] transition-colors duration-200 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
@@ -599,6 +617,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             onShowMenu={onExit}
             modeLabel={blueprint.label}
             sessionId={sessionId}
+            queueStrategy="finite"
             addPerformanceRecord={addPerformanceRecord}
             addMissedQuestion={addMissedQuestion}
             updateReviewQuestion={updateReviewQuestion}

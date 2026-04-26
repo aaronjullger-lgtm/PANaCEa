@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { widgetEntrance, springs, cardHoverVariants, tabContentVariants } from '@/config/appViews';
+import { widgetEntrance, cardHoverVariants, tabContentVariants } from '@/config/appViews';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
@@ -11,30 +11,20 @@ import {
   TrendingUp,
   Flame,
   ArrowRight,
-  Sparkles,
   Clock,
   Zap,
   Target,
   BarChart3,
   LayoutDashboard,
   AlertTriangle,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
   Stethoscope,
 } from '@/components/ui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import DecayCurve from './charts/DecayCurve';
-import StabilityPyramid from './charts/StabilityPyramid';
-import AlgorithmStatusWidget from './AlgorithmStatusWidget';
+import PerformanceTrendChart from '@/components/analytics/PerformanceTrendChart';
 import { ClinicalSkeleton } from '@/components/loading';
 import DailyTriad from './DailyTriad';
-import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
+import { ExamReadinessCard } from './Rolling360';
 import { ReadinessProjectionWidget } from './ReadinessProjectionWidget';
-import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
-import CalibrationChart from './CalibrationChart';
-import { MetacognitiveMirror } from './metacognitive';
-import { DrillRecommendationCard } from './DrillRecommendationCard';
 import { RetentionForecastCard } from './RetentionForecastCard';
 import { StudyActionList, type StudyAction } from './StudyActionCard';
 import { TodayPlanCard } from './TodayPlanCard';
@@ -49,8 +39,6 @@ import { ConfusionGraph } from './ConfusionGraph';
 import { useConfusionPairs } from '@/hooks/useConfusionPairs';
 import { ReviewCalendar } from './ReviewCalendar';
 import { useReviewForecast } from '@/hooks/useReviewForecast';
-import { InfoTooltip } from '@/components/ui/InfoTooltip';
-import { TOOLTIP_STABILITY, TOOLTIP_MASTERY } from '@/lib/constants/copy';
 import { RotationFocusCard } from './RotationFocusCard';
 import { WellnessWidget } from './WellnessWidget';
 import { computeWellnessState } from '@/hooks/useStudyWellness';
@@ -60,6 +48,7 @@ import { useRecentSessions } from '@/hooks/useRecentSessions';
 import { NCCPA_BLUEPRINT_WEIGHTS } from '@/lib/nccpa-question-weighting';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
+import { useDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
 import type { UserProfile } from '@/types';
 import type { StudyHeatmapDatum } from '@/components/charts/StudyHeatmap';
 import { formatLocalDay, getBrowserTimezone, getLocalYear } from '@/lib/time/userTz';
@@ -67,7 +56,7 @@ import { computeRotationWeek } from '@/lib/time/rotationWeek';
 
 // Lazy-loaded heavy chart — @nivo/calendar (~15-20 KB)
 const StudyHeatmap = React.lazy(() => import('@/components/charts/StudyHeatmap'));
-import { getDashboardConfig, type DashboardConfig, type WidgetId } from '@/lib/services/dashboardPersonalization';
+import { getDashboardConfig, type WidgetId } from '@/lib/services/dashboardPersonalization';
 
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
 
@@ -292,13 +281,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   }, [apiUserProfile, localCachedProfile]);
   const { sessions: recentSessions } = useRecentSessions();
   const { stats: dbStats } = useDatabaseStats();
+  const { data: dashboardAnalytics } = useDashboardAnalytics();
   const { data: blueprintGaps } = useBlueprintGaps();
   const { data: confusionPairsData } = useConfusionPairs(5);
   const { data: reviewForecast } = useReviewForecast();
   const { stage } = useResolvedBlueprint();
   const dashboardConfig = useMemo(() => getDashboardConfig(stage), [stage]);
   const { data: todayPlan, isLoading: todayPlanLoading, error: todayPlanError, refresh: refreshTodayPlan } = useTodayPlan();
-  const { data: ratingAudit, isLoading: ratingAuditLoading, error: ratingAuditError, refresh: refreshRatingAudit } = useRatingAudit();
   const prefersReducedMotion = useReducedMotion();
   const retentionFetcher = useCallback(
     async (url: string) => {
@@ -336,21 +325,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     }
   }, [view]);
 
-  // Widget visibility helper — driven by learner stage
-  const showWidget = useCallback(
-    (widget: WidgetId) =>
-      dashboardConfig.pilotWidgets.includes(widget) ||
-      dashboardConfig.dataWidgets.includes(widget),
-    [dashboardConfig]
-  );
-
   const showPilotWidget = useCallback(
     (widget: WidgetId) => dashboardConfig.pilotWidgets.includes(widget),
-    [dashboardConfig]
-  );
-
-  const showDataWidget = useCallback(
-    (widget: WidgetId) => dashboardConfig.dataWidgets.includes(widget),
     [dashboardConfig]
   );
 
@@ -881,63 +857,111 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               exit="exit"
               className="space-y-6"
             >
-              {/* System Performance + Calibration — stage-aware */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-                {showDataWidget('system_performance') && (
-                  <SystemPerformanceWidget maxSystems={5} />
-                )}
-                {dashboardConfig.showCalibrationQuadrant && showDataWidget('calibration_quadrant') && (
-                  <CalibrationQuadrantWidget className="w-full" />
-                )}
-                {showDataWidget('calibration_chart') && (
-                  <CalibrationChart />
-                )}
-              </div>
-
-              {/* Rating Health — Again/Good distribution audit */}
-              <RatingHealthCard
-                data={ratingAudit}
-                isLoading={ratingAuditLoading}
-                error={ratingAuditError}
-                onRefresh={refreshRatingAudit}
-              />
-
-              {/* Memory Health — decay + stability */}
-              <SectionHeader
-                title="Memory Health"
-                subtitle="Retention and stability over time"
-                icon={<TrendingUp className="w-4 h-4" />}
-                action={<InfoTooltip text={TOOLTIP_STABILITY} />}
-              />
-              {!hasRetentionError && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  {showDataWidget('decay_curve') && (
-                    <div className="card-cinematic p-5">
-                      <DecayCurve data={safeData.decayCurveData} />
-                    </div>
-                  )}
-                  {showDataWidget('stability_pyramid') && (
-                    <div className="card-cinematic p-5">
-                      <StabilityPyramid data={safeData.stabilityBuckets} />
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-5">
+                <div className="card-cinematic p-5">
+                  <SectionHeader
+                    title="Recent Performance"
+                    subtitle="Real session history only"
+                    icon={<TrendingUp className="w-4 h-4" />}
+                  />
+                  {dashboardAnalytics?.trend.length ? (
+                    <PerformanceTrendChart dailyData={dashboardAnalytics.trend} period="14d" />
+                  ) : (
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-6 text-sm text-[var(--color-text-muted)]">
+                      Complete a few sessions and recent performance will appear here.
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* Metacognitive Mirror — behavioral self-awareness */}
-              <MetacognitiveMirror days={30} />
+                <div className="card-cinematic p-5">
+                  <SectionHeader
+                    title="Weak Systems"
+                    subtitle="Ranked by real performance and blueprint undercoverage"
+                    icon={<Brain className="w-4 h-4" />}
+                  />
+                  {dashboardAnalytics?.weakSystems.length ? (
+                    <div className="space-y-3">
+                      {dashboardAnalytics.weakSystems.slice(0, 4).map((system) => (
+                        <div
+                          key={system.system}
+                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-3"
+                        >
+                          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                            {system.system}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                            {system.attempts} attempts · {system.accuracy}% accuracy
+                            {system.gapPercent != null ? ` · ${system.gapPercent.toFixed(1)}% gap` : ''}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-6 text-sm text-[var(--color-text-muted)]">
+                      No high-confidence weak systems yet.
+                    </div>
+                  )}
+                </div>
+              </div>
 
-              {/* Personalized Drill Recommendations */}
-              <DrillRecommendationCard days={60} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="card-cinematic p-5">
+                  <SectionHeader
+                    title="Review Load"
+                    subtitle="Scheduled review state"
+                    icon={<Brain className="w-4 h-4" />}
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-3">
+                      <p className="text-xs text-[var(--color-text-muted)]">Due today</p>
+                      <p className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
+                        {dashboardAnalytics?.overview.dueToday ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-3">
+                      <p className="text-xs text-[var(--color-text-muted)]">Overdue</p>
+                      <p className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
+                        {dashboardAnalytics?.overview.overdueReviews ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-3">
+                      <p className="text-xs text-[var(--color-text-muted)]">Active</p>
+                      <p className="mt-1 text-lg font-semibold text-[var(--color-text-primary)]">
+                        {dashboardAnalytics?.overview.totalActiveReviews ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Algorithm Status — only for advanced stages */}
-              {showDataWidget('algorithm_status') && !hasRetentionError && safeData.lastTuned && (
-                <AlgorithmStatusWidget
-                  lastTuned={new Date(safeData.lastTuned)}
-                  reason={safeData.tuningReason}
-                  adjustment={safeData.adjustment}
-                />
-              )}
+                <div className="card-cinematic p-5">
+                  <SectionHeader
+                    title="Recent Sessions"
+                    subtitle="Latest recorded sessions"
+                    icon={<Clock className="w-4 h-4" />}
+                  />
+                  {dashboardAnalytics?.recentSessions.length ? (
+                    <div className="space-y-3">
+                      {dashboardAnalytics.recentSessions.slice(0, 4).map((session) => (
+                        <div
+                          key={session.id}
+                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-3"
+                        >
+                          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                            {session.modeLabel}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                            {session.dateLabel} · {session.durationMinutes} min · {session.totalQuestions} questions
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-[var(--color-bg-primary)] p-6 text-sm text-[var(--color-text-muted)]">
+                      Recent sessions will appear here once you complete them.
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Link to full analytics */}
               <div className="flex justify-center pt-6 pb-3">

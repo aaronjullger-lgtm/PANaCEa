@@ -19,6 +19,12 @@ export type {
 // =============================================================================
 
 /** Metadata about how a session was generated. */
+export interface SessionSelectionMix {
+  dueReviewCount: number;
+  resurfacedCount: number;
+  newCardCount: number;
+}
+
 export interface SessionMetadata {
   dueReviewCount: number;
   newCardCount: number;
@@ -28,6 +34,12 @@ export interface SessionMetadata {
   blueprintStage?: string;
   learnerPhase?: string;
   source: 'reservoir' | 'on_demand' | 'mixed';
+  /**
+   * Optional adaptive-selection metadata for debugging and analytics.
+   * Kept optional so reservoir and legacy paths remain backward compatible.
+   */
+  adaptiveVersion?: 'v1';
+  selectionMix?: SessionSelectionMix;
 }
 
 /**
@@ -68,4 +80,11 @@ export interface SessionGenerateResult {
   questionIds?: string[];
   priorityBreakdown?: SessionPriorityBreakdown;
   initialDifficulty?: string;
+}
+
+/**
+ * GET /api/study/session/:sessionId/questions response data (unwrapped).
+ */
+export interface SessionQuestionsResult {
+  questions: QuestionDTO[];
 }

@@ -95,7 +95,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
             badgeTone: 'amber',
             title: 'Turn dense PDFs into audio-friendly study material.',
             subtitle:
-              'Convert notes or lecture PDFs into either a guided Q&A script or a deeper discussion format so review can continue during walks, drives, or cleanup time.',
+              'Convert notes or lecture PDFs into a guided Q&A or discussion format — review on walks, drives, or cleanup time.',
             backLabel: 'Back to Study',
             onBack,
           }}

@@ -165,6 +165,7 @@ export type {
 export type {
   SessionGenerateRequest as SessionGeneratePayload,
   SessionGenerateResult,
+  SessionQuestionsResult,
 } from '@/lib/api/types/sessions';
 
 // ── User --------------------------------------------------------------------

@@ -26,12 +26,7 @@ import {
 // TYPES
 // =============================================================================
 
-export interface GenerateSessionOptions {
-  mode: 'mainSession' | 'review' | 'drill';
-  size?: number;
-  systems?: string[];
-  adaptive?: boolean; // New flag for adaptive sessions
-}
+export interface GenerateSessionOptions extends GenerateStudySessionOptions {}
 
 export type GeneratedSession = NormalizedSessionGenerateResult;
 
@@ -80,6 +75,7 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
 
         const session = normalizeSessionGenerateResult(await sessions.generate(payload));
         setLastSession(session);
+        useStudyStore.getState().hydrateSession(runtime);
 
         // Navigate to the session
         const isAdaptiveSession =

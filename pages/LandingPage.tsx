@@ -127,10 +127,10 @@ export function LandingPage() {
             aria-hidden="true"
           />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-[4.5rem] pb-12 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
               {/* Left — copy */}
-              <div className="text-center lg:text-left space-y-8">
+              <div className="text-center lg:text-left space-y-6">
                 <motion.div {...fadeUp(0)}>
                   <span
                     className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-6"
@@ -143,7 +143,7 @@ export function LandingPage() {
                     Built by a PA student, for PA students
                   </span>
 
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]" style={{ color: '#f1f5f9' }}>
+                  <h1 className="text-4xl sm:text-[3.2rem] lg:text-[4.35rem] font-extrabold tracking-tight leading-[1.04]" style={{ color: '#f1f5f9' }}>
                     Study Smarter for the{' '}
                     <span style={{
                       backgroundImage: 'linear-gradient(135deg, #c4b78a, #e8e4d8, #c4b78a)',
@@ -156,7 +156,11 @@ export function LandingPage() {
                   </h1>
                 </motion.div>
 
-                <motion.p {...fadeUp(0.15)} className="text-lg sm:text-xl leading-relaxed max-w-xl mx-auto lg:mx-0" style={{ color: '#94a3b8' }}>
+                <motion.p
+                  {...fadeUp(0.15)}
+                  className="text-lg sm:text-[1.15rem] leading-relaxed max-w-lg mx-auto lg:mx-0"
+                  style={{ color: '#b3c0cf' }}
+                >
                   Adaptive spaced repetition, 15+ clinical drill modes, a built-in
                   medical database, and performance analytics — all aligned to the
                   NCCPA blueprint.
@@ -236,9 +240,8 @@ export function LandingPage() {
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: 'Day Streak', val: '12', color: '#c4b78a' },
                         { label: 'To Review', val: '24', color: '#60a5fa' },
                         { label: 'Accuracy', val: '78%', color: '#34d399' },
                       ].map((s) => (
@@ -251,21 +254,29 @@ export function LandingPage() {
 
                     {/* Quick Start mock */}
                     <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(241,245,249,0.04)', border: '1px solid rgba(148,163,184,0.08)' }}>
-                      <div className="h-3 w-24 rounded mb-3" style={{ backgroundColor: 'rgba(241,245,249,0.1)' }} />
-                      <div className="flex gap-2">
-                        {['5 min', '10 min', '20 min'].map((t) => (
-                          <div key={t} className="flex-1 rounded-lg py-2 text-center text-xs font-semibold" style={{ backgroundColor: 'rgba(196,183,138,0.15)', color: '#c4b78a', border: '1px solid rgba(196,183,138,0.2)' }}>
+                      <div className="h-3 w-28 rounded mb-3" style={{ backgroundColor: 'rgba(241,245,249,0.1)' }} />
+                      <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(196,183,138,0.12)', border: '1px solid rgba(196,183,138,0.2)' }}>
+                        <div className="text-sm font-semibold" style={{ color: '#e8e4d8' }}>
+                          Launch adaptive session
+                        </div>
+                        <div className="mt-1 text-xs" style={{ color: '#94a3b8' }}>
+                          Review due work first, then continue with mixed practice.
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {['10 min block', 'Quick review'].map((t) => (
+                          <div key={t} className="rounded-lg py-2 text-center text-xs font-medium" style={{ backgroundColor: 'rgba(148,163,184,0.08)', color: '#cbd5e1', border: '1px solid rgba(148,163,184,0.12)' }}>
                             {t}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* System chips mock */}
-                    <div className="flex flex-wrap gap-2">
-                      {['Cardio', 'Neuro', 'GI', 'Pulm', 'MSK', 'Psych'].map((sys) => (
-                        <span key={sys} className="px-3 py-1 rounded-full text-[10px] font-medium" style={{ backgroundColor: 'rgba(148,163,184,0.08)', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.1)' }}>
-                          {sys}
+                    {/* Focus row mock */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Weakest signal: Cardio', '12-day streak'].map((item) => (
+                        <span key={item} className="px-3 py-2 rounded-xl text-[11px] font-medium text-center" style={{ backgroundColor: 'rgba(148,163,184,0.08)', color: '#cbd5e1', border: '1px solid rgba(148,163,184,0.1)' }}>
+                          {item}
                         </span>
                       ))}
                     </div>
@@ -286,7 +297,7 @@ export function LandingPage() {
                     className="text-center"
                   >
                     <div className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#c4b78a' }}>{stat.value}</div>
-                    <div className="text-xs sm:text-sm mt-1 uppercase tracking-wider" style={{ color: '#94a3b8' }}>{stat.label}</div>
+                    <div className="text-xs sm:text-sm mt-1 font-medium" style={{ color: '#a8b6c7' }}>{stat.label}</div>
                   </motion.div>
                 ))}
               </div>

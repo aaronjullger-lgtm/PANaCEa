@@ -24,9 +24,9 @@ export const MedicalDatabaseWorkspacePage: React.FC = () => {
           meta={{
             badge: 'Evidence Search',
             badgeTone: 'steel',
-            title: 'Search outside the app without leaving the workspace.',
+            title: 'Evidence search across PubMed, trials, and guidelines.',
             subtitle:
-              'Use this page when you need external literature, trial data, or guideline context to support what you are studying inside PANaCEa.',
+              'Pull external literature, trial data, or guideline context to back what you are studying right now.',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
           }}

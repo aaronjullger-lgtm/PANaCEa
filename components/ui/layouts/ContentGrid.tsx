@@ -59,7 +59,8 @@ const GridSkeleton: React.FC<GridSkeletonProps> = ({
         <div
           key={index}
           aria-hidden="true"
-          className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 animate-pulse"
+          className={cn(surfaceBaseClass, surfaceCompactPaddingClass, 'animate-pulse')}
+          style={surfaceShadowStyle}
         >
           {/* Header skeleton */}
           <div className="space-y-3 mb-6">
@@ -193,7 +194,7 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
   filters,
 }) => {
   return (
-    <div className="mb-8 space-y-4">
+    <div className="mb-8 space-y-5">
       {/* Title row */}
       {(title || actions) && (
         <div className={sectionHeaderRowClass}>
@@ -213,7 +214,7 @@ export const ContentGridHeader: React.FC<ContentGridHeaderProps> = ({
       )}
 
       {/* Filter row */}
-      {filters && <div className="flex items-center gap-3 flex-wrap">{filters}</div>}
+      {filters && <div className="flex flex-wrap items-center gap-3">{filters}</div>}
     </div>
   );
 };

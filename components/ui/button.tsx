@@ -45,11 +45,11 @@ const buttonVariants = cva(
       },
       size: {
         xs: 'px-2.5 py-1 text-xs min-h-[32px]',
-        sm: 'px-3 py-1.5 text-sm min-h-[36px]',
-        md: 'px-4 py-2 text-base min-h-[44px]',
-        lg: 'px-6 py-3 text-lg min-h-[44px]',
-        xl: 'px-8 py-4 text-xl min-h-[52px]',
-        icon: 'p-2 min-h-[44px] min-w-[44px]',
+        sm: 'px-3.5 py-2 text-sm min-h-[38px]',
+        md: 'px-4 py-2.5 text-sm min-h-[44px]',
+        lg: 'px-5 py-3 text-base min-h-[48px]',
+        xl: 'px-7 py-4 text-lg min-h-[52px]',
+        icon: 'p-0 min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {
