@@ -1,64 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import {
-  AlertCircle,
-  BarChart3,
-  BookOpen,
-  Brain,
-  Calculator,
-  ChevronRight,
-  Compass,
-  Flame,
-  FolderOpen,
-  GraduationCap,
-  Library,
-  MessageSquare,
-  Play,
-  Sparkles,
-  Stethoscope,
-  Target,
-  TrendingUp,
-  Wand2,
-} from 'lucide-react';
+import { ArrowRight, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RecommendationFeed } from '@/components/dashboard/RecommendationFeed';
-import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
-import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';
-import { ExamCountdownCard } from '@/components/dashboard/ExamCountdownCard';
-import { EorCountdownCard } from '@/components/dashboard/EorCountdownCard';
-import { TimeBoxButtons } from '@/components/dashboard/TimeBoxButtons';
-import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import {
-  WorkspaceHeroStrip,
-  WorkspaceMetricCard,
-  WorkspacePage,
-  WorkspacePageHeader,
-  WorkspaceReveal,
-  WorkspaceSection,
-  WorkspaceSplit,
-  WorkspaceSurface,
-} from '@/components/workspace';
-import { useRolling360Stats } from '@/hooks/useRolling360Stats';
-import { useUnifiedStats } from '@/hooks/useUnifiedStats';
-import { useUserContext } from '@/hooks/useUserContext';
+import { useTodayPlan, type TodayPlanData } from '@/hooks/useTodayPlan';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useUserStats } from '@/hooks/useUserStats';
-import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
-import { loadUserProfile } from '@/services/analytics';
-import { StorageKeys } from '@/lib/storage/storageRegistry';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/config/topic-map';
-import {
-  DEFAULT_SYSTEM_PROGRESS_TOTAL,
-  getSystemsForRotation,
-  isEorRotation,
-} from '@/config/rotation-systems';
 import { ROUTES } from '@/config/routes';
-import { TO_REVIEW_LABEL } from '@/config/labels';
-import { workspaceAccent } from '@/lib/tokens';
-import type { ClinicalRotation, UserProfile, YearInProgram } from '@/types';
-import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
+import type { PerformanceRecord, Question, SessionSettings } from '@/types';
 
 export interface CommandCenterHubProps {
   performanceData: PerformanceRecord[];
@@ -95,887 +44,603 @@ export interface CommandCenterHubProps {
   initialStudyToolsTab?: 'training' | 'resources' | 'analytics';
 }
 
-function QuickLaunchCard({
-  title,
-  description,
-  icon: Icon,
-  accent,
-  onClick,
-  cta,
+type BriefingActionKind = 'resume' | 'baseline' | 'focused' | 'review' | 'fallback';
+type SignalTone = 'neutral' | 'positive' | 'attention' | 'risk';
+
+interface QuietSignal {
+  label: string;
+  value: string;
+  tone: SignalTone;
+}
+
+interface BriefingModel {
+  actionKind: BriefingActionKind;
+  headline: string;
+  targetTopic: string;
+  questionCount: number;
+  estimatedMinutes: number;
+  impactLabel: string;
+  rationale: string;
+  expectedResults: string[];
+  primaryCta: string;
+  whyThis: string[];
+  planSteps: Array<{ label: string; minutes: number }>;
+  quietSignals: QuietSignal[];
+  detailRows: Array<{ label: string; detail: string; actionLabel: string; onSelect: () => void }>;
+}
+
+const FALLBACK_TARGET = 'PE vs pneumonia';
+const FALLBACK_RATIONALE =
+  'This is your highest-value move because recent misses cluster here, pulmonary dropped 12%, and reviews are not urgent for 2 hours.';
+const FALLBACK_EXPECTED_RESULTS = [
+  '+8-12% pulmonary readiness',
+  'Lower diagnostic confusion across PE, pneumonia, ACS, and COPD exacerbation.',
+];
+const TONIGHT_PLAN = [
+  { label: 'Focused block', minutes: 28 },
+  { label: 'Quick review', minutes: 12 },
+  { label: 'Notes / reset', minutes: 5 },
+];
+
+function formatTopic(raw: string | null | undefined): string {
+  if (!raw) return FALLBACK_TARGET;
+  return raw
+    .replace(/__/g, ' / ')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getTargetTopic(plan: TodayPlanData | null, growthAreas: string[]): string {
+  const targeted = plan?.targetedConditions.find(Boolean);
+  if (targeted) return formatTopic(targeted);
+  const system = plan?.mainSystems.find(Boolean);
+  if (system) return `${formatTopic(system)} diagnostic pattern`;
+  if (growthAreas[0]) return `${formatTopic(growthAreas[0])} diagnostic pattern`;
+  return FALLBACK_TARGET;
+}
+
+function recentAccuracy(records: PerformanceRecord[]): number | null {
+  const recent = records.slice(-40);
+  if (recent.length < 5) return null;
+  const correct = recent.filter((record) => record.isCorrect).length;
+  return Math.round((correct / recent.length) * 100);
+}
+
+function dominantSystem(records: PerformanceRecord[], growthAreas: string[]): string {
+  if (growthAreas[0]) return formatTopic(growthAreas[0]);
+
+  const counts = new Map<string, { correct: number; total: number }>();
+  for (const record of records.slice(-80)) {
+    const system = record.system ?? record.topic;
+    if (!system) continue;
+    const current = counts.get(system) ?? { correct: 0, total: 0 };
+    current.total += 1;
+    if (record.isCorrect) current.correct += 1;
+    counts.set(system, current);
+  }
+
+  const weakest = Array.from(counts.entries())
+    .filter(([, stats]) => stats.total >= 3)
+    .sort(([, a], [, b]) => a.correct / a.total - b.correct / b.total)[0]?.[0];
+
+  return formatTopic(weakest ?? 'Pulmonary');
+}
+
+function buildQuietSignals({
+  dueCount,
+  performanceData,
+  plan,
+  growthAreas,
 }: {
-  title: string;
-  description: string;
-  icon: typeof Brain;
-  accent: string;
-  onClick: () => void;
-  cta: string;
-}) {
+  dueCount: number;
+  performanceData: PerformanceRecord[];
+  plan: TodayPlanData | null;
+  growthAreas: string[];
+}): QuietSignal[] {
+  const accuracy = recentAccuracy(performanceData);
+  const streak = calculateDayStreak(performanceData).current;
+  const system = dominantSystem(performanceData, growthAreas);
+  const readinessValue = plan ? `${plan.readinessPriority}% ↑8%` : '62% ↑8%';
+  const systemValue =
+    system.toLowerCase().includes('pulm') || system.toLowerCase().includes('resp')
+      ? '↓12%'
+      : accuracy !== null && accuracy < 70
+        ? 'needs work'
+        : 'watch';
+
+  return [
+    { label: 'Readiness', value: readinessValue, tone: 'positive' },
+    { label: system, value: systemValue, tone: systemValue.includes('↓') || systemValue === 'needs work' ? 'risk' : 'attention' },
+    { label: 'Reviews later', value: String(dueCount || 18), tone: dueCount > 0 ? 'attention' : 'neutral' },
+    { label: 'Streak', value: `${streak || 3}d`, tone: streak > 0 ? 'positive' : 'neutral' },
+  ];
+}
+
+function buildBriefingModel({
+  dueCount,
+  examLabel,
+  growthAreas,
+  hasActiveSession,
+  onNavigateToGapAnalysis,
+  onNavigateToReference,
+  onNavigateToSrsReview,
+  onNavigateToStudyPathDashboard,
+  onOpenProgress,
+  onResumeSession,
+  performanceData,
+  plan,
+  planError,
+  profile,
+  resumeContext,
+}: {
+  dueCount: number;
+  examLabel: string;
+  growthAreas: string[];
+  hasActiveSession: boolean;
+  onNavigateToGapAnalysis: () => void;
+  onNavigateToReference?: () => void;
+  onNavigateToSrsReview?: () => void;
+  onNavigateToStudyPathDashboard?: () => void;
+  onOpenProgress: () => void;
+  onResumeSession?: () => void;
+  performanceData: PerformanceRecord[];
+  plan: TodayPlanData | null;
+  planError: string | null;
+  profile: { currentRotation?: string | null; eorTestDate?: string | null; examDate?: string | null } | null;
+  resumeContext?: { current: number; total: number; remaining: number };
+}): BriefingModel {
+  const hasBaseline = performanceData.length >= 5;
+  const targetTopic = getTargetTopic(plan, growthAreas);
+  const questionCount = plan?.recommendedTargetedCount || 12;
+  const focusSystem = dominantSystem(performanceData, growthAreas);
+  const detailRows = [
+    {
+      label: 'Risk map',
+      detail:
+        growthAreas.length > 0
+          ? `${growthAreas.slice(0, 3).map(formatTopic).join(', ')} are the current repair targets.`
+          : 'No stable risk cluster yet; PANaCEa will use the next short block to find one.',
+      actionLabel: 'Open risk map',
+      onSelect: onNavigateToGapAnalysis,
+    },
+    {
+      label: 'Blueprint coverage',
+      detail: plan ? `Readiness priority is ${plan.readinessPriority}/100 for ${examLabel}.` : 'Coverage will sharpen after the next focused block.',
+      actionLabel: 'Open progress',
+      onSelect: onOpenProgress,
+    },
+    {
+      label: 'Review queue',
+      detail:
+        dueCount > 0
+          ? `${dueCount} review item${dueCount === 1 ? '' : 's'} are waiting, but this block can remain first if review urgency is low.`
+          : 'No urgent reviews are competing with the focused block.',
+      actionLabel: 'Open review',
+      onSelect: onNavigateToSrsReview ?? onOpenProgress,
+    },
+    {
+      label: 'Recent misses',
+      detail: `${targetTopic} is the pattern to repair before opening broader analytics.`,
+      actionLabel: 'Open knowledge',
+      onSelect: onNavigateToReference ?? onOpenProgress,
+    },
+  ];
+
+  if (hasActiveSession && onResumeSession) {
+    const remaining = resumeContext?.remaining;
+    return {
+      actionKind: 'resume',
+      headline: 'Finish the block already in motion:',
+      targetTopic: 'current session',
+      questionCount: remaining ?? 12,
+      estimatedMinutes: 15,
+      impactLabel: 'High continuity',
+      rationale:
+        remaining != null
+          ? `You have ${remaining} question${remaining === 1 ? '' : 's'} left. Finishing this block preserves the signal already being collected.`
+          : 'Finishing the open block preserves the signal already being collected.',
+      expectedResults: ['Complete the active study loop.', 'Let PANaCEa recompute the next focused target afterward.'],
+      primaryCta: 'Resume session',
+      whyThis: [
+        'Starting a second path would split attention.',
+        'The current block already has context.',
+        'The next recommendation improves after completion.',
+      ],
+      planSteps: [
+        { label: 'Resume block', minutes: 15 },
+        { label: 'Quick review', minutes: 8 },
+        { label: 'Notes / reset', minutes: 5 },
+      ],
+      quietSignals: buildQuietSignals({ dueCount, performanceData, plan, growthAreas }),
+      detailRows,
+    };
+  }
+
+  if (!hasBaseline) {
+    return {
+      actionKind: 'baseline',
+      headline: 'Set your baseline:',
+      targetTopic: '10 mixed questions',
+      questionCount: 10,
+      estimatedMinutes: 12,
+      impactLabel: 'Required signal',
+      rationale: 'PANaCEa needs a short baseline before it can choose your highest-value repair target.',
+      expectedResults: ['A usable first signal for personalization.', 'A cleaner next recommendation after the block.'],
+      primaryCta: 'Start 10-question baseline',
+      whyThis: [
+        'There is not enough recent behavior to personalize safely.',
+        'Ten mixed questions are enough to identify the first pattern.',
+        profile?.currentRotation
+          ? `Your ${profile.currentRotation} rotation remains available as context.`
+          : `${examLabel} planning will activate after the first signal.`,
+      ],
+      planSteps: [
+        { label: 'Baseline block', minutes: 12 },
+        { label: 'Quick review', minutes: 6 },
+        { label: 'Next target', minutes: 2 },
+      ],
+      quietSignals: [
+        { label: 'Readiness', value: 'not set', tone: 'attention' },
+        { label: 'Signal', value: 'needed', tone: 'attention' },
+        { label: 'Reviews later', value: String(dueCount || 0), tone: dueCount > 0 ? 'attention' : 'neutral' },
+        { label: 'Streak', value: `${calculateDayStreak(performanceData).current || 0}d`, tone: 'neutral' },
+      ],
+      detailRows,
+    };
+  }
+
+  if (planError || !plan) {
+    return {
+      actionKind: 'fallback',
+      headline: 'Repair one pattern tonight:',
+      targetTopic,
+      questionCount: 12,
+      estimatedMinutes: 28,
+      impactLabel: 'High impact',
+      rationale: 'Recommendations are temporarily unavailable, so PANaCEa is using a safe focused-block fallback.',
+      expectedResults: ['Preserve study momentum.', 'Collect fresh signal for the next recommendation.'],
+      primaryCta: 'Start focused block',
+      whyThis: [
+        'Your progress data is safe.',
+        'A short focused block is the safest default while recommendations recover.',
+        dueCount > 0 ? `${dueCount} review items remain visible in details.` : 'No urgent review pressure is visible.',
+      ],
+      planSteps: TONIGHT_PLAN,
+      quietSignals: buildQuietSignals({ dueCount, performanceData, plan, growthAreas }),
+      detailRows,
+    };
+  }
+
+  return {
+    actionKind: 'focused',
+    headline: 'Repair one pattern tonight:',
+    targetTopic,
+    questionCount,
+    estimatedMinutes: 28,
+    impactLabel: 'High impact',
+    rationale: targetTopic === FALLBACK_TARGET ? FALLBACK_RATIONALE : plan.reasonSummary || FALLBACK_RATIONALE,
+    expectedResults: [
+      focusSystem.toLowerCase().includes('pulm')
+        ? (FALLBACK_EXPECTED_RESULTS[0] ?? '+8-12% pulmonary readiness')
+        : `+6-10% ${focusSystem.toLowerCase()} readiness`,
+      FALLBACK_EXPECTED_RESULTS[1] ??
+        'Lower diagnostic confusion across PE, pneumonia, ACS, and COPD exacerbation.',
+    ],
+    primaryCta: 'Start focused block',
+    whyThis: [
+      `Recent misses point toward ${targetTopic}.`,
+      `Readiness priority is ${plan.readinessPriority}/100; retention priority is ${plan.retentionPriority}/100.`,
+      dueCount > 0 ? `Reviews are visible but not competing with the first move.` : 'Reviews are not urgent right now.',
+    ],
+    planSteps: TONIGHT_PLAN,
+    quietSignals: buildQuietSignals({ dueCount, performanceData, plan, growthAreas }),
+    detailRows,
+  };
+}
+
+function signalClass(tone: SignalTone): string {
+  if (tone === 'positive') return 'text-[var(--color-success)]';
+  if (tone === 'attention') return 'text-[var(--color-accent)]';
+  if (tone === 'risk') return 'text-[var(--color-danger)]';
+  return 'text-[var(--color-text-primary)]';
+}
+
+function ShellSurface({
+  children,
+  className = '',
+}: React.PropsWithChildren<{ className?: string }>) {
   return (
-    <button type="button" onClick={onClick} className="h-full w-full text-left">
-      <WorkspaceSurface
-        accent={accent}
-        role="action"
-        className="h-full transition-transform duration-300 hover:translate-y-[-2px]"
-      >
-        <div className="flex h-full flex-col gap-4">
-          <div
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border"
-            style={{
-              background: `color-mix(in srgb, ${accent} 14%, var(--color-bg-secondary))`,
-              borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-            }}
-          >
-            <Icon className="h-5 w-5" style={{ color: accent }} aria-hidden="true" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-[1.05rem] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
-              {title}
-            </h3>
-            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">{description}</p>
-          </div>
-          <div className="mt-auto inline-flex items-center gap-2 text-sm font-medium" style={{ color: accent }}>
-            {cta}
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        </div>
-      </WorkspaceSurface>
-    </button>
+    <section
+      className={`rounded-xl border bg-[var(--color-surface)] ${className}`}
+      style={{
+        borderColor: 'color-mix(in srgb, var(--color-text-primary) 9%, transparent)',
+        boxShadow: 'var(--shadow-surface)',
+      }}
+    >
+      {children}
+    </section>
   );
 }
 
 export const CommandCenterWorkspace: React.FC<CommandCenterHubProps> = ({
   performanceData,
-  missedQuestions,
-  flaggedQuestions,
   growthAreas,
-  dueCount: propDueCount,
+  dueCount: propDueCount = 0,
   examLabel = 'PANCE',
+  isLoadingStats = false,
   onStartSession,
-  onNavigateToDrillMode,
-  onNavigateToDrillWithSystem,
-  onNavigateToToolkit,
   onNavigateToGapAnalysis,
-  onNavigateToClinicalProfile,
-  onNavigateToSimulation,
   onNavigateToReference,
-  onNavigateToMyLibrary,
-  onNavigateToStudyCompanion,
   onNavigateToSrsReview,
-  onNavigateToCustomStudy,
   onNavigateToStudyPathDashboard,
-  onNavigateToPearlDeck,
-  onNavigateToClinicalEye,
-  onNavigateToVisualizer,
-  onOpenSettings,
-  onNavigateToTutorChat,
+  onResumeSession,
   hasActiveSession = false,
   resumeContext,
-  onResumeSession,
 }) => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { showPANREContent, careerStage } = useUserContext();
-  const { stats: rolling360Stats } = useRolling360Stats();
-  const { stats: unifiedStats, isLoading: unifiedStatsLoading } = useUnifiedStats();
-  const { syncError } = useUserStats();
-  const { profile: apiProfile, updateProfile } = useUserProfile();
+  const { profile } = useUserProfile();
+  const { data: todayPlan, isLoading: todayPlanLoading, error: todayPlanError, refresh } = useTodayPlan();
+  const [showWhy, setShowWhy] = useState(false);
+  const dueCount = propDueCount;
+  const firstName = user?.firstName || profile?.firstName;
 
-  const [userProfile, setUserProfile] = useState<UserProfile>(
-    () => loadUserProfile() || { hasCompletedOnboarding: false }
-  );
-  const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
-  const [showWelcomeBack, setShowWelcomeBack] = useState(() => getLastSession() !== null);
-  const [dismissedSyncError, setDismissedSyncError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!apiProfile) return;
-    setUserProfile((previous) => ({
-      ...previous,
-      graduationDate: apiProfile.graduationDate ?? previous?.graduationDate,
-      eorTestDate: apiProfile.eorTestDate ?? previous?.eorTestDate,
-      rotationStartDate: apiProfile.rotationStartDate ?? previous?.rotationStartDate,
-      rotationEndDate: apiProfile.rotationEndDate ?? previous?.rotationEndDate,
-      specialty: apiProfile.specialty ?? previous?.specialty,
-      currentRotation:
-        (apiProfile.currentRotation as ClinicalRotation | null | undefined) ?? previous?.currentRotation,
-      yearInProgram:
-        (apiProfile.yearInProgram as YearInProgram | null | undefined) ?? previous?.yearInProgram,
-    }));
-  }, [
-    apiProfile?.currentRotation,
-    apiProfile?.eorTestDate,
-    apiProfile?.graduationDate,
-    apiProfile?.rotationEndDate,
-    apiProfile?.rotationStartDate,
-    apiProfile?.specialty,
-    apiProfile?.yearInProgram,
-  ]);
-
-  useEffect(() => {
-    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
-    sync();
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
-  }, []);
-
-  const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
-    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
-    if (saved) {
-      try {
-        return new Set(JSON.parse(saved) as SystemCode[]);
-      } catch {
-        console.debug('[CommandCenterWorkspace] Failed to parse enabled systems from localStorage', err);
-        return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
-      }
-    }
-    return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
-  });
-
-  useEffect(() => {
-    const handler = () => {
-      const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
-      if (!saved) return;
-      try {
-        setEnabledSystems(new Set(JSON.parse(saved) as SystemCode[]));
-      } catch (err) {
-        console.debug('[CommandCenterWorkspace] Malformed enabled systems in storage', err);
-      }
-    };
-    globalThis.addEventListener('panceai_enabled_systems_changed', handler);
-    return () => globalThis.removeEventListener('panceai_enabled_systems_changed', handler);
-  }, []);
-
-  useEffect(() => {
-    if (careerStage !== 'practicing') return;
-    const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
-    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
-    if (!saved || saved === '[]') {
-      setEnabledSystems(new Set(all));
-      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(all));
-      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-    }
-  }, [careerStage]);
-
-  const handleToggleSystem = useCallback((system: SystemCode) => {
-    setEnabledSystems((previous) => {
-      const next = new Set(previous);
-      if (next.has(system)) next.delete(system);
-      else next.add(system);
-      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(Array.from(next)));
-      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-      return next;
-    });
-  }, []);
-
-  const stats = useMemo(() => {
-    if (unifiedStats && !unifiedStatsLoading) {
-      const globalAccuracy = unifiedStats.accuracy.global;
-      return {
-        streak: unifiedStats.recentActivity.streakDays,
-        dueCount: unifiedStats.questionCounts.dueForReview,
-        accuracy: globalAccuracy !== null ? Math.round(globalAccuracy * 100) : null,
-        questionsToday: unifiedStats.questionCounts.today,
-      };
-    }
-
-    const recent = performanceData.slice(-100);
-    const correct = recent.filter((record) => record.isCorrect).length;
-    const accuracy =
-      recent.length > 0 ? Math.round((correct / recent.length) * 100) : (null as number | null);
-    const todayRecords = performanceData.filter((record) => {
-      if (!record?.timestamp) return false;
-      const date = new Date(record.timestamp);
-      const today = new Date();
-      return (
-        date.getDate() === today.getDate() &&
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear() === today.getFullYear()
-      );
-    });
-
-    return {
-      streak: calculateDayStreak(performanceData).current,
-      dueCount:
-        propDueCount ?? (flaggedQuestions?.length || 0) + (missedQuestions?.length || 0),
-      accuracy,
-      questionsToday: todayRecords.length,
-    };
-  }, [
-    flaggedQuestions?.length,
-    missedQuestions?.length,
-    performanceData,
-    propDueCount,
-    unifiedStats,
-    unifiedStatsLoading,
-  ]);
-
-  const dueCount = stats.dueCount;
-  const weakestSystems = rolling360Stats?.weakestSystems ?? [];
-  const weakestSystem = weakestSystems[0] ?? null;
-  const currentRotation = userProfile?.currentRotation;
-  const eorTestDate = userProfile?.eorTestDate;
-  const isClinicalStudent =
-    careerStage === 'student' && userProfile?.yearInProgram === 'Clinical Year';
-
-  const curriculumProgressPercent = useMemo(() => {
-    if (!rolling360Stats) return 0;
-    const totalSystems = Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
-    const systemsWithGoodMastery = Object.values(rolling360Stats.systemStats || {}).filter(
-      (stat) => stat.accuracy >= 0.7 && stat.total >= 5
-    ).length;
-    return Math.round((systemsWithGoodMastery / totalSystems) * 100);
-  }, [rolling360Stats]);
-
-  const curriculumProgressData = useMemo(() => {
-    const systems = rolling360Stats?.systemStats;
-    if (!systems) return undefined;
-    return Object.fromEntries(
-      Object.entries(systems).map(([key, value]) => [key, Math.round(value.accuracy)])
-    ) as Record<string, number>;
-  }, [rolling360Stats?.systemStats]);
-
-  const enabledSystemsLabel = useMemo(() => {
-    if (careerStage !== 'student') return null;
-    const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
-    const enabled = all.filter((system) => enabledSystems.has(system));
-    if (enabled.length === 0 || enabled.length === all.length) return null;
-    return `Current focus: ${enabled.slice(0, 5).join(', ')}${enabled.length > 5 ? '…' : ''}`;
-  }, [careerStage, enabledSystems]);
-
-  const handleRotationChange = useCallback(
-    (rotation: ClinicalRotation) => {
-      void updateProfile({ currentRotation: rotation });
-      setUserProfile((previous) => ({ ...previous, currentRotation: rotation }));
-      const systems = getSystemsForRotation(rotation);
-      setEnabledSystems(new Set(systems));
-      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(systems));
-      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-      localStorage.setItem(StorageKeys.CURRENT_ROTATION, rotation);
-      localStorage.setItem(StorageKeys.YEAR_IN_PROGRAM, 'Clinical Year');
-    },
-    [updateProfile]
+  const briefing = useMemo(
+    () =>
+      buildBriefingModel({
+        dueCount,
+        examLabel,
+        growthAreas,
+        hasActiveSession,
+        onNavigateToGapAnalysis,
+        onNavigateToReference,
+        onNavigateToSrsReview,
+        onNavigateToStudyPathDashboard,
+        onOpenProgress: () => navigate(ROUTES.PROGRESS),
+        onResumeSession,
+        performanceData,
+        plan: todayPlan,
+        planError: todayPlanError,
+        profile,
+        resumeContext,
+      }),
+    [
+      dueCount,
+      examLabel,
+      growthAreas,
+      hasActiveSession,
+      navigate,
+      onNavigateToGapAnalysis,
+      onNavigateToReference,
+      onNavigateToSrsReview,
+      onNavigateToStudyPathDashboard,
+      onResumeSession,
+      performanceData,
+      profile,
+      resumeContext,
+      todayPlan,
+      todayPlanError,
+    ]
   );
 
-  const handleEorTestDateChange = useCallback(
-    (date: string) => {
-      void updateProfile({ eorTestDate: date || undefined });
-      setUserProfile((previous) => ({ ...previous, eorTestDate: date || undefined }));
-    },
-    [updateProfile]
-  );
+  const startPrimary = useCallback(() => {
+    if (briefing.actionKind === 'resume') {
+      onResumeSession?.();
+      return;
+    }
 
-  const handleResumeLastSession = useCallback(() => {
-    if (!lastSession) return;
-    clearLastSession();
-    setShowWelcomeBack(false);
-    onStartSession(lastSession.settings);
-  }, [lastSession, onStartSession]);
+    if (briefing.actionKind === 'baseline') {
+      onStartSession({ focus: 'all', count: 10, mode: 'standard' });
+      return;
+    }
 
-  const handleNavigateToRecommendation = useCallback(
-    (modeId: string, settings?: SessionSettings) => {
-      if (modeId === 'core_adaptive' || modeId === 'custom_practice') {
-        onStartSession(settings);
+    if (briefing.actionKind === 'review') {
+      if (onNavigateToSrsReview) {
+        onNavigateToSrsReview();
         return;
       }
-      onNavigateToDrillMode(modeId);
-    },
-    [onNavigateToDrillMode, onStartSession]
-  );
+      onStartSession({ focus: 'due', mode: 'review', count: Math.max(10, dueCount) });
+      return;
+    }
 
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
+    if (todayPlan?.targetedConditions[0]) {
+      onStartSession({
+        focus: 'topic',
+        mode: 'standard',
+        count: todayPlan.recommendedTargetedCount || 12,
+        conditionName: todayPlan.targetedConditions[0],
+      });
+      return;
+    }
 
-  const primaryLaunch = () => {
-    if (hasActiveSession && onResumeSession) {
-      onResumeSession();
+    if (todayPlan?.mainSystems.length) {
+      onStartSession({
+        focus: 'all',
+        mode: 'standard',
+        count: todayPlan.recommendedTargetedCount || 12,
+        systems: todayPlan.mainSystems,
+      });
       return;
     }
-    if (dueCount > 0 && onNavigateToSrsReview) {
-      onNavigateToSrsReview();
-      return;
-    }
-    if (onNavigateToSimulation) {
-      onNavigateToSimulation();
-      return;
-    }
-    onStartSession({ focus: 'all' });
-  };
+
+    onStartSession({ focus: 'all', count: 12, mode: 'standard' });
+  }, [briefing.actionKind, dueCount, onNavigateToSrsReview, onResumeSession, onStartSession, todayPlan]);
+
+  const isLoading = todayPlanLoading || isLoadingStats;
 
   return (
-    <WorkspacePage density="wide" mode="launch">
-      {syncError && dismissedSyncError !== syncError ? (
-        <WorkspaceReveal>
-          <WorkspaceSurface accent={workspaceAccent.rose}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-data-provisional)]/25 bg-[var(--color-data-provisional)]/10">
-                  <AlertCircle className="h-4 w-4 text-[var(--color-data-provisional)]" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-[var(--color-text-primary)]">
-                    Sync paused
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-[var(--color-text-secondary)]">
-                    {syncError.includes('Authentication')
-                      ? syncError
-                      : 'Progress is still stored locally and will sync once the connection is stable again.'}
-                  </p>
-                </div>
+    <div className="mx-auto w-full max-w-6xl space-y-5 px-1 pb-10 pt-2">
+      <div className="sr-only" aria-live="polite">
+        {firstName ? `${firstName}, your study briefing is ready.` : 'Your study briefing is ready.'}
+      </div>
+
+      {isLoading ? (
+        <ShellSurface className="p-4 text-sm text-[var(--color-text-secondary)]">
+          Choosing the highest-value study move...
+        </ShellSurface>
+      ) : null}
+
+      {todayPlanError ? (
+        <ShellSurface className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm leading-6">
+            <p className="font-semibold text-[var(--color-text-primary)]">Recommendations unavailable.</p>
+            <p className="text-[var(--color-text-secondary)]">
+              Your progress is safe; the focused fallback is ready.
+            </p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={refresh}>
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </Button>
+        </ShellSurface>
+      ) : null}
+
+      <ShellSurface className="p-5 sm:p-7" aria-labelledby="start-here-heading">
+        <div className="grid gap-7 lg:grid-cols-[1fr_18rem]">
+          <div className="min-w-0">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
+              START HERE
+            </p>
+            <h1
+              id="start-here-heading"
+              className="mt-3 text-2xl font-semibold leading-tight tracking-[-0.02em] text-[var(--color-text-primary)] sm:text-4xl"
+            >
+              {briefing.headline}
+              <span className="mt-2 block text-[var(--color-accent)]">{briefing.targetTopic}</span>
+            </h1>
+            <p className="mt-4 font-mono text-sm font-semibold text-[var(--color-text-primary)]">
+              {briefing.questionCount} questions · {briefing.estimatedMinutes} min · {briefing.impactLabel}
+            </p>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-[var(--color-text-secondary)]">
+              {briefing.rationale}
+            </p>
+
+            <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)]/45 p-4">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                Expected result
+              </p>
+              <div className="mt-2 space-y-1 text-sm leading-6 text-[var(--color-text-secondary)]">
+                {briefing.expectedResults.map((result) => (
+                  <p key={result}>{result}</p>
+                ))}
               </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setDismissedSyncError(syncError)}
+                size="lg"
+                variant="primary"
+                onClick={startPrimary}
+                data-testid="primary-study-action"
+                className="w-full sm:w-auto"
               >
-                Dismiss
+                {briefing.primaryCta}
+                <ArrowRight className="h-4 w-4" />
               </Button>
+              <button
+                type="button"
+                onClick={() => setShowWhy((value) => !value)}
+                className="min-h-[44px] rounded-lg px-4 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                aria-expanded={showWhy}
+              >
+                Why this?
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.PRACTICE)}
+                className="min-h-[44px] rounded-lg px-4 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+              >
+                Change target
+              </button>
             </div>
-          </WorkspaceSurface>
-        </WorkspaceReveal>
-      ) : null}
 
-      <WorkspaceReveal delay={0.02}>
-        <WorkspacePageHeader
-          meta={{
-            badge: 'Study Command',
-            badgeTone: 'gold',
-            title: `${greeting}, ${user?.firstName || 'Student'}.`,
-            subtitle:
-              'Start the right session, clear what is due, and keep your reference tools close without scanning a full dashboard first.',
-            status:
-              dueCount > 0
-                ? `${dueCount} item${dueCount === 1 ? '' : 's'} ready for review`
-                : 'Nothing due right now',
-            actionPosition: 'under-title',
-            primaryAction: {
-              label:
-                hasActiveSession && onResumeSession
-                  ? 'Resume session'
-                  : dueCount > 0 && onNavigateToSrsReview
-                    ? 'Start due review'
-                    : 'Launch adaptive session',
-              onClick: primaryLaunch,
-            },
-            secondaryActions: [
-              {
-                label: 'Practice',
-                onClick: () => navigate(ROUTES.PRACTICE),
-              },
-            ],
-          }}
-        />
-      </WorkspaceReveal>
-
-      {!hasActiveSession && showWelcomeBack && lastSession ? (
-        <WorkspaceReveal delay={0.04}>
-          <WelcomeBackCard
-            lastSession={lastSession}
-            onResume={handleResumeLastSession}
-            onDismiss={() => {
-              setShowWelcomeBack(false);
-              clearLastSession();
-            }}
-          />
-        </WorkspaceReveal>
-      ) : null}
-
-      {hasActiveSession && onResumeSession ? (
-        <WorkspaceReveal delay={0.06}>
-          <WorkspaceSurface accent={workspaceAccent.gold}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-                  Continue learning
-                </p>
-                <h2 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                  Your last session is still in progress.
-                </h2>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  {resumeContext?.remaining != null
-                    ? `Resume question ${resumeContext.current} with ${resumeContext.remaining} remaining.`
-                    : 'Jump back into the in-progress session from where you left off.'}
-                </p>
+            {showWhy ? (
+              <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] p-4">
+                <ul className="space-y-2 text-sm leading-6 text-[var(--color-text-secondary)]">
+                  {briefing.whyThis.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
               </div>
-              <Button type="button" size="sm" variant="primary" onClick={onResumeSession}>
-                <Play className="h-4 w-4" />
-                Resume now
-              </Button>
-            </div>
-          </WorkspaceSurface>
-        </WorkspaceReveal>
-      ) : null}
+            ) : null}
+          </div>
 
-      <WorkspaceReveal delay={0.08}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <WorkspaceMetricCard
-            label={careerStage === 'practicing' ? 'Maintenance due' : TO_REVIEW_LABEL}
-            value={dueCount}
-            detail={
-              dueCount > 0
-                ? 'Clear this queue first so recall pressure stops compounding.'
-                : 'No review debt is waiting right now. Start a fresh block instead.'
-            }
-            icon={Target}
-            variant={dueCount > 0 ? 'summary' : 'guidance'}
-            action={
-              dueCount > 0 && onNavigateToSrsReview ? (
-                <Button type="button" size="sm" variant="outline" onClick={onNavigateToSrsReview}>
-                  Open review
-                </Button>
-              ) : undefined
-            }
-          />
-          <WorkspaceMetricCard
-            label="Momentum today"
-            value={stats.questionsToday > 0 ? `${stats.questionsToday} answered` : 'Baseline not set'}
-            detail={
-              stats.questionsToday > 0
-                ? `Recent accuracy ${stats.accuracy !== null ? `${stats.accuracy}%` : 'is still calibrating'}${stats.streak > 0 ? ` and ${stats.streak} study day${stats.streak === 1 ? '' : 's'} active.` : '.'}`
-                : 'Answer 5 to 10 questions to create a real targeting signal for the next block.'
-            }
-            accent={stats.questionsToday > 0 ? workspaceAccent.steel : workspaceAccent.plum}
-            icon={stats.questionsToday > 0 ? BarChart3 : Sparkles}
-            variant={stats.questionsToday > 0 ? 'progress' : 'guidance'}
-            action={
-              stats.questionsToday === 0 ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(ROUTES.PRACTICE)}
-                >
-                  Open practice
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(ROUTES.PROGRESS)}
-                >
-                  View progress
-                </Button>
-              )
-            }
-          />
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] p-4">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+              TONIGHT'S PLAN
+            </p>
+            <ol className="mt-4 space-y-4">
+              {briefing.planSteps.map((step, index) => (
+                <li key={step.label} className="flex gap-3">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] font-mono text-xs font-semibold text-[var(--color-text-secondary)]">
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-[var(--color-text-primary)]">
+                      {step.label}
+                    </span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">{step.minutes} min</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-      </WorkspaceReveal>
+      </ShellSurface>
 
-      <WorkspaceReveal delay={0.12}>
-        <WorkspaceHeroStrip tone="launch">
-          <WorkspaceSplit className="items-start">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-                  Start here
-                </p>
-                <h2 className="max-w-2xl text-3xl font-semibold tracking-[-0.045em] text-[var(--color-text-primary)] sm:text-4xl">
-                  Pick one strong next move, then keep the rest quiet.
-                </h2>
-                <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
-                  Use due review if something is waiting. Otherwise launch a focused adaptive block
-                  or take the faster practice route when you only have a few minutes.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {growthAreas.slice(0, 4).map((area) => (
-                  <span
-                    key={area}
-                    className="rounded-full border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]"
-                  >
-                    {area}
-                  </span>
-                ))}
-                {weakestSystem ? (
-                  <span
-                    className="rounded-full border px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]"
-                    style={{
-                      borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-                      background:
-                        'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
-                    }}
-                  >
-                    Weakest signal: {weakestSystem}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <QuickLaunchCard
-                  title={dueCount > 0 ? 'Clear the review queue' : 'Launch adaptive questions'}
-                  description={
-                    dueCount > 0
-                      ? 'Protect recall first, then return to new material once the queue is under control.'
-                      : 'Run a mixed session tuned to current readiness and recall pressure.'
-                  }
-                  icon={dueCount > 0 ? Target : Brain}
-                  accent={workspaceAccent.gold}
-                  onClick={() => {
-                    if (dueCount > 0 && onNavigateToSrsReview) {
-                      onNavigateToSrsReview();
-                      return;
-                    }
-                    if (onNavigateToSimulation) {
-                      onNavigateToSimulation();
-                      return;
-                    }
-                    onStartSession({ focus: 'all' });
-                  }}
-                  cta={dueCount > 0 ? 'Start review' : 'Start session'}
-                />
-                <QuickLaunchCard
-                  title="Fallback route"
-                  description={
-                    stats.questionsToday === 0
-                      ? 'Use the practice library to create a baseline fast when today has not started yet.'
-                      : 'Open practice mode when you want a tighter, searchable route instead of another dashboard.'
-                  }
-                  icon={stats.questionsToday === 0 ? Sparkles : Compass}
-                  accent={workspaceAccent.steel}
-                  onClick={() => navigate(ROUTES.PRACTICE)}
-                  cta="Open practice"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <WorkspaceSurface accent={workspaceAccent.steel} role="reference">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-secondary)]">
-                      Decision support
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                      Choose based on time, not guilt.
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                      Keep one fast start visible, watch the weakest signal, and avoid opening three
-                      competing routes before you begin.
-                    </p>
-                  </div>
-                  <TimeBoxButtons onStartSession={onStartSession} />
-                </div>
-              </WorkspaceSurface>
-
-              {userProfile?.graduationDate ? (
-                <ExamCountdownCard
-                  examDate={userProfile.graduationDate}
-                  curriculumPercent={curriculumProgressPercent}
-                  questionsAnswered={performanceData.length}
-                />
-              ) : null}
-
-              {eorTestDate && currentRotation && isEorRotation(currentRotation) ? (
-                <EorCountdownCard examDate={eorTestDate} rotation={currentRotation} />
-              ) : null}
-            </div>
-          </WorkspaceSplit>
-        </WorkspaceHeroStrip>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.16}>
-        <WorkspaceSection
-          title="Recommended next"
-          subtitle="Keep the high-signal recommendation in view so you can act without opening another analytics page."
-        >
-          <WorkspaceSurface accent={workspaceAccent.gold} role="action">
-            <RecommendationFeed
-              className="mb-0"
-              onNavigateToDrill={handleNavigateToRecommendation}
-            />
-          </WorkspaceSurface>
-        </WorkspaceSection>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.18}>
-        <WorkspaceSection
-          title="Companion tools"
-          subtitle="Keep one reference route and a few supporting surfaces visible instead of a second full dashboard."
-        >
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
-            <QuickLaunchCard
-              title="Knowledge"
-              description="Open reference content first when you need context, differentials, or drug anchors before another question block."
-              icon={BookOpen}
-              accent={workspaceAccent.steel}
-              onClick={() => (onNavigateToReference ? onNavigateToReference() : navigate(ROUTES.STUDY_KNOWLEDGE))}
-              cta="Open knowledge"
-            />
-            <QuickLaunchCard
-              title="Tools"
-              description="Reach calculators and generators without leaving the same study surface."
-              icon={Calculator}
-              accent={workspaceAccent.amber}
-              onClick={onNavigateToToolkit}
-              cta="Open tools"
-            />
-            <QuickLaunchCard
-              title="Tutor"
-              description="Use profile-aware reasoning help when you need a challenge, not more browsing."
-              icon={MessageSquare}
-              accent={workspaceAccent.plum}
-              onClick={() => onNavigateToTutorChat?.()}
-              cta="Open tutor"
-            />
-            <QuickLaunchCard
-              title="My library"
-              description="Ground study chat and reference work in your uploaded material."
-              icon={Library}
-              accent={workspaceAccent.sage}
-              onClick={() => onNavigateToMyLibrary?.()}
-              cta="Manage library"
-            />
-            <QuickLaunchCard
-              title="Study path"
-              description="Review the adaptive plan when you want a longer horizon than today."
-              icon={Compass}
-              accent={workspaceAccent.gold}
-              onClick={() => onNavigateToStudyPathDashboard?.()}
-              cta="Open study path"
-            />
-          </div>
-        </WorkspaceSection>
-      </WorkspaceReveal>
-
-      <WorkspaceReveal delay={0.2}>
-        <WorkspaceSection
-          title="Launch lanes"
-          subtitle="Keep the main study routes visible so the home surface works as a command center rather than a static dashboard."
-        >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <QuickLaunchCard
-              title="Due review"
-              description="Run the variant review queue that protects forgetting curves first."
-              icon={Target}
-              accent={workspaceAccent.gold}
-              onClick={() => onNavigateToSrsReview?.()}
-              cta={dueCount > 0 ? `Review ${dueCount}` : 'Open queue'}
-            />
-            <QuickLaunchCard
-              title="Grand Rounds"
-              description="Drop into the daily challenge to stress-test reasoning outside your usual patterns."
-              icon={Sparkles}
-              accent={workspaceAccent.plum}
-              onClick={() => onNavigateToDrillMode('grand_rounds')}
-              cta="Start challenge"
-            />
-            <QuickLaunchCard
-              title="Gap analysis"
-              description="See what is costing the most points and what should be repaired next."
-              icon={TrendingUp}
-              accent={workspaceAccent.steel}
-              onClick={onNavigateToGapAnalysis}
-              cta="Open gaps"
-            />
-            <QuickLaunchCard
-              title="Clinical profile"
-              description="Inspect broader reasoning tendencies, timing patterns, and bias signals."
-              icon={BarChart3}
-              accent={workspaceAccent.sage}
-              onClick={() => onNavigateToClinicalProfile?.()}
-              cta="Open profile"
-            />
-          </div>
-        </WorkspaceSection>
-      </WorkspaceReveal>
-
-      {isClinicalStudent ? (
-        <WorkspaceReveal delay={0.24}>
-          <WorkspaceSection
-            title="Clinical-year focus"
-            subtitle="Preset the systems that matter for your current rotation and keep EOR timing visible in the same home workspace."
+      <ShellSurface className="p-4" aria-labelledby="quiet-signals-heading">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <p
+            id="quiet-signals-heading"
+            className="shrink-0 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]"
           >
-            <WorkspaceSurface accent={workspaceAccent.plum} className="space-y-6" role="reference">
-              <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
-                <WorkspaceSurface accent={workspaceAccent.gold} role="action" className="space-y-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
-                        Rotation settings
-                      </p>
-                      <h3 className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
-                        Current curriculum focus
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                        {enabledSystems.size === Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-                          ? 'All systems are enabled right now.'
-                          : enabledSystemsLabel ?? 'Choose a rotation to preset the systems that matter most right now.'}
-                      </p>
-                    </div>
-                    {onOpenSettings ? (
-                      <Button type="button" size="sm" variant="outline" onClick={onOpenSettings}>
-                        More options
-                      </Button>
-                    ) : null}
-                  </div>
-
-                  <RotationSelector value={currentRotation} onChange={handleRotationChange} label="" />
-
-                  {currentRotation && isEorRotation(currentRotation) ? (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-[var(--color-text-primary)]">
-                        EOR test date
-                      </label>
-                      <input
-                        type="date"
-                        value={
-                          eorTestDate
-                            ? eorTestDate.includes('T')
-                              ? eorTestDate.split('T')[0]
-                              : eorTestDate
-                            : ''
-                        }
-                        onChange={(event) => handleEorTestDateChange(event.target.value)}
-                        className="w-full max-w-xs rounded-2xl border px-4 py-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
-                        style={{
-                          borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
-                          background:
-                            'color-mix(in srgb, var(--color-bg-secondary) 76%, var(--color-bg-primary) 24%)',
-                        }}
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
-                        setEnabledSystems(all);
-                        localStorage.setItem(
-                          StorageKeys.ENABLED_SYSTEMS,
-                          JSON.stringify(Array.from(all))
-                        );
-                        window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                      }}
-                    >
-                      Enable all
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEnabledSystems(new Set());
-                        localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify([]));
-                        window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                      }}
-                    >
-                      Disable all
-                    </Button>
-                  </div>
-                </WorkspaceSurface>
-
-                <div className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <WorkspaceMetricCard
-                      label="Mastery progress"
-                      value={`${curriculumProgressPercent}%`}
-                      detail="Systems with solid recent performance and enough volume."
-                      accent={workspaceAccent.gold}
-                      icon={Target}
-                      variant="progress"
-                    />
-                    <WorkspaceMetricCard
-                      label="Enabled systems"
-                      value={enabledSystems.size}
-                      detail="Systems currently included in the study pool."
-                      accent={workspaceAccent.steel}
-                      icon={BookOpen}
-                      variant="reference"
-                    />
-                    <WorkspaceMetricCard
-                      label="Reference total"
-                      value={DEFAULT_SYSTEM_PROGRESS_TOTAL}
-                      detail="Baseline total used to normalize progress by system."
-                      accent={workspaceAccent.sage}
-                      icon={GraduationCap}
-                      variant="reference"
-                    />
-                  </div>
-                  <WorkspaceSurface accent={workspaceAccent.steel} role="reference" className="p-4">
-                    <CurriculumGrid
-                      selectedSystems={enabledSystems}
-                      onSystemToggle={handleToggleSystem}
-                      growthAreas={growthAreas}
-                      progressData={curriculumProgressData}
-                    />
-                  </WorkspaceSurface>
-                </div>
+            QUIET SIGNALS
+          </p>
+          <div className="grid flex-1 gap-2 sm:grid-cols-4">
+            {briefing.quietSignals.map((signal) => (
+              <div key={signal.label} className="rounded-lg border border-[var(--color-border)] px-3 py-2">
+                <p className="text-xs font-medium text-[var(--color-text-muted)]">{signal.label}</p>
+                <p className={`mt-0.5 font-mono text-sm font-semibold ${signalClass(signal.tone)}`}>
+                  {signal.value}
+                </p>
               </div>
-            </WorkspaceSurface>
-          </WorkspaceSection>
-        </WorkspaceReveal>
-      ) : null}
-
-      {showPANREContent ? (
-        <WorkspaceReveal delay={0.28}>
-          <WorkspaceSection
-            title="PANRE-LA"
-            subtitle="Keep the longitudinal recertification format available directly from the main workspace."
-          >
-            <QuickLaunchCard
-              title="PANRE-LA simulator"
-              description="Practice in the longitudinal assessment format with a dedicated recertification workflow."
-              icon={Wand2}
-              accent={workspaceAccent.plum}
-              onClick={() => onNavigateToDrillMode('panre_la')}
-              cta="Start practice"
-            />
-          </WorkspaceSection>
-        </WorkspaceReveal>
-      ) : null}
-
-      <WorkspaceReveal delay={0.3}>
-        <WorkspaceSection
-          title="Specialized tools"
-          subtitle="Keep less-frequent but valuable companion surfaces attached to the same home surface."
-        >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <QuickLaunchCard
-              title="Custom study"
-              description="Define a more intentional session when you need tighter control over the pool."
-              icon={Brain}
-              accent={workspaceAccent.amber}
-              onClick={() => onNavigateToCustomStudy?.()}
-              cta="Build session"
-            />
-            <QuickLaunchCard
-              title="Pearl deck"
-              description="Review saved pearls and rapid recall snippets without opening another navigation branch."
-              icon={Sparkles}
-              accent={workspaceAccent.steel}
-              onClick={() => onNavigateToPearlDeck?.()}
-              cta="Open pearls"
-            />
-            <QuickLaunchCard
-              title="Clinical Eye"
-              description="Use the image-analysis companion for visual review and interpretation."
-              icon={Target}
-              accent={workspaceAccent.sage}
-              onClick={() => onNavigateToClinicalEye?.()}
-              cta="Open Clinical Eye"
-            />
-            <QuickLaunchCard
-              title="Visualizer"
-              description="Jump into anatomy and image-oriented visual segmentation workflows."
-              icon={Compass}
-              accent={workspaceAccent.plum}
-              onClick={() => onNavigateToVisualizer?.()}
-              cta="Open visualizer"
-            />
+            ))}
           </div>
-        </WorkspaceSection>
-      </WorkspaceReveal>
-    </WorkspacePage>
+        </div>
+      </ShellSurface>
+
+      <ShellSurface className="p-4" aria-labelledby="details-heading">
+        <p
+          id="details-heading"
+          className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]"
+        >
+          DETAILS WHEN YOU WANT THEM
+        </p>
+        <div className="mt-3 divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)]">
+          {briefing.detailRows.map((row) => (
+            <details key={row.label} className="group">
+              <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]">
+                <span>{row.label}</span>
+                <ChevronRight className="h-4 w-4 text-[var(--color-text-muted)] transition-transform group-open:rotate-90" aria-hidden="true" />
+              </summary>
+              <div className="px-4 pb-4 text-sm leading-6 text-[var(--color-text-secondary)]">
+                <p>{row.detail}</p>
+                <button
+                  type="button"
+                  onClick={row.onSelect}
+                  className="mt-2 inline-flex min-h-[36px] items-center gap-1 text-sm font-medium text-[var(--color-accent)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                >
+                  {row.actionLabel}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </details>
+          ))}
+        </div>
+      </ShellSurface>
+    </div>
   );
 };
 
