@@ -1,22 +1,11 @@
 import React, { useEffect, useRef, useState, type CSSProperties } from 'react';
-import {
-  AnimatePresence,
-  motion,
-  useInView,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from 'framer-motion';
+import { AnimatePresence, motion, useInView } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
-  BarChart3,
-  Brain,
   Check,
   CheckCircle2,
   Clock,
-  Sparkles,
-  Stethoscope,
 } from 'lucide-react';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -114,44 +103,6 @@ function AnimatedMetricCard({
   );
 }
 
-function FloatingSignal({
-  children,
-  className,
-  prefersReducedMotion,
-}: {
-  children: React.ReactNode;
-  className: string;
-  prefersReducedMotion: boolean;
-}) {
-  return (
-    <motion.div
-      className={className}
-      animate={
-        prefersReducedMotion
-          ? undefined
-          : {
-              y: [0, -14, 0],
-            }
-      }
-      transition={
-        prefersReducedMotion
-          ? undefined
-          : {
-              duration: 6,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }
-      }
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function ParallaxOrb({ className, y }: { className: string; y: MotionValue<number> }) {
-  return <motion.div className={className} style={{ y }} aria-hidden="true" />;
-}
-
 function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
   return (
     <footer className="relative z-10">
@@ -161,13 +112,13 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
             <div className="max-w-xl space-y-4">
               <div className="flex items-center gap-3">
                 <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-10 w-auto" />
-                <span className="text-2xl font-semibold tracking-[-0.03em] text-white">
+                <span className="text-2xl font-semibold tracking-normal text-white">
                   PANaCEa
                 </span>
               </div>
               <p className="max-w-lg text-sm leading-7 text-slate-400">
-                Adaptive clinical education for Physician Assistant students who want exam prep to
-                feel intelligent, calm, and clinically grounded.
+                Clinical study intelligence for PA students who need the next move, the reason,
+                and the expected benefit without opening an overloaded study surface.
               </p>
             </div>
 
@@ -178,7 +129,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
                 </a>
               ))}
               <button type="button" onClick={onSignUp} className="panacea-footer-link">
-                Start Free
+                Start adaptive plan
               </button>
             </div>
           </div>
@@ -197,11 +148,6 @@ export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-up');
   const prefersReducedMotion = useReducedMotion();
-  const { scrollY } = useScroll();
-  const heroGoldOrbY = useTransform(scrollY, [0, 1400], [0, -180]);
-  const heroPlumOrbY = useTransform(scrollY, [0, 1400], [0, 130]);
-  const heroSteelOrbY = useTransform(scrollY, [0, 1400], [0, -90]);
-  const heroConsoleY = useTransform(scrollY, [0, 900], [0, 70]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -209,7 +155,7 @@ export function LandingPage() {
     const previousTheme = metaTheme?.getAttribute('content');
 
     root.classList.add('panacea-landing-scroll');
-    metaTheme?.setAttribute('content', '#0a0e1a');
+    metaTheme?.setAttribute('content', 'rgb(7 17 31)');
 
     return () => {
       root.classList.remove('panacea-landing-scroll');
@@ -259,7 +205,7 @@ export function LandingPage() {
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <a href="#hero" className="flex items-center gap-3 text-white">
             <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-11 w-auto" />
-            <span className="text-2xl font-semibold tracking-[-0.04em] text-white sm:text-3xl">
+            <span className="text-2xl font-semibold tracking-normal text-white sm:text-3xl">
               PANaCEa
             </span>
           </a>
@@ -287,7 +233,7 @@ export function LandingPage() {
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             >
-              Start Free
+              Start adaptive plan
             </motion.button>
           </div>
         </div>
@@ -295,37 +241,32 @@ export function LandingPage() {
 
       <main id="landing-main" className="relative z-10">
         <section id="hero" className="panacea-section panacea-section--hero">
-          <ParallaxOrb className="panacea-orb panacea-orb--gold" y={heroGoldOrbY} />
-          <ParallaxOrb className="panacea-orb panacea-orb--plum" y={heroPlumOrbY} />
-          <ParallaxOrb className="panacea-orb panacea-orb--steel" y={heroSteelOrbY} />
-
-          <div className="mx-auto grid max-w-7xl gap-14 px-4 pt-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:px-8 lg:pt-6">
+          <div className="mx-auto grid max-w-7xl gap-14 px-4 pt-4 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-8 lg:pt-6">
             <div className="max-w-3xl space-y-8">
               <motion.div
                 {...revealProps(prefersReducedMotion)}
-                className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-200"
+                className="inline-flex items-center gap-3 rounded-full border border-[var(--landing-border)] bg-[var(--landing-panel)] px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-200"
               >
                 <span className="panacea-status-dot" />
-                Adaptive clinical education for PA students
+                Clinical study operator for PA students
               </motion.div>
 
               <motion.div {...revealProps(prefersReducedMotion, 0.08)} className="space-y-6">
                 <h1 className="panacea-display-title">
-                  PANCE mastery
-                  <span className="panacea-display-break panacea-gold-shimmer">
-                    with clinical intelligence.
+                  PANCE mastery,
+                  <span className="panacea-display-break">
+                    guided by clinical intelligence.
                   </span>
                 </h1>
                 <p className="max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-                  PANaCEa turns exam prep into an adaptive clinical training loop, calibrating every
-                  review, drill, and explanation around your blueprint gaps, recall decay, and
-                  exam-day readiness.
+                  PANaCEa turns missed questions, recall decay, and blueprint gaps into a precise
+                  daily study plan.
                 </p>
               </motion.div>
 
               <motion.div
                 {...revealProps(prefersReducedMotion, 0.16)}
-                className="flex flex-col items-start gap-4"
+                className="flex flex-col items-start gap-4 sm:flex-row sm:items-center"
               >
                 <motion.button
                   type="button"
@@ -334,18 +275,16 @@ export function LandingPage() {
                   whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -1 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 >
-                  Start My Adaptive Plan
+                  Start adaptive plan
                   <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </motion.button>
 
-                <button
-                  type="button"
-                  onClick={openSignIn}
-                  className="inline-flex items-center gap-2 text-sm text-slate-300 transition-colors duration-300 hover:text-white"
+                <a
+                  href="#how-it-works"
+                  className="panacea-button panacea-button--secondary"
                 >
-                  Already studying in PANaCEa?
-                  <span className="font-semibold text-[var(--landing-gold)]">Sign in</span>
-                </button>
+                  See how it works
+                </a>
               </motion.div>
 
               <motion.div
@@ -362,104 +301,85 @@ export function LandingPage() {
             </div>
 
             <div className="relative">
-              <FloatingSignal
-                prefersReducedMotion={prefersReducedMotion}
-                className="hidden lg:block panacea-floating-chip panacea-floating-chip--left"
-              >
-                <CheckCircle2 className="h-4 w-4 text-[var(--landing-gold)]" />
-                Blueprint synced
-              </FloatingSignal>
-              <FloatingSignal
-                prefersReducedMotion={prefersReducedMotion}
-                className="hidden lg:block panacea-floating-chip panacea-floating-chip--right"
-              >
-                <Sparkles className="h-4 w-4 text-[var(--landing-steel)]" />
-                Review window recalculated
-              </FloatingSignal>
-
               <motion.div
                 {...revealProps(prefersReducedMotion, 0.16)}
-                className="panacea-glass panacea-card panacea-hero-console"
-                style={prefersReducedMotion ? undefined : { y: heroConsoleY }}
+                className="panacea-card panacea-operator-preview"
               >
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-4 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="panacea-card-label">Adaptive readiness engine</p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
-                        Every session shifts toward your highest-risk misses.
+                      <p className="panacea-card-label">Next Best Action</p>
+                      <h2 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-3xl">
+                        PE vs pneumonia differentiation
                       </h2>
                     </div>
-                    <div className="rounded-full border border-[var(--landing-gold)]/30 bg-[var(--landing-gold)]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-gold)]">
-                      Live blueprint
+                    <div className="panacea-preview-impact">
+                      High impact
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="panacea-console-stat">
-                      <p className="panacea-card-label">Projected readiness lift</p>
-                      <div className="panacea-console-stat__value">+18 pts</div>
-                      <p className="panacea-card-copy">
-                        Based on the next 14 days of targeted cardio, pulm, and pharm review.
+                  <p className="panacea-preview-summary">
+                    12 questions · 28 min · High impact
+                  </p>
+
+                  <div className="panacea-preview-meta">
+                    <span>12 questions</span>
+                    <span>28 min</span>
+                    <span>High impact</span>
+                  </div>
+
+                  <div className="panacea-preview-section">
+                    <p className="panacea-card-label">Why this</p>
+                    <p className="mt-2 text-base leading-7 text-slate-200">
+                      Recent misses · pulmonary down 12% · high-yield PANCE topic
+                    </p>
+                  </div>
+
+                  <div className="panacea-preview-section panacea-preview-section--gain">
+                    <p className="panacea-card-label">Expected gain</p>
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="panacea-preview-gain">+8–12%</div>
+                      <p className="max-w-sm text-sm leading-6 text-slate-300">
+                        Pulmonary readiness, with lower diagnostic confusion across PE, pneumonia,
+                        ACS, and COPD exacerbation.
                       </p>
                     </div>
-                    <div className="panacea-console-stat">
-                      <p className="panacea-card-label">Watchlist</p>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {['PE vs pneumonia', 'thyroid pharm', 'OB triage'].map((item) => (
-                          <span key={item} className="panacea-inline-pill">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
                   </div>
 
-                  <div className="panacea-console-panel">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="panacea-card-label">Tonight&apos;s recommended block</p>
-                        <p className="pt-1 text-lg font-semibold text-white">
-                          High-yield cardiopulmonary calibration
-                        </p>
+                  <div className="panacea-preview-plan">
+                    {[
+                      ['Focused block', '28 min'],
+                      ['Quick review', '12 min'],
+                      ['Notes / reset', '5 min'],
+                    ].map(([label, time], index) => (
+                      <div key={label} className="panacea-preview-step">
+                        <span className="panacea-preview-step__index">{index + 1}</span>
+                        <span className="flex-1">{label}</span>
+                        <span className="inline-flex items-center gap-1.5 text-slate-300">
+                          <Clock className="h-3.5 w-3.5 text-[var(--landing-gold)]" aria-hidden="true" />
+                          {time}
+                        </span>
                       </div>
-                      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200">
-                        <Clock className="h-4 w-4 text-[var(--landing-gold)]" />
-                        28 min
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {[
-                        {
-                          icon: Brain,
-                          title: 'Retention drift detected',
-                          copy: 'A resurfaced review window is opening for pulmonary embolism and ACS distractors.',
-                        },
-                        {
-                          icon: Stethoscope,
-                          title: 'Clinical reasoning drill queued',
-                          copy: 'Next sequence blends imaging, differential narrowing, and first-line management.',
-                        },
-                        {
-                          icon: BarChart3,
-                          title: 'Calibration improving',
-                          copy: 'Confidence alignment is trending upward after the last two guided sessions.',
-                        },
-                      ].map((item) => (
-                        <div key={item.title} className="panacea-console-row">
-                          <div className="panacea-console-row__icon">
-                            <item.icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-white">{item.title}</p>
-                            <p className="pt-1 text-sm leading-6 text-slate-400">{item.copy}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={openSignUp}
+                    className="panacea-preview-action"
+                  >
+                    Start focused block
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
                 </div>
+              </motion.div>
+
+              <motion.div
+                {...revealProps(prefersReducedMotion, 0.24)}
+                className="panacea-preview-note"
+              >
+                <CheckCircle2 className="h-4 w-4 text-[var(--landing-success)]" aria-hidden="true" />
+                <span>One recommended move, with the rationale visible before the student starts.</span>
               </motion.div>
             </div>
           </div>
@@ -474,12 +394,12 @@ export function LandingPage() {
               >
                 <p className="panacea-section-eyebrow">Platform depth</p>
                 <h2 className="panacea-section-title panacea-section-title--left">
-                  Clinical infrastructure that stays calm when your schedule does not.
+                  Clinical infrastructure that starts with the next move.
                 </h2>
                 <p className="panacea-section-copy panacea-section-copy--left">
-                  Every layer is built to feel deliberate, responsive, and dependable during the
-                  ugliest parts of exam prep, when time is fragmented and weak systems start to
-                  hide.
+                  PANaCEa keeps the surface calm while the system decides whether the student
+                  should repair a missed pattern, clear reviews, protect recall, or close a
+                  blueprint gap.
                 </p>
 
                 <div className="panacea-section-list mt-8">
@@ -520,7 +440,7 @@ export function LandingPage() {
                       <feature.icon className="h-6 w-6" />
                     </div>
                     <p className="panacea-card-label">{feature.eyebrow}</p>
-                    <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">
+                    <h3 className="mt-3 text-2xl font-semibold tracking-normal text-white">
                       {feature.title}
                     </h3>
                     <p className="mt-4 text-sm leading-7 text-slate-300">{feature.description}</p>
@@ -545,7 +465,7 @@ export function LandingPage() {
                 </h2>
                 <p className="panacea-section-copy panacea-section-copy--left">
                   Premium is not a glow effect. It is the feeling that the next step is justified,
-                  the weak spots are visible, and the platform is not hiding behind vague language.
+                  the weak spots are visible, and the product is not hiding behind vague language.
                 </p>
               </motion.div>
 
@@ -592,11 +512,6 @@ export function LandingPage() {
                       <BadgeCheck className="h-4 w-4 text-[var(--landing-accent)]" />
                       Early student feedback
                     </div>
-                    <div className="flex items-center gap-1 text-[var(--landing-gold)]" aria-hidden="true">
-                      <Sparkles className="h-4 w-4" />
-                      <Sparkles className="h-4 w-4" />
-                      <Sparkles className="h-4 w-4" />
-                    </div>
                   </div>
                   <p className="panacea-testimonial__quote mt-6 text-lg leading-8 text-slate-100">
                     &ldquo;{testimonial.quote}&rdquo;
@@ -624,7 +539,7 @@ export function LandingPage() {
               <div className="mt-6 grid gap-6 md:grid-cols-3">
                 {OUTCOME_STRIP.map((item) => (
                   <div key={item.title} className="panacea-proof-strip__item">
-                    <h3 className="text-lg font-semibold tracking-[-0.02em] text-white">
+                    <h3 className="text-lg font-semibold tracking-normal text-white">
                       {item.title}
                     </h3>
                     <p className="mt-2 text-sm leading-7 text-slate-400">{item.detail}</p>
@@ -644,14 +559,13 @@ export function LandingPage() {
                   A three-step path from uncertainty to exam-day composure.
                 </h2>
                 <p className="panacea-section-copy panacea-section-copy--left">
-                  The surface should feel simple and confident while the adaptive engine keeps
-                  re-ranking what matters underneath.
+                  The surface stays simple while PANaCEa ranks the next useful block underneath.
                 </p>
 
                 <div className="panacea-glass panacea-card panacea-process-note mt-8">
                   <p className="panacea-card-label">Behind every block</p>
                   <p className="mt-3 text-base leading-8 text-slate-300">
-                    Timing, confidence drift, distractor patterns, and blueprint coverage keep
+                    Timing, missed patterns, distractor behavior, and blueprint coverage keep
                     updating so the next recommendation never feels arbitrary.
                   </p>
                 </div>
@@ -673,7 +587,7 @@ export function LandingPage() {
                           <step.icon className="h-6 w-6" />
                         </div>
                       </div>
-                      <h3 className="mt-8 text-2xl font-semibold tracking-[-0.03em] text-white">
+                      <h3 className="mt-8 text-2xl font-semibold tracking-normal text-white">
                         {step.title}
                       </h3>
                       <p className="mt-4 text-sm leading-7 text-slate-300">{step.description}</p>
@@ -687,8 +601,8 @@ export function LandingPage() {
                 >
                   <div className="max-w-2xl">
                     <p className="panacea-card-label">What adapts behind the scenes</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
-                      The platform is constantly recalibrating what matters next.
+                    <h3 className="mt-2 text-2xl font-semibold tracking-normal text-white">
+                      PANaCEa keeps ranking what matters next.
                     </h3>
                     <p className="mt-3 text-sm leading-7 text-slate-400">
                       Instead of treating all misses the same, PANaCEa weighs the timing, severity,
@@ -721,7 +635,7 @@ export function LandingPage() {
               <h2 className="panacea-final-title">
                 Walk into the PANCE
                 <span className="panacea-display-break panacea-gold-shimmer">
-                  calm, calibrated, and ready.
+                  clear on what matters next.
                 </span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
@@ -792,7 +706,7 @@ export function LandingPage() {
                     <p className="panacea-card-label">PANaCEa access</p>
                     <h3
                       id="panacea-auth-title"
-                      className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white"
+                      className="mt-2 text-2xl font-semibold tracking-normal text-white"
                     >
                       {authMode === 'sign-up'
                         ? 'Start your adaptive plan.'

@@ -16,42 +16,42 @@ export const NAV_LINKS = [
 ] as const;
 
 export const HERO_SIGNALS = [
-  { label: 'NCCPA blueprint sync', value: 'Re-ranked after every block' },
-  { label: 'FSRS memory engine', value: 'Trains by forgetting risk' },
-  { label: 'Clinical reasoning drills', value: 'Built for PA decision-making' },
+  { label: 'Next move', value: 'Chosen from recent misses' },
+  { label: 'Recall timing', value: 'Reviews surface when useful' },
+  { label: 'Blueprint gaps', value: 'Mapped to PANCE weight' },
 ] as const;
 
 export const FEATURE_CARDS = [
   {
     icon: Brain,
-    accent: '#c4b78a',
-    eyebrow: 'Gold intelligence',
-    title: 'Adaptive Blueprinting',
+    accent: 'var(--landing-gold)',
+    eyebrow: 'Blueprint targeting',
+    title: 'One Study Move At A Time',
     description:
-      'Blueprint weighting, forgetting risk, and system weakness are re-ranked after every block so the next session starts where the score still moves.',
-    detail: 'Weakness prioritization updates inside the session.',
+      'Blueprint weighting, forgetting risk, and system weakness are ranked into one clear recommendation before each session starts.',
+    detail: 'The dashboard opens with a single next action.',
   },
   {
     icon: Stethoscope,
-    accent: '#9a7f9a',
-    eyebrow: 'Deep plum focus',
-    title: 'Clinical Drill Engine',
+    accent: 'var(--landing-plum)',
+    eyebrow: 'Clinical pattern repair',
+    title: 'Differentials, Not Trivia',
     description:
       'Move from recall into judgment with targeted cases across pharm, imaging, EKG, first-line treatment, and differential narrowing.',
-    detail: 'Switch modes without losing the adaptive thread.',
+    detail: 'Practice stays tied to the clinical mistake that surfaced it.',
   },
   {
     icon: Activity,
-    accent: '#728ba6',
-    eyebrow: 'Steel-blue calibration',
-    title: 'Performance Signal Layer',
+    accent: 'var(--landing-steel)',
+    eyebrow: 'Quiet signals',
+    title: 'Progress Without Metric Clutter',
     description:
-      'Accuracy, pacing, confidence, and review timing stay visible in one calm surface so you can tell what is stabilizing and what still leaks points.',
-    detail: 'Designed for fast, low-friction decisions during rotations.',
+      'Accuracy, pacing, missed patterns, and review timing are reduced to compact signals that support the next move.',
+    detail: 'Designed for fast decisions during rotations.',
   },
   {
     icon: BookOpen,
-    accent: '#7a8f6e',
+    accent: 'var(--landing-sage)',
     eyebrow: 'Sage clinical library',
     title: 'Integrated Learning Context',
     description:
@@ -60,16 +60,16 @@ export const FEATURE_CARDS = [
   },
   {
     icon: Zap,
-    accent: '#a67f7f',
-    eyebrow: 'Dusty-rose feedback',
+    accent: 'var(--landing-rose)',
+    eyebrow: 'Reasoned feedback',
     title: 'Tutor-Grade Explanations',
     description:
       'Structured rationales explain not only what is correct, but why competing answers are unsafe, premature, or incomplete in clinic terms.',
-    detail: 'Confidence grows because the reasoning gets sharper.',
+    detail: 'Reasoning gets sharper because each miss becomes a clinical contrast.',
   },
   {
     icon: ShieldCheck,
-    accent: '#b39b6c',
+    accent: 'var(--landing-amber)',
     eyebrow: 'Muted-amber trust',
     title: 'Exam-Day Readiness Guardrails',
     description:
@@ -79,9 +79,9 @@ export const FEATURE_CARDS = [
 ] as const;
 
 export const FEATURE_PILLARS = [
-  'The next block changes the moment your pattern changes.',
-  'Clinical reference stays attached to the exact miss that surfaced it.',
-  'The interface is designed for daily use during rotations, not just cram week.',
+  'The first screen tells the student what to do next.',
+  'Every recommendation explains why it is the highest-value move.',
+  'Deeper analytics stay available without competing with task initiation.',
 ] as const;
 
 /**
@@ -98,27 +98,27 @@ export const TRUST_METRICS = [
     value: 13,
     label: 'NCCPA blueprint task domains covered',
     detail: 'Every high-yield PANCE task area mapped to adaptive drills and review.',
-    accent: '#c4b78a',
+    accent: 'var(--landing-gold)',
     format: (current: number) => `${Math.round(current)}`,
   },
   {
     value: 21,
     label: 'FSRS v6 parameters driving every review',
     detail: 'Stability, difficulty, and retrievability recalculated per question per session.',
-    accent: '#728ba6',
+    accent: 'var(--landing-steel)',
     format: (current: number) => `${Math.round(current)}`,
   },
   {
     value: 94,
     label: 'target readiness threshold before simulation',
     detail: 'A strong benchmark before high-stakes full-length practice.',
-    accent: '#7a8f6e',
+    accent: 'var(--landing-sage)',
     format: (current: number) => `${Math.round(current)}%`,
   },
 ] as const;
 
 export const TRUST_CALLOUTS = [
-  'Visible readiness signals instead of vague confidence.',
+  'Visible readiness signals instead of vague self-ratings.',
   'Clinical explanations that sharpen judgment, not trivia recall.',
   'A workflow calm enough to trust before a high-stakes exam window.',
 ] as const;
@@ -133,8 +133,8 @@ export const OUTCOME_STRIP = [
     detail: 'Weak systems surface before they turn into exam-day misses.',
   },
   {
-    title: 'Confidence matches reality',
-    detail: 'Timing and certainty drift are tracked alongside accuracy.',
+    title: 'Behavior drives the plan',
+    detail: 'Timing, misses, and recall decay steer the next recommended block.',
   },
 ] as const;
 
@@ -144,21 +144,21 @@ export const TESTIMONIALS = [
       'It feels less like a question bank and more like a clinical training system that actually remembers what I am forgetting.',
     name: 'Ariana M.',
     role: 'PA-S2, emergency medicine rotation',
-    accent: '#c4b78a',
+    accent: 'var(--landing-gold)',
   },
   {
     quote:
-      'My weak systems stopped hiding once the calibration layer kicked in. The dashboard made my study time finally feel intentional.',
+      'My weak systems stopped hiding once the plan started showing one target at a time. The study surface finally felt intentional.',
     name: 'Jordan R.',
     role: 'PA-S3, cardiology track',
-    accent: '#728ba6',
+    accent: 'var(--landing-steel)',
   },
   {
     quote:
       'The explanations are clinical, not generic. I started trusting my answer process instead of just memorizing keys.',
     name: 'Samira L.',
     role: 'PA-S2, internal medicine rotation',
-    accent: '#9a7f9a',
+    accent: 'var(--landing-plum)',
   },
 ] as const;
 
@@ -166,23 +166,23 @@ export const PROCESS_STEPS = [
   {
     step: '01',
     icon: Target,
-    title: 'Diagnose the Baseline',
+    title: 'Set the Baseline',
     description:
       'PANaCEa maps your current readiness by system, pacing profile, and recall strength so the first session is already targeted.',
   },
   {
     step: '02',
     icon: Brain,
-    title: 'Train the Right Friction',
+    title: 'Repair the Right Pattern',
     description:
       'You work inside adaptive drills that raise the exact concepts, distractors, and clinical patterns most likely to move your score.',
   },
   {
     step: '03',
     icon: TrendingUp,
-    title: 'Confirm Exam Calm',
+    title: 'Track Readiness',
     description:
-      'Before exam week, your dashboard surfaces whether you are truly stable or just recently lucky, and tells you what still needs attention.',
+      'Before exam week, PANaCEa surfaces the risk areas still worth fixing and keeps lower-value analytics out of the way.',
   },
 ] as const;
 
@@ -191,7 +191,6 @@ export const PROCESS_SIGNALS = [
   'Answer speed',
   'Recall decay',
   'Blueprint coverage',
-  'Confidence drift',
   'High-risk distractors',
 ] as const;
 

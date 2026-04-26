@@ -1,8 +1,8 @@
 .panacea-landing {
-  --landing-bg: #0a0e1a;
-  --landing-bg-deep: #050814;
-  --landing-panel: rgba(10, 16, 30, 0.62);
-  --landing-panel-strong: rgba(10, 16, 30, 0.82);
+  --landing-bg: var(--color-background, #0b1423);
+  --landing-bg-deep: #07111f;
+  --landing-panel: rgba(15, 27, 45, 0.86);
+  --landing-panel-strong: rgba(22, 36, 58, 0.94);
   --landing-gold: #c4b78a;
   --landing-plum: #9a7f9a;
   --landing-steel: #728ba6;
@@ -11,17 +11,13 @@
   --landing-amber: #b39b6c;
   --landing-success: #39b8a2;
   --landing-critical: #c97d7d;
-  --landing-border: rgba(255, 255, 255, 0.08);
+  --landing-border: rgba(226, 232, 240, 0.12);
   --landing-shadow:
-    0 32px 120px rgba(2, 8, 24, 0.6), 0 0 0 1px rgba(114, 139, 166, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 18px 50px rgba(2, 8, 24, 0.34), 0 0 0 1px rgba(114, 139, 166, 0.08);
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(circle at 16% 12%, rgba(154, 127, 154, 0.18), transparent 25%),
-    radial-gradient(circle at 82% 20%, rgba(114, 139, 166, 0.15), transparent 28%),
-    radial-gradient(circle at 22% 82%, rgba(122, 143, 110, 0.12), transparent 28%),
-    linear-gradient(180deg, #050814 0%, #0a0e1a 42%, #060913 100%);
+    linear-gradient(180deg, #07111f 0%, #0b1423 42%, #0f1b2d 100%);
 }
 
 .panacea-landing::before,
@@ -35,29 +31,19 @@
 .panacea-landing::before {
   z-index: -2;
   background:
-    radial-gradient(circle at 20% 18%, rgba(154, 127, 154, 0.16), transparent 26%),
-    radial-gradient(circle at 78% 12%, rgba(114, 139, 166, 0.15), transparent 26%),
-    radial-gradient(circle at 52% 76%, rgba(196, 183, 138, 0.12), transparent 22%),
-    radial-gradient(circle at 16% 88%, rgba(122, 143, 110, 0.1), transparent 22%);
-  filter: blur(72px);
-  animation: panacea-aurora 22s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+    linear-gradient(135deg, rgba(196, 183, 138, 0.06), transparent 34%),
+    linear-gradient(315deg, rgba(114, 139, 166, 0.07), transparent 38%);
+  filter: none;
 }
 
 .panacea-landing::after {
   z-index: -1;
   inset: 0;
   background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.03),
-      transparent 26%,
-      rgba(196, 183, 138, 0.04) 55%,
-      transparent 72%
-    ),
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 55%);
-  mix-blend-mode: screen;
-  opacity: 0.55;
-  animation: panacea-hue 26s linear infinite;
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.26;
 }
 
 .panacea-landing__noise {
@@ -65,7 +51,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.08;
+  opacity: 0.035;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
@@ -83,9 +69,9 @@
   top: 0;
   z-index: 30;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(5, 8, 20, 0.72);
-  backdrop-filter: blur(22px) saturate(140%);
-  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  background: rgba(7, 17, 31, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .panacea-nav-link {
@@ -122,7 +108,7 @@
 }
 
 .panacea-section--hero {
-  min-height: min(56rem, calc(100vh - 5rem));
+  min-height: min(52rem, calc(100vh - 5rem));
   display: flex;
   align-items: flex-start;
   padding-top: clamp(2rem, 4vw, 3.75rem);
@@ -147,11 +133,11 @@
 
 .panacea-display-title {
   margin: 0;
-  font-family: 'Teko', sans-serif;
-  font-size: clamp(5rem, 11vw, 7.6rem);
-  line-height: 0.82;
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 4.6rem;
+  font-weight: 650;
+  line-height: 0.96;
+  letter-spacing: 0;
   color: #f8fafc;
 }
 
@@ -160,19 +146,7 @@
 }
 
 .panacea-gold-shimmer {
-  background-image: linear-gradient(
-    120deg,
-    #f9f5e9 0%,
-    #c4b78a 24%,
-    #efe3c0 48%,
-    #c4b78a 70%,
-    #fff9e8 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: panacea-shimmer 8s linear infinite;
+  color: var(--landing-gold);
 }
 
 .panacea-button {
@@ -206,30 +180,40 @@
   padding: 0 1.7rem;
   font-size: 1rem;
   color: #0a0e1a;
-  background: linear-gradient(135deg, #efe3c0 0%, #c4b78a 44%, #b39b6c 100%);
-  box-shadow:
-    0 18px 60px rgba(196, 183, 138, 0.3),
-    0 0 0 1px rgba(255, 248, 227, 0.12) inset;
+  background: #c4b78a;
+  box-shadow: 0 14px 34px rgba(196, 183, 138, 0.18);
 }
 
 .panacea-button--hero:hover {
   box-shadow:
-    0 26px 80px rgba(196, 183, 138, 0.38),
+    0 18px 44px rgba(196, 183, 138, 0.24),
     0 0 0 1px rgba(255, 248, 227, 0.16) inset;
 }
 
+.panacea-button--secondary {
+  min-height: 3.4rem;
+  padding: 0 1.4rem;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(226, 232, 240, 0.14);
+}
+
+.panacea-button--secondary:hover {
+  color: #fff;
+  border-color: rgba(196, 183, 138, 0.38);
+  background: rgba(196, 183, 138, 0.08);
+}
+
 .panacea-glass {
-  background: linear-gradient(180deg, rgba(13, 19, 36, 0.86), rgba(10, 16, 30, 0.56));
+  background: linear-gradient(180deg, rgba(22, 36, 58, 0.94), rgba(15, 27, 45, 0.9));
   border: 1px solid var(--landing-border);
-  backdrop-filter: blur(16px) saturate(130%);
-  -webkit-backdrop-filter: blur(16px) saturate(130%);
   box-shadow: var(--landing-shadow);
 }
 
 .panacea-card {
   position: relative;
   overflow: hidden;
-  border-radius: 1.75rem;
+  border-radius: 1rem;
   transition:
     transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -257,7 +241,7 @@
     rgba(255, 255, 255, 0.18)
   );
   box-shadow:
-    0 42px 140px rgba(2, 8, 24, 0.72),
+    0 24px 70px rgba(2, 8, 24, 0.46),
     0 0 0 1px color-mix(in srgb, var(--landing-accent, var(--landing-gold)) 16%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
@@ -294,9 +278,9 @@
 .panacea-section-title {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-size: 2.8rem;
   font-weight: 600;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   line-height: 1.04;
   color: #f8fafc;
 }
@@ -347,13 +331,11 @@
 }
 
 .panacea-signal-chip {
-  border-radius: 1.25rem;
+  border-radius: 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
   padding: 1rem 1rem 1.05rem;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 24px 70px rgba(2, 8, 24, 0.28);
+  box-shadow: 0 12px 30px rgba(2, 8, 24, 0.22);
 }
 
 .panacea-floating-chip {
@@ -408,6 +390,134 @@
   padding: 1.75rem;
 }
 
+.panacea-operator-preview {
+  padding: 1.6rem;
+  background:
+    linear-gradient(180deg, rgba(22, 36, 58, 0.96), rgba(15, 27, 45, 0.92));
+  border: 1px solid rgba(226, 232, 240, 0.14);
+  box-shadow: var(--landing-shadow);
+}
+
+.panacea-preview-impact {
+  align-self: flex-start;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 183, 138, 0.32);
+  background: rgba(196, 183, 138, 0.12);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #efe3c0;
+}
+
+.panacea-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.panacea-preview-summary {
+  margin: -0.2rem 0 0;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.panacea-preview-meta span {
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.52rem 0.72rem;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #e2e8f0;
+}
+
+.panacea-preview-section {
+  border-radius: 0.8rem;
+  border: 1px solid rgba(226, 232, 240, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 1rem;
+}
+
+.panacea-preview-section--gain {
+  border-color: rgba(57, 184, 162, 0.22);
+  background: rgba(57, 184, 162, 0.06);
+}
+
+.panacea-preview-gain {
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #6fe0cd;
+}
+
+.panacea-preview-plan {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.panacea-preview-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(226, 232, 240, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.72rem 0.82rem;
+  font-size: 0.9rem;
+  color: #f8fafc;
+}
+
+.panacea-preview-step__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.65rem;
+  width: 1.65rem;
+  border-radius: 999px;
+  background: rgba(196, 183, 138, 0.16);
+  color: #efe3c0;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.panacea-preview-action {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 0.8rem;
+  background: #c4b78a;
+  color: #07111f;
+  font-weight: 750;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panacea-preview-action:hover {
+  transform: translateY(-1px);
+  background: #d7c99a;
+}
+
+.panacea-preview-note {
+  margin-top: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(226, 232, 240, 0.1);
+  background: rgba(15, 27, 45, 0.72);
+  padding: 0.9rem 1rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
 .panacea-console-stat,
 .panacea-console-panel {
   border-radius: 1.35rem;
@@ -421,7 +531,7 @@
   font-family: 'Teko', sans-serif;
   font-size: 3rem;
   line-height: 0.92;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   color: #f8fafc;
 }
 
@@ -575,10 +685,10 @@
 
 .panacea-metric-value {
   padding-top: 0.45rem;
-  font-family: 'Teko', sans-serif;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
   font-size: 4rem;
   line-height: 0.92;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
 }
 
 .panacea-process-line {
@@ -601,9 +711,9 @@
   border-radius: 999px;
   border: 1px solid rgba(196, 183, 138, 0.22);
   background: rgba(196, 183, 138, 0.12);
-  font-family: 'Teko', sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: -0.04em;
+  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  letter-spacing: 0;
   color: var(--landing-gold);
 }
 
@@ -618,10 +728,10 @@
 .panacea-final-title {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  font-size: clamp(2.25rem, 5vw, 4.4rem);
+  font-size: 3.4rem;
   font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.96;
+  letter-spacing: 0;
+  line-height: 1;
   color: #f8fafc;
 }
 
@@ -698,7 +808,15 @@
   }
 
   .panacea-display-title {
-    font-size: clamp(4rem, 20vw, 5.6rem);
+    font-size: 3.35rem;
+  }
+
+  .panacea-section-title {
+    font-size: 2.15rem;
+  }
+
+  .panacea-final-title {
+    font-size: 2.35rem;
   }
 
   .panacea-metric-value {
