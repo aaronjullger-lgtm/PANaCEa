@@ -44,9 +44,8 @@ import {
 import { LearningCurveChart } from '@/components/analytics/LearningCurveChart';
 import { ChartContainer } from '@/components/shared/ChartContainer';
 import chartTheme from '@/lib/chartTheme';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
-import { formatPercentForDisplay } from '@/lib/utils/textFormatting';
 import {
   getSpeedBenchmarkLabel,
   getSpeedBenchmarkStatus,
@@ -165,7 +164,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
+        const response = await fetch(getApiEndpoint('/api/user/stats'), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -204,15 +203,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch(
-          `${getApiEndpoint(API_ENDPOINTS.USER_STABILITY_TREND)}?days=30`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const response = await fetch('/api/user/stability-trend?days=30', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch stability trend');
@@ -229,14 +225,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
-          const formattedData = result.data.map((point: (typeof result.data)[number]) => ({
+          const formattedData = result.data.map((point: any) => ({
             date: new Date(point.date).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
             }),
-            avgStability: point.avgStability ?? 0,
-            totalReviews: point.totalReviews ?? 0,
-          })) as StabilityTrendDatum[];
+            avgStability: point.avgStability,
+            totalReviews: point.totalReviews,
+          }));
           setStabilityTrendData(formattedData);
         }
       } catch (error) {
@@ -261,12 +257,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     // API middleware sends result.data as body, so response is { calibration, days }
     return json as { calibration: CalibrationQuadrantData; days: number };
   };
-  const calibrationUrl =
-    userStats && userStats.stats?.overall?.totalAttempts > 0
-      ? `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?days=90`
-      : null;
   const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
-    calibrationUrl,
+    userStats && userStats.stats?.overall?.totalAttempts > 0
+      ? '/api/analytics/calibration?days=90'
+      : null,
     calibrationFetcher,
     { revalidateOnFocus: false }
   );
@@ -283,20 +277,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       }))
       .filter((d) => d.attempts > 0)
       .sort((a, b) => b.accuracy - a.accuracy); // Best first, worst last (bottom 3 = study today)
-  }, [userStats]);
-
-  // PANCE readiness treemap: include ALL systems so 0-data shows as "Not Yet Studied" (neutral), not red
-  const treemapData: SystemNode[] = useMemo(() => {
-    if (!userStats?.stats.bySystems) return [];
-
-    return Object.entries(userStats.stats.bySystems)
-      .map(([system, stats]) => ({
-        name: system,
-        systemCode: system,
-        volume: stats.total ?? 0,
-        masteryPercent: stats.accuracy ?? 0,
-      }))
-      .sort((a, b) => b.volume - a.volume); // Most studied first for visual hierarchy
   }, [userStats]);
 
   // Transform server data for time chart (decision time by system)
@@ -515,14 +495,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: CheckCircle,
                     label: getQuadrantLabel('mastered').short,
                     count: calibrationData.calibration.mastered,
-                    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+                    className: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/40 text-[var(--color-data-pass)]',
                   },
                   {
                     key: 'dangerous_misconception' as const,
                     icon: AlertTriangle,
                     label: getQuadrantLabel('dangerous_misconception').short,
                     count: calibrationData.calibration.dangerousMisconception,
-                    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+                    className: 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]/40 text-[var(--color-data-fail)]',
                   },
                   {
                     key: 'lucky_guess' as const,
@@ -537,12 +517,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: XCircle,
                     label: getQuadrantLabel('unconfident_wrong').short,
                     count: calibrationData.calibration.unconfidentWrong,
-                    className: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]',
+                    className: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400',
                   },
                 ].map(({ key, icon: Icon, label, count, className }) => (
                   <div
                     key={key}
-                    className={`rounded-lg p-3 flex items-center justify-between ${className}`}
+                    className={`rounded-xl border p-3 flex items-center justify-between ${className}`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4 shrink-0" />
@@ -677,6 +657,25 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </div>
                   ))}
                 </div>
+                <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {userStats.stats.weakAreas.slice(0, 3).map((area) => (
+                  <div
+                    key={area.system}
+                    className="p-3 rounded-lg bg-surface-primary border border-data-provisional/30"
+                  >
+                    <div className="text-sm font-semibold text-action-primary mb-1">
+                      {area.system}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-data-provisional">
+                        {area.accuracy}%
+                      </span>
+                      <span className="text-xs text-action-muted">{area.attempts} Q's</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             );
           })()}

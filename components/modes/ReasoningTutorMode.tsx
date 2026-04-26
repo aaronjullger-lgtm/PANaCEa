@@ -6,23 +6,15 @@ import { InlineSpinner } from '@/components/loading';
 
 type ChatRole = 'user' | 'model';
 
-interface GroundingSource {
-  title: string;
-  uri: string;
-}
-
 interface ChatMessage {
   id: string;
   role: ChatRole;
   text: string;
-  groundingSources?: GroundingSource[];
 }
 
 interface ReasoningTutorModeProps {
   onExit?: () => void;
 }
-
-const STORAGE_KEY_GOOGLE_SEARCH = 'reasoning-tutor-google-search';
 
 const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
@@ -98,8 +90,6 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
           history,
           sessionCacheName,
           thinkingLevel,
-          enableGoogleSearch,
-          reasoningEffort: enableGoogleSearch ? 'high' : undefined,
         }),
       });
 
@@ -142,7 +132,6 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
         id: `model-${Date.now()}`,
         role: 'model',
         text: replyText,
-        groundingSources,
       };
 
       setMessages((prev) => [...prev, tutorMessage]);
@@ -206,7 +195,6 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
             <button
               type="button"
               onClick={onExit}
-              aria-label="Close Reasoning Tutor"
               className="rounded-lg p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
             >
               <X className="h-5 w-5" />

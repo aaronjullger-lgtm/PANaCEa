@@ -98,9 +98,6 @@ export interface Question {
   pubmedCitations?: GroundingSource[];
 }
 
-/** Alias for Question used in quiz/session flows (preferred in new code). */
-export type QuizQuestion = Question;
-
 /** Error taxonomy for meta-cognition - helps users understand why they miss questions */
 export type ErrorTag = 'knowledge_gap' | 'misread_question' | 'guessing';
 

@@ -70,11 +70,7 @@ html.theme-transitioning * {
    PREVENT HORIZONTAL SCROLLING ON MOBILE
 ------------------------------------------------------ */
 
-body {
-  overflow-x: hidden;
-}
-
-/* Allow sidebar shadow to render; main content uses overflow-x-hidden on inner wrapper */
+body,
 #root {
   overflow-x: visible;
   max-width: 100%;
@@ -555,42 +551,45 @@ a,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - Gold CTA, WCAG AA contrast with white text */
+  /* Primary button - semantic accent with high contrast text */
   .btn-primary {
-    @apply px-4 py-2 rounded-xl font-semibold transition-all duration-200 ease-out
+    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
            focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-           bg-[var(--color-accent-button)] text-white shadow-md border border-[var(--color-accent-button)]
-           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-lg
-           active:scale-[0.95]
+           bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-accent-hover)] hover:shadow-md
+           active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-accent-button)] dark:text-white dark:border-[var(--color-accent-button)] dark:hover:brightness-110;
+           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-accent-hover)];
   }
 
-  /* Secondary button - High-contrast border and text for visibility */
+  /* Secondary button - high contrast with borders */
   .btn-secondary {
-    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200 ease-out
-           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] shadow-sm
-           hover:-translate-y-0.5 hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-navy,#0F172A)] dark:hover:border-[var(--color-accent)] hover:shadow-md
-           active:scale-[0.95]
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
+           bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-2 border-[var(--color-border)] shadow-sm
+           hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] hover:shadow-md
+           active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed
+           dark:bg-[var(--color-bg-secondary)] dark:text-[var(--color-text-primary)] dark:border-[var(--color-border)] dark:hover:bg-[var(--color-bg-secondary)] dark:hover:border-[var(--color-accent)];
   }
 
-  /* Success button - for submit actions (hardcoded dark teal for white text contrast) */
+  /* Success button - for submit actions */
   .btn-success {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-[#0d7a6f] text-white shadow-sm
-           hover:brightness-110 hover:shadow-md
+           bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-data-pass)]/90 hover:shadow-md
            active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:opacity-50 disabled:cursor-not-allowed
+           dark:bg-[var(--color-data-pass)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-pass)]/80;
   }
 
-  /* Danger button - for destructive actions (hardcoded dark red for white text contrast) */
+  /* Danger button - for destructive actions */
   .btn-danger {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-[#b91c1c] text-white shadow-sm
-           hover:brightness-110 hover:shadow-md
+           bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] shadow-sm
+           hover:bg-[var(--color-data-fail)]/90 hover:shadow-md
            active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:opacity-50 disabled:cursor-not-allowed
+           dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
   }
 
   /* Data/KPI numbers - tabular figures for aligned columns and fast scanning (Pillar V) */
@@ -637,10 +636,10 @@ a,
 
   /* Focus ring utility - accessible keyboard focus (cyan glow, no black) */
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)];
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2;
   }
 
-  /* Global keyboard focus - visible ring on all interactive elements (accessibility) */
+  /* Global keyboard focus - visible ring (Cyan/Accent glow, not default browser blue) */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -654,7 +653,8 @@ a,
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
-      0 0 0 4px var(--color-focus-ring);
+      0 0 0 4px var(--color-accent),
+      0 0 12px rgba(14, 165, 233, 0.35);
   }
 
   /* Checkbox/radio often need larger hit area; keep ring visible */
@@ -663,7 +663,7 @@ a,
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
-      0 0 0 4px var(--color-focus-ring);
+      0 0 0 4px var(--color-accent);
   }
 
   /* Touch target — WCAG 2.1 AA minimum 44×44px for interactive elements */
@@ -688,19 +688,19 @@ a,
 
   /* Ghost button - transparent, Deep Navy text on light, slate on dark */
   .btn-ghost {
-    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
-           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-secondary)] border-2 border-transparent
-           hover:border-[var(--color-navy,#0F172A)] dark:hover:border-[var(--color-border)]
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
+           bg-transparent text-[var(--color-text-secondary)] border border-transparent
+           hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border)]
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:hover:bg-[var(--color-bg-secondary)];
+           dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-secondary)] dark:hover:border-[var(--color-border)];
   }
 
-  /* Glass button - Gold CTA (uses --color-accent-button for WCAG AA contrast with white text) */
+  /* Glass button - our themed PANaCEa button */
   .btn-glass {
-    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md
-           bg-[var(--color-accent-button)] text-white
-           hover:brightness-110 hover:shadow-lg
+    @apply px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-md
+           bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+           hover:bg-[var(--color-accent-hover)] hover:shadow-lg
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -720,8 +720,8 @@ a,
   }
 
   .pill-select-active {
-    @apply bg-[var(--color-accent-button)] text-white
-      dark:bg-[var(--color-accent-button)] dark:text-white;
+    @apply bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+      dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)];
   }
 
   .pill-select-inactive {
@@ -1059,15 +1059,15 @@ a,
 
   /* ===== PROFESSIONAL DARK MODE AESTHETIC VARIABLES ===== */
   /* Deep backgrounds with subtle opacity */
-  --clinical-bg-primary: rgba(15, 23, 42, 0.95); /* slate-950/95 */
-  --clinical-bg-secondary: rgba(30, 41, 59, 0.9); /* slate-900/90 */
-  --clinical-bg-card: rgba(30, 41, 59, 0.4); /* slate-900/40 */
-  --clinical-bg-hover: rgba(51, 65, 85, 0.6); /* slate-800/60 */
+  --sportsbook-bg-primary: rgba(15, 23, 42, 0.95); /* slate-950/95 */
+  --sportsbook-bg-secondary: rgba(30, 41, 59, 0.9); /* slate-900/90 */
+  --sportsbook-bg-card: rgba(30, 41, 59, 0.4); /* slate-900/40 */
+  --sportsbook-bg-hover: rgba(51, 65, 85, 0.6); /* slate-800/60 */
 
   /* High contrast text colors */
-  --clinical-text-primary: rgb(241, 245, 249); /* slate-100 */
-  --clinical-text-secondary: rgb(203, 213, 225); /* slate-300 */
-  --clinical-text-muted: rgb(148, 163, 184); /* slate-400 */
+  --sportsbook-text-primary: rgb(241, 245, 249); /* slate-100 */
+  --sportsbook-text-secondary: rgb(203, 213, 225); /* slate-300 */
+  --sportsbook-text-muted: rgb(148, 163, 184); /* slate-400 */
 
   /* Subtle borders with glow potential */
   --clinical-border-primary: rgba(71, 85, 105, 0.5); /* slate-600/50 */
@@ -1075,19 +1075,19 @@ a,
   --clinical-border-accent: color-mix(in srgb, var(--color-accent) 50%, transparent); /* blue-500/50 */
 
   /* System-specific accent backgrounds (for badges) */
-  --clinical-cv-bg: rgba(127, 29, 29, 0.4); /* red-950/40 */
-  --clinical-pulm-bg: rgba(8, 51, 68, 0.4); /* cyan-950/40 */
-  --clinical-gi-bg: rgba(69, 26, 3, 0.4); /* amber-950/40 */
-  --clinical-neuro-bg: rgba(46, 16, 101, 0.4); /* purple-950/40 */
-  --clinical-renal-bg: rgba(12, 10, 9, 0.4); /* blue-950/40 */
-  --clinical-endo-bg: rgba(80, 7, 36, 0.4); /* pink-950/40 */
-  --clinical-eent-bg: rgba(4, 47, 46, 0.4); /* teal-950/40 */
-  --clinical-msk-bg: rgba(15, 23, 42, 0.4); /* slate-800/40 */
+  --sportsbook-cv-bg: rgba(127, 29, 29, 0.4); /* red-950/40 */
+  --sportsbook-pulm-bg: rgba(8, 51, 68, 0.4); /* cyan-950/40 */
+  --sportsbook-gi-bg: rgba(69, 26, 3, 0.4); /* amber-950/40 */
+  --sportsbook-neuro-bg: rgba(46, 16, 101, 0.4); /* purple-950/40 */
+  --sportsbook-renal-bg: rgba(12, 10, 9, 0.4); /* blue-950/40 */
+  --sportsbook-endo-bg: rgba(80, 7, 36, 0.4); /* pink-950/40 */
+  --sportsbook-eent-bg: rgba(4, 47, 46, 0.4); /* teal-950/40 */
+  --sportsbook-msk-bg: rgba(15, 23, 42, 0.4); /* slate-800/40 */
 
   /* Yield level colors */
-  --clinical-yield-high: rgba(127, 29, 29, 0.5); /* red-950/50 */
-  --clinical-yield-medium: rgba(69, 26, 3, 0.5); /* amber-950/50 */
-  --clinical-yield-low: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+  --sportsbook-yield-high: rgba(127, 29, 29, 0.5); /* red-950/50 */
+  --sportsbook-yield-medium: rgba(69, 26, 3, 0.5); /* amber-950/50 */
+  --sportsbook-yield-low: rgba(30, 41, 59, 0.5); /* slate-800/50 */
 
   /* Hover and interaction effects */
   --clinical-glow-blue: color-mix(in srgb, var(--color-accent) 20%, transparent); /* blue-500/20 */
@@ -1423,10 +1423,17 @@ a,
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */
-/* Commuter mode only enlarges touch targets and type; it does NOT override theme.
-   This avoids a mixed light/dark UI (sidebar light, content dark) and layout bugs. */
 
 .commuter-mode {
+  /* High contrast but not bright - easier on eyes */
+  --color-bg-primary: #1a1a2e;
+  --color-bg-secondary: #252540;
+  --color-text-primary: #e8e8e8;
+  --color-text-secondary: #b8b8c8;
+  --color-accent: #6b8f71;
+  --color-accent-hover: #7fa385;
+
+  /* Larger touch targets via scaling */
   --commuter-scale: 1.15;
   --commuter-button-min-height: 56px;
   --commuter-font-size-base: 1.125rem;
@@ -1556,14 +1563,14 @@ a,
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  box-shadow: 0 18px 42px var(--color-shadow-soft);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .dark .condition-modal {
-  box-shadow: 0 18px 42px var(--color-shadow-soft);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.5);
 }
 
 .condition-modal-header {
@@ -2109,25 +2116,6 @@ a,
   line-height: 1.75;
 }
 
-/* Key point / Pearl callout - high-yield bullet with left border and background */
-.condition-callout,
-.condition-pearl {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  padding-left: 1rem;
-  border-left: 4px solid var(--color-accent);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  border-radius: 0 12px 12px 0;
-  font-size: inherit;
-  line-height: 1.65;
-}
-
-.condition-callout strong,
-.condition-pearl strong {
-  color: var(--color-text-primary);
-}
-
 .condition-mnemonic-header {
   margin: 16px 0 10px;
   font-weight: 700;
@@ -2235,23 +2223,52 @@ a,
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+/* Shimmer for analytics skeleton - left-to-right, design-system blue-gray */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(148, 163, 184, 0.08) 45%,
+    rgba(148, 163, 184, 0.12) 50%,
+    rgba(148, 163, 184, 0.08) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dark .skeleton-shimmer-wrap::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(71, 85, 105, 0.15) 45%,
+    rgba(71, 85, 105, 0.25) 50%,
+    rgba(71, 85, 105, 0.15) 55%,
+    transparent 100%
+  );
+}
+
 /* ===============================================
    MOBILE RESPONSIVE STYLES
    =============================================== */
-
-/* Layout adjustments for mobile - no sidebar rail; bottom tab bar only */
-@media (max-width: 768px) {
-  :root {
-    --nav-rail-width: 0;
-  }
-
-  /* Ensure main content has proper mobile spacing */
-  main#main-content {
-    margin-left: 0 !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-}
 
 /* Condition Modal Mobile Optimization */
 @media (max-width: 768px) {
@@ -2442,7 +2459,7 @@ a,
 /* Scoped scrollable containers */
 .scrollable-area {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
+  scrollbar-color: var(--color-border) var(--color-bg-primary);
 }
 
 .scrollable-area::-webkit-scrollbar {
@@ -2451,7 +2468,7 @@ a,
 }
 
 .scrollable-area::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-bg-primary);
 }
 
 .scrollable-area::-webkit-scrollbar-thumb {
@@ -2463,12 +2480,16 @@ a,
   background: var(--color-text-muted);
 }
 
+.dark .scrollable-area::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
 .dark .scrollable-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(71, 85, 105, 0.6);
 }
 
 .dark .scrollable-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(100, 116, 139, 0.8);
 }
 
 /* Global dark-mode scrollbar: track = brand dark blue, thumb = slate */

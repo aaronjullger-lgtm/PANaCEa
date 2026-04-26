@@ -8,7 +8,7 @@
  * instead of IndexedDB functions (generateUserFriendlyStats, assessTestReadiness).
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
 import { formatPercentForDisplay } from '@/lib/utils/textFormatting';
@@ -16,7 +16,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   TrendingUp,
   TrendingDown,
-  ArrowRight,
+  Minus,
   Target,
   Clock,
   Brain,
@@ -37,7 +37,7 @@ import {
   Minus,
   Info,
 } from 'lucide-react';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { UserStatsOverviewSkeleton } from '@/components/loading';
 import { getSpeedBenchmarkLabel } from '@/lib/speedBenchmarks';
 
@@ -170,12 +170,9 @@ const StatCard: React.FC<StatCardProps> = ({
             ) : trend === 'down' ? (
               <TrendingDown className="w-3 h-3" />
             ) : (
-              <>
-                <ArrowRight className="w-3 h-3" aria-hidden />
-                <span>No change</span>
-              </>
+              <Minus className="w-3 h-3" />
             )}
-            {trend === 'up' || trend === 'down' ? trendValue : null}
+            {trendValue}
           </div>
         )}
       </div>
@@ -346,7 +343,7 @@ const ReadinessGauge: React.FC<{
                 <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
               </>
             ) : (
-              <span className="text-xl font-bold text-[var(--color-text-muted)]">—</span>
+              <span className="text-xl font-bold text-text-muted">—</span>
             )}
           </div>
         </div>
@@ -358,7 +355,7 @@ const ReadinessGauge: React.FC<{
           >
             {hasData ? getLabel(safeScore) : 'Waiting for first session'}
           </p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+          <p className="text-sm text-text-muted mt-1">
             {hasData
               ? `${safePassProb}% estimated pass probability`
               : 'Complete questions to see readiness'}
@@ -476,17 +473,16 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'systems'>('overview');
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
+      const response = await fetch(getApiEndpoint('/api/user/stats'), {
         credentials: 'include',
-        headers,
       });
 
       // 404 = user not in DB yet (new user / not synced) — show "No data yet" instead of error
@@ -525,28 +521,18 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
       }
 
       if (!response.ok) {
-        const serverMessage =
-          data?.message || data?.error || (response.status === 503 ? 'Service unavailable.' : '');
-        const friendly =
-          serverMessage ||
-          (response.status === 500
-            ? 'Server error loading analytics. Please try again later.'
-            : `Failed to load analytics (${response.status})`);
-        throw new Error(friendly);
+        throw new Error(`Failed to fetch stats: ${response.statusText}`);
       }
 
-      setUserStats(data as UserStatsResponse);
+      const data = await response.json();
+      setUserStats(data);
     } catch (err) {
       console.error('Failed to load analytics:', err);
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  };
 
   // Transform server data for display
   const displayData = useMemo(() => {
@@ -645,7 +631,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         improving,
         declining,
       },
-      // Reserved for future server-backed insights (not displayed until API exists)
+      // Placeholder values for features not yet in server
       firstInstinctAccuracy: null,
       answerChangeHelpfulness: null,
       shouldTrustFirstInstinct: null,
@@ -664,6 +650,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
   }
 
   if (error) {
+    /* Retain skeleton layout and overlay Retry on the failing block (no layout shift). */
     return (
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 text-center">
         <AlertCircle className="w-12 h-12 mx-auto text-[var(--color-data-fail)] mb-3" aria-hidden />
@@ -673,8 +660,18 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
           onClick={loadData}
           className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
-          Try Again
-        </button>
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5 text-center shadow-lg max-w-sm mx-4">
+            <AlertCircle className="w-10 h-10 mx-auto text-[var(--color-data-fail)] mb-3" />
+            <p className="text-[var(--color-text-primary)] font-medium">Failed to load analytics</p>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1 line-clamp-2">{error}</p>
+            <button
+              onClick={loadData}
+              className="mt-4 px-4 py-2 rounded-lg border-2 border-[var(--color-accent)] bg-transparent text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -750,8 +747,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
               hasData={displayData.hasData}
             />
 
-            {/* Key Stats Grid - stretch so cards match height and reduce vertical gap */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-stretch">
+            {/* Key Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 label="Lifetime Accuracy"
                 value={
@@ -825,7 +822,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                     ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).primary
                     : '—'}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)]">
+                <p className="text-xs text-text-muted">
                   {userStats?.stats?.overall?.avgTimeMs
                     ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).benchmark ||
                       'avg per question'
@@ -838,7 +835,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 <p className="text-lg font-bold text-[var(--color-accent)]">
                   {displayData.totalStudyHours}h
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)]">total study time</p>
+                <p className="text-xs text-text-muted">total study time</p>
               </div>
 
               <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 text-center">
@@ -846,7 +843,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 <p className="text-lg font-bold text-[var(--color-accent)]">
                   {displayData.questionsPerHour === 0 ? '--' : displayData.questionsPerHour}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)]">questions/hour</p>
+                <p className="text-xs text-text-muted">questions/hour</p>
               </div>
             </div>
 
@@ -956,7 +953,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 <h3 className="text-sm font-medium text-[var(--color-accent)] mb-2">
                   Building Your Profile
                 </h3>
-                <p className="text-sm text-[var(--color-text-muted)]">
+                <p className="text-sm text-text-muted">
                   Complete at least 50 questions to unlock personalized insights about your
                   test-taking patterns, optimal study times, and break recommendations.
                 </p>
@@ -982,7 +979,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
               <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Personalized Recommendations
               </h3>
-              <p className="text-xs text-[var(--color-text-muted)] mb-4">
+              <p className="text-xs text-text-secondary mb-4">
                 Based on your study patterns and performance
               </p>
               {(() => {
@@ -1059,7 +1056,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                       ? "You're Ready!"
                       : `${Math.ceil((80 - displayData.readinessScore) / 2)} days`}
                   </p>
-                  <p className="text-sm text-[var(--color-text-muted)]">
+                  <p className="text-sm text-text-muted">
                     {displayData.readinessScore >= 80
                       ? "You've reached your target readiness level"
                       : 'estimated to reach readiness'}

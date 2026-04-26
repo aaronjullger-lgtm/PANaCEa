@@ -22,10 +22,6 @@ import { WellsPECalculator } from './risk/WellsPECalculator';
 import { PERCCalculator } from './diagnosis/PERCCalculator';
 import { GFRCalculator } from './lab/GFRCalculator';
 import { AnionGapCalculator } from './lab/AnionGapCalculator';
-import { OsmolarGapCalculator } from './lab/OsmolarGapCalculator';
-import { ParklandCalculator } from './lab/ParklandCalculator';
-import { PediatricDosingPlaceholder } from './dosing/PediatricDosingPlaceholder';
-import { ClinicalGuidelinesPlaceholder } from './guidelines/ClinicalGuidelinesPlaceholder';
 
 import type { Calculator } from './types';
 import { CALCULATORS, CALCULATOR_CATEGORIES } from './calculatorRegistry';
@@ -82,14 +78,6 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ initialCalculatorI
         return <GFRCalculator onBack={onBack} />;
       case 'anion_gap':
         return <AnionGapCalculator onBack={onBack} />;
-      case 'osmolar_gap':
-        return <OsmolarGapCalculator onBack={onBack} />;
-      case 'parkland':
-        return <ParklandCalculator onBack={onBack} />;
-      case 'pediatric_dosing':
-        return <PediatricDosingPlaceholder onBack={onBack} />;
-      case 'clinical_guidelines':
-        return <ClinicalGuidelinesPlaceholder onBack={onBack} />;
       default:
         return null;
     }

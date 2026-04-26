@@ -50,10 +50,6 @@ export interface Question {
   dueConceptKey?: { conditionId: string; taskType: string | null };
   /** Source of the question (pool, database, ai_fallback) */
   source?: string;
-  /** Content source attribution (e.g. 'openstax') */
-  contentSource?: string;
-  /** Content source title (e.g. book name) */
-  contentSourceTitle?: string;
   /** True when question is from staging lake (beta/peer review) */
   fromStaging?: boolean;
   /** Optional image/ECG/imaging URL for multi-modal questions */
@@ -123,16 +119,12 @@ export interface SessionSettings {
     | 'reviewFlagged'
     | 'unseen'
     | 'incorrect'
-    | 'bookmarked'
-    | 'due';
+    | 'bookmarked';
   topic?: string;
   count?: number;
   systems?: string[];
   /** Optional difficulty filter for pool/API (e.g. 'easy', 'medium', 'hard') */
   difficulty?: string;
-
-  /** Core PANCE Simulation only: strict NCCIPA blueprint, no weak-area bias, PANCE-level difficulty */
-  simulationStrict?: boolean;
 
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;

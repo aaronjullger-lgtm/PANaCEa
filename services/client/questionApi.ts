@@ -128,7 +128,7 @@ export async function getQuestionClient(
         difficulty: q.difficulty as Question['difficulty'],
         pearls: [],
       };
-
+      
       return question;
     }
 

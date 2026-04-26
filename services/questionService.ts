@@ -236,12 +236,10 @@ export async function fetchPearlsForQuestion(
 
 /**
  * Fetch questions from the pool API
- * systems: for didactic users - only questions from these systems
  */
 async function fetchFromPool(
   count: number,
   system?: string,
-  systems?: string[],
   category?: string,
   difficulty?: string,
   token?: string | null,
@@ -251,7 +249,6 @@ async function fetchFromPool(
   const params = new URLSearchParams();
   params.set('count', count.toString());
   if (system) params.set('system', system);
-  if (systems?.length) params.set('systems', systems.join(','));
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
   if (eorMode) params.set('eorMode', 'true');
@@ -438,7 +435,6 @@ export async function getQuestion(
     const { questions, poolStatus } = await fetchFromPool(
       1,
       system,
-      undefined, // systems (multi-system filter)
       undefined, // category
       poolDifficulty,
       token
@@ -578,8 +574,6 @@ function getClinicalContextFromStorage(): {
 
 /**
  * Get multiple questions at once (for batch prefetching)
- * When settings.systems is set (or enabled systems in storage for didactic), pool is filtered to those systems.
- * When active-unit systems are set, 80% from active unit and 20% from completed/review.
  */
 export async function getQuestionBatch(
   settings: SessionSettings,
@@ -587,7 +581,7 @@ export async function getQuestionBatch(
   count: number,
   getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
-  const { focus, difficulty, systems: settingsSystems } = settings;
+  const { focus, difficulty } = settings;
 
   const systemMap: Record<string, string> = {
     cardiology: 'CV',
@@ -724,7 +718,6 @@ export async function getQuestionBatch(
     const { questions, poolStatus } = await fetchFromPool(
       count,
       system,
-      systemsFilter,
       undefined,
       poolDifficulty,
       token

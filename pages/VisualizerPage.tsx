@@ -31,6 +31,16 @@ interface GenerateResponse {
   };
 }
 
+interface EditResponse {
+  data: {
+    imageBase64: string;
+    imageMime: string;
+    thoughtSignature?: string;
+  };
+}
+
+type VisualizerMode = 'generate' | 'edit';
+
 export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
 
@@ -45,6 +55,13 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Edit mode state
+  const [editImage, setEditImage] = useState<string | null>(null);
+  const [editMime, setEditMime] = useState<string>('image/png');
+  const [editPrompt, setEditPrompt] = useState('');
+  const [thoughtSignature, setThoughtSignature] = useState<string | undefined>(undefined);
+  const [editResult, setEditResult] = useState<EditResponse['data'] | null>(null);
 
   const generate = useCallback(async () => {
     setLoading(true);
@@ -89,6 +106,58 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       setLoading(false);
     }
   }, [getToken]);
+
+  const runEdit = useCallback(async () => {
+    if (!editImage || !editPrompt.trim()) return;
+    setLoading(true);
+    setError(null);
+    setEditResult(null);
+    try {
+      const token = await getToken();
+      const base64 = editImage.replace(/^data:[^;]+;base64,/, '');
+      const res = await fetch('/api/visualizer/edit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: editMime,
+          userPrompt: editPrompt.trim(),
+          thoughtSignature: thoughtSignature ?? undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || json.details || 'Edit failed');
+        return;
+      }
+      setEditResult(json.data);
+      if (json.data?.thoughtSignature) setThoughtSignature(json.data.thoughtSignature);
+      setEditImage(json.data?.imageBase64 ?? editImage);
+      setEditMime(json.data?.imageMime ?? editMime);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [editImage, editMime, editPrompt, thoughtSignature, getToken]);
+
+  const handleEditFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setEditImage(dataUrl);
+      setEditMime(file.type || 'image/png');
+      setEditResult(null);
+      setThoughtSignature(undefined);
+      setError(null);
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   useEffect(() => {
     if (!result?.imageBase64 || !canvasRef.current || !imgRef.current) return;
