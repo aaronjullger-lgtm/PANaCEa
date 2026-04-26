@@ -7,7 +7,6 @@
  * Prompts include:
  * - "What patterns did you notice in questions you missed?"
  * - "What will you do differently next time?"
- * - "Rate your confidence before you saw results"
  *
  * @see .clinerules Section 3: PEDAGOGY & SCIENCE OF LEARNING - Metacognition
  */
@@ -35,7 +34,6 @@ interface MetacognitiveReflectionProps {
 interface ReflectionData {
   patternsNoticed: string;
   improvementPlan: string;
-  confidenceRating: number;
   topicsToReview: string[];
   completedAt: string;
 }
@@ -57,14 +55,6 @@ const REFLECTION_PROMPTS = [
     placeholder: 'Next time I will...',
     hint: 'Think about: Study strategies, time management, content review priorities',
   },
-  {
-    id: 'confidence',
-    icon: Lightbulb,
-    title: 'Confidence Calibration',
-    question: 'Before seeing results, how confident were you in your answers?',
-    placeholder: '',
-    hint: 'Comparing this to your actual score helps calibrate your self-assessment',
-  },
 ];
 
 export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = ({
@@ -76,7 +66,6 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
   const [currentStep, setCurrentStep] = useState(0);
   const [patternsNoticed, setPatternsNoticed] = useState('');
   const [improvementPlan, setImprovementPlan] = useState('');
-  const [confidenceRating, setConfidenceRating] = useState(3);
   const [topicsToReview, setTopicsToReview] = useState<string[]>([]);
 
   const score = Math.round(
@@ -96,7 +85,6 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
     const reflection: ReflectionData = {
       patternsNoticed,
       improvementPlan,
-      confidenceRating,
       topicsToReview,
       completedAt: new Date().toISOString(),
     };
@@ -117,8 +105,6 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
         return patternsNoticed.length >= 10;
       case 1:
         return improvementPlan.length >= 10;
-      case 2:
-        return true; // Confidence rating always has a value
       default:
         return true;
     }
@@ -193,93 +179,22 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
 
                       <p className="text-[var(--color-text-primary)] text-lg">{prompt.question}</p>
 
-                      {currentStep === 2 ? (
-                        /* Confidence Rating Slider */
-                        <div className="space-y-4 pt-4">
-                          <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
-                            <span>Not confident</span>
-                            <span>Very confident</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="1"
-                            max="5"
-                            value={confidenceRating}
-                            onChange={(e) => setConfidenceRating(parseInt(e.target.value))}
-                            aria-label={`Confidence rating: ${confidenceRating} of 5`}
-                            aria-valuemin={1}
-                            aria-valuemax={5}
-                            aria-valuenow={confidenceRating}
-                            className="w-full h-3 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent)]"
-                          />
-                          <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-                            {['1', '2', '3', '4', '5'].map((num) => (
-                              <span
-                                key={num}
-                                className={
-                                  confidenceRating === parseInt(num)
-                                    ? 'text-[var(--color-accent)] font-bold'
-                                    : ''
-                                }
-                              >
-                                {num}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Confidence Comparison */}
-                          <div className="mt-6 p-4 bg-[var(--color-bg-tertiary)]/50 rounded-lg">
-                            <p className="text-[var(--color-text-secondary)] text-sm">
-                              <span className="font-semibold text-[var(--color-accent)]">
-                                Calibration Check:
-                              </span>{' '}
-                              You were{' '}
-                              {confidenceRating <= 2
-                                ? 'not very'
-                                : confidenceRating >= 4
-                                  ? 'very'
-                                  : 'moderately'}{' '}
-                              confident and scored {score}%.
-                              {Math.abs(confidenceRating * 20 - score) <= 20 ? (
-                                <span className="text-[var(--color-data-pass)]">
-                                  {' '}
-                                  Your confidence was well-calibrated! ✓
-                                </span>
-                              ) : confidenceRating * 20 > score ? (
-                                <span className="text-[var(--color-data-provisional)]">
-                                  {' '}
-                                  Consider being more cautious in your self-assessment.
-                                </span>
-                              ) : (
-                                <span className="text-[var(--color-accent)]">
-                                  {' '}
-                                  You may be underestimating your abilities!
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Text Input */
-                        <>
-                          <textarea
-                            value={currentStep === 0 ? patternsNoticed : improvementPlan}
-                            onChange={(e) =>
-                              currentStep === 0
-                                ? setPatternsNoticed(e.target.value)
-                                : setImprovementPlan(e.target.value)
-                            }
-                            placeholder={prompt.placeholder}
-                            className="w-full h-32 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl p-4 resize-none
-                              border-2 border-transparent focus:border-[var(--color-accent)] focus:outline-none
-                              placeholder:text-[var(--color-text-muted)]"
-                          />
-                          <p className="text-[var(--color-text-muted)] text-sm flex items-start gap-2">
-                            <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
-                            {prompt.hint}
-                          </p>
-                        </>
-                      )}
+                      <textarea
+                        value={currentStep === 0 ? patternsNoticed : improvementPlan}
+                        onChange={(e) =>
+                          currentStep === 0
+                            ? setPatternsNoticed(e.target.value)
+                            : setImprovementPlan(e.target.value)
+                        }
+                        placeholder={prompt.placeholder}
+                        className="w-full h-32 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl p-4 resize-none
+                          border-2 border-transparent focus:border-[var(--color-accent)] focus:outline-none
+                          placeholder:text-[var(--color-text-muted)]"
+                      />
+                      <p className="text-[var(--color-text-muted)] text-sm flex items-start gap-2">
+                        <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
+                        {prompt.hint}
+                      </p>
                     </>
                   );
                 })()}

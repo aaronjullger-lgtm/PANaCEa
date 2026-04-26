@@ -76,6 +76,9 @@
 
 .panacea-nav-link {
   position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   transition: color 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -754,6 +757,9 @@
 }
 
 .panacea-footer-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   transition: color 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 

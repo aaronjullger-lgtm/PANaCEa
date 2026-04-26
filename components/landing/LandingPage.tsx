@@ -108,7 +108,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
     <footer className="relative z-10">
       <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="panacea-footer-shell flex flex-col gap-10">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-8 lg:[flex-direction:row] lg:items-end lg:justify-between">
             <div className="max-w-xl space-y-4">
               <div className="flex items-center gap-3">
                 <img src="/favicondarkmodeTP.svg" alt="PANaCEa" className="h-10 w-auto" />
@@ -134,7 +134,7 @@ function LandingFooter({ onSignUp }: { onSignUp: () => void }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-white/6 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-white/6 pt-6 text-xs text-slate-500 sm:[flex-direction:row] sm:items-center sm:justify-between">
             <p>&copy; {new Date().getFullYear()} PANaCEa. Built for serious PANCE preparation.</p>
             <p>Not affiliated with NCCPA.</p>
           </div>
@@ -226,15 +226,13 @@ export function LandingPage() {
             >
               Sign In
             </button>
-            <motion.button
+            <button
               type="button"
               onClick={openSignUp}
               className="panacea-button panacea-button--primary"
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             >
               Start adaptive plan
-            </motion.button>
+            </button>
           </div>
         </div>
       </header>
@@ -266,18 +264,16 @@ export function LandingPage() {
 
               <motion.div
                 {...revealProps(prefersReducedMotion, 0.16)}
-                className="flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+                className="flex flex-col items-start gap-4 sm:[flex-direction:row] sm:items-center"
               >
-                <motion.button
+                <button
                   type="button"
                   onClick={openSignUp}
                   className="panacea-button panacea-button--hero"
-                  whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -1 }}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 >
                   Start adaptive plan
                   <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </motion.button>
+                </button>
 
                 <a
                   href="#how-it-works"
@@ -306,7 +302,7 @@ export function LandingPage() {
                 className="panacea-card panacea-operator-preview"
               >
                 <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-4 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-4 border-b border-white/8 pb-5 sm:[flex-direction:row] sm:items-start sm:justify-between">
                     <div>
                       <p className="panacea-card-label">Next Best Action</p>
                       <h2 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-3xl">
@@ -337,7 +333,7 @@ export function LandingPage() {
 
                   <div className="panacea-preview-section panacea-preview-section--gain">
                     <p className="panacea-card-label">Expected gain</p>
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="mt-3 flex flex-col gap-3 sm:[flex-direction:row] sm:items-end sm:justify-between">
                       <div className="panacea-preview-gain">+8–12%</div>
                       <p className="max-w-sm text-sm leading-6 text-slate-300">
                         Pulmonary readiness, with lower diagnostic confusion across PE, pneumonia,
@@ -597,7 +593,7 @@ export function LandingPage() {
 
                 <motion.div
                   {...revealProps(prefersReducedMotion, 0.22)}
-                  className="panacea-glass panacea-card panacea-process-strip mt-10 flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between"
+                  className="panacea-glass panacea-card panacea-process-strip mt-10 flex flex-col gap-6 p-6 lg:[flex-direction:row] lg:items-center lg:justify-between"
                 >
                   <div className="max-w-2xl">
                     <p className="panacea-card-label">What adapts behind the scenes</p>
@@ -643,17 +639,15 @@ export function LandingPage() {
                 the highest-yield material in front of you until it sticks.
               </p>
 
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <motion.button
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:[flex-direction:row]">
+                <button
                   type="button"
                   onClick={openSignUp}
                   className="panacea-button panacea-button--hero"
-                  whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -1 }}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 >
                   Create My Free Account
                   <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </motion.button>
+                </button>
 
                 <button
                   type="button"
@@ -682,6 +676,7 @@ export function LandingPage() {
       <AnimatePresence>
         {showAuth ? (
           <motion.div
+            key="panacea-auth-dialog"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
