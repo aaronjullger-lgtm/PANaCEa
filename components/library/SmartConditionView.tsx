@@ -11,11 +11,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
   AlertTriangle,
   Beaker,
+  BookOpen,
   ChevronDown,
   ChevronRight,
   Heart,
@@ -126,6 +126,7 @@ export interface MedicalContent {
   status?: string;
   updatedAt?: string | null;
   relatedSystems?: string[];
+  overview?: string | null;
 
   // High Yield
   pance_yield?: number | null;
@@ -1088,6 +1089,307 @@ function ManagementTab({
   );
 }
 
+// Kept for non-routing consumers that may still import this module during a
+// staged rollout; the active Phase 8 condition page renders
+// ConditionStudyWorkspace below.
+void HighYieldTab;
+void PresentationTab;
+void DiagnosticsTab;
+void ManagementTab;
+
+// ---------------------------------------------------------------------------
+// Phase 8: Integrated PA/PANCE condition workspace
+// ---------------------------------------------------------------------------
+
+function SectionCard({
+  title,
+  icon: Icon,
+  children,
+  tone = 'default',
+}: Readonly<{
+  title: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
+  tone?: 'default' | 'trap' | 'action';
+}>) {
+  const toneStyles =
+    tone === 'trap'
+      ? {
+          borderColor: 'color-mix(in srgb, var(--color-risk) 34%, transparent)',
+          background: 'color-mix(in srgb, var(--color-bg-secondary) 86%, var(--color-risk) 14%)',
+        }
+      : tone === 'action'
+        ? {
+            borderColor: 'color-mix(in srgb, var(--color-accent) 34%, transparent)',
+            background: 'color-mix(in srgb, var(--color-bg-secondary) 86%, var(--color-accent) 14%)',
+          }
+        : {
+            borderColor: 'var(--color-border)',
+            background: 'var(--color-surface)',
+          };
+
+  return (
+    <section className="rounded-xl border p-4" style={toneStyles}>
+      <div className="mb-3 flex items-center gap-2">
+        {Icon && (
+          <Icon
+            className={`h-4 w-4 ${tone === 'trap' ? 'text-[var(--color-risk)]' : 'text-[var(--color-accent)]'}`}
+            aria-hidden="true"
+          />
+        )}
+        <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+          {title}
+        </h2>
+      </div>
+      <div className="text-sm leading-6 text-[var(--color-text-primary)]">{children}</div>
+    </section>
+  );
+}
+
+function InlineFact({
+  label,
+  value,
+}: Readonly<{
+  label: string;
+  value: React.ReactNode;
+}>) {
+  if (!value) return null;
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+        {label}
+      </p>
+      <div className="text-sm font-medium leading-6 text-[var(--color-text-primary)]">{value}</div>
+    </div>
+  );
+}
+
+function TextValue({ value }: Readonly<{ value: string | null | undefined }>) {
+  if (!value) {
+    return <span className="text-[var(--color-text-muted)]">Not documented yet.</span>;
+  }
+  return <ContentFieldRenderer value={value} variant="clinical" className="text-sm leading-6" />;
+}
+
+function buildPanceTrap(data: MedicalContent): string {
+  const confusionPairs = data.ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent ?? [];
+  const firstConfusion = confusionPairs[0];
+  const confusedWith =
+    firstConfusion?.conditionName ??
+    firstConfusion?.selectedConditionId ??
+    firstConfusion?.mistakenForId;
+  if (confusedWith && !/^[0-9a-f]{8}-[0-9a-f]{4}/.test(confusedWith)) {
+    const clue = firstConfusion?.distinctiveFeature ?? firstConfusion?.clinicalContext;
+    return clue
+      ? `Do not stop at "${confusedWith}". Separate it from ${data.condition} by checking: ${clue}.`
+      : `Do not anchor on "${confusedWith}". Re-check the timing, risk factors, and first diagnostic step before choosing.`;
+  }
+  const bestInitial = parseTextField(data.best_initial_test);
+  const goldStandard = parseTextField(data.gold_standard_dx);
+  if (bestInitial && goldStandard && bestInitial !== goldStandard) {
+    return `PANCE often separates first test from best test. Start with ${bestInitial}; confirm with ${goldStandard} when the stem asks for the best or definitive test.`;
+  }
+  return 'The common trap is recognizing the diagnosis but missing the next best step. Match the stem wording to diagnosis, first test, best test, or treatment before answering.';
+}
+
+function ConditionStudyWorkspace({
+  data,
+  isLoadingDetails,
+  errorDetails,
+  onRetryDetails,
+}: Readonly<{
+  data: MedicalContent;
+  isLoadingDetails?: boolean;
+  errorDetails?: string | null;
+  onRetryDetails?: () => void;
+}>) {
+  const overview = parseTextField(data.overview);
+  const classicPatient = parseTextField(data.classic_patient);
+  const symptoms = parseTextField(data.symptoms);
+  const physicalExam = parseTextField(data.physicalExam);
+  const riskFactors = parseTextField(data.riskFactors);
+  const diagnostics = parseTextField(data.diagnostics);
+  const bestInitial = parseTextField(data.best_initial_test);
+  const goldStandard = parseTextField(data.gold_standard_dx);
+  const firstLine = parseTextField(data.first_line_rx);
+  const treatment = parseTextField(data.treatment);
+  const differentialDiagnosis = parseTextField(data.differentialDiagnosis);
+  const triad = parseListField(data.classic_triad);
+  const pearls = parseListField(data.clinical_pearls);
+  const buzzwords = parseListField(data.buzzwords);
+  const confusionPairs = data.ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent ?? [];
+  const drugs = data.DrugConditionLink ?? [];
+  const labs = data.LabConditionLink ?? [];
+
+  const firstLineDrug = drugs.find((drug) => drug.isFirstLine)?.Drug;
+  const relatedDrugNames = drugs
+    .map((drug) => drug.Drug?.genericName ?? drug.Drug?.brandName ?? drug.Drug?.name)
+    .filter((name): name is string => Boolean(name));
+  const relatedLabNames = labs
+    .map((lab) => lab.LabTest?.displayName ?? lab.LabTest?.name)
+    .filter((name): name is string => Boolean(name));
+
+  return (
+    <div className="space-y-4">
+      {errorDetails && (
+        <div className="rounded-xl border border-[var(--color-risk)]/30 bg-[var(--color-risk)]/10 p-4 text-sm text-[var(--color-text-secondary)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>Full details could not load. Showing available high-yield structure.</span>
+            {onRetryDetails && (
+              <button
+                type="button"
+                onClick={onRetryDetails}
+                className="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)]"
+              >
+                Try again
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isLoadingDetails && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      )}
+
+      <SectionCard title="30-second skim" icon={Zap} tone="action">
+        <div className="space-y-3">
+          <TextValue value={overview || classicPatient || symptoms} />
+          <div className="grid gap-3 md:grid-cols-3">
+            <InlineFact label="First test" value={bestInitial} />
+            <InlineFact label="Best test" value={goldStandard} />
+            <InlineFact label="Treatment" value={firstLine ?? firstLineDrug?.genericName} />
+          </div>
+          {buzzwords.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {buzzwords.slice(0, 6).map((word) => (
+                <Badge key={word} variant="highYield">
+                  {word}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Classic presentation" icon={Activity}>
+        <div className="space-y-3">
+          {classicPatient && <TextValue value={classicPatient} />}
+          {triad.length > 0 && (
+            <ol className="grid gap-2 sm:grid-cols-3">
+              {triad.map((item, index) => (
+                <li key={item} className="rounded-lg bg-[var(--color-bg-secondary)] p-3">
+                  <span className="mr-2 font-semibold text-[var(--color-accent)]">{index + 1}.</span>
+                  {item}
+                </li>
+              ))}
+            </ol>
+          )}
+          {(symptoms || physicalExam) && (
+            <div className="grid gap-3 md:grid-cols-2">
+              <InlineFact label="History" value={symptoms ? <TextValue value={symptoms} /> : null} />
+              <InlineFact label="Physical exam" value={physicalExam ? <TextValue value={physicalExam} /> : null} />
+            </div>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Risk factors" icon={User}>
+        <TextValue value={riskFactors} />
+      </SectionCard>
+
+      <SectionCard title="Diagnosis" icon={Stethoscope}>
+        <TextValue value={diagnostics || goldStandard || bestInitial} />
+      </SectionCard>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <SectionCard title="First test" icon={Beaker}>
+          <TextValue value={bestInitial} />
+        </SectionCard>
+        <SectionCard title="Best test" icon={Target}>
+          <TextValue value={goldStandard} />
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Treatment" icon={Pill}>
+        <div className="space-y-3">
+          <TextValue value={firstLine || treatment} />
+          {treatment && treatment !== firstLine && <TextValue value={treatment} />}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Differentials" icon={TrendingUp}>
+        <div className="space-y-3">
+          {differentialDiagnosis && <TextValue value={differentialDiagnosis} />}
+          {confusionPairs.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+                    <th className="py-2 pr-3">Confused with</th>
+                    <th className="py-2">Distinguishing clue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {confusionPairs.map((pair) => {
+                    const name =
+                      pair.conditionName ?? pair.selectedConditionId ?? pair.mistakenForId ?? 'Alternative diagnosis';
+                    return (
+                      <tr key={pair.id} className="border-b border-[var(--color-border)]">
+                        <td className="py-2 pr-3 font-medium">{name}</td>
+                        <td className="py-2 text-[var(--color-text-secondary)]">
+                          {pair.distinctiveFeature ?? pair.clinicalContext ?? 'Compare timing, exam clues, and first test.'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="PANCE trap" icon={AlertTriangle} tone="trap">
+        {buildPanceTrap(data)}
+      </SectionCard>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <SectionCard title="Related drugs" icon={Pill}>
+          {relatedDrugNames.length > 0 ? relatedDrugNames.join(', ') : 'Not linked yet.'}
+        </SectionCard>
+        <SectionCard title="Related labs" icon={TestTube}>
+          {relatedLabNames.length > 0 ? relatedLabNames.join(', ') : 'Not linked yet.'}
+        </SectionCard>
+        <SectionCard title="Related questions" icon={BookOpen} tone="action">
+          <a
+            href={`/study?mode=smart-review&tag=${encodeURIComponent(data.condition)}`}
+            className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent)]"
+          >
+            Practice related questions
+          </a>
+        </SectionCard>
+      </div>
+
+      {pearls.length > 0 && (
+        <SectionCard title="Clinical pearls" icon={Lightbulb}>
+          <ul className="space-y-2">
+            {pearls.map((pearl) => (
+              <li key={pearl} className="rounded-lg bg-[var(--color-bg-secondary)] p-3">
+                {pearl}
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Main Component (Internal - receives data directly)
 // ---------------------------------------------------------------------------
@@ -1110,9 +1412,6 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
   errorDetails,
   onRetryDetails,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabId>('highyield');
-  const detailsLoadFailed = !!errorDetails;
-
   return (
     <div className="flex flex-col h-full min-h-0 bg-[var(--color-bg-primary)]">
       {/* Zone 1: Clinical Summary Header */}
@@ -1203,127 +1502,16 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/20 overflow-x-auto">
-        {TAB_CONFIG.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={`
-              flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] min-w-[44px]
-              ${
-                activeTab === id
-                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/40'
-                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
-              }
-            `}
-            aria-label={label}
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            <span className="whitespace-nowrap">{label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content - min-h-0 so overflow-y-auto can scroll when embedded */}
+      {/* Structured PA/PANCE study content - min-h-0 so overflow-y-auto can scroll when embedded */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
-        {/* Details-fetch error banner — only shown on tabs that require details data */}
-        {errorDetails && activeTab !== 'highyield' && (
-          <div className="mb-4 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-            <div className="flex items-center justify-between gap-3">
-              <span>
-                Unable to load full details. The High Yield tab is still available.
-              </span>
-              {onRetryDetails && (
-                <button
-                  onClick={onRetryDetails}
-                  className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
-                >
-                  Try Again
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'highyield' && (
-            <motion.div
-              key="highyield"
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ErrorBoundary>
-                <HighYieldTab data={data} />
-              </ErrorBoundary>
-            </motion.div>
-          )}
-          {activeTab === 'presentation' && (
-            <motion.div
-              key="presentation"
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ErrorBoundary>
-                {isLoadingDetails ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-8 w-2/3" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                ) : (
-                  <PresentationTab data={data} detailsLoadFailed={detailsLoadFailed} />
-                )}
-              </ErrorBoundary>
-            </motion.div>
-          )}
-          {activeTab === 'diagnostics' && (
-            <motion.div
-              key="diagnostics"
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ErrorBoundary>
-                {isLoadingDetails ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-8 w-2/3" />
-                    <Skeleton className="h-32 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                ) : (
-                  <DiagnosticsTab data={data} detailsLoadFailed={detailsLoadFailed} />
-                )}
-              </ErrorBoundary>
-            </motion.div>
-          )}
-          {activeTab === 'management' && (
-            <motion.div
-              key="management"
-              initial={{ y: 8 }}
-              animate={{ y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ErrorBoundary>
-                {isLoadingDetails ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-8 w-2/3" />
-                    <Skeleton className="h-24 w-full" />
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                ) : (
-                  <ManagementTab data={data} detailsLoadFailed={detailsLoadFailed} />
-                )}
-              </ErrorBoundary>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <ErrorBoundary>
+          <ConditionStudyWorkspace
+            data={data}
+            isLoadingDetails={isLoadingDetails}
+            errorDetails={errorDetails}
+            onRetryDetails={onRetryDetails}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );
@@ -1441,6 +1629,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
     ...(details
       ? {
           subcategory: details.subcategory,
+          overview: details.overview,
           symptoms: details.symptoms,
           physicalExam: details.physicalExam,
           treatment: details.treatment,

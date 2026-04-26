@@ -13,8 +13,10 @@ import {
   BookOpen,
   Library,
   Pill,
+  Search,
   Sparkles,
   Stethoscope,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { LabReferenceView } from './LabReferenceView';
@@ -58,30 +60,30 @@ interface NavTab {
 const NAV_TABS: NavTab[] = [
   {
     id: 'conditions',
-    label: 'Condition Library',
+    label: 'Conditions',
     icon: BookOpen,
-    description: 'Diseases and conditions organized by organ system.',
-    usage: 'Best when you need differential structure, illness scripts, or targeted review.',
+    description: 'PANCE-ready condition pages with diagnosis, tests, treatment, traps, and related practice.',
+    usage: 'Use this lane when a missed question needs an illness script, differential, or next-step repair.',
   },
   {
     id: 'pharmacopeia',
-    label: 'Pharmacopeia',
+    label: 'Pharmacology',
     icon: Pill,
     description: 'Drug reference with mechanisms, indications, and interactions.',
-    usage: 'Use this lane to anchor therapeutics, class effects, and medication recall.',
+    usage: 'Use this lane to anchor therapeutics, class effects, adverse effects, and medication recall.',
   },
   {
     id: 'labs',
-    label: 'Lab Reference',
+    label: 'Labs',
     icon: Beaker,
-    description: 'Normal values, clinical differentials, and interpretation support.',
+    description: 'Normal values, clinical patterns, first-pass interpretation, and diagnostic context.',
     usage: 'Reach here when a lab question needs range context or pattern recognition.',
   },
   {
     id: 'reference',
-    label: 'Reference Library',
+    label: 'Procedures & Imaging',
     icon: Library,
-    description: 'Procedures, imaging, ECG, anatomy, special tests, and more.',
+    description: 'Procedures, imaging, ECG, anatomy, special tests, and clinical frameworks.',
     usage: 'Use the broader library for modalities, maneuvers, and clinical frameworks.',
   },
 ];
@@ -197,9 +199,11 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const labSubFromUrl = searchParams.get('labSub') as LabSubTab | null;
+  const queryFromUrl = searchParams.get('q') ?? '';
   const [activeTab, setActiveTab] = useState<TabId>(
     tabFromUrl && VALID_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'conditions'
   );
+  const [workspaceSearch, setWorkspaceSearch] = useState(queryFromUrl);
   const [labSubTab, setLabSubTab] = useState<LabSubTab>(() =>
     tabFromUrl === 'labs' && labSubFromUrl && VALID_LAB_SUB.includes(labSubFromUrl)
       ? labSubFromUrl
@@ -217,6 +221,10 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       setLabSubTab(labSubFromUrl);
     }
   }, [activeTab, labSubFromUrl]);
+
+  useEffect(() => {
+    setWorkspaceSearch(queryFromUrl);
+  }, [queryFromUrl]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -267,6 +275,26 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
     [setSearchParams]
   );
 
+  const handleWorkspaceSearch = useCallback(
+    (value: string) => {
+      setWorkspaceSearch(value);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          const trimmed = value.trim();
+          if (trimmed) {
+            next.set('q', trimmed);
+          } else {
+            next.delete('q');
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
   const currentTab = NAV_TABS.find((tab) => tab.id === activeTab) ?? NAV_TABS[0];
   if (!currentTab) {
     return null;
@@ -281,11 +309,11 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       <WorkspaceReveal>
         <WorkspacePageHeader
           meta={{
-            badge: 'Reference Workspace',
+            badge: 'Clinical Knowledge Workspace',
             badgeTone: 'steel',
-            title: 'Keep the right clinical context on deck.',
+            title: 'Clinical Knowledge Workspace',
             subtitle:
-              'Switch lanes quickly, keep clinical context visible, and move straight into the reference surface you actually need.',
+              'Search conditions, drugs, labs, procedures, and imaging without leaving the study flow.',
             status: currentTab.label,
             actionPosition: 'under-title',
             backLabel: 'Back to Study',
@@ -311,14 +339,43 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       <WorkspaceReveal delay={0.04}>
         <WorkspaceFilterBar>
           <div className="space-y-4">
+            <div
+              className="flex items-center gap-3 rounded-2xl border px-4 py-3"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--color-accent) 24%, var(--color-border))',
+                background:
+                  'color-mix(in srgb, var(--color-surface) 88%, var(--color-accent) 12%)',
+              }}
+            >
+              <Search className="h-5 w-5 shrink-0 text-[var(--color-accent)]" aria-hidden="true" />
+              <input
+                type="search"
+                value={workspaceSearch}
+                onChange={(event) => handleWorkspaceSearch(event.target.value)}
+                placeholder="Search conditions, drugs, labs, procedures..."
+                aria-label="Search conditions, drugs, labs, procedures"
+                className="min-h-[44px] flex-1 bg-transparent text-base text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
+              />
+              {workspaceSearch ? (
+                <button
+                  type="button"
+                  onClick={() => handleWorkspaceSearch('')}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                  aria-label="Clear knowledge search"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-1.5">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Lane selector
+                  Study lanes
                 </p>
                 <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
-                  Choose the reference lane that matches the question in front of you. Keep the
-                  URL synced so deeper views stay linkable.
+                  Choose the lane that matches the clinical task: condition repair, medication recall,
+                  lab interpretation, or procedure and imaging context.
                 </p>
               </div>
               <div
@@ -368,7 +425,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
                 Active lane
               </p>
               <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[var(--color-text-primary)]">
-                {currentTab.label} is ready when you need context before another blind rep.
+                {currentTab.label} keeps reference work connected to practice.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)] sm:text-base">
                 {currentTab.usage}

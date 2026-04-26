@@ -170,16 +170,21 @@ export default function ReferenceHub() {
   const { getToken } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [token, setToken] = useState<string | null>(null);
+  const queryFromUrl = searchParams.get('q') ?? '';
 
   useEffect(() => { getToken().then(setToken).catch(() => setToken(null)); }, [getToken]);
 
   const { counts: entityCounts, isLoading: countsLoading, error: countsError } = useEntityCounts(allReferenceConfigs, token);
 
   const [showHighYield, setShowHighYield] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState('');
+  const [globalSearch, setGlobalSearch] = useState(queryFromUrl);
   const [recentEntities, setRecentEntities] = useState<string[]>([]);
   const [crossSearchResults, setCrossSearchResults] = useState<{ slug: string; items: any[] }[]>([]);
   const [crossSearching, setCrossSearching] = useState(false);
+
+  useEffect(() => {
+    setGlobalSearch((current) => (current === queryFromUrl ? current : queryFromUrl));
+  }, [queryFromUrl]);
 
   // Cross-entity search (debounced, fires when query >= 3 chars)
   useEffect(() => {

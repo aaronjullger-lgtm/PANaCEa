@@ -78,13 +78,14 @@ interface ClinicalReferenceLibraryProps {
 export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit }) => {
   const { getToken, isSignedIn, isLoaded } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearchQuery = searchParams.get('q') ?? '';
 
   // Navigation state
   const [systems, setSystems] = useState<SystemOption[]>([]);
   const [activeSystem, setActiveSystem] = useState<string>('all');
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [highYieldOnly, setHighYieldOnly] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const searchQueryDebounced = useDebounce(searchQuery.trim(), LIBRARY_SEARCH_DEBOUNCE_MS);
 
   // Content state
@@ -311,10 +312,12 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     const sys = searchParams.get('system');
     const subcat = searchParams.get('subcategory');
     const hy = searchParams.get('highYield');
+    const q = searchParams.get('q') ?? '';
 
     if (sys && sys !== 'all') setActiveSystem(sys);
     if (subcat) setActiveSubcategory(subcat);
     if (hy === 'true' || hy === '1') setHighYieldOnly(true);
+    setSearchQuery((current) => (current === q ? current : q));
   }, [searchParams]);
 
   // Write URL when state changes (preserve tab and other params)
@@ -331,12 +334,14 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     else next.delete('subcategory');
     if (highYieldOnly) next.set('highYield', 'true');
     else next.delete('highYield');
+    if (searchQuery.trim()) next.set('q', searchQuery.trim());
+    else next.delete('q');
     if (selected?.id) next.set('condition', selected.id);
     else next.delete('condition');
 
     const str = next.toString();
     if (str !== current.toString()) setSearchParams(next, { replace: true });
-  }, [activeSystem, activeSubcategory, highYieldOnly, selected?.id, setSearchParams]);
+  }, [activeSystem, activeSubcategory, highYieldOnly, searchQuery, selected?.id, setSearchParams]);
 
   // Server already filters by system, subcategory, and highYield via query params.
   // No client-side re-filtering needed.
