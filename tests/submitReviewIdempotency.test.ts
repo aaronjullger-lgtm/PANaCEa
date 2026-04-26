@@ -22,6 +22,39 @@ const mockGetEorRotationEnd = vi.fn();
 const mockScheduleConceptReview = vi.fn();
 const mockEnsureDueVariant = vi.fn();
 const mockGetRelativeDrillPerformance = vi.fn();
+const idemStore = new Map<string, { id: string; status: string; response?: Record<string, unknown> }>();
+
+vi.mock('../functions/api/_shared/submission-idempotency', () => ({
+  beginSubmissionIdempotency: vi.fn(async (_prisma: unknown, options: any) => {
+    if (!options.idempotencyKey) return null;
+    const key = `${options.userId}:${options.endpoint}:${options.idempotencyKey}`;
+    const existing = idemStore.get(key);
+    if (existing?.status === 'completed') {
+      return { state: 'completed', response: existing.response };
+    }
+    if (existing?.status === 'processing') {
+      return { state: 'in_progress', retryAfterSeconds: 5 };
+    }
+    const id = `idem-${idemStore.size + 1}`;
+    idemStore.set(key, { id, status: 'processing' });
+    return { state: 'started', id };
+  }),
+  completeSubmissionIdempotency: vi.fn(async (_prisma: unknown, id: string, response: Record<string, unknown>) => {
+    for (const record of idemStore.values()) {
+      if (record.id === id) {
+        record.status = 'completed';
+        record.response = response;
+      }
+    }
+  }),
+  failSubmissionIdempotency: vi.fn(async (_prisma: unknown, id: string) => {
+    for (const record of idemStore.values()) {
+      if (record.id === id) {
+        record.status = 'failed';
+      }
+    }
+  }),
+}));
 
 vi.mock('../functions/api/_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => ({
@@ -176,6 +209,7 @@ const FAKE_RESULT = {
 };
 
 beforeEach(() => {
+  idemStore.clear();
   mockSubmitDrillReview.mockReset();
   mockResolveReviewQuestion.mockReset();
   mockGetEorRotationEnd.mockReset();
@@ -218,7 +252,7 @@ describe('submit-review singular — idempotency', () => {
     const res2 = await onRequestPostSingle(ctx2);
 
     expect(mockSubmitDrillReview).toHaveBeenCalledTimes(1);
-    // Second response echoes the cached data — preventing duplicate FSRS writes.
+    // Second response echoes persisted idempotency data — preventing duplicate FSRS writes.
     expect(res2.data).toBeDefined();
     expect((res2.data as { isCorrect?: boolean }).isCorrect).toBe(true);
   });
@@ -234,9 +268,8 @@ describe('submit-review singular — idempotency', () => {
     expect(mockSubmitDrillReview).toHaveBeenCalledTimes(2);
   });
 
-  it('runs pipeline when KV is unavailable (graceful degradation)', async () => {
+  it('runs pipeline when KV is unavailable and still uses durable idempotency', async () => {
     const ctx = makeContext(undefined, { idempotencyKey: 'review-999-xyz456' });
-    // env.CACHE is undefined — isKVAvailable should return false.
     await onRequestPostSingle(ctx);
 
     expect(mockSubmitDrillReview).toHaveBeenCalledTimes(1);
@@ -289,11 +322,11 @@ describe('submit-reviews batch — idempotency', () => {
 
     // Simulate offline-sync retry — identical batch re-submitted.
     const res2 = await onRequestPostBatch(makeBatchContext(kv, items));
-    // Pipeline count unchanged — both items served from cache.
+    // Pipeline count unchanged — both items served from durable idempotency.
     expect(mockSubmitDrillReview).toHaveBeenCalledTimes(2);
     const results = res2.data as Array<{ success: boolean; source?: string }>;
     expect(results.every((r) => r.success)).toBe(true);
-    expect(results.every((r) => r.source === 'idempotent-cache')).toBe(true);
+    expect(results.every((r) => r.source === 'idempotent-store')).toBe(true);
   });
 
   it('only short-circuits items whose key is cached; new items still run', async () => {

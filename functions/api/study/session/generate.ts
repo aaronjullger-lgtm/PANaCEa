@@ -41,6 +41,7 @@ import {
   buildGeneratedStudySessionRecord,
   normalizeSessionGenerateResult,
 } from '../../../../lib/sessionGeneration';
+import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 // Shared schema — single source of truth for this endpoint's request contract.
@@ -78,18 +79,16 @@ export const onRequestPost = authenticatedEndpoint(
         return fail(ErrorCode.VALIDATION_FAILED, { message: 'conditionId is required for condition mode' });
       }
 
-      // Look up internal user ID + profile fields for phase inference
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: {
-          id: true,
-          currentRotation: true,
-          eorTestDate: true,
-          rotationEndDate: true,
-          examDate: true,
-          yearInProgram: true,
-          trainingPhase: true,
-        },
+      // Clerk auth can succeed before the webhook-created User row exists.
+      // Bootstrap a minimal row so first-login users can start studying.
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+        id: true,
+        currentRotation: true,
+        eorTestDate: true,
+        rotationEndDate: true,
+        examDate: true,
+        yearInProgram: true,
+        trainingPhase: true,
       });
 
       // Infer learner phase from profile (didactic / clinical / pance_prep)
@@ -111,15 +110,15 @@ export const onRequestPost = authenticatedEndpoint(
 
         if (reserved.length >= body.size) {
           // Happy path: full session from reservoir
-          const questions = await hydrateReservoirQuestions(prisma, reserved);
+          const questions = filterUsableQuestions(await hydrateReservoirQuestions(prisma, reserved));
           reservoirSource = true;
 
           result = {
             sessionId,
             questions,
             metadata: {
-              dueReviewCount: reserved.filter((r: any) => r.isReview).length,
-              newCardCount: reserved.filter((r: any) => !r.isReview).length,
+              dueReviewCount: questions.filter((q: any) => q.source === 'due_review').length,
+              newCardCount: questions.filter((q: any) => q.source !== 'due_review').length,
               systemDistribution: countSystems(questions),
               estimatedMinutes: Math.ceil((questions.length * 90) / 60),
               mode: body.mode,
@@ -154,12 +153,36 @@ export const onRequestPost = authenticatedEndpoint(
           gatedSystems: body.gatedSystems,
         });
 
+        const safeQuestions = filterUsableQuestions(onDemandResult.questions);
+        const fallbackQuestions =
+          safeQuestions.length < body.size
+            ? await fetchFallbackPregeneratedQuestions(prisma, {
+                userId: user.id,
+                size: body.size - safeQuestions.length,
+                excludeQuestionIds: safeQuestions.map((q: any) => q.id),
+                system: body.system,
+                conditionId: body.conditionId,
+                gatedSystems: body.gatedSystems ?? [],
+                blueprintWeights: body.blueprintWeights,
+              })
+            : [];
+        const questions = [...safeQuestions, ...fallbackQuestions].slice(0, body.size);
+
         result = {
           ...onDemandResult,
+          questions,
           metadata: {
             ...onDemandResult.metadata,
+            dueReviewCount: questions.filter((q: any) => q.source === 'due_review').length,
+            newCardCount: questions.filter((q: any) => q.source !== 'due_review').length,
+            systemDistribution: countSystems(questions),
+            estimatedMinutes: Math.ceil((questions.length * 90) / 60),
             learnerPhase,
-            source: reservoirCount > 0 ? 'mixed' : 'on_demand',
+            source: fallbackQuestions.length > 0
+              ? 'pregenerated_fallback'
+              : reservoirCount > 0
+                ? 'mixed'
+                : 'on_demand',
           },
         };
       }
@@ -167,7 +190,7 @@ export const onRequestPost = authenticatedEndpoint(
       // ── Step 3: Trigger background refill (fire-and-forget) ──
       if (context.waitUntil) {
         context.waitUntil(
-          requestRefill(prisma, user.id, scope, 'post_session', learnerPhase)
+          Promise.resolve(requestRefill(prisma, user.id, scope, 'post_session', learnerPhase))
             .catch((err: any) => logger.info('Background refill request failed', { error: err.message }))
         );
       }
@@ -238,14 +261,153 @@ export const onRequestPost = authenticatedEndpoint(
         error: message,
         mode: validated.body.mode,
       });
-      return fail(ErrorCode.INTERNAL_ERROR, { message });
+      return fail(ErrorCode.INTERNAL_ERROR, {
+        message: 'Unable to generate a study session right now. Please try again.',
+      });
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { requestsPerMinute: 30 }
 );
 
 // ─── Reservoir Helpers ──────────────────────────────────────────────────────
+
+function normalizeOptions(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((option) => {
+        if (typeof option === 'string') return option;
+        if (option && typeof option === 'object' && 'text' in option) {
+          return String((option as { text?: unknown }).text ?? '');
+        }
+        return String(option ?? '');
+      })
+      .map((option) => option.trim())
+      .filter(Boolean);
+  }
+
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>)
+      .map((option) => String(option ?? '').trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function isUsableQuestion(question: any): boolean {
+  return (
+    question &&
+    typeof question.id === 'string' &&
+    typeof question.question === 'string' &&
+    question.question.trim().length > 0 &&
+    Array.isArray(question.options) &&
+    question.options.length >= 2 &&
+    typeof question.correctAnswerIndex === 'number' &&
+    question.correctAnswerIndex >= 0 &&
+    question.correctAnswerIndex < question.options.length
+  );
+}
+
+function filterUsableQuestions(questions: any[]): any[] {
+  return Array.isArray(questions) ? questions.filter(isUsableQuestion) : [];
+}
+
+async function fetchFallbackPregeneratedQuestions(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  options: {
+    userId: string;
+    size: number;
+    excludeQuestionIds: string[];
+    system?: string;
+    conditionId?: string;
+    gatedSystems: string[];
+    blueprintWeights: Record<string, number>;
+  }
+): Promise<any[]> {
+  if (options.size <= 0) return [];
+
+  const recentSeen = await prisma.userQuestionSeen.findMany({
+    where: { userId: options.userId },
+    select: { questionId: true },
+    orderBy: { lastSeenAt: 'desc' },
+    take: 500,
+  });
+
+  const excluded = new Set([
+    ...options.excludeQuestionIds,
+    ...recentSeen.map((row: any) => row.questionId),
+  ]);
+  const systemCandidates = Object.keys(options.blueprintWeights ?? {})
+    .filter((system) => !options.gatedSystems.includes(system));
+
+  const where: any = {};
+  if (options.conditionId) {
+    where.conditionId = options.conditionId;
+  } else if (options.system) {
+    where.system = options.system;
+  } else if (systemCandidates.length > 0) {
+    where.system = { in: systemCandidates };
+  }
+
+  const rows = await prisma.preGeneratedQuestion.findMany({
+    where,
+    select: {
+      id: true,
+      questionData: true,
+      system: true,
+      difficulty: true,
+      conditionId: true,
+      medicalContentId: true,
+    },
+    orderBy: { generatedAt: 'desc' },
+    take: Math.max(options.size * 5, 25),
+  });
+
+  const firstPass = rows.filter((row: any) => !excluded.has(row.id));
+  const pool = firstPass.length > 0
+    ? firstPass
+    : rows.filter((row: any) => !options.excludeQuestionIds.includes(row.id));
+  const questions: any[] = [];
+
+  for (const row of pool) {
+    if (questions.length >= options.size) break;
+
+    const data = row.questionData as any;
+    const opts = normalizeOptions(data?.options ?? data?.answers ?? data?.choices);
+    const rawAns = data?.correctAnswer ?? data?.answer ?? data?.correct_option ?? '';
+    const providedIdx = typeof data?.correctAnswerIndex === 'number' ? data.correctAnswerIndex : null;
+    const resolvedIdx =
+      providedIdx !== null && providedIdx >= 0 && providedIdx < opts.length
+        ? providedIdx
+        : resolveCorrectAnswerIndex(String(rawAns), opts);
+
+    const question = {
+      id: row.id,
+      question: data?.question || data?.stem || data?.vignette || '',
+      vignette: data?.vignette || null,
+      options: opts,
+      correctAnswer: String(rawAns || (resolvedIdx !== null ? opts[resolvedIdx] : '')),
+      correctAnswerIndex: resolvedIdx ?? -1,
+      explanation: data?.explanation || data?.rationale || null,
+      system: row.system || data?.system || null,
+      category: data?.subcategory || data?.category || null,
+      topic: data?.conditionName || data?.topic || null,
+      difficulty: row.difficulty || data?.difficulty || null,
+      conditionId: row.conditionId || data?.conditionId || null,
+      medicalContentId: row.medicalContentId || data?.medicalContentId || null,
+      pearls: Array.isArray(data?.pearls) ? data.pearls : [],
+      source: 'new_card',
+    };
+
+    if (isUsableQuestion(question)) {
+      questions.push(question);
+    }
+  }
+
+  return questions;
+}
 
 /**
  * Hydrate reserved reservoir items into full SelectedQuestion objects.
@@ -295,7 +457,7 @@ async function hydrateReservoirQuestions(
   const questionMap = new Map<string, any>();
   for (const q of preGenerated) {
     const data = q.questionData as any;
-    const opts = Array.isArray(data?.options) ? data.options : [];
+    const opts = normalizeOptions(data?.options ?? data?.answers ?? data?.choices);
     const rawAns = data?.correctAnswer || data?.answer || '';
     // Patient safety: never silently fall back to 0 (option A). Prefer the
     // server-provided index; if missing/invalid, resolve from the correctAnswer
@@ -331,7 +493,7 @@ async function hydrateReservoirQuestions(
     });
   }
   for (const q of standardQuestions) {
-    const opts = Array.isArray(q.options) ? q.options : [];
+    const opts = normalizeOptions(q.options);
     const rawAns = q.correctAnswer || '';
     // Patient safety: standard questions carry correctAnswer as a string
     // (e.g. "B" or the full option text). Resolve to an index; never default

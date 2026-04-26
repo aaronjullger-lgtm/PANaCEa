@@ -10,7 +10,13 @@
  * API route should: authenticate, validate, delegate here, return result.
  */
 
-import { Prisma, ProgressContext, type CircadianPhase as PrismaCircadianPhase, type PrismaClient } from '@prisma/client';
+import {
+  Prisma,
+  ProgressContext,
+  type CircadianPhase as PrismaCircadianPhase,
+  type PrismaClient,
+  type SessionType as PrismaSessionType,
+} from '@prisma/client';
 import { calculateParTime } from '../utils/questionComplexity';
 import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
@@ -63,6 +69,8 @@ import {
 } from './wilsonMasteryService';
 // Sprint 3.5 — hypercorrection detection (extracted pure function)
 import { detectHypercorrection } from '../scheduling/hypercorrectionDetector';
+
+type DrillReviewPrismaClient = PrismaClient | Prisma.TransactionClient;
 
 /** Active A/B test experiment IDs wired into the review pipeline */
 const AB_EXPERIMENTS = [
@@ -181,8 +189,10 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
-  /** When 'main', 'drill', or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
-  sessionType?: 'main' | 'drill' | 'cram' | 'rapid_recall';
+  /** When 'main', 'drill', 'targeted', or omitted, review is FSRS-eligible. When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'drill' | 'targeted' | 'cram' | 'rapid_recall';
+  /** Stable retry key supplied by the API layer. Used only for duplicate-safe attempt IDs. */
+  idempotencyKey?: string;
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -259,6 +269,15 @@ export interface DrillReviewLogger {
 /** Server-authoritative Minimum Valid Response Time. Client cannot lower below this. */
 const SERVER_MVRT_THRESHOLD_MS = 2000;
 const DEFAULT_PROGRESS_CONTEXT = ProgressContext.READINESS;
+
+function buildStableAttemptId(userId: string, questionId: string, idempotencyKey?: string): string {
+  if (!idempotencyKey) {
+    return `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  const safeKey = idempotencyKey.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 96);
+  return `drill_review_${userId}_${questionId}_${safeKey}`;
+}
 
 // ─── Per-Card RT Baseline (CRPL z-score enrichment — tier1augment.md) ──────
 
@@ -347,11 +366,11 @@ async function getCardRtBaseline(
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
- * When sessionType is 'main' or omitted, reviews are written to UserProgress.reviewHistory for FSRS.
+ * When sessionType is 'main', 'drill', 'targeted', or omitted, reviews are FSRS-eligible.
  * When eorRotationEnd is set (EOR mode), next-review date is clamped to rotation end.
  */
 export async function submitDrillReview(
-  prisma: PrismaClient,
+  prisma: DrillReviewPrismaClient,
   userId: string,
   input: SubmitDrillReviewInput,
   question: {
@@ -377,6 +396,7 @@ export async function submitDrillReview(
     timezone,
     wakeTimeHHMM,
     sessionType,
+    idempotencyKey,
     telemetry,
   } = input;
 
@@ -426,11 +446,11 @@ export async function submitDrillReview(
   const selectedMeta = findSelectedOption(optionPool, normalizedSelectedAnswer);
 
   // Fetch user's personalized speed factor (cached, 24h TTL)
-  const userSpeedFactor = await getUserSpeedFactor(prisma, userId);
+  const userSpeedFactor = await getUserSpeedFactor(prisma as PrismaClient, userId);
 
   // Fetch per-user behavioral baseline for z-score normalization (Sprint 1)
   // Returns null for new users (<25 attempts) — deriveContinuousRating falls back to absolute thresholds
-  const behavioralBaseline = await getUserBehavioralBaseline(prisma, userId);
+  const behavioralBaseline = await getUserBehavioralBaseline(prisma as PrismaClient, userId);
   const userBaseline: UserBaseline | undefined = behavioralBaseline
     ? {
         rtMedianMs: behavioralBaseline.rtBaseline.medianMs,
@@ -446,7 +466,7 @@ export async function submitDrillReview(
 
   // Fetch per-card RT baseline for CRPL z-score enrichment (tier1augment.md)
   // Runs concurrently with par time calculation — non-blocking, non-fatal
-  const cardBaselinePromise = getCardRtBaseline(prisma, userId, questionId, question.conditionId);
+  const cardBaselinePromise = getCardRtBaseline(prisma as PrismaClient, userId, questionId, question.conditionId);
 
   const parTimeMs = calculateParTime({
     ...qData,
@@ -707,6 +727,40 @@ export async function submitDrillReview(
   // Hard and Easy ratings are deprecated; mapping remains for historical data.
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
+  let attemptId = buildStableAttemptId(userId, questionId, idempotencyKey);
+
+  if (idempotencyKey) {
+    const existingAttempt = await prisma.questionAttempt.findUnique({
+      where: { id: attemptId },
+      select: { id: true },
+    });
+
+    if (existingAttempt) {
+      logger?.warn?.('Duplicate review submission suppressed by stable attempt id', {
+        userId,
+        questionId,
+      });
+      return {
+        success: true,
+        isCorrect,
+        quality,
+        parTimeMs,
+        timeSpentMs: numericTime,
+        implicitMetrics: {
+          rating,
+          gradeContinuous,
+          confidence: implicitConfidence,
+          latencyRatio: numericTime / parTimeMs,
+          answerSwitches: answerSwitches ?? 0,
+        },
+        circadian: {
+          phase: circadianContext.circadianPhase,
+          stabilityModifier: circadianContext.stabilityModifier,
+          localHour: circadianContext.localHour,
+        },
+      };
+    }
+  }
 
   try {
     await updateReviewOutcome(
@@ -742,7 +796,6 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
-  let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
     // Check for existing attempt within last 5 minutes to avoid duplicates
@@ -847,7 +900,7 @@ export async function submitDrillReview(
     // If we reused an existing attempt (e.g. created by POST /api/questions/attempt), that path already updated Rolling 360—skip to avoid double count.
     if (isMainSession && weCreatedAttempt) {
       try {
-        await getRolling360Service(prisma).updateRolling360OnSubmit({
+        await getRolling360Service(prisma as PrismaClient).updateRolling360OnSubmit({
           attemptId,
           userId,
           isCorrect,
@@ -876,7 +929,7 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
+  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as PrismaSessionType;
 
   // Assess telemetry data quality for optimizer weighting.
   // 'minimal' quality means the grade is derived from correctness + duration only —
@@ -1007,7 +1060,7 @@ export async function submitDrillReview(
       // For normal reviews: run FSRS calculation, create ReviewLog, update UserProgress
       try {
         // Sprint 5: Use per-user/system optimized parameters when available
-        const optimizedParams = await getOptimizedParameters(prisma, userId, question.system).catch(() => undefined);
+        const optimizedParams = await getOptimizedParameters(prisma as PrismaClient, userId, question.system).catch(() => undefined);
 
         // A/B Test: override request_retention from experiment variant config
         const schedulingExp = abAssignments['scheduling_retention_target'];
@@ -1109,7 +1162,7 @@ export async function submitDrillReview(
         // (Dunlosky & Nelson, 1992; Koriat, 1997)
         let calibrationFactor = 1.0;
         try {
-          const calibration = await getUserCalibration(prisma, userId);
+          const calibration = await getUserCalibration(prisma as PrismaClient, userId);
           calibrationFactor = calibration.dampenerFactor;
         } catch {
           // Non-fatal — use neutral calibration
@@ -1303,7 +1356,7 @@ export async function submitDrillReview(
         // If the model consistently overestimates retention for this system,
         // the correction factor < 1.0 → shorter intervals. Vice versa for underestimation.
         try {
-          const stabilityCorrectionFactor = await getStabilityCorrectionFactor(prisma, userId, question.system);
+          const stabilityCorrectionFactor = await getStabilityCorrectionFactor(prisma as PrismaClient, userId, question.system);
           modifiedStability *= stabilityCorrectionFactor;
         } catch (calErr) {
           // Non-fatal: if calibration fails, proceed without correction
@@ -1826,7 +1879,7 @@ export async function submitDrillReview(
   // Incrementally update per-user median RT for future grade modulation.
   // Fires asynchronously to avoid adding latency to the response.
   if (effectiveDurationMs > 0 && countForFSRS) {
-    updateUserMedianRtAsync(prisma, userId, logger).catch(() => {
+    updateUserMedianRtAsync(prisma as PrismaClient, userId, logger).catch(() => {
       // Swallowed — non-fatal background task
     });
   }

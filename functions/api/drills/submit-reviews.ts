@@ -7,7 +7,13 @@ import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { DrillSubmitReviewSchema, buildBatchIdemKey, IDEM_TTL_SECONDS } from './submit-review';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
-import { getFromCache, setInCache, isKVAvailable } from '../_shared/cache';
+import { setInCache, isKVAvailable } from '../_shared/cache';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import {
+  beginSubmissionIdempotency,
+  completeSubmissionIdempotency,
+  failSubmissionIdempotency,
+} from '../_shared/submission-idempotency';
 import { z } from 'zod';
 
 const BatchDrillSubmitReviewSchema = z.array(DrillSubmitReviewSchema);
@@ -34,24 +40,13 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: {
-        id: true,
-        yearInProgram: true,
-        currentRotation: true,
-        eorTestDate: true,
-        rotationEndDate: true,
-      },
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+      id: true,
+      yearInProgram: true,
+      currentRotation: true,
+      eorTestDate: true,
+      rotationEndDate: true,
     });
-
-    if (!user) {
-      return {
-        status: 404,
-        error: 'User not found',
-        message: 'Your user account has not been synced yet.',
-      };
-    }
 
     const eorRotationEnd = getEorRotationEnd({
       yearInProgram: user.yearInProgram,
@@ -77,26 +72,41 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         idempotencyKey,
       } = review;
 
+      let idempotencyRecordId: string | null = null;
       try {
-        // Sprint S3 — Per-item idempotency short-circuit.
-        // Each batch item carries its own idempotency key (the queued item's
-        // stable UUID from syncManager). A retry of the same batch after a
-        // flaky network short-circuits per-item, so items that already landed
-        // don't re-enter the FSRS pipeline and create duplicate rows.
-        if (idempotencyKey && kvAvailable) {
-          const cached = await getFromCache<Record<string, unknown>>(
-            env.CACHE,
-            buildBatchIdemKey(auth.userId, idempotencyKey),
-          );
-          if (cached) {
-            logger.info('batch idempotency cache hit — skipping pipeline', {
-              questionId,
-              idempotencyKey,
-            });
-            results.push({ questionId, success: true, data: cached, source: 'idempotent-cache' });
-            continue;
-          }
+        const idempotency = await beginSubmissionIdempotency(prisma, {
+          userId: user.id,
+          endpoint: '/api/drills/submit-reviews',
+          idempotencyKey,
+        });
+        if (idempotency?.state === 'completed') {
+          logger.info('persistent batch idempotency hit — skipping pipeline', {
+            questionId,
+            idempotencyKey,
+          });
+          results.push({
+            questionId,
+            success: true,
+            data: idempotency.response,
+            source: 'idempotent-store',
+          });
+          continue;
         }
+        if (idempotency?.state === 'in_progress') {
+          logger.warn('duplicate batch item is still processing', {
+            questionId,
+            idempotencyKey,
+          });
+          results.push({
+            questionId,
+            success: false,
+            error: 'Submission is still processing. Retry shortly.',
+            source: 'idempotent-in-progress',
+            retryAfterSeconds: idempotency.retryAfterSeconds,
+          });
+          continue;
+        }
+        idempotencyRecordId = idempotency?.id ?? null;
 
         const normalizedSelectedAnswer =
           typeof selectedAnswer === 'string' ? selectedAnswer : String(selectedAnswer);
@@ -107,6 +117,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         });
 
         if (!question) {
+          await failSubmissionIdempotency(prisma, idempotencyRecordId, 'NOT_FOUND');
           results.push({ questionId, error: 'Question not found', success: false, source: 'missing' });
           continue;
         }
@@ -125,6 +136,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
             wakeTimeHHMM,
             telemetry,
             sessionType,
+            idempotencyKey,
           },
           question,
           { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
@@ -149,7 +161,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
               {
                 id: question.id,
                 conditionId: question.conditionId,
-                system: question.system,
+                system: question.system ?? null,
                 difficulty: question.difficulty ?? 'medium',
                 questionType: question.questionType ?? 'mcq',
                 questionData: question.questionData,
@@ -164,22 +176,41 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         // Sprint S3 — Cache the successful per-item response so retries with
         // the same idempotency key short-circuit. Fire-and-forget; a KV write
         // failure must not fail the user request.
+        await completeSubmissionIdempotency(prisma, idempotencyRecordId, result);
+
         if (idempotencyKey && kvAvailable) {
-          await setInCache(
-            env.CACHE,
-            buildBatchIdemKey(auth.userId, idempotencyKey),
-            result,
-            IDEM_TTL_SECONDS,
-          );
+          try {
+            await setInCache(
+              env.CACHE,
+              buildBatchIdemKey(auth.userId, idempotencyKey),
+              result,
+              IDEM_TTL_SECONDS,
+            );
+          } catch (cacheError) {
+            logger.warn('batch idempotency cache write failed (non-fatal)', {
+              questionId,
+              error: cacheError instanceof Error ? cacheError.message : String(cacheError),
+            });
+          }
         }
 
         results.push({ questionId, success: true, data: result, source });
       } catch (error) {
+        if (idempotencyRecordId) {
+          try {
+            await failSubmissionIdempotency(prisma, idempotencyRecordId, 'INTERNAL_ERROR');
+          } catch (idempotencyError) {
+            logger.warn('failed to mark batch idempotency row failed', {
+              questionId,
+              error: idempotencyError instanceof Error ? idempotencyError.message : String(idempotencyError),
+            });
+          }
+        }
         logger.error(`Failed to process review for question ${questionId}`, error);
         results.push({
           questionId,
           success: false,
-          error: error instanceof Error ? error.message : String(error),
+          error: 'Failed to submit review',
         });
       }
     }
@@ -197,4 +228,4 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
       await safePrismaDisconnect(prisma);
     }
   }
-});
+}, { requestsPerMinute: 60 });

@@ -21,6 +21,15 @@ vi.mock('../_shared/cache', () => ({
   getQuestionPoolCacheKey: vi.fn(),
 }));
 
+const mockBeginSubmissionIdempotency = vi.fn();
+const mockCompleteSubmissionIdempotency = vi.fn();
+const mockFailSubmissionIdempotency = vi.fn();
+vi.mock('../_shared/submission-idempotency', () => ({
+  beginSubmissionIdempotency: (...args: any[]) => mockBeginSubmissionIdempotency(...args),
+  completeSubmissionIdempotency: (...args: any[]) => mockCompleteSubmissionIdempotency(...args),
+  failSubmissionIdempotency: (...args: any[]) => mockFailSubmissionIdempotency(...args),
+}));
+
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(),
   safePrismaDisconnect: vi.fn(),
@@ -142,6 +151,7 @@ function makePrisma(userResult: any = MOCK_USER) {
   return {
     user: {
       findUnique: vi.fn().mockResolvedValue(userResult),
+      create: vi.fn().mockResolvedValue(MOCK_USER),
     },
     question: {
       findUnique: vi.fn().mockResolvedValue({ conditionFamily: 'Cardiac Arrhythmias' }),
@@ -170,6 +180,9 @@ describe('POST /api/drills/submit-review', () => {
     mockIsKVAvailable.mockReturnValue(false);
     mockGetFromCache.mockResolvedValue(null);
     mockSetInCache.mockResolvedValue(undefined);
+    mockBeginSubmissionIdempotency.mockResolvedValue(null);
+    mockCompleteSubmissionIdempotency.mockResolvedValue(undefined);
+    mockFailSubmissionIdempotency.mockResolvedValue(undefined);
 
     // Default happy-path mocks
     const prisma = makePrisma();
@@ -196,14 +209,25 @@ describe('POST /api/drills/submit-review', () => {
     expect(createEdgePrismaClient).not.toHaveBeenCalled();
   });
 
-  // ── 2. User not found ────────────────────────────────────────────────
-  it('returns 404 when user not found', async () => {
+  // ── 2. First-login user bootstrap ───────────────────────────────────
+  it('creates a placeholder user when Clerk auth succeeds before webhook sync', async () => {
     const prisma = makePrisma(null);
+    prisma.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(MOCK_USER);
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
     const result = await _capture.handler!(makeContext());
 
-    expect(result).toMatchObject({ status: 404, error: 'User not found' });
+    expect(result.data).toBeDefined();
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          clerkId: 'clerk-user-1',
+          email: 'clerk-user-1@placeholder.panacea.app',
+        }),
+      }),
+    );
   });
 
   // ── 3. Question not found ────────────────────────────────────────────
@@ -220,7 +244,7 @@ describe('POST /api/drills/submit-review', () => {
     await _capture.handler!(makeContext());
 
     expect(submitDrillReview).toHaveBeenCalledTimes(1);
-    const [prismaArg, userId, reviewData, question, _logger, eorRotationEnd, urgencyMult, tracer] =
+    const [prismaArg, userId, reviewData, question, _logger, eorRotationEnd, urgencyMult] =
       (submitDrillReview as Mock).mock.calls[0];
 
     expect(prismaArg).toBeDefined();
@@ -231,7 +255,7 @@ describe('POST /api/drills/submit-review', () => {
     expect(question).toEqual(MOCK_QUESTION);
     expect(eorRotationEnd).toBeNull(); // mocked getEorRotationEnd returns null
     expect(urgencyMult).toBeUndefined();
-    expect(tracer).toBeDefined();
+    expect((submitDrillReview as Mock).mock.calls[0]).toHaveLength(7);
   });
 
   // ── 5. Returns FSRS schedule data when available ─────────────────────
@@ -280,7 +304,8 @@ describe('POST /api/drills/submit-review', () => {
     await _capture.handler!(makeContext());
 
     expect(ensureDueVariant).toHaveBeenCalledTimes(1);
-    expect((ensureDueVariant as Mock).mock.calls[0][1]).toMatchObject({
+    const ensureCall = (ensureDueVariant as Mock).mock.calls[0];
+    expect(ensureCall?.[1]).toMatchObject({
       id: MOCK_QUESTION.id,
       conditionId: MOCK_QUESTION.conditionId,
     });
@@ -302,6 +327,7 @@ describe('POST /api/drills/submit-review', () => {
 
     expect(result.status).toBe(504);
     expect(result.code).toBe('SUBMISSION_TIMEOUT');
+    expect(result.details).toBeUndefined();
     expect(result.retryable).toBe(true);
   });
 
@@ -313,6 +339,7 @@ describe('POST /api/drills/submit-review', () => {
 
     expect(result.status).toBe(500);
     expect(result.code).toBe('DATABASE_ERROR');
+    expect(result.details).toBeUndefined();
     expect(result.retryable).toBe(true);
   });
 
@@ -395,9 +422,9 @@ describe('POST /api/drills/submit-review', () => {
     expect(result.data.isRapidGuess).toBe(false);
   });
 
-  // ── Sprint S3: idempotency cache ─────────────────────────────────────────
+  // ── Persistent idempotency + best-effort KV cache ────────────────────────
 
-  describe('idempotency cache (Sprint S3)', () => {
+  describe('persistent idempotency', () => {
     const CACHED_RESPONSE = {
       isCorrect: true,
       isRapidGuess: false,
@@ -405,27 +432,55 @@ describe('POST /api/drills/submit-review', () => {
       drillFeedback: null,
     };
 
-    it('returns cached response without calling submitDrillReview on cache hit', async () => {
-      mockIsKVAvailable.mockReturnValue(true);
-      mockGetFromCache.mockResolvedValue(CACHED_RESPONSE);
+    it('returns persisted response without calling submitDrillReview on duplicate completed key', async () => {
+      mockBeginSubmissionIdempotency.mockResolvedValue({
+        state: 'completed',
+        response: CACHED_RESPONSE,
+      });
 
       const result = await _capture.handler!(
         makeContext({ validated: { idempotencyKey: 'review-idem-1' } })
       );
 
       expect(result.data).toEqual(CACHED_RESPONSE);
-      // Pipeline never entered — no DB call, no FSRS update
+      // Pipeline never entered — no FSRS update
       expect(submitDrillReview).not.toHaveBeenCalled();
-      expect(createEdgePrismaClient).not.toHaveBeenCalled();
+      expect(createEdgePrismaClient).toHaveBeenCalled();
     });
 
-    it('calls submitDrillReview and writes cache on cache miss', async () => {
+    it('returns 409 when a duplicate submission is still processing', async () => {
+      mockBeginSubmissionIdempotency.mockResolvedValue({
+        state: 'in_progress',
+        retryAfterSeconds: 5,
+      });
+
+      const result = await _capture.handler!(
+        makeContext({ validated: { idempotencyKey: 'review-idem-processing' } })
+      );
+
+      expect(result).toMatchObject({
+        status: 409,
+        code: 'CONFLICT',
+        details: { retryAfterSeconds: 5 },
+      });
+      expect(submitDrillReview).not.toHaveBeenCalled();
+    });
+
+    it('calls submitDrillReview, completes durable idempotency, and writes best-effort cache', async () => {
       mockIsKVAvailable.mockReturnValue(true);
-      mockGetFromCache.mockResolvedValue(null); // cache miss
+      mockBeginSubmissionIdempotency.mockResolvedValue({
+        state: 'started',
+        id: 'idem-row-1',
+      });
 
       await _capture.handler!(makeContext({ validated: { idempotencyKey: 'review-idem-2' } }));
 
       expect(submitDrillReview).toHaveBeenCalledTimes(1);
+      expect(mockCompleteSubmissionIdempotency).toHaveBeenCalledWith(
+        expect.anything(),
+        'idem-row-1',
+        expect.objectContaining({ isRapidGuess: false }),
+      );
       expect(mockSetInCache).toHaveBeenCalledTimes(1);
       // Key format: idem:submit-review:<clerkId>:<idempotencyKey>
       const [, key] = mockSetInCache.mock.calls[0] as [any, string, any, any];
@@ -440,13 +495,20 @@ describe('POST /api/drills/submit-review', () => {
       // Explicitly no idempotencyKey field
       await _capture.handler!({ ...makeContext(), validated });
 
-      expect(mockGetFromCache).not.toHaveBeenCalled();
+      expect(mockBeginSubmissionIdempotency).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ idempotencyKey: undefined }),
+      );
       expect(mockSetInCache).not.toHaveBeenCalled();
       expect(submitDrillReview).toHaveBeenCalledTimes(1);
     });
 
-    it('proceeds normally when KV is unavailable even if idempotencyKey is present', async () => {
+    it('proceeds normally when KV is unavailable and durable idempotency starts', async () => {
       mockIsKVAvailable.mockReturnValue(false); // KV binding absent
+      mockBeginSubmissionIdempotency.mockResolvedValue({
+        state: 'started',
+        id: 'idem-row-4',
+      });
 
       await _capture.handler!(makeContext({ validated: { idempotencyKey: 'review-idem-4' } }));
 

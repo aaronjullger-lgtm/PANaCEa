@@ -31,6 +31,24 @@ VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"
 VITE_API_URL = "https://studypanacea.com"
 VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
 
+# Preview/private-beta staging must not share production state.
+# Replace these placeholder IDs after creating preview namespaces:
+#   npx wrangler kv:namespace create RATE_LIMIT_KV --preview
+#   npx wrangler kv:namespace create CACHE --preview
+[env.preview]
+
+[env.preview.vars]
+NODE_VERSION = "22"
+VITE_PRIVATE_BETA_LAUNCH = "true"
+
+[[env.preview.kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_PREVIEW_RATE_LIMIT_KV_ID"
+
+[[env.preview.kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_PREVIEW_CACHE_KV_ID"
+
 # CRITICAL: Add these secrets via Cloudflare Dashboard
 # Cloudflare Dashboard > Workers & Pages > [your project] > Settings > Environment Variables
 # Set variables for BOTH "Production" and "Preview" (or at least Production for main branch).
@@ -40,3 +58,9 @@ VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.in
 # - GEMINI_API_KEY: AIzaSy... (Google Gemini API key)
 # - SUPABASE_SERVICE_ROLE_KEY: eyJ... (Supabase service role key)
 # Note: Secret keys should NEVER be committed to version control
+
+# Sprint OSCE-01: Durable Objects for multi-agent OSCE session state
+[[durable_objects.bindings]]
+name = "OsceSessionDO"
+class_name = "OsceSessionDO"
+script_name = "workers/osce-session"

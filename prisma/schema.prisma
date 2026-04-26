@@ -1918,6 +1918,96 @@ model NormalVitalSign {
   @@index([vitalName])
 }
 
+
+// Sprint OSCE-01: EasyMED factorization - 31-intent taxonomy
+enum ClinicalIntent {
+  DEMOGRAPHICS
+  CHIEF_COMPLAINT
+  ONSET
+  CAUSE
+  LOCATION
+  CHARACTER
+  DURATION
+  MODIFIERS
+  ASSOCIATED
+  PROGRESSION
+  TREATMENT
+  TESTS
+  GENERAL
+  ELIMINATION
+  CHANGES
+  HEALTH
+  CHRONIC
+  INFECTIOUS
+  SURGICAL
+  TRANSFUSIONS
+  ALLERGIES
+  IMMUNIZATION
+  TRAVEL
+  HABITS
+  OCCUPATION
+  SEXUAL
+  OBSTETRIC
+  FAMILY
+  MENSTRUAL
+  COMMUNICATION
+  OTHER
+}
+
+// Sprint OSCE-01: ClinicalIntentLog - tracks intent classifications during OSCE sessions
+model ClinicalIntentLog {
+  id          String    @id
+  sessionId   String    @map("PatientEncounterSession")
+  intent      ClinicalIntent
+  confidence  Float     @default(0.0)
+  studentText String
+  classifiedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([sessionId, classifiedAt])
+}
+
+// Sprint OSCE-01: OsceSession - multi-agent session state management
+// Tracks which agent (Auxiliary/Patient/Evaluation) is active and agent-specific state
+model OsceSession {
+  id             String    @id
+  userId         String
+  caseId         String    @map("PatientEncounterCase")
+  status         String    @default("active") // active | completed
+  currentAgent  String    // "auxiliary" | "patient" | "evaluation"
+  auxiliaryState Json? // intent classifier state
+  patientState   Json? // patient agent state (empathy level, questions asked)
+  evaluationState Json? // rubric scorer state (transcript, scores)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  completedAt    DateTime?
+
+  @@index([userId, status])
+  @@index([caseId])
+}
+
+// Sprint OSCE-01: SpbenchScore - SPBench 8-dimension rubric scoring
+model SpbenchScore {
+  id                String @id
+  sessionId         String    @map("OsceSession") @unique
+  // 8 SPBench dimensions (0-100 scale)
+  queryCompetence   Float // QC: Query Competence - appropriateness of history questions
+  caseCoverage      Float // CC: Case Coverage - completeness of data gathered
+  clinicalDepth     Float // CD: Clinical Depth - depth of diagnostic reasoning
+  relevanceCheck    Float // RC: Relevance Check - focus on relevant findings
+  logicalConsistency Float // LC: Logical Consistency - coherence of reasoning
+  languageNaturality Float // LN: Language Naturality - patient-appropriate communication
+  clinicalSafety    Float // CS: Clinical Safety - red flag detection
+  professionalDemeanor Float // PD: Professional Demeanor - empathy and professionalism
+  overallScore      Float // weighted average
+
+  justification      String? // brief explanation from evaluation agent
+  scoredAt         DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@index([sessionId])
+}
+
 model OsceResult {
   id                       String                  @id
   sessionId                String                  @unique
@@ -2456,6 +2546,7 @@ model QuestionAttempt {
   @@index([userId, createdAt])
   @@index([userId, isMainSession, createdAt(sort: Desc)], map: "QuestionAttempt_userId_isMainSession_createdAt_desc_idx")
   @@index([userId, mode, createdAt])
+  @@index([userId, questionId, createdAt(sort: Desc)], map: "QuestionAttempt_user_question_created_desc_idx")
   @@index([userId, questionType, createdAt])
   @@index([userId, systemNormalized, createdAt])
   @@index([userId, wasCorrect, createdAt])
@@ -2634,6 +2725,7 @@ model ReviewLog {
   @@index([reviewedAt])
   @@index([userId, conditionId, reviewedAt])
   @@index([userId, grade, reviewedAt])
+  @@index([userId, questionId, reviewedAt(sort: Desc)], map: "ReviewLog_user_question_reviewed_desc_idx")
   @@index([userId, review_type, reviewedAt])
   @@index([userId, reviewedAt])
   @@index([userId, state, reviewedAt])
@@ -3211,6 +3303,7 @@ model User {
   SavedQuestion             SavedQuestion[]
   Reflection                Reflection[]
   SessionAnalytics          SessionAnalytics[]
+  SubmissionIdempotency     SubmissionIdempotency[]
   StudyGroupMember          StudyGroupMember[]
   StudyRecommendation       StudyRecommendation[]
   StudySession              StudySession[]
@@ -3251,6 +3344,28 @@ model User {
   @@index([lifecycleRole])
   @@index([role])
   @@index([trainingPhase])
+}
+
+model SubmissionIdempotency {
+  id             String   @id @default(cuid())
+  userId         String
+  endpoint       String
+  idempotencyKey String
+  status         String   @default("processing")
+  responseJson   Json?
+  errorCode      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  expiresAt      DateTime
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint, idempotencyKey])
+  @@index([userId])
+  @@index([endpoint])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([userId, endpoint, status])
 }
 
 model UserAchievement {
@@ -3603,6 +3718,7 @@ model UserProgress {
   @@index([userId, conditionId])
   @@index([userId, nextReviewAt])
   @@index([userId, progressContext, nextReviewAt])
+  @@index([userId, system, nextReviewAt], map: "UserProgress_user_system_next_review_idx")
 }
 
 model UserQuestionHistory {
@@ -4184,6 +4300,7 @@ model DailyStudyPlan {
 
   @@unique([userId, planDate])
   @@index([userId, planDate])
+  @@index([userId, status, planDate], map: "DailyStudyPlan_user_status_plan_date_idx")
   @@index([userId, status])
 }
 

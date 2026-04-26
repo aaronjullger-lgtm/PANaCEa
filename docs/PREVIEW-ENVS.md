@@ -2,7 +2,7 @@
 
 How PANaCEa should run PR previews — and what's still missing today.
 
-Last updated: 2026-04-18.
+Last updated: 2026-04-26.
 
 ---
 
@@ -31,20 +31,22 @@ Partial. Here's what's wired and what isn't.
 
 - **Cloudflare Pages preview deployments.** Every push to a non-main branch
   creates a `*.panacea.pages.dev` preview URL via Cloudflare's default
-  integration. These inherit Production env vars unless overridden.
+  integration. These inherit Production env vars unless overridden in the
+  Cloudflare Pages Preview environment.
 - **Neon DB branch-per-PR** — `.github/workflows/neon_workflow.yml` creates a
   preview branch on PR open and deletes it on PR close. 2-week TTL.
+- **Preview binding scaffold in `wrangler.toml`.** `[env.preview]` now exists
+  with separate `RATE_LIMIT_KV` and `CACHE` bindings. The IDs are placeholders
+  until the operator creates and pastes the real preview namespace IDs.
+- **Backend env contract check.** `npm run env:check:backend` verifies required
+  backend secret documentation plus production and preview KV binding presence,
+  and warns while placeholder preview IDs remain.
 
 ### Not wired
 
-- **Preview env vars in `wrangler.toml`.** There is no `[env.preview]` block.
-  Preview deployments use the same env vars as production, including:
-  - Same `CLERK_SECRET_KEY` → preview signs real prod tokens.
-  - Same `DATABASE_URL` → preview writes to prod DB (currently mitigated only
-    by running migrations against a Neon branch, but the deployed Pages
-    Function still connects to prod).
-  - Same `RATE_LIMIT_KV` binding → preview consumes prod rate-limit budget.
-  - Same `CACHE` KV → preview pollutes prod cache.
+- **Preview operator wiring.** `wrangler.toml` has placeholders, but the real
+  preview KV namespace IDs and Cloudflare Pages Preview secrets still need to
+  be set before beta users touch preview.
 - **Neon branch DATABASE_URL is not piped to the preview deployment.** The
   Neon branch exists but nothing reads from it; the commented-out step in
   `neon_workflow.yml` would need to run migrations and export the
@@ -62,7 +64,8 @@ Three coordinated changes.
 
 ### 1. Add `[env.preview]` to `wrangler.toml`
 
-Append to `wrangler.toml`:
+Status: scaffolded on 2026-04-26. Replace the placeholder IDs before preview
+smoke testing.
 
 ```toml
 # ─────────────────────────────────────────────────────────────────────────

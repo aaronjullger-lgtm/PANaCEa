@@ -10,7 +10,13 @@ import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';
-import { getFromCache, setInCache, isKVAvailable } from '../_shared/cache';
+import { setInCache, isKVAvailable } from '../_shared/cache';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import {
+  beginSubmissionIdempotency,
+  completeSubmissionIdempotency,
+  failSubmissionIdempotency,
+} from '../_shared/submission-idempotency';
 
 // Sprint S3 — Idempotency cache constants.
 // See lib/api/schemas/drills.ts → DrillSubmitReviewRequestSchema.idempotencyKey.
@@ -53,6 +59,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/drills/submit-review');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+  let idempotencyRecordId: string | null = null;
 
   try {
     logger.addContext({ userId: auth.userId });
@@ -71,26 +78,6 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       sessionType,
       idempotencyKey,
     } = validated;
-
-    // Sprint S3 — Idempotency short-circuit.
-    // If the caller supplied an idempotency key AND the KV cache is available,
-    // check whether we've already handled this exact submission. On hit, return
-    // the prior response without re-entering the FSRS pipeline. This prevents
-    // duplicate QuestionAttempt / ReviewLog rows when the client retries
-    // (offline sync replay, double-submit, flaky network).
-    if (idempotencyKey && isKVAvailable(env.CACHE)) {
-      const cached = await getFromCache<CachedDrillResponse>(
-        env.CACHE,
-        buildSingleIdemKey(auth.userId, idempotencyKey),
-      );
-      if (cached) {
-        logger.info('idempotency cache hit — returning prior response', {
-          questionId,
-          idempotencyKey,
-        });
-        return { data: cached };
-      }
-    }
 
     // Create pipeline tracer for structured observability across the entire review pipeline.
     // Pass the endpoint logger so tracer output flows through SecureLogger's redaction layer
@@ -111,24 +98,40 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: {
-        id: true,
-        yearInProgram: true,
-        currentRotation: true,
-        eorTestDate: true,
-        rotationEndDate: true,
-      },
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+      id: true,
+      yearInProgram: true,
+      currentRotation: true,
+      eorTestDate: true,
+      rotationEndDate: true,
     });
 
-    if (!user) {
+    const idempotency = await beginSubmissionIdempotency(prisma, {
+      userId: user.id,
+      endpoint: '/api/drills/submit-review',
+      idempotencyKey,
+    });
+    if (idempotency?.state === 'completed') {
+      logger.info('persistent idempotency hit — returning prior response', {
+        questionId,
+        idempotencyKey,
+      });
+      return { data: idempotency.response };
+    }
+    if (idempotency?.state === 'in_progress') {
+      logger.warn('duplicate submission is still processing', {
+        questionId,
+        idempotencyKey,
+      });
       return {
-        status: 404,
-        error: 'User not found',
-        message: 'Your user account has not been synced yet.',
+        status: 409,
+        error: 'Submission is still processing. Retry shortly.',
+        code: 'CONFLICT',
+        details: { retryAfterSeconds: idempotency.retryAfterSeconds },
+        headers: { 'Retry-After': String(idempotency.retryAfterSeconds) },
       };
     }
+    idempotencyRecordId = idempotency?.id ?? null;
 
     const normalizedSelectedAnswer =
       typeof selectedAnswer === 'string' ? selectedAnswer : String(selectedAnswer);
@@ -139,6 +142,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
     });
 
     if (!question) {
+      await failSubmissionIdempotency(prisma, idempotencyRecordId, 'NOT_FOUND');
       return { status: 404, error: 'Question not found' };
     }
 
@@ -177,12 +181,12 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         wakeTimeHHMM,
         telemetry,
         sessionType,
+        idempotencyKey,
       },
       question,
       { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
       eorRotationEnd,
-      undefined, // urgencyMultiplier
-      tracer
+      undefined // urgencyMultiplier
     );
     const { durationMs: pipelineMs } = pipelineSpan.end({
       userId: user.id,
@@ -226,7 +230,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
           {
             id: question.id,
             conditionId: question.conditionId,
-            system: question.system,
+            system: question.system ?? null,
             difficulty: question.difficulty ?? 'medium',
             questionType: question.questionType ?? 'mcq',
             questionData: question.questionData,
@@ -293,13 +297,21 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
     // retries with the same key short-circuit. Intentionally fire-and-forget:
     // a cache write failure must not fail the user-visible request. 24h TTL
     // covers worst-case offline-retry windows.
+    await completeSubmissionIdempotency(prisma, idempotencyRecordId, responseData);
+
     if (idempotencyKey && isKVAvailable(env.CACHE)) {
-      await setInCache(
-        env.CACHE,
-        buildSingleIdemKey(auth.userId, idempotencyKey),
-        responseData,
-        IDEM_TTL_SECONDS,
-      );
+      try {
+        await setInCache(
+          env.CACHE,
+          buildSingleIdemKey(auth.userId, idempotencyKey),
+          responseData,
+          IDEM_TTL_SECONDS,
+        );
+      } catch (cacheError) {
+        logger.warn('idempotency cache write failed (non-fatal)', {
+          error: cacheError instanceof Error ? cacheError.message : String(cacheError),
+        });
+      }
     }
 
     return { data: responseData };
@@ -310,18 +322,30 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
     logger.error('submit-review error:', {
       error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
       category: isTimeoutError ? 'timeout' : isDbError ? 'database' : 'unknown',
       userId: auth.userId,
       questionId: validated.questionId,
       sessionType: validated.sessionType ?? 'drill',
     });
 
+    if (prisma && idempotencyRecordId) {
+      try {
+        await failSubmissionIdempotency(
+          prisma,
+          idempotencyRecordId,
+          isTimeoutError ? 'TIMEOUT' : isDbError ? 'DB_ERROR' : 'INTERNAL_ERROR',
+        );
+      } catch (idempotencyError) {
+        logger.warn('failed to mark idempotency row failed', {
+          error: idempotencyError instanceof Error ? idempotencyError.message : String(idempotencyError),
+        });
+      }
+    }
+
     return {
       status: isTimeoutError ? 504 : 500,
       error: 'Failed to submit review',
       code: isTimeoutError ? 'SUBMISSION_TIMEOUT' : isDbError ? 'DATABASE_ERROR' : 'INTERNAL_ERROR',
-      details: error instanceof Error ? error.message : String(error),
       retryable: isTimeoutError || isDbError,
     };
   } finally {
@@ -329,4 +353,4 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       await safePrismaDisconnect(prisma);
     }
   }
-});
+}, { requestsPerMinute: 120 });
