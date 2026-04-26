@@ -16,7 +16,7 @@ const COLLAPSED_WRAPPER_CLASS =
   'w-10 h-10 shrink-0 justify-center items-center px-0 min-w-0 min-h-0';
 
 const ACTIVE_CLASS =
-  'text-[var(--color-text-primary)] font-semibold bg-[var(--color-accent)]/5';
+  'text-[var(--color-text-primary)] font-semibold bg-[var(--color-accent)]/8';
 
 const INACTIVE_CLASS =
   'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]/50 hover:text-[var(--color-text-primary)]';
@@ -85,7 +85,7 @@ function SidebarItemContent({
         <span
           className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
             active
-              ? 'bg-[var(--color-bg-tertiary)]'
+              ? 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'
               : 'group-hover:bg-[var(--color-bg-tertiary)]/50'
           }`}
         >
@@ -104,7 +104,7 @@ function SidebarItemContent({
           <span
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors ${
               active
-                ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+                ? 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'
                 : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]'
             }`}
           >

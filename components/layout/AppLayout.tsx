@@ -7,15 +7,15 @@ import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Settings, Shield, HelpCircle } from 'lucide-react';
+import { CalendarClock, Search, Settings, Shield, UserCircle } from 'lucide-react';
 import { AppBrand } from './AppBrand';
 import { NavRail } from './NavRail';
 import { ROUTES } from '@/config/routes';
 import { useUser } from '@clerk/clerk-react';
 import ThemeToggleButton from '@/components/ui/ThemeToggleButton';
-import { MasteryHeatmapToggle } from '@/components/ui/MasteryHeatmapToggle';
 import { OfflineSyncIndicator } from '@/components/offline/OfflineSyncIndicator';
 import { useStreakAutoFreeze } from '@/hooks/useStreakAutoFreeze';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { toast } from '@/lib/toast';
 
 interface AppLayoutProps {
@@ -23,6 +23,7 @@ interface AppLayoutProps {
   showHeader?: boolean;
   showNavRail?: boolean;
   onSettingsClick?: () => void;
+  onSearchClick?: () => void;
   onHelpClick?: () => void;
   contentMaxWidth?: string;
   contentClassName?: string;
@@ -33,22 +34,53 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   showHeader = true,
   showNavRail = true,
   onSettingsClick,
-  onHelpClick,
+  onSearchClick,
   contentMaxWidth = '72rem',
   contentClassName,
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
   const { user } = useUser();
+  const { profile } = useUserProfile();
   const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
-  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 82%, transparent)';
+  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 94%, var(--color-bg-primary) 6%)';
   const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
   const chromeShadow =
-    '0 10px 32px rgba(15, 23, 42, 0.14), inset 0 -1px 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
+    'inset 0 -1px 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
   const appCanvasBackground =
-    'radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 26%), radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--color-accent-secondary) 12%, transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 96%, transparent) 0%, color-mix(in srgb, var(--color-bg-primary) 90%, var(--color-accent) 10%) 56%, color-mix(in srgb, var(--color-bg-primary) 97%, transparent) 100%)';
+    'linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 98%, var(--color-bg-secondary) 2%) 0%, var(--color-bg-primary) 58%, color-mix(in srgb, var(--color-bg-primary) 96%, var(--color-accent) 4%) 100%)';
   const headerActionClass =
-    'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[12px] border p-2 text-[var(--color-text-muted)] transition-all duration-200 ease-premium hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
+    'flex min-h-[40px] min-w-[40px] items-center justify-center rounded-[10px] border p-2 text-[var(--color-text-muted)] transition-all duration-200 ease-premium hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
+  const openSearch = () => {
+    if (onSearchClick) {
+      onSearchClick();
+      return;
+    }
+    window.dispatchEvent(new Event('panacea:open-command-palette'));
+  };
+  const examCountdown = React.useMemo(() => {
+    const sourceDate = profile?.eorTestDate ?? profile?.examDate;
+    const label = profile?.eorTestDate ? 'EOR' : 'PANCE';
+    if (!sourceDate) return `${label} planning`;
+
+    const examDate = new Date(sourceDate);
+    if (Number.isNaN(examDate.getTime())) return `${label} planning`;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    examDate.setHours(0, 0, 0, 0);
+    const days = Math.ceil((examDate.getTime() - today.getTime()) / 86_400_000);
+
+    if (days < 0) return `${label} date passed`;
+    if (days === 0) return `${label} today`;
+    return `${label} in ${days} day${days === 1 ? '' : 's'}`;
+  }, [profile?.eorTestDate, profile?.examDate]);
+  const profileName =
+    user?.firstName ||
+    user?.fullName ||
+    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
+    'Profile';
+  const profileInitial = profileName.charAt(0).toUpperCase();
 
   // Auto-apply streak freezes on app mount (non-blocking)
   const autoFreezeResult = useStreakAutoFreeze();
@@ -73,30 +105,78 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         Skip to main content
       </a>
 
-      {/* Header — Glass morphism with premium depth */}
+      {/* Header — restrained clinical chrome with search, exam timing, sync, and profile. */}
       {showHeader && (
         <header
-          className="header-glass sticky top-0 z-50 shrink-0"
+          className="sticky top-0 z-50 shrink-0"
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 50,
             height: 'var(--header-height, 4rem)',
             background: chromeSurface,
-            backdropFilter: 'blur(24px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(160%)',
             borderBottom: `1px solid ${chromeBorder}`,
             boxShadow: chromeShadow,
           }}
         >
-          <div className="h-full w-full flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div
+            className="h-full w-full max-w-[100vw] items-center gap-3 px-3 sm:px-4"
+            style={{
+              height: '100%',
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: 'auto minmax(10rem, 34rem) auto',
+              alignItems: 'center',
+            }}
+          >
             <AppBrand
               size="sm"
               asLink
+              className="min-w-0"
               onClick={() => {
                 navigate(ROUTES.STUDY);
               }}
+            />
+            <button
+              type="button"
+              onClick={openSearch}
+              className="hidden min-h-[40px] min-w-0 items-center gap-2 rounded-[12px] border px-3 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] sm:flex"
+              style={{
+                borderColor: chromeBorder,
+                background:
+                  'color-mix(in srgb, var(--color-bg-primary) 58%, var(--color-bg-secondary) 42%)',
+              }}
+              aria-label="Search conditions, drugs, labs, procedures"
             >
+              <Search className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+              <span className="truncate">Search conditions, drugs, labs, procedures...</span>
+              <span className="ml-auto hidden rounded-md border px-1.5 py-0.5 text-[0.68rem] font-medium text-[var(--color-text-muted)] md:inline-flex" style={{ borderColor: chromeBorder }}>
+                Cmd K
+              </span>
+            </button>
+            <div className="flex min-w-0 items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={openSearch}
+                className={`${headerActionClass} sm:hidden`}
+                style={{ borderColor: chromeBorder }}
+                aria-label="Search"
+                title="Search"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+              <div
+                className="hidden min-h-[40px] items-center gap-2 rounded-[10px] border px-3 text-xs font-medium text-[var(--color-text-secondary)] lg:flex"
+                style={{
+                  borderColor: chromeBorder,
+                  background:
+                    'color-mix(in srgb, var(--color-bg-secondary) 74%, var(--color-bg-primary) 26%)',
+                }}
+                aria-label={examCountdown}
+              >
+                <CalendarClock className="h-4 w-4 text-[var(--color-accent)]" aria-hidden />
+                <span>{examCountdown}</span>
+              </div>
               <OfflineSyncIndicator />
               {(user?.publicMetadata?.role === 'admin' || user?.publicMetadata?.role === 'superadmin') && (
                 <Link
@@ -123,21 +203,22 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   <Settings className="w-5 h-5" />
                 </motion.button>
               )}
-              <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
-              {onHelpClick && (
-                <button
-                  type="button"
-                  onClick={onHelpClick}
-                  className={headerActionClass}
-                  style={{ borderColor: chromeBorder }}
-                  aria-label="Help and getting started"
-                  title="Help and getting started"
-                >
-                  <HelpCircle className="w-5 h-5" />
-                </button>
-              )}
               <ThemeToggleButton />
-            </AppBrand>
+              <button
+                type="button"
+                onClick={onSettingsClick}
+                disabled={!onSettingsClick}
+                className="hidden min-h-[40px] items-center gap-2 rounded-[999px] border px-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] disabled:cursor-default disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)] md:flex"
+                style={{ borderColor: chromeBorder }}
+                aria-label={`Profile: ${profileName}`}
+                title={profileName}
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-accent)]/12 text-xs font-semibold text-[var(--color-accent)]">
+                  {profileInitial || <UserCircle className="h-4 w-4" />}
+                </span>
+                <span className="max-w-[8rem] truncate">{profileName}</span>
+              </button>
+            </div>
           </div>
         </header>
       )}

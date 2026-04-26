@@ -151,6 +151,16 @@ const App: React.FC = () => {
     return undefined;
   }, [location.pathname, location.search]);
 
+  // Shell shortcuts for nav items that still resolve to view-state workflows.
+  // Keeps Review in the primary rail without adding a production route or API.
+  useEffect(() => {
+    if (location.pathname !== '/study' && location.pathname !== '/study/') return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('mode') === 'review') {
+      setView('srs_review');
+    }
+  }, [location.pathname, location.search, setView]);
+
   // Support ?modal=settings query param to open Settings modal (for nav links)
   useEffect(() => {
     const params = new URLSearchParams(location.search);

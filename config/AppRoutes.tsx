@@ -697,6 +697,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
 
                 <AppLayout
                   onSettingsClick={() => setIsSettingsModalOpen(true)}
+                  onSearchClick={() => setIsCommandPaletteOpen(true)}
                   onHelpClick={() => setIsHelpModalOpen(true)}
                   contentMaxWidth={contentMaxWidth}
                 >

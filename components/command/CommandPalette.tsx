@@ -74,8 +74,13 @@ export default function CommandPalette() {
         setOpen((prev) => !prev);
       }
     };
+    const openPalette = () => setOpen(true);
     document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    window.addEventListener('panacea:open-command-palette', openPalette);
+    return () => {
+      document.removeEventListener('keydown', down);
+      window.removeEventListener('panacea:open-command-palette', openPalette);
+    };
   }, []);
 
   const handleSelect = useCallback(

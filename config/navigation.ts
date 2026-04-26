@@ -25,6 +25,7 @@ import {
   BookOpen,
   Calculator,
   Calendar,
+  RotateCcw,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -63,6 +64,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   BookOpen,
   Calculator,
   Calendar,
+  RotateCcw,
 };
 
 /**
@@ -74,13 +76,14 @@ export interface NavRailItem {
   label: string;
   path: string;
   icon: LucideIcon;
-  section: 'study' | 'resources';
+  section: 'study' | 'knowledge' | 'plan';
   showInBottomBar: boolean;
 }
 
 /**
  * Canonical nav rail items. Used by NavRail and referenced in docs.
- * Exactly five items in mobile bottom bar; Study Path is rail-only on desktop.
+ * Kept intentionally small for the signed-in shell: one study entry point,
+ * one practice entry point, review, knowledge, progress, and the long-range plan.
  */
 export const NAV_RAIL_ITEMS: NavRailItem[] = [
   {
@@ -100,43 +103,35 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
     showInBottomBar: true,
   },
   {
-    id: 'progress',
-    label: 'Progress',
-    path: '/progress',
-    icon: BarChart3,
+    id: 'review',
+    label: 'Review',
+    path: '/study?mode=review',
+    icon: RotateCcw,
     section: 'study',
     showInBottomBar: true,
   },
   {
     id: 'knowledge',
-    label: 'Reference',
+    label: 'Knowledge',
     path: '/study/knowledge',
     icon: BookOpen,
-    section: 'resources',
+    section: 'knowledge',
     showInBottomBar: true,
   },
   {
-    id: 'utilities',
-    label: 'Toolkit',
-    path: '/study/utilities',
-    icon: Calculator,
-    section: 'resources',
+    id: 'progress',
+    label: 'Progress',
+    path: '/progress',
+    icon: BarChart3,
+    section: 'plan',
     showInBottomBar: true,
   },
   {
     id: 'study_path',
-    label: 'Study Path',
+    label: 'Plan',
     path: '/study/path',
     icon: TrendingUp,
-    section: 'resources',
-    showInBottomBar: false,
-  },
-  {
-    id: 'daily_challenges',
-    label: 'Daily',
-    path: '/daily-challenges',
-    icon: Calendar,
-    section: 'resources',
+    section: 'plan',
     showInBottomBar: false,
   },
 ];

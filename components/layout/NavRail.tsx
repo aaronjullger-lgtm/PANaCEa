@@ -15,15 +15,11 @@ import { springs } from '@/config/appViews';
 import {
   ChevronLeft,
   ChevronRight,
-  Headphones,
   PanelLeftClose,
   PanelLeftOpen,
-  Download,
   LucideIcon,
 } from 'lucide-react';
 import { NAV_RAIL_ITEMS } from '@/config/navigation';
-import { useCommuter } from '@/contexts/CommuterContext';
-import { usePWAEnhancer } from '@/services/pwaEnhancer';
 import { SidebarItem } from '@/components/layout/SidebarItem';
 import { InfoTooltipWrapper } from '@/components/shared/TooltipWrapper';
 
@@ -55,7 +51,7 @@ const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = NAV_RAIL_ITEMS.map((item) => ({
 }));
 
 const RAIL_WIDTH_COLLAPSED = 56;
-const RAIL_WIDTH_EXPANDED = 208;
+const RAIL_WIDTH_EXPANDED = 184;
 
 function isPathActive(href: string, pathname: string, search: string): boolean {
   const fullPath = pathname + search;
@@ -100,7 +96,6 @@ function BottomTabBar({
   const prefersReducedMotion = useReducedMotion();
   // Take max 5 for the bottom bar
   const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
-  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 88%, transparent)';
   const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
 
   // Light haptic tap for PWA standalone mode
@@ -121,15 +116,13 @@ function BottomTabBar({
       }}
       aria-label="Main navigation"
     >
-      {/* Glass backdrop for mobile bottom bar — dark cinematic */}
+      {/* Quiet mobile bottom bar. */}
       <div
         className="absolute inset-0"
         style={{
-          background: chromeSurface,
-          backdropFilter: 'blur(24px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+          background: 'color-mix(in srgb, var(--color-bg-secondary) 96%, var(--color-bg-primary) 4%)',
           borderTop: `1px solid ${chromeBorder}`,
-          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 -2px 12px rgba(15, 23, 42, 0.08)',
         }}
       />
       <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
@@ -160,7 +153,7 @@ function BottomTabBar({
                 <motion.span
                   layoutId={prefersReducedMotion ? undefined : "bottom-tab-indicator"}
                   className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
-                  style={{ background: '#c4b78a', boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)' }}
+                  style={{ background: 'var(--color-accent)' }}
                   transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                 />
               )}
@@ -207,19 +200,15 @@ export const NavRail: React.FC<NavRailProps> = ({
   className = '',
 }) => {
   const prefersReducedMotion = useReducedMotion();
-  const commuterContext = useCommuter();
-  const { status: pwaStatus, showInstallPrompt } = usePWAEnhancer();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const { pathname, search } = location;
-  const showPwaInstall =
-    pwaStatus.hasInstallPrompt && !pwaStatus.isInstalled && !pwaStatus.isStandalone;
-  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 82%, transparent)';
+  const chromeSurface = 'color-mix(in srgb, var(--color-bg-secondary) 96%, var(--color-bg-primary) 4%)';
   const chromeBorder = 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)';
   const railShadow =
-    'inset -1px 0 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent)';
+    'inset -1px 0 0 color-mix(in srgb, var(--color-text-primary) 6%, transparent)';
   const railControlClass =
     'rounded-lg border p-1.5 text-[var(--color-text-muted)] transition-all duration-200 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]';
 
@@ -277,7 +266,8 @@ export const NavRail: React.FC<NavRailProps> = ({
   }
 
   const studyItems = quickActions.filter((i) => i.section === 'study' || !i.section);
-  const resourceItems = quickActions.filter((i) => i.section === 'resources');
+  const knowledgeItems = quickActions.filter((i) => i.section === 'knowledge');
+  const planItems = quickActions.filter((i) => i.section === 'plan');
 
   const baseClass =
     'group relative flex w-full h-12 items-center rounded-xl px-2 transition-[padding,background-color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
@@ -340,9 +330,8 @@ export const NavRail: React.FC<NavRailProps> = ({
                   className="absolute inset-0 rounded-xl z-0"
                   style={{
                     background:
-                      'color-mix(in srgb, #c4b78a 12%, var(--color-bg-secondary))',
-                    boxShadow:
-                      '0 0 12px color-mix(in srgb, #c4b78a 18%, transparent), inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 8%, transparent)',
+                      'color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-secondary))',
+                    boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent)',
                   }}
                   transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                   aria-hidden
@@ -351,8 +340,8 @@ export const NavRail: React.FC<NavRailProps> = ({
                   layoutId={prefersReducedMotion ? undefined : "active-nav-accent"}
                   className={`absolute top-1/2 z-0 h-5 w-[3px] -translate-y-1/2 rounded-full ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-1'}`}
                   style={{
-                    background: 'linear-gradient(180deg, #c4b78a 0%, rgba(196, 183, 138, 0.4) 100%)',
-                    boxShadow: '0 0 8px rgba(196, 183, 138, 0.4)',
+                    background:
+                      'linear-gradient(180deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 42%, transparent) 100%)',
                   }}
                   transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
                   aria-hidden
@@ -411,14 +400,12 @@ export const NavRail: React.FC<NavRailProps> = ({
         overflowY: 'auto',
         overflowX: 'hidden',
         background: chromeSurface,
-        backdropFilter: 'blur(20px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
         borderRight: `1px solid ${chromeBorder}`,
         boxShadow: railShadow,
       }}
       aria-label="Main navigation"
     >
-      {/* Header with collapse/hide controls — glass buttons */}
+      {/* Header with collapse/hide controls. */}
       <div
         className={`flex h-10 shrink-0 items-center ${collapsed ? 'justify-center px-1' : 'justify-between px-2'}`}
       >
@@ -451,68 +438,9 @@ export const NavRail: React.FC<NavRailProps> = ({
         aria-label="App sections"
       >
         {renderSection('Study', studyItems)}
-        {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
+        {knowledgeItems.length > 0 && renderSection('Knowledge', knowledgeItems)}
+        {planItems.length > 0 && renderSection('Plan', planItems)}
       </nav>
-
-      {/* PWA Install — show when browser supports install and app is not installed */}
-      {showPwaInstall && (
-        <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
-          <button
-            type="button"
-            onClick={() => showInstallPrompt()}
-            className={`group flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] ${
-              collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3'
-            }`}
-            title="Install PANaCEa app"
-            aria-label="Install PANaCEa app"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors group-hover:bg-[var(--color-bg-tertiary)]">
-              <Download className="h-5 w-5" aria-hidden />
-            </span>
-            {!collapsed && <span className="truncate text-sm font-medium">Install app</span>}
-          </button>
-        </div>
-      )}
-
-      {/* Commuter Mode quick toggle — centered when collapsed */}
-      {commuterContext && (
-        <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
-          <button
-            type="button"
-            onClick={commuterContext.toggleCommuterMode}
-            className={`group flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] ${
-              collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3'
-            } ${
-              commuterContext.isCommuterMode
-                ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
-            }`}
-            title={
-              commuterContext.isCommuterMode
-                ? 'Disable Commuter Mode'
-                : 'Enable Commuter Mode (voice + larger buttons)'
-            }
-            aria-label={
-              commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode'
-            }
-          >
-            <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                commuterContext.isCommuterMode
-                  ? 'bg-[var(--color-accent)]/20'
-                  : 'group-hover:bg-[var(--color-bg-tertiary)]'
-              }`}
-            >
-              <Headphones className="h-5 w-5" aria-hidden />
-            </span>
-            {!collapsed && (
-              <span className="truncate text-sm font-medium">
-                {commuterContext.isCommuterMode ? 'Commuter On' : 'Commuter'}
-              </span>
-            )}
-          </button>
-        </div>
-      )}
     </motion.aside>
   );
 };
