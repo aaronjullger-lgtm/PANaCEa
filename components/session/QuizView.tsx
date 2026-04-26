@@ -1,6 +1,7 @@
 // components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useShortcut } from '@/contexts/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
@@ -89,6 +90,8 @@ import { TrustBadge } from '@/components/ui/TrustBadge';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
+import { ROUTES } from '@/config/routes';
+import { BookOpen } from 'lucide-react';
 
 // FlagIcon, ClearHighlightIcon, CloseIcon, lucide icons moved to QuizToolbar/AnswerFeedback
 // ROUTES moved to QuizToolbar
@@ -267,9 +270,12 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6 space-y-4"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-lg leading-relaxed text-[var(--color-text-primary)] shadow-[var(--shadow-surface)] md:text-xl"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+          Question stem
+        </p>
         {/* Text before the table */}
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
 
@@ -301,9 +307,12 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-primary)] rounded-xl p-6"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-lg font-semibold leading-relaxed text-[var(--color-text-primary)] shadow-[var(--shadow-surface)] md:text-xl"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+          Question stem
+        </p>
         {normalizedText}
       </div>
     );
@@ -318,9 +327,12 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] rounded-xl p-6"
-      style={{ fontSize: `calc(1em + var(--font-size-adj))`, boxShadow: '0 0 0 1px var(--color-glass-border), 0 2px 8px -2px var(--color-glass-shadow), 0 1px 3px -1px rgba(0,0,0,0.04)' }}
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-lg leading-relaxed text-[var(--color-text-primary)] shadow-[var(--shadow-surface)] md:text-xl"
+      style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+        Question stem
+      </p>
       <p className="whitespace-pre-wrap">{vignette}</p>
       <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
     </div>
@@ -356,6 +368,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   modeLabel,
 }) => {
   const prefersReducedMotion = useReducedMotion();
+  const navigate = useNavigate();
   // Validate required callback props at runtime
   useEffect(() => {
     const requiredCallbacks = {
@@ -465,11 +478,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showSocraticTutor, setShowSocraticTutor] = useState(false);
   // Lab calculator modal (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation
   const [showLabCalcModal, setShowLabCalcModal] = useState(false);
-
-  // Peer selection stats ("42% of students also chose B") – Wisdom of the Crowds
-  const [answerDistribution, setAnswerDistribution] = useState<
-    { optionLetter: string; count: number; percent: number }[] | null
-  >(null);
 
   // Sprint 3: Wellness checks extracted to useWellnessChecks hook
   const wellness = useWellnessChecks();
@@ -691,48 +699,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     return flaggedQuestions.some((q) => q.question === currentQuestion.question);
   }, [currentQuestion, flaggedQuestions]);
 
-  // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
-  // S5 — Uses AbortController so the fetch itself is cancelled on unmount /
-  // question change, not just its result discarded. Previously the response
-  // body still flowed over the wire and was JSON-parsed in the background.
-  useEffect(() => {
-    if (!isAnswered || !currentQuestion?.id || selectedAnswerIndex === null) {
-      setAnswerDistribution(null);
-      return;
-    }
-    const controller = new AbortController();
-    const { signal } = controller;
-    const fetchDistribution = async () => {
-      try {
-        const token = await getToken();
-        if (signal.aborted) return;
-        const res = await fetch(
-          `/api/analytics/peer-stats?questionId=${encodeURIComponent(currentQuestion?.id ?? '')}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            signal,
-          }
-        );
-        if (!res.ok || signal.aborted) return;
-        const json = (await res.json()) as {
-          data?: { distribution?: { optionLetter: string; count: number; percent: number }[] };
-        };
-        if (signal.aborted) return;
-        const dist = json?.data?.distribution;
-        if (Array.isArray(dist)) setAnswerDistribution(dist);
-      } catch (distErr) {
-        if ((distErr as { name?: string })?.name === 'AbortError') return;
-        console.warn('[QuizView] Failed to fetch answer distribution', distErr);
-        if (!signal.aborted) setAnswerDistribution(null);
-      }
-    };
-    const timeoutId = setTimeout(fetchDistribution, 500);
-    return () => {
-      controller.abort();
-      clearTimeout(timeoutId);
-    };
-  }, [isAnswered, currentQuestion?.id, selectedAnswerIndex, getToken]);
-
   // Keep current question synced with queue[0]
   useEffect(() => {
     setCurrentQuestion(queue[0] ?? null);
@@ -782,7 +748,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       setShowRationale(false);
       setAlternateRationale(null);
       setShowSocraticTutor(false);
-      setAnswerDistribution(null); // Reset peer selection stats for next question
       setIsExplainerLoading(false);
       setQuestionNumber((prev) => prev + 1);
       resetElimination();
@@ -1016,7 +981,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             ? confidenceResult
             : (confidenceResult?.score ?? 0.5);
       }
-      // Store for CalibrationFeedbackBadge in AnswerFeedback
+      // Keep behavioral signal internal for adaptive explanation scaffolding.
       setLastImplicitConfidence(inferredConfidenceValue);
 
       // Trigger causal chain generation (tier1 Item 4) — fires async in background
@@ -1282,19 +1247,17 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     }
   }, [currentQuestion, isFlagged, removeFlaggedQuestion, addFlaggedQuestion]);
 
-  const topicStats = useMemo(() => {
-    if (!isAnswered || !currentQuestion) return null;
-
-    const topicQuestions = performanceData
-      .filter((p) => p.topic === currentQuestion.topic)
-      .slice(-100);
-
-    const correct = topicQuestions.filter((p) => p.isCorrect).length;
-    const total = topicQuestions.length;
-    const score = total > 0 ? (correct / total) * 100 : 0;
-
-    return { score, correct, total };
-  }, [isAnswered, currentQuestion, performanceData]);
+  const openQuestionReference = useCallback(
+    (conditionId?: string | null) => {
+      const params = new URLSearchParams();
+      params.set('tab', 'conditions');
+      if (conditionId) {
+        params.set('conditionId', conditionId);
+      }
+      navigate(`${ROUTES.STUDY_KNOWLEDGE}?${params.toString()}`);
+    },
+    [navigate]
+  );
 
   const parTimeMs = useMemo(() =>
     currentQuestion ? calculateParTime(currentQuestion) : null,
@@ -1418,7 +1381,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     <div
       className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}
       style={{
-        background: 'linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(15,23,42,0.5) 50%, rgba(10,14,26,1) 100%)',
+        background: 'var(--color-bg-primary)',
         minHeight: '100vh',
       }}
     >
@@ -1476,12 +1439,22 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               >
                 {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <TrustBadge
                     source={currentQuestion.source}
                     fromStaging={currentQuestion.fromStaging}
                     size="sm"
                   />
+                  {currentQuestion.conditionId && (
+                    <button
+                      type="button"
+                      onClick={() => openQuestionReference(currentQuestion.conditionId)}
+                      className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)]"
+                    >
+                      <BookOpen className="h-4 w-4" aria-hidden="true" />
+                      Reference
+                    </button>
+                  )}
                 </div>
                 {currentQuestion.contentSource === 'openstax' && (
                   <OpenStaxAttributionFooter
@@ -1524,6 +1497,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               role="radiogroup"
               aria-label={`Answer options for question ${questionNumber}`}
             >
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                Answer choices
+              </p>
               {(currentQuestion.options || []).map((option, index) => {
                 const isCorrect = index === currentQuestion.correctAnswerIndex;
                 const isSelected = index === selectedAnswerIndex;
@@ -1604,8 +1580,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               selectedAnswerIndex={selectedAnswerIndex}
               isExamSimulator={isExamSimulator}
               fontSizeAdjustment={fontSizeAdjustment}
-              topicStats={topicStats}
-              answerDistribution={answerDistribution}
               updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
               onExplainDifferently={handleExplainDifferently}
               isExplainerLoading={isExplainerLoading}
@@ -1615,7 +1589,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               showNotes={showNotes}
               setShowNotes={setShowNotes}
               onNoteChange={handleNoteChange}
-              implicitConfidence={lastImplicitConfidence}
+              isFlagged={isFlagged}
+              onToggleFlag={toggleFlag}
+              onOpenReference={() => openQuestionReference(currentQuestion.conditionId)}
               causalChain={causalChainHook.chain}
               causalChainDisplayLevel={
                 lastImplicitConfidence !== undefined

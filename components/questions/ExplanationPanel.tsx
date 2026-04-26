@@ -23,7 +23,7 @@ import {
   XCircle,
   Target,
   AlertCircle,
-  Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   compressExplanation,
@@ -224,6 +224,18 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     () => buildDifferentialList(condition, confusionPairs),
     [condition, confusionPairs]
   );
+  const panceTrap = useMemo(() => {
+    if (isStructuredRationale(rationale) && rationale.commonPitfalls?.length) {
+      return (
+        rationale.commonPitfalls[0] ??
+        'The trap is stopping at recognition. PANCE questions often test the next best step for this patient, not just the diagnosis label.'
+      );
+    }
+    if (!isCorrect && userAnswer) {
+      return `The trap is anchoring on ${userAnswer} before matching the vignette to the best next step. Re-check the timing, severity, and exclusion clues before moving on.`;
+    }
+    return 'The trap is stopping at recognition. PANCE questions often test the next best step for this patient, not just the diagnosis label.';
+  }, [isCorrect, rationale, userAnswer]);
 
   // Track confusion when user answers incorrectly
   React.useEffect(() => {
@@ -350,6 +362,27 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           </motion.div>
         )}
 
+        <motion.section variants={itemVariants}>
+          <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-[var(--color-success)]" />
+            Correct Answer
+          </h3>
+          <div
+            className="rounded-lg border px-4 py-3"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--color-success) 32%, transparent)',
+              background: 'color-mix(in srgb, var(--color-bg-secondary) 86%, var(--color-success) 14%)',
+            }}
+          >
+            <p className="text-[var(--color-text-primary)] leading-relaxed">
+              <span className="font-semibold">
+                {String.fromCharCode(65 + correctAnswerIndex)}.
+              </span>{' '}
+              {renderFormattedText(correctAnswer)}
+            </p>
+          </div>
+        </motion.section>
+
         {/* STRUCTURED RATIONALE (New Format) */}
         {structured && isStructuredRationale(rationale) && (
           <>
@@ -357,7 +390,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             <motion.section variants={itemVariants}>
               <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
                 <Target className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                Why This Is Correct
+                Why It Is Correct
               </h3>
               <div className="bg-sage-50/20 border border-sage-200/40 rounded-lg px-4 py-3">
                 <p className="text-[var(--color-text-secondary)] leading-relaxed">
@@ -370,7 +403,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             <motion.section variants={itemVariants}>
               <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-dusty-rose-500" />
-                Why Other Options Are Wrong
+                Why Distractors Are Wrong
               </h3>
               <div className="space-y-2">
                 {options.map((option, index) => {
@@ -457,7 +490,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             {rationale.clinicalPearl && (
               <motion.section variants={itemVariants}>
                 <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[var(--color-data-provisional)]" />
+                  <Lightbulb className="w-4 h-4 text-[var(--color-data-provisional)]" />
                   Clinical Pearl
                 </h3>
                 <div className="bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 rounded-lg px-4 py-3">
@@ -469,6 +502,25 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             )}
           </>
         )}
+
+        <motion.section variants={itemVariants}>
+          <h3 className="font-semibold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-[var(--color-risk)]" />
+            PANCE Trap
+          </h3>
+          <div
+            className="rounded-lg border border-l-4 px-4 py-3"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--color-risk) 26%, transparent)',
+              borderLeftColor: 'var(--color-risk)',
+              background: 'color-mix(in srgb, var(--color-bg-secondary) 90%, var(--color-risk) 10%)',
+            }}
+          >
+            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              {renderFormattedText(panceTrap)}
+            </p>
+          </div>
+        </motion.section>
 
         {/* LEGACY RATIONALE (String Format) */}
         {!structured && (

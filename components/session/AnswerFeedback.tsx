@@ -2,10 +2,9 @@
  * AnswerFeedback — Extracted from QuizView.tsx
  *
  * Renders the post-answer feedback panel:
- * - Topic accuracy stats bar
  * - Error tagger (when incorrect)
- * - Peer selection stats ("42% of students also chose B")
  * - ExplanationPanel (structured or legacy rationale)
+ * - Add to review + reference actions
  * - "Explain Differently" + "Tutor Me" buttons
  * - Alternate rationale (AI-generated)
  * - Clinical pearls section
@@ -15,11 +14,9 @@
 import React, { memo } from 'react';
 import ExplanationPanel, { type StructuredRationale } from '@/components/questions/ExplanationPanel';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
-import { CalibrationFeedbackBadge } from '@/components/session/CalibrationFeedbackBadge';
 import { CausalChainDisplay } from '@/components/session/CausalChainDisplay';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
-import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
-import { MessageCircle, PenLine } from 'lucide-react';
+import { BookOpen, Flag, MessageCircle, PenLine } from 'lucide-react';
 import type { Question, ErrorTag } from '@/types';
 import type { CausalChain, CausalChainDisplayLevel } from '@/types/causalChain';
 
@@ -28,10 +25,6 @@ export interface AnswerFeedbackProps {
   selectedAnswerIndex: number;
   isExamSimulator: boolean;
   fontSizeAdjustment: number;
-  topicStats: { score: number; correct: number; total: number } | null;
-  answerDistribution:
-    | { optionLetter: string; count: number; percent: number }[]
-    | null;
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   onExplainDifferently: () => void;
   isExplainerLoading: boolean;
@@ -41,8 +34,9 @@ export interface AnswerFeedbackProps {
   showNotes: boolean;
   setShowNotes: (show: boolean) => void;
   onNoteChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  /** Implicit confidence score (0-1) from behavioral telemetry. If provided, shows calibration feedback. */
-  implicitConfidence?: number;
+  isFlagged: boolean;
+  onToggleFlag: () => void;
+  onOpenReference?: () => void;
   /** Causal reasoning chain for mechanistic explanation (tier1 Item 4). */
   causalChain?: CausalChain | null;
   /** Display level for the causal chain, driven by expertise-adaptive scaffolding. */
@@ -54,8 +48,6 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   selectedAnswerIndex,
   isExamSimulator,
   fontSizeAdjustment,
-  topicStats,
-  answerDistribution,
   updateLastPerformanceErrorTag,
   onExplainDifferently,
   isExplainerLoading,
@@ -65,57 +57,18 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   showNotes,
   setShowNotes,
   onNoteChange,
-  implicitConfidence,
+  isFlagged,
+  onToggleFlag,
+  onOpenReference,
   causalChain,
   causalChainDisplayLevel,
 }) => {
   if (isExamSimulator) return null;
 
   const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
-  const getBarColor = (score: number): string => getAccuracyBarClass(score);
 
   return (
-    <section className="mt-6 animate-fade-in space-y-3" aria-label="Answer feedback">
-      {/* Result meta: calibration + topic stats */}
-      {(implicitConfidence !== undefined || topicStats) && (
-        <div className="pb-3 mb-4 border-b border-[var(--color-border)]">
-          {implicitConfidence !== undefined && (
-            <CalibrationFeedbackBadge
-              wasCorrect={isCorrect}
-              confidence={implicitConfidence}
-            />
-          )}
-
-          {topicStats && (
-            <div className="mt-2">
-              <div className="flex justify-between items-center mb-1 text-sm">
-                <span className="font-semibold text-[var(--color-text-secondary)]">
-                  {currentQuestion.topic}
-                </span>
-                <span className="font-medium text-[var(--color-text-muted)]">
-                  {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
-                </span>
-              </div>
-              <div
-                className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2"
-                role="progressbar"
-                aria-valuenow={Math.round(topicStats.score)}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${currentQuestion.topic} accuracy: ${topicStats.score.toFixed(0)}%`}
-              >
-                <div
-                  className={`h-2 rounded-full ${getBarColor(
-                    topicStats.score
-                  )} transition-all duration-500 ease-out`}
-                  style={{ width: `${topicStats.score}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
+    <section className="mt-6 animate-fade-in space-y-4" aria-label="Answer feedback">
       <div className="feedback-content space-y-4">
         {/* Error Tagger - Only show when incorrect */}
         {!isCorrect && (
@@ -123,24 +76,6 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
             <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
           </div>
         )}
-
-        {/* Peer selection stats: "42% of students also chose B" */}
-        {answerDistribution &&
-          (() => {
-            const letter = ['A', 'B', 'C', 'D', 'E'][selectedAnswerIndex];
-            const entry = answerDistribution.find((d) => d.optionLetter === letter);
-            if (!entry || entry.count === 0) return null;
-            return (
-              <p className="mb-3 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 rounded-md px-3 py-2">
-                <span className="font-medium text-[var(--color-text-secondary)]">
-                  {entry.percent}% of students also chose {letter}.
-                </span>
-                {!isCorrect && (
-                  <> This was a tricky distractor — you&apos;re not alone.</>
-                )}
-              </p>
-            );
-          })()}
 
         {/* Core PANCE: rationale – structured (5-section) or legacy, via ExplanationPanel */}
         <ExplanationPanel
@@ -178,12 +113,41 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
               : undefined)
           }
           pubmedCitations={
-            currentQuestion.pubmedCitations ??
-            (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
+            typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
               ? (currentQuestion.rationale as StructuredRationale).pubmedCitations
-              : undefined)
+              : undefined
+          }
+          onViewCondition={
+            onOpenReference && currentQuestion.conditionId
+              ? (_slug: string) => onOpenReference()
+              : undefined
           }
         />
+
+        <div className="flex flex-wrap gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-3">
+          <button
+            type="button"
+            onClick={onToggleFlag}
+            className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-colors ${
+              isFlagged
+                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-text-primary)]'
+                : 'border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)]'
+            }`}
+          >
+            <Flag className="h-4 w-4" aria-hidden="true" />
+            {isFlagged ? 'Added to review' : 'Add to review'}
+          </button>
+          {onOpenReference && (
+            <button
+              type="button"
+              onClick={onOpenReference}
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3.5 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)]"
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Open reference
+            </button>
+          )}
+        </div>
 
         {/* Causal Reasoning Chain — mechanistic "Why This Happens" display
             Research: Woods et al. (2005), Chi et al. (1994) — causal chains
