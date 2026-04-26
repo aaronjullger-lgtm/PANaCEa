@@ -125,11 +125,6 @@ export const onRequestPost = authenticatedEndpoint(
               blueprintStage: body.blueprintStage,
               learnerPhase,
               source: 'reservoir',
-              selectionMix: {
-                dueReviewCount: reserved.filter((r: any) => r.isReview).length,
-                resurfacedCount: 0,
-                newCardCount: reserved.filter((r: any) => !r.isReview).length,
-              },
             },
           };
         }
@@ -191,32 +186,6 @@ export const onRequestPost = authenticatedEndpoint(
           },
         };
       }
-
-      await prisma.studySession.create({
-        data: {
-          id: result.sessionId,
-          userId: user.id,
-          startedAt: new Date(),
-          totalQuestions: result.questions.length,
-          mode: body.mode,
-          focus: body.system
-            ? 'system'
-            : body.conditionId
-              ? 'condition'
-              : body.subcategory
-                ? 'subcategory'
-                : 'all',
-          sessionType: body.sessionLane ?? 'MAIN',
-          systemsTargeted: Object.keys(result.metadata.systemDistribution ?? {}),
-          questionIds: result.questions
-            .map((question: any) => question.id)
-            .filter((questionId: unknown): questionId is string => typeof questionId === 'string' && questionId.length > 0),
-          blueprintStage: body.blueprintStage,
-          blueprintExamTypes: body.blueprintExamTypes ?? [],
-          blueprintLabel: body.blueprintLabel,
-          isQuickSession: body.size <= 10,
-        },
-      });
 
       // ── Step 3: Trigger background refill (fire-and-forget) ──
       if (context.waitUntil) {
@@ -574,29 +543,4 @@ function countSystems(questions: any[]): Record<string, number> {
     counts[sys] = (counts[sys] || 0) + 1;
   }
   return counts;
-}
-
-function resolveCorrectAnswerIndex(
-  options: string[],
-  rawIndex: unknown,
-  rawCorrectAnswer: string
-): number {
-  if (typeof rawIndex === 'number' && Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < options.length) {
-    return rawIndex;
-  }
-
-  const correctAnswer = rawCorrectAnswer.trim();
-  if (!correctAnswer) return 0;
-
-  const exactMatch = options.findIndex(
-    (option) => option.trim().toLowerCase() === correctAnswer.toLowerCase()
-  );
-  if (exactMatch >= 0) return exactMatch;
-
-  if (/^[A-E]$/i.test(correctAnswer)) {
-    const letterIndex = correctAnswer.toUpperCase().charCodeAt(0) - 65;
-    if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
-  }
-
-  return 0;
 }

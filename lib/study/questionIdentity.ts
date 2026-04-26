@@ -12,7 +12,7 @@ type StudyQuestionCondition =
   | null
   | undefined;
 
-export interface StudyQuestionLike extends Record<string, unknown> {
+export interface StudyQuestionLike {
   id?: string | null;
   questionId?: string | null;
   question?: string | null;

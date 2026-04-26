@@ -11,7 +11,7 @@ import { getStableQuestionId, normalizeStudyQuestions } from './questionIdentity
 
 export type LegacySessionMode = 'mainSession' | 'review' | 'drill';
 
-export interface GenerateStudySessionOptions extends Partial<SessionGeneratePayload> {
+export interface GenerateStudySessionOptions extends Omit<Partial<SessionGeneratePayload>, 'mode'> {
   mode?: SessionGeneratePayload['mode'] | LegacySessionMode;
   adaptive?: boolean;
   onProgress?: (progress: StudySessionGenerationProgress) => void;

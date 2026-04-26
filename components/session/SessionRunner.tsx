@@ -85,23 +85,6 @@ function deriveGrowthAreas(questions: Question[]): string[] {
   return Array.from(systems);
 }
 
-function buildSessionSettings(
-  questionCount: number,
-  runtime: StudySessionRuntime | null
-): SessionSettings {
-  const requestedSystems =
-    runtime?.request.systems?.filter(Boolean) ??
-    (runtime?.request.system ? [runtime.request.system] : []);
-
-  return {
-    mode: runtime?.metadata.mode === 'exam' ? 'exam' : 'standard',
-    focus: runtime?.request.conditionId || runtime?.request.subcategory || runtime?.request.system ? 'topic' : 'all',
-    systems: requestedSystems,
-    difficulty: runtime?.request.initialDifficulty ?? 'adaptive',
-    count: questionCount,
-  };
-}
-
 const SessionRunner: React.FC<SessionRunnerProps> = ({
   onExit,
   addPerformanceRecord,
@@ -117,7 +100,6 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
   updateQuestionNote,
   removeDueConcept,
 }) => {
-  const { getToken } = useAuth();
   const { sessionId } = useParams<{ sessionId: string }>();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -237,8 +219,6 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       addFlaggedQuestion={addFlaggedQuestion}
       removeFlaggedQuestion={removeFlaggedQuestion}
       updateQuestionNote={updateQuestionNote}
-      sessionId={sessionId}
-      queueStrategy="finite"
       onReviewMissed={undefined}
     />
   );

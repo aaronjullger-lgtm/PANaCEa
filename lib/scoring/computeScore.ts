@@ -10,7 +10,6 @@ import type { Question } from '@/types';
 import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { calculateParTime } from '@/lib/utils/questionComplexity';
 import { behavioralPayloadToTelemetryData, enrichTelemetryWithSessionPosition } from '@/components/quiz/Tracker';
-import { getStableQuestionId } from '@/lib/study/questionIdentity';
 
 interface MicroMetrics {
   oscillations: number;
@@ -51,7 +50,7 @@ export function computeScore(params: {
 
   const isCorrect = selectedAnswerIndex === question.correctAnswerIndex;
   const timeToAnswer = Date.now() - questionStartTime;
-  const questionId = getStableQuestionId(question);
+  const questionId = question.id || `temp-${questionNumber}`;
   const parTime = calculateParTime(question);
 
   // Elimination velocity

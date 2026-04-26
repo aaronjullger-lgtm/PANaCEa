@@ -1,24 +1,31 @@
 /**
  * Concept-Level Question Selector
  *
- * The core question selection engine for study sessions. This version keeps
- * the selector orchestration thin and pushes adaptive weighting into a shared,
- * deterministic scoring layer so every study mode can reuse the same ranking
- * behavior.
+ * The core question selection engine for study sessions. Consumes blueprint
+ * weights from learnerStageBlueprint.ts + distribution constraints from
+ * antiGamingDistribution.ts, and selects an optimal mix of:
  *
- * Candidate sources:
- *   1. Due reviews from UserProgress
- *   2. Missed-question resurfacing from QuestionAttempt history
- *   3. New/exploratory questions from the question bank
+ *   1. Due reviews (FSRS nextReviewAt <= now) — ordered by overdue ratio
+ *   2. New cards — sampled proportional to blueprint weights
+ *
+ * Supports four session modes:
+ *   - adaptive: Full blueprint-weighted selection (default)
+ *   - system: All questions from one system
+ *   - subcategory: Narrower filter within a system
+ *   - condition: Drill into one specific condition
+ *
+ * Research backing:
+ *   - 85% Rule (Wilson et al., 2019): difficulty mix auto-calibrates
+ *   - Interleaving (Brunmair & Richter, 2019): questions are interleaved across systems
+ *   - FSRS v6: due cards prioritized by overdue ratio for optimal retention
  *
  * @module lib/services/conceptQuestionSelector
  */
 
 import type { PrismaClient } from '@prisma/client';
-import type { SessionMetadata } from '@/lib/api/types/sessions';
 import type { LearnerStage } from './learnerStageBlueprint';
 import { batchGetLeastSeenQuestions } from './batchVariantService';
-import { letterToIndex } from '../answerLetterMap';
+import { letterToIndex, ANSWER_LETTERS } from '../answerLetterMap';
 import { logger } from '../logger';
 import {
   buildBanditArm,
@@ -28,28 +35,12 @@ import {
   type QuestionMetadata,
   type ScoredArm,
 } from './contextualBanditService';
-import {
-  allocateAdaptiveSystemCounts,
-  buildAdaptiveProfileSnapshot,
-  buildAdaptiveSystemWeaknessMap,
-  buildAdaptiveTopicMasteryMap,
-  scoreAdaptiveCandidate,
-  type AdaptiveCandidateDescriptor,
-  type AdaptiveProfileSnapshot,
-  type AdaptiveQuestionSource,
-} from '../study/adaptiveQuestionRanking';
 
 const LOG_SCOPE = 'ConceptQuestionSelector';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type SessionMode =
-  | 'adaptive'
-  | 'system'
-  | 'subcategory'
-  | 'condition'
-  | 'review'
-  | 'focused';
+export type SessionMode = 'adaptive' | 'system' | 'subcategory' | 'condition' | 'review' | 'focused';
 
 export interface SessionRequest {
   userId: string;
@@ -76,9 +67,13 @@ export interface SessionRequest {
   gatedSystems?: string[];
 
   // ── Bandit reranking (optional) ──
+  /** Bandit state for LinUCB reranking. If provided, candidates are reranked. */
   banditState?: BanditState;
+  /** Per-system weakness scores (0=strong, 1=weakest) for bandit context */
   systemWeaknesses?: Record<string, number>;
+  /** Per-question mastery scores (0=new, 1=mastered) for bandit context */
   topicMasteryMap?: Record<string, number>;
+  /** Override bandit config */
   banditConfig?: BanditConfig;
 }
 
@@ -95,56 +90,42 @@ export interface SelectedQuestion {
   topic: string | null;
   difficulty: string | null;
   conditionId: string | null;
-  source: AdaptiveQuestionSource;
+  source: 'due_review' | 'new_card';
 }
 
 export interface SessionGenerationResult {
   sessionId: string;
   questions: SelectedQuestion[];
-  metadata: SessionMetadata;
-}
-
-type QuestionRow = {
-  id: string;
-  question: string;
-  vignette: string | null;
-  options: unknown;
-  correctAnswer: string | null;
-  explanation: string | null;
-  system: string | null;
-  category: string | null;
-  topic: string | null;
-  difficulty: string | null;
-  conditionId: string | null;
-};
-
-interface ScopeFilter {
-  system?: string;
-  subcategory?: string;
-  conditionId?: string;
-  gatedSystems: string[];
-}
-
-interface NewCardOptions extends ScopeFilter {
-  blueprintWeights: Record<string, number>;
-  boostSystems: string[];
-  suppressSystems: string[];
-  perSystemCaps: Record<string, number>;
-  snapshot: AdaptiveProfileSnapshot;
-  excludeQuestionIds: Set<string>;
+  metadata: {
+    dueReviewCount: number;
+    newCardCount: number;
+    systemDistribution: Record<string, number>;
+    estimatedMinutes: number;
+    mode: SessionMode;
+    blueprintStage: LearnerStage;
+  };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+/** Target ratio of due reviews to new cards */
 const DUE_REVIEW_RATIO = 0.7;
+
+/** Minimum new cards even when many reviews are due (prevents stagnation) */
 const MIN_NEW_CARD_RATIO = 0.15;
-const MAX_RESURFACE_RATIO = 0.2;
+
+/** Average seconds per question for time estimation */
 const AVG_SECONDS_PER_QUESTION = 90;
-const MAX_SINGLE_SYSTEM_FRACTION = 0.4;
-const ADAPTIVE_LOOKBACK_DAYS = 45;
+
+/** Maximum system concentration in adaptive mode */
+const MAX_SINGLE_SYSTEM_FRACTION = 0.40;
 
 // ─── Core Selector ───────────────────────────────────────────────────────────
 
+/**
+ * Generate a study session by selecting questions through the concept-level
+ * FSRS pipeline.
+ */
 export async function selectSessionQuestions(
   prisma: PrismaClient,
   request: SessionRequest
@@ -162,57 +143,54 @@ export async function selectSessionQuestions(
     perSystemCaps = {},
     gatedSystems = [],
     blueprintStage,
+    urgencyMultiplier,
   } = request;
 
-  const snapshot = await loadAdaptiveSelectionSnapshot(prisma, userId);
-  const derivedSystemWeaknesses = buildAdaptiveSystemWeaknessMap(snapshot);
-  const derivedTopicMasteryMap = buildAdaptiveTopicMasteryMap(snapshot);
-  const scope: ScopeFilter = { system, subcategory, conditionId, gatedSystems };
-
+  // ── Review mode: 100% due reviews, no new cards ──
   if (mode === 'review') {
-    const dueCards = await fetchDueReviews(prisma, userId, mode, scope, snapshot, blueprintWeights);
+    const dueCards = await fetchDueReviews(prisma, userId, mode, {
+      system, subcategory, conditionId, gatedSystems,
+    });
     const selected = dueCards.slice(0, size);
+    const sessionId = generateSessionId();
+    const systemDist: Record<string, number> = {};
+    for (const q of selected) {
+      const sys = q.system ?? 'Unknown';
+      systemDist[sys] = (systemDist[sys] ?? 0) + 1;
+    }
     return {
-      sessionId: generateSessionId(),
-      questions: selected,
-      metadata: buildMetadata(selected, selected.length, 0, 0, mode, blueprintStage),
+      sessionId, questions: selected,
+      metadata: {
+        dueReviewCount: selected.length, newCardCount: 0,
+        systemDistribution: systemDist,
+        estimatedMinutes: Math.round((selected.length * AVG_SECONDS_PER_QUESTION) / 60),
+        mode, blueprintStage,
+      },
     };
   }
 
-  const focusedNewRatio = mode === 'focused' ? 0.5 : MIN_NEW_CARD_RATIO;
+  // ── Focused mode: weak-system boost, higher new card ratio ──
+  const focusedNewRatio = mode === 'focused' ? 0.50 : MIN_NEW_CARD_RATIO;
+
+  // Step 1: Find due review cards
+  const dueCards = await fetchDueReviews(prisma, userId, mode, {
+    system,
+    subcategory,
+    conditionId,
+    gatedSystems,
+  });
+
+  // Step 2: Calculate the split between due reviews and new cards
   const maxDueSlots = Math.floor(size * DUE_REVIEW_RATIO);
   const minNewSlots = Math.max(1, Math.floor(size * focusedNewRatio));
-  const resurfaceCap = Math.max(1, Math.floor(size * MAX_RESURFACE_RATIO));
-
-  const dueCards = await fetchDueReviews(prisma, userId, mode, scope, snapshot, blueprintWeights);
   const dueCount = Math.min(dueCards.length, maxDueSlots);
+  const newCount = Math.max(minNewSlots, size - dueCount);
+
+  // Step 3: Select due review cards (sorted by overdue ratio — most overdue first)
   const selectedDue = dueCards.slice(0, dueCount);
 
-  const resurfaceSlots = Math.max(0, Math.min(resurfaceCap, maxDueSlots - selectedDue.length));
-  const selectedQuestionIds = new Set(selectedDue.map((question) => question.id));
-  const resurfacedCards =
-    resurfaceSlots > 0
-      ? await fetchMissedResurfacingQuestions(
-          prisma,
-          userId,
-          mode,
-          scope,
-          snapshot,
-          blueprintWeights,
-          selectedQuestionIds
-        )
-      : [];
-  const selectedResurfaced = resurfacedCards.slice(0, resurfaceSlots);
-  for (const question of selectedResurfaced) {
-    selectedQuestionIds.add(question.id);
-  }
-
-  const exploratoryTarget = Math.max(
-    minNewSlots,
-    size - selectedDue.length - selectedResurfaced.length
-  );
-
-  const selectedNew = await fetchNewCards(prisma, userId, exploratoryTarget, mode, {
+  // Step 4: Select new cards based on mode
+  const selectedNew = await fetchNewCards(prisma, userId, newCount, mode, {
     blueprintWeights,
     system,
     subcategory,
@@ -221,145 +199,73 @@ export async function selectSessionQuestions(
     suppressSystems,
     perSystemCaps,
     gatedSystems,
-    snapshot,
-    excludeQuestionIds: selectedQuestionIds,
   });
 
+  // Step 5: Combine candidates
   const allCandidates = [
-    ...selectedDue,
-    ...selectedResurfaced,
-    ...selectedNew,
+    ...selectedDue.map(q => ({ ...q, source: 'due_review' as const })),
+    ...selectedNew.map(q => ({ ...q, source: 'new_card' as const })),
   ];
 
+  // Step 5b: Bandit reranking (if state provided)
   const rerankedCandidates = request.banditState
-    ? banditRerankQuestions(allCandidates, {
-        ...request,
-        systemWeaknesses: request.systemWeaknesses ?? derivedSystemWeaknesses,
-        topicMasteryMap: request.topicMasteryMap ?? derivedTopicMasteryMap,
-      })
+    ? banditRerankQuestions(allCandidates, request)
     : allCandidates;
 
+  // Step 5c: Interleave across systems
   const combined = interleaveQuestions(
-    rerankedCandidates.filter((question) => question.source !== 'new_card'),
-    rerankedCandidates.filter((question) => question.source === 'new_card')
-  ).slice(0, size);
+    rerankedCandidates.filter(q => q.source === 'due_review') as (SelectedQuestion & { source: 'due_review' })[],
+    rerankedCandidates.filter(q => q.source === 'new_card') as (SelectedQuestion & { source: 'new_card' })[],
+  );
+
+  // Step 6: Create session record
+  const sessionId = generateSessionId();
+
+  // Step 7: Compute metadata
+  const systemDist: Record<string, number> = {};
+  for (const q of combined) {
+    const sys = q.system ?? 'Unknown';
+    systemDist[sys] = (systemDist[sys] ?? 0) + 1;
+  }
 
   return {
-    sessionId: generateSessionId(),
+    sessionId,
     questions: combined,
-    metadata: buildMetadata(
-      combined,
-      selectedDue.length,
-      selectedResurfaced.length,
-      combined.filter((question) => question.source === 'new_card').length,
+    metadata: {
+      dueReviewCount: dueCount,
+      newCardCount: selectedNew.length,
+      systemDistribution: systemDist,
+      estimatedMinutes: Math.round((combined.length * AVG_SECONDS_PER_QUESTION) / 60),
       mode,
-      blueprintStage
-    ),
+      blueprintStage,
+    },
   };
 }
 
-// ─── Snapshot Loader ─────────────────────────────────────────────────────────
-
-async function loadAdaptiveSelectionSnapshot(
-  prisma: PrismaClient,
-  userId: string
-): Promise<AdaptiveProfileSnapshot> {
-  const since = new Date(Date.now() - ADAPTIVE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
-
-  const [progress, conditionAccuracy, reviewSignals, attemptSignals] = await Promise.all([
-    prisma.userProgress.findMany({
-      where: { userId },
-      select: {
-        conditionId: true,
-        system: true,
-        nextReviewAt: true,
-        fsrsStability: true,
-        accuracy: true,
-        totalAttempts: true,
-        correctCount: true,
-      },
-    }),
-    prisma.userConditionAccuracy.findMany({
-      where: { userId },
-      select: {
-        conditionId: true,
-        attemptCount: true,
-        correctCount: true,
-        lastAttemptedAt: true,
-      },
-    }),
-    prisma.reviewLog.findMany({
-      where: {
-        userId,
-        reviewedAt: { gte: since },
-        conditionId: { not: null },
-      },
-      select: {
-        conditionId: true,
-        system: true,
-        wasCorrect: true,
-        reviewedAt: true,
-      },
-      orderBy: { reviewedAt: 'desc' },
-      take: 600,
-    }),
-    prisma.questionAttempt.findMany({
-      where: {
-        userId,
-        createdAt: { gte: since },
-      },
-      select: {
-        questionId: true,
-        conditionId: true,
-        system: true,
-        wasCorrect: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 1000,
-    }),
-  ]);
-
-  return buildAdaptiveProfileSnapshot({
-    now: new Date(),
-    progress: progress.map((row) => ({
-      conditionId: row.conditionId,
-      system: row.system,
-      nextReviewAt: row.nextReviewAt,
-      stability: row.fsrsStability,
-      accuracy: row.accuracy,
-      totalAttempts: row.totalAttempts,
-      correctCount: row.correctCount,
-    })),
-    conditionAccuracy,
-    reviewSignals: reviewSignals
-      .filter((row): row is typeof row & { conditionId: string } => Boolean(row.conditionId))
-      .map((row) => ({
-        conditionId: row.conditionId,
-        system: row.system,
-        wasCorrect: row.wasCorrect,
-        reviewedAt: row.reviewedAt,
-      })),
-    attemptSignals,
-  });
-}
-
 // ─── Due Review Fetcher ──────────────────────────────────────────────────────
+
+interface ScopeFilter {
+  system?: string;
+  subcategory?: string;
+  conditionId?: string;
+  gatedSystems: string[];
+}
 
 async function fetchDueReviews(
   prisma: PrismaClient,
   userId: string,
   mode: SessionMode,
-  scope: ScopeFilter,
-  snapshot: AdaptiveProfileSnapshot,
-  blueprintWeights: Record<string, number>
+  scope: ScopeFilter
 ): Promise<SelectedQuestion[]> {
   const now = new Date();
+
+  // Build UserProgress filter for due cards
   const progressWhere: any = {
     userId,
     nextReviewAt: { lte: now },
   };
 
+  // Apply scope filters to the joined condition
   if (scope.system && (mode === 'system' || mode === 'subcategory')) {
     progressWhere.system = scope.system;
   }
@@ -368,6 +274,7 @@ async function fetchDueReviews(
     progressWhere.conditionId = scope.conditionId;
   }
 
+  // Exclude gated systems (didactic students)
   if (scope.gatedSystems.length > 0) {
     progressWhere.system = {
       ...(typeof progressWhere.system === 'string'
@@ -377,20 +284,25 @@ async function fetchDueReviews(
     };
   }
 
+  // Fetch due UserProgress entries with their linked questions
   const dueProgress = await prisma.userProgress.findMany({
     where: progressWhere,
-    orderBy: { nextReviewAt: 'asc' },
-    take: 100,
+    orderBy: [
+      { nextReviewAt: 'asc' }, // Most overdue first
+    ],
+    take: 100, // Cap to prevent huge queries
     select: {
       conditionId: true,
       system: true,
+      fsrsStability: true,
       nextReviewAt: true,
     },
   });
 
   if (dueProgress.length === 0) return [];
 
-  const conditionIds = dueProgress.map((progress) => progress.conditionId);
+  // For each due concept, find a question
+  const conditionIds = dueProgress.map(p => p.conditionId);
   const questionWhere: any = {
     conditionId: { in: conditionIds },
   };
@@ -401,46 +313,46 @@ async function fetchDueReviews(
 
   const questions = await prisma.question.findMany({
     where: questionWhere,
-    select: QUESTION_SELECT,
+    select: {
+      id: true,
+      question: true,
+      vignette: true,
+      options: true,
+      correctAnswer: true,
+      explanation: true,
+      system: true,
+      category: true,
+      topic: true,
+      difficulty: true,
+      conditionId: true,
+    },
   });
 
-  const byCondition = new Map<string, QuestionRow[]>();
-  for (const question of questions) {
-    if (!question.conditionId) continue;
-    const existing = byCondition.get(question.conditionId) ?? [];
-    existing.push(question);
-    byCondition.set(question.conditionId, existing);
+  // Group questions by conditionId, pick one per condition
+  const byCondition = new Map<string, typeof questions>();
+  for (const q of questions) {
+    if (!q.conditionId) continue;
+    const existing = byCondition.get(q.conditionId) ?? [];
+    existing.push(q);
+    byCondition.set(q.conditionId, existing);
   }
 
-  const leastSeenMap = await batchGetLeastSeenQuestions(prisma, userId, conditionIds).catch(
-    () => new Map<string, string | null>()
-  );
-
-  const selected: SelectedQuestion[] = [];
+  const result: SelectedQuestion[] = [];
   const usedQuestionIds = new Set<string>();
 
-  for (const progress of dueProgress) {
-    const candidates = byCondition.get(progress.conditionId) ?? [];
-    if (candidates.length === 0) continue;
+  // Batch pre-fetch least-seen questions for all conditions (3 queries instead of 3×N)
+  const leastSeenMap = await batchGetLeastSeenQuestions(
+    prisma, userId, conditionIds
+  ).catch(() => new Map<string, string | null>());
 
+  for (const progress of dueProgress) {
     const leastSeenId = leastSeenMap.get(progress.conditionId) ?? null;
-    const overdueDays = progress.nextReviewAt
-      ? Math.max(
-          0,
-          (now.getTime() - progress.nextReviewAt.getTime()) / (1000 * 60 * 60 * 24)
-        )
-      : 0;
-    const ranked = rankQuestionRows(
-      candidates,
-      'due_review',
-      snapshot,
-      blueprintWeights,
-      usedQuestionIds,
-      overdueDays,
-      leastSeenId
-    );
-    const picked = ranked[0]?.row;
-    if (!picked) continue;
+    const candidates = byCondition.get(progress.conditionId) ?? [];
+
+    // If leastSeenId points to a Question we already fetched, use it
+    const leastSeenCandidate = leastSeenId
+      ? candidates.find(c => c.id === leastSeenId && !usedQuestionIds.has(c.id))
+      : null;
 
     if (leastSeenCandidate) {
       usedQuestionIds.add(leastSeenCandidate.id);
@@ -463,61 +375,21 @@ async function fetchDueReviews(
     }
   }
 
-  return selected;
-}
-
-// ─── Missed Resurfacing ──────────────────────────────────────────────────────
-
-async function fetchMissedResurfacingQuestions(
-  prisma: PrismaClient,
-  userId: string,
-  mode: SessionMode,
-  scope: ScopeFilter,
-  snapshot: AdaptiveProfileSnapshot,
-  blueprintWeights: Record<string, number>,
-  excludeQuestionIds: Set<string>
-): Promise<SelectedQuestion[]> {
-  const eligibleQuestionIds = Object.values(snapshot.questions)
-    .filter((question) => question.resurfacingEligible)
-    .map((question) => question.questionId);
-
-  if (eligibleQuestionIds.length === 0) return [];
-
-  const where: any = {
-    id: { in: eligibleQuestionIds },
-  };
-
-  if (scope.system && (mode === 'system' || mode === 'subcategory')) {
-    where.system = scope.system;
-  }
-
-  if (scope.conditionId && mode === 'condition') {
-    where.conditionId = scope.conditionId;
-  }
-
-  if (scope.subcategory && mode === 'subcategory') {
-    where.subcategory = scope.subcategory;
-  }
-
-  if (!scope.system && scope.gatedSystems.length > 0) {
-    where.system = { notIn: scope.gatedSystems };
-  }
-
-  const questions = await prisma.question.findMany({
-    where,
-    select: QUESTION_SELECT,
-  });
-
-  return rankQuestionRows(
-    questions,
-    'missed_resurface',
-    snapshot,
-    blueprintWeights,
-    excludeQuestionIds
-  ).map((entry) => normalizeQuestion(entry.row, 'missed_resurface'));
+  return result;
 }
 
 // ─── New Card Fetcher ────────────────────────────────────────────────────────
+
+interface NewCardOptions {
+  blueprintWeights: Record<string, number>;
+  system?: string;
+  subcategory?: string;
+  conditionId?: string;
+  boostSystems: string[];
+  suppressSystems: string[];
+  perSystemCaps: Record<string, number>;
+  gatedSystems: string[];
+}
 
 async function fetchNewCards(
   prisma: PrismaClient,
@@ -528,47 +400,48 @@ async function fetchNewCards(
 ): Promise<SelectedQuestion[]> {
   if (count <= 0) return [];
 
+  // Get IDs of questions the user has already attempted (avoid repeating in session)
   const attemptedIds = await prisma.questionAttempt.findMany({
     where: { userId },
     select: { questionId: true },
     distinct: ['questionId'],
     take: 2000,
   });
-  const attemptedSet = new Set(
-    attemptedIds.map((attempt) => attempt.questionId).filter(Boolean)
-  );
-
-  for (const questionId of Array.from(options.excludeQuestionIds)) {
-    attemptedSet.add(questionId);
-  }
+  const attemptedSet = new Set(attemptedIds.map(a => a.questionId).filter(Boolean));
 
   if (mode === 'condition' && options.conditionId) {
-    return fetchScopedNew(prisma, count, attemptedSet, options, {
+    // Condition-scoped: all questions for this condition
+    return fetchScopedNew(prisma, count, attemptedSet, {
       conditionId: options.conditionId,
     });
   }
 
   if (mode === 'subcategory' && options.system && options.subcategory) {
-    return fetchScopedNew(prisma, count, attemptedSet, options, {
+    // Subcategory-scoped
+    return fetchScopedNew(prisma, count, attemptedSet, {
       system: options.system,
       subcategory: options.subcategory,
     });
   }
 
   if (mode === 'system' && options.system) {
-    return fetchScopedNew(prisma, count, attemptedSet, options, {
+    // System-scoped
+    return fetchScopedNew(prisma, count, attemptedSet, {
       system: options.system,
     });
   }
 
+  // Adaptive mode: distribute across systems proportional to blueprint weights
   return fetchAdaptiveNew(prisma, count, attemptedSet, options);
 }
 
+/**
+ * Fetch new questions for a scoped session (system/subcategory/condition).
+ */
 async function fetchScopedNew(
   prisma: PrismaClient,
   count: number,
   attemptedSet: Set<string>,
-  options: NewCardOptions,
   filter: { system?: string; subcategory?: string; conditionId?: string }
 ): Promise<SelectedQuestion[]> {
   const where: any = {};
@@ -576,11 +449,12 @@ async function fetchScopedNew(
   if (filter.subcategory) where.subcategory = filter.subcategory;
   if (filter.conditionId) where.conditionId = filter.conditionId;
 
+  // Fetch more than needed to filter out attempted questions
   const candidates = await prisma.question.findMany({
     where,
     select: QUESTION_SELECT,
-    take: count * 4,
-    orderBy: { id: 'asc' },
+    take: count * 3,
+    orderBy: { id: 'asc' }, // Deterministic ordering for pagination
   });
 
   const unseen = candidates.filter(q => !attemptedSet.has(q.id));
@@ -596,53 +470,92 @@ async function fetchScopedNew(
     .slice(0, count);
 }
 
+/**
+ * Fetch new questions distributed across systems proportional to blueprint weights.
+ * This is the "adaptive" mode where the system decides what mix to show.
+ */
 async function fetchAdaptiveNew(
   prisma: PrismaClient,
   totalCount: number,
   attemptedSet: Set<string>,
   options: NewCardOptions
 ): Promise<SelectedQuestion[]> {
-  const adjustedWeights = { ...options.blueprintWeights };
+  const { blueprintWeights, boostSystems, suppressSystems, perSystemCaps, gatedSystems } = options;
 
-  for (const gatedSystem of options.gatedSystems) {
-    delete adjustedWeights[gatedSystem];
+  // Adjust weights: boost under-represented, suppress over-represented
+  const adjustedWeights = { ...blueprintWeights };
+
+  for (const sys of boostSystems) {
+    if (adjustedWeights[sys]) adjustedWeights[sys] *= 1.5;
+  }
+  for (const sys of suppressSystems) {
+    if (adjustedWeights[sys]) adjustedWeights[sys] *= 0.5;
+  }
+  // Zero out gated systems
+  for (const sys of gatedSystems) {
+    delete adjustedWeights[sys];
   }
 
-  const systems = Object.keys(adjustedWeights).sort((left, right) => left.localeCompare(right));
-  if (systems.length === 0) return [];
+  // Renormalize
+  const totalWeight = Object.values(adjustedWeights).reduce((a, b) => a + b, 0);
+  if (totalWeight === 0) return [];
 
-  const allocation = allocateAdaptiveSystemCounts({
-    totalCount,
-    blueprintWeights: adjustedWeights,
-    systems,
-    snapshot: options.snapshot,
-    boostSystems: options.boostSystems,
-    suppressSystems: options.suppressSystems,
-    perSystemCaps: options.perSystemCaps,
-    maxSingleSystemFraction: MAX_SINGLE_SYSTEM_FRACTION,
-  });
+  for (const sys of Object.keys(adjustedWeights)) {
+    adjustedWeights[sys] /= totalWeight;
+  }
 
-  const selected: SelectedQuestion[] = [];
-  const sessionExcluded = new Set(attemptedSet);
+  // Calculate per-system allocation
+  const allocation: Record<string, number> = {};
+  let allocated = 0;
 
-  for (const system of systems) {
-    const targetCount = allocation[system] ?? 0;
+  for (const [sys, weight] of Object.entries(adjustedWeights)) {
+    let sysCount = Math.round(totalCount * weight);
+
+    // Apply per-system caps from anti-gaming
+    if (perSystemCaps[sys] !== undefined) {
+      sysCount = Math.min(sysCount, perSystemCaps[sys]);
+    }
+
+    // Apply max concentration cap
+    sysCount = Math.min(sysCount, Math.ceil(totalCount * MAX_SINGLE_SYSTEM_FRACTION));
+
+    allocation[sys] = sysCount;
+    allocated += sysCount;
+  }
+
+  // If under-allocated due to caps, distribute remainder to boosted systems
+  let remainder = totalCount - allocated;
+  if (remainder > 0) {
+    const boostable = boostSystems.length > 0
+      ? boostSystems
+      : Object.keys(adjustedWeights);
+
+    for (const sys of boostable) {
+      if (remainder <= 0) break;
+      const cap = perSystemCaps[sys] ?? Infinity;
+      const maxAdd = cap - (allocation[sys] ?? 0);
+      const add = Math.min(remainder, Math.max(0, maxAdd));
+      allocation[sys] = (allocation[sys] ?? 0) + add;
+      remainder -= add;
+    }
+  }
+
+  // Fetch questions per system
+  const allQuestions: SelectedQuestion[] = [];
+
+  for (const [sys, targetCount] of Object.entries(allocation)) {
     if (targetCount <= 0) continue;
 
     const candidates = await prisma.question.findMany({
-      where: { system },
+      where: { system: sys },
       select: QUESTION_SELECT,
-      take: Math.max(targetCount * 4, 12),
-      orderBy: { id: 'asc' },
+      take: targetCount * 3,
     });
 
-    const ranked = rankQuestionRows(
-      candidates,
-      'new_card',
-      options.snapshot,
-      adjustedWeights,
-      sessionExcluded
-    );
+    const unseen = candidates.filter(q => !attemptedSet.has(q.id));
+    const pool = unseen.length >= targetCount
+      ? unseen
+      : [...unseen, ...candidates.filter(q => attemptedSet.has(q.id))];
 
     const shuffled = shuffleArray(pool);
     const selected = shuffled
@@ -652,54 +565,53 @@ async function fetchAdaptiveNew(
     allQuestions.push(...selected);
   }
 
-  return selected;
+  return allQuestions;
 }
 
 // ─── Interleaving ────────────────────────────────────────────────────────────
 
+/**
+ * Interleave questions to avoid system blocking.
+ * Research: Brunmair & Richter (2019) — interleaved practice improves
+ * discrimination learning by +9 percentage points vs blocked practice.
+ *
+ * Strategy: Round-robin across systems, mixing due reviews and new cards.
+ * Never serve 3+ questions from the same system consecutively.
+ */
 function interleaveQuestions(
-  reviewLike: SelectedQuestion[],
-  newCards: SelectedQuestion[]
+  dueReviews: (SelectedQuestion & { source: 'due_review' })[],
+  newCards: (SelectedQuestion & { source: 'new_card' })[],
 ): SelectedQuestion[] {
-  const bySystem = new Map<string, SelectedQuestion[]>();
+  const all = [...shuffleArray(dueReviews), ...shuffleArray(newCards)];
 
-  for (const question of [...reviewLike, ...newCards]) {
-    const system = question.system ?? 'Unknown';
-    const existing = bySystem.get(system) ?? [];
-    existing.push(question);
-    bySystem.set(system, existing);
+  if (all.length <= 2) return all;
+
+  // Group by system
+  const bySystem = new Map<string, typeof all>();
+  for (const q of all) {
+    const sys = q.system ?? 'Unknown';
+    const existing = bySystem.get(sys) ?? [];
+    existing.push(q);
+    bySystem.set(sys, existing);
   }
 
+  // Round-robin across systems
   const result: SelectedQuestion[] = [];
-  let lastSystem: string | null = null;
+  const iterators = Array.from(bySystem.values()).map(qs => ({ items: qs, idx: 0 }));
 
-  while (true) {
-    const nextSystem = Array.from(bySystem.entries())
-      .filter(([, questions]) => questions.length > 0)
-      .sort((left, right) => {
-        const leftReviewLike = left[1].filter((question) => question.source !== 'new_card').length;
-        const rightReviewLike = right[1].filter((question) => question.source !== 'new_card').length;
-        if (rightReviewLike !== leftReviewLike) {
-          return rightReviewLike - leftReviewLike;
-        }
-        if (right[1].length !== left[1].length) {
-          return right[1].length - left[1].length;
-        }
-        const leftPenalty = left[0] === lastSystem ? 1 : 0;
-        const rightPenalty = right[0] === lastSystem ? 1 : 0;
-        if (leftPenalty !== rightPenalty) {
-          return leftPenalty - rightPenalty;
-        }
-        return left[0].localeCompare(right[0]);
-      })[0];
+  // Shuffle the order of systems for variety
+  shuffleArrayInPlace(iterators);
 
-    if (!nextSystem) break;
-
-    const nextQuestion = nextSystem[1].shift();
-    if (!nextQuestion) break;
-
-    result.push(nextQuestion);
-    lastSystem = nextSystem[0];
+  while (result.length < all.length) {
+    let addedThisRound = false;
+    for (const iter of iterators) {
+      if (iter.idx < iter.items.length) {
+        result.push(iter.items[iter.idx]);
+        iter.idx++;
+        addedThisRound = true;
+      }
+    }
+    if (!addedThisRound) break;
   }
 
   return result;
@@ -707,51 +619,52 @@ function interleaveQuestions(
 
 // ─── Bandit Reranking ───────────────────────────────────────────────────────
 
+/**
+ * Re-rank selected questions using LinUCB contextual bandit.
+ *
+ * Builds a BanditArm for each question from available metadata,
+ * scores them via the bandit, and returns questions in bandit-optimal order.
+ * Pure function — no database calls.
+ *
+ * @see lib/services/contextualBanditService.ts
+ */
 export function banditRerankQuestions(
-  questions: (SelectedQuestion & { source: AdaptiveQuestionSource })[],
-  request: Pick<
-    SessionRequest,
-    'banditState' | 'systemWeaknesses' | 'topicMasteryMap' | 'blueprintWeights' | 'banditConfig' | 'size'
-  >
-): (SelectedQuestion & { source: AdaptiveQuestionSource })[] {
+  questions: (SelectedQuestion & { source: 'due_review' | 'new_card' })[],
+  request: Pick<SessionRequest, 'banditState' | 'systemWeaknesses' | 'topicMasteryMap' | 'blueprintWeights' | 'banditConfig' | 'size'>
+): (SelectedQuestion & { source: 'due_review' | 'new_card' })[] {
   if (!request.banditState || questions.length <= 1) return questions;
 
-  const arms = questions.map((question, index) => {
+  const arms = questions.map((q, idx) => {
     const meta: QuestionMetadata = {
-      questionId: question.id,
-      system: question.system,
-      difficulty: question.difficulty,
-      topic: question.topic,
-      topicMastery: request.topicMasteryMap?.[question.conditionId ?? ''] ?? 0.5,
-      overdueRatio:
-        question.source === 'due_review' ? 1.0 : question.source === 'missed_resurface' ? 0.5 : 0,
-      systemWeakness: request.systemWeaknesses?.[question.system ?? ''] ?? 0.5,
-      blueprintWeight: request.blueprintWeights[question.system ?? ''] ?? 0.08,
-      daysSinceReview: question.source === 'new_card' ? undefined : 7,
-      sessionIndex: index,
+      questionId: q.id,
+      system: q.system,
+      difficulty: q.difficulty,
+      topic: q.topic,
+      topicMastery: request.topicMasteryMap?.[q.conditionId ?? ''] ?? 0.5,
+      overdueRatio: q.source === 'due_review' ? 1.0 : 0.0,
+      systemWeakness: request.systemWeaknesses?.[q.system ?? ''] ?? 0.5,
+      blueprintWeight: request.blueprintWeights[q.system ?? ''] ?? 0.08,
+      daysSinceReview: q.source === 'due_review' ? 7 : undefined,
+      sessionIndex: idx,
       sessionSize: request.size,
     };
-
     return buildBanditArm(meta);
   });
 
-  const scored: ScoredArm[] = rankCandidates(
-    arms,
-    request.banditState,
-    request.banditConfig
-  );
+  const scored: ScoredArm[] = rankCandidates(arms, request.banditState, request.banditConfig);
 
+  // Build a map from questionId → rank position
   const rankMap = new Map<string, number>();
-  scored.forEach((entry, index) => rankMap.set(entry.questionId, index));
+  scored.forEach((s, i) => rankMap.set(s.questionId, i));
 
-  return [...questions].sort((left, right) => {
-    const leftRank = rankMap.get(left.id) ?? questions.length;
-    const rightRank = rankMap.get(right.id) ?? questions.length;
-    if (leftRank !== rightRank) {
-      return leftRank - rightRank;
-    }
-    return left.id.localeCompare(right.id);
+  // Sort questions by bandit rank (lower rank = higher UCB score)
+  const sorted = [...questions].sort((a, b) => {
+    const rankA = rankMap.get(a.id) ?? questions.length;
+    const rankB = rankMap.get(b.id) ?? questions.length;
+    return rankA - rankB;
   });
+
+  return sorted;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -771,43 +684,51 @@ const QUESTION_SELECT = {
 } as const;
 
 function normalizeQuestion(
-  raw: QuestionRow,
-  source: AdaptiveQuestionSource
+  raw: any,
+  source: 'due_review' | 'new_card'
 ): SelectedQuestion {
-  const rawOptions = raw.options;
-  const options: string[] = Array.isArray(rawOptions)
-    ? rawOptions.map((option) => String(option))
-    : rawOptions && typeof rawOptions === 'object'
-      ? Object.values(rawOptions as Record<string, string>).map((option) => String(option))
+  // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array
+  const rawOpts = raw.options;
+  const opts: string[] = Array.isArray(rawOpts)
+    ? rawOpts
+    : rawOpts && typeof rawOpts === 'object'
+      ? Object.values(rawOpts as Record<string, string>)
       : [];
 
-  let correctAnswerIndex: number | null = null;
+  // Derive correctAnswerIndex from letter key (A=0, B=1, ..., E=4) or string match
+  // Uses canonical converter — returns null on invalid input instead of silently falling back to 0
+  let correctIdx: number | null = null;
   if (typeof raw.correctAnswer === 'string') {
-    const letterIndex = letterToIndex(raw.correctAnswer);
-    if (letterIndex !== null && letterIndex < options.length) {
-      correctAnswerIndex = letterIndex;
+    const letterIdx = letterToIndex(raw.correctAnswer);
+    if (letterIdx !== null && letterIdx < opts.length) {
+      correctIdx = letterIdx;
     } else {
-      const textIndex = options.findIndex((option) => option === raw.correctAnswer);
-      correctAnswerIndex = textIndex >= 0 ? textIndex : null;
+      // Full-text match fallback
+      const textIdx = opts.findIndex((o) => o === raw.correctAnswer);
+      correctIdx = textIdx >= 0 ? textIdx : null;
     }
   }
 
-  if (correctAnswerIndex === null) {
-    logger.warn(`[${LOG_SCOPE}] normalizeQuestion: could not resolve correctAnswerIndex`, {
-      questionId: raw.id,
-      correctAnswer: raw.correctAnswer,
-      optionsCount: options.length,
-    });
-    correctAnswerIndex = -1;
+  if (correctIdx === null) {
+    // Log but don't crash — return with index -1 so callers can filter
+    logger.warn(
+      `[${LOG_SCOPE}] normalizeQuestion: could not resolve correctAnswerIndex`,
+      {
+        questionId: raw.id,
+        correctAnswer: raw.correctAnswer,
+        optionsCount: opts.length,
+      }
+    );
+    correctIdx = -1;
   }
 
   return {
     id: raw.id,
     question: raw.question,
     vignette: raw.vignette ?? null,
-    options,
-    correctAnswer: raw.correctAnswer ?? '',
-    correctAnswerIndex,
+    options: opts,
+    correctAnswer: raw.correctAnswer,
+    correctAnswerIndex: correctIdx,
     explanation: raw.explanation ?? null,
     system: raw.system ?? null,
     category: raw.category ?? null,
@@ -830,6 +751,19 @@ function isUsableSelectedQuestion(question: SelectedQuestion): boolean {
 
 function generateSessionId(): string {
   const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
+  const rand = Math.random().toString(36).substring(2, 8);
   return `ses_${ts}_${rand}`;
+}
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  shuffleArrayInPlace(copy);
+  return copy;
+}
+
+function shuffleArrayInPlace<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
 }

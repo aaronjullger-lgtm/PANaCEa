@@ -138,8 +138,6 @@ import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain'
 import { useAnalyticsTracking, type QuestionMeta } from '@/hooks/useAnalyticsTracking';
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 import { computeScore } from '@/lib/scoring/computeScore';
-import { getServerQuestionId, getStableQuestionId } from '@/lib/study/questionIdentity';
-import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -196,8 +194,6 @@ export interface QuizViewProps {
   modeLabel?: string;
   /** Optional external session identifier used by some parent modes */
   sessionId?: string | null;
-  /** Controls whether the queue is finite or can replenish continuously */
-  queueStrategy?: 'auto' | 'finite' | 'continuous';
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -370,8 +366,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   isFullSitDownTest = false,
   totalQuestions,
   modeLabel,
-  sessionId,
-  queueStrategy = 'auto',
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
@@ -406,15 +400,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- CLERK USER & AUTH ----
   const { user } = useUser();
   const { getToken } = useAuth();
-  const recordStudyAttempt = useStudyStore((state) => state.recordAttempt);
-  const sessionEngine = useStudySessionEngine(sessionId);
-  const {
-    progress: sessionProgress,
-    pauseSession: pauseStudySession,
-    resumeSession: resumeStudySession,
-    advanceSession: advanceStudySession,
-    recordSessionResponse,
-  } = sessionEngine;
 
   // ---- ADVANCED ANALYTICS ----
   const { recordQuestionResult, cognitiveState, recommendations } = useAdvancedAnalytics();
@@ -484,7 +469,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     sessionSettings,
     growthAreas,
     getToken,
-    queueStrategy,
   });
 
   // Report issue modal state
@@ -591,51 +575,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     },
   });
-
-  const didRestoreFromSessionEngine = useRef(false);
-
-  useEffect(() => {
-    if (!sessionId || !sessionProgress || didRestoreFromSessionEngine.current) {
-      return;
-    }
-
-    resumeStudySession();
-
-    if (shouldRestore) {
-      return;
-    }
-
-    const resumeIndex = Math.min(
-      sessionProgress.currentQuestionIndex,
-      Math.max(0, initialQueue.length - 1)
-    );
-    if (resumeIndex <= 0) {
-      didRestoreFromSessionEngine.current = true;
-      return;
-    }
-
-    const resumedQueue = initialQueue.slice(resumeIndex);
-    setQueue(resumedQueue);
-    setParentQueue(resumedQueue);
-    setCurrentQuestion(resumedQueue[0] ?? null);
-    setQuestionNumber(sessionProgress.questionNumber);
-    didRestoreFromSessionEngine.current = true;
-  }, [
-    initialQueue,
-    sessionId,
-    sessionProgress,
-    resumeStudySession,
-    setParentQueue,
-    shouldRestore,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (sessionId) {
-        pauseStudySession();
-      }
-    };
-  }, [pauseStudySession, sessionId]);
 
   // Debounced save function
   const debouncedSave = useRef(
@@ -834,10 +773,6 @@ const QuizView: React.FC<QuizViewProps> = ({
         const [, ...rest] = prev;
         const newQueue = rest;
 
-        if (sessionId) {
-          advanceStudySession();
-        }
-
         setParentQueue(newQueue);
 
         // Finite sessions ONLY: REVIEW / REVIEW FLAGGED - show summary when done
@@ -877,8 +812,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     implicitMetrics,
     behavioralTracker,
     microKinetics,
-    advanceStudySession,
-    sessionId,
   ]);
 
   // Initialize from incoming queue once.
@@ -958,7 +891,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
 
     const { isCorrect, timeToAnswer, questionId, parTime, telemetryWithPosition } = score;
-    const serverQuestionId = getServerQuestionId(currentQuestion);
 
     // Feed the wellness engine for mid-session diminishing returns detection
     sessionWellness.recordAttempt(isCorrect, timeToAnswer);
@@ -972,10 +904,10 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Persist the answer IMMEDIATELY (before any async operations) so the user
     // can't lose data by navigating away or the tab closing mid-submit.
-    if (user?.id && serverQuestionId) {
+    if (user?.id && currentQuestion.id) {
       try {
         syncManager.queueReview({
-          questionId: serverQuestionId,
+          questionId: currentQuestion.id,
           selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
           timeSpentMs: timeToAnswer,
           timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
@@ -993,40 +925,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       } catch (err) {
         quizLogger.error('Failed to queue review for offline sync', { error: err });
       }
-    }
-
-    recordStudyAttempt({
-      sessionId: sessionId ?? null,
-      questionId,
-      canonicalQuestionId: serverQuestionId,
-      questionNumber,
-      source: 'session',
-      result: isCorrect ? 'correct' : 'incorrect',
-      selectedAnswer:
-        (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
-      selectedAnswerIndex,
-      timeSpentMs: timeToAnswer,
-      system: currentQuestion.system ?? null,
-      conditionId: currentQuestion.conditionId ?? null,
-      syncState: serverQuestionId ? 'queued' : 'local',
-    });
-
-    if (sessionId) {
-      recordSessionResponse({
-        questionId,
-        canonicalQuestionId: serverQuestionId,
-        questionNumber,
-        questionIndex: Math.max(0, questionNumber - 1),
-        result: isCorrect ? 'correct' : 'incorrect',
-        selectedAnswer:
-          (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
-        selectedAnswerIndex,
-        timeSpentMs: timeToAnswer,
-        submittedAt: Date.now(),
-        system: currentQuestion.system ?? null,
-        conditionId: currentQuestion.conditionId ?? null,
-        syncState: serverQuestionId ? 'queued' : 'local',
-      });
     }
 
     // Note: Removed showOptimisticFeedback() call - user feedback on correctness
@@ -1089,7 +987,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       // Trigger causal chain generation (tier1 Item 4) — fires async in background
       if (!isExamSimulator && currentQuestion.condition) {
         causalChainHook.generate({
-          questionId: serverQuestionId ?? questionId,
+          questionId: questionId,
           questionText: currentQuestion.question || '',
           correctAnswer: currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '',
           condition: currentQuestion.condition,
@@ -1131,7 +1029,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     try {
       if (typeof recordQuestionResult === 'function') {
         recordQuestionResult({
-          questionId,
+          questionId: currentQuestion.id || `temp-${questionNumber}`,
           responseTimeMs: timeToAnswer,
           wasCorrect: isCorrect,
           difficulty: (currentQuestion.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
@@ -1206,7 +1104,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Track answer in session analytics (local state for session summary)
     recordSessionAnswer(
-      questionId,
+      currentQuestion.id || `temp-${questionNumber}`,
       isCorrect,
       currentQuestion.system || 'Unknown',
       timeToAnswer
@@ -1238,8 +1136,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     eliminatedAnswers,
     questionNumber,
     implicitMetrics,
-    recordSessionResponse,
-    sessionId,
   ]);
 
   // Keep the ref current so the keyboard hook's onSubmitAnswer always calls the latest version
@@ -1795,7 +1691,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         <FlagQuestionModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
-          questionId={getServerQuestionId(currentQuestion) ?? getStableQuestionId(currentQuestion)}
+          questionId={currentQuestion.id || `temp-${Date.now()}`}
           questionText={currentQuestion.question}
           correctAnswer={
             typeof currentQuestion.correctIndex === 'number'
@@ -1823,7 +1719,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       <Suspense fallback={null}>
       <SessionEndSummary
         isOpen={showSessionEndSummary}
-        sessionId={sessionId}
         celebrateStreak={performanceData.length >= 10}
         onClose={() => {
           setShowSessionEndSummary(false);

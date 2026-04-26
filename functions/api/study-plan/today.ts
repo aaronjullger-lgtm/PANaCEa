@@ -1,3 +1,16 @@
+/**
+ * GET /api/study-plan/today
+ *
+ * Returns today's recommended study allocation split between MAIN (readiness)
+ * and TARGETED (FSRS retention) sessions.
+ *
+ * Response shape: DailyStudyAllocation — see dailyStudyAllocatorService.ts
+ *
+ * Security: Authenticated endpoint — requires valid Clerk JWT.
+ *
+ * Sprint: Dual-Study Allocator — April 2026
+ */
+
 import { z } from 'zod';
 import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
@@ -5,21 +18,9 @@ import { getDailyStudyAllocation } from '../../../lib/services/dailyStudyAllocat
 import { getOrCreateDailyStudyPlan, sanitizeStudyPlanTasks } from '../../../lib/services/studyPlanService';
 import { resolveOrCreateUserId } from '../_shared/user-resolver';
 
+// GET endpoint — no request body needed
 const EmptySchema = z.object({});
-
-async function getInternalUserId(
-  prisma: ReturnType<typeof createEdgePrismaClient>,
-  clerkId: string
-) {
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    select: { id: true },
-  });
-  if (!user) {
-    throw new Error('User not found');
-  }
-  return user.id;
-}
+type EmptyQuery = z.infer<typeof EmptySchema>;
 
 export const onRequestOptions = withCors();
 
