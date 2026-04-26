@@ -356,7 +356,10 @@ async function fetchDueReviews(
 
     if (leastSeenCandidate) {
       usedQuestionIds.add(leastSeenCandidate.id);
-      result.push(normalizeQuestion(leastSeenCandidate, 'due_review'));
+      const normalized = normalizeQuestion(leastSeenCandidate, 'due_review');
+      if (isUsableSelectedQuestion(normalized)) {
+        result.push(normalized);
+      }
       continue;
     }
 
@@ -366,7 +369,10 @@ async function fetchDueReviews(
 
     const picked = available[Math.floor(Math.random() * available.length)];
     usedQuestionIds.add(picked.id);
-    result.push(normalizeQuestion(picked, 'due_review'));
+    const normalized = normalizeQuestion(picked, 'due_review');
+    if (isUsableSelectedQuestion(normalized)) {
+      result.push(normalized);
+    }
   }
 
   return result;
@@ -458,7 +464,10 @@ async function fetchScopedNew(
 
   // Shuffle and take
   const shuffled = shuffleArray(pool);
-  return shuffled.slice(0, count).map(q => normalizeQuestion(q, 'new_card'));
+  return shuffled
+    .map(q => normalizeQuestion(q, 'new_card'))
+    .filter(isUsableSelectedQuestion)
+    .slice(0, count);
 }
 
 /**
@@ -549,8 +558,11 @@ async function fetchAdaptiveNew(
       : [...unseen, ...candidates.filter(q => attemptedSet.has(q.id))];
 
     const shuffled = shuffleArray(pool);
-    const selected = shuffled.slice(0, targetCount);
-    allQuestions.push(...selected.map(q => normalizeQuestion(q, 'new_card')));
+    const selected = shuffled
+      .map(q => normalizeQuestion(q, 'new_card'))
+      .filter(isUsableSelectedQuestion)
+      .slice(0, targetCount);
+    allQuestions.push(...selected);
   }
 
   return allQuestions;
@@ -725,6 +737,16 @@ function normalizeQuestion(
     conditionId: raw.conditionId ?? null,
     source,
   };
+}
+
+function isUsableSelectedQuestion(question: SelectedQuestion): boolean {
+  return (
+    typeof question.question === 'string' &&
+    question.question.trim().length > 0 &&
+    question.options.length >= 2 &&
+    question.correctAnswerIndex >= 0 &&
+    question.correctAnswerIndex < question.options.length
+  );
 }
 
 function generateSessionId(): string {

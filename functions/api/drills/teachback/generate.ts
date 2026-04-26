@@ -17,8 +17,9 @@
  */
 
 import { authenticatedEndpoint } from '../../_shared/middleware';
-import { ok } from '../../_shared/endpoint';
+import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { z } from 'zod';
 
 const querySchema = z.object({
@@ -141,23 +142,23 @@ export const onRequestGet = authenticatedEndpoint(
   querySchema,
   async (context) => {
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-    const userId = context.auth.userId;
-    const systemFilter = context.data?.system;
+    const systemFilter = context.validated?.system;
 
     try {
+      const user = await resolveUserByClerkId(prisma, context.auth.userId);
+      if (!user) {
+        return fail(ErrorCode.NOT_FOUND, { message: 'User not found' });
+      }
+
       // Find topics the student has demonstrated mastery of (stability > 30 days, reps ≥ 5)
       const masteredSystems = await prisma.userProgress.findMany({
         where: {
-          userId,
-          stability: { gte: 30 },
-          reps: { gte: 5 },
+          userId: user.id,
+          fsrsStability: { gte: 30 },
+          fsrsReps: { gte: 5 },
         },
         select: {
-          question: {
-            select: {
-              questionData: true,
-            },
-          },
+          system: true,
         },
         take: 100,
       });
@@ -165,9 +166,8 @@ export const onRequestGet = authenticatedEndpoint(
       // Extract systems the student has mastered
       const masteredSystemSet = new Set<string>();
       for (const progress of masteredSystems) {
-        const qData = progress.question?.questionData as Record<string, unknown> | null;
-        if (qData?.system && typeof qData.system === 'string') {
-          masteredSystemSet.add(qData.system);
+        if (progress.system) {
+          masteredSystemSet.add(progress.system);
         }
       }
 

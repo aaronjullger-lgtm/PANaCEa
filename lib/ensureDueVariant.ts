@@ -179,7 +179,7 @@ export async function ensureDueVariant(
 
     // Adaptive strategy selection (priority order):
     //   1. confusion pairs present  → different_distractors  (target the misconception)
-    //   2. ≥3 consecutive incorrect → decomposition          (find the prerequisite gap)
+    //   2. ≥3 consecutive incorrect → different_scenario     (test transfer after repeated misses)
     //   3. 2  consecutive incorrect → different_scenario     (test transfer of learning)
     //   4. otherwise               → rephrased               (lower bar: just re-exposure)
     let targetType: VariantType = 'rephrased';
@@ -193,7 +193,7 @@ export async function ensureDueVariant(
           select: { consecutiveWrong: true },
         });
         if (weakness) {
-          if (weakness.consecutiveWrong >= 3) targetType = 'decomposition';
+          if (weakness.consecutiveWrong >= 3) targetType = 'different_scenario';
           else if (weakness.consecutiveWrong >= 2) targetType = 'different_scenario';
         }
       } catch {
@@ -210,7 +210,7 @@ export async function ensureDueVariant(
         targetType,
         confusionPairs: confusionPairs.length > 0 ? confusionPairs : undefined,
       },
-      apiKey
+      { env: { GEMINI_API_KEY: apiKey ?? '' } }
     );
     if (!variant?.question || !Array.isArray(variant.options) || variant.options.length === 0) {
       log?.warn('Due variant: generation returned no usable variant', { conditionId });

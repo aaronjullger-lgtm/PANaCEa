@@ -50,8 +50,9 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
       const payload = (await res.json()) as
         | { passages?: CuratedPassage[] }
         | { data?: { passages?: CuratedPassage[] } };
-      const root = 'data' in payload && payload.data ? payload.data : payload;
-      const list = (root?.passages || []) as CuratedPassage[];
+      const wrapped = payload as { data?: { passages?: CuratedPassage[] } };
+      const flat = payload as { passages?: CuratedPassage[] };
+      const list = wrapped.data?.passages ?? flat.passages ?? [];
       setPassages(list);
     } catch (e) {
       setError('Error loading passages. See console for details.');

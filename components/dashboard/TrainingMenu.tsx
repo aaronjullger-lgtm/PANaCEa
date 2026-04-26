@@ -46,6 +46,7 @@ import {
 import { useUserContext } from '@/hooks/useUserContext';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { getDashboardConfig } from '@/lib/services/dashboardPersonalization';
+import { filterPrivateBetaModes } from '@/lib/modes/privateBetaVisibility';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -143,10 +144,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const drillModes = useMemo(() => {
     const allModes = MODE_REGISTRY.filter((mode) => !HIDDEN_DRILL_MODES.includes(mode.id));
     // When searching, show all modes so the user can discover hidden ones
-    if (searchQuery.trim()) return allModes;
+    if (searchQuery.trim()) return filterPrivateBetaModes(allModes);
     // Otherwise, filter to stage-appropriate modes + always show coming-soon for discovery
-    return allModes.filter(
-      (mode) => dashboardConfig.visibleModes.includes(mode.id) || mode.isComingSoon
+    return filterPrivateBetaModes(
+      allModes.filter((mode) => dashboardConfig.visibleModes.includes(mode.id) || mode.isComingSoon)
     );
   }, [dashboardConfig.visibleModes, searchQuery]);
 

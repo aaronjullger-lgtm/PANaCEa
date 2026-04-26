@@ -540,7 +540,7 @@ async function executeCore<T>(
 
     // ── Structured: parse + validate ──
     const parse = parseStructured<T>(invokeResult.response.text, args.schema);
-    if (parse.ok) {
+    if (parse.ok === true) {
       return {
         response: invokeResult.response,
         validated: parse.data,
@@ -611,7 +611,7 @@ async function executeCore<T>(
     }
 
     const reparse = parseStructured<T>(repaired.response.text, args.schema);
-    if (reparse.ok) {
+      if (reparse.ok === true) {
       return {
         response: repaired.response,
         validated: reparse.data,

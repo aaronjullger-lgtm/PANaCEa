@@ -7,7 +7,8 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, type CloudflareContext } from '../_shared/middleware';
+import { featureDisabledResponse, isFeatureEnabled } from '../_shared/feature-flags';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import type { CloudflareEnv } from '../_shared/types';
@@ -21,7 +22,7 @@ const IntentClassifySchema = z.object({
   }),
 });
 
-export const onRequestPost = authenticatedEndpoint(
+const classifyIntentHandler = authenticatedEndpoint(
   IntentClassifySchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/osce/intent', auth.userId);
@@ -68,6 +69,17 @@ export const onRequestPost = authenticatedEndpoint(
     }
   },
 );
+
+export const onRequestPost = (context: CloudflareContext) => {
+  if (!isFeatureEnabled(context.env, 'ENABLE_OSCE_BETA')) {
+    return featureDisabledResponse(
+      context.request,
+      'OSCE beta endpoints are disabled for this launch.'
+    );
+  }
+
+  return classifyIntentHandler(context);
+};
 
 // Load auxiliary agent prompt from YAML
 async function loadAuxiliaryPrompt(): Promise<{

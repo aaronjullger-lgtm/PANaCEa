@@ -240,7 +240,7 @@ export async function generateBatchVariants(
                 : JSON.stringify(sourceQuestion.explanation),
             targetType: variantType,
           },
-          apiKey
+          { env: { GEMINI_API_KEY: apiKey ?? '' } }
         );
 
         if (!variant?.question || !Array.isArray(variant.options) || variant.options.length === 0) {

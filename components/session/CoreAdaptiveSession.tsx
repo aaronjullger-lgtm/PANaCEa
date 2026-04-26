@@ -28,6 +28,7 @@ import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/ty
 import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
 import { SessionScopeSelector } from '@/components/session/SessionScopeSelector';
 import { DrillLoadingState } from '@/components/loading';
+import { createApiClient } from '@/lib/sdk';
 
 const QuizView = lazy(() => import('@/components/session/QuizView'));
 
@@ -35,6 +36,16 @@ const QuizView = lazy(() => import('@/components/session/QuizView'));
 
 interface CoreAdaptiveSessionProps {
   onExit: () => void;
+  initialScope?: {
+    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
+    size: number;
+    system?: string;
+    systems?: string[];
+    subcategory?: string;
+    conditionId?: string;
+  } | null;
+  studyPlanTaskId?: string | null;
+  studyPlanSource?: string | null;
   // Shared quiz props passed from DrillViewRouter
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: QuizQuestion) => void;
@@ -122,6 +133,9 @@ interface SessionSummaryResponse {
 
 const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   onExit,
+  initialScope = null,
+  studyPlanTaskId = null,
+  studyPlanSource = null,
   addPerformanceRecord,
   addMissedQuestion,
   updateReviewQuestion,
@@ -160,14 +174,15 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   });
 
   // Session scope state (set by SessionScopeSelector)
-  const [showScopeSelector, setShowScopeSelector] = useState(true);
+  const [showScopeSelector, setShowScopeSelector] = useState(() => !initialScope);
   const [sessionScope, setSessionScope] = useState<{
     mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
     size: number;
     system?: string;
+    systems?: string[];
     subcategory?: string;
     conditionId?: string;
-  } | null>(null);
+  } | null>(initialScope);
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -176,6 +191,14 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [rotationNotice, setRotationNotice] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  const initialScopeKey = JSON.stringify(initialScope ?? null);
+
+  useEffect(() => {
+    if (!initialScope) return;
+    setSessionScope(initialScope);
+    setShowScopeSelector(false);
+  }, [initialScope, initialScopeKey]);
 
   // ── Initialize: resolve blueprint + check distribution + fetch questions ──
   // Only runs after the user has selected a session scope (or skipped via Quick Start)
@@ -187,19 +210,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     async function initialize() {
       try {
         setIsLoading(true);
-        const token = await getToken();
-        if (!token || cancelled) return;
+        const api = createApiClient(getToken);
 
         // Step 1: Resolve blueprint (calls our new API endpoint)
-        const bpResponse = await fetch('/api/study/resolve-blueprint', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!bpResponse.ok) {
-          throw new Error(`Blueprint resolution failed: ${bpResponse.status}`);
-        }
-
-        const bp = (await bpResponse.json()) as ResolvedBlueprintResponse;
+        const bp = await api.get<ResolvedBlueprintResponse>('/api/study/resolve-blueprint');
         if (cancelled) return;
 
         setBlueprint({
@@ -221,17 +235,13 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
         // Step 2: Check distribution for anti-gaming constraints
         let distData: DistributionCheckResponse | null = null;
-        const distResponse = await fetch('/api/study/check-distribution', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ weights: bp.weights }),
-        });
+        const distResponse = await api.postResult<DistributionCheckResponse>(
+          '/api/study/check-distribution',
+          { weights: bp.weights },
+        );
 
         if (distResponse.ok) {
-          distData = (await distResponse.json()) as DistributionCheckResponse;
+          distData = distResponse.data;
           if (!cancelled) {
             setDistribution({
               isBalanced: distData.isBalanced,
@@ -245,13 +255,9 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
         }
 
         // Step 3: Fetch questions using blueprint weights + distribution constraints + user scope
-        const sessionResponse = await fetch('/api/study/session/generate', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        const session = await api.post<GeneratedStudySessionResponse>(
+          '/api/study/session/generate',
+          {
             mode: scope.mode,
             size: scope.size,
             blueprintWeights: bp.weights,
@@ -265,16 +271,11 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             urgencyMultiplier: bp.urgencyMultiplier,
             // Scope filters from user selection
             system: scope.system,
+            systems: scope.systems,
             subcategory: scope.subcategory,
             conditionId: scope.conditionId,
-          }),
-        });
-
-        if (!sessionResponse.ok) {
-          throw new Error(`Session generation failed: ${sessionResponse.status}`);
-        }
-
-        const session = (await sessionResponse.json()) as GeneratedStudySessionResponse;
+          },
+        );
         if (cancelled) return;
 
         setSessionId(session.sessionId ?? null);
@@ -308,17 +309,26 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       const token = await getToken();
       if (!token) { onExit(); return; }
 
-      const res = await fetch('/api/study/session-summary', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId }),
-      });
+      const api = createApiClient(getToken);
+      const summaryResult = await api.postResult<SessionSummaryResponse>(
+        '/api/study/session-summary',
+        { sessionId },
+      );
 
-      if (res.ok) {
-        const summary = (await res.json()) as SessionSummaryResponse;
+      if (summaryResult.ok) {
+        const summary = summaryResult.data;
+        if (studyPlanTaskId && studyPlanSource === 'study-plan') {
+          void api.postResult('/api/users/me/daily-plan', {
+            action: 'complete',
+            taskId: studyPlanTaskId,
+            questionsAnswered: summary.totalQuestions ?? questions.length,
+            accuracy:
+              summary.totalQuestions && summary.totalQuestions > 0
+                ? (summary.correctAnswers ?? 0) / summary.totalQuestions
+                : undefined,
+            durationMinutes: Math.max(1, Math.round(((summary.totalQuestions ?? questions.length) * 90) / 60)),
+          });
+        }
         setSessionSummary(summary);
         setShowSummary(true);
         return; // Don't exit yet — show summary overlay first
@@ -328,7 +338,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     }
 
     onExit(); // Fallback: exit if summary fails
-  }, [sessionId, getToken, onExit]);
+  }, [sessionId, getToken, onExit, studyPlanTaskId, studyPlanSource, questions.length]);
 
   // ── Distribution health helpers ──
   const distributionBadge = useMemo(() => {

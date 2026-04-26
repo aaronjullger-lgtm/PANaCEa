@@ -13,39 +13,6 @@ import {
 } from '@/src/registries/physiologyRegistry';
 import { TREATMENT_REGISTRY, type TreatmentMeta } from '@/src/registries/treatmentRegistry';
 
-const FALLBACK_DRUGS: Array<DrugSearchResult & { score: number }> = [
-  {
-    id: 'prozac',
-    drugName: 'Prozac',
-    genericName: 'Fluoxetine',
-    drugClass: 'SSRI',
-    subclass: 'Antidepressant',
-    type: 'drug',
-    aliases: ['fluoxetine', 'Sarafem'],
-    score: 1,
-  },
-  {
-    id: 'aspirin',
-    drugName: 'Aspirin',
-    genericName: 'Aspirin',
-    drugClass: 'NSAID',
-    subclass: 'Analgesic',
-    type: 'drug',
-    aliases: ['acetylsalicylic acid', 'ASA'],
-    score: 1,
-  },
-  {
-    id: 'neomycin',
-    drugName: 'Neomycin',
-    genericName: 'Neomycin',
-    drugClass: 'Antibiotic',
-    subclass: 'Aminoglycoside',
-    type: 'drug',
-    aliases: ['neomycin sulfate'],
-    score: 1,
-  },
-];
-
 export type UnifiedSearchResultType =
   | 'condition'
   | 'drug'
@@ -144,28 +111,6 @@ function similarityScore(query: string, target: string): number {
   if (wordBoundary.test(normalizedTarget)) return 2.3;
 
   return 0;
-}
-
-function fallbackDrugSearch(
-  query: string,
-  limit: number
-): Array<DrugSearchResult & { score: number }> {
-  const normalizedQuery = query.toLowerCase().trim();
-  if (!normalizedQuery) return [];
-
-  return FALLBACK_DRUGS.map((drug) => {
-    const candidates = [
-      drug.drugName,
-      drug.genericName || '',
-      drug.subclass || '',
-      drug.drugClass || '',
-    ];
-    const bestScore = Math.max(...candidates.map((name) => similarityScore(normalizedQuery, name)));
-    return { ...drug, score: bestScore };
-  })
-    .filter((drug) => drug.score > 0.3)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
 }
 
 /**
@@ -314,10 +259,7 @@ export async function unifiedSearch(
   // Search all content types
   const conditionResults = await searchConditions(trimmedQuery);
   const drugResultsRaw = await searchDrugs(trimmedQuery);
-  const drugResults =
-    drugResultsRaw && drugResultsRaw.length > 0
-      ? drugResultsRaw
-      : fallbackDrugSearch(trimmedQuery, limit);
+  const drugResults = drugResultsRaw ?? [];
   const testResults = searchSpecialTestsInternal(trimmedQuery);
   const physiologyResults = searchPhysiologyInternal(trimmedQuery);
   const treatmentResults = searchTreatmentsInternal(trimmedQuery);

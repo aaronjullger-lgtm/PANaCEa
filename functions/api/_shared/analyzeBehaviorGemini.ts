@@ -19,6 +19,7 @@ import { gateway, GatewayError, type GatewayContext } from '../../../lib/ai/aiGa
 import {
   BehaviorGradeSchema,
   BEHAVIOR_GRADE_DESCRIPTION,
+  type BehaviorGrade,
 } from '../../../lib/ai/schemas/grading';
 import { deriveContinuousRating } from '../../../lib/implicit-metrics';
 
@@ -91,7 +92,7 @@ export async function analyzeBehaviorGemini(
   const ctx: GatewayContext = { env };
 
   try {
-    const result = await gateway.grade<typeof BehaviorGradeSchema._type>(ctx, {
+    const result = await gateway.grade<BehaviorGrade>(ctx, {
       schema: BehaviorGradeSchema,
       schemaDescription: BEHAVIOR_GRADE_DESCRIPTION,
       endpoint: '/api/srs/analyze-behavior',

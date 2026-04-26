@@ -1,6 +1,6 @@
 // AppRoutes.tsx — All <Routes> / <Route> definitions extracted from App.tsx.
 // Imported and rendered by App.tsx inside the provider tree.
-import React, { Suspense, useRef, useEffect } from 'react';
+import React, { Suspense, useRef, useEffect, useMemo } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, HelpCircle } from 'lucide-react';
@@ -49,6 +49,7 @@ import {
   StudyPathDashboard,
   LectureConverterPage,
   TechniqueCheckPage,
+  CoreAdaptiveSession,
 } from './lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/loading';
@@ -59,6 +60,7 @@ import { AdminRoute } from '../components/auth/AdminRoute';
 import { AuthenticatedRoute } from '../components/auth/AuthenticatedRoute';
 import { ProductTour } from '../components/onboarding/ProductTour';
 import { WithGeminiErrorBoundary, ErrorBoundary } from '../components/error/ErrorBoundary';
+import { isPrivateBetaRouteVisible } from '@/lib/modes/privateBetaVisibility';
 import type {
   Question as QuizQuestion,
   PerformanceRecord,
@@ -70,6 +72,94 @@ import type {
 // Re-export SimulationFocus type so callers can reference it
 export type SimulationFocus = 'all' | 'growth' | 'flagged' | 'due';
 type OnboardingStep = 'profile' | 'baseline' | 'your_plan';
+
+const PrivateBetaUnavailable: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <AppLayout contentMaxWidth="48rem">
+      <div className="mx-auto flex min-h-[50vh] max-w-xl flex-col justify-center px-6 py-16">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+            Private beta
+          </p>
+          <h1 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">
+            This workspace is not part of the beta yet.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+            Your beta access is focused on the core study loop: dashboard, focused practice,
+            answer submission, review timing, and progress updates.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.STUDY)}
+            className="mt-6 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+          >
+            Return to Study
+          </button>
+        </div>
+      </div>
+    </AppLayout>
+  );
+};
+
+const privateBetaElement = (path: string, element: React.ReactElement) =>
+  isPrivateBetaRouteVisible(path) ? (
+    element
+  ) : (
+    <AuthenticatedRoute>
+      <PrivateBetaUnavailable />
+    </AuthenticatedRoute>
+  );
+
+function splitLaunchList(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseMainSessionLaunch(search: string): {
+  scope: {
+    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
+    size: number;
+    system?: string;
+    systems?: string[];
+    subcategory?: string;
+    conditionId?: string;
+  };
+  taskId: string | null;
+  source: string | null;
+} {
+  const params = new URLSearchParams(search);
+  const systems = splitLaunchList(params.get('systems'));
+  const conditions = splitLaunchList(params.get('conditions'));
+  const conditionId = params.get('conditionId') ?? conditions[0] ?? undefined;
+  const sizeParam = Number(params.get('size') ?? params.get('count') ?? '20');
+  const size = Number.isFinite(sizeParam) ? Math.min(100, Math.max(5, Math.round(sizeParam))) : 20;
+  const requestedMode = params.get('mode');
+  const mode =
+    conditionId || requestedMode === 'condition'
+      ? 'condition'
+      : requestedMode === 'system' || systems.length === 1
+        ? 'system'
+        : requestedMode === 'subcategory'
+          ? 'subcategory'
+          : 'adaptive';
+
+  return {
+    scope: {
+      mode,
+      size,
+      system: systems[0],
+      systems: systems.length > 0 ? systems : undefined,
+      subcategory: params.get('topic') ?? params.get('subcategory') ?? undefined,
+      conditionId,
+    },
+    taskId: params.get('taskId'),
+    source: params.get('source'),
+  };
+}
 
 export interface AppRoutesProps {
   // View state
@@ -274,7 +364,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       ? '80rem'
       : normalizedView === 'quiz' || normalizedView === 'session_runner'
         ? '64rem'
-        : '56rem';
+      : '56rem';
+  const mainSessionLaunch = useMemo(
+    () => parseMainSessionLaunch(location.search),
+    [location.search]
+  );
 
   // Scroll to top on route change (replaces ScrollRestoration which requires data router)
   useEffect(() => {
@@ -381,6 +475,36 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         }
       />
       <Route
+        path="/study/main-session"
+        element={
+          <AuthenticatedRoute>
+            <AppLayout contentMaxWidth="64rem">
+              <Suspense fallback={<Loader message="Loading study session…" />}>
+                <ErrorBoundary variant="page">
+                  <CoreAdaptiveSession
+                    onExit={() => navigate(ROUTES.STUDY)}
+                    initialScope={mainSessionLaunch.scope}
+                    studyPlanTaskId={mainSessionLaunch.taskId}
+                    studyPlanSource={mainSessionLaunch.source}
+                    addPerformanceRecord={addPerformanceRecord}
+                    addMissedQuestion={addMissedQuestion}
+                    updateReviewQuestion={updateReviewQuestion}
+                    updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                    performanceData={performanceData}
+                    fontSizeAdjustment={fontSizeAdjustment}
+                    setFontSizeAdjustment={setFontSizeAdjustment}
+                    flaggedQuestions={flaggedQuestions}
+                    addFlaggedQuestion={addFlaggedQuestion}
+                    removeFlaggedQuestion={removeFlaggedQuestion}
+                    updateQuestionNote={updateQuestionNote}
+                  />
+                </ErrorBoundary>
+              </Suspense>
+            </AppLayout>
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
         path="/gap-analysis"
         element={
           <AuthenticatedRoute>
@@ -433,7 +557,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       />
       <Route
         path="/live-collaboration"
-        element={
+        element={privateBetaElement(
+          '/live-collaboration',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading live study session..." />}>
@@ -443,11 +568,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       <Route
         path="/explorer"
-        element={
+        element={privateBetaElement(
+          '/explorer',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading cross‑system explorer..." />}>
@@ -457,7 +583,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       {/* ── Admin routes — client-side guarded by AdminRoute ── */}
       <Route
@@ -534,7 +660,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       />
       <Route
         path="/clinical-eye"
-        element={
+        element={privateBetaElement(
+          '/clinical-eye',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
@@ -544,11 +671,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       <Route
         path="/visualizer"
-        element={
+        element={privateBetaElement(
+          '/visualizer',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading visualizer…" />}>
@@ -558,11 +686,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       <Route
         path="/lecture-converter"
-        element={
+        element={privateBetaElement(
+          '/lecture-converter',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading lecture converter…" />}>
@@ -572,11 +701,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       <Route
         path="/technique-check"
-        element={
+        element={privateBetaElement(
+          '/technique-check',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading technique check…" />}>
@@ -586,7 +716,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       <Route
         path="*"

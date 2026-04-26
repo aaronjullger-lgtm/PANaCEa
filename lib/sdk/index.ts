@@ -28,9 +28,12 @@ export { createContentClient, type ContentClient } from './contentClient';
 // Shared types
 export {
   ApiError,
+  apiErrorToResult,
   type TokenProvider,
   type SdkClientOptions,
   type WrappedResponse,
+  type ApiErrorPayload,
+  type ApiResult,
   type DrillSubmitPayload,
   type DrillSubmitResult,
   type SessionGeneratePayload,

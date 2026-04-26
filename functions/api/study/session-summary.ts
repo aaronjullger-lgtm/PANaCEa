@@ -20,6 +20,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   analyzeDistribution,
 } from '../../../lib/services/antiGamingDistribution';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 const SessionSummarySchema = z.object({
   body: z.object({
@@ -38,17 +39,16 @@ export const onRequestPost = authenticatedEndpoint(
       prisma = createEdgePrismaClient(env.DATABASE_URL);
       const { sessionId } = validated.body;
 
-      // Resolve internal user ID
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      // Resolve internal user ID. First-login users may not have a webhook-created
+      // row yet; summary should still return a safe empty-state response.
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
       // Fetch the session and its reviews
-      const session = await prisma.studySession.findUnique({
-        where: { id: sessionId },
+      const session = await prisma.studySession.findFirst({
+        where: { id: sessionId, userId: user.id },
         select: {
           id: true,
+          userId: true,
           blueprintLabel: true,
           blueprintStage: true,
           blueprintExamTypes: true,
@@ -58,10 +58,7 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       if (!session) {
-        return new Response(
-          JSON.stringify({ error: 'Session not found' }),
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
-        );
+        return { status: 404, error: 'Session not found' };
       }
 
       // Get reviews from this specific session
@@ -155,6 +152,20 @@ export const onRequestPost = authenticatedEndpoint(
         );
       }
 
+      const correctAnswers = sessionReviews.filter((review) => review.wasCorrect).length;
+      const accuracy = totalReviews > 0 ? correctAnswers / totalReviews : 0;
+
+      await prisma.studySession.update({
+        where: { id: session.id },
+        data: {
+          endedAt: new Date(),
+          correctAnswers,
+          accuracy,
+          totalQuestions: Math.max(session.totalQuestions ?? 0, totalReviews),
+          updatedAt: new Date(),
+        },
+      });
+
       logger.info('Session summary generated', {
         sessionId,
         totalReviews,
@@ -162,12 +173,12 @@ export const onRequestPost = authenticatedEndpoint(
         rollingBalanced: rollingHealth?.isBalanced ?? null,
       });
 
-      return new Response(
-        JSON.stringify({
+      return {
+        data: {
           sessionId,
           blueprintLabel: session.blueprintLabel,
-          totalQuestions: session.totalQuestions,
-          correctAnswers: session.correctAnswers,
+          totalQuestions: Math.max(session.totalQuestions ?? 0, totalReviews),
+          correctAnswers,
           sessionBreakdown,
           rollingHealth: rollingHealth
             ? {
@@ -179,15 +190,11 @@ export const onRequestPost = authenticatedEndpoint(
               }
             : null,
           recommendations,
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+        },
+      };
     } catch (err: any) {
       logger.error('Session summary failed', { error: err.message });
-      return new Response(
-        JSON.stringify({ error: err.message ?? 'Internal error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return { status: 500, error: 'Unable to summarize this session right now.' };
     } finally {
       await safePrismaDisconnect(prisma);
     }

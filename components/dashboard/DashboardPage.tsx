@@ -38,7 +38,7 @@ import { DrillRecommendationCard } from './DrillRecommendationCard';
 import { RetentionForecastCard } from './RetentionForecastCard';
 import { StudyActionList, type StudyAction } from './StudyActionCard';
 import { TodayPlanCard } from './TodayPlanCard';
-import { useTodayPlan } from '@/hooks/useTodayPlan';
+import { useTodayPlan, type TodayPlanData } from '@/hooks/useTodayPlan';
 import { RatingHealthCard } from './RatingHealthCard';
 import { useRatingAudit } from '@/hooks/useRatingAudit';
 import { BlueprintProgressBar } from './BlueprintProgressBar';
@@ -72,6 +72,25 @@ import { getDashboardConfig, type DashboardConfig, type WidgetId } from '@/lib/s
 const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
 
 export type DashboardViewId = 'pilot' | 'data';
+type TodayPlanTask = NonNullable<TodayPlanData['tasks']>[number];
+
+function buildStudyPlanTaskRoute(
+  task: TodayPlanTask | undefined,
+  fallbackPath: string,
+  fallbackParams: Record<string, string>
+): string {
+  const route = task?.route && task.route.startsWith('/') ? task.route : fallbackPath;
+  const url = new URL(route, 'https://panacea.local');
+  const launchParams = task?.launchParams ?? {};
+
+  for (const [key, value] of Object.entries({ ...fallbackParams, ...launchParams })) {
+    if (value) url.searchParams.set(key, value);
+  }
+  if (task?.id) url.searchParams.set('taskId', task.id);
+  if (!url.searchParams.has('source')) url.searchParams.set('source', 'study-plan');
+
+  return `${url.pathname}${url.search}`;
+}
 
 const DASHBOARD_VIEWS: Array<{
   id: DashboardViewId;
@@ -723,13 +742,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 isLoading={todayPlanLoading}
                 error={todayPlanError}
                 onRefresh={refreshTodayPlan}
-                onStartMain={(systems) => {
-                  const params = systems?.length ? `?systems=${systems.join(',')}` : '';
-                  handleNavigation(`/study/main-session${params}`);
+                onStartMain={(systems, task) => {
+                  handleNavigation(
+                    buildStudyPlanTaskRoute(task, '/study/main-session', {
+                      mode: 'adaptive',
+                      systems: systems?.join(',') ?? '',
+                    })
+                  );
                 }}
-                onStartTargeted={(conditions) => {
-                  const params = conditions?.length ? `?conditions=${conditions.join(',')}` : '';
-                  handleNavigation(`/study/targeted-session${params}`);
+                onStartTargeted={(conditions, task) => {
+                  handleNavigation(
+                    buildStudyPlanTaskRoute(task, '/study/main-session', {
+                      mode: 'condition',
+                      conditions: conditions?.join(',') ?? '',
+                      conditionId: conditions?.[0] ?? '',
+                    })
+                  );
                 }}
               />
 

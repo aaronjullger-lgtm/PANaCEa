@@ -4,6 +4,56 @@ Last updated: 2026-04-26
 
 This file is the source of truth for bringing StudyPANaCEa to production. It intentionally excludes visual polish unless the visual issue blocks a user flow.
 
+## 2026-04-26 Gated Core Launch Implementation Batch
+
+Production target for this batch: make the controlled beta launch surface smoke-testable and block unsafe legacy/mock paths by default.
+
+Implemented:
+
+- Added a standard `FEATURE_DISABLED` API error code and shared feature-flag helper.
+- Gated legacy exam endpoints by default:
+  - `/api/exam/start`
+  - `/api/exam/complete`
+  - Existing behavior is reachable only with `ENABLE_LEGACY_EXAM_API=true`.
+- Gated OSCE beta/mock endpoints by default:
+  - `/api/osce/intent`
+  - `/api/osce/patient`
+  - `/api/osce/evaluate`
+  - Existing behavior is reachable only with `ENABLE_OSCE_BETA=true`.
+- Added `playwright.production-smoke.config.ts`, `e2e/production-smoke/core-launch.spec.ts`, and `npm run test:e2e:production-smoke`.
+  - Uses `BASE_URL`.
+  - Does not depend on `e2e/auth.setup.ts` or committed auth storage state.
+  - Fails fast when `E2E_REQUIRE_AUTH=1` and Clerk smoke credentials are missing.
+  - Saves auth state only under Playwright test output.
+- Added smoke coverage for `/api/health`, `/study`, standard unauthenticated 401 shape, Clerk sign-in, hidden private-beta route states, command-palette route exposure, session generation, session resume fetch, answer attempt idempotency, dashboard/progress fetch, today-plan task launch, task completion, and condition/drug search.
+- Hid disabled private-beta routes from the app-level command palette.
+- Made study-plan launch context deterministic:
+  - Daily plan tasks now include `source`, `mode`, filter params, and `taskId`.
+  - Targeted study-plan tasks now launch the core `/study/main-session` path instead of the production-deferred rapid-recall route.
+  - `/study/main-session` is now a real authenticated route instead of a redirect that dropped query context.
+  - `CoreAdaptiveSession` can auto-start from query-derived launch scope and completes a daily-plan task on session summary when launched with `source=study-plan`.
+- Fixed `/session/:sessionId` refresh/resume to attach the Clerk token when hydrating session questions from the backend.
+
+Verification:
+
+- Passed: `npm run test -- functions/api/_shared/__tests__/error-catalog.test.ts functions/api/exam/feature-disabled.test.ts functions/api/osce/feature-disabled.test.ts` — 3 files, 20 tests.
+- Passed: `npm run test -- lib/services/studyPlanService.test.ts functions/api/_shared/__tests__/error-catalog.test.ts functions/api/exam/feature-disabled.test.ts functions/api/osce/feature-disabled.test.ts` — 4 files, 26 tests.
+- Passed: `npx playwright test --config=playwright.production-smoke.config.ts --list` — 4 smoke tests discovered.
+- Passed: `npm run env:check:backend`; preview KV placeholder warning remains until operator wiring.
+- Passed: `npx prisma validate`; existing Prisma referential-action warning remains.
+- Passed: `npm run typecheck`.
+- Passed: `npm run lint` with existing warning budget, 0 errors.
+- Passed: targeted production-flow suite — 9 files, 82 tests.
+- Passed: `npm run test:critical` — 6 files, 142 tests.
+- Passed: `npm run build`; Sentry sourcemap upload warned locally because `sentry.io` DNS is unavailable, build continued.
+- Passed: `npm run build:check-size`.
+
+Remaining launch risks after this batch:
+
+- `npm run test:e2e:production-smoke` still needs to be run against Wrangler/preview with `E2E_CLERK_TEST_EMAIL` and `E2E_CLERK_TEST_PASSWORD`.
+- `/api/health` production smoke will only pass when Cloudflare database, Clerk, cache, and content bindings are configured.
+- Full broad-public `npm run typecheck:all` remains a tracked non-core hardening backlog.
+
 ## 2026-04-26 Private Beta Production Completion Batch
 
 Production target for this batch: harden the launch-critical study loop without expanding the beta surface.

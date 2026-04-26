@@ -345,8 +345,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         const payload = (await res.json()) as
           | { passages?: CuratedPassageView[] }
           | { data?: { passages?: CuratedPassageView[] } };
-        const root = 'data' in payload && payload.data ? payload.data : payload;
-        const list = (root?.passages || []) as CuratedPassageView[];
+        const wrapped = payload as { data?: { passages?: CuratedPassageView[] } };
+        const flat = payload as { passages?: CuratedPassageView[] };
+        const list = wrapped.data?.passages ?? flat.passages ?? [];
         if (!cancelled && list.length > 0) {
           setCuratedPassage(list[0] ?? null);
         } else if (!cancelled) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { SessionSettings, Question, PerformanceRecord } from '@/types';
 import { QuizViewWithErrorBoundary } from '@/components/session/QuizViewWithErrorBoundary';
@@ -100,6 +101,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
   removeDueConcept,
 }) => {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -117,10 +119,21 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SESSION_QUESTIONS(sessionId)));
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Sign in to resume this session.');
+      }
+
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SESSION_QUESTIONS(sessionId)), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Failed to fetch session: ${response.status} ${text}`);
+        const body = await response.json().catch(() => null);
+        const message =
+          body?.error?.message ??
+          body?.message ??
+          `Failed to fetch session: ${response.status}`;
+        throw new Error(message);
       }
       const json = await response.json();
       const { questions: questionList, session } = extractSessionPayload(json);
@@ -140,7 +153,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [getToken, sessionId]);
 
   useEffect(() => {
     fetchSession();

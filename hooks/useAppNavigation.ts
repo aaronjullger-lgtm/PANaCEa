@@ -33,11 +33,6 @@ function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): Vie
     navigate('/study/utilities', { replace: true });
     return 'redirect';
   }
-  if (path === '/study/main-session' || path === '/study/main-session/') {
-    navigate('/study', { replace: true });
-    return 'redirect';
-  }
-
   // Use unified route registry to determine view
   const view = getViewForPath(path);
 

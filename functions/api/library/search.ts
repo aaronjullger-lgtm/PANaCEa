@@ -123,5 +123,5 @@ export const onRequestGet = aiEndpoint(
       await safePrismaDisconnect(prisma);
     }
   },
-  { source: 'query' }
+  { source: 'query', requestsPerMinute: 10 }
 );

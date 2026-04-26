@@ -17,6 +17,7 @@ import { InlineSpinner } from '@/components/loading';
 import { MODE_REGISTRY } from '@/config/training-modes';
 import { NAV_RAIL_ITEMS } from '@/config/navigation';
 import { getRecentModeIds, recordRecentMode, MAX_RECENT_MODES } from '@/lib/recentModes';
+import { filterPrivateBetaModes } from '@/lib/modes/privateBetaVisibility';
 import { safeFetchJson } from '@/lib/utils/safeFetch';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
@@ -124,9 +125,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
       try {
         setSearchError(null);
-        const data = await safeFetchJson<{ results?: ApiSearchResult[] }>(
+        const payload = await safeFetchJson<{
+          data?: { results?: ApiSearchResult[] };
+          results?: ApiSearchResult[];
+        }>(
           getApiEndpoint('/api/content/search') + `?q=${encodeURIComponent(searchQuery)}&limit=10`
         );
+        const data = payload.data ?? payload;
         return data.results || [];
       } catch (error) {
         console.error('Search API error:', error);
@@ -159,12 +164,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           : [];
 
         const recentIds = getRecentModeIds();
-        const modeMap = new Map(MODE_REGISTRY.map((m) => [m.id, m]));
+        const betaVisibleModes = filterPrivateBetaModes(MODE_REGISTRY);
+        const modeMap = new Map(betaVisibleModes.map((m) => [m.id, m]));
         const recentModes = recentIds
           .map((id) => modeMap.get(id as import('@/config/training-modes').TrainingModeId))
           .filter((m): m is (typeof MODE_REGISTRY)[0] => !!m);
         const recentIdsSet = new Set(recentModes.map((m) => m.id));
-        const otherModes = MODE_REGISTRY.filter((m) => !recentIdsSet.has(m.id)).slice(
+        const otherModes = betaVisibleModes.filter((m) => !recentIdsSet.has(m.id)).slice(
           0,
           Math.max(0, MAX_RECENT - recentModes.length)
         );
@@ -192,7 +198,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       const lowerQuery = debouncedQuery.toLowerCase();
 
       // Search training modes (client-side, instant)
-      MODE_REGISTRY.forEach((mode) => {
+      filterPrivateBetaModes(MODE_REGISTRY).forEach((mode) => {
         if (
           mode.label.toLowerCase().includes(lowerQuery) ||
           mode.description.toLowerCase().includes(lowerQuery) ||

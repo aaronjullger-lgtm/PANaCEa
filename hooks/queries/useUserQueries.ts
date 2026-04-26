@@ -11,8 +11,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { createApiClient } from '@/lib/sdk';
 import { createUserClient } from '@/lib/sdk/userClient';
+import type { FSRSParamsResponse } from '@/lib/sdk/userClient';
 import { queryKeys } from '@/lib/queryKeys';
-import type { UserProfile, UserStats, FSRSParams } from '@/lib/sdk/types';
+import type { UserProfile, UserStats } from '@/lib/sdk/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ export function useUserFSRSParams() {
   const { isSignedIn } = useAuth();
   const client = useUserClient();
 
-  return useQuery<FSRSParams>({
+  return useQuery<FSRSParamsResponse>({
     queryKey: queryKeys.user.fsrsParams(),
     queryFn: () => client.getFSRSParams(),
     enabled: !!isSignedIn,

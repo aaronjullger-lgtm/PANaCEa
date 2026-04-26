@@ -574,6 +574,7 @@ class SyncManager {
               answerChangedCount: answer.answerChangedCount,
             }),
             ...(answer.durationMs != null && { durationMs: answer.durationMs }),
+            idempotencyKey: answer.id,
           }),
         });
 

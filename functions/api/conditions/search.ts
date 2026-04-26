@@ -6,18 +6,30 @@
  * Condition metadata is public curriculum content
  */
 
-import { publicEndpoint, withCors} from '../_shared/middleware';
+import { Prisma } from '@prisma/client';
+import { publicEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
 const SearchSchema = z.object({
-  query: z.object({
-    q: z.string().min(1, 'Search query is required'),
-    system: z.string().optional(),
-    subcategory: z.string().optional(),
-    limit: z.coerce.number().min(1).max(100).optional().default(30),
-  }),
+  q: z.string().min(1, 'Search query is required').max(200),
+  system: z.string().optional(),
+  subcategory: z.string().optional(),
+  limit: z.coerce.number().min(1).max(100).optional().default(30),
 });
+
+function sanitizeSearchQuery(query: string): string {
+  const withoutControlChars = Array.from(query, (char) => {
+    const code = char.charCodeAt(0);
+    return code <= 31 || code === 127 ? ' ' : char;
+  }).join('');
+
+  return withoutControlChars.replace(/\s+/g, ' ').trim().slice(0, 200);
+}
+
+function jsonStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
 
 /**
  * Calculate relevance score for a search result
@@ -74,7 +86,11 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { q: query, system, subcategory, limit } = validated.query;
+    const { system, subcategory, limit } = validated;
+    const query = sanitizeSearchQuery(validated.q);
+    if (!query) {
+      return { data: [] };
+    }
 
     // Build where clause for filtering
     const where: any = {
@@ -95,12 +111,16 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
         ...where,
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } },
           { subcategory: { contains: query, mode: 'insensitive' } },
+          { aliases: { hasSome: [query, query.toLowerCase(), query.toUpperCase()] } },
         ],
       },
       select: {
         id: true,
         name: true,
+        displayName: true,
+        aliases: true,
         system: true,
         subcategory: true,
         status: true,
@@ -111,6 +131,8 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
     type ConditionResult = {
       id: string;
       name: string;
+      displayName: string | null;
+      aliases: string[];
       system: string;
       subcategory: string | null;
       status: string | null;
@@ -138,12 +160,18 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
     // Score and rank results
     const results = conditions
       .map((condition: ConditionResult) => {
-        const aliases = (synonymsMap.get(condition.id) || []) as string[];
-        const score = calculateRelevanceScore(query, condition.name, aliases);
+        const aliases = Array.from(
+          new Set([...(condition.aliases || []), ...((synonymsMap.get(condition.id) || []) as string[])])
+        );
+        const displayName = condition.displayName || condition.name;
+        const score = Math.max(
+          calculateRelevanceScore(query, condition.name, aliases),
+          calculateRelevanceScore(query, displayName, aliases)
+        );
 
         return {
           id: condition.id,
-          condition: condition.name,
+          condition: displayName,
           system: condition.system,
           subcategory: condition.subcategory,
           aliases,
@@ -177,31 +205,40 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
     const FALLBACK_THRESHOLD = 3;
     if (results.length < FALLBACK_THRESHOLD) {
       try {
-        type FTSRow = { id: string; condition: string; conditionId: string; system: string; subcategory: string | null; synonyms: unknown };
-        const ftsRows = await prisma.$queryRawUnsafe<FTSRow[]>(
-          `SELECT id, condition, "conditionId", system, subcategory, synonyms
-           FROM "MedicalContent"
-           WHERE status = 'published'
-             AND search_vector @@ websearch_to_tsquery('english', $1)
-             ${system ? `AND system = $2` : ''}
-           ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', $1)) DESC
-           LIMIT $${system ? 3 : 2}`,
-          ...(system ? [query, system, limit] : [query, limit])
-        );
+        type FTSRow = {
+          id: string;
+          condition: string;
+          conditionId: string;
+          system: string;
+          subcategory: string | null;
+          synonyms: unknown;
+        };
+        const systemFilter = system ? Prisma.sql`AND system = ${system}` : Prisma.empty;
+        const ftsRows = await prisma.$queryRaw<FTSRow[]>`
+          SELECT id, condition, "conditionId", system, subcategory, synonyms
+          FROM "MedicalContent"
+          WHERE status = 'published'
+            ${systemFilter}
+            AND search_vector IS NOT NULL
+            AND search_vector @@ websearch_to_tsquery('english', ${query})
+          ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${query})) DESC
+          LIMIT ${limit}
+        `;
 
         const existingIds = new Set(results.map((r) => r.id));
         for (const row of ftsRows) {
-          if (existingIds.has(row.id)) continue;
-          const aliases = Array.isArray(row.synonyms) ? (row.synonyms as string[]) : [];
+          const resultId = row.conditionId || row.id;
+          if (existingIds.has(resultId)) continue;
+          const aliases = jsonStringArray(row.synonyms);
           results.push({
-            id: row.id,
+            id: resultId,
             condition: row.condition,
             system: row.system,
             subcategory: row.subcategory,
             aliases,
             score: 0.9, // FTS hit without string score — treated as high-relevance
           });
-          existingIds.add(row.id);
+          existingIds.add(resultId);
         }
       } catch {
         // FTS fallback is best-effort — never block the primary response
@@ -212,4 +249,4 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query' });

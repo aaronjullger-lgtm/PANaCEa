@@ -14,7 +14,8 @@ import {
   type EdgePrismaClient,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { resolveUserId } from '../_shared/user-resolver';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
+import { getReviewQueueStats } from '../../../lib/services/dashboardAnalyticsService';
 
 const ReviewQueueSchema = z.object({});
 
@@ -44,22 +45,22 @@ export const onRequestGet = authenticatedEndpoint(ReviewQueueSchema, async (cont
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const userId = await resolveUserId(prisma, auth.userId);
-    if (!userId) {
-      return { status: 404, error: 'User not found' };
-    }
+    const userId = await resolveOrCreateUserId(prisma, auth.userId);
 
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    const pending = await prisma.studyRecommendation.findMany({
-      where: {
-        userId,
-        type: 'review',
-        status: 'pending',
-      },
-      select: { id: true, topic: true, reason: true, priority: true, data: true },
-    });
+    const [pending, reviewQueueStats] = await Promise.all([
+      prisma.studyRecommendation.findMany({
+        where: {
+          userId,
+          type: 'review',
+          status: 'pending',
+        },
+        select: { id: true, topic: true, reason: true, priority: true, data: true },
+      }),
+      getReviewQueueStats(prisma as any, userId),
+    ]);
 
     const dueToday: ReviewItem[] = [];
     for (const rec of pending) {
@@ -94,7 +95,8 @@ export const onRequestGet = authenticatedEndpoint(ReviewQueueSchema, async (cont
     return {
       data: {
         dueToday,
-        count: dueToday.length,
+        count: Math.max(dueToday.length, reviewQueueStats.dueNow),
+        reviewQueueStats,
       },
     };
   } catch (error) {
@@ -106,4 +108,4 @@ export const onRequestGet = authenticatedEndpoint(ReviewQueueSchema, async (cont
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query', requestsPerMinute: 60 });

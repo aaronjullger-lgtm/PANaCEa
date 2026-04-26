@@ -16,7 +16,7 @@ import type { DrillSubmitPayload, DrillSubmitResult } from '@/lib/sdk/types';
 
 function useDrillsClient() {
   const { getToken } = useAuth();
-  return createDrillsClient(createApiClient(getToken));
+  return createDrillsClient(createApiClient(getToken), { getToken });
 }
 
 // ─── Mutations ──────────────────────────────────────────────────────────────

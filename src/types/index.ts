@@ -39,6 +39,8 @@ export interface GroundingSource {
 export interface Question {
   /** Unique identifier for tracking */
   id?: string;
+  /** Legacy API identifier used by older sync endpoints. */
+  questionId?: string;
   /** Optional vignette text for long-form stems */
   vignette?: string;
   /** Legacy alias for question text used by older generated content */
@@ -103,6 +105,8 @@ export type QuizQuestion = Question;
 export type ErrorTag = 'knowledge_gap' | 'misread_question' | 'guessing';
 
 export interface PerformanceRecord {
+  /** Optional persisted attempt identifier from cloud sync. */
+  id?: string;
   timestamp: number;
 
   // What was shown

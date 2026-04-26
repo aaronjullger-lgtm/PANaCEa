@@ -3,7 +3,8 @@
  * Start a new PANCE/PANRE-LA exam attempt
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, type CloudflareContext } from '../_shared/middleware';
+import { featureDisabledResponse, isFeatureEnabled } from '../_shared/feature-flags';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -20,7 +21,7 @@ const StartExamSchema = z.object({
   }),
 });
 
-export const onRequestPost = authenticatedEndpoint(
+const startExamHandler = authenticatedEndpoint(
   StartExamSchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/exam/start', auth.userId);
@@ -232,3 +233,15 @@ export const onRequestPost = authenticatedEndpoint(
     }
   }
 );
+
+export const onRequestPost = (context: CloudflareContext) => {
+  if (!isFeatureEnabled(context.env, 'ENABLE_LEGACY_EXAM_API')) {
+    return featureDisabledResponse(
+      context.request,
+      'Legacy exam API is disabled for this launch.',
+      410
+    );
+  }
+
+  return startExamHandler(context);
+};

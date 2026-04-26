@@ -18,13 +18,14 @@
 
 import { z } from 'zod';
 import { authenticateRequest } from './auth';
-import { getCorsHeaders, handleCorsPreflightSecure } from './cors';
+import { getCorsConfig, getCorsHeaders, handleCorsPreflightSecure } from './cors';
 import { validateFunctionEnv, MissingEnvError, type EnvRequirement } from './env-validation';
 import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
 import { withStructuredLogging } from './structuredLogger';
 import { envelopeFromHandlerResult, envelopeInternalError } from './api-response';
+import { ErrorCode } from './error-catalog';
 import { resolveRequestId } from './requestLogger';
 
 // ============================================================================
@@ -63,7 +64,16 @@ export interface ValidatedContext<T = any> extends CloudflareContext {
 /**
  * Handler response format
  */
-export type HandlerResponse = Response | { status?: number; data?: any; error?: string };
+export type HandlerResponse =
+  | Response
+  | {
+      status?: number;
+      data?: any;
+      error?: string;
+      code?: string;
+      details?: unknown;
+      headers?: Record<string, string>;
+    };
 
 /**
  * Middleware function type
@@ -196,7 +206,7 @@ export function withCors(options: { allowedOrigins?: string[] } = {}): Middlewar
 
     // Add CORS headers if not already present
     if (response instanceof Response) {
-      const corsHeaders = getCorsHeaders(context.request);
+      const corsHeaders = getCorsHeaders(context.request, getCorsConfig(context.env));
       if (corsHeaders) {
         const headers = new Headers(response.headers);
         Object.entries(corsHeaders).forEach(([key, value]) => {
@@ -487,6 +497,10 @@ export function withErrorHandling(options: { includeStack?: boolean } = {}): Mid
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
+      const isProduction =
+        context.env?.ENVIRONMENT === 'production' ||
+        context.env?.NODE_ENV === 'production' ||
+        context.env?.VITE_APP_ENV === 'production';
 
       logger.error('Handler error', error, {
         path: new URL(context.request.url).pathname,
@@ -494,8 +508,9 @@ export function withErrorHandling(options: { includeStack?: boolean } = {}): Mid
 
       return {
         status: 500,
+        code: ErrorCode.INTERNAL_ERROR,
         error:
-          options.includeStack && errorStack
+          options.includeStack && !isProduction && errorStack
             ? `${errorMessage}\n${errorStack}`
             : 'Internal server error',
       };
@@ -543,7 +558,9 @@ export function withRateLimit(options: {
 
       return {
         status: 429,
+        code: ErrorCode.RATE_LIMITED,
         error: getRateLimitErrorMessage(options.endpointType),
+        headers: { 'Retry-After': '60' },
       };
     }
 

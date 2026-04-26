@@ -79,6 +79,15 @@ describe('createApiClient', () => {
     expect(result).toEqual({ totalAttempts: 42 });
   });
 
+  it('unwraps { ok: true, data: T } production envelope', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ ok: true, data: { dueCount: 7 } })
+    );
+
+    const result = await api.get<{ dueCount: number }>('/api/drills/due');
+    expect(result).toEqual({ dueCount: 7 });
+  });
+
   it('returns bare object when no envelope wrapper', async () => {
     mockFetch.mockResolvedValueOnce(
       jsonResponse({ sessionId: 'ses_123', questions: [] })
@@ -137,6 +146,53 @@ describe('createApiClient', () => {
       expect(apiErr.status).toBe(404);
       expect(apiErr.message).toBe('Not Found');
     }
+  });
+
+  it('throws ApiError from nested { ok: false, error } production envelope', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        ok: false,
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Slow down',
+          details: { retryAfterSeconds: 30 },
+        },
+      }, 429)
+    );
+
+    try {
+      await api.get('/api/drills/start');
+      throw new Error('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      const apiErr = err as ApiError;
+      expect(apiErr.status).toBe(429);
+      expect(apiErr.code).toBe('RATE_LIMITED');
+      expect(apiErr.message).toBe('Slow down');
+      expect(apiErr.details).toEqual({ retryAfterSeconds: 30 });
+    }
+  });
+
+  it('returns standardized ApiResult from getResult success and error paths', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ ok: true, data: { id: 'q1' } })
+    );
+
+    await expect(api.getResult<{ id: string }>('/api/questions/next'))
+      .resolves.toEqual({ ok: true, data: { id: 'q1' } });
+
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        ok: false,
+        error: { code: 'EMPTY_QUEUE', message: 'No questions available' },
+      }, 404)
+    );
+
+    await expect(api.getResult('/api/questions/next'))
+      .resolves.toEqual({
+        ok: false,
+        error: { code: 'EMPTY_QUEUE', message: 'No questions available' },
+      });
   });
 
   it('throws ApiError with NETWORK_ERROR on fetch failure', async () => {

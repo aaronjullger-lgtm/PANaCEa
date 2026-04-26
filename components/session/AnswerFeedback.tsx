@@ -81,7 +81,7 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
         <ExplanationPanel
           rationale={(() => {
             const r = currentQuestion.rationale;
-            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as StructuredRationale;
+            if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r as unknown as StructuredRationale;
             if (typeof r === 'string') {
               try {
                 const parsed = JSON.parse(r) as unknown;
@@ -109,12 +109,12 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           groundingSources={
             currentQuestion.groundingSources ??
             (typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as StructuredRationale).groundingSources
+              ? (currentQuestion.rationale as unknown as StructuredRationale).groundingSources
               : undefined)
           }
           pubmedCitations={
             typeof currentQuestion.rationale === 'object' && currentQuestion.rationale !== null
-              ? (currentQuestion.rationale as StructuredRationale).pubmedCitations
+              ? (currentQuestion.rationale as unknown as StructuredRationale).pubmedCitations
               : undefined
           }
           onViewCondition={

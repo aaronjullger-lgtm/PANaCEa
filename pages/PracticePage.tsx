@@ -64,6 +64,7 @@ import {
 } from '@/config/training-modes';
 import { getRecentModeIds, recordRecentMode } from '@/lib/recentModes';
 import { ROUTES } from '@/config/routes';
+import { filterPrivateBetaModes, isPrivateBetaModeVisible } from '@/lib/modes/privateBetaVisibility';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Activity,
@@ -310,7 +311,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 
   const filteredModes = useMemo(() => {
     const filterForContext = (modes: TrainingModeConfig[]) =>
-      modes.filter((mode) => {
+      filterPrivateBetaModes(modes).filter((mode) => {
         if (mode.panreOnly && !showPANREContent) return false;
         if (mode.didacticOnly && showPANREContent) return false;
 
@@ -341,12 +342,15 @@ export const PracticePage: React.FC<PracticePageProps> = ({
     () =>
       getRecentModeIds()
         .map((id) => MODE_REGISTRY.find((mode) => mode.id === id))
-        .filter((mode): mode is TrainingModeConfig => !!mode && !mode.isComingSoon)
+        .filter(
+          (mode): mode is TrainingModeConfig =>
+            !!mode && !mode.isComingSoon && isPrivateBetaModeVisible(mode.id)
+        )
         .slice(0, 4),
     []
   );
 
-  const recommendedModeIds = ['core_adaptive', 'grand_rounds', 'diagnostic_puzzle'] as const;
+  const recommendedModeIds = ['core_adaptive', 'system_drill', 'pharmacology'] as const;
 
   const recommendedModes = useMemo(
     () =>
@@ -387,7 +391,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             badgeTone: 'gold',
             title: 'Practice that adapts to your cognitive load.',
             subtitle:
-              'Search by workload, launch the right mode quickly, and keep the full practice library visible without another dashboard detour.',
+              'Search by workload and launch a verified beta practice path without another dashboard detour.',
             status:
               weakestSystem && hasResidencyData
                 ? `Weakest live signal: ${weakestSystem}`
@@ -405,10 +409,14 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                   onClick: () => onNavigateToDrillMode('core_adaptive'),
                 },
             secondaryActions: [
-              {
-                label: 'Grand Rounds',
-                onClick: () => onNavigateToDrillMode('grand_rounds'),
-              },
+              ...(isPrivateBetaModeVisible('rapid_recall')
+                ? [
+                    {
+                      label: 'Rapid Recall',
+                      onClick: () => onNavigateToDrillMode('rapid_recall'),
+                    },
+                  ]
+                : []),
             ],
           }}
         />
@@ -448,7 +456,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder="Search ECG, pharmacology, ventilator, stroke..."
+                placeholder="Search pharmacology, systems, treatments, recall..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-full rounded-2xl border py-3.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
@@ -581,8 +589,8 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                 >
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">Quick wins</p>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    Use 10-minute recall or image drills when you need momentum between classes or
-                    on rotation.
+                  Use 10-minute recall or focused question drills when you need momentum between
+                  classes or on rotation.
                   </p>
                 </div>
                 <div
@@ -597,8 +605,8 @@ export const PracticePage: React.FC<PracticePageProps> = ({
                     Deep reasoning
                   </p>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    Switch into cases, OSCEs, and diagnostic puzzles when you have enough time to
-                    think through ambiguity.
+                    Use adaptive, system, or pharmacology blocks when you have enough time to work
+                    through clinical reasoning.
                   </p>
                 </div>
                 <div

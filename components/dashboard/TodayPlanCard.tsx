@@ -29,13 +29,15 @@ import type { TodayPlanData, StudySplit } from '@/hooks/useTodayPlan';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type TodayPlanTask = NonNullable<TodayPlanData['tasks']>[number];
+
 interface TodayPlanCardProps {
   data: TodayPlanData | null;
   isLoading: boolean;
   error: string | null;
   onRefresh: () => void;
-  onStartMain: (systems?: string[]) => void;
-  onStartTargeted: (conditions?: string[]) => void;
+  onStartMain: (systems?: string[], task?: TodayPlanTask) => void;
+  onStartTargeted: (conditions?: string[], task?: TodayPlanTask) => void;
 }
 
 // ─── Split Label ──────────────────────────────────────────────────────────────
@@ -236,7 +238,11 @@ export function TodayPlanCard({
       {/* Action Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button
-          onClick={() => onStartMain(data.mainSystems)}
+          onClick={() => {
+            const mainTask = data.tasks?.find((task) => task.kind === 'main' && task.status !== 'completed');
+            if (mainTask?.systemFilter) onStartMain(mainTask.systemFilter, mainTask);
+            else onStartMain(data.mainSystems);
+          }}
           className={`flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-lg text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
             splitMeta.emphasis === 'main' || splitMeta.emphasis === 'both'
               ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90'
@@ -248,7 +254,11 @@ export function TodayPlanCard({
           <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
         <button
-          onClick={() => onStartTargeted(data.targetedConditions)}
+          onClick={() => {
+            const targetedTask = data.tasks?.find((task) => task.kind === 'targeted' && task.status !== 'completed');
+            if (targetedTask?.conditionIds) onStartTargeted(targetedTask.conditionIds, targetedTask);
+            else onStartTargeted(data.targetedConditions);
+          }}
           className={`flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-lg text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
             splitMeta.emphasis === 'targeted'
               ? 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)] hover:opacity-90'

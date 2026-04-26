@@ -37,7 +37,10 @@ type PrismaClientLike = {
   question: any;
   userQuestionSeen: any;
   studentReservoirItem: any;
+  $queryRaw: any;
   $queryRawUnsafe: any;
+  $transaction: any;
+  $executeRawUnsafe: any;
   [key: string]: any;
 };
 
@@ -106,14 +109,16 @@ export async function executeRefill(
     where: { userId },
     select: { questionId: true },
   });
-  const reservoirQuestionIds = new Set(existingReservoir.map((r: any) => r.questionId));
+  const reservoirQuestionIds = new Set<string>(existingReservoir.map((r: any) => String(r.questionId)));
 
   // Get questions the student has already seen (for variety)
   const seenQuestions = await prisma.userQuestionSeen.findMany({
     where: { userId },
     select: { questionId: true, timesShown: true },
   });
-  const seenMap = new Map(seenQuestions.map((s: any) => [s.questionId, s.timesShown]));
+  const seenMap = new Map<string, number>(
+    seenQuestions.map((s: any) => [String(s.questionId), Number(s.timesShown) || 0])
+  );
 
   // ── Phase 1: FSRS Due Reviews ──
 
@@ -329,8 +334,8 @@ export async function executeRefill(
         const bSeen = seenMap.get(b.id) || 0;
         if (aSeen !== bSeen) return aSeen - bSeen;
         if (payload.learnerPhase && a.questionOrder && b.questionOrder) {
-          const aWeight = phaseOrderWeights[a.questionOrder] || 0;
-          const bWeight = phaseOrderWeights[b.questionOrder] || 0;
+          const aWeight = Number(phaseOrderWeights[a.questionOrder] || 0);
+          const bWeight = Number(phaseOrderWeights[b.questionOrder] || 0);
           if (aWeight !== bWeight) return bWeight - aWeight;
         }
         return (b.qualityScore || 0) - (a.qualityScore || 0);

@@ -264,9 +264,18 @@ export function createRateLimitResponse(
 
   return new Response(
     JSON.stringify({
-      error: 'Too Many Requests',
+      ok: false,
+      error: {
+        code: 'RATE_LIMITED',
+        message: `Rate limit exceeded for ${config.description}. Please try again later.`,
+        details: { retryAfter: result.retryAfter, limitType },
+      },
+      success: false,
+      code: 'RATE_LIMITED',
       message: `Rate limit exceeded for ${config.description}. Please try again later.`,
-      retryAfter: result.retryAfter,
+      details: { retryAfter: result.retryAfter, limitType },
+      traceId: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
     }),
     {
       status: 429,

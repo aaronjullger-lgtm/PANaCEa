@@ -6,6 +6,7 @@
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { createApiClient } from '@/lib/sdk';
 
 const isTestEnv =
   typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
@@ -28,6 +29,10 @@ export interface LabCase {
 }
 
 class LabService {
+  private client(token?: string) {
+    return createApiClient(async () => token ?? null);
+  }
+
   /**
    * Get all lab tests from database
    * @throws Error if database is unavailable
@@ -35,19 +40,7 @@ class LabService {
   async getAllTests(token?: string): Promise<LabTest[]> {
     if (isTestEnv) return [];
 
-    const headers: HeadersInit = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LAB_TESTS), { headers });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch lab tests: ${response.status}`);
-    }
-
-    return await response.json();
+    return this.client(token).get<LabTest[]>(getApiEndpoint(API_ENDPOINTS.LAB_TESTS));
   }
 
   /**
@@ -62,18 +55,7 @@ class LabService {
       throw new Error('Authentication required to fetch lab cases');
     }
 
-    const response = await fetch(getApiEndpoint(API_ENDPOINTS.LAB_CASES), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch lab cases: ${response.status}`);
-    }
-
-    return await response.json();
+    return this.client(token).get<LabCase[]>(getApiEndpoint(API_ENDPOINTS.LAB_CASES));
   }
 
   /**
@@ -88,18 +70,7 @@ class LabService {
       throw new Error('Authentication required to fetch lab cases');
     }
 
-    const response = await fetch(API_ENDPOINTS.LAB_CASES_RANDOM(count), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to fetch random lab cases: ${response.status}`);
-    }
-
-    return await response.json();
+    return this.client(token).get<LabCase[]>(getApiEndpoint(API_ENDPOINTS.LAB_CASES_RANDOM(count)));
   }
 }
 

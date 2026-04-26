@@ -43,7 +43,7 @@ export interface DrugData {
 // Cache for drugs loaded from API
 let drugRegistry: Map<string, DrugEntry> | null = null;
 
-// Minimal dataset to keep search deterministic during tests/offline runs
+// Minimal dataset is test-only; production search must not invent unavailable drug content.
 const FALLBACK_DRUG_ENTRIES: DrugEntry[] = [
   {
     term: 'fluoxetine',
@@ -208,7 +208,7 @@ async function ensureRegistryLoaded(): Promise<void> {
     }
   } catch (error) {
     console.error('Failed to load drugs for search:', error);
-    drugRegistry = new Map(FALLBACK_DRUG_ENTRIES.map((entry) => [entry.term.toLowerCase(), entry]));
+    drugRegistry = new Map();
   }
 }
 

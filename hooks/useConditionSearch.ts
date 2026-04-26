@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { searchConditions, type ConditionSearchResult } from '@src/lib/conditionSearch';
+import { searchConditions, type ConditionSearchResult } from '@/lib/conditionSearch';
+import type { SystemCode } from '@/types';
 
 interface UseConditionSearchOptions {
   /** Minimum query length before searching (default: 2) */
@@ -7,7 +8,7 @@ interface UseConditionSearchOptions {
   /** Maximum number of results to return (default: 10) */
   limit?: number;
   /** System filter */
-  system?: string;
+  system?: SystemCode;
   /** Subcategory filter */
   subcategory?: string;
   /** Debounce delay in milliseconds (default: 300) */

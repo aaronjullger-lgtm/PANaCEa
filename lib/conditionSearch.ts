@@ -129,6 +129,19 @@ function fallbackSearch(query: string, limit?: number): ConditionSearchResult[] 
   return typeof limit === 'number' ? results.slice(0, limit) : results;
 }
 
+function unwrapApiData<T>(payload: unknown): T {
+  if (payload && typeof payload === 'object') {
+    const record = payload as { data?: unknown; success?: boolean; ok?: boolean };
+    if (('success' in record || 'ok' in record) && 'data' in record) {
+      return record.data as T;
+    }
+    if ('data' in record && Array.isArray(record.data)) {
+      return record.data as T;
+    }
+  }
+  return payload as T;
+}
+
 /**
  * Search conditions via API endpoint
  * Uses database-backed search with fuzzy matching
@@ -171,17 +184,17 @@ export async function searchConditions(
 
     if (!response.ok) {
       console.error('Search API error:', response.status, response.statusText);
-      return fallbackSearch(query, filters.limit);
+      return [];
     }
 
-    const results: ConditionSearchResult[] = await response.json();
-    if (results && results.length > 0) {
+    const results = unwrapApiData<ConditionSearchResult[]>(await response.json());
+    if (Array.isArray(results) && results.length > 0) {
       return results;
     }
-    return fallbackSearch(query, filters.limit);
+    return [];
   } catch (error) {
     console.error('Error searching conditions:', error);
-    return fallbackSearch(query, filters.limit);
+    return [];
   }
 }
 

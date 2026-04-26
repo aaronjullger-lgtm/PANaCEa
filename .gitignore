@@ -307,6 +307,7 @@ docker-compose.yml
 /*_SUMMARY*.md
 /*_STATUS*.md
 /*_CHECKLIST*.md
+!/DEPLOYMENT_CHECKLIST.md
 /SESSION_*.md
 /DEPLOYMENT_STATUS*.md
 /PLAN.md

@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 
 type ReviewQuestion = {
   id: string;
@@ -15,6 +15,11 @@ type ResolveReviewQuestionResult = {
   source: 'pre_generated' | 'main_question' | 'question_attempt' | 'missing';
 };
 
+type ReviewQuestionPrisma = Pick<
+  PrismaClient,
+  'preGeneratedQuestion' | 'question' | 'questionAttempt'
+>;
+
 export const PLACEHOLDER_CORRECT_ANSWER = '__correct_answer__';
 
 /**
@@ -25,17 +30,7 @@ export const PLACEHOLDER_CORRECT_ANSWER = '__correct_answer__';
  * 3) Latest QuestionAttempt fallback (for ephemeral ids like seed/generated session ids)
  */
 export async function resolveReviewQuestion(
-  prisma: {
-    preGeneratedQuestion: {
-      findUnique: (args: unknown) => Promise<any>;
-    };
-    question: {
-      findUnique: (args: unknown) => Promise<any>;
-    };
-    questionAttempt: {
-      findFirst: (args: unknown) => Promise<any>;
-    };
-  },
+  prisma: ReviewQuestionPrisma,
   params: {
     userId: string;
     questionId: string;

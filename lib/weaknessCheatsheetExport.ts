@@ -94,7 +94,7 @@ function identifyWeaknesses(
         options: q.options,
         correctAnswerIndex: q.correctAnswerIndex,
         userWasCorrect: false, // From missed questions
-        rationale: q.rationale,
+        rationale: typeof q.rationale === 'string' ? q.rationale : JSON.stringify(q.rationale),
         pearls: q.pearls || [],
         condition: q.condition,
       })),

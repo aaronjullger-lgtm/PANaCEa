@@ -12,18 +12,18 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const ConditionContentSchema = z.object({
-  params: z.object({
-    conditionId: z.string().min(1).max(200),
-  }),
+  conditionId: z.string().min(1).max(200),
 });
 
-export const onRequestGet = publicEndpoint(ConditionContentSchema, async (context) => {
-  const { env, validated } = context;
-  const logger = createEndpointLogger('/api/content/condition/[conditionId]');
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = publicEndpoint(
+  ConditionContentSchema,
+  async (context) => {
+    const { env, validated } = context;
+    const logger = createEndpointLogger('/api/content/condition/[conditionId]');
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-  try {
-    const { conditionId } = validated.params;
+    try {
+      const { conditionId } = validated;
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -179,13 +179,15 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
         other_MedicalContent: content.other_MedicalContent,
       },
     };
-  } catch (error) {
-    logger.error('Condition content error', {
-      error: error instanceof Error ? error.message : String(error),
-      conditionId: validated.params.conditionId.substring(0, 100),
-    });
-    throw new Error('Failed to fetch condition content');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-});
+    } catch (error) {
+      logger.error('Condition content error', {
+        error: error instanceof Error ? error.message : String(error),
+        conditionId: validated.conditionId.substring(0, 100),
+      });
+      throw new Error('Failed to fetch condition content');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { source: 'params' }
+);

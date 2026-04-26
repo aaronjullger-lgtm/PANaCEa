@@ -122,7 +122,11 @@ export async function retrieveContext(
   const embedding = await embedQuery(query, apiKey);
   const vectorStr = `[${embedding.join(',')}]`;
 
-  const rows: ContentRow[] = await prisma.$queryRawUnsafe<ContentRow[]>(
+  const queryRawUnsafe = prisma.$queryRawUnsafe as <T = unknown>(
+    query: string,
+    ...values: unknown[]
+  ) => Promise<T>;
+  const rows: ContentRow[] = await queryRawUnsafe<ContentRow[]>(
     `SELECT e."medicalContentId", (1 - (e.embedding <=> $1::vector))::float as similarity
      FROM "MedicalContentEmbedding" e
      ORDER BY e.embedding <=> $1::vector
@@ -312,7 +316,7 @@ export function refineRetrievedContext(
 
   // Step 3: Log content gaps for knowledge base improvement
   if (cragResult.contentGap) {
-    logger.warn(LOG_SCOPE, formatGapForLogging(cragResult.contentGap));
+    logger.warn('RAG content gap', { scope: LOG_SCOPE, gap: formatGapForLogging(cragResult.contentGap) });
   }
 
   return {

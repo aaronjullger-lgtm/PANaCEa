@@ -107,7 +107,7 @@ export interface EndpointOptions<
   /** Override rate limiting. Each stack has a sensible default. */
   rateLimit?: EndpointRateLimit;
   /** Optional env requirement (preset key or explicit list). */
-  env?: EnvRequirement | readonly string[];
+  env?: EnvRequirement;
   /** The endpoint handler. Receives validated + auth context. */
   handler: Authed extends true
     ? Handler<AuthenticatedContext & ValidatedContext<T>>
@@ -193,7 +193,7 @@ export interface CronEndpointOptions<T = unknown> {
   /** 'body' | 'query' | 'params'. Default: 'body'. */
   source?: ValidatedSource;
   /** Optional env requirement beyond the defaults. */
-  env?: EnvRequirement | readonly string[];
+  env?: EnvRequirement;
   /** Handler. Receives validated payload (or {} if no schema). */
   handler: (
     context: CloudflareContext & ValidatedContext<T>
@@ -245,7 +245,7 @@ export function cronEndpoint<T = unknown>(
     try {
       const rawInput = await extractSource(context, source);
       const result = validateSchema(schema, rawInput, 'Cron');
-      if (!result.success) {
+      if (result.success === false) {
         return fail(ErrorCode.VALIDATION_FAILED, {
           message: `Cron payload validation failed: ${result.errors.join('; ')}`,
           details: result.errors,

@@ -38,6 +38,19 @@ const SCORE_KEYWORD_MATCH = 60;
 const SCORE_CONTAINS = 50;
 const SCORE_FUZZY = 30;
 
+function sanitizeSearchQuery(query: string): string {
+  const withoutControlChars = Array.from(query, (char) => {
+    const code = char.charCodeAt(0);
+    return code <= 31 || code === 127 ? ' ' : char;
+  }).join('');
+
+  return withoutControlChars.replace(/\s+/g, ' ').trim().slice(0, 200);
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 /**
  * Calculate similarity score between query and target string
  */
@@ -297,25 +310,27 @@ export async function searchContent(
   limit = 10,
   includeTypes: ('condition' | 'drug')[] = ['condition', 'drug']
 ): Promise<SearchResult[]> {
-  const sanitizedQuery = query.trim();
+  const sanitizedQuery = sanitizeSearchQuery(query);
 
   if (!sanitizedQuery || sanitizedQuery.length < 2) {
     return [];
   }
 
-  const normalizedQuery = sanitizedQuery.toLowerCase();
   const results: RankedResult[] = [];
+  const seen = new Set<string>();
 
   try {
     // Search conditions
     if (includeTypes.includes('condition')) {
       const conditions = await prisma.condition.findMany({
         where: {
+          status: 'published',
           OR: [
-            { name: { contains: normalizedQuery, mode: 'insensitive' } },
-            { displayName: { contains: normalizedQuery, mode: 'insensitive' } },
-            { aliases: { hasSome: [normalizedQuery] } },
-            { system: { contains: normalizedQuery, mode: 'insensitive' } },
+            { name: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { displayName: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { aliases: { hasSome: [sanitizedQuery, sanitizedQuery.toLowerCase(), sanitizedQuery.toUpperCase()] } },
+            { system: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { subcategory: { contains: sanitizedQuery, mode: 'insensitive' } },
           ],
         },
         take: limit * 2,
@@ -332,6 +347,48 @@ export async function searchContent(
         const ranked = rankCondition(condition, sanitizedQuery);
         if (ranked.score > 0) {
           results.push(ranked);
+          seen.add(`condition:${condition.id}`);
+        }
+      });
+
+      const contentMatches = await prisma.medicalContent.findMany({
+        where: {
+          status: 'published',
+          OR: [
+            { condition: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { overview: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { classic_patient: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { symptoms: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { diagnostics: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { treatment: { contains: sanitizedQuery, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          conditionId: true,
+          condition: true,
+          canonicalName: true,
+          synonyms: true,
+          system: true,
+          subcategory: true,
+        },
+        take: limit * 2,
+      });
+
+      contentMatches.forEach((row) => {
+        const conditionId = row.conditionId;
+        if (!conditionId || seen.has(`condition:${conditionId}`)) return;
+        const condition = {
+          id: conditionId,
+          name: row.condition,
+          displayName: row.canonicalName ?? undefined,
+          aliases: stringArray(row.synonyms),
+          system: row.system,
+          subcategory: row.subcategory ?? undefined,
+        };
+        const ranked = rankCondition(condition, sanitizedQuery);
+        if (ranked.score > 0) {
+          results.push(ranked);
+          seen.add(`condition:${conditionId}`);
         }
       });
     }
@@ -341,11 +398,12 @@ export async function searchContent(
       const drugs = await prisma.drug.findMany({
         where: {
           OR: [
-            { genericName: { contains: normalizedQuery, mode: 'insensitive' } },
-            { brandName: { contains: normalizedQuery, mode: 'insensitive' } },
-            { aliases: { hasSome: [normalizedQuery] } },
-            { drugClass: { hasSome: [normalizedQuery] } },
-            { displayName: { contains: normalizedQuery, mode: 'insensitive' } },
+            { genericName: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { brandName: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { aliases: { hasSome: [sanitizedQuery, sanitizedQuery.toLowerCase(), sanitizedQuery.toUpperCase()] } },
+            { drugClass: { hasSome: [sanitizedQuery, sanitizedQuery.toLowerCase(), sanitizedQuery.toUpperCase()] } },
+            { displayName: { contains: sanitizedQuery, mode: 'insensitive' } },
+            { mechanismOfAction: { contains: sanitizedQuery, mode: 'insensitive' } },
           ],
         },
         take: limit * 2,

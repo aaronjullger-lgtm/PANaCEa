@@ -123,7 +123,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
         if (!clerkScript) {
           setError('Authentication service not loaded. Please check your internet connection.');
           recordAuthFailure();
-          return;
+          return undefined;
         }
 
         // Use error event listener instead of monkey-patching console.error
@@ -148,6 +148,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
       const cleanup = checkClerkErrors();
       return cleanup;
     }
+    return undefined;
   }, [clerkLoaded, elapsedTime]);
 
   const retryAuth = useCallback(() => {
@@ -186,7 +187,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
 
   return {
     authLoaded: clerkLoaded,
-    isSignedIn: isGuestMode ? false : isSignedIn, // Guest mode is not signed in
+    isSignedIn: isGuestMode ? false : !!isSignedIn, // Guest mode is not signed in
     isLoading,
     error,
     elapsedTime,

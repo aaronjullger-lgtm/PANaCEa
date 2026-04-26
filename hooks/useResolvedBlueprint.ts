@@ -13,6 +13,7 @@ import { useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
 
 import type { LearnerStage } from '@/lib/services/learnerStageBlueprint';
+import { createApiClient } from '@/lib/sdk';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,18 +35,8 @@ export function useResolvedBlueprint() {
 
   const fetcher = useCallback(
     async (url: string): Promise<ResolvedBlueprintData> => {
-      const token = await getToken();
-      if (!token) throw new Error('Not authenticated');
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        throw new Error(`Blueprint resolution failed: ${res.status}`);
-      }
-
-      return res.json();
+      const api = createApiClient(getToken);
+      return api.get<ResolvedBlueprintData>(url);
     },
     [getToken]
   );

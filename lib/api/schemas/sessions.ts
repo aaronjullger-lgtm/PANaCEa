@@ -125,6 +125,6 @@ export const SessionAnalyticsRequestSchema = z.object({
 // INFERRED TYPES
 // =============================================================================
 
-export type SessionGenerateRequest = z.infer<typeof SessionGenerateRequestSchema>;
+export type SessionGenerateRequest = z.input<typeof SessionGenerateRequestSchema>;
 export type SessionConfig = z.infer<typeof SessionConfigSchema>;
 export type SessionAnalyticsRequest = z.infer<typeof SessionAnalyticsRequestSchema>;

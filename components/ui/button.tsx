@@ -68,8 +68,8 @@ interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   loading?: boolean;
-  icon?: React.ReactNode;
-  iconRight?: React.ReactNode;
+  icon?: React.ReactNode | React.ComponentType;
+  iconRight?: React.ReactNode | React.ComponentType;
 }
 
 /* ---------- Button component ---------- */

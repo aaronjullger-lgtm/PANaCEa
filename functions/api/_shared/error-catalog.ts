@@ -37,6 +37,7 @@ export const ErrorCode = {
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
   GONE: 'GONE',
+  FEATURE_DISABLED: 'FEATURE_DISABLED',
 
   // --- Rate limiting (429) ---
   RATE_LIMITED: 'RATE_LIMITED',
@@ -153,6 +154,11 @@ export const ERROR_CATALOG: Record<ErrorCode, ErrorCatalogEntry> = {
   [ErrorCode.GONE]: {
     status: 410,
     defaultMessage: 'Resource no longer available',
+    capture: false,
+  },
+  [ErrorCode.FEATURE_DISABLED]: {
+    status: 404,
+    defaultMessage: 'Feature is disabled',
     capture: false,
   },
 

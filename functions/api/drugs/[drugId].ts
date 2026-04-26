@@ -10,47 +10,49 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const DrugDetailSchema = z.object({
-  params: z.object({
-    drugId: z.string().min(1),
-  }),
+  drugId: z.string().min(1),
 });
 
-export const onRequestGet = authenticatedEndpoint(DrugDetailSchema, async (context) => {
-  const { env, validated } = context;
-  const logger = createEndpointLogger('/api/drugs/[drugId]');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  DrugDetailSchema,
+  async (context) => {
+    const { env, validated } = context;
+    const logger = createEndpointLogger('/api/drugs/[drugId]');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const drugId = validated.params?.drugId;
-    if (!drugId) {
-      return { data: { error: 'Drug ID is required' }, status: 400 };
-    }
+    try {
+      const drugId = validated.drugId;
+      if (!drugId) {
+        return { error: 'Drug ID is required', status: 400 };
+      }
 
-    const drug = await prisma.drug.findUnique({
-      where: { id: drugId },
-      include: {
-        DrugConditionLink: {
-          include: {
-            Condition: {
-              select: { id: true, name: true, system: true },
+      const drug = await prisma.drug.findUnique({
+        where: { id: drugId },
+        include: {
+          DrugConditionLink: {
+            include: {
+              Condition: {
+                select: { id: true, name: true, system: true },
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!drug) {
-      return { data: { error: 'Drug not found' }, status: 404 };
+      if (!drug) {
+        return { error: 'Drug not found', status: 404 };
+      }
+
+      logger.info('Fetched drug detail', { drugId });
+      return { data: drug, headers: { 'Cache-Control': 'public, max-age=3600' } };
+    } catch (error) {
+      logger.error('Failed to fetch drug', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error('Failed to fetch drug');
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    logger.info('Fetched drug detail', { drugId });
-    return { data: drug, headers: { 'Cache-Control': 'public, max-age=3600' } };
-  } catch (error) {
-    logger.error('Failed to fetch drug', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to fetch drug');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-});
+  },
+  { source: 'params' }
+);

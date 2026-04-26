@@ -20,6 +20,7 @@ interface AttemptData {
   timeSpentMs?: number;
   answerChangedCount?: number;
   isRankedAttempt?: boolean;
+  idempotencyKey?: string;
 }
 
 interface AttemptResponse {
@@ -40,8 +41,31 @@ const RETRY_QUEUE_KEY = 'panceai_attempt_retry_queue';
 
 interface QueuedAttempt {
   data: AttemptData;
+  idempotencyKey: string;
   timestamp: number;
   retries: number;
+}
+
+function createAttemptIdempotencyKey(questionId: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `attempt-${crypto.randomUUID()}`;
+  }
+  return `attempt-${questionId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function unwrapUserStatsResponse(payload: unknown): any | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const root = payload as Record<string, any>;
+  if (root.stats) return root.stats;
+  if (root.data && typeof root.data === 'object') {
+    const data = root.data as Record<string, any>;
+    if (data.stats) return data.stats;
+    if (data.data && typeof data.data === 'object') {
+      const nested = data.data as Record<string, any>;
+      if (nested.stats) return nested.stats;
+    }
+  }
+  return null;
 }
 
 /**
@@ -72,8 +96,10 @@ function saveQueuedAttempts(attempts: QueuedAttempt[]): void {
  */
 function queueAttemptForRetry(data: AttemptData): void {
   const queued = getQueuedAttempts();
+  const idempotencyKey = data.idempotencyKey ?? createAttemptIdempotencyKey(data.questionId);
   queued.push({
-    data,
+    data: { ...data, idempotencyKey },
+    idempotencyKey,
     timestamp: Date.now(),
     retries: 0,
   });
@@ -155,7 +181,10 @@ async function sendAttemptToServer(
   const response = await fetch('/api/questions/attempt', {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      idempotencyKey: data.idempotencyKey ?? createAttemptIdempotencyKey(data.questionId),
+    }),
   });
 
   if (!response.ok) {
@@ -173,8 +202,13 @@ export async function recordQuestionAttempt(
   data: AttemptData,
   token?: string | null
 ): Promise<AttemptResponse | null> {
+  const idempotentData = {
+    ...data,
+    idempotencyKey: data.idempotencyKey ?? createAttemptIdempotencyKey(data.questionId),
+  };
+
   try {
-    const result = await sendAttemptToServer(data, token);
+    const result = await sendAttemptToServer(idempotentData, token);
 
     if (result) {
       // Success - also try to process any queued attempts
@@ -184,13 +218,13 @@ export async function recordQuestionAttempt(
       return result;
     } else {
       // Failed - queue for retry
-      queueAttemptForRetry(data);
+      queueAttemptForRetry(idempotentData);
       return null;
     }
   } catch (error) {
     // Network error - queue for retry
     console.error('[AttemptService] Error recording attempt, queueing for retry:', error);
-    queueAttemptForRetry(data);
+    queueAttemptForRetry(idempotentData);
     return null;
   }
 }
@@ -227,7 +261,11 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
     }
 
     const result = await response.json();
-    return result.stats;
+    const stats = unwrapUserStatsResponse(result);
+    if (!stats) {
+      attemptLogger.warn('User stats response did not contain stats payload');
+    }
+    return stats;
   } catch (error) {
     attemptLogger.error('Error fetching user stats', { error });
     return null;

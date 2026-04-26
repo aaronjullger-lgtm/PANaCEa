@@ -15,7 +15,7 @@ import {
   Star,
 } from 'lucide-react';
 
-import DrugMaster from './DrugMaster';
+import DrugMaster, { type Drug as DrugDetail } from './DrugMaster';
 import { InlineSpinner } from '@/components/loading';
 
 // Types
@@ -25,7 +25,7 @@ interface DrugClass {
   count: number;
 }
 
-interface Drug {
+interface DrugSummary {
   id: string;
   genericName: string;
   brandName?: string | null;
@@ -38,6 +38,33 @@ interface Drug {
   panceYield?: number | null;
   // Additional fields for detail view loaded via API
   [key: string]: any;
+}
+
+function toDrugDetail(drug: DrugSummary): DrugDetail {
+  return {
+    ...drug,
+    drugClass: drug.drugClass ?? [],
+    indications: drug.indications ?? [],
+    contraindications: drug.contraindications ?? [],
+    clinicalPearls: drug.clinicalPearls ?? [],
+    boardYieldFacts: drug.boardYieldFacts ?? [],
+    mnemonics: drug.mnemonics ?? [],
+    commonMistakes: drug.commonMistakes ?? [],
+    testQuestionTips: drug.testQuestionTips ?? [],
+    monitoringParams: drug.monitoringParams ?? [],
+    routesOfAdmin: drug.routesOfAdmin ?? [],
+    formulations: drug.formulations ?? [],
+    sideEffects: drug.sideEffects ?? [],
+    interactions: drug.interactions ?? [],
+    blackBoxWarnings: drug.blackBoxWarnings ?? [],
+    foodInteractions: drug.foodInteractions ?? [],
+    riskStrategies: drug.riskStrategies ?? [],
+    aliases: drug.aliases ?? [],
+    tags: drug.tags ?? [],
+    isHighYield: drug.isHighYield ?? false,
+    isFirstLine: drug.isFirstLine ?? false,
+    genericAvailable: drug.genericAvailable ?? true,
+  };
 }
 
 interface ClinicalReferenceLibraryProps {
@@ -81,7 +108,7 @@ const ErrorState: React.FC<{ title: string; message: string; onRetry?: () => voi
 
 // Drug card component
 const DrugCard: React.FC<{
-  drug: Drug;
+  drug: DrugSummary;
   isSelected: boolean;
   onClick: () => void;
 }> = ({ drug, isSelected, onClick }) => {
@@ -294,7 +321,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError, setClassesError] = useState<string | null>(null);
 
-  const [drugs, setDrugs] = useState<Drug[]>([]);
+  const [drugs, setDrugs] = useState<DrugSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -304,7 +331,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
   const [highYieldOnly, setHighYieldOnly] = useState(false);
   const [firstLineOnly, setFirstLineOnly] = useState(false);
 
-  const [selected, setSelected] = useState<Drug | null>(null);
+  const [selected, setSelected] = useState<DrugDetail | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -431,7 +458,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
 
   // Group drugs by class for display
   const groupedDrugs = useMemo(() => {
-    const map = new Map<string, Drug[]>();
+    const map = new Map<string, DrugSummary[]>();
 
     for (const drug of filteredDrugs) {
       // A drug can belong to multiple classes
@@ -456,8 +483,8 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
     setActiveDrugClass(classId);
   };
 
-  const handleDrugSelect = (drug: Drug, index: number) => {
-    setSelected(drug);
+  const handleDrugSelect = (drug: DrugSummary, index: number) => {
+    setSelected(toDrugDetail(drug));
     setSelectedIndex(index);
   };
 
@@ -466,7 +493,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
       const nextIndex = selectedIndex + 1;
       const nextDrug = filteredDrugs[nextIndex];
       if (nextDrug) {
-        setSelected(nextDrug);
+        setSelected(toDrugDetail(nextDrug));
         setSelectedIndex(nextIndex);
       }
     }
@@ -477,7 +504,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
       const prevIndex = selectedIndex - 1;
       const prevDrug = filteredDrugs[prevIndex];
       if (prevDrug) {
-        setSelected(prevDrug);
+        setSelected(toDrugDetail(prevDrug));
         setSelectedIndex(prevIndex);
       }
     }

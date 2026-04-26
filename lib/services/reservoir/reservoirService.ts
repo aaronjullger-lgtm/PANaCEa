@@ -184,7 +184,7 @@ export async function bulkInsertReservoirItems(
       inserted += batch.length; // Approximate — ON CONFLICT skips are not counted
     } catch (err: any) {
       // Log but don't fail the whole batch
-      logger.error(LOG_SCOPE, `Batch insert error: ${err.message}`);
+      logger.error('Reservoir batch insert error', { scope: LOG_SCOPE, error: err.message });
     }
   }
 

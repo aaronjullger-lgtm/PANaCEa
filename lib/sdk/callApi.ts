@@ -65,17 +65,14 @@ export interface CallApiOptions<
 
 // ─── Envelope types ──────────────────────────────────────────────────────────
 
-interface ApiSuccessEnvelope<T = unknown> {
-  success: true;
-  data: T;
-  traceId?: string;
-  timestamp?: string;
-  message?: string;
-}
-
 interface ApiErrorEnvelope {
-  success: false;
-  error: string;
+  ok?: false;
+  success?: false;
+  error: string | {
+    code?: string;
+    message?: string;
+    details?: unknown;
+  };
   code?: string;
   message?: string;
   details?: unknown;
@@ -158,6 +155,60 @@ function parseResponseData<C extends ApiContract<any, any, any>>(
     );
   }
   return parsed.data as ContractResponse<C>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function extractErrorEnvelope(
+  envelope: unknown,
+  status: number,
+  statusText?: string,
+): { code?: string; message: string; details?: unknown } | null {
+  if (!isRecord(envelope)) return null;
+
+  const isError =
+    envelope.ok === false ||
+    envelope.success === false ||
+    (status >= 400 && ('error' in envelope || 'message' in envelope));
+  if (!isError) return null;
+
+  const nested = isRecord(envelope.error) ? envelope.error : null;
+  return {
+    code:
+      asString(nested?.code) ??
+      asString(envelope.code) ??
+      asString(envelope.error) ??
+      (status > 0 ? `HTTP_${status}` : undefined),
+    message:
+      asString(nested?.message) ??
+      asString(envelope.message) ??
+      asString(envelope.error) ??
+      statusText ??
+      'Request failed',
+    details:
+      nested && 'details' in nested
+        ? nested.details
+        : 'details' in envelope
+          ? envelope.details
+          : undefined,
+  };
+}
+
+function extractSuccessData(envelope: unknown): unknown {
+  if (!isRecord(envelope)) return envelope;
+  if (
+    (envelope.ok === true || envelope.success === true) &&
+    'data' in envelope
+  ) {
+    return envelope.data;
+  }
+  return envelope;
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -258,19 +309,14 @@ export async function callApi<C extends ApiContract<any, any, any>>(
   }
 
   // Error envelope — throw typed ApiError.
-  if (
-    typeof envelope === 'object' &&
-    envelope !== null &&
-    (envelope as { success?: unknown }).success === false
-  ) {
-    const err = envelope as ApiErrorEnvelope;
+  const errorEnvelope = extractErrorEnvelope(envelope, res.status, res.statusText);
+  if (errorEnvelope) {
+    const errorStatus = res.ok ? 400 : res.status;
     throw new ApiError(
-      res.status,
-      err.message ?? err.error ?? 'Request failed',
-      err.code ?? err.error,
-      (typeof err.details === 'object' && err.details !== null
-        ? (err.details as Record<string, unknown>)
-        : undefined),
+      errorStatus,
+      errorEnvelope.message,
+      errorEnvelope.code,
+      errorEnvelope.details,
     );
   }
 
@@ -279,24 +325,16 @@ export async function callApi<C extends ApiContract<any, any, any>>(
     const err = envelope as Partial<ApiErrorEnvelope> | null;
     throw new ApiError(
       res.status,
-      err?.message ?? err?.error ?? res.statusText ?? 'Request failed',
+      err?.message ??
+        (typeof err?.error === 'string' ? err.error : undefined) ??
+        res.statusText ??
+        'Request failed',
       err?.code,
     );
   }
 
   // Success envelope — extract `data` and validate.
-  let raw: unknown;
-  if (
-    typeof envelope === 'object' &&
-    envelope !== null &&
-    (envelope as { success?: unknown }).success === true &&
-    'data' in (envelope as Record<string, unknown>)
-  ) {
-    raw = (envelope as ApiSuccessEnvelope).data;
-  } else {
-    // Some legacy endpoints still return bare payloads; pass-through.
-    raw = envelope;
-  }
+  const raw = extractSuccessData(envelope);
 
   return parseResponseData(contract, raw, skipResponseValidation);
 }

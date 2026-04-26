@@ -26,7 +26,15 @@ export const onRequestGet = publicEndpoint(
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
     try {
-      const query = validated.q;
+      const query = validated.q
+        ? Array.from(validated.q, (char) => {
+            const code = char.charCodeAt(0);
+            return code <= 31 || code === 127 ? ' ' : char;
+          })
+            .join('')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : undefined;
       if (!query) {
         return { data: [] };
       }
@@ -39,7 +47,7 @@ export const onRequestGet = publicEndpoint(
       // Collect ids whose array fields (drugClass, indications) contain the query.
       // Prisma doesn't support ilike-contains on array elements via the ORM, so
       // raw SQL is used — the same pattern as drugs/library.ts for indications.
-      const [classMatches, indicationMatches] = await Promise.all([
+      const [classMatches, indicationMatches, aliasMatches, interactionMatches] = await Promise.all([
         prisma.$queryRaw<Array<{ id: string }>>`
           SELECT id FROM "Drug"
           WHERE EXISTS (
@@ -54,18 +62,36 @@ export const onRequestGet = publicEndpoint(
             WHERE ind ILIKE ${like}
           )
         `,
+        prisma.$queryRaw<Array<{ id: string }>>`
+          SELECT id FROM "Drug"
+          WHERE EXISTS (
+            SELECT 1 FROM unnest(aliases) AS alias
+            WHERE alias ILIKE ${like}
+          )
+        `,
+        prisma.$queryRaw<Array<{ id: string }>>`
+          SELECT id FROM "Drug"
+          WHERE EXISTS (
+            SELECT 1 FROM unnest(interactions) AS interaction
+            WHERE interaction ILIKE ${like}
+          )
+        `,
       ]);
 
       const classIds = classMatches.map((r) => r.id);
       const indicationIds = indicationMatches.map((r) => r.id);
-      const extraIds = [...new Set([...classIds, ...indicationIds])];
+      const aliasIds = aliasMatches.map((r) => r.id);
+      const interactionIds = interactionMatches.map((r) => r.id);
+      const extraIds = [...new Set([...classIds, ...indicationIds, ...aliasIds, ...interactionIds])];
 
       const drugs = await prisma.drug.findMany({
         where: {
           OR: [
             { genericName: { contains: query, mode: 'insensitive' } },
             { brandName: { contains: query, mode: 'insensitive' } },
+            { displayName: { contains: query, mode: 'insensitive' } },
             { mechanismOfAction: { contains: query, mode: 'insensitive' } },
+            { mechanismDetailed: { contains: query, mode: 'insensitive' } },
             ...(extraIds.length > 0 ? [{ id: { in: extraIds } }] : []),
           ],
         },
@@ -82,7 +108,14 @@ export const onRequestGet = publicEndpoint(
           indications: true,
           contraindications: true,
           sideEffects: true,
+          interactions: true,
+          monitoringParams: true,
           blackBoxWarnings: true,
+          pregnancyCategory: true,
+          pregnancyNotes: true,
+          lactationSafety: true,
+          lactationNotes: true,
+          clinicalPearls: true,
         },
         orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { genericName: 'asc' }],
         take: limit,

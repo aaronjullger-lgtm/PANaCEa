@@ -12,7 +12,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { searchContent } from '../_shared/content-search';
 
 const SearchSchema = z.object({
-  q: z.string().min(2, 'Search query must be at least 2 characters'),
+  q: z.string().max(200).optional().default(''),
   limit: z.string().optional(),
   type: z.string().optional(),
 });
@@ -55,5 +55,5 @@ export const onRequestGet = authenticatedEndpoint(
       await safePrismaDisconnect(prisma);
     }
   },
-  { source: 'query' }
+  { source: 'query', requestsPerMinute: 60 }
 );

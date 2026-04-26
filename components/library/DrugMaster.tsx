@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-interface Drug {
+export interface Drug {
   id: string;
   genericName: string;
   brandName?: string | null;

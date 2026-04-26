@@ -41,6 +41,7 @@ export const QuestionAttemptRequestSchema = z
     durationMs: z.number().optional(),
     isMainSession: z.boolean().optional().default(false),
     rating: z.number().int().min(1).max(4).optional(),
+    idempotencyKey: z.string().min(8).max(128).optional(),
   })
   .refine((data) => data.isCorrect !== undefined || data.wasCorrect !== undefined, {
     message: 'Either isCorrect or wasCorrect must be provided',

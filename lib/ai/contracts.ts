@@ -11,7 +11,7 @@
  * without pulling in the full gateway.
  */
 
-import type { z, ZodSchema } from 'zod';
+import type { ZodSchema } from 'zod';
 
 // ─── Task types ────────────────────────────────────────────────────────────
 
@@ -254,4 +254,3 @@ export class GatewayError extends Error {
 // ─── Helper type: infer schema output ──────────────────────────────────────
 
 export type InferSchema<S> = S extends ZodSchema<infer T> ? T : never;
-export type _UnusedZodNs = z; // keep the import used even if no re-export

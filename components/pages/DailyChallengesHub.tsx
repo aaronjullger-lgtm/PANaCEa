@@ -392,8 +392,11 @@ export function DailyChallengesHub() {
               >
                 <div
                   className="h-full rounded-full transition-[width] duration-500"
-                  style={{ background: 'linear-gradient(90deg, var(--color-accent), var(--color-category-knowledge), var(--color-category-practice))' }}
-                  style={{ width: `${overallProgress}%` }}
+                  style={{
+                    background:
+                      'linear-gradient(90deg, var(--color-accent), var(--color-category-knowledge), var(--color-category-practice))',
+                    width: `${overallProgress}%`,
+                  }}
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">

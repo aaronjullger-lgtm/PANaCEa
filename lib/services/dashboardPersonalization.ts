@@ -17,6 +17,7 @@
 
 import type { LearnerStage } from './learnerStageBlueprint';
 import type { TrainingModeId } from '@/config/training-modes';
+import { isPrivateBetaModeVisible } from '@/lib/modes/privateBetaVisibility';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -383,5 +384,5 @@ export function shouldShowWidget(stage: LearnerStage, widget: WidgetId): boolean
  */
 export function shouldShowMode(stage: LearnerStage, mode: TrainingModeId): boolean {
   const config = getDashboardConfig(stage);
-  return config.visibleModes.includes(mode);
+  return config.visibleModes.includes(mode) && isPrivateBetaModeVisible(mode);
 }

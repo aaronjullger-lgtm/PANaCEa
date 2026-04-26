@@ -16,6 +16,8 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../ai/learning/profile-crud';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import { getFromCache, isKVAvailable, setInCache } from '../_shared/cache';
 
 import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 
@@ -23,21 +25,37 @@ import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 // To change the /api/questions/attempt contract, edit lib/api/schemas/questions.ts.
 import { QuestionAttemptRequestSchema } from '../../../lib/api/schemas/questions';
 const AttemptSchema = z.object({ body: QuestionAttemptRequestSchema });
+const IDEM_TTL_SECONDS = 86400;
+const IDEM_KEY_PREFIX = 'idem:questions-attempt:';
+
+function buildAttemptIdemKey(clerkId: string, idempotencyKey: string): string {
+  return `${IDEM_KEY_PREFIX}${clerkId}:${idempotencyKey}`;
+}
+
+function buildDeterministicAttemptId(userId: string, idempotencyKey: string): string {
+  const safeKey = idempotencyKey.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+  return `attempt-${userId}-${safeKey}`;
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: string }).code === 'P2002'
+  );
+}
 
 export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/attempt');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  let duplicateContext:
+    | { idempotencyKey: string; userId: string; attemptId: string; system?: string }
+    | null = null;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
-
-    if (!user) {
-      return { data: { error: 'User not found', message: 'Account not synced yet.' }, status: 404 };
-    }
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
     const userId = user.id;
     const {
@@ -57,12 +75,31 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       telemetryJson,
       durationMs,
       isMainSession = false,
+      idempotencyKey,
     } = validated.body;
+
+    if (idempotencyKey && isKVAvailable(env.CACHE)) {
+      const cached = await getFromCache<Record<string, unknown>>(
+        env.CACHE,
+        buildAttemptIdemKey(auth.userId, idempotencyKey)
+      );
+      if (cached) {
+        logger.info('attempt idempotency cache hit', {
+          userId: auth.userId,
+          questionId,
+          idempotencyKey,
+        });
+        return { data: cached };
+      }
+    }
 
     // Support both isCorrect and wasCorrect field names
     const correctness = isCorrect ?? wasCorrect;
     const timeSpentMillis = timeSpentMs ?? timeSpent ?? null;
-    const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
+    const attemptId = idempotencyKey
+      ? buildDeterministicAttemptId(userId, idempotencyKey)
+      : `attempt-${userId}-${questionId}-${Date.now()}`;
+    duplicateContext = idempotencyKey ? { idempotencyKey, userId, attemptId, system } : null;
 
     const selectedAnswerLetter =
       selectedAnswerRaw === undefined
@@ -71,7 +108,6 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           ? (ANSWER_LETTERS[selectedAnswerRaw] ?? null)
           : selectedAnswerRaw;
 
-    type AttemptResult = { wasCorrect: boolean; system: string | null };
     type TransactionResult = {
       attemptId: string;
       stats: { totalQuestionsAnswered: number; correctAnswers: number; overallAccuracy: number };
@@ -82,6 +118,36 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         accuracy: number;
       } | null;
     };
+
+    if (idempotencyKey) {
+      const existingAttempt = await prisma.questionAttempt.findUnique({
+        where: { id: attemptId },
+        select: { id: true },
+      });
+      if (existingAttempt) {
+        const stats = await getAggregateAttemptStats(prisma, userId);
+        const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
+        const responseData = {
+          success: true,
+          attemptId,
+          stats,
+          systemStats: detailedSystemStats,
+          deduped: true,
+        };
+
+        if (isKVAvailable(env.CACHE)) {
+          await setInCache(
+            env.CACHE,
+            buildAttemptIdemKey(auth.userId, idempotencyKey),
+            responseData,
+            IDEM_TTL_SECONDS
+          );
+        }
+
+        return { data: responseData };
+      }
+    }
+
     const result = (await prisma.$transaction(async (tx) => {
       // 1. Record attempt (with selectedAnswer, telemetry for Ghost Grader)
       await tx.questionAttempt.create({
@@ -127,14 +193,17 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         }
       }
 
+      const now = new Date();
       await tx.userQuestionSeen.upsert({
         where: { userId_questionId_questionType: { userId, questionId, questionType: qType } },
         create: {
+          id: crypto.randomUUID(),
           userId,
           questionId,
           questionType: qType,
-          firstSeenAt: new Date(),
-          lastSeenAt: new Date(),
+          firstSeenAt: now,
+          lastSeenAt: now,
+          updatedAt: now,
           timesShown: 1,
           timesCorrect: correctness ? 1 : 0,
           timesIncorrect: correctness ? 0 : 1,
@@ -166,21 +235,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       // SQL COUNT query. The old approach loaded every attempt the user ever made
       // into memory on each submission — O(total_attempts) per answer, guaranteed
       // to timeout at scale. This is now O(1) regardless of history length.
-      type AggRow = { total: bigint; correct: bigint };
-      const [agg] = await tx.$queryRaw<AggRow[]>`
-        SELECT
-          COUNT(*)                                                AS total,
-          SUM(CASE WHEN "wasCorrect" = true THEN 1 ELSE 0 END)  AS correct
-        FROM "QuestionAttempt"
-        WHERE "userId" = ${userId}
-      `;
-
-      const totalQuestionsAnswered = Number(agg?.total ?? 0);
-      const correctAnswers = Number(agg?.correct ?? 0);
-      const overallAccuracy =
-        totalQuestionsAnswered > 0
-          ? Math.round((correctAnswers / totalQuestionsAnswered) * 100)
-          : 0;
+      const stats = await getAggregateAttemptStats(tx, userId);
 
       let systemStats = null;
       if (system) {
@@ -206,7 +261,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
       return {
         attemptId,
-        stats: { totalQuestionsAnswered, correctAnswers, overallAccuracy },
+        stats,
         systemStats,
       };
     })) as unknown as TransactionResult;
@@ -232,15 +287,42 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
     logger.info('Attempt recorded', { userId: auth.userId, questionId, correctness });
 
+    const responseData = {
+      success: true,
+      attemptId: result.attemptId,
+      stats: result.stats,
+      systemStats: detailedSystemStats || result.systemStats,
+    };
+
+    if (idempotencyKey && isKVAvailable(env.CACHE)) {
+      await setInCache(
+        env.CACHE,
+        buildAttemptIdemKey(auth.userId, idempotencyKey),
+        responseData,
+        IDEM_TTL_SECONDS
+      );
+    }
+
     return {
-      data: {
-        success: true,
-        attemptId: result.attemptId,
-        stats: result.stats,
-        systemStats: detailedSystemStats || result.systemStats,
-      },
+      data: responseData,
     };
   } catch (error) {
+    if (duplicateContext && isUniqueConstraintError(error)) {
+      const stats = await getAggregateAttemptStats(prisma, duplicateContext.userId);
+      const detailedSystemStats = duplicateContext.system
+        ? await getUserSystemStats(prisma, duplicateContext.userId, duplicateContext.system)
+        : null;
+      return {
+        data: {
+          success: true,
+          attemptId: duplicateContext.attemptId,
+          stats,
+          systemStats: detailedSystemStats,
+          deduped: true,
+        },
+      };
+    }
+
     logger.error('Error recording attempt', {
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
@@ -250,6 +332,27 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     await safePrismaDisconnect(prisma);
   }
 });
+
+async function getAggregateAttemptStats(
+  prisma: Pick<ReturnType<typeof createEdgePrismaClient>, '$queryRaw'>,
+  userId: string
+) {
+  type AggRow = { total: bigint; correct: bigint };
+  const [agg] = await prisma.$queryRaw<AggRow[]>`
+    SELECT
+      COUNT(*)                                               AS total,
+      SUM(CASE WHEN "wasCorrect" = true THEN 1 ELSE 0 END)  AS correct
+    FROM "QuestionAttempt"
+    WHERE "userId" = ${userId}
+  `;
+
+  const totalQuestionsAnswered = Number(agg?.total ?? 0);
+  const correctAnswers = Number(agg?.correct ?? 0);
+  const overallAccuracy =
+    totalQuestionsAnswered > 0 ? Math.round((correctAnswers / totalQuestionsAnswered) * 100) : 0;
+
+  return { totalQuestionsAnswered, correctAnswers, overallAccuracy };
+}
 
 async function getUserSystemStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,

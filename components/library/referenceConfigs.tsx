@@ -566,7 +566,7 @@ export const specialTestConfig: ReferenceViewConfig<SpecialTestItem> = {
         {t.region && badge(t.region, entityAccent.specialTest.badge.bg, entityAccent.specialTest.badge.text)}
       </div>
       {!expanded && (
-        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' }}>
           {t.sensitivity != null && <span>Sn: {(t.sensitivity * 100).toFixed(0)}%</span>}
           {t.specificity != null && <span>Sp: {(t.specificity * 100).toFixed(0)}%</span>}
         </div>
@@ -703,7 +703,7 @@ export const findingsConfig: ReferenceViewConfig<FindingItem> = {
         {f.eponymousName && <span style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--color-text-secondary)', fontFamily: FONT_BODY }}>{f.eponymousName}</span>}
       </div>
       {!expanded && (
-        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' }}>
           {f.sensitivity != null && <span>Sn: {(f.sensitivity * 100).toFixed(0)}%</span>}
           {f.specificity != null && <span>Sp: {(f.specificity * 100).toFixed(0)}%</span>}
           {f.positiveLR != null && <span>+LR: {f.positiveLR.toFixed(1)}</span>}
@@ -944,7 +944,7 @@ export const labTestConfig: ReferenceViewConfig<LabTestItem> = {
         {l.category && badge(l.category, entityAccent.labTest.badge.bg, entityAccent.labTest.badge.text)}
       </div>
       {!expanded && l.conventionalRange && (
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' }}>
           Normal: {l.conventionalRange} {l.siUnits || ''}
         </p>
       )}

@@ -88,12 +88,18 @@ export class MissingEnvError extends Error {
       (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development');
     return new Response(
       JSON.stringify({
-        success: false,
+        ok: false,
         error: {
-          code: 'MISSING_ENVIRONMENT_CONFIG',
+          code: 'ENV_MISCONFIGURED',
           message: 'Server configuration error. Required environment variables are missing.',
           details: isDev ? { missing: this.missingVars } : undefined,
         },
+        success: false,
+        code: 'ENV_MISCONFIGURED',
+        message: 'Server configuration error. Required environment variables are missing.',
+        details: isDev ? { missing: this.missingVars } : undefined,
+        traceId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
       }),
       {
         status: 503,

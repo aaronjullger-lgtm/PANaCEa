@@ -3,78 +3,87 @@
  * Centralized to reduce App.tsx size and improve maintainability
  */
 
-import { lazy } from 'react';
+import React, { lazy } from 'react';
+
+const productionDeferred = (
+  label: string
+): React.LazyExoticComponent<React.ComponentType<Record<string, unknown>>> =>
+  lazy(async () => ({
+    default: () =>
+      React.createElement(
+        'div',
+        {
+          className:
+            'mx-auto flex min-h-[45vh] max-w-xl flex-col justify-center px-6 py-16 text-[var(--color-text-primary)]',
+        },
+        React.createElement(
+          'div',
+          {
+            className:
+              'rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]',
+          },
+          React.createElement(
+            'p',
+            {
+              className:
+                'text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]',
+            },
+            'Private beta'
+          ),
+          React.createElement(
+            'h1',
+            { className: 'mt-3 text-2xl font-semibold' },
+            `${label} is not enabled for this launch.`
+          ),
+          React.createElement(
+            'p',
+            { className: 'mt-3 text-sm leading-6 text-[var(--color-text-secondary)]' },
+            'The production launch is focused on the core study loop, review, progress, study plan, and content lookup.'
+          )
+        )
+      ),
+  }));
 
 export const QuizViewWithErrorBoundary = lazy(
   () => import('../components/session/QuizViewWithErrorBoundary')
 );
 export const SessionRunner = lazy(() => import('../components/session/SessionRunner'));
-export const PhotoDrillSession = lazy(() => import('../components/session/PhotoDrillSession'));
-export const RapidRecallDrill = lazy(() => import('../components/drill/recall/RapidRecallDrill'));
-export const DDxCompareDrill = lazy(() => import('../components/drill/ddx/DDxCompareDrill'));
-export const MiniLabDrillSession = lazy(() => import('../components/drill/MiniLabDrillSession'));
-export const PharmDrillSession = lazy(() => import('../components/drill/PharmDrillSession'));
-export const FirstLineDrillSession = lazy(
-  () => import('../components/drill/FirstLineDrillSession')
-);
-export const ConditionDrillSession = lazy(
-  () => import('../components/drill/ConditionDrillSession')
-);
-export const GuidelineDrillSession = lazy(
-  () => import('../components/drill/GuidelineDrillSession')
-);
-export const SystemDrillSession = lazy(() => import('../components/drill/SystemDrillSession'));
-export const PharmacologyDrillSession = lazy(
-  () => import('../components/drill/PharmacologyDrillSession')
-);
-export const SubcategoryDrillSession = lazy(
-  () => import('../components/drill/SubcategoryDrillSession')
-);
-export const VentilatorDrillSession = lazy(
-  () => import('../components/drill/VentilatorDrillSession')
-);
-export const PhysiologyDrillSession = lazy(
-  () => import('../components/drill/PhysiologyDrillSession')
-);
-export const AnatomyDrillSession = lazy(() => import('../components/drill/AnatomyDrillSession'));
-export const ECGDrillSession = lazy(() => import('../components/drill/ECGDrillSession'));
-export const DermDrillSession = lazy(() => import('../components/drill/DermDrillSession'));
-export const ImagingDrillSession = lazy(() => import('../components/drill/ImagingDrillSession'));
-export const FluidElectrolyteMode = lazy(() => import('../components/modes/FluidElectrolyteMode'));
-export const AntibioticMode = lazy(() => import('../components/modes/AntibioticMode'));
-export const PatientEncounterMode = lazy(() => import('../components/modes/PatientEncounterMode'));
-export const CodeBlueSpeedMode = lazy(() => import('../components/modes/CodeBlueSpeedMode'));
-export const GrandRoundsMode = lazy(() => import('../components/modes/GrandRoundsMode'));
-export const ContrastiveDrillSession = lazy(() =>
-  import('../components/drill/ContrastiveDrillSession').then((m) => ({
-    default: m.ContrastiveDrillSession,
-  }))
-);
-export const ReasoningTutorMode = lazy(() => import('../components/modes/ReasoningTutorMode'));
-export const CommuterMode = lazy(() => import('../components/modes/CommuterMode'));
-export const CramMode = lazy(() =>
-  import('../components/modes').then((m) => ({ default: m.CramMode }))
-);
-export const PolypharmacyPuzzleMode = lazy(() =>
-  import('../components/modes').then((m) => ({ default: m.PolypharmacyPuzzleMode }))
-);
-export const MedicalWordleMode = lazy(() =>
-  import('../components/modes').then((m) => ({ default: m.MedicalWordleMode }))
-);
-export const DiagnosticPuzzleMode = lazy(() =>
-  import('../components/modes').then((m) => ({ default: m.DiagnosticPuzzleMode }))
-);
-export const FullSitDownTestMode = lazy(() =>
-  import('../components/modes').then((m) => ({ default: m.FullSitDownTestMode }))
-);
-export const IntegrationsHub = lazy(() => import('../components/integrations/IntegrationsHub'));
+export const PhotoDrillSession = productionDeferred('Photo drill');
+export const RapidRecallDrill = productionDeferred('Rapid recall');
+export const DDxCompareDrill = productionDeferred('Differential comparison');
+export const MiniLabDrillSession = productionDeferred('Mini lab drill');
+export const PharmDrillSession = productionDeferred('Pharmacology drill');
+export const FirstLineDrillSession = productionDeferred('First-line drill');
+export const ConditionDrillSession = productionDeferred('Condition drill');
+export const GuidelineDrillSession = productionDeferred('Guideline drill');
+export const SystemDrillSession = productionDeferred('System drill');
+export const PharmacologyDrillSession = productionDeferred('Pharmacology drill');
+export const SubcategoryDrillSession = productionDeferred('Subcategory drill');
+export const VentilatorDrillSession = productionDeferred('Ventilator drill');
+export const PhysiologyDrillSession = productionDeferred('Physiology drill');
+export const AnatomyDrillSession = productionDeferred('Anatomy drill');
+export const ECGDrillSession = productionDeferred('ECG drill');
+export const DermDrillSession = productionDeferred('Dermatology drill');
+export const ImagingDrillSession = productionDeferred('Imaging drill');
+export const FluidElectrolyteMode = productionDeferred('Fluid and electrolyte mode');
+export const AntibioticMode = productionDeferred('Antibiotic mode');
+export const PatientEncounterMode = productionDeferred('Patient encounter mode');
+export const CodeBlueSpeedMode = productionDeferred('Code blue mode');
+export const GrandRoundsMode = productionDeferred('Grand rounds mode');
+export const ContrastiveDrillSession = productionDeferred('Contrastive drill');
+export const ReasoningTutorMode = productionDeferred('Reasoning tutor mode');
+export const CommuterMode = productionDeferred('Commuter mode');
+export const CramMode = productionDeferred('Cram mode');
+export const PolypharmacyPuzzleMode = productionDeferred('Polypharmacy puzzle');
+export const MedicalWordleMode = productionDeferred('Medical word game');
+export const DiagnosticPuzzleMode = productionDeferred('Diagnostic puzzle');
+export const FullSitDownTestMode = productionDeferred('Full sit-down test');
+export const IntegrationsHub = productionDeferred('Integrations');
 export const SettingsStatsModal = lazy(() => import('../components/modals/SettingsStatsModal'));
 export const KeyboardShortcutsModal = lazy(
   () => import('../components/modals/KeyboardShortcutsModal')
 );
-export const PANRELASimulator = lazy(
-  () => import('../components/lifelong-learning/PANRELASimulator')
-);
+export const PANRELASimulator = productionDeferred('PANRE-LA simulator');
 export const CommandPalette = lazy(() => import('../components/navigation/CommandPalette'));
 export const UserProfileModal = lazy(() => import('../components/onboarding/UserProfileModal'));
 export const BaselineAssessment = lazy(() =>
@@ -87,7 +96,7 @@ export const OnboardingYourPlan = lazy(() =>
     default: m.OnboardingYourPlan,
   }))
 );
-export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
+export const MediaApproval = productionDeferred('Media approval');
 export const CoreAdaptiveSession = lazy(() => import('../components/session/CoreAdaptiveSession'));
 // StudyGroupDashboard removed — social API not implemented
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
@@ -103,30 +112,12 @@ export const StudyPathDashboard = lazy(() =>
 );
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));
-export const DailyChallengesHub = lazy(() =>
-  import('@/components/pages/DailyChallengesHub').then((m) => ({ default: m.DailyChallengesHub }))
-);
-export const MedicalDatabaseWorkspacePage = lazy(() =>
-  import('../pages/MedicalDatabaseWorkspacePage').then((m) => ({
-    default: m.MedicalDatabaseWorkspacePage,
-  }))
-);
-export const ExplorerWorkspacePage = lazy(() =>
-  import('../pages/ExplorerWorkspacePage').then((m) => ({
-    default: m.ExplorerWorkspacePage,
-  }))
-);
-export const LiveCollaborationWorkspacePage = lazy(() =>
-  import('../pages/LiveCollaborationWorkspacePage').then((m) => ({
-    default: m.LiveCollaborationWorkspacePage,
-  }))
-);
-export const SimulationPage = lazy(() =>
-  import('../pages/SimulationPage').then((m) => ({ default: m.SimulationPage }))
-);
-export const CommandCenterPage = lazy(() =>
-  import('../pages/CommandCenterPage').then((m) => ({ default: m.CommandCenterPage }))
-);
+export const DailyChallengesHub = productionDeferred('Daily challenges');
+export const MedicalDatabaseWorkspacePage = productionDeferred('Medical database workspace');
+export const ExplorerWorkspacePage = productionDeferred('Explorer workspace');
+export const LiveCollaborationWorkspacePage = productionDeferred('Live collaboration workspace');
+export const SimulationPage = productionDeferred('Simulation');
+export const CommandCenterPage = productionDeferred('Command center workspace');
 export const ClinicalReferenceLibrary = lazy(
   () => import('../components/library/ClinicalReferenceLibrary')
 );
@@ -145,72 +136,40 @@ export const MyLibraryPage = lazy(() =>
 export const TutorChatPage = lazy(() =>
   import('../components/pages/TutorChatPage').then((m) => ({ default: m.TutorChatPage }))
 );
-export const AgentChat = lazy(() => import('../components/agents/AgentChat'));
+export const AgentChat = productionDeferred('Agent chat');
 export const StudyCompanionPage = lazy(() =>
   import('../components/pages/StudyCompanionPage').then((m) => ({ default: m.StudyCompanionPage }))
 );
 export const SrsFlashcardView = lazy(() =>
   import('../components/session/SrsFlashcardView').then((m) => ({ default: m.SrsFlashcardView }))
 );
-export const CustomStudyMode = lazy(() => import('../components/modes/CustomStudyMode'));
-export const QuestionCurationPanel = lazy(
-  () => import('../components/admin/QuestionCurationPanel')
-);
-export const ClinicalProfileDashboard = lazy(
-  () => import('../components/dashboard/ClinicalProfile/ClinicalProfileDashboard')
-);
-export const AdminDashboard = lazy(() =>
-  import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
-);
-export const TaxonomiesPage = lazy(() =>
-  import('../pages/admin/TaxonomiesPage').then((m) => ({ default: m.TaxonomiesPage }))
-);
-export const SystemMappingsPage = lazy(() =>
-  import('../pages/admin/SystemMappingsPage').then((m) => ({ default: m.SystemMappingsPage }))
-);
-export const QuestionGeneratorPage = lazy(() =>
-  import('../pages/admin/QuestionGeneratorPage').then((m) => ({ default: m.QuestionGeneratorPage }))
-);
-export const RefineryPage = lazy(() =>
-  import('../pages/admin/RefineryPage').then((m) => ({ default: m.RefineryPage }))
-);
+export const CustomStudyMode = productionDeferred('Custom study mode');
+export const QuestionCurationPanel = productionDeferred('Question curation');
+export const ClinicalProfileDashboard = productionDeferred('Clinical profile dashboard');
+export const AdminDashboard = productionDeferred('Admin dashboard');
+export const TaxonomiesPage = productionDeferred('Taxonomies');
+export const SystemMappingsPage = productionDeferred('System mappings');
+export const QuestionGeneratorPage = productionDeferred('Question generator');
+export const RefineryPage = productionDeferred('Refinery');
 export const MyPearlsPanel = lazy(() => import('../components/pearls/MyPearlsPanel'));
-export const ClinicalEyePage = lazy(() =>
-  import('../pages/ClinicalEyePage').then((m) => ({ default: m.ClinicalEyePage }))
-);
-export const VisualizerPage = lazy(() =>
-  import('../pages/VisualizerPage').then((m) => ({ default: m.VisualizerPage }))
-);
-export const CrossSystemExplorer = lazy(() =>
-  import('../components/explorer/CrossSystemExplorer').then((m) => ({ default: m.CrossSystemExplorer }))
-);
-export const MedicalDatabaseSearch = lazy(() =>
-  import('../components/external/MedicalDatabaseSearch').then((m) => ({
-    default: m.MedicalDatabaseSearch,
-  }))
-);
-export const LiveStudySession = lazy(() =>
-  import('../components/collaboration/LiveStudySession').then((m) => ({
-    default: m.LiveStudySession,
-  }))
-);
-export const LectureConverterPage = lazy(() =>
-  import('../pages/LectureConverterPage').then((m) => ({ default: m.LectureConverterPage }))
-);
-export const TechniqueCheckPage = lazy(() =>
-  import('../pages/TechniqueCheckPage').then((m) => ({ default: m.TechniqueCheckPage }))
-);
-export const CalibrationDashboard = lazy(() => import('../components/dashboard/CalibrationDashboard'));
-export const AnalyticsDashboard = lazy(() => import('../components/analytics/AnalyticsDashboard'));
-export const DatabaseAnalyticsDashboard = lazy(() => import('../components/analytics/DatabaseAnalyticsDashboard'));
-export const LearningProfileDashboard = lazy(() => import('../components/analytics/LearningProfileDashboard'));
-export const AdvancedLearningProfileDashboard = lazy(() => import('../components/analytics/AdvancedLearningProfileDashboard'));
-export const UserFriendlyStatsDisplay = lazy(() => import('../components/analytics/UserFriendlyStatsDisplay'));
+export const ClinicalEyePage = productionDeferred('Clinical eye');
+export const VisualizerPage = productionDeferred('Visualizer');
+export const CrossSystemExplorer = productionDeferred('Cross-system explorer');
+export const MedicalDatabaseSearch = productionDeferred('External medical database search');
+export const LiveStudySession = productionDeferred('Live study session');
+export const LectureConverterPage = productionDeferred('Lecture converter');
+export const TechniqueCheckPage = productionDeferred('Technique check');
+export const CalibrationDashboard = productionDeferred('Calibration dashboard');
+export const AnalyticsDashboard = productionDeferred('Advanced analytics');
+export const DatabaseAnalyticsDashboard = productionDeferred('Database analytics');
+export const LearningProfileDashboard = productionDeferred('Learning profile');
+export const AdvancedLearningProfileDashboard = productionDeferred('Advanced learning profile');
+export const UserFriendlyStatsDisplay = productionDeferred('Experimental stats display');
 export const PracticePage = lazy(() => import('../pages/PracticePage').then((m) => ({ default: m.PracticePage })));
 export const ProgressPage = lazy(() => import('../pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));
-export const ElaborationDrill = lazy(() => import('../components/drill/ElaborationDrill'));
-export const ICDCodingDrill = lazy(() => import('../components/drill/ICDCodingDrill'));
-export const TeachBackDrill = lazy(() => import('../components/drill/TeachBackDrill'));
+export const ElaborationDrill = productionDeferred('Elaboration drill');
+export const ICDCodingDrill = productionDeferred('ICD coding drill');
+export const TeachBackDrill = productionDeferred('Teach-back drill');
 export const IllnessScriptView = lazy(() =>
   import('../components/library/IllnessScriptView').then((m) => ({
     default: m.IllnessScriptView,

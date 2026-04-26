@@ -6,7 +6,7 @@
  */
 
 import type { View } from './appViews';
-import { TRAINING_MODES } from './training-modes';
+import { getTrainingModeContracts } from '@/lib/modes/studyModeContracts';
 
 export interface RouteDefinition {
   /** The URL path */
@@ -59,13 +59,13 @@ export const ROUTE_REGISTRY: RouteDefinition[] = [
   // Legacy redirects (handled in useAppNavigation)
   { path: '/study/reference', view: 'reference_library', label: 'Reference (Legacy)', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
   { path: '/study/toolkit', view: 'toolkit', label: 'Toolkit (Legacy)', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
-  { path: '/study/main-session', view: 'command_center', label: 'Main Session (Legacy)', isRouterRoute: false, includeIn404Check: true, parentPath: '/study' },
+  { path: '/study/main-session', view: null, label: 'Main Session', isRouterRoute: true, includeIn404Check: true, parentPath: '/study' },
   
-  // Training mode routes (from TRAINING_MODES)
-  ...TRAINING_MODES.map((mode) => ({
+  // Training mode routes (from centralized study mode contracts)
+  ...getTrainingModeContracts().map((mode) => ({
     path: mode.route,
-    view: mode.id as View,
-    label: mode.label,
+    view: mode.modeId as View,
+    label: mode.displayName,
     isRouterRoute: false, // Currently all use view-state, should migrate to React Router
     includeIn404Check: true,
   })),

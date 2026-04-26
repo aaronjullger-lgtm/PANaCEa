@@ -51,6 +51,7 @@ import {
 } from '@/config/lazyComponents';
 import type { View } from '@/config/appViews';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
+import { isPrivateBetaModeVisible } from '@/lib/modes/privateBetaVisibility';
 // TRAINING_MODES import removed — no longer needed after polypharmacy simplification
 
 interface DrillViewRouterProps {
@@ -124,6 +125,31 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
     removeFlaggedQuestion,
     updateQuestionNote,
   };
+
+  if (!isPrivateBetaModeVisible(view)) {
+    return (
+      <div className="mx-auto flex min-h-[50vh] max-w-xl flex-col justify-center px-6 py-16">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+            Private beta
+          </p>
+          <h1 className="mt-3 text-2xl font-semibold text-[var(--color-text-primary)]">
+            This mode is not part of the beta yet.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+            Use the core study loop while we finish validating this mode for production.
+          </p>
+          <button
+            type="button"
+            onClick={exit}
+            className="mt-6 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+          >
+            Return to Study
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

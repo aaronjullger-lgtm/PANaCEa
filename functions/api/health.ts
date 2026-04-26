@@ -9,6 +9,7 @@
 import { getCorsHeaders, getCorsConfig } from './_shared/cors';
 import { withRateLimit, getRateLimitIdentifier } from './_shared/rateLimiter';
 import { sanitizeEnvValue } from './_shared/env-validation';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 export const onRequestOptions = async (context: any) => {
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
@@ -71,7 +72,7 @@ export const onRequestGet = async (context: any) => {
 
     // 3. Test database connection (skip if DATABASE_URL missing; dynamic import to avoid load-time throw in Workers)
     let prisma: unknown = null;
-    let disconnect: ((p: unknown) => Promise<void>) | null = null;
+    let disconnect: ((p: any) => Promise<void>) | null = null;
     if (!dbUrl) {
       diagnostics.prismaClientCreated = false;
       diagnostics.dbConnected = false;

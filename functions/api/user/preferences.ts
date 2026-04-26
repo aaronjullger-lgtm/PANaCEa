@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserRecord, resolveUserRecord } from '../_shared/user-resolver';
 
 // Validation schemas
 const UserPreferencesSchema = z.object({
@@ -123,6 +124,19 @@ const PartialPreferencesSchema = z.object({
 // Empty schema for GET and DELETE
 const EmptySchema = z.object({});
 
+function sanitizePreferencesPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const {
+    id: _id,
+    userId: _userId,
+    clerkId: _clerkId,
+    User: _userRelation,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    ...safePayload
+  } = payload;
+  return safePayload;
+}
+
 /**
  * GET - Fetch user preferences
  */
@@ -136,14 +150,7 @@ export const onRequestGet = authenticatedEndpoint<Record<string, never>>(
     try {
       logger.addContext({ userId: auth.userId });
 
-      // Resolve internal user ID from Clerk sub
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
       // Fetch preferences
       let preferences = await prisma.userPreferences.findUnique({
@@ -154,7 +161,9 @@ export const onRequestGet = authenticatedEndpoint<Record<string, never>>(
       if (!preferences) {
         preferences = await prisma.userPreferences.create({
           data: {
+            id: crypto.randomUUID(),
             userId: user.id,
+            updatedAt: new Date(),
             // All other fields will use their default values from schema
           },
         });
@@ -191,18 +200,17 @@ export const onRequestPost = authenticatedEndpoint<z.infer<typeof UserPreference
     try {
       logger.addContext({ userId: auth.userId });
 
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
-      const payload = validated as Record<string, unknown>;
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+      const payload = sanitizePreferencesPayload(validated as Record<string, unknown>);
 
       type CreateInput = Parameters<typeof prisma.userPreferences.create>[0]['data'];
       type UpdateInput = Parameters<typeof prisma.userPreferences.update>[0]['data'];
-      const createData: CreateInput = { userId: user.id, ...payload };
+      const createData: CreateInput = {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        ...payload,
+        updatedAt: new Date(),
+      };
       const updateData: UpdateInput = { ...payload };
       const preferences = await prisma.userPreferences.upsert({
         where: { userId: user.id },
@@ -245,14 +253,8 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
     try {
       logger.addContext({ userId: auth.userId });
 
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
-      const payload = validated as Record<string, unknown>;
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+      const payload = sanitizePreferencesPayload(validated as Record<string, unknown>);
 
       const existing = await prisma.userPreferences.findUnique({
         where: { userId: user.id },
@@ -260,7 +262,12 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
 
       if (!existing) {
         type CreateInput = Parameters<typeof prisma.userPreferences.create>[0]['data'];
-        const createData: CreateInput = { userId: user.id, ...payload };
+        const createData: CreateInput = {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          ...payload,
+          updatedAt: new Date(),
+        };
         const preferences = await prisma.userPreferences.create({
           data: createData,
         });
@@ -333,10 +340,7 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
     logger.addContext({ userId: auth.userId });
 
     // Resolve internal user ID from Clerk sub
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
+    const user = await resolveUserRecord(prisma, auth.userId, { id: true });
     if (!user) {
       return { status: 404, error: 'User not found' };
     }

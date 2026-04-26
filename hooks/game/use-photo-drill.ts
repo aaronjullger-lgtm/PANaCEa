@@ -664,50 +664,45 @@ export function usePhotoDrill(
 
   /**
    * Advance to the next case.
-   * For infinite mode, moves to next case in queue (auto-refill handled by useEffect).
+   * Moves to the next real case in queue. If the queue is exhausted, try one
+   * last synchronous refill before ending the session instead of showing dummy cases.
    */
   const nextCase = useCallback(() => {
-    // For infinite queue mode (when we have a selected category)
-    if (selectedCategory !== null) {
-      const placeholder = generateRandomCase(selectedCategory);
-      setQueue((prev) => [...prev, placeholder]);
-
-      fetchMoreCases(selectedCategory, 1)
-        .then((more) => {
-          if (!more.length) return;
-          setQueue((prev) => {
-            const trimmed = prev.slice(0, Math.max(prev.length - 1, 0));
-            return [...trimmed, ...more];
-          });
-        })
-        .catch(() => {
-          // Keep placeholder on failure
-        });
-
+    const advance = () => {
       setCurrentCaseIndex((prev) => prev + 1);
       setUserAnswer(null);
       setIsCorrect(null);
       setStatus('playing');
 
-      // Start FSRS tracking for the new question
       questionStartTimeRef.current = Date.now();
       startQuestionFSRS();
-    } else {
-      // Legacy mode - finite cases
-      if (currentCaseIndex >= totalCases - 1) {
-        setStatus('summary');
-      } else {
-        setCurrentCaseIndex((prev) => prev + 1);
-        setUserAnswer(null);
-        setIsCorrect(null);
-        setStatus('playing');
+    };
 
-        // Start FSRS tracking for the new question
-        questionStartTimeRef.current = Date.now();
-        startQuestionFSRS();
-      }
+    if (currentCaseIndex < totalCases - 1) {
+      advance();
+      return;
     }
-  }, [currentCaseIndex, totalCases, selectedCategory, startQuestionFSRS]);
+
+    if (selectedCategory !== null) {
+      void fetchMoreCases(selectedCategory, INITIAL_QUEUE_SIZE)
+        .then((more) => {
+          if (!more.length) {
+            setStatus('summary');
+            return;
+          }
+          setQueue((prev) => [...prev, ...more]);
+          advance();
+        })
+        .catch((error) => {
+          logger.error(`[${LOG_SCOPE}] Final refill failed`, { error });
+          setFetchError(error instanceof Error ? error.message : 'Failed to load more questions');
+          setStatus('summary');
+        });
+      return;
+    }
+
+    setStatus('summary');
+  }, [currentCaseIndex, totalCases, selectedCategory, fetchMoreCases, startQuestionFSRS]);
 
   /**
    * Skip the current case (counts as incorrect).
@@ -722,25 +717,8 @@ export function usePhotoDrill(
     setUserAnswer(null);
     setIsCorrect(false);
 
-    // Move to next case (queue auto-refills)
-    const placeholder = generateRandomCase(selectedCategory || 'random');
-    setQueue((prev) => [...prev, placeholder]);
-
-    fetchMoreCases(selectedCategory || 'random', 1)
-      .then((more) => {
-        if (!more.length) return;
-        setQueue((prev) => {
-          const trimmed = prev.slice(0, Math.max(prev.length - 1, 0));
-          return [...trimmed, ...more];
-        });
-      })
-      .catch(() => {
-        // Keep placeholder on failure
-      });
-
-    setCurrentCaseIndex((prev) => prev + 1);
-    setStatus('playing');
-  }, [status, selectedCategory, fetchMoreCases]);
+    nextCase();
+  }, [status, nextCase]);
 
   /**
    * Reset the game to start fresh (legacy support).
@@ -756,16 +734,20 @@ export function usePhotoDrill(
 
     // If we have a category, fetch new queue
     if (selectedCategory !== null) {
-      const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() =>
-        generateRandomCase(selectedCategory)
-      );
-      setQueue(seedQueue);
       setStatus('playing');
+      setQueue([]);
 
       void fetchMoreCases(selectedCategory, INITIAL_QUEUE_SIZE)
-        .then((newQueue) => setQueue(newQueue))
+        .then((newQueue) => {
+          setQueue(newQueue);
+          if (newQueue.length === 0) {
+            setStatus('summary');
+          }
+        })
         .catch((error) => {
           logger.error(`[${LOG_SCOPE}] Failed to reset`, { error });
+          setFetchError(error instanceof Error ? error.message : 'Failed to load questions');
+          setStatus('summary');
         });
     } else {
       setStatus('playing');

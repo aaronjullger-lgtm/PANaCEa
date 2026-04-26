@@ -16,7 +16,9 @@ import {
   type TokenProvider,
   type SdkClientOptions,
   type WrappedResponse,
+  type ApiResult,
   ApiError,
+  apiErrorToResult,
 } from './types';
 
 // ─── Defaults ─────────────────────────────────────────────────────────────
@@ -35,6 +37,10 @@ export interface ApiClient {
   post<T>(path: string, body?: unknown): Promise<T>;
   put<T>(path: string, body?: unknown): Promise<T>;
   delete<T>(path: string): Promise<T>;
+  getResult<T>(path: string, params?: Record<string, string>): Promise<ApiResult<T>>;
+  postResult<T>(path: string, body?: unknown): Promise<ApiResult<T>>;
+  putResult<T>(path: string, body?: unknown): Promise<ApiResult<T>>;
+  deleteResult<T>(path: string): Promise<ApiResult<T>>;
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────
@@ -115,13 +121,16 @@ export function createApiClient(
       return undefined as unknown as T;
     }
 
-    // Error responses
-    if (!res.ok) {
+    const envelopeError = extractEnvelopeError(json, res.status, res.statusText);
+
+    // Error responses, including the production envelope { ok: false, error }.
+    if (!res.ok || envelopeError) {
+      const errorStatus = res.ok && envelopeError ? 400 : res.status;
       throw new ApiError(
-        res.status,
-        json?.error ?? json?.message ?? res.statusText ?? 'Request failed',
-        json?.code,
-        json?.details,
+        errorStatus,
+        envelopeError?.message ?? res.statusText ?? 'Request failed',
+        envelopeError?.code,
+        envelopeError?.details,
       );
     }
 
@@ -185,6 +194,20 @@ export function createApiClient(
     throw lastError ?? new ApiError(0, 'Request failed after retries', 'RETRY_EXHAUSTED');
   }
 
+  async function requestResult<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    params?: Record<string, string>,
+  ): Promise<ApiResult<T>> {
+    try {
+      const data = await request<T>(method, path, body, params);
+      return { ok: true, data };
+    } catch (error) {
+      return apiErrorToResult(error);
+    }
+  }
+
   // ── Public methods ─────────────────────────────────────────────────────
 
   return {
@@ -199,6 +222,18 @@ export function createApiClient(
     },
     delete<T>(path: string) {
       return request<T>('DELETE', path);
+    },
+    getResult<T>(path: string, params?: Record<string, string>) {
+      return requestResult<T>('GET', path, undefined, params);
+    },
+    postResult<T>(path: string, body?: unknown) {
+      return requestResult<T>('POST', path, body);
+    },
+    putResult<T>(path: string, body?: unknown) {
+      return requestResult<T>('PUT', path, body);
+    },
+    deleteResult<T>(path: string) {
+      return requestResult<T>('DELETE', path);
     },
   };
 }
@@ -217,6 +252,11 @@ function unwrap<T>(json: unknown): T {
 
   const obj = json as WrappedResponse;
 
+  // Production shape: { ok: true, data: T }
+  if ('ok' in obj && obj.ok === true && 'data' in obj) {
+    return obj.data as T;
+  }
+
   // Shape 1 & 2: has a `data` key
   if ('data' in obj && obj.data !== undefined) {
     return obj.data as T;
@@ -229,4 +269,46 @@ function unwrap<T>(json: unknown): T {
 
   // Shape 3: bare object — return as-is
   return json as unknown as T;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function extractEnvelopeError(
+  json: unknown,
+  status: number,
+  statusText?: string,
+): { code?: string; message: string; details?: unknown } | null {
+  if (!isRecord(json)) return null;
+
+  const explicitError =
+    json.ok === false ||
+    json.success === false ||
+    (status >= 400 && ('error' in json || 'message' in json));
+  if (!explicitError) return null;
+
+  const nested = isRecord(json.error) ? json.error : null;
+  const message =
+    asString(nested?.message) ??
+    asString(json.message) ??
+    asString(json.error) ??
+    statusText ??
+    'Request failed';
+  const code =
+    asString(nested?.code) ??
+    asString(json.code) ??
+    (status > 0 ? `HTTP_${status}` : undefined);
+  const details =
+    nested && 'details' in nested
+      ? nested.details
+      : 'details' in json
+        ? json.details
+        : undefined;
+
+  return { message, code, details };
 }

@@ -3,7 +3,8 @@
  * Complete an exam and generate score report
  */
 
-import { authenticatedEndpoint } from '../_shared/middleware';
+import { authenticatedEndpoint, type CloudflareContext } from '../_shared/middleware';
+import { featureDisabledResponse, isFeatureEnabled } from '../_shared/feature-flags';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -19,7 +20,7 @@ const CompleteExamSchema = z.object({
   }),
 });
 
-export const onRequestPost = authenticatedEndpoint(
+const completeExamHandler = authenticatedEndpoint(
   CompleteExamSchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/exam/complete', auth.userId);
@@ -162,3 +163,15 @@ export const onRequestPost = authenticatedEndpoint(
     }
   }
 );
+
+export const onRequestPost = (context: CloudflareContext) => {
+  if (!isFeatureEnabled(context.env, 'ENABLE_LEGACY_EXAM_API')) {
+    return featureDisabledResponse(
+      context.request,
+      'Legacy exam API is disabled for this launch.',
+      410
+    );
+  }
+
+  return completeExamHandler(context);
+};

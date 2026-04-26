@@ -278,7 +278,11 @@ export async function generateSingleQuestion(
       : '';
 
   // Pass findings-only for vignette-building; withhold condition/overview from vignette text
-  const sections = condition.sections || {};
+  const sections = (condition.sections || {}) as {
+    clinicalPresentation?: unknown;
+    diagnostics?: unknown;
+    treatment?: unknown;
+  };
   const findingsContext = [
     sections.clinicalPresentation
       ? `Clinical Presentation: ${String(sections.clinicalPresentation).slice(0, 500)}`

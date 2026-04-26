@@ -161,7 +161,7 @@ export const ENDPOINT_TIERS: Record<string, EndpointAuthTier> = {
   'streaks/*':                   'user',
   'study/*':                     'user',
   'study-plan/*':                'user',
-  'exam/*':                      'exam',
+  'exam/*':                      'user',
   'feedback/*':                  'user',
   'push/*':                      'user',
   'reflection':                  'user',

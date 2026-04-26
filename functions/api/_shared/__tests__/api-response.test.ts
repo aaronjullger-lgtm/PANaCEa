@@ -25,6 +25,7 @@ describe('api-response: ok()', () => {
     expect(res.headers.get('Content-Type')).toContain('application/json');
 
     const body = await parse<ApiSuccessEnvelope<{ hello: string }>>(res);
+    expect(body.ok).toBe(true);
     expect(body.success).toBe(true);
     expect(body.data).toEqual({ hello: 'world' });
     expect(typeof body.traceId).toBe('string');
@@ -67,8 +68,12 @@ describe('api-response: fail()', () => {
     const res = fail(ErrorCode.UNAUTHORIZED);
     expect(res.status).toBe(401);
     const body = await parse<ApiErrorEnvelope>(res);
+    expect(body.ok).toBe(false);
     expect(body.success).toBe(false);
-    expect(body.error).toBe(ErrorCode.UNAUTHORIZED);
+    expect(body.error).toEqual({
+      code: ErrorCode.UNAUTHORIZED,
+      message: 'Authentication required',
+    });
     expect(body.code).toBe(ErrorCode.UNAUTHORIZED);
     expect(body.message).toBe('Authentication required');
     expect(typeof body.traceId).toBe('string');
@@ -82,6 +87,11 @@ describe('api-response: fail()', () => {
     expect(res.status).toBe(400);
     const body = await parse<ApiErrorEnvelope>(res);
     expect(body.message).toBe('bad body');
+    expect(body.error).toMatchObject({
+      code: ErrorCode.VALIDATION_FAILED,
+      message: 'bad body',
+      details: [{ path: ['email'], message: 'required' }],
+    });
     expect(body.details).toEqual([{ path: ['email'], message: 'required' }]);
   });
 
@@ -141,9 +151,21 @@ describe('api-response: envelopeFromHandlerResult()', () => {
     );
     expect(out.status).toBe(200);
     const body = await parse<ApiSuccessEnvelope<{ items: number[] }>>(out);
+    expect(body.ok).toBe(true);
     expect(body.success).toBe(true);
     expect(body.data).toEqual({ items: [1, 2, 3] });
     expect(body.traceId).toBe('trace-1');
+  });
+
+  it('preserves handler headers while wrapping data', async () => {
+    const out = envelopeFromHandlerResult(
+      { status: 200, data: { ok: true }, headers: { 'X-Cache-Test': 'yes' } },
+      req,
+      'trace-h'
+    );
+    expect(out.headers.get('X-Cache-Test')).toBe('yes');
+    const body = await parse<ApiSuccessEnvelope<{ ok: boolean }>>(out);
+    expect(body.ok).toBe(true);
   });
 
   it('wraps a { error } handler result in the error envelope with inferred code', async () => {

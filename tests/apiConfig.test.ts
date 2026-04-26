@@ -8,6 +8,14 @@ import { describe, it, expect } from 'vitest';
 import { API_ENDPOINTS, getApiBaseUrl, buildApiUrl } from '@/lib/utils/apiConfig';
 
 describe('apiConfig', () => {
+  describe('lab endpoints', () => {
+    it('points lab service constants at production Pages Functions', () => {
+      expect(API_ENDPOINTS.LAB_TESTS).toBe('/api/labs/tests');
+      expect(API_ENDPOINTS.LAB_CASES).toBe('/api/labs/cases');
+      expect(API_ENDPOINTS.LAB_CASES_RANDOM(3)).toBe('/api/labs/cases/random?count=3');
+    });
+  });
+
   describe('KNOWLEDGE_CACHE_DELETE', () => {
     it('returns path with encoded cache name', () => {
       const name = 'cachedContents/abc123';

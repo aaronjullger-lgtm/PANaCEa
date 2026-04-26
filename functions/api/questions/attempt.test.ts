@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // ---------------------------------------------------------------------------
 
 const mockPrisma: any = {
-  user: { findUnique: vi.fn() },
-  questionAttempt: { create: vi.fn(), findMany: vi.fn() },
+  user: { findUnique: vi.fn(), create: vi.fn() },
+  questionAttempt: { create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
   userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
   question: { update: vi.fn() },
   $queryRaw: vi.fn(),
@@ -67,9 +67,13 @@ import { scheduleConceptReview } from '../ai/learning/profile-crud';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeContext(bodyOverrides: Record<string, unknown> = {}, authOverrides: Record<string, unknown> = {}) {
+function makeContext(
+  bodyOverrides: Record<string, unknown> = {},
+  authOverrides: Record<string, unknown> = {},
+  envOverrides: Record<string, unknown> = {}
+) {
   return {
-    env: { DATABASE_URL: 'postgresql://test', CLERK_SECRET_KEY: 'sk_test_123' },
+    env: { DATABASE_URL: 'postgresql://test', CLERK_SECRET_KEY: 'sk_test_123', ...envOverrides },
     auth: { userId: 'clerk_user_1', ...authOverrides },
     validated: {
       body: {
@@ -82,6 +86,20 @@ function makeContext(bodyOverrides: Record<string, unknown> = {}, authOverrides:
         ...bodyOverrides,
       },
     },
+  };
+}
+
+function makeKV() {
+  const store = new Map<string, string>();
+  return {
+    get: vi.fn(async (key: string, options?: { type?: string }) => {
+      const value = store.get(key);
+      if (!value) return null;
+      return options?.type === 'json' ? JSON.parse(value) : value;
+    }),
+    put: vi.fn(async (key: string, value: string) => {
+      store.set(key, value);
+    }),
   };
 }
 
@@ -99,6 +117,7 @@ function makeMockTx() {
 function setupDefaultMocks(tx?: any) {
   const mockTx = tx ?? makeMockTx();
   mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-db-1' });
+  mockPrisma.questionAttempt.findUnique.mockResolvedValue(null);
   mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(mockTx));
   // getUserSystemStats after transaction
   mockPrisma.questionAttempt.findMany.mockResolvedValue([
@@ -126,11 +145,27 @@ describe('POST /api/questions/attempt', () => {
 
   // ---- User lookup ----
   describe('user lookup', () => {
-    it('returns 404 when user not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+    it('creates a placeholder user when Clerk auth succeeds before webhook sync', async () => {
+      const tx = makeMockTx();
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 'user-db-1' });
+      mockPrisma.user.create.mockResolvedValue({ id: 'user-db-1' });
+      mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(tx));
+      mockPrisma.questionAttempt.findMany.mockResolvedValue([]);
+
       const { status, body } = await callEndpoint(makeContext());
-      expect(status).toBe(404);
-      expect(body.error).toBe('User not found');
+
+      expect(status).toBe(200);
+      expect(body.success).toBe(true);
+      expect(mockPrisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            clerkId: 'clerk_user_1',
+            email: 'clerk_user_1@placeholder.panacea.app',
+          }),
+        })
+      );
     });
   });
 
@@ -220,6 +255,21 @@ describe('POST /api/questions/attempt', () => {
       expect(createCall.data.id).toMatch(/^attempt-user-db-1-q-42-/);
     });
 
+    it('ignores client-supplied userId and writes attempt for authenticated user only', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+
+      await callEndpoint(makeContext({ userId: 'user-db-other', questionId: 'q-99' }));
+
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { clerkId: 'clerk_user_1' },
+        select: { id: true },
+      });
+      const createCall = tx.questionAttempt.create.mock.calls[0][0];
+      expect(createCall.data.userId).toBe('user-db-1');
+      expect(createCall.data.userId).not.toBe('user-db-other');
+    });
+
     it('upserts UserQuestionSeen for new item (timesShown=1)', async () => {
       const tx = makeMockTx();
       tx.userQuestionSeen.findUnique.mockResolvedValue(null);
@@ -286,6 +336,39 @@ describe('POST /api/questions/attempt', () => {
       setupDefaultMocks(tx);
       const { body } = await callEndpoint(makeContext());
       expect(body.attemptId).toMatch(/^attempt-user-db-1-q-1-/);
+    });
+
+    it('short-circuits duplicate submissions with the same idempotency key', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+      const cache = makeKV();
+      const body = { idempotencyKey: 'attempt-idem-1' };
+      const env = { CACHE: cache };
+
+      const first = await callEndpoint(makeContext(body, {}, env));
+      const second = await callEndpoint(makeContext(body, {}, env));
+
+      expect(first.status).toBe(200);
+      expect(second.status).toBe(200);
+      expect(second.body.attemptId).toBe(first.body.attemptId);
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('dedupes idempotent submissions from the primary key when KV is unavailable', async () => {
+      setupDefaultMocks();
+      mockPrisma.questionAttempt.findUnique.mockResolvedValueOnce({
+        id: 'attempt-user-db-1-attempt-idem-2',
+      });
+      mockPrisma.$queryRaw.mockResolvedValueOnce([{ total: BigInt(1), correct: BigInt(1) }]);
+
+      const { status, body } = await callEndpoint(
+        makeContext({ idempotencyKey: 'attempt-idem-2', system: undefined })
+      );
+
+      expect(status).toBe(200);
+      expect(body.deduped).toBe(true);
+      expect(body.attemptId).toBe('attempt-user-db-1-attempt-idem-2');
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
   });
 

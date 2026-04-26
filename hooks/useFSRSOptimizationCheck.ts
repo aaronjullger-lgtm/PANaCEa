@@ -59,7 +59,7 @@ export function useFSRSOptimizationCheck(): void {
 
         const data = await user.getFSRSParams();
         const canOptimize = data?.canOptimize === true;
-        const lastOptimizedAt = data?.params?.lastOptimizedAt;
+        const lastOptimizedAt = data?.params?.optimizedAt;
 
         if (!canOptimize) return;
 

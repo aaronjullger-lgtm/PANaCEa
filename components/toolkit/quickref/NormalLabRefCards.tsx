@@ -174,7 +174,7 @@ export default function NormalLabRefCards({ variant = 'labs' }: Props) {
                 padding: '8px 12px', borderRadius: 8, marginBottom: 6,
                 background: 'color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-primary))', border: '1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-bg-primary))',
               }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-accent)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' as React.CSSProperties }}>{range}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-accent)', fontFamily: FONT_MONO, fontVariantNumeric: 'tabular-nums' }}>{range}</div>
                 {unit && <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{unit}</div>}
               </div>
 

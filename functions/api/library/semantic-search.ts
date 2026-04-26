@@ -282,4 +282,4 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { requestsPerMinute: 10 });

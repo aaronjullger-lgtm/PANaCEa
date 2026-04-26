@@ -11,10 +11,10 @@ export const API_ENDPOINTS = {
   QUESTIONS_POOL: '/api/questions/pool',
   QUESTIONS_ANSWER_DISTRIBUTION: '/api/questions/answer-distribution',
   QUESTIONS_CURATE: '/api/questions/curate',
-  LAB_TESTS: '/api/labtests',
-  LAB_CASES: '/api/labcases',
+  LAB_TESTS: '/api/labs/tests',
+  LAB_CASES: '/api/labs/cases',
   LABS_CASES: '/api/labs/cases', // Alternative naming for lab cases
-  LAB_CASES_RANDOM: (count: number) => `/api/labcases/random/${count}`,
+  LAB_CASES_RANDOM: (count: number) => `/api/labs/cases/random?count=${count}`,
   IMAGING: '/api/imaging',
   DRUGS: '/api/drugs',
   DRUGS_ALL: '/api/drugs/all',

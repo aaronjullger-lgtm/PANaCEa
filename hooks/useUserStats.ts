@@ -294,6 +294,7 @@ export function useUserStats(): UseUserStatsResult {
 
       const result = (await response.json()) as {
         success?: boolean;
+        sessionId?: string;
         data?: {
           performanceRecords?: PerformanceRecord[];
           srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0];

@@ -8,8 +8,11 @@
  * middleware.ts::toResponse).
  *
  * Envelope shape (frozen contract):
- *   Success → { success: true,  data, traceId, timestamp, message? }
- *   Error   → { success: false, error, code, traceId, timestamp, message, details? }
+ *   Success → { ok: true,  data, traceId, timestamp, message? }
+ *   Error   → { ok: false, error: { code, message, details? }, traceId, timestamp }
+ *
+ * Backward-compatible aliases (`success`, top-level `code`, `message`, and
+ * `details`) are emitted while older consumers migrate.
  *
  * Usage:
  *   return ok(payload);                              // 200 OK
@@ -38,6 +41,8 @@ import {
 // ─── Envelope types ──────────────────────────────────────────────────────────
 
 export interface ApiSuccessEnvelope<T = unknown> {
+  ok: true;
+  /** @deprecated Use ok. */
   success: true;
   data: T;
   message?: string;
@@ -46,14 +51,19 @@ export interface ApiSuccessEnvelope<T = unknown> {
 }
 
 export interface ApiErrorEnvelope {
+  ok: false;
+  error: {
+    code: ErrorCode;
+    message: string;
+    details?: unknown;
+  };
+  /** @deprecated Use ok. */
   success: false;
-  /** Stable error code — part of public contract */
-  error: ErrorCode;
-  /** Alias for error, kept for backward-compat with the `code` field */
+  /** @deprecated Use error.code. */
   code: ErrorCode;
-  /** Human-readable message (may be overridden per-call) */
+  /** @deprecated Use error.message. */
   message: string;
-  /** Optional structured details (zod issues, etc.) */
+  /** @deprecated Use error.details. */
   details?: unknown;
   traceId: string;
   timestamp: string;
@@ -91,6 +101,15 @@ export interface FailOptions {
   traceId?: string;
   /** For 429 — sets `Retry-After` header (seconds) */
   retryAfterSeconds?: number;
+}
+
+export interface LegacyHandlerResult {
+  status?: number;
+  data?: unknown;
+  error?: string;
+  code?: string;
+  details?: unknown;
+  headers?: Record<string, string>;
 }
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
@@ -146,6 +165,7 @@ function buildHeaders(
 export function ok<T>(data: T, options: OkOptions = {}): Response {
   const traceId = options.traceId ?? generateTraceId();
   const body: ApiSuccessEnvelope<T> = {
+    ok: true,
     success: true,
     data,
     traceId,
@@ -173,14 +193,21 @@ export function fail(
   const traceId = options.traceId ?? generateTraceId();
 
   const body: ApiErrorEnvelope = {
+    ok: false,
+    error: {
+      code: resolvedCode,
+      message: options.message ?? entry.defaultMessage,
+    },
     success: false,
-    error: resolvedCode,
     code: resolvedCode,
     message: options.message ?? entry.defaultMessage,
     traceId,
     timestamp: new Date().toISOString(),
   };
-  if (options.details !== undefined) body.details = options.details;
+  if (options.details !== undefined) {
+    body.error.details = options.details;
+    body.details = options.details;
+  }
 
   const extraHeaders: Record<string, string> = { ...(options.headers ?? {}) };
   if (options.retryAfterSeconds != null && options.retryAfterSeconds >= 0) {
@@ -201,7 +228,7 @@ export function fail(
  * envelope Response. Used by middleware.ts::toResponse().
  */
 export function envelopeFromHandlerResult(
-  result: { status?: number; data?: unknown; error?: string } | Response,
+  result: LegacyHandlerResult | Response,
   request: Request,
   traceId?: string
 ): Response {
@@ -225,9 +252,12 @@ export function envelopeFromHandlerResult(
   const status = result.status ?? 200;
 
   if (result.error != null) {
-    return fail(codeFromStatus(status), {
+    const code = result.code && isKnownErrorCode(result.code) ? result.code : codeFromStatus(status);
+    return fail(code, {
       status,
       message: result.error,
+      details: result.details,
+      headers: result.headers,
       request,
       traceId,
     });
@@ -235,6 +265,7 @@ export function envelopeFromHandlerResult(
 
   return ok(result.data ?? null, {
     status,
+    headers: result.headers,
     request,
     traceId,
   });

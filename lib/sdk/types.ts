@@ -23,6 +23,16 @@ export type TokenProvider = () => Promise<string | null>;
 /** Error categories for downstream retry/display logic. */
 export type ApiErrorCategory = 'network' | 'auth' | 'validation' | 'server' | 'timeout' | 'unknown';
 
+export interface ApiErrorPayload {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export type ApiResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: ApiErrorPayload };
+
 export class ApiError extends Error {
   public readonly category: ApiErrorCategory;
 
@@ -30,7 +40,7 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly code?: string,
-    public readonly details?: Record<string, unknown>,
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -75,6 +85,27 @@ export class ApiError extends Error {
   }
 }
 
+export function apiErrorToResult(error: unknown): ApiResult<never> {
+  if (error instanceof ApiError) {
+    return {
+      ok: false,
+      error: {
+        code: error.code ?? (error.status > 0 ? `HTTP_${error.status}` : 'API_ERROR'),
+        message: error.message || error.userMessage,
+        ...(error.details !== undefined ? { details: error.details } : {}),
+      },
+    };
+  }
+
+  return {
+    ok: false,
+    error: {
+      code: 'UNKNOWN_ERROR',
+      message: error instanceof Error ? error.message : 'Unexpected error',
+    },
+  };
+}
+
 // =============================================================================
 // SDK-INTERNAL: Response envelope (used by core.ts unwrap())
 // =============================================================================
@@ -88,11 +119,13 @@ export class ApiError extends Error {
  * The SDK core normalises all three into `T` before the domain client sees it.
  */
 export interface WrappedResponse<T = unknown> {
+  ok?: boolean;
   success?: boolean;
   data?: T;
-  error?: string;
+  error?: string | ApiErrorPayload | Record<string, unknown>;
   code?: string;
   message?: string;
+  details?: unknown;
   status?: number;
   timestamp?: string;
 }

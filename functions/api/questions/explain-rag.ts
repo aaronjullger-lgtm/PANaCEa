@@ -49,6 +49,33 @@ interface KVNamespace {
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
+function buildFallbackExplanation(input: {
+  selectedAnswer: string;
+  correctAnswer: string;
+  system: string;
+}) {
+  return {
+    explanation: {
+      whyCorrect: `${input.correctAnswer} is the best answer based on the validated explanation for this question.`,
+      whyWrong: `${input.selectedAnswer} does not fit this question as well as the correct answer.`,
+      whenWrongWouldBeRight: null,
+      clinicalPearl: `Review the key ${input.system} finding that separates the correct option from nearby distractors.`,
+      keyDistinction: 'Use the original rationale and answer choices to compare the decisive clinical clue.',
+      relatedConcepts: [input.system],
+    },
+    ragMetadata: {
+      sourceChunkIds: [],
+      retrievalQuality: 'fallback',
+      retrievalMessage: 'AI explanation is temporarily unavailable; showing a safe fallback explanation.',
+      isGrounded: false,
+      chunksUsed: 0,
+      avgSimilarity: 0,
+    },
+    cached: false,
+    fallback: true,
+  };
+}
+
 // Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory): RAG explanation
 // pipeline invokes Gemini + vector retrieval; 25 rpm 'ai' bucket is correct.
 export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
@@ -154,7 +181,9 @@ Return ONLY valid JSON. No markdown fences.`;
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
       console.error('[explain-rag] Gemini error:', errText.slice(0, 300));
-      return { status: 502, error: 'Explanation generation failed' };
+      return {
+        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
+      };
     }
 
     const geminiData = (await geminiRes.json()) as {
@@ -163,7 +192,9 @@ Return ONLY valid JSON. No markdown fences.`;
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!rawText) {
-      return { status: 502, error: 'Empty response from explanation model' };
+      return {
+        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
+      };
     }
 
     // 5. Parse response
@@ -173,7 +204,9 @@ Return ONLY valid JSON. No markdown fences.`;
       explanation = JSON.parse(cleaned);
     } catch {
       console.error('[explain-rag] JSON parse error:', rawText.slice(0, 200));
-      return { status: 502, error: 'Invalid JSON from explanation model' };
+      return {
+        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
+      };
     }
 
     // 6. Build response with RAG metadata
@@ -210,8 +243,7 @@ Return ONLY valid JSON. No markdown fences.`;
   } catch (error) {
     console.error('[explain-rag]', error);
     return {
-      status: 500,
-      error: error instanceof Error ? error.message : 'RAG explanation generation failed',
+      data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
     };
   } finally {
     await safePrismaDisconnect(prisma);

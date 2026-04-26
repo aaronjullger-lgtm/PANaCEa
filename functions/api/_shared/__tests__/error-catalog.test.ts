@@ -22,6 +22,7 @@ describe('error-catalog', () => {
       // Resource
       expect(ErrorCode.NOT_FOUND).toBe('NOT_FOUND');
       expect(ErrorCode.CONFLICT).toBe('CONFLICT');
+      expect(ErrorCode.FEATURE_DISABLED).toBe('FEATURE_DISABLED');
       // Rate
       expect(ErrorCode.RATE_LIMITED).toBe('RATE_LIMITED');
       expect(ErrorCode.AI_QUOTA_EXCEEDED).toBe('AI_QUOTA_EXCEEDED');
@@ -62,6 +63,11 @@ describe('error-catalog', () => {
       expect(ERROR_CATALOG[ErrorCode.RATE_LIMITED].status).toBe(429);
       expect(ERROR_CATALOG[ErrorCode.AI_QUOTA_EXCEEDED].status).toBe(429);
       expect(ERROR_CATALOG[ErrorCode.AI_QUOTA_EXCEEDED].capture).toBe(true);
+    });
+
+    it('maps disabled launch features to a non-capturing 404', () => {
+      expect(ERROR_CATALOG[ErrorCode.FEATURE_DISABLED].status).toBe(404);
+      expect(ERROR_CATALOG[ErrorCode.FEATURE_DISABLED].capture).toBe(false);
     });
   });
 

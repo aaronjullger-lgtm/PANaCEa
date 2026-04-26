@@ -24,6 +24,7 @@ import { gateway, GatewayError, toGatewayContext } from '@/lib/ai/aiGateway';
 import {
   VisionAnalysisSchema,
   VISION_ANALYSIS_DESCRIPTION,
+  type VisionAnalysis,
 } from '@/lib/ai/schemas/extraction';
 
 const MAX_IMAGE_BASE64 = 4 * 1024 * 1024;
@@ -87,7 +88,7 @@ export const onRequestPost = aiEndpoint(AnalyzeBodySchema, async (context) => {
     : defaultPrompt;
 
   try {
-    const result = await gateway.callVision<typeof VisionAnalysisSchema._type>(
+    const result = await gateway.callVision<VisionAnalysis>(
       toGatewayContext(context as Parameters<typeof toGatewayContext>[0]),
       {
         mode: 'vision-structured',

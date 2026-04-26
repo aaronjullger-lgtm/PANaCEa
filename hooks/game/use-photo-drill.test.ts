@@ -241,7 +241,7 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('nextCase (infinite mode)', () => {
-    it('should advance to the next case and generate new case', async () => {
+    it('should advance to the next queued case without appending a dummy case', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
       await act(async () => {
@@ -261,7 +261,7 @@ describe('usePhotoDrill hook', () => {
 
       expect(result.current.currentCaseIndex).toBe(1);
       expect(result.current.status).toBe('playing');
-      expect(result.current.queue.length).toBe(initialQueueLength + 1);
+      expect(result.current.queue.length).toBe(initialQueueLength);
     });
 
     it('should reset userAnswer and isCorrect when moving to next case', async () => {

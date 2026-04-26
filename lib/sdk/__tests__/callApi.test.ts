@@ -234,6 +234,19 @@ describe('callApi', () => {
     expect(result).toEqual({ echoed: 'hi' });
   });
 
+  it('extracts .data from the { ok: true } production envelope', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        ok: true,
+        data: { echoed: 'hi' },
+        traceId: 't_1',
+      }),
+    );
+
+    const result = await callApi(postPing, { msg: 'hi' }, { getToken });
+    expect(result).toEqual({ echoed: 'hi' });
+  });
+
   it('throws ApiError with server code on error envelope', async () => {
     mockFetch.mockResolvedValueOnce(
       jsonResponse(
@@ -269,6 +282,33 @@ describe('callApi', () => {
       expect(e.status).toBe(429);
       expect(e.code).toBe(ErrorCode.RATE_LIMITED);
       expect(e.message).toBe('Slow down');
+    }
+  });
+
+  it('throws ApiError with nested production error envelope', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(
+        {
+          ok: false,
+          error: {
+            code: ErrorCode.RATE_LIMITED,
+            message: 'Slow down',
+            details: { retryAfterSeconds: 10 },
+          },
+        },
+        429,
+      ),
+    );
+
+    try {
+      await callApi(postPing, { msg: 'hi' }, { getToken });
+      throw new Error('should have thrown');
+    } catch (err) {
+      const e = err as ApiError;
+      expect(e.status).toBe(429);
+      expect(e.code).toBe(ErrorCode.RATE_LIMITED);
+      expect(e.message).toBe('Slow down');
+      expect(e.details).toEqual({ retryAfterSeconds: 10 });
     }
   });
 

@@ -34,6 +34,7 @@ import {
   Database,
   FlaskConical,
 } from '@/components/ui/icons';
+import { isPrivateBetaRouteVisible } from '@/lib/modes/privateBetaVisibility';
 
 // ── Static navigation items ──
 const NAV_ITEMS = [
@@ -61,6 +62,8 @@ const DRILL_ITEMS = [
   { label: 'Imaging Drill', path: '/practice?drill=imaging', icon: Eye, group: 'Drills' },
   { label: 'Anatomy Drill', path: '/practice?drill=anatomy', icon: Stethoscope, group: 'Drills' },
 ] as const;
+
+const visibleNavItems = NAV_ITEMS.filter((item) => isPrivateBetaRouteVisible(item.path));
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -98,7 +101,7 @@ export default function CommandPalette() {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <CommandItem
               key={item.path}
               value={item.label}

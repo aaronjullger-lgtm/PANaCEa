@@ -7,6 +7,7 @@ import { User } from 'lucide-react';
 import { runStorageKeyMigration } from './lib/storage/storageRegistry';
 import { type View, DRILL_MODE_IDS, springs } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
+import { isPrivateBetaModeVisible } from './lib/modes/privateBetaVisibility';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
@@ -955,6 +956,15 @@ const App: React.FC = () => {
   //    This ensures users always see the URL update when launching modes from Practice page
   // 2. Fallback to view-based navigation if no route exists (legacy or special modes)
   const handleNavigateToDrillMode = useCallback((modeId: string) => {
+    if (!isPrivateBetaModeVisible(modeId)) {
+      setError(
+        'This private beta is focused on the core study loop. Start a focused practice block from Study or Practice.'
+      );
+      setView('command_center');
+      navigate('/study');
+      return;
+    }
+
     // Look up mode config and navigate to dedicated route if available
     const modeConfig = TRAINING_MODES.find((m) => m.id === modeId);
     if (modeConfig?.route && modeConfig.route.startsWith('/')) {
@@ -1003,6 +1013,15 @@ const App: React.FC = () => {
 
   const handleNavigateToModeRoute = useCallback(
     (route: string, modeId: string) => {
+      if (!isPrivateBetaModeVisible(modeId)) {
+        setError(
+          'This private beta is focused on the core study loop. Start a focused practice block from Study or Practice.'
+        );
+        setView('command_center');
+        navigate('/study');
+        return;
+      }
+
       // If route is a dedicated path (starts with '/'), navigate using React Router
       if (route.startsWith('/')) {
         navigate(route);

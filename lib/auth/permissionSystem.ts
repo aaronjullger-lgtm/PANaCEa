@@ -15,7 +15,17 @@
  *   }
  */
 
-import { AppError, ErrorCategory, ErrorCode } from '@/lib/errors/appError';
+import { AppErrorFactory, ErrorCategory, ErrorCode } from '@/lib/errors/appError';
+
+function permissionDeniedError(message: string, context: Record<string, unknown>): Error {
+  const appError = AppErrorFactory.create(
+    message,
+    ErrorCategory.AUTHENTICATION,
+    ErrorCode.AUTH_PERMISSION_DENIED,
+    context
+  );
+  return Object.assign(new Error(appError.userMessage), appError);
+}
 
 // Permission enumeration
 export enum Permission {
@@ -358,10 +368,8 @@ export class PermissionSystem {
     // Check if granter has permission to grant this permission
     const canGrant = await this.checkPermission(granterContext, Permission.USER_ROLE_MANAGE);
     if (!canGrant.allowed) {
-      throw new AppError(
+      throw permissionDeniedError(
         'Insufficient permissions to grant custom permissions',
-        ErrorCategory.AUTHENTICATION,
-        ErrorCode.PERMISSION_DENIED,
         { granterId: granterContext.userId, targetUserId: userId, permission }
       );
     }
@@ -399,10 +407,8 @@ export class PermissionSystem {
     // Check if revoker has permission to revoke
     const canRevoke = await this.checkPermission(revokerContext, Permission.USER_ROLE_MANAGE);
     if (!canRevoke.allowed) {
-      throw new AppError(
+      throw permissionDeniedError(
         'Insufficient permissions to revoke custom permissions',
-        ErrorCategory.AUTHENTICATION,
-        ErrorCode.PERMISSION_DENIED,
         { revokerId: revokerContext.userId, targetUserId: userId, permission }
       );
     }
@@ -617,10 +623,8 @@ export async function requirePermission(
 ): Promise<void> {
   const result = await checkPermission(context, permission, options);
   if (!result.allowed) {
-    throw new AppError(
+    throw permissionDeniedError(
       result.reason || 'Permission denied',
-      ErrorCategory.AUTHENTICATION,
-      ErrorCode.PERMISSION_DENIED,
       {
         userId: context.userId,
         permission,

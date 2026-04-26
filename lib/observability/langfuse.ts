@@ -157,7 +157,7 @@ export function createTrace(env: LangfuseEnv, options: TraceOptions) {
                   totalTokens: gen.usage.totalTokens,
                 }
               : undefined,
-            modelParameters: gen.modelParameters,
+            modelParameters: gen.modelParameters as any,
             metadata: {
               ...gen.metadata,
               latencyMs: gen.latencyMs,

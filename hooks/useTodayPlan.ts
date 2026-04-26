@@ -25,6 +25,29 @@ export interface TodayPlanData {
   recommendedSplit: StudySplit;
   reasonSummary: string;
   generatedAt: string;
+  planId?: string;
+  planDate?: string;
+  status?: string;
+  progress?: {
+    questionsAnswered: number;
+    questionsTarget: number;
+    percentComplete: number;
+  };
+  tasks?: Array<{
+    id: string;
+    kind: string;
+    mode: string;
+    title: string;
+    count: number;
+    estimatedMinutes: number;
+    reason: string;
+    priority: string;
+    status: string;
+    systemFilter?: string[];
+    conditionIds?: string[];
+    route: string;
+    launchParams: Record<string, string>;
+  }>;
 }
 
 export function useTodayPlan() {
@@ -49,10 +72,9 @@ export function useTodayPlan() {
         throw new Error(`Study plan fetch failed: ${response.status}`);
       }
 
-      const json = await response.json();
-      if (json?.data) {
-        setData(json.data);
-      }
+      const json: any = await response.json();
+      const payload = json?.data?.data ?? json?.data ?? json;
+      if (payload) setData(payload);
     } catch (err) {
       console.warn('[useTodayPlan] Failed:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');

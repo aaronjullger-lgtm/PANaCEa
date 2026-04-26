@@ -1,7 +1,13 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
-import { generateDailyPlan } from '../../_shared/phenotypeService';
 import { prisma } from '../../_shared/prisma-edge';
+import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
+import {
+  applyDailyStudyPlanAction,
+  getOrCreateDailyStudyPlan,
+  normalizePlanDate,
+  sanitizeStudyPlanTasks,
+} from '../../../../lib/services/studyPlanService';
 
 const DailyPlanGetQuerySchema = z.object({
   // Loose string — passed straight to `new Date(...)`. Invalid dates fall back
@@ -11,11 +17,15 @@ const DailyPlanGetQuerySchema = z.object({
 
 const DailyPlanCompleteSchema = z.object({
   body: z.object({
+    action: z.enum(['complete', 'skip', 'reschedule']).optional(),
+    taskId: z.string().min(1).max(128).optional(),
     // Accuracy expressed as a 0..1 decimal (matches `actualAccuracy` storage).
     accuracy: z.number().min(0).max(1).optional(),
     // Minutes spent; clamp to a realistic full-day range so malformed input
     // can't pollute downstream analytics.
     durationMinutes: z.number().int().min(0).max(24 * 60).optional(),
+    questionsAnswered: z.number().int().min(0).max(500).optional(),
+    rescheduleDate: z.string().min(1).max(64).optional(),
   }),
 });
 
@@ -35,41 +45,11 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const clerkId = context.auth.userId;
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true },
-    });
-    if (!user) {
-      return { status: 404, error: 'User not found' };
-    }
+    const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
 
-    // Parse optional date param
     const dateParam = context.validated.date;
-    const targetDate = dateParam ? new Date(dateParam) : new Date();
-    targetDate.setUTCHours(0, 0, 0, 0);
-    // Get the plan for the specified date
-    const plan = await prisma.dailyStudyPlan.findUnique({
-      where: {
-        userId_planDate: {
-          userId: user.id,
-          planDate: targetDate,
-        },
-      },
-    });
-
-    if (!plan) {
-      // Generate plan on-demand if it doesn't exist
-      const result = await generateDailyPlan(user.id, targetDate);
-      const newPlan = await prisma.dailyStudyPlan.findUnique({
-        where: { id: result.id },
-      });
-
-      if (!newPlan) {
-        return { status: 500, error: 'Failed to generate daily plan' };
-      }
-
-      return { status: 200, data: formatPlanResponse(newPlan) };
-    }
+    const targetDate = normalizePlanDate(dateParam ? new Date(dateParam) : new Date());
+    const plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, targetDate);
 
     return { status: 200, data: formatPlanResponse(plan) };
   },
@@ -84,20 +64,13 @@ export const onRequestPost = authenticatedEndpoint(
   DailyPlanCompleteSchema,
   async (context) => {
     const clerkId = context.auth.userId;
-    const { accuracy, durationMinutes } = context.validated.body;
+    const { action, accuracy, durationMinutes, questionsAnswered, rescheduleDate, taskId } =
+      context.validated.body;
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true },
-    });
-    if (!user) {
-      return { status: 404, error: 'User not found' };
-    }
+    const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    // Find today's plan
-    const plan = await prisma.dailyStudyPlan.findUnique({
+    const today = normalizePlanDate(new Date());
+    let plan = await prisma.dailyStudyPlan.findUnique({
       where: {
         userId_planDate: {
           userId: user.id,
@@ -107,20 +80,25 @@ export const onRequestPost = authenticatedEndpoint(
     });
 
     if (!plan) {
-      return { status: 404, error: 'No plan found for today' };
+      plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, today);
     }
 
-    // Update plan with completion data
-    const updatedPlan = await prisma.dailyStudyPlan.update({
-      where: { id: plan.id },
-      data: {
-        status: 'completed',
-        actualAccuracy: accuracy ?? undefined,
-        actualDurationMinutes: durationMinutes ?? undefined,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
+    let updatedPlan;
+    try {
+      updatedPlan = await applyDailyStudyPlanAction(prisma as any, plan, {
+        action,
+        accuracy,
+        durationMinutes,
+        questionsAnswered,
+        taskId,
+        rescheduleDate: rescheduleDate ? new Date(rescheduleDate) : undefined,
+      });
+    } catch (error) {
+      return {
+        status: 400,
+        error: error instanceof Error ? error.message : 'Invalid study plan action',
+      };
+    }
 
     return { status: 200, data: formatPlanResponse(updatedPlan) };
   },
@@ -131,10 +109,15 @@ export const onRequestPost = authenticatedEndpoint(
 // ============================================
 
 interface RecommendedSession {
+  id?: string;
   mode: string;
   count: number;
   systemFilter?: string[];
+  conditionIds?: string[];
   reason: string;
+  status?: string;
+  route?: string;
+  launchParams?: Record<string, string>;
 }
 
 function formatPlanResponse(plan: {
@@ -155,9 +138,15 @@ function formatPlanResponse(plan: {
   feedbackReason: string | null;
   createdAt: Date;
   updatedAt: Date;
-}) {  const sessions = Array.isArray(plan.recommendedSessions)
-    ? (plan.recommendedSessions as RecommendedSession[])
-    : [];
+}) {
+  const sessions = sanitizeStudyPlanTasks(plan.recommendedSessions) as RecommendedSession[];
+  const completedTasks = sessions.filter((session) => session.status === 'completed').length;
+  const actionableTasks = sessions.filter((session) => session.status !== 'skipped' && session.status !== 'rescheduled').length;
+  const percentComplete = plan.targetQuestionsCount > 0
+    ? Math.min(100, Math.round((plan.actualQuestionsAnswered / plan.targetQuestionsCount) * 100))
+    : actionableTasks > 0
+      ? Math.round((completedTasks / actionableTasks) * 100)
+      : 0;
 
   return {
     id: plan.id,
@@ -167,6 +156,7 @@ function formatPlanResponse(plan: {
     // Recommendations
     recommendedModes: plan.recommendedModes,
     recommendedSessions: sessions,
+    tasks: sessions,
     targetQuestionsCount: plan.targetQuestionsCount,
     targetSystemFocus: plan.targetSystemFocus,
     estimatedTimeMinutes: plan.estimatedTimeMinutes,
@@ -175,14 +165,14 @@ function formatPlanResponse(plan: {
     progress: {
       questionsAnswered: plan.actualQuestionsAnswered,
       questionsTarget: plan.targetQuestionsCount,
-      percentComplete: plan.targetQuestionsCount > 0
-        ? Math.round((plan.actualQuestionsAnswered / plan.targetQuestionsCount) * 100)
-        : 0,
-      accuracy: plan.actualAccuracy
-        ? parseFloat((plan.actualAccuracy * 100).toFixed(1))
+      percentComplete,
+      accuracy: plan.actualAccuracy != null
+        ? Math.min(100, Math.max(0, parseFloat((plan.actualAccuracy * 100).toFixed(1))))
         : null,
       durationMinutes: plan.actualDurationMinutes,
       estimatedDurationMinutes: plan.estimatedTimeMinutes,
+      completedTasks,
+      totalTasks: sessions.length,
     },
     // Metadata
     completedAt: plan.completedAt ? plan.completedAt.toISOString() : null,

@@ -39,6 +39,8 @@ export const onRequestGet = publicEndpoint(
             OR: [
               { genericName: { contains: search, mode: 'insensitive' as const } },
               { brandName: { contains: search, mode: 'insensitive' as const } },
+              { displayName: { contains: search, mode: 'insensitive' as const } },
+              { mechanismOfAction: { contains: search, mode: 'insensitive' as const } },
               { drugClass: { hasSome: [search] } },
             ],
           }
@@ -56,6 +58,14 @@ export const onRequestGet = publicEndpoint(
           indications: true,
           sideEffects: true,
           contraindications: true,
+          interactions: true,
+          monitoringParams: true,
+          pregnancyCategory: true,
+          pregnancyNotes: true,
+          lactationSafety: true,
+          lactationNotes: true,
+          blackBoxWarnings: true,
+          clinicalPearls: true,
           isHighYield: true,
         },
         orderBy: { genericName: 'asc' },
