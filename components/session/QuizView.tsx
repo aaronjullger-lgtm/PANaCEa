@@ -1,4 +1,4 @@
-// components/session/QuizView.tsx
+// components/QuizView.tsx
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -7,9 +7,9 @@ import { useShortcut } from '@/contexts/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
+// useSwipeGestures removed — not used in this file
 import { enhancedHaptics } from '@/lib/enhancedHaptics';
 import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
-import { useQuizTimer } from './hooks/useQuizTimer';
 import { debounce } from '@/lib/utils/debounce';
 import { useQuizTimer } from '@/hooks/useQuizTimer';
 import { useQuizKeyboard } from './hooks/useQuizKeyboard';
@@ -37,7 +37,8 @@ import {
 } from '@/services/session';
 
 // Analytics services
-import { recordCircadianPerformance, updatePerformancePrediction, resetPrediction } from '@/services/analytics';
+import { recordCircadianPerformance } from '@/services/analytics';
+import { updatePerformancePrediction, resetPrediction } from '@/services/analytics';
 
 // Domain services
 import { recordQuestion, getSessionSummary, resetSessionDistribution } from '@/services/domain';
@@ -85,32 +86,15 @@ import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 
 // Sprint 10: Trust badges for question source indication
 import { TrustBadge } from '@/components/ui/TrustBadge';
+// Progress moved to QuizToolbar component
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
 import { ROUTES } from '@/config/routes';
 import { BookOpen } from 'lucide-react';
 
-// Extracted sub-components and hooks
-import QuestionDisplay from './QuestionDisplay';
-import QuizToolbar from './QuizToolbar';
-import AnswerFeedback from './AnswerFeedback';
-import { SessionPacer } from './SessionPacer';
-import { BreakTimer } from './BreakTimer';
-import { FatigueBreakPrompt } from './FatigueBreakPrompt';
-import { useSessionWellness } from '@/hooks/useSessionWellness';
-import { useQuizSubmit } from './hooks/useQuizSubmit';
-
-// Lib utils
-import { calculateParTime } from '@/lib/utils/questionComplexity';
-import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
-import { syncManager } from '@/lib/services/sync/syncManager';
-import { inferQuestionType } from '@/hooks/useTelemetryCollector';
-import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
-import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
-import { feedback } from '@/services/core/feedbackService';
+// FlagIcon, ClearHighlightIcon, CloseIcon, lucide icons moved to QuizToolbar/AnswerFeedback
+// ROUTES moved to QuizToolbar
 
 // Types
 import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
@@ -121,7 +105,10 @@ import AnswerFeedback from '@/components/session/AnswerFeedback';
 import { SessionPacer } from '@/components/session/SessionPacer';
 import { useSessionWellness } from '@/hooks/useSessionWellness';
 
-/** Map Question to the shape inferQuestionType expects */
+// Lib utils
+import { calculateParTime } from '@/lib/utils/questionComplexity';
+
+/** Map Question to the shape inferQuestionType expects (type, stem, hasImage, mediaAssets). */
 function questionToInferShape(q: Question): {
   type?: string;
   stem?: string;
@@ -135,6 +122,12 @@ function questionToInferShape(q: Question): {
     mediaAssets: (q as { mediaAssets?: unknown[] }).mediaAssets ?? [],
   };
 }
+import {
+  optimisticUpdateStats,
+  optimisticUpdateSystemStats,
+  createOptimisticPerformanceRecord,
+} from '@/lib/utils/optimisticUI';
+// getApiEndpoint, API_ENDPOINTS removed — no longer used directly in QuizView
 
 // Hooks
 import { useAuth } from '@/hooks/useAuth';
@@ -155,9 +148,17 @@ import { logger } from "@/lib/simple-logger";
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
 const STRIP_HTML_TAGS_REGEX = /<[^>]*>/g;
+/** Regex to match <br> and <br/> for normalizing line breaks */
+const BR_TAG_REGEX = /<br\s*\/?>/gi;
 
 const LOG_SCOPE = 'QuizView';
 const quizLogger = logger.scope(LOG_SCOPE);
+
+// Strip basic HTML tags from question text while preserving table HTML rendered separately
+function stripSimpleHtmlTags(text: string): string {
+  if (!text) return text;
+  return text.replace(/<[^>]+>/g, '');
+}
 
 export interface QuizViewProps {
   initialQueue: Question[];
@@ -165,6 +166,7 @@ export interface QuizViewProps {
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: Question) => void;
   updateReviewQuestion: (question: Question, wasCorrect: boolean) => void;
+  /** When user answers a Due sibling correctly, remove that concept from the Due queue */
   removeDueConcept?: (conditionId: string, taskType: string | null) => void;
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   setIsLoading: (loading: boolean) => void;
@@ -180,11 +182,17 @@ export interface QuizViewProps {
   addFlaggedQuestion: (question: Question) => void;
   removeFlaggedQuestion: (question: Question) => void;
   updateQuestionNote: (question: Question, note: string) => void;
+  /** When true and question has vignette, use split-pane layout (vignette left, content right) */
   useSplitPane?: boolean;
+  /** Start a review session with missed questions (from SessionEndSummary) */
   onReviewMissed?: () => void;
+  /** When true, enables exam simulator mode (hide feedback, enforce timer, high-contrast theme) */
   isExamSimulator?: boolean;
+  /** When true, enables full sit-down test mode (locked navigation, 300 questions, progress tracking) */
   isFullSitDownTest?: boolean;
+  /** Total number of questions in the session (used for progress tracking in full sit-down test) */
   totalQuestions?: number;
+  /** Breadcrumb/context label (e.g. "Practice → Diagnostic Puzzle") shown beside BackLink */
   modeLabel?: string;
   /** Optional external session identifier used by some parent modes */
   sessionId?: string | null;
@@ -370,11 +378,22 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Validate required callback props at runtime
   useEffect(() => {
     const requiredCallbacks = {
-      setParentQueue, addPerformanceRecord, addMissedQuestion, updateReviewQuestion,
-      removeDueConcept, updateLastPerformanceErrorTag, setIsLoading, setError,
-      onEndSession, onShowMenu, setFontSizeAdjustment,
-      addFlaggedQuestion, removeFlaggedQuestion, updateQuestionNote,
+      setParentQueue,
+      addPerformanceRecord,
+      addMissedQuestion,
+      updateReviewQuestion,
+      removeDueConcept,
+      updateLastPerformanceErrorTag,
+      setIsLoading,
+      setError,
+      onEndSession,
+      onShowMenu,
+      setFontSizeAdjustment,
+      addFlaggedQuestion,
+      removeFlaggedQuestion,
+      updateQuestionNote,
     };
+
     for (const [name, callback] of Object.entries(requiredCallbacks)) {
       if (typeof callback !== 'function') {
         quizLogger.error(`Required callback prop "${name}" is not a function`, {
@@ -384,7 +403,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
   }, []);
 
-  // ---- AUTH & ANALYTICS HOOKS ----
+  // ---- CLERK USER & AUTH ----
   const { user } = useUser();
   const { getToken } = useAuth();
   const recordStudyAttempt = useStudyStore((state) => state.recordAttempt);
@@ -400,22 +419,36 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- ADVANCED ANALYTICS ----
   const { recordQuestionResult, cognitiveState, recommendations } = useAdvancedAnalytics();
 
-  // ---- BEHAVIORAL TRACKING HOOKS ----
+  // ---- IMPLICIT METRICS TRACKING ----
   const implicitMetrics = useImplicitMetrics();
   const behavioralTracker = useBehavioralTracker();
   const microKinetics = useUnifiedKinetics();
   const fatigueTracking = useFatigueTracking(isExamSimulator);
   const sessionWellness = useSessionWellness();
+
+  // Causal Reasoning Chain — mechanistic "Why This Happens" (tier1 Item 4)
   const causalChainHook = useCausalChain();
   const { trackAnswer: analyticsTrackerTrack } = useAnalyticsTracking();
   const analyticsTracker = { trackAnswer: analyticsTrackerTrack };
 
-  // ---- ANSWER STATE ----
+  // ---- QUEUE HANDLING ----
+  const [queue, setQueue] = useState<Question[]>(initialQueue);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(initialQueue[0] || null);
+
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
+  const [isAnswered, setIsAnswered] = useState<boolean>(false);
+  const [questionNumber, setQuestionNumber] = useState<number>(1);
+  const [lastImplicitConfidence, setLastImplicitConfidence] = useState<number | undefined>(undefined);
+
+  // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+
   const [showRationale, setShowRationale] = useState<boolean>(false);
   const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
   const [isExplainerLoading, setIsExplainerLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
   const [localNote, setLocalNote] = useState<string>('');
 
   // eliminatedAnswers + eliminationTimestampsRef owned by useQuizKeyboard hook (below)
@@ -456,7 +489,10 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Report issue modal state
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Socratic Tutor (Tutor Me) for incorrect answers
   const [showSocraticTutor, setShowSocraticTutor] = useState(false);
+  // Lab calculator modal (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation
   const [showLabCalcModal, setShowLabCalcModal] = useState(false);
 
   // Sprint 3: Wellness checks extracted to useWellnessChecks hook
@@ -525,11 +561,13 @@ const QuizView: React.FC<QuizViewProps> = ({
   });
 
   // ---- SESSION RECOVERY ----
-  const { saveState, clearSavedState } = useQuizSessionRecovery({
-    userId: user?.id,
+  const userId = user?.id;
+  const { saveState, clearSavedState, shouldRestore, savedState } = useQuizSessionRecovery({
+    userId,
     sessionSettings,
     initialQueue,
     onRestore: (restored) => {
+      // Restore queue and other state
       if (restored.queue && restored.queue.length > 0) {
         setQueue(restored.queue);
         setParentQueue(restored.queue);
@@ -545,9 +583,12 @@ const QuizView: React.FC<QuizViewProps> = ({
       if (restored.questionNumber !== undefined) setQuestionNumber(restored.questionNumber);
       if (restored.eliminatedAnswers) setEliminatedAnswers(new Set(restored.eliminatedAnswers));
       if (restored.localNote !== undefined) setLocalNote(restored.localNote);
-      if (restored.answerChangeCount !== undefined) answerChangeCountRef.current = restored.answerChangeCount;
-      if (restored.firstSelectedAnswer !== undefined) firstSelectedAnswerRef.current = restored.firstSelectedAnswer;
-      if (restored.sessionScore) recoveredSessionScoreRef.current = restored.sessionScore;
+      if (restored.answerChangeCount !== undefined) setAnswerChangeCount(restored.answerChangeCount);
+      if (restored.firstSelectedAnswer !== undefined) setFirstSelectedAnswer(restored.firstSelectedAnswer);
+      // Finding 4 fix: restore running session score so displays aren't zeroed
+      if (restored.sessionScore) {
+        recoveredSessionScoreRef.current = restored.sessionScore;
+      }
     },
   });
 
@@ -606,10 +647,16 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion) return;
     const currentQuestionIndex = queue.findIndex(q => q.id === currentQuestion.id);
     debouncedSave({
-      queue, currentQuestionIndex, selectedAnswerIndex, isAnswered, questionNumber,
-      eliminatedAnswers: Array.from(eliminatedAnswers), localNote,
+      queue,
+      currentQuestionIndex,
+      selectedAnswerIndex,
+      isAnswered,
+      questionNumber,
+      eliminatedAnswers: Array.from(eliminatedAnswers),
+      localNote,
       answerChangeCount: answerChangeCountRef.current,
       firstSelectedAnswer: firstSelectedAnswerRef.current,
+      // Finding 4 fix: persist running session score so it survives tab crash/reload
       sessionScore: {
         correct: performanceData.filter((p) => p.isCorrect).length,
         total: performanceData.length,
@@ -629,7 +676,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Clear saved state when session ends
   useEffect(() => {
-    if (showSessionEndSummary) clearSavedState();
+    if (showSessionEndSummary) {
+      clearSavedState();
+    }
   }, [showSessionEndSummary, clearSavedState]);
 
   // Flush session state immediately on tab close to prevent data loss in the debounce window
@@ -668,9 +717,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       saveState({
         queue: s.queue,
         currentQuestionIndex: s.queue.findIndex(q => q.id === s.currentQuestion!.id),
-        selectedAnswerIndex: s.selectedAnswerIndex, isAnswered: s.isAnswered,
+        selectedAnswerIndex: s.selectedAnswerIndex,
+        isAnswered: s.isAnswered,
         questionNumber: s.questionNumber,
-        eliminatedAnswers: Array.from(s.eliminatedAnswers), localNote: s.localNote,
+        eliminatedAnswers: Array.from(s.eliminatedAnswers),
+        localNote: s.localNote,
         answerChangeCount: answerChangeCountRef.current,
         firstSelectedAnswer: firstSelectedAnswerRef.current,
         sessionScore: s.sessionScore,
@@ -697,8 +748,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     document.documentElement.style.setProperty('--font-size-adj', `${fontSizeAdjustment * 0.1}rem`);
   }, [fontSizeAdjustment]);
 
+  // Close overflow menu on click outside — moved to QuizToolbar
+
   // Reset collapsible states when question changes
-  useEffect(() => { setShowNotes(false); }, [currentQuestion?.id]);
+  useEffect(() => {
+    setShowNotes(false);
+  }, [currentQuestion?.id]);
 
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
@@ -706,9 +761,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [currentQuestion, flaggedQuestions]);
 
   // Keep current question synced with queue[0]
-  useEffect(() => { setCurrentQuestion(queue[0] || null); }, [queue]);
-
-  // Auto-read question aloud when commuter mode is active
   useEffect(() => {
     setCurrentQuestion(queue[0] ?? null);
   }, [queue]);
@@ -716,8 +768,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- SHOULD WE REPLENISH ENDLESSLY? ----
   // shouldEndlesslyReplenish is derived inside the useQuizReplenishment hook
 
-  // ---- HANDLE END SESSION ----
+  // Sprint 4: Handler to show session end summary before ending
   const handleEndSession = useCallback(() => {
+    // Accessibility: announce session completion
     const correctCount = performanceData.filter((p) => p.isCorrect).length;
     const totalCount = performanceData.length;
     const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
@@ -725,9 +778,12 @@ const QuizView: React.FC<QuizViewProps> = ({
       `Session ended. Score: ${scorePercent} percent. ${correctCount} correct out of ${totalCount}.`,
       'assertive'
     );
+
+    // For finite sessions (review mode), show the session end summary
     if (!shouldEndlesslyReplenish || performanceData.length >= 5) {
       setShowSessionEndSummary(true);
     } else {
+      // For continuous sessions with few questions, just end directly
       onEndSession();
     }
   }, [onEndSession, shouldEndlesslyReplenish, performanceData]);
@@ -746,7 +802,10 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
     try {
-      quizSubmit.resetForNextQuestion();
+      setIsAnswered(false);
+      submittingRef.current = false;
+      setIsSubmitting(false);
+      setSelectedAnswerIndex(null);
       setShowRationale(false);
       setAlternateRationale(null);
       setShowSocraticTutor(false);
@@ -760,14 +819,18 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       // Reset causal chain state for next question
       causalChainHook.reset();
+
+      // Reset implicit metrics, behavioral tracker, and micro-kinetics for new question
       implicitMetrics.reset();
       implicitMetrics.startQuestion();
       microKinetics.reset();
       const nextQ = queue.length > 1 ? queue[1] : undefined;
       const qType = nextQ ? inferQuestionType(questionToInferShape(nextQ)) : 'unknown';
       behavioralTracker.start(qType);
+
       setQueue((prev) => {
         if (prev.length === 0) return prev;
+
         const [, ...rest] = prev;
         const newQueue = rest;
 
@@ -776,18 +839,29 @@ const QuizView: React.FC<QuizViewProps> = ({
         }
 
         setParentQueue(newQueue);
-        if (!shouldEndlesslyReplenish && newQueue.length === 0) handleEndSession();
+
+        // Finite sessions ONLY: REVIEW / REVIEW FLAGGED - show summary when done
+        // For continuous sessions, NEVER auto-end - the proactive replenishment effect handles it
+        if (!shouldEndlesslyReplenish && newQueue.length === 0) {
+          handleEndSession();
+        }
+
         return newQueue;
       });
-      const totalQ = queue.length + performanceData.length;
+
+      // Accessibility: announce question progress and move focus to question content
+      const totalQuestions = queue.length + performanceData.length; // Approximate total
       const currentNum = questionNumber + 1;
-      announceToScreenReader(`Question ${currentNum} of ${totalQ}`, 'polite');
+      announceToScreenReader(`Question ${currentNum} of ${totalQuestions}`, 'polite');
+
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById('question-container');
           if (el && typeof (el as HTMLElement).focus === 'function') (el as HTMLElement).focus();
         });
       });
+
+      // Note: Replenishment is handled by the proactive effect when queue < LOW_QUEUE_THRESHOLD
     } catch (error) {
       quizLogger.error('Error advancing to next question', { error });
       setError('Failed to load next question. Please try again.');
@@ -807,9 +881,17 @@ const QuizView: React.FC<QuizViewProps> = ({
     sessionId,
   ]);
 
-  // Initialize from incoming queue once
+  // Initialize from incoming queue once.
+  // Deps: only initialQueue (identity changes when a new session starts) and
+  // currentQuestion (null → first question). Hook objects (implicitMetrics,
+  // behavioralTracker, microKinetics) are now memoized/stable and read via refs
+  // inside the effect body, so they don't need to be in the dep array.
+  // (Finding 11 fix: previously, unstable hook object refs caused this effect
+  // to re-fire on every render, resetting the dwell timer.)
   useEffect(() => {
-    if (!currentQuestion && initialQueue.length > 0) setCurrentQuestion(initialQueue[0] ?? null);
+    if (!currentQuestion && initialQueue.length > 0) {
+      setCurrentQuestion(initialQueue[0] ?? null);
+    }
     setLocalNote(initialQueue[0]?.userNote || '');
     resetElimination();
 
@@ -824,9 +906,11 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // handleToggleEliminate provided by useQuizKeyboard hook
 
-  // ---- KEYBOARD SHORTCUTS ----
-  useShortcut('FLIP_CARD', () => { if (isAnswered) setShowRationale((prev) => !prev); }, { enabled: isAnswered });
-  useShortcut('NEXT_QUESTION', () => { if (isAnswered) nextButtonRef.current?.click(); }, { enabled: isAnswered });
+  // Ref-based guard: synchronous, immune to React batching delays.
+  // State-based guards (isAnswered, isSubmitting) can have a window where
+  // a second call sneaks through before the state update is committed.
+  // (Finding 6 fix: prevents theoretical double-submit from held Enter key.)
+  const submittingRef = useRef(false);
 
   // Keyboard shortcuts
   const handleSubmitAnswer = useCallback(async () => {
@@ -1185,11 +1269,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     setSelectedAnswerIndex(index);
   }, [isAnswered, currentQuestion, eliminatedAnswers, microKinetics, selectedAnswerIndex, behavioralTracker, implicitMetrics]);
 
-  // ---- EXPLAIN DIFFERENTLY ----
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;
+
     setIsExplainerLoading(true);
-    setAlternateRationale('');
+    setAlternateRationale(''); // Start with empty string for streaming
+
     try {
       const userAnswer = currentQuestion.options[selectedAnswerIndex] ?? '';
       const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
@@ -1214,10 +1299,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
       // Use Edge streaming API (/api/ai/chat/stream) so user sees tokens immediately (latency masking)
       const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
+
       try {
         await callGeminiTextStreaming('gemini-2.5-flash', prompt, 0.7, {
           getToken,
-          systemInstruction: 'You are a clinical educator for PA students. Be concise (3-4 sentences), use a different angle than the original explanation, and focus on why the mistake was made.',
+          systemInstruction:
+            'You are a clinical educator for PA students. Be concise (3-4 sentences), use a different angle than the original explanation, and focus on why the mistake was made.',
           onChunk: (chunk) => setAlternateRationale((prev) => prev + chunk),
           onComplete: () => setIsExplainerLoading(false),
           onError: () => setIsExplainerLoading(false),
@@ -1238,22 +1325,30 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       );
       setIsExplainerLoading(false);
     }
-  }, [currentQuestion, selectedAnswerIndex, getToken]);
+  }, [currentQuestion, selectedAnswerIndex]);
 
-  // ---- NOTE CHANGE ----
   const handleNoteChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
-    if (noteUpdateTimeout.current) clearTimeout(noteUpdateTimeout.current);
+
+    if (noteUpdateTimeout.current) {
+      clearTimeout(noteUpdateTimeout.current);
+    }
+
     noteUpdateTimeout.current = window.setTimeout(() => {
-      if (currentQuestion) updateQuestionNote(currentQuestion, newNote);
+      if (currentQuestion) {
+        updateQuestionNote(currentQuestion, newNote);
+      }
     }, 750);
-  }, [currentQuestion, updateQuestionNote]);
+  }, [currentQuestion, updateQuestionNote, noteUpdateTimeout, setLocalNote]);
 
   const toggleFlag = useCallback(() => {
     if (!currentQuestion) return;
-    if (isFlagged) removeFlaggedQuestion(currentQuestion);
-    else addFlaggedQuestion(currentQuestion);
+    if (isFlagged) {
+      removeFlaggedQuestion(currentQuestion);
+    } else {
+      addFlaggedQuestion(currentQuestion);
+    }
   }, [currentQuestion, isFlagged, removeFlaggedQuestion, addFlaggedQuestion]);
 
   const openQuestionReference = useCallback(
@@ -1268,7 +1363,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     [navigate]
   );
 
-  const parTimeMs = useMemo(() => currentQuestion ? calculateParTime(currentQuestion) : null, [currentQuestion]);
+  const parTimeMs = useMemo(() =>
+    currentQuestion ? calculateParTime(currentQuestion) : null,
+    [currentQuestion]
+  );
 
   // Focus the question container when a new question loads
   useEffect(() => {
@@ -1298,15 +1396,18 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
+    // In continuous mode, show loading while waiting for questions
     if (shouldEndlesslyReplenish) {
       // If we've already exceeded max attempts, show error
       if (replenishmentError || replenishAttempts >= 3) {
         // Determine the error type based on session settings
         const isDueMode = sessionSettings.mode === 'due';
         const isVariantMode = sessionSettings.mode === 'variant';
+
         let errorTitle = 'Unable to Load Questions';
         let errorMessage = replenishmentError || 'The question service is currently unavailable. Please try again later.';
         let secondaryActionLabel = 'Retry';
+
         if (isDueMode) {
           errorTitle = 'No Questions Due';
           errorMessage = 'Great job! You\'ve completed all your due questions. Come back when more questions are ready for review, or explore other study modes to continue learning.';
@@ -1316,12 +1417,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           errorMessage = 'You\'ve completed all available variants for this topic. Try another topic or mode to continue your practice session.';
           secondaryActionLabel = 'Try Another Mode';
         }
+
         return (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
             <h2 className="text-2xl font-semibold mb-2">{errorTitle}</h2>
-            <p className="text-[var(--color-text-secondary)] max-w-md">{errorMessage}</p>
+            <p className="text-[var(--color-text-secondary)] max-w-md">
+              {errorMessage}
+            </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
-              <GhostButton type="button" onClick={onShowMenu}>
+              <button type="button" onClick={onShowMenu} className="btn-glass px-6 py-2">
                 {isDueMode || isVariantMode ? 'Back to Practice' : 'Back to Dashboard'}
               </button>
               <button
@@ -1336,7 +1440,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 className="btn-secondary px-6 py-2"
               >
                 {secondaryActionLabel}
-              </SecondaryButton>
+              </button>
             </div>
           </div>
         );
@@ -1354,13 +1458,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         />
       );
     }
+
+    // Finite modes (review, reviewFlagged) - show session complete
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
         <h2 className="text-2xl font-semibold mb-2">Session Complete</h2>
-        <p className="text-[var(--color-text-secondary)]">You've reached the end of this set of questions.</p>
+        <p className="text-[var(--color-text-secondary)]">
+          You've reached the end of this set of questions.
+        </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
-          <GhostButton type="button" onClick={onShowMenu}>Back to Dashboard</GhostButton>
-          <SecondaryButton type="button" onClick={handleEndSession}>View Summary</SecondaryButton>
+          <button type="button" onClick={onShowMenu} className="btn-glass px-6 py-2">
+            Back to Dashboard
+          </button>
+          <button type="button" onClick={handleEndSession} className="btn-secondary px-6 py-2">
+            View Summary
+          </button>
         </div>
       </div>
     );
@@ -1416,9 +1528,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         currentQuestion={currentQuestion}
       />
       </header>
-
       <main id="main-content" role="main" aria-label="Quiz question and answers">
-        <SplitPaneDrillLayout vignette={useSplitPane ? currentQuestion.vignette : null} className="mb-6">
+      <SplitPaneDrillLayout
+          vignette={useSplitPane ? currentQuestion.vignette : null}
+          className="mb-6"
+        >
           <div ref={microKinetics.registerMouseTrackingContainer}>
             <AnimatePresence mode="wait">
               <motion.div
@@ -1447,7 +1561,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   )}
                 </div>
                 {currentQuestion.contentSource === 'openstax' && (
-                  <OpenStaxAttributionFooter title={currentQuestion.contentSourceTitle || 'Textbook'} sourceUrl="https://openstax.org" />
+                  <OpenStaxAttributionFooter
+                    title={currentQuestion.contentSourceTitle || 'Textbook'}
+                    sourceUrl="https://openstax.org"
+                  />
                 )}
                 {currentQuestion.imageUrl && (
                   <div
@@ -1468,7 +1585,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 <QuestionDisplay
                   text={
                     useSplitPane && currentQuestion.vignette
-                      ? currentQuestion.question.replace((currentQuestion.vignette || '') + '\n\n', '')
+                      ? currentQuestion.question.replace(
+                          (currentQuestion.vignette || '') + '\n\n',
+                          ''
+                        )
                       : currentQuestion.question
                   }
                 />
@@ -1488,13 +1608,27 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 const isCorrect = index === currentQuestion.correctAnswerIndex;
                 const isSelected = index === selectedAnswerIndex;
                 const optionLabel = ['A', 'B', 'C', 'D', 'E'][index] ?? 'A';
+
                 return (
-                  <OptionHoverTracker key={`${currentQuestion.id}-${index}`} optionIndex={index} optionLabel={optionLabel} className="block" onHoverEnter={microKinetics.recordOptionInteraction}>
+                  <OptionHoverTracker
+                    key={`${currentQuestion.id}-${index}`}
+                    optionIndex={index}
+                    optionLabel={optionLabel}
+                    className="block"
+                    onHoverEnter={microKinetics.recordOptionInteraction}
+                  >
                     <AnswerChoice
-                      ref={(el) => { optionButtonsRef.current[index] = el; }}
-                      text={option} index={index} isSelected={isSelected} isCorrect={isCorrect}
-                      isAnswered={isAnswered} isEliminated={eliminatedAnswers.has(index)}
-                      onSelect={handleOptionClick} onToggleEliminate={handleToggleEliminate}
+                      ref={(el) => {
+                        optionButtonsRef.current[index] = el;
+                      }}
+                      text={option}
+                      index={index}
+                      isSelected={isSelected}
+                      isCorrect={isCorrect}
+                      isAnswered={isAnswered}
+                      isEliminated={eliminatedAnswers.has(index)}
+                      onSelect={handleOptionClick}
+                      onToggleEliminate={handleToggleEliminate}
                       fontSizeAdjustment={fontSizeAdjustment}
                     />
                   </OptionHoverTracker>
@@ -1503,7 +1637,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
+          {/* SUBMIT BUTTON - Sticky on mobile with glass effect */}
           {!isAnswered && selectedAnswerIndex !== null && (
             <motion.div
               initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
@@ -1563,15 +1697,20 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               onToggleFlag={toggleFlag}
               onOpenReference={() => openQuestionReference(currentQuestion.conditionId)}
               causalChain={causalChainHook.chain}
-              causalChainDisplayLevel={lastImplicitConfidence !== undefined ? expertiseToDisplayLevel(lastImplicitConfidence) : 'collapsed'}
+              causalChainDisplayLevel={
+                lastImplicitConfidence !== undefined
+                  ? expertiseToDisplayLevel(lastImplicitConfidence)
+                  : 'collapsed'
+              }
             />
           )}
 
-          {/* Fatigue break prompt */}
+          {/* Proactive fatigue break prompt — inline between feedback and Next button */}
           {isAnswered && (
             <Suspense fallback={null}>
             <FatigueBreakPrompt
-              fatigue={sessionWellness.fatigue} dismissed={sessionWellness.breakDismissed}
+              fatigue={sessionWellness.fatigue}
+              dismissed={sessionWellness.breakDismissed}
               onTakeBreak={(minutes) => sessionWellness.startBreak(minutes)}
               onDismiss={sessionWellness.dismissBreak}
               hardStopVisible={sessionWellness.check.shouldStop && !sessionWellness.dismissed}
@@ -1579,7 +1718,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </Suspense>
           )}
 
-          {/* NEXT QUESTION BUTTON */}
           {isAnswered && !sessionWellness.onBreak && (
             <motion.div
               initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
@@ -1605,10 +1743,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 className="btn-cinematic px-10 py-3.5 font-semibold min-h-[48px] text-body"
               >
                 Next Question
-              </Button>
+              </button>
             </motion.div>
           )}
-        </SplitPaneDrillLayout>
+      </SplitPaneDrillLayout>
       </main>
 
       {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
