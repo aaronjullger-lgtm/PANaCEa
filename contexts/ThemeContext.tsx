@@ -61,7 +61,8 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
 
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'dark' ? '#101729' : '#e9ecf1');
+    const themeColor = getComputedStyle(root).getPropertyValue('--color-background').trim();
+    if (meta && themeColor) meta.setAttribute('content', themeColor);
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => root.classList.remove('theme-transitioning'));

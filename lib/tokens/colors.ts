@@ -15,11 +15,29 @@
 /* ---------- 1. Raw CSS var references (for inline styles) ---------- */
 
 export const color = {
+  // Clinical semantic foundation
+  semantic: {
+    background:      'var(--color-background)',
+    surface:         'var(--color-surface)',
+    surfaceElevated: 'var(--color-surface-elevated)',
+    border:          'var(--color-border)',
+    textPrimary:     'var(--color-text-primary)',
+    textSecondary:   'var(--color-text-secondary)',
+    textMuted:       'var(--color-text-muted)',
+    accent:          'var(--color-accent)',
+    accentHover:     'var(--color-accent-hover)',
+    success:         'var(--color-success)',
+    risk:            'var(--color-risk)',
+    danger:          'var(--color-danger)',
+  },
+
   // Backgrounds
   bg: {
     primary:   'var(--color-bg-primary)',
     secondary: 'var(--color-bg-secondary)',
     tertiary:  'var(--color-bg-tertiary)',
+    surface:   'var(--color-surface)',
+    elevated:  'var(--color-surface-elevated)',
     card:      'var(--color-card-bg)',
     overlay:   'var(--color-overlay)',
     glass:     'var(--color-glass-bg)',
@@ -62,6 +80,8 @@ export const color = {
   // Status aliases (same values as data.* — use the name that reads best)
   status: {
     success: 'var(--color-success)',
+    risk:    'var(--color-risk)',
+    danger:  'var(--color-danger)',
     error:   'var(--color-error)',
     warning: 'var(--color-warning)',
     info:    'var(--color-info)',
@@ -100,10 +120,25 @@ export const color = {
 /* ---------- 2. Tailwind class shortcuts ---------- */
 
 export const colorClass = {
+  semantic: {
+    background:      'bg-[var(--color-background)]',
+    surface:         'bg-[var(--color-surface)]',
+    surfaceElevated: 'bg-[var(--color-surface-elevated)]',
+    border:          'border-[var(--color-border)]',
+    textPrimary:     'text-[var(--color-text-primary)]',
+    textSecondary:   'text-[var(--color-text-secondary)]',
+    textMuted:       'text-[var(--color-text-muted)]',
+    accent:          'text-[var(--color-accent)]',
+    success:         'text-[var(--color-success)]',
+    risk:            'text-[var(--color-risk)]',
+    danger:          'text-[var(--color-danger)]',
+  },
   bg: {
     primary:   'bg-[var(--color-bg-primary)]',
     secondary: 'bg-[var(--color-bg-secondary)]',
     tertiary:  'bg-[var(--color-bg-tertiary)]',
+    surface:   'bg-[var(--color-surface)]',
+    elevated:  'bg-[var(--color-surface-elevated)]',
   },
   text: {
     primary:   'text-[var(--color-text-primary)]',
@@ -142,6 +177,18 @@ export const statusColors = {
     text:   'text-[var(--color-data-pass)]',
     border: 'border-[var(--color-data-pass)]/30',
     icon:   'text-[var(--color-data-pass)]',
+  },
+  risk: {
+    bg:     'bg-[var(--color-risk)]/10',
+    text:   'text-[var(--color-risk)]',
+    border: 'border-[var(--color-risk)]/30',
+    icon:   'text-[var(--color-risk)]',
+  },
+  danger: {
+    bg:     'bg-[var(--color-danger)]/10',
+    text:   'text-[var(--color-danger)]',
+    border: 'border-[var(--color-danger)]/30',
+    icon:   'text-[var(--color-danger)]',
   },
   error: {
     bg:     'bg-[var(--color-data-fail)]/10',

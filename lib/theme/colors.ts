@@ -46,6 +46,9 @@ export const semanticColors = {
   bgPrimary: 'var(--color-bg-primary)',
   bgSecondary: 'var(--color-bg-secondary)',
   bgTertiary: 'var(--color-bg-tertiary)',
+  background: 'var(--color-background)',
+  surface: 'var(--color-surface)',
+  surfaceElevated: 'var(--color-surface-elevated)',
 
   // Text colors
   textPrimary: 'var(--color-text-primary)',
@@ -62,6 +65,8 @@ export const semanticColors = {
 
   // Status colors
   success: 'var(--color-success)',
+  risk: 'var(--color-risk)',
+  danger: 'var(--color-danger)',
   error: 'var(--color-error)',
   warning: 'var(--color-warning)',
   info: 'var(--color-info)',

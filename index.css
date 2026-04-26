@@ -866,141 +866,166 @@ a,
   /* Content max-width - consistent across main content pages */
   --content-max-width: 72rem; /* 1152px = max-w-6xl */
 
-  /* ===== UNIFIED COLORWAY: COOLER GOLD + SLATE (same family, light-optimized) ===== */
-  /* Gold: one family in both modes; light mode uses darker shade for contrast on white */
-  --color-action: #9a8f72; /* Cooler gold - accent (same hue as dark, darker for light bg) */
-  --color-action-hover: #8a7f62;
-  --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
-  --color-action-text: #f8fafc; /* Off-white on gold (continuity with dark) */
+  /* ===== PANaCEa CLINICAL FOUNDATION - LIGHT MODE ===== */
+  /* Warm clinical canvas, clear ink text, and restrained teal action color.
+     Gold remains available as a legacy accent, but primary actions use teal to
+     avoid low-contrast gold-on-white patterns. */
+  --color-action: #256c78;
+  --color-action-hover: #1d5661;
+  --color-action-light: #e8f3f3;
+  --color-action-text: #fffdfa;
   /* Action semantic tokens (admin/interactive buttons) */
-  --color-action-primary: #7a6f52;        /* Same as gold-dark — WCAG AA on white */
-  --color-action-primary-hover: #6a5f42;  /* Darker on hover */
-  --color-action-secondary: #728ba6;      /* Steel blue */
-  --color-action-secondary-hover: #5e7a96;
-  --color-action-bg: #f5f2ec;             /* Gold tint background */
-  --color-action-border: #c4b89a;         /* Light gold border */
-  --color-action-icon: #7a6f52;           /* Same as action-primary */
-  --color-action-muted: #f0ede6;          /* Very light gold for gesture indicators */
-  --color-label-primary: #0f172a; /* Slate-900 */
-  --color-label-secondary: #475569; /* Slate-600 */
+  --color-action-primary: #256c78;
+  --color-action-primary-hover: #1d5661;
+  --color-action-secondary: #5f7284;
+  --color-action-secondary-hover: #4e6274;
+  --color-action-bg: #e8f3f3;
+  --color-action-border: #9bc4c8;
+  --color-action-icon: #256c78;
+  --color-action-muted: #edf4f1;
+  --color-label-primary: #111827;
+  --color-label-secondary: #475467;
 
   /* Navy / Gold palette tokens (same family) */
-  --color-navy: #0f172a;
-  --color-canvas: #f8fafc; /* slate-50 */
-  --color-surface: #ffffff;
-  --color-gold: #9a8f72;
+  --color-navy: #101828;
+  --color-canvas: #f7f3ea;
+  --color-surface: #fffdfa;
+  --color-surface-elevated: #ffffff;
+  --color-gold: #8a7046;
   --color-gold-hover: #8a7f62;
-  --color-gold-text: #f8fafc;
+  --color-gold-text: #fffdfa;
   /* Gold dark tokens for exam mode and accents */
-  --color-gold-dark: #7a6f52;
-  --color-gold-dark-hover: #6a5f42;
+  --color-gold-dark: #6f572f;
+  --color-gold-dark-hover: #5f4926;
 
-  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) — LIGHT MODE ===== */
+  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) - LIGHT MODE ===== */
   /* Medical traffic-light conventions. Supplements data-pass/fail/provisional. */
-  --clinical-normal: oklch(0.72 0.19 142);    /* green — correct, mastered, safe */
-  --clinical-warning: oklch(0.80 0.16 84);    /* amber — borderline, needs review */
-  --clinical-critical: oklch(0.63 0.26 29);   /* red — incorrect, failed, urgent */
-  --clinical-info: oklch(0.65 0.15 250);      /* blue — neutral clinical data */
+  --clinical-normal: oklch(0.72 0.19 142);    /* green - correct, mastered, safe */
+  --clinical-warning: oklch(0.80 0.16 84);    /* amber - borderline, needs review */
+  --clinical-critical: oklch(0.63 0.26 29);   /* red - incorrect, failed, urgent */
+  --clinical-info: oklch(0.65 0.15 250);      /* blue - neutral clinical data */
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
   /* Main backgrounds */
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --color-background: #f7f3ea;
+  --color-surface-muted: #f0eadf;
+  --color-border-strong: #c9bfad;
+
+  --background: var(--color-background);
+  --foreground: #101828;
 
   /* Card/Container system */
-  --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card: var(--color-surface);
+  --card-foreground: #101828;
 
-  /* Primary brand - same gold family */
-  --primary: #9a8f72;
-  --primary-foreground: #f8fafc;
+  /* Primary brand action */
+  --primary: var(--color-action-primary);
+  --primary-foreground: #fffdfa;
 
   /* Muted/Secondary */
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted: #ede7da;
+  --muted-foreground: #5f6978;
 
   /* Border */
-  --border: #e2e8f0;
+  --border: #ded7c8;
 
   /* ===== shadcn/ui SEMANTIC TOKENS (mapped to PANaCEa palette) ===== */
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --input: #e2e8f0;
-  --ring: #3B82F6;
+  --secondary: #ede7da;
+  --secondary-foreground: #101828;
+  --accent: #e8f3f3;
+  --accent-foreground: #123f47;
+  --destructive: #b42318;
+  --destructive-foreground: #fffdfa;
+  --popover: var(--color-surface-elevated);
+  --popover-foreground: #101828;
+  --input: #d8d0c2;
+  --ring: #256c78;
   --radius: 0.5rem;
-  --chart-1: #3B82F6;
-  --chart-2: #0a766c;
-  --chart-3: #f59e0b;
-  --chart-4: #9a8f72;
-  --chart-5: #ef4444;
-  --sidebar-background: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #0f172a;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #3B82F6;
+  --chart-1: #256c78;
+  --chart-2: #237a57;
+  --chart-3: #a46110;
+  --chart-4: #5f7284;
+  --chart-5: #b42318;
+  --sidebar-background: #fffdfa;
+  --sidebar-foreground: #101828;
+  --sidebar-primary: #256c78;
+  --sidebar-primary-foreground: #fffdfa;
+  --sidebar-accent: #ede7da;
+  --sidebar-accent-foreground: #101828;
+  --sidebar-border: #ded7c8;
+  --sidebar-ring: #256c78;
 
   /* Legacy theme-aware variables - LIGHT MODE */
-  --color-bg-primary: #f8fafc; /* Canvas */
-  --color-bg-secondary: #ffffff;
-  --color-bg-tertiary: #f1f5f9;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
-  --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: var(--color-gold-dark); /* Darker gold (Stormy Slate) — WCAG AA with bg-primary */
-  --color-accent-hover: var(--color-gold-dark-hover);
-  --color-accent-button: var(--color-gold-dark); /* Darker gold for buttons — 4.5:1+ with white text */
-  --color-accent-border: var(--color-gold); /* Lighter gold for borders to improve contrast */
-  --color-accent-cta: var(--color-gold-dark); /* Darker gold for primary CTAs only (one per screen) */
-  --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
-  --color-accent-light: #f5f2ec;
-  --color-overlay: rgba(15, 23, 42, 0.5);
-  --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: var(--color-gold-dark); /* Darker gold for focus indicators */
+  --color-bg-primary: var(--color-background);
+  --color-bg-secondary: var(--color-surface);
+  --color-bg-tertiary: var(--color-surface-muted);
+  --color-text-primary: #101828;
+  --color-text-secondary: #344054;
+  --color-text-muted: #5f6978;
+  --color-border: var(--border);
+  --color-border-light: #eee7dc;
+  --chart-grid-stroke: rgba(16, 24, 40, 0.1);
+  --color-accent: var(--color-action-primary);
+  --color-accent-hover: var(--color-action-primary-hover);
+  --color-accent-button: var(--color-action-primary);
+  --color-accent-border: #9bc4c8;
+  --color-accent-cta: var(--color-action-primary);
+  --color-accent-secondary: #5f7284;
+  --color-accent-light: var(--color-action-light);
+  --color-overlay: rgba(16, 24, 40, 0.48);
+  --color-shadow-soft: rgba(52, 64, 84, 0.12);
+  --color-focus-ring: #256c78;
 
   /* Text on accent - off-white in both modes for continuity */
-  --color-text-inverse: #f8fafc;
+  --color-text-inverse: #fffdfa;
 
   /* Glass card variables - LIGHT MODE */
-  --color-glass-bg: rgba(255, 255, 255, 0.88);
-  --color-glass-border: rgba(203, 213, 225, 0.7);
-  --color-glass-shadow: rgba(15, 23, 42, 0.12);
+  --color-glass-bg: rgba(255, 253, 250, 0.9);
+  --color-glass-border: rgba(222, 215, 200, 0.8);
+  --color-glass-shadow: rgba(52, 64, 84, 0.14);
 
   /* Card background for table content */
-  --color-card-bg: #ffffff;
+  --color-card-bg: var(--color-surface);
 
-  /* Semantic data colors — actual semantic meaning, muted to fit Stormy Slate */
-  --color-data-pass: #2d7a4f; /* Muted forest green — success/correct */
-  --color-data-fail: #b83a3a; /* Muted crimson — error/incorrect */
-  --color-data-provisional: #b8860b; /* Dark goldenrod — pending/in-progress */
-  --color-data-neutral: #64748b; /* slate-500 - text/borders */
-  --color-data-neutral-bg: #f1f5f9; /* slate-100 - card surfaces */
+  /* Semantic data colors - actual semantic meaning, muted to fit Stormy Slate */
+  --color-data-pass: #237a57;
+  --color-data-fail: #b42318;
+  --color-data-provisional: #8f5108;
+  --color-data-neutral: #5f6978;
+  --color-data-neutral-bg: #ede7da;
 
   /* Semantic status aliases (used by 50+ components) */
   --color-success: var(--color-data-pass);
+  --color-risk: var(--color-data-provisional);
+  --color-danger: var(--color-data-fail);
   --color-error: var(--color-data-fail);
   --color-warning: var(--color-data-provisional);
   --color-info: var(--color-accent);
+  --color-success-bg: #e5f4eb;
+  --color-success-text: #155b3e;
+  --color-success-border: #9dd8b7;
+  --color-success-icon: var(--color-success);
+  --color-risk-bg: #fff3df;
+  --color-risk-text: #7a4205;
+  --color-risk-border: #e5bf7c;
+  --color-risk-icon: var(--color-risk);
+  --color-danger-bg: #fde8e5;
+  --color-danger-text: #8a1f17;
+  --color-danger-border: #f2aaa2;
+  --color-danger-icon: var(--color-danger);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);
   --color-btn-primary-text: var(--color-text-inverse);
   --color-border-hover: var(--color-border);
 
-  /* Semantic aliases for design system docs */
+  /* Semantic aliases for design system docs and new UI primitives */
   --surface-canvas: var(--color-bg-primary);
+  --surface: var(--color-surface);
+  --surface-elevated: var(--color-surface-elevated);
   --content-primary-on-canvas: var(--color-text-primary);
+  --shadow-surface: 0 1px 2px rgba(52, 64, 84, 0.06), 0 8px 24px -18px rgba(52, 64, 84, 0.22);
+  --shadow-surface-elevated: 0 1px 2px rgba(52, 64, 84, 0.08), 0 14px 34px -18px rgba(52, 64, 84, 0.28);
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS ===== */
   --color-category-visual: #8c6666; /* Dusty Rose 600 - improved contrast 4.8:1 (WCAG AA) */
@@ -1113,33 +1138,34 @@ a,
 }
 
 .dark {
-  /* ===== UNIFIED COLORWAY: SAME GOLD + SLATE FAMILY (dark-optimized) ===== */
-  /* Gold: same hue as light, lighter shade for contrast on navy */
-  --color-action: #a89b7a; /* Same gold family, lighter for dark bg */
-  --color-action-hover: #b8ab8a;
-  --color-action-light: #1e293b;
-  --color-action-text: #f8fafc; /* Same as light - continuity */
+  /* ===== PANaCEa CLINICAL FOUNDATION - DARK MODE ===== */
+  /* Deep ink navy, not black. Muted cyan-teal remains readable on dark
+     surfaces without turning the app into neon medical sci-fi. */
+  --color-action: #6bb6c4;
+  --color-action-hover: #8fd0dc;
+  --color-action-light: #132b38;
+  --color-action-text: #07111f;
   /* Action semantic tokens (admin/interactive buttons) - dark mode */
-  --color-action-primary: #c4b78a;        /* Lighter gold for dark bg — WCAG AA */
-  --color-action-primary-hover: #d4c79a;
-  --color-action-secondary: #91a6bd;      /* Steel blue (lighter on dark) */
-  --color-action-secondary-hover: #7e96b0;
-  --color-action-bg: #1e293b;             /* Dark surface for action areas */
-  --color-action-border: #475569;         /* Slate border */
-  --color-action-icon: #c4b78a;           /* Same as action-primary in dark */
-  --color-action-muted: #334155;          /* Slate tint for gesture indicators */
-  --color-label-primary: #f1f5f9;
-  --color-label-secondary: #94a3b8;
+  --color-action-primary: #6bb6c4;
+  --color-action-primary-hover: #8fd0dc;
+  --color-action-secondary: #9fb1c5;
+  --color-action-secondary-hover: #c3cfdd;
+  --color-action-bg: #102635;
+  --color-action-border: rgba(107, 182, 196, 0.42);
+  --color-action-icon: #8fd0dc;
+  --color-action-muted: #15283a;
+  --color-label-primary: #f4f7fb;
+  --color-label-secondary: #aab7c9;
 
   /* Gold palette tokens (same family, dark-appropriate) */
-  --color-gold: #a89b7a;
-  --color-gold-hover: #b8ab8a;
-  --color-gold-text: #f8fafc;
+  --color-gold: #d2bd82;
+  --color-gold-hover: #e0cc95;
+  --color-gold-text: #07111f;
   /* Gold dark tokens for exam mode and accents (dark mode lighter variant) */
-  --color-gold-dark: #c4b78a;
-  --color-gold-dark-hover: #b4a77a;
+  --color-gold-dark: #d2bd82;
+  --color-gold-dark-hover: #e0cc95;
 
-  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) — DARK MODE ===== */
+  /* ===== CLINICAL SEMANTIC COLORS (OKLCH) - DARK MODE ===== */
   --clinical-normal: oklch(0.65 0.17 142);    /* slightly muted green for dark bg */
   --clinical-warning: oklch(0.73 0.14 84);    /* slightly muted amber */
   --clinical-critical: oklch(0.58 0.23 29);   /* slightly muted red */
@@ -1147,95 +1173,121 @@ a,
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
-  /* Main backgrounds - same slate family, elevation ladder */
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  /* Main backgrounds - ink-navy elevation ladder */
+  --color-background: #08111f;
+  --color-surface: #0f1b2d;
+  --color-surface-elevated: #16243a;
+  --color-surface-muted: #111f33;
+  --color-border-strong: rgba(199, 208, 223, 0.26);
+
+  --background: var(--color-background);
+  --foreground: #f4f7fb;
 
   /* Card/Container system */
-  --card: #1e293b;
-  --card-foreground: #f1f5f9;
+  --card: var(--color-surface);
+  --card-foreground: #f4f7fb;
 
-  /* Primary brand - same gold family */
-  --primary: #a89b7a;
-  --primary-foreground: #f8fafc;
+  /* Primary brand action */
+  --primary: var(--color-action-primary);
+  --primary-foreground: #07111f;
 
   /* Muted/Secondary */
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
+  --muted: #132034;
+  --muted-foreground: #9aa8bc;
 
   /* Border */
-  --border: #475569;
+  --border: rgba(199, 208, 223, 0.16);
 
   /* ===== shadcn/ui SEMANTIC TOKENS (dark mode) ===== */
-  --secondary: #334155;
-  --secondary-foreground: #f1f5f9;
-  --accent: #334155;
-  --accent-foreground: #f1f5f9;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #f1f5f9;
-  --popover: #1e293b;
-  --popover-foreground: #f1f5f9;
-  --input: #334155;
-  --ring: #3B82F6;
-  --chart-1: #60A5FA;
-  --chart-2: #34d399;
-  --chart-3: #fbbf24;
-  --chart-4: #c4b78a;
-  --chart-5: #f87171;
-  --sidebar-background: #0a0e1a;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #3B82F6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: #475569;
-  --sidebar-ring: #3B82F6;
+  --secondary: #132034;
+  --secondary-foreground: #f4f7fb;
+  --accent: #102635;
+  --accent-foreground: #d8f4f8;
+  --destructive: #ff8a80;
+  --destructive-foreground: #3c0b07;
+  --popover: var(--color-surface-elevated);
+  --popover-foreground: #f4f7fb;
+  --input: rgba(199, 208, 223, 0.2);
+  --ring: #8fd0dc;
+  --chart-1: #6bb6c4;
+  --chart-2: #63d297;
+  --chart-3: #f0b35a;
+  --chart-4: #9fb1c5;
+  --chart-5: #ff8a80;
+  --sidebar-background: #0b1525;
+  --sidebar-foreground: #f4f7fb;
+  --sidebar-primary: #6bb6c4;
+  --sidebar-primary-foreground: #07111f;
+  --sidebar-accent: #132034;
+  --sidebar-accent-foreground: #f4f7fb;
+  --sidebar-border: rgba(199, 208, 223, 0.16);
+  --sidebar-ring: #8fd0dc;
 
-  /* Legacy theme-aware variables (elevation 0-3) — Cinematic Dark */
-  --color-bg-primary: #0a0e1a;
-  --color-bg-secondary: #111827;
-  --color-bg-tertiary: #1e293b;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #94a3b8;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-light: rgba(255, 255, 255, 0.05);
-  --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: var(--color-gold); /* Lighter gold on dark background (Stormy Slate) */
-  --color-accent-hover: var(--color-gold-dark);
-  --color-accent-button: #8a7f62; /* Gold for buttons — 4.5:1 with white text on dark */
-  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders to improve visibility */
-  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
-  --color-accent-cta-dark: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
-  --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
-  --color-accent-light: #1e293b;
-  --color-text-inverse: #f8fafc;
-  --color-overlay: rgba(10, 14, 26, 0.88);
-  --color-shadow-soft: rgba(0, 0, 0, 0.4);
-  --color-focus-ring: var(--color-gold); /* Gold for dark mode focus */
+  /* Legacy theme-aware variables (elevation 0-3) */
+  --color-bg-primary: var(--color-background);
+  --color-bg-secondary: var(--color-surface);
+  --color-bg-tertiary: var(--color-surface-muted);
+  --color-text-primary: #f4f7fb;
+  --color-text-secondary: #c7d0df;
+  --color-text-muted: #9aa8bc;
+  --color-border: var(--border);
+  --color-border-light: rgba(199, 208, 223, 0.1);
+  --chart-grid-stroke: rgba(199, 208, 223, 0.14);
+  --color-accent: var(--color-action-primary);
+  --color-accent-hover: var(--color-action-primary-hover);
+  --color-accent-button: #2f7f8d;
+  --color-accent-border: rgba(107, 182, 196, 0.54);
+  --color-accent-cta: var(--color-action-primary);
+  --color-accent-cta-dark: var(--color-action-primary);
+  --color-accent-secondary: #9fb1c5;
+  --color-accent-light: var(--color-action-light);
+  --color-text-inverse: #fffdfa;
+  --color-overlay: rgba(8, 17, 31, 0.88);
+  --color-shadow-soft: rgba(0, 0, 0, 0.46);
+  --color-focus-ring: #8fd0dc;
 
-  --color-modal-bg: rgba(10, 14, 26, 0.92);
-  --color-glass-bg: rgba(17, 24, 39, 0.6);
-  --color-glass-border: rgba(255, 255, 255, 0.06);
-  --color-glass-shadow: rgba(0, 0, 0, 0.4);
-  --color-card-bg: rgba(17, 24, 39, 0.8);
+  --color-modal-bg: rgba(8, 17, 31, 0.94);
+  --color-glass-bg: rgba(15, 27, 45, 0.72);
+  --color-glass-border: rgba(199, 208, 223, 0.12);
+  --color-glass-shadow: rgba(0, 0, 0, 0.48);
+  --color-card-bg: var(--color-surface);
 
-  /* Semantic data colors — actual semantic meaning, desaturated for dark surfaces */
-  --color-data-pass: #4ade80; /* Soft green — success/correct on dark bg */
-  --color-data-fail: #f87171; /* Soft red — error/incorrect on dark bg */
-  --color-data-provisional: #fbbf24; /* Warm amber — pending/in-progress on dark bg */
-  --color-data-neutral: #94a3b8; /* slate-400 - readable text on dark surfaces */
-  --color-data-neutral-bg: #1e293b; /* slate-800 - card surface in dark mode */
+  /* Semantic data colors - actual semantic meaning, desaturated for dark surfaces */
+  --color-data-pass: #63d297;
+  --color-data-fail: #ff8a80;
+  --color-data-provisional: #f0b35a;
+  --color-data-neutral: #9aa8bc;
+  --color-data-neutral-bg: #132034;
 
   /* Semantic status aliases (dark mode) */
   --color-success: var(--color-data-pass);
+  --color-risk: var(--color-data-provisional);
+  --color-danger: var(--color-data-fail);
   --color-error: var(--color-data-fail);
   --color-warning: var(--color-data-provisional);
   --color-info: var(--color-accent);
+  --color-success-bg: rgba(99, 210, 151, 0.14);
+  --color-success-text: #baf2d1;
+  --color-success-border: rgba(99, 210, 151, 0.36);
+  --color-success-icon: var(--color-success);
+  --color-risk-bg: rgba(240, 179, 90, 0.14);
+  --color-risk-text: #ffe0ad;
+  --color-risk-border: rgba(240, 179, 90, 0.38);
+  --color-risk-icon: var(--color-risk);
+  --color-danger-bg: rgba(255, 138, 128, 0.14);
+  --color-danger-text: #ffd3ce;
+  --color-danger-border: rgba(255, 138, 128, 0.38);
+  --color-danger-icon: var(--color-danger);
   --color-bg-card: var(--color-card-bg);
   --color-text-tertiary: var(--color-text-muted);
   --color-btn-primary-text: var(--color-text-inverse);
   --color-border-hover: var(--color-border);
+  --surface-canvas: var(--color-bg-primary);
+  --surface: var(--color-surface);
+  --surface-elevated: var(--color-surface-elevated);
+  --content-primary-on-canvas: var(--color-text-primary);
+  --shadow-surface: 0 1px 2px rgba(0, 0, 0, 0.28), 0 10px 28px -20px rgba(0, 0, 0, 0.58);
+  --shadow-surface-elevated: 0 1px 2px rgba(0, 0, 0, 0.32), 0 18px 42px -24px rgba(0, 0, 0, 0.68);
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */

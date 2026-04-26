@@ -482,10 +482,26 @@ export default {
           border: 'var(--sidebar-border)',
           ring: 'var(--sidebar-ring)',
         },
+        // PANaCEa semantic tokens. These map to CSS variables in index.css so
+        // light and dark mode stay first-class without page-level overrides.
+        'clinical-background': 'var(--color-background)',
+        'clinical-surface': 'var(--color-surface)',
+        'clinical-surface-elevated': 'var(--color-surface-elevated)',
+        'clinical-border': 'var(--color-border)',
+        'clinical-text-primary': 'var(--color-text-primary)',
+        'clinical-text-secondary': 'var(--color-text-secondary)',
+        'clinical-text-muted': 'var(--color-text-muted)',
+        'clinical-accent': 'var(--color-accent)',
+        'clinical-accent-hover': 'var(--color-accent-hover)',
+        'clinical-success': 'var(--color-success)',
+        'clinical-risk': 'var(--color-risk)',
+        'clinical-danger': 'var(--color-danger)',
+
         // Legacy theme-aware colors (for backward compatibility)
         'bg-primary': 'var(--color-bg-primary)',
         'bg-secondary': 'var(--color-bg-secondary)',
         'bg-tertiary': 'var(--color-bg-tertiary)',
+        'surface-elevated': 'var(--color-surface-elevated)',
         'text-primary': 'var(--color-text-primary)',
         'text-secondary': 'var(--color-text-secondary)',
         'text-muted': 'var(--color-text-muted)',
