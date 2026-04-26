@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   batchCalibrateItems,
@@ -41,6 +42,13 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
     auth: { userId: string };
   };
 
+  const validation = await validateRequest(context.request, BodySchema);
+  if (validation.success === false) {
+    return validation.response;
+  }
+
+  const env = context.env as Env;
+  const validated = validation.data;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const minResponses = validated?.minResponses ?? MIN_OBSERVATIONS;
 
@@ -69,13 +77,14 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
     const userAccuracyMap = new Map(userStats.map((u) => [u.userId, u.accuracy]));
 
     if (userAccuracyMap.size === 0) {
-      return {
+      return Response.json({
+        success: true,
         data: {
           message: 'No eligible users found (need >=10 attempts each)',
           calibrated: 0,
           summary: null,
         },
-      };
+      });
     }
 
     // 3. Query question attempts
@@ -97,9 +106,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
     });
 
     if (rawAttempts.length === 0) {
-      return {
+      return Response.json({
+        success: true,
         data: { message: 'No attempts found in time window', calibrated: 0, summary: null },
-      };
+      });
     }
 
     // 4. Group by question and build AttemptRecord arrays
@@ -161,7 +171,8 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
       }
     }
 
-    return {
+    return Response.json({
+      success: true,
       data: {
         calibrated: calibrations.size,
         skipped: attemptsByQuestion.size - calibrations.size,
@@ -172,14 +183,16 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
         flaggedItems: flaggedItems.slice(0, 50),
         calibratedAt: new Date().toISOString(),
       },
-    };
+    });
   } catch (error) {
     console.error('[calibrate-items]', error);
-    return {
-      status: 500,
-      error: error instanceof Error ? error.message : 'Calibration failed',
-    };
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : 'Calibration failed',
+      },
+      { status: 500 }
+    );
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}

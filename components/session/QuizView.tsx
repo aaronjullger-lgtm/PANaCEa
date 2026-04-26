@@ -1823,6 +1823,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       <Suspense fallback={null}>
       <SessionEndSummary
         isOpen={showSessionEndSummary}
+        sessionId={sessionId}
         celebrateStreak={performanceData.length >= 10}
         onClose={() => {
           setShowSessionEndSummary(false);

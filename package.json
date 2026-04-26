@@ -46,8 +46,6 @@
     "generate:basic-science-links:incremental": "tsx ./scripts/generateBasicScienceLinksIncremental.ts",
     "test:basic-science-links": "tsx ./scripts/testBasicScienceLinks.ts",
     "worker": "tsx ./scripts/backgroundWorker.ts",
-    "schedule": "tsx ./scripts/scheduleJobs.ts",
-    "health-check": "tsx ./scripts/contentHealthChecker.ts",
     "system-health": "tsx ./scripts/system-health.ts",
     "orchestrate:full": "tsx ./scripts/runAutomatedPipeline.ts",
     "orchestrate:context-aware": "tsx ./scripts/runContextAwareOrchestration.ts",

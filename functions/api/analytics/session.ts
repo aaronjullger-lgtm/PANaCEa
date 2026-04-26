@@ -44,6 +44,7 @@ export const onRequestPost = authenticatedEndpoint(
     try {
       const data = context.validated;
       const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
+      const resolvedSessionId = data.sessionId || uuidv4();
 
       // Determine session ID: use provided one or generate a fallback
       const sessionId = data.sessionId || uuidv4();

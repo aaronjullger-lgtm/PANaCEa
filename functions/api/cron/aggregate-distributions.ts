@@ -15,6 +15,7 @@
 import { Prisma } from '@prisma/client';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
 import { z } from 'zod';
 
 const bodySchema = z
@@ -60,19 +61,29 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         ORDER BY "questionId"
       `;
 
-      // Aggregate into per-question distributions
-      const questionDistributions = new Map<
-        string,
-        { distribution: DistributionMap; totalAttempts: number }
-      >();
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-      for (const row of rawResults) {
-        const qId = row.questionId;
-        const count = Number(row.count);
+  try {
+    const groupedAttempts = await prisma.questionAttempt.groupBy({
+      by: ['questionId', 'selectedAnswer'],
+      where: {
+        selectedAnswer: { not: null },
+        ...(validation.data.questionIds?.length
+          ? { questionId: { in: validation.data.questionIds } }
+          : {}),
+      },
+      _count: {
+        _all: true,
+      },
+      orderBy: {
+        questionId: 'asc',
+      },
+    });
 
-        if (!questionDistributions.has(qId)) {
-          questionDistributions.set(qId, { distribution: {}, totalAttempts: 0 });
-        }
+    const questionDistributions = new Map<
+      string,
+      { distribution: DistributionMap; totalAttempts: number }
+    >();
 
         const entry = questionDistributions.get(qId)!;
         const letter = normalizeToLetter(row.selectedAnswer);
@@ -82,31 +93,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         }
       }
 
-      // Upsert distributions for questions with enough attempts
-      let upsertedCount = 0;
-      let skippedCount = 0;
-
-      for (const [questionId, data] of questionDistributions) {
-        if (data.totalAttempts < MIN_ATTEMPTS) {
-          skippedCount++;
-          continue;
-        }
-
-        await prisma.questionAnswerDistribution.upsert({
-          where: { questionId },
-          create: {
-            questionId,
-            distribution: data.distribution,
-            totalAttempts: data.totalAttempts,
-            lastUpdated: new Date(),
-          },
-          update: {
-            distribution: data.distribution,
-            totalAttempts: data.totalAttempts,
-            lastUpdated: new Date(),
-          },
-        });
-        upsertedCount++;
+      const entry = questionDistributions.get(qId)!;
+      const letter = normalizeToLetter(row.selectedAnswer);
+      if (!letter) {
+        continue;
       }
 
       return {
@@ -120,8 +110,28 @@ export const onRequestPost = adminAuthenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
+
+    return Response.json({
+      success: true,
+      data: {
+        totalQuestionsProcessed: questionDistributions.size,
+        upsertedCount,
+        skippedBelowThreshold: skippedCount,
+        minAttemptsThreshold: MIN_ATTEMPTS,
+      },
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        error: 'Answer distribution aggregation failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+}
 
 /**
  * Normalize a selectedAnswer value to a single letter (A-E).

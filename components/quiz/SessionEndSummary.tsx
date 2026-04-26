@@ -68,6 +68,7 @@ import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
   isOpen?: boolean; // For conditional rendering from parent
+  sessionId?: string | null;
   performanceData: PerformanceRecord[];
   sessionDurationMs?: number;
   sessionStartTime?: number;
@@ -121,6 +122,7 @@ function AccuracyBarFill({ accuracy, barClass }: Readonly<{ accuracy: number; ba
 
 export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   isOpen = true,
+  sessionId,
   performanceData,
   sessionDurationMs,
   sessionStartTime,
@@ -457,6 +459,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
     sessionDurationMs,
     overallStats,
     sessionSettings,
+    sessionId,
     getToken,
   ]);
 

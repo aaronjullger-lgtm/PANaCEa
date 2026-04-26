@@ -68,7 +68,7 @@ The recent work addressed:
   Table columns use `cond.name` (from `DeepConditionData`); dropdown uses `cond.condition` (from `availableConditions: { id, condition, system }`). Two different shapes for “condition label” — if a single source is introduced later, both call sites must be updated.
 
 - **Typecheck still failing in CI:**  
-  `ci-cd.yml` has `continue-on-error: true` on the typecheck step. Hundreds of errors remain in `functions/api/**` and `scripts/**` (Prisma schema vs. code, missing fields, etc.). The repo is in a “builds and runs locally but typecheck fails” state; refactors and IDE guidance are brittle until typecheck passes.
+  The legacy combined CI/CD workflow had `continue-on-error: true` on the typecheck step. Hundreds of errors remain in `functions/api/**` and `scripts/**` (Prisma schema vs. code, missing fields, etc.). The repo is in a “builds and runs locally but typecheck fails” state; refactors and IDE guidance are brittle until typecheck passes.
 
 - **Prisma generate order:**  
   `prisma generate` was added before typecheck/build in CI. That fixes “missing Prisma client” during typecheck. Remaining type errors are mostly schema/code mismatches (e.g. required `id` on create, renamed/removed columns), not generate order.

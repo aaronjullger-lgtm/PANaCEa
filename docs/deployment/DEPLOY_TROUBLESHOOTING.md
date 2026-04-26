@@ -24,7 +24,7 @@ Error **8000119** often means the token doesn’t have permission to deploy Page
 3. **Optional but recommended:** set **CLOUDFLARE_ACCOUNT_ID**
    - In Cloudflare: select your account → right sidebar → **Account ID**
    - In GitHub Actions secrets, add or update **CLOUDFLARE_ACCOUNT_ID** with that value  
-   - The main workflow (`ci-cd.yml`) uses `wrangler-action`; the simpler `deploy.yml` uses this for `wrangler pages deploy`.
+   - The active deploy workflow is `.github/workflows/deploy.yml`, which uses `wrangler pages deploy`.
 
 4. **Redeploy**
    - Push a commit to `main` or run the workflow manually from **Actions**.

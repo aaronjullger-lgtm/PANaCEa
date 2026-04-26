@@ -1,13 +1,17 @@
 #!/usr/bin/env npx tsx
 /**
- * CI entrypoint: build an instruction from AGENT_JOB and context, then launch the agent.
- * Used by GitHub Actions. Expects:
+ * CI/manual entrypoint: build an instruction from AGENT_JOB and context, then launch the agent.
+ * Used by GitHub Actions for PR/push-triggered reviews and operator-triggered manual jobs.
+ * There is intentionally no scheduled cloud-agent path in PANaCEa.
+ *
+ * Expects:
  *   AGENT_JOB= edge-guard | living-docs | asset-perf | schema-sync | e2e-gap | pr-review | security-sentinel | lint-fix
  *   AGENT_INSTRUCTION_OVERRIDE= optional full instruction (overrides job template)
  *   CHANGED_FILES= optional newline-separated list of changed files (for templates)
  *   GITHUB_REPOSITORY= owner/repo
+ *   AGENT_BRANCH_OVERRIDE= optional branch/ref override for manual dispatch
  *   GITHUB_HEAD_REF or GITHUB_REF_NAME= branch
- *   (security-sentinel) PACKAGE_NAME=, PACKAGE_VERSION=, ADVISORY_URL=
+ *   (security-sentinel) PACKAGE_NAME=, PACKAGE_VERSION= optional, ADVISORY_URL= optional
  *
  * Outputs agent ID to stdout (last line) for optional follow-up (e.g. post comment).
  */
@@ -17,6 +21,8 @@ config({ path: '.env.local' });
 config({ path: '.env' });
 
 import { launchAgent } from './client.js';
+
+const AUTO_PR_JOBS = new Set(['security-sentinel', 'lint-fix']);
 
 const JOB_TEMPLATES: Record<string, (ctx: CiContext) => string> = {
   'edge-guard': (ctx) =>
@@ -38,7 +44,7 @@ const JOB_TEMPLATES: Record<string, (ctx: CiContext) => string> = {
     `Review this PR. Focus on Edge runtime rules (no Node APIs in \`functions/\`), Prisma singleton usage, and Zod validation in API routes. Leave comments as if reviewing the code. Changed files: ${ctx.files}. PR branch: ${ctx.branch}.`,
 
   'security-sentinel': (ctx) =>
-    `A dependency vulnerability was reported: ${ctx.packageName ?? 'package'} ${ctx.packageVersion ?? 'version'} ${ctx.advisoryUrl ?? ''}. Create a new branch from main. Upgrade the package to the suggested safe version (or minimal fix). Run \`npm ci\`, \`npx prisma generate\`, \`npm run build\`, and \`npm test\`. If all pass, push the branch and open a Pull Request with title "Security: bump [package] to [version]" and label "Security Fix". If tests fail, describe what broke and do not open the PR.`,
+    `Manual security-sentinel run. A dependency vulnerability was reported for ${ctx.packageName ?? 'package'} ${ctx.packageVersion ?? 'version'} ${ctx.advisoryUrl ?? ''}. Use only this advisory context; do not widen scope to a generic dependency sweep. Create a new branch from main. Upgrade the package to the suggested safe version (or minimal fix). Run \`npm ci\`, \`npx prisma generate\`, \`npm run build\`, and \`npm test\`. If all pass, push the branch and open a Pull Request with title "Security: bump [package] to [version]" and label "Security Fix". If tests fail, describe what broke and do not open the PR.`,
 
   'lint-fix': (ctx) =>
     `Fix ESLint and Prettier issues in the files reported below. Do not change behavior; only fix lint/format. Use project rules in .cursorrules and .cursor/rules. Files: ${ctx.files}. Failure output or file list: ${ctx.files}.`,
@@ -57,7 +63,11 @@ function getContext(): CiContext {
     (process.env.CHANGED_FILES ?? '').trim().replaceAll('\n', ', ') ||
     process.env.GITHUB_REF_NAME ||
     'unknown';
-  const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || 'main';
+  const branch =
+    process.env.AGENT_BRANCH_OVERRIDE ||
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    'main';
   return {
     files,
     branch,
@@ -82,18 +92,38 @@ async function main() {
     process.exit(1);
   }
 
+  if (job === 'security-sentinel') {
+    const packageName = process.env.PACKAGE_NAME?.trim();
+    const packageVersion = process.env.PACKAGE_VERSION?.trim();
+    const advisoryUrl = process.env.ADVISORY_URL?.trim();
+
+    if (!packageName) {
+      console.error('security-sentinel requires PACKAGE_NAME.');
+      process.exit(1);
+    }
+
+    if (!packageVersion && !advisoryUrl) {
+      console.error('security-sentinel requires PACKAGE_VERSION or ADVISORY_URL.');
+      process.exit(1);
+    }
+  }
+
   const repo = process.env.GITHUB_REPOSITORY;
   const repository = repo ? `https://github.com/${repo}` : undefined;
-  const ref = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || 'main';
+  const ref =
+    process.env.AGENT_BRANCH_OVERRIDE ||
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    'main';
 
   const result = await launchAgent({
     instruction,
     repository,
     ref,
-    autoCreatePr: job === 'security-sentinel' || job === 'lint-fix',
+    autoCreatePr: Boolean(job && AUTO_PR_JOBS.has(job)),
     branchName:
       job === 'security-sentinel'
-        ? `security-bump-${process.env.PACKAGE_NAME ?? 'deps'}-${Date.now()}`
+        ? `security-bump-${sanitizeForBranch(process.env.PACKAGE_NAME ?? 'deps')}-${Date.now()}`
         : undefined,
   });
 
@@ -106,3 +136,12 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+
+function sanitizeForBranch(value: string): string {
+  const sanitized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return sanitized || 'deps';
+}

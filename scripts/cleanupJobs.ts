@@ -2,6 +2,9 @@
 /**
  * Cleanup Old Jobs Script
  *
+ * DEPRECATED: local cron cleanup is retired in favor of GitHub Actions lanes.
+ * Keep this file only for explicit operator or historical use.
+ *
  * Removes completed and failed jobs older than the retention period
  * to prevent database bloat.
  *

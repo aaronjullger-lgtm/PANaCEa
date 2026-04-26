@@ -227,6 +227,33 @@ export function withCors(options: { allowedOrigins?: string[] } = {}): Middlewar
   };
 }
 
+/**
+ * Shared-secret cron authentication for GitHub Actions or other schedulers.
+ * Returns a ready-made error response when the request is unauthorized.
+ */
+export function requireCronSecret(
+  request: Request,
+  env: { CRON_SECRET?: string | null | undefined }
+): Response | null {
+  const expectedSecret = env?.CRON_SECRET;
+  if (!expectedSecret) {
+    return new Response(JSON.stringify({ error: 'CRON_SECRET not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const authHeader = request.headers.get('Authorization') ?? request.headers.get('authorization');
+  if (authHeader !== `Bearer ${expectedSecret}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return null;
+}
+
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE
 // ============================================================================

@@ -1,3 +1,5 @@
+#!/usr/bin/env tsx
+
 /**
  * Step 9: UserProgress & FSRS Consistency Audit
  *
@@ -12,6 +14,7 @@
 import { prisma, disconnectPrisma } from '../helpers/prisma-client.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 interface AuditResults {
   orphanedProgress: Array<{
@@ -41,11 +44,13 @@ interface AuditResults {
     staleCount: number;
     healthyCount: number;
   };
+  artifacts: string[];
 }
 
 async function auditUserProgress(
   generateCsv: boolean = false,
-  fixOrphaned: boolean = false
+  fixOrphaned: boolean = false,
+  outputDirectory: string = process.cwd()
 ): Promise<AuditResults> {
   console.log('\n🔍 UserProgress & FSRS Consistency Audit\n');
 
@@ -60,6 +65,7 @@ async function auditUserProgress(
       staleCount: 0,
       healthyCount: 0,
     },
+    artifacts: [],
   };
 
   try {
@@ -238,11 +244,12 @@ async function auditUserProgress(
       generateCsv &&
       (orphanedProgress.length > 0 || missingProgress.length > 0 || staleProgress.length > 0)
     ) {
+      fs.mkdirSync(outputDirectory, { recursive: true });
       const timestamp = new Date().toISOString().split('T')[0];
 
       // Orphaned CSV
       if (orphanedProgress.length > 0) {
-        const orphanedCsvPath = path.join(process.cwd(), `orphaned-progress-${timestamp}.csv`);
+        const orphanedCsvPath = path.join(outputDirectory, `orphaned-progress-${timestamp}.csv`);
         const orphanedLines = ['ID,User ID,Condition ID,Last Review At'];
         orphanedProgress.forEach((op) => {
           orphanedLines.push(
@@ -250,23 +257,25 @@ async function auditUserProgress(
           );
         });
         fs.writeFileSync(orphanedCsvPath, orphanedLines.join('\n'));
+        results.artifacts.push(orphanedCsvPath);
         console.log(`✅ Orphaned records CSV: ${orphanedCsvPath}`);
       }
 
       // Missing progress CSV
       if (missingProgress.length > 0) {
-        const missingCsvPath = path.join(process.cwd(), `missing-progress-${timestamp}.csv`);
+        const missingCsvPath = path.join(outputDirectory, `missing-progress-${timestamp}.csv`);
         const missingLines = ['User ID,Condition ID,Attempt Count'];
         missingProgress.forEach((mp) => {
           missingLines.push(`"${mp.userId}","${mp.conditionId}",${Number(mp.attemptCount)}`);
         });
         fs.writeFileSync(missingCsvPath, missingLines.join('\n'));
+        results.artifacts.push(missingCsvPath);
         console.log(`✅ Missing progress CSV: ${missingCsvPath}`);
       }
 
       // Stale progress CSV
       if (staleProgress.length > 0) {
-        const staleCsvPath = path.join(process.cwd(), `stale-progress-${timestamp}.csv`);
+        const staleCsvPath = path.join(outputDirectory, `stale-progress-${timestamp}.csv`);
         const staleLines = ['ID,User ID,Condition ID,Last Review,Days Since Review,Stability'];
         staleProgress.forEach((sp) => {
           const days = sp.lastReviewAt
@@ -281,6 +290,7 @@ async function auditUserProgress(
           );
         });
         fs.writeFileSync(staleCsvPath, staleLines.join('\n'));
+        results.artifacts.push(staleCsvPath);
         console.log(`✅ Stale progress CSV: ${staleCsvPath}`);
       }
       console.log('');
@@ -319,4 +329,11 @@ async function main() {
   }
 }
 
-main();
+const isDirectExecution =
+  process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  main();
+}
+
+export { auditUserProgress };

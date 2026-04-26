@@ -7,11 +7,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const prisma = new PrismaClient();
+interface BackupResult {
+  backupDir: string;
+  timestamp: string;
+  tablesAttempted: number;
+  tablesSaved: number;
+  skippedTables: string[];
+}
 
-async function backup() {
+async function backup(outputDir?: string): Promise<BackupResult> {
+  const prisma = new PrismaClient();
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupDir = path.join(__dirname, '../backups', timestamp);
+  const backupDir = outputDir ?? path.join(__dirname, '../backups', timestamp);
 
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -272,25 +279,47 @@ async function backup() {
     },
   ];
 
-  for (const table of tables) {
-    try {
-      const data = await table.accessor();
-      fs.writeFileSync(path.join(backupDir, table.filename), JSON.stringify(data, null, 2));
-      console.log(`✅ Saved ${data.length} ${table.name} records`);
-    } catch (error) {
-      console.log(`⚠️  ${table.name} table not found or error, skipping...`);
-    }
-  }
+  let tablesSaved = 0;
+  const skippedTables: string[] = [];
 
-  console.log('\n🎉 Backup Complete! Your data is safe locally.');
-  console.log(`📁 Backup location: ${backupDir}`);
-  console.log(`\n⚠️  IMPORTANT: Save this folder name for restoration:`);
-  console.log(`   ${timestamp}`);
+  try {
+    for (const table of tables) {
+      try {
+        const data = await table.accessor();
+        fs.writeFileSync(path.join(backupDir, table.filename), JSON.stringify(data, null, 2));
+        tablesSaved += 1;
+        console.log(`✅ Saved ${data.length} ${table.name} records`);
+      } catch (error) {
+        skippedTables.push(table.name);
+        console.log(`⚠️  ${table.name} table not found or error, skipping...`);
+      }
+    }
+
+    console.log('\n🎉 Backup Complete! Your data is safe locally.');
+    console.log(`📁 Backup location: ${backupDir}`);
+    console.log(`\n⚠️  IMPORTANT: Save this folder name for restoration:`);
+    console.log(`   ${timestamp}`);
+
+    return {
+      backupDir,
+      timestamp,
+      tablesAttempted: tables.length,
+      tablesSaved,
+      skippedTables,
+    };
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-backup()
-  .catch((error) => {
+const isDirectExecution =
+  process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectExecution) {
+  backup().catch((error) => {
     console.error('❌ Backup failed:', error);
     process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+  });
+}
+
+export { backup };

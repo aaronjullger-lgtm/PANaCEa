@@ -1,11 +1,13 @@
 /**
  * scripts/weekly-maintenance.ts
  *
- * 🔧 PANaCEa Weekly Maintenance Suite
+ * Manual-only PANaCEa Weekly Maintenance Suite
  *
- * Comprehensive automated maintenance for database content quality and quantity.
- * Combines all critical quality checks, content generation, and standardization
- * into a single weekly automation workflow.
+ * This file is no longer a scheduled workflow owner. Keep it for explicit
+ * operator runs when broad AI/content mutation is intentionally supervised.
+ *
+ * It remains a comprehensive maintenance suite for database content quality
+ * and quantity, but it is intentionally excluded from unattended GitHub cron.
  *
  * Operations Performed:
  * 1. Gap Analysis - Identify missing content across all systems

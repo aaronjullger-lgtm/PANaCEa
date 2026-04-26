@@ -1,6 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
  * Fire-and-forget: launch a Cloud Agent with a custom instruction.
+ * Manual-only helper. PANaCEa does not schedule generic cloud-agent runs.
  * Usage:
  *   npx tsx scripts/cloud-agents/trigger.ts --instruction "Refactor X to Y"
  *   npx tsx scripts/cloud-agents/trigger.ts --instruction "Add tests for lib/foo.ts" --branch main
