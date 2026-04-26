@@ -13,13 +13,14 @@
  * toast.success('Changes saved');
  *
  * // API error handler
- * toast.error('Failed to sync. Retrying...');
+ * toast.error('Sync paused. Your progress is saved locally.');
  *
  * // With action
- * toast.error('Sync failed', { action: { label: 'Retry', onClick: retry } });
+ * toast.error('Sync paused', { action: { label: 'Retry', onClick: retry } });
  */
 
 import { useToastStore } from '@/lib/stores/useToastStore';
+import { formatSystemToastMessage } from '@/lib/systemStateCopy';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
@@ -45,6 +46,7 @@ export interface ToastApi {
 }
 
 function normalizeOptions(opts?: ToastOptions | number): {
+  id?: string;
   duration?: number;
   action?: ToastOptions['action'];
 } {
@@ -54,8 +56,12 @@ function normalizeOptions(opts?: ToastOptions | number): {
 }
 
 function add(variant: ToastVariant, message: string, options?: ToastOptions): string {
-  const { duration, action } = normalizeOptions(options) ?? {};
-  return useToastStore.getState().addToast({ message, variant, duration, action });
+  const { id, duration, action } = normalizeOptions(options) ?? {};
+  const safeMessage =
+    variant === 'error' || variant === 'warning'
+      ? formatSystemToastMessage(message)
+      : message;
+  return useToastStore.getState().addToast({ id, message: safeMessage, variant, duration, action });
 }
 
 const toast: ToastApi = {

@@ -46,7 +46,7 @@ function createFetcher(getToken: () => Promise<string | null>) {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error('Failed to fetch daily load');
+    if (!res.ok) throw new Error('Study load unavailable.');
     return res.json() as Promise<DailyLoadResponse>;
   };
 }
@@ -86,7 +86,9 @@ export default function DailyLoadWidget() {
   if (error || !data) {
     return (
       <div className="p-5 text-center">
-        <p className="text-sm text-[var(--color-text-muted)] mb-3">Couldn't load study plan</p>
+        <p className="text-sm text-[var(--color-text-muted)] mb-3">
+          Study plan unavailable. Your progress is safe.
+        </p>
         <button
           onClick={() => mutate()}
           className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1 mx-auto"

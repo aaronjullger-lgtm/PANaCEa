@@ -48,7 +48,7 @@ export function OfflineSyncPanel() {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h3 className="font-semibold text-[var(--color-data-provisional)]">Offline Requests</h3>
+          <h3 className="font-semibold text-[var(--color-data-provisional)]">Sync paused</h3>
         </div>
         <span className="text-sm font-medium text-[var(--color-data-provisional)]">
           {queue.length} pending
@@ -56,8 +56,7 @@ export function OfflineSyncPanel() {
       </div>
 
       <p className="text-sm text-[var(--color-data-provisional)] mb-3">
-        {queue.length} {queue.length === 1 ? 'request' : 'requests'} will be synced when you're back
-        online.
+        Your progress is saved locally. {queue.length} {queue.length === 1 ? 'item' : 'items'} will sync automatically when the connection returns.
       </p>
 
       <button
@@ -68,16 +67,16 @@ export function OfflineSyncPanel() {
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
             <InlineSpinner size="sm" />
-            Syncing...
+            Syncing progress...
           </span>
         ) : (
-          <span>Retry All Now</span>
+          <span>Retry sync</span>
         )}
       </button>
 
       {!navigator.onLine && (
         <p className="text-xs text-[var(--color-data-provisional)] mt-2 text-center">
-          You're offline. Requests will auto-sync when connected.
+          You're offline. We'll sync automatically when connected.
         </p>
       )}
     </div>

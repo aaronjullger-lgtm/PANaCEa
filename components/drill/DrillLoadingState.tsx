@@ -8,6 +8,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { getClinicalLoadingMessage } from '@/lib/systemStateCopy';
 
 interface DrillLoadingStateProps {
   /** Number of answer options to show in skeleton */
@@ -26,7 +27,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   optionCount = 4,
   showTimer = true,
   showProgress = true,
-  message = 'Loading question...',
+  message = getClinicalLoadingMessage(0),
   variant = 'question',
 }) => {
   const prefersReducedMotion = useReducedMotion();

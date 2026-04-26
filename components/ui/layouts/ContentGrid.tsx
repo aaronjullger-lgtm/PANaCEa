@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { InlineSpinner } from '@/components/loading';
+import { getClinicalLoadingMessage } from '@/lib/systemStateCopy';
 import { cn } from '@/lib/utils';
 import {
   bodySupportClass,
@@ -225,7 +226,7 @@ interface LoadingOverlayProps {
 }
 
 export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
-  message = 'Loading content...',
+  message = getClinicalLoadingMessage(0),
 }) => {
   return (
     <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">

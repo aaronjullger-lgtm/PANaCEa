@@ -369,11 +369,11 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
             >
               <FileImage className="mx-auto w-12 h-12 text-[var(--color-text-muted)] mb-4" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-                {fetchError ? 'Something went wrong' : 'No questions available'}
+                {fetchError ? 'Photo drill unavailable' : 'No questions available'}
               </h3>
               <p className="text-[var(--color-text-muted)] text-sm mb-4">
                 {fetchError
-                  ? fetchError
+                  ? 'Your progress is safe. Retry or try another category.'
                   : 'There are no questions for this filter yet. Try another category or retry.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

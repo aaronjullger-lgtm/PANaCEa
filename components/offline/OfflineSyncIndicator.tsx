@@ -120,7 +120,7 @@ export function OfflineSyncIndicator() {
       setOfflineStatus(getSyncStatus());
     } catch (error) {
       console.error('Manual sync failed:', error);
-      toast.error('Sync failed. Check your connection and try again.');
+      toast.error('Sync paused. Your progress is saved locally.');
     } finally {
       setSyncing(false);
     }
@@ -141,7 +141,7 @@ export function OfflineSyncIndicator() {
       }
     } catch (error) {
       console.error('Dead-letter retry failed:', error);
-      toast.error('Retry failed. Items remain stuck and can be discarded.');
+      toast.warning('Sync retry paused. Your progress is saved locally.');
     } finally {
       setRecovering(false);
     }
@@ -157,7 +157,6 @@ export function OfflineSyncIndicator() {
         ? 'Discard 1 stuck item? This cannot be undone and it will not reach the server.'
         : `Discard ${deadLetteredCount} stuck items? This cannot be undone and they will not reach the server.`;
 
-    // eslint-disable-next-line no-alert
     if (!window.confirm(message)) return;
 
     try {
@@ -166,7 +165,7 @@ export function OfflineSyncIndicator() {
       toast.success(`Discarded ${total} stuck item${total === 1 ? '' : 's'}.`);
     } catch (error) {
       console.error('Dead-letter discard failed:', error);
-      toast.error('Discard failed. Try again.');
+      toast.error('Discard unavailable. Try again when you are ready.');
     }
   };
 
@@ -225,7 +224,7 @@ export function OfflineSyncIndicator() {
         : isOfflineState
           ? 'Offline'
           : hasSyncError
-            ? 'Sync error'
+            ? 'Sync paused'
             : `${totalPending} pending`;
 
   return (
@@ -262,12 +261,12 @@ export function OfflineSyncIndicator() {
             {isOfflineState ? (
               <>
                 <WifiOff className="w-4 h-4 text-[var(--color-data-provisional)]" />
-                <span className="font-medium text-[var(--color-text-primary)]">You're offline</span>
+                <span className="font-medium text-[var(--color-text-primary)]">Sync paused</span>
               </>
             ) : hasSyncError ? (
               <>
                 <AlertCircle className="w-4 h-4 text-[var(--color-data-fail)]" />
-                <span className="font-medium text-[var(--color-text-primary)]">Sync failed</span>
+                <span className="font-medium text-[var(--color-text-primary)]">Sync paused</span>
               </>
             ) : syncing ? (
               <>
@@ -287,10 +286,10 @@ export function OfflineSyncIndicator() {
 
           <p className="text-xs text-[var(--color-text-muted)] mb-3">
             {isOfflineState
-              ? 'Changes will sync when connection is restored.'
+              ? "Your progress is saved locally. We'll sync automatically when the connection returns."
               : hasSyncError
-                ? (syncManagerStatus.lastSyncError ?? 'An error occurred during sync.')
-                : 'Will sync when ready.'}
+                ? "Your progress is saved locally. We'll retry automatically, or you can retry now."
+                : 'Your progress will sync when ready.'}
           </p>
 
           {/* Sprint S1: dead-letter recovery panel — shows when items exhausted retries */}
@@ -303,10 +302,10 @@ export function OfflineSyncIndicator() {
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--color-data-fail)]" />
                 <div>
                   <p className="text-xs font-semibold text-[var(--color-text-primary)]">
-                    {deadLetteredCount} item{deadLetteredCount === 1 ? '' : 's'} stuck after 5 attempts
+                    {deadLetteredCount} item{deadLetteredCount === 1 ? '' : 's'} need attention
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                    Retry to try again, or discard to remove without syncing.
+                    Retry when connected, or discard only if you do not need these saved.
                   </p>
                 </div>
               </div>

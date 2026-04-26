@@ -20,6 +20,7 @@ import {
   contentAppearVariants,
   easings,
 } from '@/config/appViews';
+import { getClinicalLoadingMessage } from '@/lib/systemStateCopy';
 
 // ============================================================================
 // Shared Shimmer Overlay — Gold-tinted cinematic sweep
@@ -79,7 +80,7 @@ export interface LoaderProps {
  */
 export const Loader: React.FC<LoaderProps> = ({
   variant = 'spinner',
-  message = 'Loading...',
+  message = getClinicalLoadingMessage(0),
   forceDark = false,
 }) => {
   // Prevent scrolling behind overlay
@@ -308,7 +309,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         rounded-xl
         ${className}
       `}
-      aria-label="Loading content..."
+      aria-label="Preparing content..."
       aria-busy="true"
       aria-live="polite"
     >
@@ -464,7 +465,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   optionCount = 4,
   showTimer = true,
   showProgress = true,
-  message = 'Loading question...',
+  message = getClinicalLoadingMessage(0),
   variant = 'question',
 }) => {
   return (

@@ -75,13 +75,13 @@ export const IncidentBanner: React.FC<IncidentBannerProps> = ({ forceVisible = f
   const isOffline = status === 'unreachable';
   const Icon = isOffline ? WifiOff : AlertTriangle;
   const title = isOffline
-    ? "Can't reach PANaCEa servers"
-    : 'PANaCEa is experiencing issues';
+    ? 'Sync paused'
+    : 'Some features are temporarily unavailable';
   const body = isOffline
-    ? 'Your answers will sync once you reconnect. Study content may be stale.'
+    ? "Your progress is saved locally. We'll sync automatically when the connection returns."
     : message
-      ? `Some features may be degraded — ${message}. Your work is saved locally.`
-      : 'Some features may be degraded. Your work is saved locally and will sync when service is restored.';
+      ? `Your progress is safe. Retry if needed, or continue with available study tools.`
+      : 'Your progress is safe. Continue studying or retry the unavailable feature in a moment.';
 
   const handleDismiss = () => {
     markDismissed();

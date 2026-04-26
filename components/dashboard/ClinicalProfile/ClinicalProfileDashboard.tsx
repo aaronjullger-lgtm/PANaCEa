@@ -52,9 +52,9 @@ const ClinicalProfileDashboard: React.FC = () => {
             meta={{
               badge: 'Clinical Profile',
               badgeTone: 'plum',
-              title: 'Loading your clinical profile.',
+              title: 'Building your clinical profile.',
               subtitle:
-                'We’re assembling your strengths, speed patterns, and diagnostic tendencies from your study history.',
+                'Prioritizing missed patterns, timing signals, and diagnostic tendencies from your study history.',
             }}
           />
         </WorkspaceReveal>
@@ -66,7 +66,7 @@ const ClinicalProfileDashboard: React.FC = () => {
               aria-live="polite"
             >
               <InlineSpinner size="lg" />
-              <span>Loading clinical profile...</span>
+              <span>Prioritizing missed patterns...</span>
             </div>
           </WorkspaceSurface>
         </WorkspaceReveal>
@@ -84,7 +84,7 @@ const ClinicalProfileDashboard: React.FC = () => {
               badgeTone: 'plum',
               title: 'Clinical profile unavailable.',
               subtitle:
-                'We could not load the analysis needed to describe your current strengths, timing patterns, and diagnostic bias.',
+                'Your progress is safe. Retry when you are ready.',
               primaryAction: {
                 label: 'Retry',
                 onClick: refetch,
@@ -95,8 +95,8 @@ const ClinicalProfileDashboard: React.FC = () => {
         <WorkspaceReveal delay={0.05}>
           <WorkspaceEmptyState
             icon={Brain}
-            title="Unable to load profile"
-            description={error || 'Unable to load profile'}
+            title="Clinical profile unavailable"
+            description="Your progress is safe. Retry when you are ready."
             action={
               <Button type="button" size="sm" onClick={refetch}>
                 Retry

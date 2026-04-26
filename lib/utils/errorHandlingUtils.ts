@@ -5,6 +5,7 @@
 
 // Import Sentry utilities from lazy-loading module (avoids static @sentry/react import)
 import { captureError, captureMessage } from '@/lib/monitoring/sentry';
+import { getCalmSystemCopy } from '@/lib/systemStateCopy';
 
 // Error severity levels
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
@@ -77,17 +78,17 @@ const ERROR_CATEGORY_MAP: Record<string, ErrorCategory> = {
 // User-friendly message templates
 const USER_MESSAGES: Record<ErrorCategory, string> = {
   network:
-    "We couldn't connect to the server. Please check your internet connection and try again.",
+    "Your progress is safe. We'll reconnect automatically when the connection returns.",
   authentication: 'Your session has expired. Please sign in again to continue.',
-  authorization: "You don't have permission to perform this action.",
+  authorization: 'This area is not available for your current account.',
   validation: 'Please check your input and try again.',
-  server: "Something went wrong on our end. We're working to fix it.",
-  database: 'We had trouble saving your data. Please try again.',
-  timeout: 'The request took too long. Please try again.',
-  rate_limit: "You've made too many requests. Please wait a moment before trying again.",
-  not_found: "We couldn't find what you're looking for.",
-  conflict: 'This action conflicts with existing data. Please refresh and try again.',
-  unknown: 'An unexpected error occurred. Please try again.',
+  server: 'This is temporarily unavailable. Your progress is safe.',
+  database: 'Saving is paused. Your progress is safe locally.',
+  timeout: 'This is taking longer than expected. Retry when you are ready.',
+  rate_limit: 'Give this a moment before trying again.',
+  not_found: 'This item is unavailable. Try search or return to Study.',
+  conflict: 'This item was already updated. Refresh before trying again.',
+  unknown: 'This is temporarily unavailable. Your progress is safe.',
 };
 
 // Retry configuration by error category
@@ -350,10 +351,11 @@ export function formatErrorForToast(error: AppError): {
 } {
   const variant =
     error.severity === 'low' ? 'info' : error.severity === 'medium' ? 'warning' : 'error';
+  const calmCopy = getCalmSystemCopy(error.message);
 
   return {
     title: getErrorTitle(error.category),
-    description: error.userMessage,
+    description: calmCopy.description || error.userMessage,
     variant,
     action: error.retryable ? { label: 'Try Again', onClick: () => {} } : undefined,
   };
@@ -364,17 +366,17 @@ export function formatErrorForToast(error: AppError): {
  */
 function getErrorTitle(category: ErrorCategory): string {
   const titles: Record<ErrorCategory, string> = {
-    network: 'Connection Error',
+    network: 'Connection paused',
     authentication: 'Session Expired',
-    authorization: 'Access Denied',
-    validation: 'Invalid Input',
-    server: 'Server Error',
-    database: 'Save Error',
-    timeout: 'Request Timeout',
-    rate_limit: 'Too Many Requests',
-    not_found: 'Not Found',
-    conflict: 'Conflict',
-    unknown: 'Error',
+    authorization: 'Access unavailable',
+    validation: 'Check this entry',
+    server: 'Service unavailable',
+    database: 'Save paused',
+    timeout: 'Still working',
+    rate_limit: 'Brief pause needed',
+    not_found: 'Item unavailable',
+    conflict: 'Already updated',
+    unknown: 'Temporarily unavailable',
   };
   return titles[category];
 }
@@ -399,9 +401,9 @@ export function getUserFacingError(
 } {
   if (context === 'gemini') {
     return {
-      title: 'Tutor Unavailable',
+      title: 'Tutor unavailable',
       message:
-        'The tutor is temporarily busy. Please try again in a moment, or continue without asking a follow-up.',
+        'Continue the question and try the tutor again in a moment.',
       primaryAction: 'Try Again',
       secondaryLabel: 'Go Home',
     };
@@ -409,48 +411,48 @@ export function getUserFacingError(
 
   const base: Record<ErrorCategory, { title: string; message: string }> = {
     network: {
-      title: 'Connection Problem',
-      message: "We couldn't load this. Check your connection and try again.",
+      title: 'Connection paused',
+      message: "Your progress is saved locally. We'll sync automatically when the connection returns.",
     },
     authentication: {
       title: 'Session Expired',
       message: 'Your session has expired. Please sign in again to continue.',
     },
     authorization: {
-      title: 'Access Denied',
-      message: "You don't have permission to perform this action.",
+      title: 'Access unavailable',
+      message: 'This area is not available for your current account.',
     },
     validation: {
-      title: 'Invalid Input',
+      title: 'Check this entry',
       message: 'Please check your input and try again.',
     },
     server: {
-      title: 'Something Went Wrong',
-      message: "We couldn't load this. Please try again or go home and try another topic.",
+      title: 'Temporarily unavailable',
+      message: 'Your progress is safe. Retry or return to Study.',
     },
     database: {
-      title: 'Save Error',
-      message: 'We had trouble saving. Please try again.',
+      title: 'Save paused',
+      message: 'Your progress is safe locally. Retry when you are ready.',
     },
     timeout: {
-      title: 'Request Timeout',
-      message: 'The request took too long. Please try again.',
+      title: 'Still working',
+      message: 'This is taking longer than expected. Retry when you are ready.',
     },
     rate_limit: {
-      title: 'Too Many Requests',
-      message: "You've made too many requests. Please wait a moment before trying again.",
+      title: 'Brief pause needed',
+      message: 'Give this a moment before trying again.',
     },
     not_found: {
-      title: 'Not Found',
-      message: "We couldn't find what you're looking for.",
+      title: 'Item unavailable',
+      message: 'Try search or return to Study.',
     },
     conflict: {
-      title: 'Conflict',
-      message: 'This action conflicts with existing data. Please refresh and try again.',
+      title: 'Already updated',
+      message: 'Refresh before trying again.',
     },
     unknown: {
-      title: 'Something Went Wrong',
-      message: "We couldn't complete this. Please try again or go home and try another topic.",
+      title: 'Temporarily unavailable',
+      message: 'Your progress is safe. Retry or return to Study.',
     },
   };
 

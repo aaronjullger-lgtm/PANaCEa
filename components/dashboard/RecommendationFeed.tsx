@@ -123,7 +123,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
       recommendationLogger.warn('Failed to fetch recommendations', { errorMsg });
-      toast.error('Failed to load recommendations. Please try again.', { id: 'recommendations-error' });
+      toast.error('Recommendations unavailable.', { id: 'recommendations-error' });
       setRecommendations([]); // Clear on error
     } finally {
       setLoading(false);

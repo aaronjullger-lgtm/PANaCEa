@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createAppError, getUserFacingError } from '@/lib/utils/errorHandlingUtils';
+import { getCalmSystemCopy, looksLikeRawError } from '@/lib/systemStateCopy';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface ErrorStateProps {
@@ -23,7 +24,7 @@ interface ErrorStateProps {
  * Provides consistent error UX across the application with smooth animations
  * and clear call-to-action for recoverable errors.
  *
- * @param message - Error message to display (default: "Something went wrong")
+ * @param message - Error message to display (default: calm recoverable copy)
  * @param onRetry - Optional callback for retry button
  * @param className - Additional Tailwind classes
  * @param title - Optional error title (default: "Error")
@@ -31,14 +32,19 @@ interface ErrorStateProps {
  * @param secondaryAction - Optional secondary button (e.g. Go Home)
  */
 export const ErrorState: React.FC<ErrorStateProps> = ({
-  message = 'Something went wrong',
+  message = 'Your progress is safe. Retry when you are ready.',
   onRetry,
   className = '',
-  title = 'Error',
+  title = 'Temporarily unavailable',
   showIcon = true,
   secondaryAction,
 }) => {
   const prefersReducedMotion = useReducedMotion();
+  const shouldNormalize = looksLikeRawError(message);
+  const calmCopy = shouldNormalize ? getCalmSystemCopy(message) : null;
+  const displayTitle =
+    (title === 'Error' || title === 'Temporarily unavailable') && calmCopy ? calmCopy.title : title;
+  const displayMessage = calmCopy?.description ?? message;
   return (
     <motion.div
       initial={prefersReducedMotion ? false : { y: 10 }}
@@ -47,8 +53,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       className={cn('flex flex-col items-center justify-center text-center', className)}
     >
       <EmptyState
-        title={title}
-        description={message}
+        title={displayTitle}
+        description={displayMessage}
         icon={AlertCircle}
         showIcon={showIcon}
         layout="surface"

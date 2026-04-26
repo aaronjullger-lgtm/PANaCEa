@@ -32,7 +32,7 @@ export interface Toast {
 }
 
 const DEFAULT_DURATION = 4000;
-const MAX_TOASTS = 5;
+const MAX_TOASTS = 3;
 
 // Timer map lives outside Zustand (non-serializable, not state)
 const timerMap = new Map<string, ReturnType<typeof setTimeout>>();
@@ -50,7 +50,7 @@ interface ToastState {
 }
 
 interface ToastActions {
-  addToast: (toast: Omit<Toast, 'id'>) => string;
+  addToast: (toast: Omit<Toast, 'id'> & { id?: string }) => string;
   removeToast: (id: string) => void;
   clearAllToasts: () => void;
   // Convenience methods
@@ -70,11 +70,27 @@ export const useToastStore = create<ToastState & ToastActions>((set, get) => ({
   toasts: [],
 
   addToast: (toast) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const existing = get().toasts.find(
+      (item) =>
+        (toast.id && item.id === toast.id) ||
+        (item.variant === toast.variant && item.message === toast.message)
+    );
+    if (existing) return existing.id;
+
+    const id = toast.id ?? `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const newToast: Toast = { ...toast, id };
 
     set((state) => {
-      const updated = [...state.toasts, newToast];
+      const shouldLimitCompetingAlerts = toast.variant === 'error' || toast.variant === 'warning';
+      const baseToasts = shouldLimitCompetingAlerts
+        ? state.toasts.filter((item) => item.variant !== 'error' && item.variant !== 'warning')
+        : state.toasts;
+      if (shouldLimitCompetingAlerts) {
+        state.toasts
+          .filter((item) => item.variant === 'error' || item.variant === 'warning')
+          .forEach((item) => clearTimer(item.id));
+      }
+      const updated = [...baseToasts, newToast];
       if (updated.length > MAX_TOASTS) {
         // Evict oldest and clear their timers
         const evicted = updated.slice(0, updated.length - MAX_TOASTS);

@@ -277,10 +277,10 @@ describe('formatErrorForToast', () => {
 // ─── getUserFacingError ───────────────────────────────────────────────────────
 
 describe('getUserFacingError', () => {
-  it('gemini context always returns "Tutor Unavailable"', () => {
+  it('gemini context always returns tutor unavailable copy', () => {
     for (const cat of ['network', 'server', 'validation'] as ErrorCategory[]) {
       const result = getUserFacingError(cat, 'gemini');
-      expect(result.title).toBe('Tutor Unavailable');
+      expect(result.title).toBe('Tutor unavailable');
     }
   });
 

@@ -164,7 +164,7 @@ export const DrillRecommendationCard: React.FC<Props> = ({ days = 60 }) => {
           Recommended Drills
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Unable to load recommendations right now.
+          Recommendations unavailable. Your progress is safe. Retry or start a default mixed block.
         </p>
       </section>
     );

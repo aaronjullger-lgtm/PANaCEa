@@ -9,6 +9,7 @@ import React from 'react';
 import { Skeleton, ClinicalSkeleton } from '@/components/loading';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState, type EmptyStateVariant, type EmptyStateProps } from '@/components/ui/EmptyState';
+import { getCalmSystemCopy } from '@/lib/systemStateCopy';
 
 type SkeletonVariant = 'skeleton' | 'clinical' | 'custom';
 
@@ -89,11 +90,12 @@ export function AsyncContent<T>({
   if (error) {
     if (errorComponent) return <div className={className}>{errorComponent}</div>;
     const errorMessage = error instanceof Error ? error.message : error;
+    const calmCopy = getCalmSystemCopy(errorMessage);
     return (
       <div className={className}>
         <ErrorState
-          title={errorTitle}
-          message={errorMessage}
+          title={errorTitle ?? calmCopy.title}
+          message={calmCopy.description}
           onRetry={onRetry}
         />
       </div>
