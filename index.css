@@ -576,20 +576,36 @@ a,
   .btn-success {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
            bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] shadow-sm
-           hover:bg-[var(--color-data-pass)]/90 hover:shadow-md
+           hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-data-pass)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-pass)]/80;
+           dark:bg-[var(--color-data-pass)] dark:text-[var(--color-text-inverse)];
+  }
+
+  .btn-success:hover {
+    background: color-mix(in srgb, var(--color-data-pass) 90%, black);
+  }
+
+  .dark .btn-success:hover {
+    background: color-mix(in srgb, var(--color-data-pass) 80%, black);
   }
 
   /* Danger button - for destructive actions */
   .btn-danger {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
            bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] shadow-sm
-           hover:bg-[var(--color-data-fail)]/90 hover:shadow-md
+           hover:shadow-md
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
+           dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)];
+  }
+
+  .btn-danger:hover {
+    background: color-mix(in srgb, var(--color-data-fail) 90%, black);
+  }
+
+  .dark .btn-danger:hover {
+    background: color-mix(in srgb, var(--color-data-fail) 80%, black);
   }
 
   /* Data/KPI numbers - tabular figures for aligned columns and fast scanning (Pillar V) */
