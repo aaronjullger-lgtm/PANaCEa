@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-26
 
-Target: Cloudflare Pages with Pages Functions, PostgreSQL/Supabase through Prisma, Clerk auth, Gemini AI, Cloudflare KV for rate limits/cache, and optional OSCE Durable Object bindings.
+Target: Cloudflare Pages with Pages Functions, PostgreSQL/Supabase through Prisma, Clerk auth, Gemini AI, and Cloudflare KV for rate limits/cache. OSCE Durable Object bindings are deferred until OSCE is part of the launch surface and its Worker is deployed separately.
 
 ## Required Environment
 
@@ -36,7 +36,10 @@ Set these in Cloudflare Pages for Production and Preview unless noted otherwise.
 
 - `RATE_LIMIT_KV`: KV namespace for rate limiting.
 - `CACHE`: KV namespace for API/cache/idempotency storage.
-- `OsceSessionDO`: Durable Object binding for OSCE session state. Current local smoke shows it binds locally but is not connected to a separate local DO process.
+
+Deferred:
+
+- `OsceSessionDO`: OSCE session-state Durable Object. Do not bind this for private beta Pages deploys; Pages can consume an existing Durable Object Worker, but cannot deploy that Worker from this project.
 
 ### GitHub Actions Secrets
 

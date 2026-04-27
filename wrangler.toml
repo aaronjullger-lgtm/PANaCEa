@@ -59,8 +59,7 @@ id = "REPLACE_WITH_PREVIEW_CACHE_KV_ID"
 # - SUPABASE_SERVICE_ROLE_KEY: eyJ... (Supabase service role key)
 # Note: Secret keys should NEVER be committed to version control
 
-# Sprint OSCE-01: Durable Objects for multi-agent OSCE session state
-[[durable_objects.bindings]]
-name = "OsceSessionDO"
-class_name = "OsceSessionDO"
-script_name = "workers/osce-session"
+# OSCE Durable Objects are intentionally not bound for the private beta Pages
+# deploy. Pages can consume an existing Durable Object Worker, but it cannot
+# deploy that Worker from this project. Re-enable only after the OSCE Worker is
+# deployed separately and the route is part of the launch surface.
