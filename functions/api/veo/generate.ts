@@ -13,11 +13,6 @@ import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation'
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
-const GenerateBodySchema = z.object({
-  prompt: z.string().min(1).max(2000),
-  durationSeconds: z.number().min(1).max(30).optional().default(5),
-});
-
 interface Env {
   GEMINI_API_KEY: string;
   SUPABASE_URL?: string;
@@ -36,6 +31,31 @@ const VALID_PRESETS = [
   'steppage_gait',
   'normal_gait',
 ] as const;
+
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+const VEO_MODEL = 'veo-2.0-generate-001';
+const VEO_ATLAS_PREFIX = 'veo/atlas';
+const MAX_PROMPT_LENGTH = 2000;
+const PRESET_PROMPTS: Record<(typeof VALID_PRESETS)[number], string> = {
+  parkinsonian_gait: 'Clinical education video showing a Parkinsonian gait pattern.',
+  cerebellar_ataxia: 'Clinical education video showing cerebellar ataxic gait.',
+  antalgic_gait: 'Clinical education video showing an antalgic gait pattern.',
+  hemiplegic_gait: 'Clinical education video showing a hemiplegic gait pattern.',
+  tonic_clonic_seizure: 'Clinical education video showing a tonic-clonic seizure presentation.',
+  syncope_presyncope: 'Clinical education video showing syncope and presyncope presentation.',
+  resting_tremor: 'Clinical education video showing a resting tremor.',
+  waddling_gait: 'Clinical education video showing a waddling gait pattern.',
+  steppage_gait: 'Clinical education video showing a steppage gait pattern.',
+  normal_gait: 'Clinical education video showing a normal gait pattern.',
+};
+
+const GenerateBodySchema = z.object({
+  prompt: z.string().min(1).max(MAX_PROMPT_LENGTH).optional(),
+  preset: z.enum(VALID_PRESETS).optional(),
+  aspectRatio: z.enum(['16:9', '9:16']).optional(),
+  negativePrompt: z.string().max(1000).optional(),
+  durationSeconds: z.number().min(1).max(30).optional().default(5),
+});
 
 /** Check if a preset video exists in the Atlas cache (Supabase). */
 async function checkAtlasCache(env: Env, preset: string): Promise<string | null> {
@@ -94,6 +114,7 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
         { headers: { 'Cache-Control': 'private, max-age=86400' } }
       );
     }
+  }
 
   const identifier = getRateLimitIdentifier(request, auth.userId);
   const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
@@ -173,4 +194,4 @@ export const onRequestPost = aiEndpoint(GenerateBodySchema, async (context) => {
     log.error('Veo generate error', err);
     return fail(ErrorCode.INTERNAL_ERROR, { message: 'Internal server error' });
   }
-);
+});

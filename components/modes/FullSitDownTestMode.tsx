@@ -2,8 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { QuizView } from '@/components/session/QuizView';
 import type { ErrorTag, PerformanceRecord, Question, SessionSettings } from '@/types';
-import { mapLaunchModeToSessionRequestMode } from '@/lib/sessionGeneration';
 import { InlineSpinner } from '@/components/loading';
+import { createApiClient } from '@/lib/sdk';
+import { MAX_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
+import { generateStudySession } from '@/lib/study/sessionRuntime';
 
 interface FullSitDownTestModeProps {
   /** Callback to navigate back to the menu */
@@ -125,24 +128,9 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
     }
   }, [getToken]);
 
-  // Generate 300-question session
   useEffect(() => {
-    const generateSession = async () => {
-      try {
-        setIsLoading(true);
-        const token = await getToken();
-        const response = await fetch('/api/study/session/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            mode: mapLaunchModeToSessionRequestMode('mainSession'),
-            size: 300,
-            sessionLane: 'main',
-          }),
-        });
+    void generateSession(false);
+  }, [generateSession]);
 
   const handleRetry = useCallback(() => {
     void generateSession(true);

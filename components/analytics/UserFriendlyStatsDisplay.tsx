@@ -34,7 +34,6 @@ import {
   Activity,
   RefreshCw,
   Coffee,
-  Minus,
   Info,
 } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
@@ -657,21 +656,12 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         <p className="font-medium text-[var(--color-accent)]">Failed to load analytics</p>
         <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button
+          type="button"
           onClick={loadData}
           className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5 text-center shadow-lg max-w-sm mx-4">
-            <AlertCircle className="w-10 h-10 mx-auto text-[var(--color-data-fail)] mb-3" />
-            <p className="text-[var(--color-text-primary)] font-medium">Failed to load analytics</p>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1 line-clamp-2">{error}</p>
-            <button
-              onClick={loadData}
-              className="mt-4 px-4 py-2 rounded-lg border-2 border-[var(--color-accent)] bg-transparent text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
+          Try Again
+        </button>
       </div>
     );
   }

@@ -14,21 +14,22 @@ import {
   getNextDifficultyLevel,
   DifficultyLevel,
 } from '@/lib/services/progressiveDifficultyService';
-import { createApiClient, createSessionsClient } from '@/lib/sdk';
-import type { SessionGeneratePayload } from '@/lib/sdk/types';
+import { createApiClient } from '@/lib/sdk';
+import { mapLaunchModeToSessionRequestMode } from '@/lib/sessionGeneration';
 import {
-  mapLaunchModeToSessionRequestMode,
-  normalizeSessionGenerateResult,
-  type NormalizedSessionGenerateResult,
-} from '@/lib/sessionGeneration';
+  generateStudySession,
+  type GeneratedStudySession,
+  type GenerateStudySessionOptions,
+} from '@/lib/study/sessionRuntime';
+import { useStudyStore } from '@/lib/stores/useStudyStore';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-export interface GenerateSessionOptions extends GenerateStudySessionOptions {}
+export type GenerateSessionOptions = GenerateStudySessionOptions;
 
-export type GeneratedSession = NormalizedSessionGenerateResult;
+export type GeneratedSession = GeneratedStudySession;
 
 interface UseSessionGeneratorReturn {
   generateSession: (options: GenerateSessionOptions) => Promise<GeneratedSession | null>;
@@ -63,17 +64,16 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
         }
 
         const api = createApiClient(getToken);
-        const sessions = createSessionsClient(api);
         const requestMode = mapLaunchModeToSessionRequestMode(options.mode);
-        const payload: SessionGeneratePayload = {
+        const { generatedSession, runtime } = await generateStudySession(api, {
           mode: requestMode,
           size: options.size || 20,
           systems: options.systems,
           initialDifficulty,
           sessionLane: options.mode === 'drill' ? 'drill' : 'main',
-        };
+        });
 
-        const session = normalizeSessionGenerateResult(await sessions.generate(payload));
+        const session = generatedSession;
         setLastSession(session);
         useStudyStore.getState().hydrateSession(runtime);
 

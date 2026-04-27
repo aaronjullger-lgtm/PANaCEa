@@ -13,14 +13,12 @@
 import { z } from 'zod';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { validateRequest } from '../_shared/schemas';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   batchCalibrateItems,
   summarizeCalibration,
   MIN_OBSERVATIONS,
   type AttemptRecord,
-  type ItemCalibration,
 } from '../../../lib/services/itemCalibrationService';
 
 const BodySchema = z
@@ -42,13 +40,6 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
     auth: { userId: string };
   };
 
-  const validation = await validateRequest(context.request, BodySchema);
-  if (validation.success === false) {
-    return validation.response;
-  }
-
-  const env = context.env as Env;
-  const validated = validation.data;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const minResponses = validated?.minResponses ?? MIN_OBSERVATIONS;
 
@@ -195,4 +186,4 @@ export const onRequestPost = adminAuthenticatedEndpoint(BodySchema, async (conte
   } finally {
     await safePrismaDisconnect(prisma);
   }
-}
+});

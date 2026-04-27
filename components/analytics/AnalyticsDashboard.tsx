@@ -657,25 +657,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </div>
                   ))}
                 </div>
-                <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {userStats.stats.weakAreas.slice(0, 3).map((area) => (
-                  <div
-                    key={area.system}
-                    className="p-3 rounded-lg bg-surface-primary border border-data-provisional/30"
-                  >
-                    <div className="text-sm font-semibold text-action-primary mb-1">
-                      {area.system}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-data-provisional">
-                        {area.accuracy}%
-                      </span>
-                      <span className="text-xs text-action-muted">{area.attempts} Q's</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             );
           })()}

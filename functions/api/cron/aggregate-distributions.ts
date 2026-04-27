@@ -15,7 +15,6 @@
 import { Prisma } from '@prisma/client';
 import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { validateRequest } from '../_shared/schemas';
 import { z } from 'zod';
 
 const bodySchema = z
@@ -61,77 +60,69 @@ export const onRequestPost = adminAuthenticatedEndpoint(
         ORDER BY "questionId"
       `;
 
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+      const questionDistributions = new Map<
+        string,
+        { distribution: DistributionMap; totalAttempts: number }
+      >();
 
-  try {
-    const groupedAttempts = await prisma.questionAttempt.groupBy({
-      by: ['questionId', 'selectedAnswer'],
-      where: {
-        selectedAnswer: { not: null },
-        ...(validation.data.questionIds?.length
-          ? { questionId: { in: validation.data.questionIds } }
-          : {}),
-      },
-      _count: {
-        _all: true,
-      },
-      orderBy: {
-        questionId: 'asc',
-      },
-    });
-
-    const questionDistributions = new Map<
-      string,
-      { distribution: DistributionMap; totalAttempts: number }
-    >();
-
-        const entry = questionDistributions.get(qId)!;
-        const letter = normalizeToLetter(row.selectedAnswer);
-        if (letter) {
-          entry.distribution[letter] = (entry.distribution[letter] || 0) + count;
-          entry.totalAttempts += count;
+      for (const row of rawResults) {
+        const qId = row.questionId;
+        const count = Number(row.count);
+        if (!questionDistributions.has(qId)) {
+          questionDistributions.set(qId, { distribution: {}, totalAttempts: 0 });
         }
+        const entry = questionDistributions.get(qId);
+        const letter = normalizeToLetter(row.selectedAnswer);
+        if (!entry || !letter) continue;
+        entry.distribution[letter] = (entry.distribution[letter] || 0) + count;
+        entry.totalAttempts += count;
       }
 
-      const entry = questionDistributions.get(qId)!;
-      const letter = normalizeToLetter(row.selectedAnswer);
-      if (!letter) {
-        continue;
+      let upsertedCount = 0;
+      let skippedCount = 0;
+      for (const [questionId, entry] of questionDistributions) {
+        if (entry.totalAttempts < MIN_ATTEMPTS) {
+          skippedCount += 1;
+          continue;
+        }
+
+        await (prisma as any).questionAnswerDistribution.upsert({
+          where: { questionId },
+          create: {
+            questionId,
+            distribution: entry.distribution,
+            totalAttempts: entry.totalAttempts,
+          },
+          update: {
+            distribution: entry.distribution,
+            totalAttempts: entry.totalAttempts,
+          },
+        });
+        upsertedCount += 1;
       }
 
-      return {
+      return Response.json({
+        success: true,
         data: {
           totalQuestionsProcessed: questionDistributions.size,
           upsertedCount,
           skippedBelowThreshold: skippedCount,
           minAttemptsThreshold: MIN_ATTEMPTS,
         },
-      };
+      });
+    } catch (error) {
+      return Response.json(
+        {
+          error: 'Answer distribution aggregation failed',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+        { status: 500 }
+      );
     } finally {
       await safePrismaDisconnect(prisma);
     }
-
-    return Response.json({
-      success: true,
-      data: {
-        totalQuestionsProcessed: questionDistributions.size,
-        upsertedCount,
-        skippedBelowThreshold: skippedCount,
-        minAttemptsThreshold: MIN_ATTEMPTS,
-      },
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        error: 'Answer distribution aggregation failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  } finally {
-    await safePrismaDisconnect(prisma);
   }
-}
+);
 
 /**
  * Normalize a selectedAnswer value to a single letter (A-E).
