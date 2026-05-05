@@ -142,8 +142,8 @@ export interface ParameterBounds {
 // Constants
 // ============================================================================
 
-/** Minimum reviews required for reliable optimization */
-export const MIN_REVIEWS_FOR_OPTIMIZATION = 500;
+/** Minimum real MAIN/DRILL reviews required for reliable personalization. */
+export const MIN_REVIEWS_FOR_OPTIMIZATION = 1000;
 
 /** Minimum reviews for per-system optimization */
 export const MIN_REVIEWS_PER_SYSTEM = 30;
@@ -814,7 +814,7 @@ export async function runFullOptimization(
  * Use this when ReviewLog is the source of truth instead of UserProgress.reviewHistory.
  *
  * @param userId - User identifier
- * @param rows - ReviewLog rows from prisma.reviewLog.findMany (real + MAIN only)
+ * @param rows - ReviewLog rows from prisma.reviewLog.findMany (real MAIN/DRILL only)
  * @returns Optimized parameters
  */
 export function runFullOptimizationFromReviewLog(

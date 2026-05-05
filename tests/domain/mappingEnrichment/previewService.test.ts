@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mock Prisma Edge client factory
 vi.mock('../../../functions/api/_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(),
+  safePrismaDisconnect: vi.fn(),
 }));
 
 // Mock blueprint compliance service
@@ -45,8 +46,8 @@ describe('PreviewService', () => {
         },
         systemMapping: {
           findMany: vi.fn().mockResolvedValue([
-            { taxonomyCode: 'CV', systemCode: 'CV' },
-            { taxonomyCode: 'GI', systemCode: 'GI' },
+            { taxonomyCode: 'CV', canonicalName: 'Cardiovascular', blueprintTags: ['CV'] },
+            { taxonomyCode: 'GI', canonicalName: 'Gastrointestinal', blueprintTags: ['GI'] },
             // MSK is unmapped
           ]),
         },
@@ -62,7 +63,7 @@ describe('PreviewService', () => {
         { taxonomyCode: 'MSK', systemCode: 'MSK' },
       ];
 
-      const result = await simulateMappingImpact(changes);
+      const result = await simulateMappingImpact(changes, 'prisma://test');
 
       // Verify structure
       expect(result).toHaveProperty('before');
@@ -91,7 +92,7 @@ describe('PreviewService', () => {
       (createEdgePrismaClient as any).mockReturnValue(mockPrisma);
 
       const changes: any[] = [];
-      const result = await simulateMappingImpact(changes);
+      const result = await simulateMappingImpact(changes, 'prisma://test');
 
       expect(result.before.totalMappedTaxonomies).toBe(0);
       expect(result.after.totalMappedTaxonomies).toBe(0);
@@ -109,7 +110,7 @@ describe('PreviewService', () => {
         },
         systemMapping: {
           findMany: vi.fn().mockResolvedValue([
-            { taxonomyCode: 'CV', systemCode: 'CV' },
+            { taxonomyCode: 'CV', canonicalName: 'Cardiovascular', blueprintTags: ['CV'] },
           ]),
         },
         $disconnect: vi.fn(),
@@ -120,9 +121,38 @@ describe('PreviewService', () => {
         { taxonomyCode: 'GI', systemCode: 'GI' },
       ];
 
-      const result = await simulateMappingImpact(changes);
+      const result = await simulateMappingImpact(changes, 'prisma://test');
       expect(result.before.systems).toBeInstanceOf(Array);
       expect(result.after.systems).toBeInstanceOf(Array);
+    });
+
+    it('prefers blueprint tags over canonical names when deriving current systems', async () => {
+      const mockPrisma = {
+        medicalTaxonomy: {
+          findMany: vi.fn().mockResolvedValue([
+            { code: 'PULM_NODE', name: 'Pulmonary node', weight: 1.0 },
+          ]),
+        },
+        systemMapping: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              taxonomyCode: 'PULM_NODE',
+              canonicalName: 'Asthma',
+              blueprintTags: ['PUL'],
+            },
+          ]),
+        },
+        nCCPABlueprintConfig: {
+          findFirst: vi.fn().mockResolvedValue({ weights: { PUL: 1 } }),
+        },
+        $disconnect: vi.fn(),
+      };
+      (createEdgePrismaClient as any).mockReturnValue(mockPrisma);
+
+      const result = await simulateMappingImpact([], 'prisma://test');
+
+      expect(result.before.totalMappedTaxonomies).toBe(1);
+      expect(result.before.systems.find((system) => system.system === 'PUL')?.count).toBe(1);
     });
   });
 });

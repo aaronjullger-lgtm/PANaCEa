@@ -7,6 +7,7 @@ const {
   mockPlanUpdate,
   mockGetOrCreateDailyStudyPlan,
   mockApplyDailyStudyPlanAction,
+  mockSafePrismaDisconnect,
   capturedHandlers,
   registerHandler,
 } = vi.hoisted(() => {
@@ -22,6 +23,7 @@ const {
     mockPlanUpdate: vi.fn(),
     mockGetOrCreateDailyStudyPlan: vi.fn(),
     mockApplyDailyStudyPlanAction: vi.fn(),
+    mockSafePrismaDisconnect: vi.fn(),
     capturedHandlers,
     registerHandler: (handler: (ctx: any) => Promise<any>) => {
       if (capturedHandlers.index === 0) capturedHandlers.get = handler;
@@ -39,10 +41,11 @@ vi.mock('../../_shared/middleware', () => ({
 }));
 
 vi.mock('../../_shared/prisma-edge', () => ({
-  prisma: {
+  createEdgePrismaClient: vi.fn(() => ({
     user: { findUnique: mockUserFindUnique, create: mockUserCreate },
     dailyStudyPlan: { findUnique: mockPlanFindUnique, update: mockPlanUpdate },
-  },
+  })),
+  safePrismaDisconnect: (...args: unknown[]) => mockSafePrismaDisconnect(...args),
 }));
 
 vi.mock('../../../../lib/services/studyPlanService', () => ({
@@ -83,6 +86,7 @@ function makePlan(overrides: Record<string, unknown> = {}) {
 
 function makeContext(validated: Record<string, unknown> = {}) {
   return {
+    env: { DATABASE_URL: 'postgres://test' },
     auth: { userId: 'clerk_user_123' },
     validated,
   };
@@ -113,6 +117,7 @@ describe('/api/users/me/daily-plan user ownership', () => {
     expect(mockGetOrCreateDailyStudyPlan).toHaveBeenCalledWith(expect.any(Object), 'user-db-1', expect.any(Date));
     expect(result.status).toBe(200);
     expect(result.data.id).toBe('plan-1');
+    expect(mockSafePrismaDisconnect).toHaveBeenCalledWith(expect.any(Object));
   });
 
   it('POST completes only the authenticated user daily plan', async () => {
@@ -186,5 +191,55 @@ describe('/api/users/me/daily-plan user ownership', () => {
     );
     expect(result.data.progress.questionsAnswered).toBe(20);
     expect(result.data.status).toBe('active');
+  });
+
+  it('POST compatibility completion honors planDate and linkedSessionId', async () => {
+    const plan = makePlan({ id: 'plan-linked', userId: 'user-db-1' });
+    const completed = makePlan({
+      ...plan,
+      status: 'completed',
+      recommendedSessions: [
+        {
+          id: 'task-main',
+          kind: 'main',
+          mode: 'core_adaptive',
+          status: 'completed',
+          count: 12,
+          linkedSessionId: 'study-session-123',
+        },
+      ],
+    });
+    mockUserFindUnique.mockResolvedValue({ id: 'user-db-1' });
+    mockPlanFindUnique.mockResolvedValue(plan);
+    mockApplyDailyStudyPlanAction.mockResolvedValue(completed);
+
+    await capturedHandlers.post!(
+      makeContext({
+        body: {
+          action: 'complete',
+          planDate: '2026-05-01',
+          taskId: 'task-main',
+          questionsAnswered: 12,
+          linkedSessionId: 'study-session-123',
+        },
+      })
+    );
+
+    expect(mockPlanFindUnique).toHaveBeenCalledWith({
+      where: {
+        userId_planDate: {
+          userId: 'user-db-1',
+          planDate: new Date('2026-05-01T00:00:00.000Z'),
+        },
+      },
+    });
+    expect(mockApplyDailyStudyPlanAction).toHaveBeenCalledWith(
+      expect.any(Object),
+      plan,
+      expect.objectContaining({
+        taskId: 'task-main',
+        linkedSessionId: 'study-session-123',
+      })
+    );
   });
 });

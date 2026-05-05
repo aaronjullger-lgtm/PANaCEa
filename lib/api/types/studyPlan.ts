@@ -2,8 +2,8 @@ import type { SessionSettings } from '@/types';
 
 export type StudyPlanTargetKind = 'pance' | 'eor' | 'custom' | 'none';
 export type StudyPlanStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
-export type StudyPlanTaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
-export type StudyPlanTaskKind = 'main' | 'targeted' | 'review' | 'rest';
+export type StudyPlanTaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped' | 'rescheduled';
+export type StudyPlanTaskKind = 'main' | 'targeted' | 'review' | 'content' | 'rest';
 
 export interface StudyPlanSettings {
   dailyMinutesLimit: number;
@@ -31,9 +31,11 @@ export interface StudyPlanTask {
   reason: string;
   systems: string[];
   conditionIds: string[];
+  reviewCardIds?: string[];
   estimatedMinutes: number;
   targetQuestions: number;
   launchSettings: SessionSettings;
+  route: string;
   startedAt?: string | null;
   completedAt?: string | null;
   skippedAt?: string | null;

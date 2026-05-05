@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Prisma Integrity"
+  short_description: "Handle PANaCEa schema, migrations, and data write paths"
+  default_prompt: "Trace this PANaCEa data change through Prisma models, write paths, integrity risks, and the right validation before editing."

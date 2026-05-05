@@ -1,53 +1,54 @@
 ---
 name: "panacea-navigator"
-description: "Use this skill for work in the PANaCEa repo, especially when adding features, debugging, tracing data flow, deciding where code belongs, or figuring out which files to read first. It gives Codex a compact map of the StudyPANaCEa architecture so changes land in the right layer."
+description: "Use this skill for any PANaCEa repo work: adding features, debugging, tracing data flow, choosing files, reviewing architecture, or deciding whether code belongs in frontend, Cloudflare Functions, services, Prisma, config registries, tests, or scripts. It is the compact current map for StudyPANaCEa."
 ---
 
 # PANaCEa Navigator
 
-Start with [AGENTS.md](../../../AGENTS.md) and the files you plan to touch.
+Use this first for repo orientation. The repo does not currently have `AGENTS.md`; use `CLAUDE.md`, `README.md`, `package.json`, and the files you plan to touch.
 
-Use this skill when the task touches repo structure, architecture, or integration points.
+## Read Path
 
-## Read Path By Task
+- Project rules/context: `CLAUDE.md`
+- Commands and runtime overview: `README.md`, `package.json`
+- Current database model: `prisma/schema.prisma`
+- App route/view wiring: `config/appViews.ts`, `config/lazyComponents.tsx`, `config/AppRoutes.tsx`
+- Production API patterns: `functions/api/_shared/middleware.ts`, `functions/api/_shared/endpoint.ts`
+- Verification scripts: `package.json`
 
-- Product overview and commands: `README.md`
-- Repo-specific working rules: `AGENTS.md`
-- Deep project context: `CLAUDE.md`
-- DB model assumptions: `prisma/schema.prisma`
+## Current Map
 
-## Quick Map
-
-- `components/`: React UI by product area
-- `hooks/`: client-side behavior and workflow hooks
-- `lib/`: core logic, FSRS, domain services, utilities
+- `components/`: React UI by product area; high-risk surfaces include `components/session`, `components/drill`, `components/dashboard`, `components/osce`, `components/admin`
+- `hooks/`: client workflow and telemetry hooks such as `useDrillFSRS`, `useTelemetryCollector`, `useStudyPlanLaunch`
+- `lib/`: domain logic, FSRS, services, SDK clients, sync, study/session helpers, analytics
 - `functions/api/`: production Cloudflare Pages Functions
-- `routes/` + `server.ts`: local-only Express paths
-- `tests/` and `e2e/`: unit/integration and Playwright coverage
-- `config/`: view registration and lazy-loading
-- `scripts/`: one-off and operational automation
+- `routes/` + `server.ts`: legacy/local Express paths only
+- `prisma/`: schema and migrations
+- `config/`: app view, lazy component, navigation, and route registries
+- `tests/`, `lib/**/*.test.ts`, `functions/api/**/*.test.ts`, `e2e/`: verification
+- `scripts/`: maintenance, generation, ingestion, migration, audit, and automation
 
-## Default Placement Rules
+## Placement Rules
 
-- Production endpoint work goes in `functions/api/`, not `routes/`
-- Shared backend logic belongs in `lib/services/` or `functions/api/_shared/`
-- Frontend state belongs in `hooks/`, `store/`, or existing component flows
-- New views usually require checking:
-  - `config/appViews.ts`
-  - `config/lazyComponents.tsx`
+- Production endpoint behavior goes in `functions/api/`, not `routes/`.
+- Shared Edge-only helpers belong in `functions/api/_shared/`.
+- Shared domain logic belongs in `lib/` or `lib/services/`, but check Edge compatibility before importing it into `functions/api`.
+- Frontend state belongs in hooks, stores, or the existing component flow; do not hide server writes in UI helpers.
+- New app views normally require `config/lazyComponents.tsx` plus `config/appViews.ts` or the relevant route registry.
+- Use the existing `@/` alias when surrounding code does; do not force relative imports across the repo.
 
-## High-Risk Areas
+## High-Risk Subsystems
 
-- FSRS and review submission pipeline
-- Auth and role checks
-- Prisma schema assumptions
-- Edge/runtime env handling
-
-Before editing those, read the surrounding implementation instead of patching from guesses.
+- FSRS/review submission: `lib/fsrs.ts`, `lib/implicit-metrics.ts`, `lib/services/drillReviewService.ts`, `functions/api/drills/submit-review.ts`, `functions/api/srs/submit.ts`
+- Main session: `components/session/QuizView.tsx`, `components/session/hooks/useQuizSubmit.ts`, `lib/services/sync/syncManager.ts`
+- Edge auth/API: `functions/api/_shared/middleware.ts`, `functions/api/_shared/auth.ts`, `functions/api/_shared/prisma-edge.ts`
+- Content/refinery: `functions/api/content`, `functions/api/admin/refinery`, `functions/api/admin/staging`, `lib/services/search`
+- OSCE: `components/osce`, `components/modes/osce`, `functions/api/osce`, `lib/services/soap*`, `lib/services/osceStructuralScorer.ts`
 
 ## Non-Negotiables
 
-- Do not use `process.env` inside deployed Edge handlers
-- Do not import Prisma into frontend code
-- Do not bypass shared auth or Prisma cleanup helpers
-- Do not introduce ad-hoc routing when config wiring already exists
+- No Prisma imports in frontend/browser code.
+- No `process.env` in deployed Edge handlers; use `context.env` or wrapper-provided `env`.
+- Do not bypass shared auth/RBAC, response envelopes, request validation, or Prisma cleanup helpers.
+- Do not add Hard/Easy student-facing rating controls.
+- Do not run migrations, destructive data scripts, production deploys, or env edits without explicit approval.

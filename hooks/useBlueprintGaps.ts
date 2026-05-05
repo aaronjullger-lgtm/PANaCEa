@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface BlueprintGapSystem {
   system: string;
@@ -49,13 +50,13 @@ export function useBlueprintGaps() {
         });
 
         if (!response.ok) {
-          throw new Error(`Blueprint gaps fetch failed: ${response.status}`);
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(
+            getApiEnvelopeError(errorPayload, `Blueprint gaps fetch failed: ${response.status}`)
+          );
         }
 
-        const json = await response.json();
-        if (json?.data) {
-          setData(json.data);
-        }
+        setData(unwrapApiEnvelope<BlueprintGapsData>(await response.json()));
       } catch (err) {
         console.warn('[useBlueprintGaps] Failed:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');

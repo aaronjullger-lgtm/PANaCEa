@@ -10,6 +10,12 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { isRankedMode } from '../../../config/training-modes';
 import { updateGlobalAccuracy } from '../../../lib/services/userStatsService';
+import { upsertCanonicalQuestionMirror } from '../_shared/canonical-question-mirror';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
+import type { Prisma } from '@prisma/client';
 
 const QuestionRecordSchema = z.object({
   body: z.object({
@@ -22,13 +28,56 @@ const QuestionRecordSchema = z.object({
   }),
 });
 
+async function resolveCanonicalRecordTarget(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  questionId: string
+): Promise<{ questionId: string; conditionId: string | null; medicalContentId: string | null } | null> {
+  const existing = await prisma.question.findFirst({
+    where: withProductionQuestionSafety({ id: questionId }) as Prisma.QuestionWhereInput,
+    select: { id: true, conditionId: true, medicalContentId: true },
+  });
+  if (existing) {
+    return {
+      questionId: existing.id,
+      conditionId: existing.conditionId ?? null,
+      medicalContentId: existing.medicalContentId ?? null,
+    };
+  }
+
+  const pregenerated = await prisma.preGeneratedQuestion.findFirst({
+    where: withProductionPregeneratedSafety({ id: questionId }) as Prisma.PreGeneratedQuestionWhereInput,
+    select: {
+      id: true,
+      questionData: true,
+      system: true,
+      difficulty: true,
+      conditionId: true,
+      medicalContentId: true,
+      generatedAt: true,
+    },
+  });
+  if (!pregenerated) return null;
+
+  const canonicalQuestionId = await upsertCanonicalQuestionMirror(prisma, pregenerated, {
+    source: 'record_pre_generated',
+    humanReviewed: true,
+  });
+  if (!canonicalQuestionId) return null;
+
+  return {
+    questionId: canonicalQuestionId,
+    conditionId: pregenerated.conditionId ?? null,
+    medicalContentId: pregenerated.medicalContentId ?? null,
+  };
+}
+
 export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/record');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { questionId, questionType, system, conditionId, wasCorrect, mode } =
+    const { questionId, questionType, system, wasCorrect, mode } =
       validated.body;
 
     // Resolve internal user ID from Clerk auth — never trust client-supplied userId
@@ -41,9 +90,20 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
 
     const isRankedAttempt = isRankedMode(mode);
     const now = new Date();
+    const recordTarget = await resolveCanonicalRecordTarget(prisma, questionId);
+    if (!recordTarget) {
+      logger.warn('Question record rejected because canonical target could not be resolved', {
+        questionId,
+        questionType,
+      });
+      return {
+        status: 400,
+        error: 'Question cannot be recorded because it is not canonical or mirrorable.',
+      };
+    }
 
     // Record question seen (no-repeat guard)
-    const seenKey = { userId, questionId, questionType } as const;
+    const seenKey = { userId, questionId: recordTarget.questionId, questionType } as const;
 
     const updateData: any = {
       lastSeenAt: now,
@@ -68,15 +128,16 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
       update: updateData,
     });
 
-    const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
+    const attemptId = `attempt-${userId}-${recordTarget.questionId}-${Date.now()}`;
     await prisma.questionAttempt.create({
       data: {
         id: attemptId,
         userId,
-        questionId,
+        questionId: recordTarget.questionId,
         questionType: questionType ?? null,
         system: system ?? null,
-        conditionId: conditionId ?? null,
+        conditionId: recordTarget.conditionId,
+        medicalContentId: recordTarget.medicalContentId,
         mode: mode ?? null,
         wasCorrect: Boolean(wasCorrect),
         isRankedAttempt,

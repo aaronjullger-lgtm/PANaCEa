@@ -354,11 +354,45 @@ describe('SyncManager', () => {
       });
     });
 
-    it('should return zeros when already syncing', async () => {
+    it('should return zeros when already syncing without a tracked drain promise', async () => {
       // Force isSyncing = true
       syncManager['isSyncing'] = true;
       const result = await syncManager.syncAll();
       expect(result).toEqual({ answers: 0, pearls: 0, reviews: 0 });
+    });
+
+    it('should await the in-flight immediate review sync instead of racing it', async () => {
+      let resolveFetch: ((response: Response) => void) | null = null;
+      mockFetch.mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve;
+          })
+      );
+
+      syncManager.queueReview({
+        questionId: 'q-inflight',
+        selectedAnswer: 0,
+        timeSpentMs: 900,
+      });
+
+      await waitForAssertion(() => {
+        expect(syncManager.getStatus().isSyncing).toBe(true);
+        expect(resolveFetch).toBeTypeOf('function');
+      });
+
+      const drain = syncManager.syncAll();
+      resolveFetch!(
+        new Response(
+          JSON.stringify({
+            data: [{ questionId: 'q-inflight', success: true }],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
+
+      await expect(drain).resolves.toEqual({ answers: 0, pearls: 0, reviews: 1 });
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it('should return zeros when offline', async () => {

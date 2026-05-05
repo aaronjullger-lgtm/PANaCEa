@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ContrastiveSet {
   id: string;
@@ -50,8 +51,11 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ setId: set.id, conditionIndex: index }),
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as ContrastiveQuestion | null;
+        if (!res.ok) {
+          const errorPayload = await res.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorPayload, `HTTP ${res.status}`));
+        }
+        const data = unwrapApiEnvelope<ContrastiveQuestion | null>(await res.json());
         setCurrentQuestion(data);
         startQuestionFSRS();
         questionStartTimeRef.current = Date.now();
@@ -62,7 +66,7 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
         setIsLoadingQuestion(false);
       }
     },
-    [set, startQuestionFSRS]
+    [getToken, set, startQuestionFSRS]
   );
 
   const submitAnswer = useCallback(
@@ -73,21 +77,24 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
         const token = await getToken();
         if (!token) throw new Error('Please sign in to submit answers');
         // Submit to existing contrastive endpoint
+        const isCorrect = selectedCondition === currentQuestion.correctCondition;
         const res = await fetch('/api/drills/contrastive/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
-            drillId,
-            selectedCondition,
-            targetCondition: currentQuestion.correctCondition,
-            timeSpentMs,
+            setId: set?.id ?? drillId,
+            selectedConditionId: selectedCondition,
+            isCorrect,
           }),
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const result = (await res.json()) as { isCorrect?: boolean };
+        if (!res.ok) {
+          const errorPayload = await res.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorPayload, `HTTP ${res.status}`));
+        }
+        const result = unwrapApiEnvelope<{ success?: boolean; correct?: boolean }>(await res.json());
 
         // Update local stats
-        if (result.isCorrect) setStats((s) => ({ ...s, correct: s.correct + 1 }));
+        if (result.correct) setStats((s) => ({ ...s, correct: s.correct + 1 }));
         setStats((s) => ({ ...s, total: s.total + 1 }));
 
         // Fire-and-forget FSRS submission
@@ -98,13 +105,13 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
           timeSpentMs: Date.now() - questionStartTimeRef.current,
         }).catch((err) => console.error('[useContrastiveDrill] FSRS submission failed:', err));
 
-        return result;
+        return { isCorrect: result.correct ?? false };
       } catch (err) {
         console.error('[useContrastiveDrill] Submit failed:', err);
         return { isCorrect: false };
       }
     },
-    [drillId, currentQuestion, currentQuestionIndex, recordAnswerChange, submitAnswerFSRS]
+    [drillId, getToken, set, currentQuestion, currentQuestionIndex, recordAnswerChange, submitAnswerFSRS]
   );
 
   const nextQuestion = useCallback(() => {

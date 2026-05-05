@@ -98,12 +98,17 @@ import { BookOpen } from 'lucide-react';
 
 // Types
 import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
-import type { SRSScheduleResult } from '@/lib/services/srsService';
+import type { SRSScheduleResult } from '@/lib/api/types/review';
 // ExplanationPanel moved to AnswerFeedback component
 import QuizToolbar from '@/components/session/QuizToolbar';
 import AnswerFeedback from '@/components/session/AnswerFeedback';
+import { PreAnswerStudyScaffold } from '@/components/session/StudyModeCoach';
 import { SessionPacer } from '@/components/session/SessionPacer';
 import { useSessionWellness } from '@/hooks/useSessionWellness';
+import type {
+  StudyGuidanceLevel,
+  StudyModePreference,
+} from '@/lib/study/studyModeScaffolding';
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
@@ -138,6 +143,7 @@ import { useCausalChain, expertiseToDisplayLevel } from '@/hooks/useCausalChain'
 import { useAnalyticsTracking, type QuestionMeta } from '@/hooks/useAnalyticsTracking';
 import { useWellnessChecks } from '@/hooks/useWellnessChecks';
 import { computeScore } from '@/lib/scoring/computeScore';
+import { getQuestionIdentity } from '@/lib/study/questionIdentity';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -151,11 +157,23 @@ const BR_TAG_REGEX = /<br\s*\/?>/gi;
 
 const LOG_SCOPE = 'QuizView';
 const quizLogger = logger.scope(LOG_SCOPE);
+const STUDY_MODE_STORAGE_KEY = 'panacea.studyMode.preference';
 
 // Strip basic HTML tags from question text while preserving table HTML rendered separately
 function stripSimpleHtmlTags(text: string): string {
   if (!text) return text;
   return text.replace(/<[^>]+>/g, '');
+}
+
+function buildStudyPlanTelemetry(settings: SessionSettings): Record<string, string | number> {
+  const telemetry: Record<string, string | number> = {};
+  if (settings.studyPlanTaskId) telemetry.study_plan_task_id = settings.studyPlanTaskId;
+  if (settings.studyPlanDate) telemetry.study_plan_date = settings.studyPlanDate;
+  if (settings.studyPlanSource) telemetry.study_plan_source = settings.studyPlanSource;
+  if (typeof settings.urgencyMultiplier === 'number' && Number.isFinite(settings.urgencyMultiplier)) {
+    telemetry.urgency_multiplier = Math.min(2, Math.max(0.5, settings.urgencyMultiplier));
+  }
+  return telemetry;
 }
 
 export interface QuizViewProps {
@@ -194,6 +212,8 @@ export interface QuizViewProps {
   modeLabel?: string;
   /** Optional external session identifier used by some parent modes */
   sessionId?: string | null;
+  /** Controls whether QuizView should replenish beyond the provided queue */
+  queueStrategy?: 'auto' | 'finite' | 'continuous';
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -366,6 +386,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   isFullSitDownTest = false,
   totalQuestions,
   modeLabel,
+  sessionId,
+  queueStrategy = 'auto',
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
@@ -424,6 +446,22 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
   const [lastImplicitConfidence, setLastImplicitConfidence] = useState<number | undefined>(undefined);
+  const [studyMode, setStudyModeState] = useState<StudyModePreference>(() => {
+    if (isExamSimulator) return 'direct';
+    if (typeof window === 'undefined') return 'guided';
+    const stored = window.localStorage.getItem(STUDY_MODE_STORAGE_KEY);
+    return stored === 'direct' || stored === 'guided' ? stored : 'guided';
+  });
+  const [guidanceLevel, setGuidanceLevel] = useState<StudyGuidanceLevel>('developing');
+  const [learnerReflection, setLearnerReflection] = useState('');
+  const [hintsViewed, setHintsViewed] = useState(0);
+
+  const setStudyMode = useCallback((mode: StudyModePreference) => {
+    setStudyModeState(mode);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STUDY_MODE_STORAGE_KEY, mode);
+    }
+  }, []);
 
   // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
@@ -469,6 +507,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     sessionSettings,
     growthAreas,
     getToken,
+    queueStrategy,
   });
 
   // Report issue modal state
@@ -692,6 +731,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Reset collapsible states when question changes
   useEffect(() => {
     setShowNotes(false);
+    setLearnerReflection('');
+    setHintsViewed(0);
   }, [currentQuestion?.id]);
 
   const isFlagged = useMemo(() => {
@@ -753,6 +794,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       resetElimination();
       setSrsResult(null); // Reset SRS result for new question
       setQuestionStartTime(Date.now()); // Track time for new question
+      setLearnerReflection('');
+      setHintsViewed(0);
       answerChangeCountRef.current = 0; // Reset answer change tracking
       firstSelectedAnswerRef.current = null; // Reset first selected answer
 
@@ -891,6 +934,30 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
 
     const { isCorrect, timeToAnswer, questionId, parTime, telemetryWithPosition } = score;
+    const questionIdentity = getQuestionIdentity(currentQuestion);
+    const studyPlanTelemetry = buildStudyPlanTelemetry(sessionSettings);
+    const telemetryForReview = sessionId
+      ? {
+          ...(telemetryWithPosition ?? {}),
+          session_id: sessionId,
+          ...studyPlanTelemetry,
+          study_mode: studyMode,
+          guided_scaffold: {
+            level: guidanceLevel,
+            hints_viewed: hintsViewed,
+            reflection_length: learnerReflection.trim().length,
+          },
+        }
+      : {
+          ...(telemetryWithPosition ?? {}),
+          ...studyPlanTelemetry,
+          study_mode: studyMode,
+          guided_scaffold: {
+            level: guidanceLevel,
+            hints_viewed: hintsViewed,
+            reflection_length: learnerReflection.trim().length,
+          },
+        };
 
     // Feed the wellness engine for mid-session diminishing returns detection
     sessionWellness.recordAttempt(isCorrect, timeToAnswer);
@@ -907,7 +974,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (user?.id && currentQuestion.id) {
       try {
         syncManager.queueReview({
-          questionId: currentQuestion.id,
+          questionId: questionIdentity.sourceQuestionId,
+          canonicalQuestionId: questionIdentity.canonicalQuestionId,
+          sourceQuestionId: questionIdentity.sourceQuestionId,
+          questionSource: questionIdentity.questionSource,
+          medicalContentId: currentQuestion.medicalContentId ?? null,
           selectedAnswer: (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? String(selectedAnswerIndex),
           timeSpentMs: timeToAnswer,
           timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
@@ -919,8 +990,10 @@ const QuizView: React.FC<QuizViewProps> = ({
               ? 'rapid_recall'
               : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
                 ? 'cram'
-                : 'main',
-          telemetry: telemetryWithPosition,
+                : sessionSettings.mode === 'targeted'
+                  ? 'targeted'
+                  : 'main',
+          telemetry: telemetryForReview,
         });
       } catch (err) {
         quizLogger.error('Failed to queue review for offline sync', { error: err });
@@ -1136,6 +1209,10 @@ const QuizView: React.FC<QuizViewProps> = ({
     eliminatedAnswers,
     questionNumber,
     implicitMetrics,
+    studyMode,
+    guidanceLevel,
+    hintsViewed,
+    learnerReflection,
   ]);
 
   // Keep the ref current so the keyboard hook's onSubmitAnswer always calls the latest version
@@ -1422,6 +1499,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           void retryReplenishment();
         }}
         currentQuestion={currentQuestion}
+        studyMode={studyMode}
+        onStudyModeChange={setStudyMode}
       />
       </header>
       <main id="main-content" role="main" aria-label="Quiz question and answers">
@@ -1488,6 +1567,17 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       : currentQuestion.question
                   }
                 />
+                {studyMode === 'guided' && !isAnswered && (
+                  <PreAnswerStudyScaffold
+                    question={currentQuestion}
+                    guidanceLevel={guidanceLevel}
+                    onGuidanceLevelChange={setGuidanceLevel}
+                    learnerReflection={learnerReflection}
+                    onLearnerReflectionChange={setLearnerReflection}
+                    hintsViewed={hintsViewed}
+                    onHintsViewedChange={setHintsViewed}
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
 
@@ -1598,6 +1688,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   ? expertiseToDisplayLevel(lastImplicitConfidence)
                   : 'collapsed'
               }
+              studyMode={studyMode}
+              guidanceLevel={guidanceLevel}
+              learnerReflection={learnerReflection}
+              hintsViewed={hintsViewed}
             />
           )}
 
@@ -1766,6 +1860,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
             <Suspense fallback={null}>
             <SocraticTutorChat
+              questionId={currentQuestion.id ?? currentQuestion.questionId}
+              conditionId={currentQuestion.conditionId}
               vignette={currentQuestion.vignette || ''}
               question={currentQuestion.question}
               correctAnswer={

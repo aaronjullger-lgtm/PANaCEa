@@ -84,7 +84,11 @@ export const onRequestPost = adminAuthenticatedEndpoint(
           status: 'published',
         },
         select: {
+          id: true,
+          conditionId: true,
           condition: true,
+          system: true,
+          subcategory: true,
           overview: true,
           etiology: true,
           symptoms: true,
@@ -126,6 +130,10 @@ export const onRequestPost = adminAuthenticatedEndpoint(
           question.metadata = {
             taxonomyCode: body.taxonomyCode,
             subcategory,
+            conditionId: conditionRecord?.conditionId ?? null,
+            medicalContentId: conditionRecord?.id ?? null,
+            conditionName: conditionRecord?.condition ?? subcategory,
+            source: 'admin_question_generator',
             generatedAt: new Date().toISOString(),
             generatorUserId: auth.userId,
           };

@@ -14,6 +14,7 @@
 
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // =============================================================================
 // TYPES
@@ -118,13 +119,14 @@ async function fetchRolling360Stats(url: string, token: string | null): Promise<
     },
   });
   if (!response.ok) {
-    throw new Error(`Rolling 360 stats failed: ${response.status}`);
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(errorPayload, `Rolling 360 stats failed: ${response.status}`));
   }
   const contentType = response.headers.get('content-type');
   if (!contentType?.includes('application/json')) {
     throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
   }
-  return response.json();
+  return unwrapApiEnvelope<Rolling360Stats>(await response.json());
 }
 
 // =============================================================================

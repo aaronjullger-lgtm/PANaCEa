@@ -44,6 +44,16 @@ const MAX_FLAG_COUNT = 3;
 
 export type ReviewStatus = 'approved' | 'pending' | 'needs_revision' | 'rejected';
 
+export type AutoApproveCandidateQuestion = {
+  id: string;
+  questionData: unknown;
+  system?: string | null;
+  difficulty?: string | null;
+  conditionId?: string | null;
+  medicalContentId?: string | null;
+  generatedAt?: Date | string | null;
+};
+
 /**
  * Determine the initial validation status for a question based on quality signals.
  */
@@ -84,8 +94,12 @@ export function determineValidationStatus(
  */
 export async function autoApproveHighQuality(
   prisma: any,
-  options: { dryRun?: boolean; threshold?: number } = {}
-): Promise<{ approved: number; alreadyApproved: number }> {
+  options: {
+    dryRun?: boolean;
+    threshold?: number;
+    onApprove?: (question: AutoApproveCandidateQuestion) => Promise<boolean> | boolean;
+  } = {}
+): Promise<{ approved: number; alreadyApproved: number; skipped: number }> {
   const threshold = options.threshold ?? AUTO_APPROVE_THRESHOLD;
 
   // Count already-approved
@@ -101,25 +115,48 @@ export async function autoApproveHighQuality(
         flagCount: { lt: MAX_FLAG_COUNT },
       },
     });
-    return { approved: wouldApprove, alreadyApproved };
+    return { approved: wouldApprove, alreadyApproved, skipped: 0 };
   }
 
-  // Batch update: pending → approved where qualityScore >= threshold
-  const result = await prisma.preGeneratedQuestion.updateMany({
+  const candidates = await prisma.preGeneratedQuestion.findMany({
     where: {
       validationStatus: 'pending',
       qualityScore: { gte: threshold },
       flagCount: { lt: MAX_FLAG_COUNT },
     },
-    data: {
-      validationStatus: 'approved',
-      validatedAt: new Date(),
-      validatedBy: 'auto-approve-gate',
-      validationNotes: `Auto-approved: qualityScore >= ${threshold}`,
+    select: {
+      id: true,
+      questionData: true,
+      system: true,
+      difficulty: true,
+      conditionId: true,
+      medicalContentId: true,
+      generatedAt: true,
     },
   });
 
-  return { approved: result.count, alreadyApproved };
+  let approved = 0;
+  let skipped = 0;
+  for (const question of candidates) {
+    const mirrorReady = options.onApprove ? await options.onApprove(question) : true;
+    if (!mirrorReady) {
+      skipped += 1;
+      continue;
+    }
+
+    await prisma.preGeneratedQuestion.update({
+      where: { id: question.id },
+      data: {
+        validationStatus: 'approved',
+        validatedAt: new Date(),
+        validatedBy: 'auto-approve-gate',
+        validationNotes: `Auto-approved: qualityScore >= ${threshold}`,
+      },
+    });
+    approved += 1;
+  }
+
+  return { approved, alreadyApproved, skipped };
 }
 
 /**

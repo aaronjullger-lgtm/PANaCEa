@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors} from '../../_shared/middleware';
-import { prisma } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 import {
   applyDailyStudyPlanAction,
@@ -20,11 +20,13 @@ const DailyPlanCompleteSchema = z.object({
     action: z.enum(['complete', 'skip', 'reschedule']).optional(),
     taskId: z.string().min(1).max(128).optional(),
     // Accuracy expressed as a 0..1 decimal (matches `actualAccuracy` storage).
+    planDate: z.string().date().optional(),
     accuracy: z.number().min(0).max(1).optional(),
     // Minutes spent; clamp to a realistic full-day range so malformed input
     // can't pollute downstream analytics.
     durationMinutes: z.number().int().min(0).max(24 * 60).optional(),
     questionsAnswered: z.number().int().min(0).max(500).optional(),
+    linkedSessionId: z.string().min(1).max(128).optional(),
     rescheduleDate: z.string().min(1).max(64).optional(),
   }),
 });
@@ -43,15 +45,20 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(
   DailyPlanGetQuerySchema,
   async (context) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
     const clerkId = context.auth.userId;
 
-    const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
+    try {
+      const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
 
-    const dateParam = context.validated.date;
-    const targetDate = normalizePlanDate(dateParam ? new Date(dateParam) : new Date());
-    const plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, targetDate);
+      const dateParam = context.validated.date;
+      const targetDate = normalizePlanDate(dateParam ? new Date(dateParam) : new Date());
+      const plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, targetDate);
 
-    return { status: 200, data: formatPlanResponse(plan) };
+      return { status: 200, data: formatPlanResponse(plan) };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   },
   { source: 'query', requestsPerMinute: 30 }
 );
@@ -63,44 +70,50 @@ export const onRequestGet = authenticatedEndpoint(
 export const onRequestPost = authenticatedEndpoint(
   DailyPlanCompleteSchema,
   async (context) => {
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
     const clerkId = context.auth.userId;
-    const { action, accuracy, durationMinutes, questionsAnswered, rescheduleDate, taskId } =
+    const { action, accuracy, durationMinutes, questionsAnswered, rescheduleDate, taskId, planDate, linkedSessionId } =
       context.validated.body;
 
-    const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
-
-    const today = normalizePlanDate(new Date());
-    let plan = await prisma.dailyStudyPlan.findUnique({
-      where: {
-        userId_planDate: {
-          userId: user.id,
-          planDate: today,
-        },
-      },
-    });
-
-    if (!plan) {
-      plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, today);
-    }
-
-    let updatedPlan;
     try {
-      updatedPlan = await applyDailyStudyPlanAction(prisma as any, plan, {
-        action,
-        accuracy,
-        durationMinutes,
-        questionsAnswered,
-        taskId,
-        rescheduleDate: rescheduleDate ? new Date(rescheduleDate) : undefined,
-      });
-    } catch (error) {
-      return {
-        status: 400,
-        error: error instanceof Error ? error.message : 'Invalid study plan action',
-      };
-    }
+      const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
 
-    return { status: 200, data: formatPlanResponse(updatedPlan) };
+      const today = normalizePlanDate(planDate ? new Date(planDate) : new Date());
+      let plan = await prisma.dailyStudyPlan.findUnique({
+        where: {
+          userId_planDate: {
+            userId: user.id,
+            planDate: today,
+          },
+        },
+      });
+
+      if (!plan) {
+        plan = await getOrCreateDailyStudyPlan(prisma as any, user.id, today);
+      }
+
+      let updatedPlan;
+      try {
+        updatedPlan = await applyDailyStudyPlanAction(prisma as any, plan, {
+          action,
+          accuracy,
+          durationMinutes,
+          questionsAnswered,
+          linkedSessionId,
+          taskId,
+          rescheduleDate: rescheduleDate ? new Date(rescheduleDate) : undefined,
+        });
+      } catch (error) {
+        return {
+          status: 400,
+          error: error instanceof Error ? error.message : 'Invalid study plan action',
+        };
+      }
+
+      return { status: 200, data: formatPlanResponse(updatedPlan) };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   },
   { requestsPerMinute: 30 }
 );

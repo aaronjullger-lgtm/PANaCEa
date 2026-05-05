@@ -1,6 +1,6 @@
 # Offline Sync Modules Audit
 
-## Current State (as of 2025-01)
+## Current State (updated 2026-05)
 
 There are three offline/sync-related modules with overlapping concerns:
 
@@ -8,7 +8,7 @@ There are three offline/sync-related modules with overlapping concerns:
 - **Purpose**: Queue operations for SRS, performance, etc. when offline; dead letter queue for failed ops.
 - **API**: `queueOperation`, `flushPendingToLocalStorage`, `getDeadLetterQueue`, `processPendingOperations`
 - **Storage**: `panceai_offline_queue`, `panceai_offline_dead_letter`
-- **Used by**: App.tsx, srsService, FailedSyncItems, syncManager
+- **Used by**: App.tsx, FailedSyncItems, syncManager
 
 ### 2. `lib/services/offlineSyncService.ts`
 - **Purpose**: Delta sync for performance/SRS/savedQuestion/achievement/streak; conflict resolution.
@@ -40,7 +40,6 @@ There are three offline/sync-related modules with overlapping concerns:
 | Consumer | Module |
 |----------|--------|
 | App.tsx (flushPendingToLocalStorage) | sync/offlineSync |
-| srsService (queueOperation) | sync/offlineSync |
 | OfflineSyncIndicator | offlineSyncService (root) |
 | reviewSubmissionService | offline/offlineSyncService |
 | FailedSyncItems | sync/offlineSync |

@@ -7,8 +7,8 @@
  * - Daily progress tracking (questions answered, time studied)
  *
  * This store does NOT replace SessionContext or useSRSItems. It holds
- * derived/summary data that components like NavRail badges, DrillHub counts,
- * and DashboardPage metrics all need simultaneously.
+ * derived/summary data that components like NavRail badges, drill counts,
+ * and adaptive dashboard metrics all need simultaneously.
  *
  * Why Zustand over Context:
  * - Selective subscriptions: components only re-render for the slice they use

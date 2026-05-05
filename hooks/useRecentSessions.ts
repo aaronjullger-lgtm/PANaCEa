@@ -10,6 +10,7 @@ import { useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import type { StudySession } from './useStudyWellness';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface RawSessionRecord {
   startedAt: string;
@@ -32,10 +33,8 @@ function createSessionFetcher(getToken: () => Promise<string | null>) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return [];
-    const data = (await res.json()) as SessionAnalyticsResponse | { data?: SessionAnalyticsResponse };
-    // Handle both { sessions: [...] } and { data: { sessions: [...] } } shapes
-    const sessions = ('data' in data && data.data?.sessions) || ('sessions' in data && data.sessions) || [];
-    return sessions;
+    const data = unwrapApiEnvelope<SessionAnalyticsResponse>(await res.json());
+    return data.sessions ?? [];
   };
 }
 

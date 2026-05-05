@@ -69,8 +69,8 @@ describe('OfflineSyncIndicator', () => {
 
     // Dropdown content is revealed after clicking the badge
     fireEvent.click(screen.getByRole('button', { name: /Sync status/i }));
-    expect(screen.getByText(/You're offline/i)).toBeTruthy();
-    expect(screen.getByText(/Changes will sync when connection is restored/i)).toBeTruthy();
+    expect(screen.getByText(/Sync paused/i)).toBeTruthy();
+    expect(screen.getByText(/saved locally/i)).toBeTruthy();
   });
 
   it('shows retry and triggers both sync services when online with pending operations', async () => {

@@ -102,16 +102,16 @@ info: {
 - `components/ui/Card.tsx` — Simple card with `CardHeader`, `CardTitle`, `CardContent` subcomponents
 - `components/ui/GlassCard.tsx` — Glassmorphism card with 5 variants, animation, reduced-motion support
 - `components/ui/StudyCard.tsx` — Study mode selection card
-- `components/dashboard/UnifiedDashboard/Card.tsx` — **Competing** dashboard-specific Card (different API)
+- Retired dashboard-specific Card primitive — removed with the legacy dashboard cleanup
 - ~193 inline card-pattern divs across the codebase
 - Only **4 files** import any Card primitive
 
 **Competing implementations:**
 1. `ui/Card.tsx` — Compound component (`Card` + `CardHeader` + `CardTitle` + `CardContent`), no animation
 2. `ui/GlassCard.tsx` — Motion-animated, backdrop blur, variant-based, rounded-2xl
-3. `dashboard/UnifiedDashboard/Card.tsx` — Motion-animated, default export, different props, rounded-xl
+3. Retired dashboard-specific Card primitive — removed; do not add new imports
 
-**Conflict:** `ui/Card.tsx` uses `rounded-xl` with `shadow-sm`. `GlassCard.tsx` uses `rounded-xl` with `backdrop-blur-sm`. `UnifiedDashboard/Card.tsx` also uses `rounded-xl` with `backdrop-blur-sm`. But they have different border handling, padding defaults, and animation behavior. A developer looking for "the" Card component finds three options with no guidance on which to use.
+**Conflict:** `ui/Card.tsx` uses `rounded-xl` with `shadow-sm`. `GlassCard.tsx` uses `rounded-xl` with `backdrop-blur-sm`. The former dashboard-specific card has been removed, but the broader cleanup remains: a developer looking for "the" Card component still finds multiple options with incomplete guidance.
 
 **User Impact:** Inconsistent card border-radius, padding, shadow depth, and hover behavior across features. Some cards animate on mount, others don't. The dashboard looks different from the library which looks different from drill screens.
 
@@ -373,7 +373,7 @@ export function getChartColors(theme: 'light' | 'dark') {
 | 1 | **Button** | 1,100 raw, 5 using primitive | Migrate top 20 screens to `Button` primitive |
 | 2 | **Modal/Dialog** | 29 independent impls | Create `BaseModal`, migrate 8 core modals |
 | 3 | **Form Input** | No primitive exists | Create `Input`, `TextArea`, `Select` with consistent styling |
-| 4 | **Card** | 3 competing + 193 inline | Deprecate `UnifiedDashboard/Card`, unify on `ui/Card` + `GlassCard` |
+| 4 | **Card** | 2 competing + 193 inline | Keep the retired dashboard card deleted; unify on `ui/Card` + `GlassCard` |
 | 5 | **Data Loading Wrapper** | No standard trio | Create `AsyncContent<T>` wrapper (loading → error → empty → content) |
 | 6 | **Chart Color Tokens** | 45+ hardcoded hex | Create `getChartColors(theme)` utility |
 | 7 | **Panel/Drawer** | 27 independent impls | Create `SidePanel` with slide animation + escape |
@@ -401,7 +401,7 @@ export function getChartColors(theme: 'light' | 'dark') {
 ### Day 3: Form Input Primitive + Card Consolidation
 1. Create `components/ui/Input.tsx` with consistent sizing, focus ring, error state, label
 2. Create `components/ui/TextArea.tsx`
-3. Deprecate `dashboard/UnifiedDashboard/Card.tsx` — replace its 3 imports with `ui/Card`
+3. Keep the retired dashboard-specific Card deleted; migrate future card work to `ui/Card`
 4. Rename `GlassCard`'s `CardHeader` to `GlassCardHeader` to resolve export collision (Finding 11-11)
 
 ### Day 4: Chart Colors + Dark Mode Fixes

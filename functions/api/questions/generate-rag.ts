@@ -18,8 +18,10 @@
 
 import { z } from 'zod';
 import { aiEndpoint } from '../_shared/middleware';
+import { ErrorCode } from '../_shared/error-catalog';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   retrieveForQuestionGeneration,
@@ -41,6 +43,7 @@ import {
   rewriteQuestion,
 } from '../../../lib/langchain/chains/questionGeneration';
 import { fromCloudflareEnv } from '../../../lib/langchain/envAdapter';
+import { stageGeneratedQuestionPreview } from '../_shared/generated-question-preview';
 
 const BodySchema = z.object({
   conditionName: z.string().min(1).max(200),
@@ -60,6 +63,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     validated: z.infer<typeof BodySchema>;
     auth: { userId: string };
   };
+  const logger = createEndpointLogger('/api/questions/generate-rag', context.auth.userId);
 
   try {
     validateFunctionEnv(env as unknown as Record<string, unknown>, [
@@ -128,8 +132,16 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
         formattedContext,
       });
     } catch (err) {
-      console.error('[generate-rag] LangChain generation failed:', err);
-      return { status: 502, error: 'Question generation failed' };
+      logger.error('RAG question generation failed', {
+        conditionName,
+        system,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return {
+        status: 502,
+        code: ErrorCode.GEMINI_ERROR,
+        error: 'Question generation failed. No learner-facing question was created.',
+      };
     }
 
     let questions = genResult.questions;
@@ -160,7 +172,11 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
             } catch { /* fall through to original */ }
           }
         } catch (e) {
-          console.warn('[generate-rag] Self-refine failed, using original:', e);
+          logger.warn('RAG self-refine failed; using original generated question', {
+            conditionName,
+            system,
+            error: e instanceof Error ? e.message : String(e),
+          });
         }
       }
       refinedQuestions.push(q);
@@ -169,12 +185,72 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     // Use refined questions
     questions = refinedQuestions;
 
-    // 5. Attach RAG metadata
+    // 5. Attach RAG metadata and persist to staging for human review. These are
+    // preview-only until the staging approval path promotes them to the live pool.
     const sourceChunkIds = [...new Set(ragContext.chunks.map((c) => c.sourceId))];
+    const previewQuestions: Record<string, unknown>[] = [];
+    const stagingFailures: string[] = [];
+
+    for (const q of questions) {
+      const record = q && typeof q === 'object' && !Array.isArray(q)
+        ? (q as Record<string, unknown>)
+        : {};
+      const metadata = {
+        source: 'rag_question_generate_endpoint',
+        conditionName,
+        taxonomyCode: system,
+        system,
+        groundingSources: sourceChunkIds,
+        retrievalQuality: quality.grade,
+        retrievalMessage: quality.message,
+        isGrounded: ragContext.isGrounded,
+        cragAction: refined.cragAction,
+        chunksUsed: ragContext.chunks.length,
+      };
+
+      try {
+        const preview = await stageGeneratedQuestionPreview(prisma, {
+          question: record,
+          system,
+          difficulty: record.difficulty ?? 'medium',
+          metadata,
+        });
+        previewQuestions.push(preview);
+      } catch (stagingError) {
+        const message =
+          stagingError instanceof Error ? stagingError.message : 'Unknown staging error';
+        stagingFailures.push(message);
+        logger.warn('RAG generated question was not staged for review', {
+          conditionName,
+          system,
+          error: message,
+        });
+        continue;
+      }
+    }
+
+    if (questions.length > 0 && previewQuestions.length === 0) {
+      logger.error('RAG generation produced questions but none could be staged', {
+        conditionName,
+        system,
+        generatedCount: questions.length,
+        stagingFailureCount: stagingFailures.length,
+      });
+      return {
+        status: 502,
+        code: ErrorCode.DB_ERROR,
+        error: 'Generated questions could not be staged for review.',
+        details: {
+          generatedCount: questions.length,
+          stagedCount: 0,
+          stagingFailures: stagingFailures.slice(0, 3),
+        },
+      };
+    }
 
     return {
       data: {
-        questions,
+        questions: previewQuestions,
         ragMetadata: {
           sourceChunkIds,
           retrievalQuality: quality.grade,
@@ -189,6 +265,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
           cragAction: refined.cragAction,
           pipelineMetrics: refined.pipelineMetrics,
           refinementMetrics,
+          stagingFailureCount: stagingFailures.length,
           langchainMetadata: {
             model: genResult.model,
             provider: genResult.provider,
@@ -199,9 +276,14 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       },
     };
   } catch (error) {
-    console.error('[generate-rag]', error);
+    logger.error('RAG question generation endpoint failed', {
+      conditionName,
+      system,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       status: 500,
+      code: ErrorCode.INTERNAL_ERROR,
       error: error instanceof Error ? error.message : 'RAG question generation failed',
     };
   } finally {

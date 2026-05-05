@@ -11,15 +11,17 @@
  * - Proper vignette structure
  *
  * Usage:
- *   npx tsx scripts/regenerate-pool-v2.ts          # Regenerate all
+ *   npx tsx scripts/regenerate-pool-v2.ts          # Add generated questions without clearing
  *   npx tsx scripts/regenerate-pool-v2.ts --add 50 # Add 50 more questions
  *   npx tsx scripts/regenerate-pool-v2.ts --system CV  # Only CV system
+ *   ALLOW_DESTRUCTIVE_POOL_REGENERATION=true npx tsx scripts/regenerate-pool-v2.ts --clear
  */
 
 import { Prisma } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 import { prisma, disconnect } from './_shared/db';
+import { resolvePoolRegenerationClearPlan } from './regenerate-pool-v2-safety';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -256,11 +258,16 @@ async function main() {
   const addMode = args.includes('--add');
   const addCount = addMode ? parseInt(args[args.indexOf('--add') + 1] || '50', 10) : 0;
   const systemFilter = args.includes('--system') ? args[args.indexOf('--system') + 1] : null;
-  const clearFirst = !addMode && !args.includes('--no-clear');
+  const clearPlan = resolvePoolRegenerationClearPlan(args, process.env);
+  const clearFirst = clearPlan.clearFirst;
 
   console.log('═'.repeat(70));
   console.log('🔄 Question Pool Regeneration V2 - "Describe, Don\'t Diagnose"');
   console.log('═'.repeat(70));
+
+  for (const warning of clearPlan.warnings) {
+    console.log(`\n⚠️  ${warning}`);
+  }
 
   if (clearFirst) {
     console.log('\n⚠️  This will DELETE all existing questions and regenerate them.');

@@ -14,6 +14,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 interface SocraticTutorChatProps {
+  readonly questionId?: string;
+  readonly conditionId?: string;
   readonly vignette: string;
   readonly question: string;
   readonly correctAnswer: string;
@@ -28,6 +30,8 @@ const MAX_TURNS = 3;
 type Message = { role: 'user' | 'tutor'; text: string };
 
 export function SocraticTutorChat({
+  questionId,
+  conditionId,
   vignette,
   question,
   correctAnswer,
@@ -55,14 +59,18 @@ export function SocraticTutorChat({
         const historyForApi = userReply
           ? [...messages, { role: 'user' as const, text: userReply }]
           : messages;
+        const turnNumber = historyForApi.filter((message) => message.role === 'user').length;
         const payload = {
           body: {
+            questionId,
+            conditionId,
             vignette,
             question,
             correctAnswer,
             userWrongAnswer,
             options,
             history: historyForApi.length > 0 ? historyForApi : undefined,
+            turnNumber,
           },
         };
 
@@ -103,7 +111,17 @@ export function SocraticTutorChat({
         setInitialLoad(false);
       }
     },
-    [getToken, vignette, question, correctAnswer, userWrongAnswer, options, messages]
+    [
+      getToken,
+      questionId,
+      conditionId,
+      vignette,
+      question,
+      correctAnswer,
+      userWrongAnswer,
+      options,
+      messages,
+    ]
   );
 
   const handleStart = useCallback(() => {

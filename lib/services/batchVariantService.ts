@@ -252,8 +252,19 @@ export async function generateBatchVariants(
           continue;
         }
 
-        const correctStr = variant.correctAnswer ?? variant.options[0];
-        const correctIdx = Math.max(0, variant.options.indexOf(correctStr));
+        const correctStr =
+          typeof variant.correctAnswer === 'string' ? variant.correctAnswer.trim() : '';
+        const correctIdx = variant.options.findIndex(
+          (option) => option.trim().toLowerCase() === correctStr.toLowerCase()
+        );
+        if (correctIdx === -1) {
+          result.failed++;
+          result.errors.push({
+            conditionId: condition.conditionId,
+            error: 'Generated variant correctAnswer did not match any option',
+          });
+          continue;
+        }
         const newId =
           typeof crypto !== 'undefined' &&
           typeof (crypto as { randomUUID?: () => string }).randomUUID === 'function'

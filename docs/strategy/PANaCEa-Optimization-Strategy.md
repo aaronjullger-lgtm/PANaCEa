@@ -182,7 +182,7 @@ Every optimization should map to a real workflow: cramming before EOR exams, dri
 | Dimension | Assessment |
 |-----------|-----------|
 | **User-facing job** | Get a recommended study plan based on current progress, rotation schedule, and EOR exam dates |
-| **Current bottleneck** | `RotationFocusCard` not yet wired to real user profile (priority #3 in CLAUDE.md). `useStudyWellness` not wired to real session history (priority #4) |
+| **Current bottleneck** | Rotation and wellness signals need to feed the adaptive dashboard mode classifier and load guardrail directly. `useStudyWellness` is not yet fully wired to real session history. |
 | **AI needed?** | **Partial** — path computation is algorithmic; natural-language study advice benefits from AI |
 | **Best method** | Deterministic optimizer (PANCE blueprint gaps × FSRS due dates × rotation calendar × EOR dates) + AI for natural-language framing |
 | **Latency sensitivity** | **Low** — study path recalculated daily or on-demand |
@@ -415,9 +415,9 @@ Ranked by composite score of product impact, engineering effort, performance gai
 - **Cost efficiency:** High — one cheap model call per user per day vs. per-request
 - **Confidence:** High
 
-### Rank 7: Wire RotationFocusCard + useStudyWellness to Real Data
+### Rank 7: Wire Rotation/Wellness Signals to Adaptive Dashboard
 - **Product impact:** Very High — personalization becomes real instead of placeholder
-- **Engineering effort:** Low — data sources exist; just need wiring
+- **Engineering effort:** Low — data sources exist; just need wiring into normalization, mode profiles, and the load guardrail
 - **Performance gain:** Low — already fast
 - **Cost efficiency:** N/A — no AI cost
 - **Confidence:** Very High — priorities #3 and #4 in CLAUDE.md
@@ -596,8 +596,8 @@ These require low engineering effort, have high ROI, and unblock future optimiza
 **F1.1 — Token counting middleware** (Rank #4)
 Add token usage logging to all Gemini proxy endpoints. Without this, every cost claim in this document is an estimate. Implementation: wrap `functions/api/gemini/` handlers with a counter that logs model, endpoint, input_tokens, output_tokens, and user_id.
 
-**F1.2 — Wire RotationFocusCard + useStudyWellness** (Rank #7)
-Already priority #3 and #4 in CLAUDE.md. Pure wiring, no AI. Immediate personalization improvement.
+**F1.2 — Wire rotation/wellness signals to the adaptive dashboard** (Rank #7)
+Pure wiring, no AI. Feed rotation deadlines, session load, and wellness signals into dashboard normalization so EOR/didactic, overloaded, behind, and maintenance modes select the correct widgets.
 
 **F1.3 — Model downgrade for mnemonics + simple tasks** (Rank #14)
 Change `generate-mnemonic` endpoint from `gemini-2.0-flash` (already correct per codebase) to ensure no accidental upgrades. Audit all AI endpoints to confirm cheapest-viable model is used.
@@ -679,7 +679,7 @@ Against an estimated current spend of $500-800/month at 100 users, this represen
 | Item | Status | Files Changed |
 |------|--------|---------------|
 | F1.1 Token counting middleware | ✅ Done | `functions/api/_shared/tokenTracking.ts` (new), `functions/api/gemini/index.ts`, `functions/api/gemini/stream.ts`, `functions/api/ai/generate-mnemonic.ts` |
-| F1.2 Wire RotationFocusCard + useStudyWellness | ⏳ Pending (wiring only) | — |
+| F1.2 Wire rotation/wellness signals to adaptive dashboard | ⏳ Pending (wiring only) | — |
 | F1.3 Model audit + downgrades | ✅ Done | `conditions/[identifier]/structured.ts`, `admin/generate-draft.ts`, `_shared/analyzeBehaviorGemini.ts`, `knowledge/cache.ts` — 4 endpoints downgraded from `-exp`/2.5 to stable `gemini-2.0-flash` |
 | F1.4 AI output provenance metadata | ✅ Already done | (Migration `20260403100000`) |
 | F1.5 Semantic cache extension | ✅ Already covered | Mnemonics, questions, library answers all cached |

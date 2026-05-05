@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { buildDashboardAnalyticsModel, type DashboardStatsPayload } from '@/lib/dashboard/realStudyAnalytics';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  buildDashboardAnalyticsModel,
+  type DashboardStatsPayload,
+  type StudyHistoryPayload,
+} from '@/lib/dashboard/realStudyAnalytics';
 
 const baseStats: DashboardStatsPayload = {
   success: true,
@@ -53,7 +57,69 @@ const baseStats: DashboardStatsPayload = {
   },
 };
 
+const baseStudyHistory: StudyHistoryPayload = {
+  reviewCount: 30,
+  correctCount: 24,
+  retentionRate: 0.8,
+  averageRating: 3.2,
+  averageResponseTimeMs: 42000,
+  averageStability: 8.4,
+  averageDifficulty: 5.1,
+  averageRetrievability: 0.87,
+  optimizer: {
+    eligible: false,
+    reviewCount: 740,
+    minimumRequired: 1000,
+    reviewsNeeded: 260,
+  },
+  trends: [
+    {
+      date: '2026-04-14',
+      reviews: 30,
+      correct: 24,
+      retentionRate: 0.8,
+      averageRating: 3.2,
+    },
+  ],
+  bySystem: [
+    {
+      system: 'Cardiovascular',
+      reviews: 20,
+      correct: 15,
+      retentionRate: 0.75,
+      averageStability: 7.8,
+      averageDifficulty: 5.6,
+    },
+  ],
+  recentReviews: [],
+  upcomingReviews: [
+    {
+      id: 'card-1',
+      source: 'card',
+      questionId: 'q1',
+      conditionId: 'condition-1',
+      dueAt: '2026-04-15T16:00:00.000Z',
+      overdueDays: 0,
+      stability: 8.4,
+      difficulty: 5.1,
+      state: 2,
+      retrievability: 0.82,
+      progressContext: 'main',
+      system: 'Cardiovascular',
+    },
+  ],
+};
+
 describe('buildDashboardAnalyticsModel', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-15T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('computes overview, trend, and weak system ranking from real inputs', () => {
     const model = buildDashboardAnalyticsModel({
       stats: baseStats,
@@ -87,6 +153,7 @@ describe('buildDashboardAnalyticsModel', () => {
         totalActive: 70,
         forecast: [],
       },
+      studyHistory: baseStudyHistory,
       blueprintGaps: {
         totalAttempts: 42,
         coverageScore: 71,
@@ -125,6 +192,10 @@ describe('buildDashboardAnalyticsModel', () => {
     expect(model.recentSessions[0]?.modeLabel).toBe('Main');
     expect(model.weakSystems[0]?.system).toBe('Cardiovascular');
     expect(model.weakSystems[0]?.label).toBe('needs-accuracy-work');
+    expect(model.fsrs.retentionPercent).toBe(80);
+    expect(model.fsrs.averageRetrievabilityPercent).toBe(87);
+    expect(model.fsrs.optimizer?.progressPercent).toBe(74);
+    expect(model.fsrs.upcomingReviews[0]?.targetLabel).toBe('Cardiovascular');
   });
 
   it('returns a clean empty model for new users', () => {
@@ -163,5 +234,25 @@ describe('buildDashboardAnalyticsModel', () => {
     expect(model.weakSystems).toEqual([]);
     expect(model.recentSessions).toEqual([]);
     expect(model.heatmap).toEqual([]);
+    expect(model.fsrs.reviewCount).toBe(0);
+    expect(model.fsrs.optimizer).toBeNull();
+  });
+
+  it('treats FSRS review history as meaningful dashboard data', () => {
+    const model = buildDashboardAnalyticsModel({
+      stats: null,
+      sessions: { sessions: [] },
+      reviewForecast: null,
+      studyHistory: {
+        ...baseStudyHistory,
+        upcomingReviews: [],
+      },
+      blueprintGaps: null,
+      confusionPairs: null,
+    });
+
+    expect(model.hasMeaningfulData).toBe(true);
+    expect(model.studyHistory?.reviewCount).toBe(30);
+    expect(model.fsrs.dueTodayCount).toBe(0);
   });
 });

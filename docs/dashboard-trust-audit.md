@@ -4,15 +4,23 @@
 **Scope:** student-facing dashboards, retention curves, mastery heatmaps, forgetting-curve visualizations, blueprint coverage, metric correctness
 **Mandate:** no dashboard lies; every metric has a known provenance path; no misleading defaults; prefer "insufficient data" over fake precision
 
+**2026-04-30 update:** This audit is historical for the old student-home
+dashboard. The active `/study` surface is now
+`components/navigation/command-center/CommandCenterWorkspace.tsx`, which renders
+the adaptive dashboard page under `components/dashboard/adaptive/`. References
+below to the deleted legacy dashboard identify the retired implementation audited
+on 2026-04-17.
+
 ---
 
 ## 1. Surface Inventory
 
 | Surface | Location | Wired to | Notes |
 |---|---|---|---|
-| **Main dashboard** | `components/dashboard/DashboardPage.tsx` (923 lines) | primary student route | two tabs: `pilot` (Today) and `data` (Analytics) |
-| Unified dashboard (widget grid) | `components/dashboard/UnifiedDashboard/index.tsx` | alt layout | |
-| Insights hub | `components/dashboard/InsightsHub.tsx` | secondary | |
+| **Main dashboard** | `components/dashboard/adaptive/` | `/study` via CommandCenterWorkspace | Adaptive command center |
+| Legacy student-home dashboard | deleted legacy files | retired | Removed after adaptive switch |
+| Legacy alternate dashboard layout | deleted legacy files | retired alt layout | Removed after adaptive switch |
+| Legacy insights hub | deleted legacy file | retired | Replaced by adaptive insight stack |
 | Intelligence hub | `components/analytics/IntelligenceHub.tsx` (1056 lines) | `/progress` route | |
 | Analytics dashboard | `components/analytics/AnalyticsDashboard.tsx` (995 lines) | | |
 | SRS dashboard | `components/analytics/SrsDashboard.tsx` | | |
@@ -60,24 +68,24 @@ Ordered by severity / student impact.
 5. **`analyticsService.ts`: zero-attempt systems return `accuracy: 0` and `userPercentile: 0`** (L87, L304, L307)
    Zero attempts or zero cohort data produces a "0%" display, not an "insufficient data" signal — the student sees 0% accuracy in Rheumatology before ever answering a Rheum question. Should return `null` / `undefined` / explicit `insufficientData: true`.
 
-6. **`DashboardPage.tsx`: `safeData` fallback lies on API failure** (L384–392)
+6. **Retired student-home dashboard: `safeData` fallback lied on API failure** (L384–392 in deleted file)
    When `/api/stats/retention` errors, `safeData` is populated with `adjustment: 'tighten'` and zeros. The banner tells the student "some analytics unavailable," but the Pilot tab still renders QuickStats and actions built from fake zeros.
 
-7. **`DashboardPage.tsx`: streak has two authorities that can disagree** (L351–357)
+7. **Retired student-home dashboard: streak had two authorities that could disagree** (L351–357 in deleted file)
    Prefers `dbStats.overall.currentStreak` but falls back to `calculateDayStreak(performanceData)` (localStorage). No reconciliation — a bug in either path is invisible to the student. Needs a single authority with explicit provenance and a mismatch alarm.
 
-8. **`DashboardPage.tsx`: `systemAccuracy` / `systemCounts` dual-sourced** (L399–451)
-   Same pattern — DB preferred, localStorage fallback, no reconciliation, no provenance mark in the UI. The `BlueprintProgressBar` and `RotationFocusCard` silently switch sources.
+8. **Retired student-home dashboard: `systemAccuracy` / `systemCounts` were dual-sourced** (L399–451 in deleted file)
+   Same pattern — DB preferred, localStorage fallback, no reconciliation, no provenance mark in the UI. The retired blueprint/rotation dashboard widgets silently switched sources.
 
 ### P2 — Time and bucketing errors
 
-9. **`DashboardPage.tsx`: StudyHeatmap uses UTC year + localStorage first** (L469–493)
+9. **Retired student-home dashboard: StudyHeatmap used UTC year + localStorage first** (L469–493 in deleted file)
    `new Date().getUTCFullYear()` filters to the UTC year, so a Western-hemisphere student on Dec 31 local time sees a suddenly-empty heatmap. Worse, `performanceData` (localStorage) is consulted before `recentSessions` (server), so the heatmap silently uses whichever source has data regardless of freshness.
 
 10. **`review-forecast.ts`: UTC-bucketed days** (L43–49)
     `todayStart = UTC 00:00`. A PT student studying at 22:00 local (= 06:00 UTC next day) sees cards due "tomorrow" when the scheduler considers them due today. Circadian/timezone profile on `User` exists but isn't applied.
 
-11. **`DashboardPage.tsx`: rotation-week math ignores DST** (L454–461)
+11. **Retired student-home dashboard: rotation-week math ignored DST** (L454–461 in deleted file)
     `diffMs / (7 * 86400000) + 1` over a date range that crosses a DST transition is off by one hour and can flip a Sunday-night student's "week 4" to "week 5" or vice versa.
 
 ### P3 — Missing trust mechanisms
@@ -106,26 +114,26 @@ Each sprint scoped to 1–4 files + reconciliation tests. Ordered by student-imp
 - Tests: (a) empty-progress user returns empty arrays, not 500; (b) populated user gets correct row counts; (c) clerkId-vs-internal mismatch is caught by a single typed helper.
 
 ### Sprint 3 — Kill default-value lies (P1 #5, #6)
-**Files:** `lib/services/analyticsService.ts`, `components/dashboard/DashboardPage.tsx`, new `lib/types/metric.ts`
+**Files:** `lib/services/analyticsService.ts`, adaptive dashboard consumers, new `lib/types/metric.ts`
 - Introduce `type Metric<T> = { status: 'ok'; value: T; source: 'db' | 'cache' } | { status: 'insufficient_data' } | { status: 'error'; reason: string }`.
 - Update `getUserAccuracyProfile`, `generatePeerComparison` to return `Metric`-typed values instead of coercing to 0.
 - Update consumers to render "—" or "Insufficient data (N attempts)" rather than "0%".
 - Remove the `safeData` fallback for widgets that require real data; show per-widget degraded states.
 
 ### Sprint 4 — Single streak authority + provenance badge (P1 #7, #8, P3 #13)
-**Files:** `components/dashboard/DashboardPage.tsx`, `hooks/useUserStats.ts`, `hooks/useDatabaseStats.ts`, new `components/ui/ProvenanceBadge.tsx`
+**Files:** adaptive dashboard consumers, `hooks/useUserStats.ts`, `hooks/useDatabaseStats.ts`, new `components/ui/ProvenanceBadge.tsx`
 - Pick one authority for streak, system accuracy, system counts (DB). LocalStorage may inform optimistic rendering but the source of truth is DB.
 - Emit a lightweight `ProvenanceBadge` ("server verified" / "offline cache" / "local only") on any metric whose source isn't obvious.
 - Add a dev-only reconciliation hook that warns when DB and localStorage disagree by > tolerance.
 
 ### Sprint 5 — Timezone-correct review forecast + study heatmap (P2 #9, #10)
-**Files:** `functions/api/analytics/review-forecast.ts`, `components/dashboard/DashboardPage.tsx` (`studyActivityData`), `lib/time/userTz.ts` (new or reuse existing timezone helper)
+**Files:** `functions/api/analytics/review-forecast.ts`, adaptive dashboard activity consumers, `lib/time/userTz.ts` (new or reuse existing timezone helper)
 - Accept user timezone (from `UserCircadianProfile` or user preferences) in forecast endpoint. Bucket days in local tz.
 - StudyHeatmap: use local year, prefer server `recentSessions` over localStorage, drop the `getUTCFullYear` filter.
 - Test: forecast for a PT user at 22:00 PT correctly returns overdue/today/forecast based on local calendar.
 
 ### Sprint 6 — Retention / forgetting-curve chart hardening
-**Files:** `components/dashboard/charts/DecayCurve.tsx`, `components/analytics/FSRSDecayVisualization.tsx`, `components/analytics/LearningCurveChart.tsx`, `components/dashboard/RetentionForecastCard.tsx`, new `components/analytics/InsufficientDataState.tsx`
+**Files:** `components/dashboard/charts/DecayCurve.tsx`, `components/analytics/FSRSDecayVisualization.tsx`, `components/analytics/LearningCurveChart.tsx`, adaptive retention/readiness widgets, new `components/analytics/InsufficientDataState.tsx`
 - Every curve component: explicit empty state, null-safe data access, bounded axes, tooltip values matching the source.
 - Replace any ad-hoc forgetting-curve math with a shared `lib/fsrs.ts` export.
 - Test: snapshot render with `data=[]`, `data=[{day:0,retentionProb:null}]`, full data; none should crash or show bogus curves.
@@ -136,7 +144,7 @@ Each sprint scoped to 1–4 files + reconciliation tests. Ordered by student-imp
 - Reconciliation test: per-cell `correct/total` ≤ 1, sum of cell totals equals user total attempts, blueprint weights sum to 100 ± ε.
 
 ### Sprint 8 — Rotation-week + calendar-boundary math
-**Files:** `components/dashboard/DashboardPage.tsx`, `lib/time/rotationWeek.ts` (new)
+**Files:** adaptive dashboard date consumers, `lib/time/rotationWeek.ts`
 - Replace ad-hoc `diffMs / (7*86400000) + 1` with a DST-safe helper that uses calendar-day differences in user tz.
 - Apply same helper anywhere a "week N of rotation" appears.
 

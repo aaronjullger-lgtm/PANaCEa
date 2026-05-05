@@ -10,16 +10,24 @@ import { aiEndpoint } from '../../_shared/middleware';
 import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-// Phase 1.3 optimization: stable release for reliability (was gemini-2.0-flash-exp)
-const PARSE_MODEL = 'gemini-2.0-flash';
+import { gateway, GatewayError, toGatewayContext } from '../../../../lib/ai/aiGateway';
 
 const StructuredSchema = z.object({
   params: z.object({
     identifier: z.string().min(1),
   }),
 });
+
+const StructuredConditionSchema = z.object({
+  clinical_pearls: z.array(z.string()).default([]),
+  history_key_features: z.array(z.string()).default([]),
+  physical_exam_findings: z.array(z.string()).default([]),
+  diagnostic_labs: z.array(z.string()).default([]),
+  gold_standard: z.string().default(''),
+  treatment_first_line: z.string().default(''),
+});
+
+type StructuredCondition = z.infer<typeof StructuredConditionSchema>;
 
 function buildRawTextFromContent(content: unknown): string {
   if (content == null) return '';
@@ -43,6 +51,21 @@ function buildRawTextFromContent(content: unknown): string {
     return parts.join('\n\n');
   }
   return String(content);
+}
+
+function fallbackStructuredCondition(row: {
+  gold_standard_dx: string | null;
+  first_line_rx: string | null;
+}): StructuredCondition & { source: 'fallback' } {
+  return {
+    clinical_pearls: [],
+    history_key_features: [],
+    physical_exam_findings: [],
+    diagnostic_labs: [],
+    gold_standard: row.gold_standard_dx ?? '',
+    treatment_first_line: row.first_line_rx ?? '',
+    source: 'fallback',
+  };
 }
 
 export const onRequestGet = aiEndpoint(
@@ -103,18 +126,9 @@ export const onRequestGet = aiEndpoint(
       }
 
       if (!rawText.trim()) {
-        return ok(
-          {
-            clinical_pearls: [],
-            history_key_features: [],
-            physical_exam_findings: [],
-            diagnostic_labs: [],
-            gold_standard: row.gold_standard_dx ?? '',
-            treatment_first_line: row.first_line_rx ?? '',
-            source: 'fallback',
-          },
-          { headers: { 'Cache-Control': 'public, max-age=3600' } }
-        );
+        return ok(fallbackStructuredCondition(row), {
+          headers: { 'Cache-Control': 'public, max-age=3600' },
+        });
       }
 
       const prompt = `Parse the following medical condition content into a strict JSON schema. Extract only from the text; do not invent.
@@ -134,67 +148,21 @@ Return a JSON object with exactly these keys (arrays of strings unless noted):
 
 Output valid JSON only, no markdown.`;
 
-      const res = await fetch(
-        `${GEMINI_BASE}/v1beta/models/${PARSE_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 2048,
-              responseMimeType: 'application/json',
-            },
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        logger.warn('Gemini structured parse failed', {
-          status: res.status,
-          text: text.slice(0, 200),
-        });
-        return ok({
-          clinical_pearls: [],
-          history_key_features: [],
-          physical_exam_findings: [],
-          diagnostic_labs: [],
-          gold_standard: row.gold_standard_dx ?? '',
-          treatment_first_line: row.first_line_rx ?? '',
-          source: 'fallback',
-        });
-      }
-
-      const data = (await res.json()) as {
-        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-      };
-      const text =
-        data.candidates?.[0]?.content?.parts
-          ?.map((p) => p.text)
-          .filter(Boolean)
-          .join('')
-          ?.trim() ?? '';
-
-      let parsed: {
-        clinical_pearls: string[];
-        history_key_features: string[];
-        physical_exam_findings: string[];
-        diagnostic_labs: string[];
-        gold_standard: string;
-        treatment_first_line: string;
-      } = {
-        clinical_pearls: [],
-        history_key_features: [],
-        physical_exam_findings: [],
-        diagnostic_labs: [],
-        gold_standard: row.gold_standard_dx ?? '',
-        treatment_first_line: row.first_line_rx ?? '',
-      };
-
+      let parsed: StructuredCondition;
       try {
-        const decoded = JSON.parse(text) as typeof parsed;
+        const result = await gateway.callStructured(toGatewayContext(context), {
+          mode: 'structured',
+          task: 'extraction',
+          tier: 'balanced',
+          endpoint: '/api/conditions/[identifier]/structured',
+          userPrompt: prompt,
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+          schema: StructuredConditionSchema,
+          schemaDescription:
+            'Structured PANCE condition card fields: clinical_pearls, history_key_features, physical_exam_findings, diagnostic_labs, gold_standard, treatment_first_line.',
+        });
+        const decoded = result.data;
         parsed = {
           clinical_pearls: Array.isArray(decoded.clinical_pearls) ? decoded.clinical_pearls : [],
           history_key_features: Array.isArray(decoded.history_key_features)
@@ -211,10 +179,23 @@ Output valid JSON only, no markdown.`;
           treatment_first_line:
             typeof decoded.treatment_first_line === 'string'
               ? decoded.treatment_first_line
-              : parsed.treatment_first_line,
+              : row.first_line_rx ?? '',
         };
-      } catch {
-        logger.warn('Structured JSON parse failed', { text: text.slice(0, 150) });
+      } catch (err) {
+        if (err instanceof GatewayError) {
+          logger.warn('Gateway structured condition parse failed', {
+            code: err.code,
+            requestId: err.requestId,
+            traceId: err.traceId,
+          });
+        } else {
+          logger.warn('Structured condition parse failed', {
+            message: err instanceof Error ? err.message : String(err),
+          });
+        }
+        return ok(fallbackStructuredCondition(row), {
+          headers: { 'Cache-Control': 'public, max-age=900' },
+        });
       }
 
       logger.info('Structured condition returned', {
@@ -222,7 +203,10 @@ Output valid JSON only, no markdown.`;
         userId: auth.userId?.substring(0, 10),
       });
 
-      return ok({ ...parsed, source: 'gemini' }, { headers: { 'Cache-Control': 'public, max-age=3600' } });
+      return ok(
+        { ...parsed, source: 'gateway' },
+        { headers: { 'Cache-Control': 'public, max-age=3600' } }
+      );
     } catch (error) {
       logger.error('Structured condition error', {
         error: error instanceof Error ? error.message : String(error),

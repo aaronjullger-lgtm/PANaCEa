@@ -12,9 +12,8 @@ import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation'
 import type { CloudflareEnv } from '../_shared/types';
 import { hybridSearchRRF, classifyQuery } from '@/lib/services/search/hybridSearch';
 import { gradeDocuments, buildCRAGContext, type RetrievedDocument, type CRAGResult } from '@/lib/services/search/correctiveRag';
+import { getEmbedding } from '../../../lib/gemini';
 
-const EMBED_MODEL = 'text-embedding-005';
-const EMBED_DIMS = 768;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
@@ -36,28 +35,6 @@ const BodySchema = z.object({
 });
 
 type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
-
-async function getQueryEmbedding(query: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text: query }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Embed API error ${res.status}: ${err.slice(0, 200)}`);
-  }
-  const data = (await res.json()) as { embedding?: { values?: number[] } };
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
-    throw new Error(`Invalid embedding: expected ${EMBED_DIMS} dims`);
-  }
-  return values;
-}
 
 /** Convert search results to CRAG documents for grading.
  * Include all safety-critical fields so CRAG can assess relevance on the
@@ -199,7 +176,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
     }
 
     // ── Pure semantic search path (default, backward compat) ──
-    const embedding = await getQueryEmbedding(query, apiKey);
+    const embedding = await getEmbedding(query, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
 
     // Tune HNSW recall for this connection only (SET LOCAL is transaction-scoped).

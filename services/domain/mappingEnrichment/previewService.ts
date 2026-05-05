@@ -3,13 +3,15 @@
  * Computes before/after blueprint coverage impact of mapping changes.
  */
 
-import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+} from '../../../functions/api/_shared/prisma-edge';
 import {
   NCCPA_2025_BLUEPRINT,
   normalizeSystemName,
   getAllSystems,
 } from '@/lib/constants/blueprint';
-import { analyzeMedicalContentCompliance, analyzeQuestionPoolCompliance } from '../blueprintComplianceService';
 
 export interface MappingChange {
   taxonomyCode: string;
@@ -64,17 +66,20 @@ async function getCurrentTaxonomyMappingDistribution(prisma: ReturnType<typeof c
 
   // Fetch all system mappings (group by taxonomyCode, pick the most recent? we'll assume each taxonomy has at most one mapping)
   const mappings = await prisma.systemMapping.findMany({
-    select: { taxonomyCode: true, systemCode: true },
-    distinct: ['taxonomyCode'], // not supported by Prisma directly, we'll group in memory
+    select: { taxonomyCode: true, canonicalName: true, blueprintTags: true },
+    distinct: ['taxonomyCode'],
   });
 
   // Group by taxonomyCode, pick first system (should be unique)
   const mappingByTaxonomy = new Map<string, string>();
   for (const mapping of mappings) {
-    // If there are multiple mappings for same taxonomy, we'll pick the first encountered.
-    // This is a simplification; ideally we'd need to decide based on subcategory.
+    const mappedSystem = resolveKnownSystem(
+      ...(Array.isArray(mapping.blueprintTags) ? mapping.blueprintTags : []),
+      mapping.canonicalName
+    );
+    if (!mappedSystem) continue;
     if (!mappingByTaxonomy.has(mapping.taxonomyCode)) {
-      mappingByTaxonomy.set(mapping.taxonomyCode, mapping.systemCode);
+      mappingByTaxonomy.set(mapping.taxonomyCode, mappedSystem);
     }
   }
 
@@ -84,13 +89,31 @@ async function getCurrentTaxonomyMappingDistribution(prisma: ReturnType<typeof c
   for (const tax of taxonomies) {
     const system = mappingByTaxonomy.get(tax.code);
     if (system) {
-      const canonical = normalizeSystemName(system);
-      systemCounts.set(canonical, (systemCounts.get(canonical) || 0) + 1);
+      systemCounts.set(system, (systemCounts.get(system) || 0) + 1);
       totalMapped++;
     }
   }
 
   return { systemCounts, totalMapped, taxonomiesCount: taxonomies.length };
+}
+
+function resolveKnownSystem(...candidates: Array<string | null | undefined>): string | null {
+  const validSystems = new Set(getAllSystems());
+  for (const candidate of candidates) {
+    if (!candidate || candidate.trim().length === 0) continue;
+    const normalized = normalizeSystemName(candidate.trim());
+    if (validSystems.has(normalized)) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
+function requireDatabaseUrl(databaseUrl: string | undefined): string {
+  if (!databaseUrl || databaseUrl.trim().length === 0) {
+    throw new Error('simulateMappingImpact requires an injected DATABASE_URL');
+  }
+  return databaseUrl;
 }
 
 /**
@@ -172,9 +195,9 @@ function computeTaxonomyComplianceSummary(
  */
 export async function simulateMappingImpact(
   changes: MappingChange[],
-  databaseUrl?: string
+  databaseUrl: string
 ): Promise<PreviewResult> {
-  const prisma = createEdgePrismaClient(databaseUrl || process.env.DATABASE_URL!);
+  const prisma = createEdgePrismaClient(requireDatabaseUrl(databaseUrl));
   try {
     // 1. Get current distribution
     const { systemCounts: beforeCounts, totalMapped: beforeTotal, taxonomiesCount } =
@@ -202,34 +225,28 @@ export async function simulateMappingImpact(
 
     // 4. Apply changes to system counts (simulate)
     const afterCounts = new Map(beforeCounts);
-    // For each change, we need to adjust counts:
-    // If previousSystemCode exists, decrement count for previous system (if it was mapped)
-    // Increment count for new system.
-    // If previousSystemCode not provided, assume taxonomy was unmapped before.
+    let mappedTotalDelta = 0;
     for (const change of changes) {
-      const prevSystem = change.previousSystemCode
-        ? normalizeSystemName(change.previousSystemCode)
-        : null;
-      const newSystem = normalizeSystemName(change.systemCode);
+      const prevSystem = resolveKnownSystem(change.previousSystemCode);
+      const newSystem = resolveKnownSystem(change.systemCode);
+
+      if (!newSystem) {
+        throw new Error(`Unsupported system mapping target: ${change.systemCode}`);
+      }
 
       if (prevSystem) {
         const prevCount = afterCounts.get(prevSystem) || 0;
         if (prevCount > 0) {
           afterCounts.set(prevSystem, prevCount - 1);
         }
+      } else {
+        mappedTotalDelta += 1;
       }
       const newCount = afterCounts.get(newSystem) || 0;
       afterCounts.set(newSystem, newCount + 1);
     }
 
-    // Recompute total mapped (should stay same because each change maps a taxonomy)
-    // If mapping from unmapped to mapped, total increases; we don't track unmapped count.
-    // For simplicity, assume each change maps a previously unmapped taxonomy (since we only have mapping suggestions for gaps).
-    // We'll compute total mapped as beforeTotal + number of changes that map previously unmapped taxonomies.
-    // We'll need to know which taxonomies were previously unmapped. That's complex.
-    // For preview purposes, we'll assume all changes map previously unmapped taxonomies (since we are previewing approval of suggestions).
-    // That means total mapped increases by changes.length.
-    const afterTotal = beforeTotal + changes.length;
+    const afterTotal = beforeTotal + mappedTotalDelta;
 
     // 5. Compute after compliance
     const after = computeTaxonomyComplianceSummary(afterCounts, afterTotal, taxonomiesCount, weights);
@@ -244,6 +261,6 @@ export async function simulateMappingImpact(
       changes,
     };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

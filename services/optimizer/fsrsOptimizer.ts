@@ -45,7 +45,8 @@ export interface OptimizationProgress {
  */
 export async function optimizeFSRSParameters(
   userId: string,
-  onProgress?: (progress: OptimizationProgress) => void
+  onProgress?: (progress: OptimizationProgress) => void,
+  token?: string | null
 ): Promise<OptimizationResult> {
   try {
     // Stage 1: Trigger optimization
@@ -64,7 +65,10 @@ export async function optimizeFSRSParameters(
 
     const response = await fetch('/api/user/fsrs-params', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ userId }),
     });
 
@@ -73,7 +77,15 @@ export async function optimizeFSRSParameters(
       throw new Error(errorData?.error ?? `Optimization failed: ${response.statusText}`);
     }
 
-    const data = (await response.json()) as {
+    const body = (await response.json()) as {
+      data?: {
+        params?: {
+          w?: number[];
+          brierScore?: number;
+          sampleSize?: number;
+          improvementOverDefault?: number;
+        };
+      };
       params?: {
         w?: number[];
         brierScore?: number;
@@ -81,6 +93,7 @@ export async function optimizeFSRSParameters(
         improvementOverDefault?: number;
       };
     };
+    const data = body.data ?? body;
 
     // Stage 3: Validate results
     onProgress?.({
@@ -89,7 +102,7 @@ export async function optimizeFSRSParameters(
       message: 'Validating optimized parameters...',
     });
 
-    if (!data.params || !data.params.w || data.params.w.length !== 21) {
+    if (!data.params || !data.params.w || ![21, 29].includes(data.params.w.length)) {
       throw new Error('Server returned invalid parameters');
     }
 
@@ -131,7 +144,7 @@ export async function saveOptimizedParameters(userId: string, parameters: number
 /**
  * Get current optimization status for user
  */
-export async function getOptimizationStatus(userId: string): Promise<{
+export async function getOptimizationStatus(userId: string, token?: string | null): Promise<{
   isOptimized: boolean;
   lastOptimized?: Date;
   parameters?: number[];
@@ -139,7 +152,9 @@ export async function getOptimizationStatus(userId: string): Promise<{
   canOptimize?: boolean;
   reviewsNeeded?: number;
 }> {
-  const response = await fetch(`/api/user/fsrs-params`);
+  const response = await fetch(`/api/user/fsrs-params`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to get optimization status: ${response.statusText}`);

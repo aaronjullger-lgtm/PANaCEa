@@ -5,14 +5,14 @@
  * what the correct answer is, and the underlying clinical reasoning.
  *
  * Uses retrieved clinical reference content to ground explanations,
- * with KV caching to avoid redundant Gemini calls for the same
+ * with KV caching to avoid redundant gateway calls for the same
  * question + answer combo.
  *
  * Pipeline:
  *   1. Check KV cache for existing explanation
  *   2. If miss: retrieve clinical context via RAG
  *   3. Build explanation prompt with correct/wrong answer context
- *   4. Generate via Gemini with clinical grounding rules
+ *   4. Generate via the shared AI gateway with clinical grounding rules
  *   5. Cache result in KV (24h TTL)
  *   6. Return structured explanation with source citations
  *
@@ -23,14 +23,21 @@ import { z } from 'zod';
 import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { ErrorCode } from '../_shared/error-catalog';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   retrieveForExplanation,
   formatContextForPrompt,
   assessRetrievalQuality,
 } from '../../../lib/services/ragContextService';
+import {
+  gateway,
+  GatewayError,
+  toGatewayContext,
+  type GatewayContext,
+} from '../../../lib/ai/aiGateway';
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
 const CACHE_TTL_SECONDS = 86400; // 24 hours
 
 const BodySchema = z.object({
@@ -49,30 +56,28 @@ interface KVNamespace {
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
-function buildFallbackExplanation(input: {
-  selectedAnswer: string;
-  correctAnswer: string;
-  system: string;
-}) {
+const ExplanationSchema = z.object({
+  whyCorrect: z.string().min(20).max(1500),
+  whyWrong: z.string().min(20).max(1500),
+  whenWrongWouldBeRight: z.string().min(10).max(1000).nullable(),
+  clinicalPearl: z.string().min(10).max(500),
+  keyDistinction: z.string().min(5).max(500),
+  relatedConcepts: z.array(z.string().min(1).max(120)).min(1).max(6),
+});
+
+type Explanation = z.infer<typeof ExplanationSchema>;
+
+function unavailable(reason: string, status = 503) {
   return {
-    explanation: {
-      whyCorrect: `${input.correctAnswer} is the best answer based on the validated explanation for this question.`,
-      whyWrong: `${input.selectedAnswer} does not fit this question as well as the correct answer.`,
-      whenWrongWouldBeRight: null,
-      clinicalPearl: `Review the key ${input.system} finding that separates the correct option from nearby distractors.`,
-      keyDistinction: 'Use the original rationale and answer choices to compare the decisive clinical clue.',
-      relatedConcepts: [input.system],
+    status,
+    error: 'AI explanation is temporarily unavailable.',
+    code: ErrorCode.SERVICE_UNAVAILABLE,
+    details: {
+      reason,
+      fallback: false,
+      message:
+        'No generated clinical explanation was returned because the system could not produce a grounded, validated response.',
     },
-    ragMetadata: {
-      sourceChunkIds: [],
-      retrievalQuality: 'fallback',
-      retrievalMessage: 'AI explanation is temporarily unavailable; showing a safe fallback explanation.',
-      isGrounded: false,
-      chunksUsed: 0,
-      avgSimilarity: 0,
-    },
-    cached: false,
-    fallback: true,
   };
 }
 
@@ -98,6 +103,8 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const apiKey = env.GEMINI_API_KEY!;
   const { questionId, questionText, selectedAnswer, correctAnswer, system, allOptions } = validated;
+  const logger = createEndpointLogger('/api/questions/explain-rag', context.auth.userId);
+  const gwCtx: GatewayContext = toGatewayContext(context);
 
   try {
     // 1. Check KV cache
@@ -107,7 +114,19 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          return { data: { ...parsed, cached: true } };
+          const cachedExplanation = ExplanationSchema.safeParse(parsed?.explanation);
+          if (parsed?.fallback === true || !cachedExplanation.success) {
+            logger.warn('Ignoring stale fallback explanation cache entry', { questionId });
+          } else {
+            return {
+              data: {
+                ...parsed,
+                explanation: cachedExplanation.data,
+                cached: true,
+                fallback: false,
+              },
+            };
+          }
         } catch {
           // Corrupted cache — fall through to generate
         }
@@ -124,6 +143,13 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       apiKey
     );
     const quality = assessRetrievalQuality(ragContext);
+    if (ragContext.chunks.length === 0 || quality.grade === 'none') {
+      logger.warn('Explanation unavailable because RAG returned no clinical context', {
+        questionId,
+        system,
+      });
+      return unavailable('No relevant clinical reference context was available.');
+    }
     const formattedContext = formatContextForPrompt(ragContext, 2500);
 
     // 3. Build explanation prompt
@@ -136,7 +162,8 @@ CRITICAL RULES:
 - Explain WHY the correct answer fits THIS patient's presentation.
 - Include a concise "clinical pearl" that helps prevent this mistake in the future.
 - If the wrong answer would be correct in a different scenario, mention that scenario.
-- Use clear, direct language appropriate for a PA-S2 student.`;
+- Use clear, direct language appropriate for a PA-S2 student.
+- If the provided reference context is insufficient, do not invent facts. Return conservative distinctions only from the context.`;
 
     const optionContext = allOptions
       ? `\nAll answer choices: ${allOptions.join(', ')}`
@@ -162,51 +189,43 @@ Generate a structured explanation in JSON format:
 
 Return ONLY valid JSON. No markdown fences.`;
 
-    // 4. Call Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.4, // Lower temp for factual explanations
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
-
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('[explain-rag] Gemini error:', errText.slice(0, 300));
-      return {
-        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
-      };
-    }
-
-    const geminiData = (await geminiRes.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!rawText) {
-      return {
-        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
-      };
-    }
-
-    // 5. Parse response
-    let explanation: Record<string, unknown>;
+    // 4. Generate and validate through the AI Gateway. The structured path
+    // performs deterministic JSON parsing, Zod validation, telemetry, and one
+    // schema-repair pass before failing closed.
+    let explanation: Explanation;
     try {
-      const cleaned = rawText.replace(/```json|```/g, '').trim();
-      explanation = JSON.parse(cleaned);
-    } catch {
-      console.error('[explain-rag] JSON parse error:', rawText.slice(0, 200));
-      return {
-        data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
-      };
+      const result = await gateway.callStructured(gwCtx, {
+        mode: 'structured',
+        task: 'tutoring',
+        tier: 'balanced',
+        endpoint: '/api/questions/explain-rag',
+        systemPrompt: systemInstruction,
+        userPrompt: prompt,
+        temperature: 0.4,
+        maxOutputTokens: 2048,
+        schema: ExplanationSchema,
+        schemaDescription:
+          'Wrong-answer clinical teaching explanation with whyCorrect, whyWrong, optional whenWrongWouldBeRight, clinicalPearl, keyDistinction, and relatedConcepts.',
+      });
+      explanation = result.data;
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        logger.warn('Explanation gateway failure', {
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+          traceId: err.traceId,
+        });
+        if (err.code === 'RATE_LIMITED') {
+          return {
+            status: 429,
+            error: 'AI explanation rate limit exceeded.',
+            code: ErrorCode.RATE_LIMITED,
+          };
+        }
+        return unavailable(`Gateway failure: ${err.code}`, 502);
+      }
+      throw err;
     }
 
     // 6. Build response with RAG metadata
@@ -226,6 +245,7 @@ Return ONLY valid JSON. No markdown fences.`;
             : 0,
       },
       cached: false,
+      fallback: false,
     };
 
     // 7. Cache in KV (fire and forget)
@@ -235,16 +255,17 @@ Return ONLY valid JSON. No markdown fences.`;
           expirationTtl: CACHE_TTL_SECONDS,
         });
       } catch (cacheErr) {
-        console.warn('[explain-rag] KV cache write failed:', cacheErr);
+        logger.warn('KV cache write failed', {
+          questionId,
+          message: cacheErr instanceof Error ? cacheErr.message : String(cacheErr),
+        });
       }
     }
 
     return { data: result };
   } catch (error) {
-    console.error('[explain-rag]', error);
-    return {
-      data: buildFallbackExplanation({ selectedAnswer, correctAnswer, system }),
-    };
+    logger.error('Explanation generation failed', error, { questionId });
+    return unavailable('Unexpected explanation generation failure.');
   } finally {
     await safePrismaDisconnect(prisma);
   }

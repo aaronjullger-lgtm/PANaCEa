@@ -1,7 +1,7 @@
 /**
  * MetacognitiveMirror — Container for all metacognitive insight widgets
  *
- * Drop this into the "Data" tab of DashboardPage to give students
+ * Used by analytics/progress surfaces to give students
  * a behavioral self-awareness section. Uses useMetacognitiveStats()
  * to fetch data in one API call, then fans out to individual widgets.
  *

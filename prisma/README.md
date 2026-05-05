@@ -14,6 +14,12 @@ The schema is organized by domain:
 
 See [prisma/schema.prisma](schema.prisma) for the full schema. Migrations live in [prisma/migrations](migrations/); see [migrations/README.md](migrations/README.md) for how to run them.
 
+## Normalized study schema
+
+The additive normalized study layer introduces `Course`, `StudyTopic`, `CourseStudyTopic`, `StudyTopicCondition`, `QuestionStudyTopic`, `QuestionAnswerChoice`, `QuestionExplanation`, `QuestionExplanationCitation`, `StudyPlan`, `StudyPlanItem`, and `StudySessionQuestion`. These tables give study modes, question generation, explanations, daily plans, and scheduler analytics relational joins while preserving legacy JSON/string fields during migration.
+
+See [docs/database/normalized-study-schema.md](../docs/database/normalized-study-schema.md) and migration `20260502000000_normalized_study_schema`.
+
 ## UserProgress → ReviewLog migration
 
 **New review data must be written to `ReviewLog`.** `UserProgress.reviewHistory` (Json[]) is legacy and is a performance anti-pattern for large datasets; `ReviewLog` provides a queryable time-series table and ~100x faster reads (e.g. 500ms → 5ms for FSRS optimizer).

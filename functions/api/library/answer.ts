@@ -2,7 +2,7 @@
  * POST /api/library/answer
  *
  * "Answer, don't just list": takes user question, runs semantic search for top K
- * reference cards, feeds excerpts to Gemini 1.5 Flash, returns a 1-sentence answer
+ * reference cards, feeds excerpts to the shared AI gateway, returns a 1-sentence answer
  * (SGE style) plus the ranked results.
  */
 
@@ -11,15 +11,14 @@ import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
+import { createEndpointLogger } from '../_shared/secureLogger';
 import type { CloudflareEnv } from '../_shared/types';
+import { gateway, GatewayError, toGatewayContext } from '../../../lib/ai/aiGateway';
+import { getEmbedding } from '../../../lib/gemini';
 
-const EMBED_MODEL = 'text-embedding-005';
-const EMBED_DIMS = 768;
-const ANSWER_MODEL = 'gemini-2.0-flash';
 const TOP_K = 3;
 const HNSW_EF_SEARCH = 100;
 const MIN_SIMILARITY = 0.25;
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 
 const BodySchema = z.object({
   query: z.string().min(1).max(2000),
@@ -27,23 +26,6 @@ const BodySchema = z.object({
 });
 
 type Env = CloudflareEnv & { GEMINI_API_KEY?: string };
-
-async function getQueryEmbedding(query: string, apiKey: string): Promise<number[]> {
-  const url = `${GEMINI_BASE}/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text: query }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) throw new Error(`Embed API error ${res.status}`);
-  const data = (await res.json()) as { embedding?: { values?: number[] } };
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) throw new Error('Invalid embedding');
-  return values;
-}
 
 function buildExcerpt(item: {
   condition: string | null;
@@ -83,6 +65,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   const { query, topK } = validated;
   const apiKey = env.GEMINI_API_KEY;
+  const logger = createEndpointLogger('/api/library/answer', auth.userId);
   if (!apiKey) {
     return { status: 500, error: 'GEMINI_API_KEY not configured' };
   }
@@ -101,7 +84,7 @@ export const onRequestPost = aiEndpoint(BodySchema, async (context) => {
       // Cache lookup failure should not block generation
     }
 
-    const embedding = await getQueryEmbedding(query, apiKey);
+    const embedding = await getEmbedding(query, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
 
     await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = ${HNSW_EF_SEARCH}`);
@@ -170,33 +153,51 @@ User question: ${query}
 
 One-sentence answer:`;
 
-    const genUrl = `${GEMINI_BASE}/v1beta/models/${ANSWER_MODEL}:generateContent?key=${apiKey}`;
-    const genRes = await fetch(genUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 150,
-        },
-      }),
-    });
+    let answer: string | null = null;
+    try {
+      const answerResult = await gateway.callText(toGatewayContext(context), {
+        mode: 'text',
+        task: 'enrichment',
+        tier: 'fast',
+        endpoint: '/api/library/answer',
+        userPrompt: prompt,
+        temperature: 0.2,
+        maxOutputTokens: 150,
+      });
 
-    if (!genRes.ok) {
-      const err = await genRes.text();
-      console.error('[library/answer] Gemini error', genRes.status, err.slice(0, 300));
+      if (answerResult.blocked) {
+        logger.warn('Library answer generation blocked by safety filter', {
+          reason: answerResult.blockReason ?? 'unknown',
+        });
+        return {
+          data: {
+            answer: null,
+            results,
+            message: 'Could not generate answer.',
+          },
+          headers: { 'Cache-Control': 'private, max-age=60' },
+        };
+      }
+
+      answer = answerResult.text.trim() || null;
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        logger.warn('Library answer gateway failure', {
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+          traceId: err.traceId,
+        });
+      } else {
+        logger.warn('Library answer generation failed', {
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
       return {
         data: { answer: null, results, message: 'Could not generate answer.' },
         headers: { 'Cache-Control': 'private, max-age=60' },
       };
     }
-
-    const genData = (await genRes.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text;
-    const answer = typeof rawText === 'string' ? rawText.trim() : null;
 
     // Cache the answer for future similar queries
     const cachePayload = { answer, results, count: results.length };
@@ -214,10 +215,10 @@ One-sentence answer:`;
       headers: { 'Cache-Control': 'private, max-age=60' },
     };
   } catch (error) {
-    console.error('[library/answer]', error);
+    logger.error('Library answer failed', error);
     return {
       status: 500,
-      error: error instanceof Error ? error.message : 'Answer generation failed',
+      error: 'Answer generation failed',
     };
   } finally {
     await safePrismaDisconnect(prisma);

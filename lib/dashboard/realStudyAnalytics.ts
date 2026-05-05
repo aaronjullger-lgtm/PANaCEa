@@ -95,6 +95,10 @@ export interface DashboardSessionRecord {
 export interface ReviewForecastPayload {
   overdue: number;
   today: number;
+  dueConditionIds?: string[];
+  overdueConditionIds?: string[];
+  dueReviewCardIds?: string[];
+  overdueReviewCardIds?: string[];
   forecast: Array<{
     date: string;
     count: number;
@@ -130,6 +134,70 @@ export interface ConfusionPairsPayload {
     selectedConditionName?: string;
   }>;
   total: number;
+}
+
+export interface StudyHistoryPayload {
+  reviewCount: number;
+  correctCount: number;
+  retentionRate: number;
+  averageRating: number | null;
+  averageResponseTimeMs: number | null;
+  averageStability: number | null;
+  averageDifficulty: number | null;
+  averageRetrievability: number | null;
+  optimizer: {
+    eligible: boolean;
+    reviewCount: number;
+    minimumRequired: number;
+    reviewsNeeded: number;
+  };
+  trends: Array<{
+    date: string;
+    reviews: number;
+    correct: number;
+    retentionRate: number;
+    averageRating: number | null;
+  }>;
+  bySystem: Array<{
+    system: string;
+    reviews: number;
+    correct: number;
+    retentionRate: number;
+    averageStability: number | null;
+    averageDifficulty: number | null;
+  }>;
+  recentReviews: Array<{
+    id: string;
+    questionId: string | null;
+    conditionId: string | null;
+    medicalContentId: string | null;
+    reviewedAt: string;
+    rating: number;
+    gradeContinuous: number | null;
+    wasCorrect: boolean;
+    responseTimeMs: number | null;
+    stability: number;
+    difficulty: number;
+    retrievability: number | null;
+    sessionType: string;
+    reviewType: string;
+    system: string | null;
+    telemetryQuality: string | null;
+  }>;
+  upcomingReviews: Array<{
+    id: string;
+    source: 'card' | 'user_progress';
+    questionId: string | null;
+    conditionId: string | null;
+    dueAt: string;
+    overdueDays: number;
+    stability: number | null;
+    difficulty: number | null;
+    state: number | null;
+    retrievability: number | null;
+    progressContext: string | null;
+    system: string | null;
+  }>;
 }
 
 export interface DashboardOverview {
@@ -178,6 +246,43 @@ export interface RecentSessionSummary {
   completionLabel: string;
 }
 
+export interface DashboardUpcomingReviewSummary {
+  id: string;
+  dueAt: string;
+  source: 'card' | 'user_progress';
+  sourceLabel: string;
+  targetLabel: string;
+  questionId: string | null;
+  conditionId: string | null;
+  system: string | null;
+  progressContext: string | null;
+  overdueDays: number;
+  stability: number | null;
+  difficulty: number | null;
+  retrievabilityPercent: number | null;
+}
+
+export interface DashboardFsrsSummary {
+  reviewCount: number;
+  correctCount: number;
+  retentionPercent: number | null;
+  averageRating: number | null;
+  averageResponseTimeMs: number | null;
+  averageStability: number | null;
+  averageDifficulty: number | null;
+  averageRetrievabilityPercent: number | null;
+  optimizer: {
+    eligible: boolean;
+    reviewCount: number;
+    minimumRequired: number;
+    reviewsNeeded: number;
+    progressPercent: number;
+  } | null;
+  upcomingReviews: DashboardUpcomingReviewSummary[];
+  overdueCount: number;
+  dueTodayCount: number;
+}
+
 export interface DashboardAnalyticsModel {
   overview: DashboardOverview;
   trend: DailyTrendPoint[];
@@ -185,6 +290,8 @@ export interface DashboardAnalyticsModel {
   weakSystems: WeakSystemSummary[];
   recentSessions: RecentSessionSummary[];
   reviewForecast: ReviewForecastPayload | null;
+  studyHistory: StudyHistoryPayload | null;
+  fsrs: DashboardFsrsSummary;
   blueprintGaps: BlueprintGapsPayload | null;
   weakConditions: DashboardStatsPayload['stats']['weakConditions'];
   conditionStats: DashboardStatsPayload['stats']['byConditions'];
@@ -244,6 +351,25 @@ function clampPercent(value: number | null | undefined): number | null {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+function clampUnitPercent(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  return clampPercent(value * 100);
+}
+
+function formatReviewTarget(review: StudyHistoryPayload['upcomingReviews'][number]): string {
+  if (review.system) return review.system;
+  if (review.progressContext) {
+    return review.progressContext
+      .split(/[_\s-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+  }
+  if (review.conditionId) return review.conditionId;
+  if (review.questionId) return review.questionId;
+  return 'Scheduled review';
+}
+
 function buildTrend(sessions: DashboardSessionRecord[], days = 14): DailyTrendPoint[] {
   const keys = buildDateRange(days);
   const byDay = new Map<string, DailyTrendPoint>();
@@ -274,8 +400,7 @@ function buildTrend(sessions: DashboardSessionRecord[], days = 14): DailyTrendPo
     const bucket = byDay.get(key)!;
     return {
       ...bucket,
-      accuracy:
-        bucket.attempts > 0 ? Math.round((bucket.correct / bucket.attempts) * 100) : 0,
+      accuracy: bucket.attempts > 0 ? Math.round((bucket.correct / bucket.attempts) * 100) : 0,
     };
   });
 }
@@ -296,26 +421,26 @@ function buildHeatmap(sessions: DashboardSessionRecord[]): StudyHeatmapDatum[] {
 function buildOverview(
   stats: DashboardStatsPayload | null,
   sessions: DashboardSessionRecord[],
-  reviewForecast: ReviewForecastPayload | null,
+  reviewForecast: ReviewForecastPayload | null
 ): DashboardOverview {
   const last7DateKeys = new Set(buildDateRange(7));
   const recentSessions = sessions.filter((session) =>
-    last7DateKeys.has(toLocalDateKey(session.startedAt)),
+    last7DateKeys.has(toLocalDateKey(session.startedAt))
   );
   const studyMinutesLast7Days = Math.round(
-    recentSessions.reduce((sum, session) => sum + safeNumber(session.totalTimeMs), 0) / 60000,
+    recentSessions.reduce((sum, session) => sum + safeNumber(session.totalTimeMs), 0) / 60000
   );
   const avgSessionQuestions =
     sessions.length > 0
       ? Math.round(
           sessions.reduce((sum, session) => sum + safeNumber(session.totalQuestions), 0) /
-            sessions.length,
+            sessions.length
         )
       : null;
 
   const accuracyLast7Days = clampPercent(stats?.stats.recentPerformance.last7Days.accuracy ?? null);
   const previousAccuracy = clampPercent(
-    stats?.stats.recentPerformance.previous7Days.accuracy ?? null,
+    stats?.stats.recentPerformance.previous7Days.accuracy ?? null
   );
 
   return {
@@ -339,12 +464,12 @@ function buildOverview(
 
 function buildWeakSystems(
   stats: DashboardStatsPayload | null,
-  blueprintGaps: BlueprintGapsPayload | null,
+  blueprintGaps: BlueprintGapsPayload | null
 ): WeakSystemSummary[] {
   if (!stats) return [];
 
   const gapMap = new Map(
-    (blueprintGaps?.systems ?? []).map((system) => [system.system, system.gapPercent]),
+    (blueprintGaps?.systems ?? []).map((system) => [system.system, system.gapPercent])
   );
 
   const systems = Object.entries(stats.stats.bySystems)
@@ -356,7 +481,9 @@ function buildWeakSystems(
       const accuracyPenalty = attempts >= 5 ? 100 - accuracy : 0;
       const trendPenalty = details.trend === 'declining' ? 8 : 0;
       const confidenceWeight = Math.min(1, attempts / 20);
-      const score = Math.round((accuracyPenalty * confidenceWeight + underStudyPenalty + trendPenalty) * 10) / 10;
+      const score =
+        Math.round((accuracyPenalty * confidenceWeight + underStudyPenalty + trendPenalty) * 10) /
+        10;
 
       let label: WeakSystemSummary['label'] = 'watch-list';
       if (attempts >= 5 && accuracy < 70) label = 'needs-accuracy-work';
@@ -377,7 +504,7 @@ function buildWeakSystems(
       (system) =>
         system.label !== 'watch-list' ||
         system.trend === 'declining' ||
-        (system.gapPercent != null && system.gapPercent < -6),
+        (system.gapPercent != null && system.gapPercent < -6)
     )
     .sort((left, right) => right.score - left.score);
 
@@ -392,7 +519,9 @@ function buildRecentSessions(sessions: DashboardSessionRecord[]): RecentSessionS
       session.accuracy != null
         ? clampPercent(session.accuracy)
         : session.totalQuestions > 0
-          ? Math.round((safeNumber(session.correctAnswers) / safeNumber(session.totalQuestions)) * 100)
+          ? Math.round(
+              (safeNumber(session.correctAnswers) / safeNumber(session.totalQuestions)) * 100
+            )
           : null;
 
     return {
@@ -416,10 +545,73 @@ function buildRecentSessions(sessions: DashboardSessionRecord[]): RecentSessionS
   });
 }
 
+function buildFsrsSummary(studyHistory: StudyHistoryPayload | null): DashboardFsrsSummary {
+  if (!studyHistory) {
+    return {
+      reviewCount: 0,
+      correctCount: 0,
+      retentionPercent: null,
+      averageRating: null,
+      averageResponseTimeMs: null,
+      averageStability: null,
+      averageDifficulty: null,
+      averageRetrievabilityPercent: null,
+      optimizer: null,
+      upcomingReviews: [],
+      overdueCount: 0,
+      dueTodayCount: 0,
+    };
+  }
+
+  const todayKey = toLocalDateKey(new Date());
+  const upcomingReviews = studyHistory.upcomingReviews.slice(0, 8).map((review) => ({
+    id: review.id,
+    dueAt: review.dueAt,
+    source: review.source,
+    sourceLabel: review.source === 'card' ? 'Question card' : 'Topic review',
+    targetLabel: formatReviewTarget(review),
+    questionId: review.questionId,
+    conditionId: review.conditionId,
+    system: review.system,
+    progressContext: review.progressContext,
+    overdueDays: safeNumber(review.overdueDays),
+    stability: review.stability,
+    difficulty: review.difficulty,
+    retrievabilityPercent: clampUnitPercent(review.retrievability),
+  }));
+  const optimizerMinimum = Math.max(1, studyHistory.optimizer.minimumRequired);
+
+  return {
+    reviewCount: safeNumber(studyHistory.reviewCount),
+    correctCount: safeNumber(studyHistory.correctCount),
+    retentionPercent:
+      studyHistory.reviewCount > 0 ? clampUnitPercent(studyHistory.retentionRate) : null,
+    averageRating: studyHistory.averageRating,
+    averageResponseTimeMs: studyHistory.averageResponseTimeMs,
+    averageStability: studyHistory.averageStability,
+    averageDifficulty: studyHistory.averageDifficulty,
+    averageRetrievabilityPercent: clampUnitPercent(studyHistory.averageRetrievability),
+    optimizer: {
+      eligible: studyHistory.optimizer.eligible,
+      reviewCount: safeNumber(studyHistory.optimizer.reviewCount),
+      minimumRequired: safeNumber(studyHistory.optimizer.minimumRequired),
+      reviewsNeeded: safeNumber(studyHistory.optimizer.reviewsNeeded),
+      progressPercent:
+        clampPercent((safeNumber(studyHistory.optimizer.reviewCount) / optimizerMinimum) * 100) ??
+        0,
+    },
+    upcomingReviews,
+    overdueCount: upcomingReviews.filter((review) => review.overdueDays > 0).length,
+    dueTodayCount: upcomingReviews.filter((review) => toLocalDateKey(review.dueAt) === todayKey)
+      .length,
+  };
+}
+
 export function buildDashboardAnalyticsModel(input: {
   stats: DashboardStatsPayload | null;
   sessions: SessionAnalyticsPayload | null;
   reviewForecast: ReviewForecastPayload | null;
+  studyHistory?: StudyHistoryPayload | null;
   blueprintGaps: BlueprintGapsPayload | null;
   confusionPairs: ConfusionPairsPayload | null;
   warnings?: string[];
@@ -431,15 +623,17 @@ export function buildDashboardAnalyticsModel(input: {
   const overview = buildOverview(stats, sessionList, input.reviewForecast);
   const weakSystems = buildWeakSystems(stats, input.blueprintGaps);
   const recentSessions = buildRecentSessions(sessionList);
+  const fsrs = buildFsrsSummary(input.studyHistory ?? null);
   const confusionPairs = (input.confusionPairs?.confusionPairs ?? []).filter(
     (pair): pair is DashboardAnalyticsModel['confusionPairs'][number] =>
-      typeof pair.correctConditionId === 'string' &&
-      typeof pair.selectedConditionId === 'string',
+      typeof pair.correctConditionId === 'string' && typeof pair.selectedConditionId === 'string'
   );
 
   const hasMeaningfulData =
     overview.totalAttempts > 0 ||
     overview.totalActiveReviews > 0 ||
+    fsrs.reviewCount > 0 ||
+    fsrs.upcomingReviews.length > 0 ||
     recentSessions.length > 0 ||
     heatmap.length > 0;
 
@@ -450,6 +644,8 @@ export function buildDashboardAnalyticsModel(input: {
     weakSystems,
     recentSessions,
     reviewForecast: input.reviewForecast,
+    studyHistory: input.studyHistory ?? null,
+    fsrs,
     blueprintGaps: input.blueprintGaps,
     weakConditions: stats?.stats.weakConditions ?? [],
     conditionStats: stats?.stats.byConditions ?? [],

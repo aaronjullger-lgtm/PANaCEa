@@ -277,7 +277,7 @@ import { SemanticButton } from '@/components/ui/SemanticButton';
 | CREATE  | `docs/plans/CLINICAL_PRECISION_SPRINT.md`                   | This document                                  |
 | UPDATED | `components/dashboard/Rolling360/ExamReadinessCard.tsx`     | ✅ Button migration complete                   |
 | UPDATED | `components/dashboard/Rolling360/CalibrationProtocolUI.tsx` | ✅ Button migration complete                   |
-| UPDATED | `components/dashboard/DashboardPage.tsx`                    | ✅ Quick Stats colors converted to slate       |
+| UPDATED | legacy dashboard page (removed)                            | ✅ Quick Stats colors converted to slate       |
 | UPDATED | `tailwind.config.js`                                        | ✅ Design tokens added (surface, action, data) |
 | UPDATED | `components/analytics/AnalyticsDashboard.tsx`               | ✅ Empty state CTA added                       |
 

@@ -22,6 +22,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useDrillFSRS, type FSRSNextReview } from '@/hooks/useDrillFSRS';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { logger } from '@/lib/logger';
 
 const LOG_SCOPE = 'TeachBackDrill';
@@ -121,8 +122,8 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
       },
     });
     if (!res.ok) throw new Error(`Failed to fetch topic: ${res.status}`);
-    const json = await res.json() as { data: { topic: TeachBackTopic } };
-    return json.data.topic;
+    const json = unwrapApiEnvelope<{ topic: TeachBackTopic }>(await res.json());
+    return json.topic;
   }, [getToken]);
 
   const startSession = useCallback(async () => {
@@ -173,9 +174,11 @@ export function useTeachBackDrill(): UseTeachBackDrillReturn {
         }),
       });
 
-      if (!res.ok) throw new Error(`Grading failed: ${res.status}`);
-      const json = await res.json() as { data: TeachBackGradeResult };
-      const result = json.data;
+      if (!res.ok) {
+        const errorPayload = await res.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errorPayload, `Grading failed: ${res.status}`));
+      }
+      const result = unwrapApiEnvelope<TeachBackGradeResult>(await res.json());
       setGradeResult(result);
 
       // Submit to FSRS pipeline

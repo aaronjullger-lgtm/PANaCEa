@@ -6,7 +6,7 @@ Date: 2026-04-26
 
 - The signed-in `/study` route resolves to the `command_center` view in `config/AppRoutes.tsx`.
 - The active signed-in home surface is `components/navigation/command-center/CommandCenterWorkspace.tsx`.
-- `components/dashboard/DashboardPage.tsx` is legacy/unused for the current `/study` entrypoint and should not be the redesign target for this sprint.
+- The legacy dashboard entrypoint was retired and deleted. The current `/study` entrypoint is the adaptive command-center path through `CommandCenterWorkspace`.
 
 ## Current Risks
 

@@ -6,6 +6,8 @@ import {
 } from '../config/routeRegistry';
 import { TRAINING_MODES, MODES_WITH_DEDICATED_ROUTES } from '../config/training-modes';
 import { ROUTES } from '../config/routes';
+import { filterPrivateBetaModes } from '../lib/modes/privateBetaVisibility';
+import { getModeReadiness } from '../lib/modes/modeReadiness';
 
 // ---------------------------------------------------------------------------
 // 1. isKnownPath — strict matching (no false positives)
@@ -110,6 +112,14 @@ describe('Training mode routes', () => {
         mode.route.startsWith('/'),
         `mode ${mode.id} route should start with /`
       ).toBe(true);
+    }
+  });
+
+  it('private-beta visible mode CTAs resolve only to known, real-mounted routes', () => {
+    for (const mode of filterPrivateBetaModes(TRAINING_MODES)) {
+      const readiness = getModeReadiness(mode.id);
+      expect(isKnownPath(mode.route), `mode ${mode.id} route ${mode.route} should be known`).toBe(true);
+      expect(readiness.mountedComponent, `mode ${mode.id} should not point at productionDeferred`).toBe('real');
     }
   });
 

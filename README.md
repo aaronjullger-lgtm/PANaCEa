@@ -14,21 +14,21 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 </div>
 
-> **🚨 DEPLOYMENT FIX REQUIRED:** Cloudflare deployments failing due to API token permissions. **Solution:** Update `CLOUDFLARE_API_TOKEN` secret with "Account → Cloudflare Pages: Edit" permission. See [docs/archive/CLOUDFLARE_API_TOKEN_FIX.md](./docs/archive/CLOUDFLARE_API_TOKEN_FIX.md) for step-by-step instructions. Local development is unaffected.
+> **Deployment note:** Cloudflare deployment readiness is tracked in the current production scorecard and final readiness reports. Local development is unaffected.
 
 ---
 
 ## 🎯 Overview
 
-PANaCEa is a comprehensive medical education platform designed specifically for PA students preparing for their PANCE/PANRE board exams. It combines cutting-edge AI with proven spaced repetition algorithms (FSRS v5) to create a personalized learning experience.
+PANaCEa is a comprehensive medical education platform designed specifically for PA students preparing for their PANCE/PANRE board exams. It combines AI-assisted learning workflows with FSRS v6-compatible spaced repetition to create a personalized learning experience.
 
-**📚 For comprehensive documentation, architecture details, and developer guides, see [docs/archive/MASTER_DOCUMENTATION.md](./docs/archive/MASTER_DOCUMENTATION.md)**
+**📚 For current production status and implementation priorities, see [UPDATED_PRODUCTION_READINESS_SCORECARD.md](./UPDATED_PRODUCTION_READINESS_SCORECARD.md) and [NEXT_IMPLEMENTATION_PLAN.md](./NEXT_IMPLEMENTATION_PLAN.md).**
 **🤖 For the Intelligence Layer (Gemini Live, Clinical Eye, Knowledge Cache, Visualizer, Podcast), see [docs/INTELLIGENCE_LAYER.md](./docs/INTELLIGENCE_LAYER.md).**
 
 ### ✨ Key Features
 
 - **🧠 AI-Generated Questions**: Clinical scenarios powered by Google Gemini API
-- **📊 Adaptive Learning**: FSRS v5 spaced repetition with user-specific tuning
+- **📊 Adaptive Learning**: FSRS v6-compatible spaced repetition with user-specific tuning
 - **🎮 Gamified Training**: Multiple drill modes including Photo Drill, Rapid Recall, DDx Compare
 - **📈 Analytics Dashboard**: Track performance across all PANCE organ systems
 - **🏥 Virtual Patient Encounters**: Interactive clinical case simulations
@@ -191,7 +191,7 @@ PANaCEa/
 ├── lib/
 │   ├── services/      # Backend services (CMS, SRS, Auto-author)
 │   ├── middleware/    # Express middleware (auth, validation)
-│   └── fsrs.ts        # FSRS v5 spaced repetition algorithm
+│   └── fsrs.ts        # FSRS-compatible spaced repetition algorithm
 ├── server.ts          # Express backend server
 ├── App.tsx            # Main React application
 ├── conditionRegistry.ts # Medical condition definitions (2195 entries)

@@ -34,10 +34,65 @@ export interface ConditionContent {
 
 export interface ConditionData {
   id: string;
+  conditionId?: string | null;
   name: string;
   system: string;
   subcategory?: string | null;
   content: ConditionContent;
+}
+
+type MedicalContentConditionRow = {
+  id: string;
+  conditionId?: string | null;
+  condition: string;
+  system: string;
+  subcategory?: string | null;
+  content?: unknown;
+};
+
+const MEDICAL_CONTENT_CONDITION_SELECT = {
+  id: true,
+  conditionId: true,
+  condition: true,
+  system: true,
+  subcategory: true,
+  content: true,
+} as const;
+
+const PRODUCTION_MEDICAL_CONTENT_STATUS = ['published', 'approved'];
+
+function productionMedicalContentWhere(extra: Record<string, unknown> = {}) {
+  return {
+    status: { in: PRODUCTION_MEDICAL_CONTENT_STATUS },
+    ...extra,
+  };
+}
+
+function parseConditionContent(content: unknown): ConditionContent {
+  if (typeof content === 'string') {
+    try {
+      return JSON.parse(content) as ConditionContent;
+    } catch {
+      return {};
+    }
+  }
+
+  if (content && typeof content === 'object') {
+    return content as ConditionContent;
+  }
+
+  return {};
+}
+
+function toConditionData(condition: MedicalContentConditionRow): ConditionData {
+  return {
+    id: condition.id,
+    conditionId: condition.conditionId,
+    name: condition.condition,
+    system: condition.system,
+    subcategory: condition.subcategory,
+    content: parseConditionContent(condition.content),
+  };
 }
 
 /**
@@ -54,56 +109,38 @@ export async function loadConditionData(
   try {
     // First try exact match
     let condition = await prisma.medicalContent.findFirst({
-      where: {
-        name: {
+      where: productionMedicalContentWhere({
+        condition: {
           equals: queryText,
           mode: 'insensitive',
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        system: true,
-        subcategory: true,
-        content: true,
-      },
+      }),
+      select: MEDICAL_CONTENT_CONDITION_SELECT,
     });
 
     // If not found, try partial match
     if (!condition) {
       condition = await prisma.medicalContent.findFirst({
-        where: {
-          name: {
+        where: productionMedicalContentWhere({
+          condition: {
             contains: queryText,
             mode: 'insensitive',
           },
-        },
-        select: {
-          id: true,
-          name: true,
-          system: true,
-          subcategory: true,
-          content: true,
-        },
+        }),
+        select: MEDICAL_CONTENT_CONDITION_SELECT,
       });
     }
 
     // If still not found, search by buzzwords or clinical pearls
     if (!condition) {
       condition = await prisma.medicalContent.findFirst({
-        where: {
+        where: productionMedicalContentWhere({
           OR: [
             { buzzwords: { has: queryText.toLowerCase() } },
             { clinicalPearl: { contains: queryText, mode: 'insensitive' } },
           ],
-        },
-        select: {
-          id: true,
-          name: true,
-          system: true,
-          subcategory: true,
-          content: true,
-        },
+        }),
+        select: MEDICAL_CONTENT_CONDITION_SELECT,
       });
     }
 
@@ -111,17 +148,7 @@ export async function loadConditionData(
       return null;
     }
 
-    // Parse content if it's a string (JSONB should auto-parse, but just in case)
-    const content =
-      typeof condition.content === 'string' ? JSON.parse(condition.content) : condition.content;
-
-    return {
-      id: condition.id,
-      name: condition.name,
-      system: condition.system,
-      subcategory: condition.subcategory,
-      content: content as ConditionContent,
-    };
+    return toConditionData(condition);
   } catch (error) {
     console.error('Failed to load condition data:', error);
     return null;
@@ -143,29 +170,19 @@ export async function loadConditionsBySystem(
 ): Promise<ConditionData[]> {
   try {
     const conditions = await prisma.medicalContent.findMany({
-      where: {
+      where: productionMedicalContentWhere({
         system: {
           equals: system,
           mode: 'insensitive',
         },
-      },
+      }),
       select: {
-        id: true,
-        name: true,
-        system: true,
-        subcategory: true,
-        content: true,
+        ...MEDICAL_CONTENT_CONDITION_SELECT,
       },
       take: limit,
     });
 
-    return conditions.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      system: c.system,
-      subcategory: c.subcategory,
-      content: typeof c.content === 'string' ? JSON.parse(c.content) : c.content,
-    }));
+    return conditions.map(toConditionData);
   } catch (error) {
     console.error('Failed to load conditions by system:', error);
     return [];
@@ -186,12 +203,11 @@ export async function loadRandomCondition(
   try {
     // Get total count
     const totalCount = await prisma.medicalContent.count({
-      where:
+      where: productionMedicalContentWhere(
         excludeIds.length > 0
-          ? {
-              id: { notIn: excludeIds },
-            }
-          : undefined,
+          ? { id: { notIn: excludeIds } }
+          : {}
+      ),
     });
 
     if (totalCount === 0) {
@@ -202,19 +218,14 @@ export async function loadRandomCondition(
     const randomOffset = Math.floor(Math.random() * totalCount);
 
     const condition = await prisma.medicalContent.findFirst({
-      where:
+      where: productionMedicalContentWhere(
         excludeIds.length > 0
-          ? {
-              id: { notIn: excludeIds },
-            }
-          : undefined,
+          ? { id: { notIn: excludeIds } }
+          : {}
+      ),
       skip: randomOffset,
       select: {
-        id: true,
-        name: true,
-        system: true,
-        subcategory: true,
-        content: true,
+        ...MEDICAL_CONTENT_CONDITION_SELECT,
       },
     });
 
@@ -222,14 +233,7 @@ export async function loadRandomCondition(
       return null;
     }
 
-    return {
-      id: condition.id,
-      name: condition.name,
-      system: condition.system,
-      subcategory: condition.subcategory,
-      content:
-        typeof condition.content === 'string' ? JSON.parse(condition.content) : condition.content,
-    };
+    return toConditionData(condition);
   } catch (error) {
     console.error('Failed to load random condition:', error);
     return null;

@@ -10,6 +10,7 @@ import {
   type DashboardStatsPayload,
   type ReviewForecastPayload,
   type SessionAnalyticsPayload,
+  type StudyHistoryPayload,
 } from '@/lib/dashboard/realStudyAnalytics';
 
 function toWarning(label: string, reason: unknown): string {
@@ -40,24 +41,37 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
     enabled: !!isSignedIn,
     staleTime: 60_000,
     gcTime: 5 * 60_000,
-    refetchOnWindowFocus: false,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const api = createApiClient(getToken);
       const warnings: string[] = [];
 
-      const [statsResult, sessionsResult, reviewResult, blueprintResult, confusionResult] =
-        await Promise.allSettled([
-          api.get<DashboardStatsPayload>('/api/user/stats'),
-          api.get<SessionAnalyticsPayload>('/api/analytics/session', {
-            limit: '100',
-            includeProfile: 'false',
-          }),
-          api.get<ReviewForecastPayload>('/api/analytics/review-forecast'),
-          api.get<BlueprintGapsPayload>('/api/analytics/blueprint-gaps'),
-          api.get<ConfusionPairsPayload>('/api/analytics/confusion-pairs', {
-            limit: '5',
-          }),
-        ]);
+      const [
+        statsResult,
+        sessionsResult,
+        reviewResult,
+        studyHistoryResult,
+        blueprintResult,
+        confusionResult,
+      ] = await Promise.allSettled([
+        api.get<DashboardStatsPayload>('/api/user/stats'),
+        api.get<SessionAnalyticsPayload>('/api/analytics/session', {
+          limit: '100',
+          includeProfile: 'false',
+        }),
+        api.get<ReviewForecastPayload>('/api/analytics/review-forecast'),
+        api.get<StudyHistoryPayload>('/api/user/study-history', {
+          range: '30d',
+          limit: '500',
+          horizonDays: '14',
+        }),
+        api.get<BlueprintGapsPayload>('/api/analytics/blueprint-gaps'),
+        api.get<ConfusionPairsPayload>('/api/analytics/confusion-pairs', {
+          limit: '5',
+        }),
+      ]);
 
       if (statsResult.status === 'rejected') {
         warnings.push(toWarning('Core stats', statsResult.reason));
@@ -67,6 +81,9 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
       }
       if (reviewResult.status === 'rejected') {
         warnings.push(toWarning('Review forecast', reviewResult.reason));
+      }
+      if (studyHistoryResult.status === 'rejected') {
+        warnings.push(toWarning('Study history', studyHistoryResult.reason));
       }
       if (blueprintResult.status === 'rejected') {
         warnings.push(toWarning('Blueprint gaps', blueprintResult.reason));
@@ -79,6 +96,7 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
         stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
         sessions: sessionsResult.status === 'fulfilled' ? sessionsResult.value : null,
         reviewForecast: reviewResult.status === 'fulfilled' ? reviewResult.value : null,
+        studyHistory: studyHistoryResult.status === 'fulfilled' ? studyHistoryResult.value : null,
         blueprintGaps: blueprintResult.status === 'fulfilled' ? blueprintResult.value : null,
         confusionPairs: confusionResult.status === 'fulfilled' ? confusionResult.value : null,
         warnings,

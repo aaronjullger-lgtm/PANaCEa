@@ -135,16 +135,17 @@
 3. If any mode is disabled, hover over it
 
 **Expected Results:**
-- ✅ Hover shows browser tooltip with description
-- ✅ Disabled modes show "Feature in development, available soon"
+- ✅ Only readiness-approved modes are visible
+- ✅ Deferred or placeholder modes are hidden, not shown as "Coming Soon"
+- ✅ Hover shows browser tooltip with description for visible modes
 - ✅ Tooltip appears within 1-2 seconds
 - ✅ Aria-label present for screen readers
 
-**Note:** All modes should now be enabled (no "Coming Soon" badges)
+**Note:** Mode discovery now fails closed. A mode is public only when the mode readiness gate marks its contract and mounted implementation as production-ready.
 
 ---
 
-### 7. DashboardPage Error Handling (POLISHED)
+### 7. Adaptive Dashboard Error Handling (POLISHED)
 
 **Test Steps:**
 1. Go to Dashboard

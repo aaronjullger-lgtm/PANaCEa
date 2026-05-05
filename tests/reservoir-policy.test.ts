@@ -75,8 +75,18 @@ describe('deriveScope', () => {
     expect(deriveScope('system', {})).toBe('adaptive');
   });
 
-  it('falls back to adaptive for unknown modes', () => {
+  it('returns subcategory-scoped string when system and subcategory are present', () => {
+    expect(deriveScope('subcategory', { system: 'CV', subcategory: 'valve disease' })).toBe(
+      'subcategory:CV:valve%20disease'
+    );
+  });
+
+  it('falls back to adaptive if subcategory mode has incomplete scope', () => {
     expect(deriveScope('subcategory', { system: 'CV' })).toBe('adaptive');
+  });
+
+  it('falls back to adaptive for unknown modes', () => {
+    expect(deriveScope('unknown', { system: 'CV' })).toBe('adaptive');
   });
 
   it('falls back to adaptive for review mode', () => {

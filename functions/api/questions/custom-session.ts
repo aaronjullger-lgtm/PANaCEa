@@ -10,6 +10,7 @@ import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { withProductionQuestionSafety } from '../../../lib/services/questionServingSafety';
 
 const CustomSessionSchema = z.object({
   body: z.object({
@@ -58,8 +59,9 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
       });
     }
 
-    // Build where for Question model (no status/approval field)
-    const whereClause = whereConditions.length > 0 ? { AND: whereConditions } : {};
+    const whereClause = withProductionQuestionSafety(
+      whereConditions.length > 0 ? { AND: whereConditions } : {}
+    );
     const poolQuestions = await prisma.question.findMany({
       where: whereClause,
       select: {

@@ -28,10 +28,13 @@ import { authenticatedEndpoint } from '../../_shared/middleware';
 import { ok, fail, ErrorCode } from '../../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
+import { createCanonicalQuestionMirrors } from '../../_shared/canonical-question-mirror';
 import { selectSessionQuestions } from '../../../../lib/services/conceptQuestionSelector';
 import { MIN_SESSION_SIZE, MAX_SESSION_SIZE } from '../../../../lib/constants/sessionDefaults';
 import {
   reserveFromReservoir,
+  releaseReservation,
+  failReservation,
   requestRefill,
   deriveScope,
 } from '../../../../lib/services/reservoir';
@@ -39,9 +42,14 @@ import { inferLearnerPhase } from '../../../../lib/nccpa-question-weighting';
 import { resolveCorrectAnswerIndex } from '../../../../lib/answerLetterMap';
 import {
   buildGeneratedStudySessionRecord,
+  buildStudySessionQuestionRecords,
   normalizeSessionGenerateResult,
 } from '../../../../lib/sessionGeneration';
 import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../../lib/services/questionServingSafety';
 
 // ─── Schema ────────────────────────────────────────────────────────────────
 // Shared schema — single source of truth for this endpoint's request contract.
@@ -94,39 +102,63 @@ export const onRequestPost = authenticatedEndpoint(
       // Infer learner phase from profile (didactic / clinical / pance_prep)
       const learnerPhase = inferLearnerPhase(user);
 
-      const scope = deriveScope(body.mode, { system: body.system, conditionId: body.conditionId });
+      const scope = deriveScope(body.mode, {
+        system: body.system,
+        subcategory: body.subcategory,
+        conditionId: body.conditionId,
+      });
       const sessionId = `ses_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       // ── Step 1: Try reservoir first ──
       let reservoirSource = false;
       let reservoirCount = 0;
+      let reservedQuestions: Awaited<ReturnType<typeof reserveFromReservoir>> = [];
+      let usableReservedQuestionIds: string[] = [];
+      let unusableReservedQuestionIds: string[] = [];
       let result: any;
 
       try {
         const reserved = await reserveFromReservoir(
           prisma, user.id, scope, body.size, sessionId
         );
+        reservedQuestions = reserved;
         reservoirCount = reserved.length;
 
-        if (reserved.length >= body.size) {
-          // Happy path: full session from reservoir
+        if (reserved.length > 0) {
           const questions = filterUsableQuestions(await hydrateReservoirQuestions(prisma, reserved));
-          reservoirSource = true;
+          usableReservedQuestionIds = questions.map((question: any) => question.sourceQuestionId ?? question.id);
 
-          result = {
-            sessionId,
-            questions,
-            metadata: {
-              dueReviewCount: questions.filter((q: any) => q.source === 'due_review').length,
-              newCardCount: questions.filter((q: any) => q.source !== 'due_review').length,
-              systemDistribution: countSystems(questions),
-              estimatedMinutes: Math.ceil((questions.length * 90) / 60),
+          if (reserved.length >= body.size && questions.length >= body.size) {
+            // Happy path: full session from reservoir
+            reservoirSource = true;
+
+            result = {
+              sessionId,
+              questions,
+              metadata: {
+                dueReviewCount: questions.filter((q: any) => q.source === 'due_review').length,
+                newCardCount: questions.filter((q: any) => q.source !== 'due_review').length,
+                systemDistribution: countSystems(questions),
+                estimatedMinutes: Math.ceil((questions.length * 90) / 60),
+                mode: body.mode,
+                blueprintStage: body.blueprintStage,
+                learnerPhase,
+                source: 'reservoir',
+              },
+            };
+          } else {
+            const usableIds = new Set(usableReservedQuestionIds);
+            unusableReservedQuestionIds = reserved
+              .map((item: any) => item.questionId)
+              .filter((questionId: string) => !usableIds.has(questionId));
+            logger.info('Reservoir reservation did not hydrate enough production-safe questions', {
+              reservedCount: reserved.length,
+              usableCount: questions.length,
+              unusableCount: unusableReservedQuestionIds.length,
+              requestedSize: body.size,
               mode: body.mode,
-              blueprintStage: body.blueprintStage,
-              learnerPhase,
-              source: 'reservoir',
-            },
-          };
+            });
+          }
         }
       } catch (reservoirErr: unknown) {
         // Reservoir failed — fall through to on-demand
@@ -137,6 +169,37 @@ export const onRequestPost = authenticatedEndpoint(
 
       // ── Step 2: Fall back to on-demand if reservoir didn't fully cover ──
       if (!result) {
+        if (reservedQuestions.length > 0) {
+          const unusableIds = new Set(unusableReservedQuestionIds);
+          const releasableQuestionIds = usableReservedQuestionIds.length > 0
+            ? usableReservedQuestionIds.filter((questionId) => !unusableIds.has(questionId))
+            : reservedQuestions
+                .map((item) => item.questionId)
+                .filter((questionId) => !unusableIds.has(questionId));
+
+          if (unusableReservedQuestionIds.length > 0) {
+            try {
+              await failReservation(prisma, sessionId, unusableReservedQuestionIds);
+            } catch (failErr: unknown) {
+              logger.info('Reservoir reservation failure marking failed', {
+                error: failErr instanceof Error ? failErr.message : String(failErr),
+                failedCount: unusableReservedQuestionIds.length,
+              });
+            }
+          }
+
+          try {
+            if (releasableQuestionIds.length > 0) {
+              await releaseReservation(prisma, sessionId, releasableQuestionIds);
+            }
+          } catch (releaseErr: unknown) {
+            logger.info('Partial reservoir reservation release failed', {
+              error: releaseErr instanceof Error ? releaseErr.message : String(releaseErr),
+              reservedCount: releasableQuestionIds.length,
+            });
+          }
+        }
+
         const onDemandResult = await selectSessionQuestions(prisma, {
           userId: user.id,
           mode: body.mode as any,
@@ -167,18 +230,31 @@ export const onRequestPost = authenticatedEndpoint(
               })
             : [];
         const questions = [...safeQuestions, ...fallbackQuestions].slice(0, body.size);
+        if (questions.length < body.size) {
+          logger.warn('Study session question pool shortage; refusing learner-facing dynamic generation', {
+            requestedSize: body.size,
+            availableSafeQuestions: questions.length,
+            mode: body.mode,
+            system: body.system,
+            conditionId: body.conditionId,
+          });
+        }
+        const dynamicQuestions: any[] = [];
+        const completedQuestions = [...questions, ...dynamicQuestions].slice(0, body.size);
 
         result = {
           ...onDemandResult,
-          questions,
+          questions: completedQuestions,
           metadata: {
             ...onDemandResult.metadata,
-            dueReviewCount: questions.filter((q: any) => q.source === 'due_review').length,
-            newCardCount: questions.filter((q: any) => q.source !== 'due_review').length,
-            systemDistribution: countSystems(questions),
-            estimatedMinutes: Math.ceil((questions.length * 90) / 60),
+            dueReviewCount: completedQuestions.filter((q: any) => q.source === 'due_review').length,
+            newCardCount: completedQuestions.filter((q: any) => q.source !== 'due_review').length,
+            systemDistribution: countSystems(completedQuestions),
+            estimatedMinutes: Math.ceil((completedQuestions.length * 90) / 60),
             learnerPhase,
-            source: fallbackQuestions.length > 0
+            source: dynamicQuestions.length > 0
+              ? 'on_demand'
+              : fallbackQuestions.length > 0
               ? 'pregenerated_fallback'
               : reservoirCount > 0
                 ? 'mixed'
@@ -196,6 +272,25 @@ export const onRequestPost = authenticatedEndpoint(
       }
 
       const normalizedResult = normalizeSessionGenerateResult(result);
+      const canonicalizedPregeneratedIds = await ensureCanonicalQuestionTargetsForPregenerated(
+        prisma,
+        normalizedResult.questions,
+        logger
+      );
+      if (canonicalizedPregeneratedIds.size > 0) {
+        normalizedResult.questions = normalizedResult.questions.map((question) => {
+          const sourceQuestionId = question.sourceQuestionId ?? question.id;
+          if (question.questionSource !== 'pre_generated' || !canonicalizedPregeneratedIds.has(sourceQuestionId)) {
+            return question;
+          }
+
+          return {
+            ...question,
+            questionId: sourceQuestionId,
+            canonicalQuestionId: sourceQuestionId,
+          };
+        });
+      }
       const persistedSession = buildGeneratedStudySessionRecord({
         request: {
           mode: body.mode,
@@ -242,6 +337,12 @@ export const onRequestPost = authenticatedEndpoint(
           updatedAt: new Date(),
         },
       });
+      await persistStudySessionQuestionLinks(
+        prisma,
+        normalizedResult.sessionId,
+        normalizedResult.questions,
+        logger
+      );
 
       logger.info('Session generated', {
         sessionId: normalizedResult.sessionId,
@@ -272,6 +373,78 @@ export const onRequestPost = authenticatedEndpoint(
 );
 
 // ─── Reservoir Helpers ──────────────────────────────────────────────────────
+
+async function ensureCanonicalQuestionTargetsForPregenerated(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  questions: ReturnType<typeof normalizeSessionGenerateResult>['questions'],
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<Set<string>> {
+  const mirrorInputs = questions
+    .filter((question) => question.questionSource === 'pre_generated')
+    .flatMap((question) => {
+      const id = question.sourceQuestionId ?? question.id;
+      if (!id) return [];
+
+      return {
+        id,
+        questionData: {
+          ...question,
+          stem: question.question,
+          rationale: question.explanation ?? question.rationale ?? '',
+        },
+        system: question.system ?? 'General',
+        difficulty: question.difficulty ?? 'medium',
+        conditionId: question.conditionId,
+        medicalContentId: question.medicalContentId,
+      };
+    });
+
+  if (mirrorInputs.length === 0) return new Set();
+
+  try {
+    return await createCanonicalQuestionMirrors(prisma as any, mirrorInputs, {
+      source: 'pre_generated_approved',
+    });
+  } catch (error) {
+    logger.warn('Failed to pre-canonicalize pre-generated session questions; submit path will retain FK fallback', {
+      count: mirrorInputs.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return new Set();
+  }
+}
+
+async function persistStudySessionQuestionLinks(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  sessionId: string,
+  questions: ReturnType<typeof normalizeSessionGenerateResult>['questions'],
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<void> {
+  const delegate = (prisma as any).studySessionQuestion;
+  if (!delegate?.deleteMany || !delegate?.createMany) {
+    logger.info('StudySessionQuestion delegate unavailable; session questionIds remain the resume source', {
+      sessionId,
+    });
+    return;
+  }
+
+  const records = buildStudySessionQuestionRecords(sessionId, questions);
+  try {
+    await delegate.deleteMany({ where: { sessionId } });
+    if (records.length > 0) {
+      await delegate.createMany({
+        data: records,
+        skipDuplicates: true,
+      });
+    }
+  } catch (error: unknown) {
+    logger.warn('StudySessionQuestion link persistence failed; session questionIds remain the fallback source', {
+      sessionId,
+      recordCount: records.length,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 function normalizeOptions(raw: unknown): string[] {
   if (Array.isArray(raw)) {
@@ -342,9 +515,12 @@ async function fetchFallbackPregeneratedQuestions(
   const systemCandidates = Object.keys(options.blueprintWeights ?? {})
     .filter((system) => !options.gatedSystems.includes(system));
 
-  const where: any = {};
+  const where: any = withProductionPregeneratedSafety({});
   if (options.conditionId) {
-    where.conditionId = options.conditionId;
+    where.OR = [
+      { conditionId: options.conditionId },
+      { medicalContentId: options.conditionId },
+    ];
   } else if (options.system) {
     where.system = options.system;
   } else if (systemCandidates.length > 0) {
@@ -397,6 +573,9 @@ async function fetchFallbackPregeneratedQuestions(
       difficulty: row.difficulty || data?.difficulty || null,
       conditionId: row.conditionId || data?.conditionId || null,
       medicalContentId: row.medicalContentId || data?.medicalContentId || null,
+      canonicalQuestionId: null,
+      sourceQuestionId: row.id,
+      questionSource: 'pre_generated',
       pearls: Array.isArray(data?.pearls) ? data.pearls : [],
       source: 'new_card',
     };
@@ -407,6 +586,16 @@ async function fetchFallbackPregeneratedQuestions(
   }
 
   return questions;
+}
+
+function normalizeDifficulty(value: unknown): string {
+  if (typeof value === 'number') {
+    if (value < 0.4) return 'easy';
+    if (value > 0.7) return 'hard';
+    return 'medium';
+  }
+  if (value === 'easy' || value === 'medium' || value === 'hard') return value;
+  return 'medium';
 }
 
 /**
@@ -420,13 +609,14 @@ async function hydrateReservoirQuestions(
 
   // Fetch from PreGeneratedQuestion
   const preGenerated = await prisma.preGeneratedQuestion.findMany({
-    where: { id: { in: questionIds } },
+    where: withProductionPregeneratedSafety({ id: { in: questionIds } }),
     select: {
       id: true,
       questionData: true,
       system: true,
       difficulty: true,
       conditionId: true,
+      medicalContentId: true,
     },
   });
 
@@ -436,7 +626,7 @@ async function hydrateReservoirQuestions(
   let standardQuestions: any[] = [];
   if (remainingIds.length > 0) {
     standardQuestions = await prisma.question.findMany({
-      where: { id: { in: remainingIds } },
+      where: withProductionQuestionSafety({ id: { in: remainingIds } }),
       select: {
         id: true,
         question: true,
@@ -446,6 +636,7 @@ async function hydrateReservoirQuestions(
         system: true,
         difficulty: true,
         conditionId: true,
+        medicalContentId: true,
         category: true,
         topic: true,
         vignette: true,
@@ -490,6 +681,10 @@ async function hydrateReservoirQuestions(
       topic: data?.conditionName || null,
       difficulty: q.difficulty || data?.difficulty || null,
       conditionId: q.conditionId || null,
+      medicalContentId: q.medicalContentId || data?.medicalContentId || null,
+      canonicalQuestionId: null,
+      sourceQuestionId: q.id,
+      questionSource: 'pre_generated',
     });
   }
   for (const q of standardQuestions) {
@@ -519,6 +714,10 @@ async function hydrateReservoirQuestions(
       topic: q.topic || null,
       difficulty: q.difficulty || null,
       conditionId: q.conditionId || null,
+      medicalContentId: q.medicalContentId || null,
+      canonicalQuestionId: q.id,
+      sourceQuestionId: q.id,
+      questionSource: 'question',
     });
   }
 

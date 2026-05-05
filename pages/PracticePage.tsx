@@ -269,7 +269,12 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 }) => {
   const navigate = useNavigate();
   const { showPANREContent } = useUserContext();
-  const { stats: rolling360Stats, isLoading } = useRolling360Stats();
+  const {
+    stats: rolling360Stats,
+    isLoading,
+    error: rollingStatsError,
+    mutate: refreshRollingStats,
+  } = useRolling360Stats();
 
   const [searchQuery, setSearchQuery] = useState(() => {
     try {
@@ -357,6 +362,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       recommendedModeIds
         .map((id) => MODE_REGISTRY.find((mode) => mode.id === id))
         .filter((mode): mode is TrainingModeConfig => !!mode && !mode.isComingSoon)
+        .filter((mode) => isPrivateBetaModeVisible(mode.id))
         .filter((mode) => !mode.panreOnly || showPANREContent),
     [showPANREContent]
   );
@@ -373,6 +379,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   );
   const weakestSystem = rolling360Stats?.weakestSystems?.[0] ?? null;
   const hasResidencyData = (rolling360Stats?.totalInWindow ?? 0) >= 5;
+  const systemDrillAvailable = isPrivateBetaModeVisible('system_drill');
   const systemsWithData = Object.entries(rolling360Stats?.systemStats ?? {}).filter(
     ([, stats]) => stats.total >= 2
   );
@@ -399,7 +406,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             actionPosition: 'under-title',
             backLabel: 'Back to Study',
             onBack: () => navigate(ROUTES.STUDY),
-            primaryAction: weakestSystem && onNavigateToDrillWithSystem
+            primaryAction: weakestSystem && onNavigateToDrillWithSystem && systemDrillAvailable
               ? {
                   label: `Target ${weakestSystem}`,
                   onClick: () => onNavigateToDrillWithSystem('system_drill', weakestSystem),
@@ -496,9 +503,11 @@ export const PracticePage: React.FC<PracticePageProps> = ({
           />
           <WorkspaceMetricCard
             label="Weakest system"
-            value={weakestSystem ?? 'Calibrating'}
+            value={rollingStatsError ? 'Unavailable' : (weakestSystem ?? 'Calibrating')}
             detail={
-              weakestSystem
+              rollingStatsError
+                ? 'Rolling 360 signals could not be loaded. Your practice modes are still available.'
+                : weakestSystem
                 ? 'Pulled from Rolling 360 performance signals.'
                 : 'Answer a few more questions to unlock targeting.'
             }
@@ -506,7 +515,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             icon={TrendingUp}
             variant={weakestSystem ? 'progress' : 'guidance'}
             action={
-              weakestSystem && onNavigateToDrillWithSystem ? (
+              weakestSystem && onNavigateToDrillWithSystem && systemDrillAvailable ? (
                 <Button
                   type="button"
                   size="sm"
@@ -737,7 +746,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
         />
       </WorkspaceReveal>
 
-      {!isLoading && onNavigateToDrillWithSystem ? (
+      {!isLoading && onNavigateToDrillWithSystem && systemDrillAvailable ? (
         <WorkspaceReveal delay={0.4}>
           <WorkspaceSection
             title="Residency Cockpit"
@@ -745,7 +754,23 @@ export const PracticePage: React.FC<PracticePageProps> = ({
           >
             <WorkspaceSurface accent="#7a8f6e">
               <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                {hasResidencyData && systemsWithData.length > 0 && rolling360Stats?.systemStats ? (
+                {rollingStatsError ? (
+                  <WorkspaceEmptyState
+                    icon={AlertCircle}
+                    title="Rolling signals unavailable"
+                    description="System-level targeting is paused until the stats endpoint responds."
+                    action={
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void refreshRollingStats()}
+                      >
+                        Retry
+                      </Button>
+                    }
+                  />
+                ) : hasResidencyData && systemsWithData.length > 0 && rolling360Stats?.systemStats ? (
                   <div
                     className="overflow-hidden rounded-[1.25rem] border"
                     style={{ borderColor: 'color-mix(in srgb, var(--color-text-primary) 8%, transparent)' }}

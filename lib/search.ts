@@ -9,11 +9,10 @@
  */
 
 import type { Prisma, PrismaClient } from '@prisma/client';
+import { getEmbedding } from './gemini';
 import { rerankFast } from './services/rerankService';
 import type { RAGChunk, RAGContext, ContentType } from './services/ragContextService';
 
-const EMBED_MODEL = 'text-embedding-005';
-const EMBED_DIMS = 768;
 const RRF_K = 60;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -71,28 +70,6 @@ export interface MedicalContentSearchResult {
   rrfScore: number;
 }
 
-async function getQueryEmbedding(query: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text: query }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Embed API error ${res.status}: ${err.slice(0, 200)}`);
-  }
-  const data: { embedding?: { values?: number[] } } = await res.json();
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
-    throw new Error(`Invalid embedding: expected ${EMBED_DIMS} dims`);
-  }
-  return values;
-}
-
 /**
  * Reciprocal Rank Fusion: score = sum over lists of 1 / (k + rank).
  * k=60 is a common default; ranks are 1-based.
@@ -148,7 +125,7 @@ export async function searchMedicalContent(
   // Step B: Semantic (vector) search via MedicalContentEmbedding (HNSW)
   let semanticRows: Array<{ medicalContentId: string }> = [];
   try {
-    const embedding = await getQueryEmbedding(trimmed, apiKey);
+    const embedding = await getEmbedding(trimmed, apiKey);
     const vectorStr = `[${embedding.join(',')}]`;
     // SET LOCAL is transaction-scoped; safe on a pooled connection.
     await prisma.$executeRawUnsafe(`SET LOCAL hnsw.ef_search = ${HNSW_EF_SEARCH}`);
@@ -307,4 +284,3 @@ export function applyReranker(
   }
   return out;
 }
-

@@ -8,8 +8,12 @@
  */
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { computeFSRSUpdate } from '../lib/services/fsrsScheduleService';
+import { FSRS } from '../lib/fsrs';
 
 // ── Mock all external dependencies ───────────────────────────────────
+const mockState = vi.hoisted(() => ({
+  intervalFromStability: null as null | ((stability: number) => number),
+}));
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(function () {
@@ -38,6 +42,9 @@ vi.mock('../lib/fsrs', () => ({
           last_review: new Date(),
         },
       }),
+      calculateIntervalFromStability: vi.fn((stability: number) =>
+        mockState.intervalFromStability?.(stability) ?? 3
+      ),
       calculateRetrievability: vi.fn().mockReturnValue(0.9),
     };
   }),
@@ -194,6 +201,7 @@ describe('computeFSRSUpdate', () => {
     vi.clearAllMocks();
 
     // Default: no existing progress (new card)
+    mockState.intervalFromStability = null;
     prisma.userProgress.findUnique.mockResolvedValue(null);
     prisma.confusionPair.findMany.mockResolvedValue([]);
     prisma.reviewLog.findMany.mockResolvedValue([]);
@@ -303,6 +311,19 @@ describe('computeFSRSUpdate', () => {
     expect(tel).toHaveProperty('adjusted_confidence');
     expect(tel).toHaveProperty('final_stability');
     expect(tel).toHaveProperty('final_difficulty');
+  });
+
+  it('should recompute Review interval from final modified stability', async () => {
+    mockState.intervalFromStability = (stability: number) => stability * 2;
+
+    const result = await computeFSRSUpdate(prisma, baseInput);
+    const fsrsInstance = vi.mocked(FSRS).mock.results[0]?.value as any;
+
+    expect(fsrsInstance.calculateIntervalFromStability).toHaveBeenCalledWith(
+      result.updatedCard.stability
+    );
+    expect(result.updatedCard.scheduled_days).toBe(result.updatedCard.stability * 2);
+    expect(result.fsrsSchedule.intervalDays).toBe(Math.round(result.updatedCard.stability * 2));
   });
 
   it('should produce a non-null nextReviewDate for any valid input', async () => {

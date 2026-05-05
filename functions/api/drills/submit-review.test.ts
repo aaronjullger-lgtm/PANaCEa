@@ -100,6 +100,10 @@ vi.mock('../../../lib/services/drillAnalyticsService', () => ({
   getRelativeDrillPerformance: vi.fn(),
 }));
 
+vi.mock('../../../lib/services/reservoir', () => ({
+  markConsumed: vi.fn().mockResolvedValue(1),
+}));
+
 vi.mock('../../../lib/api/schemas/drills', () => ({
   DrillSubmitReviewRequestSchema: { parse: (x: any) => x },
 }));
@@ -258,6 +262,35 @@ describe('POST /api/drills/submit-review', () => {
     expect((submitDrillReview as Mock).mock.calls[0]).toHaveLength(7);
   });
 
+  it('passes validated telemetry urgency multiplier into the FSRS writer', async () => {
+    await _capture.handler!(
+      makeContext({
+        validated: {
+          telemetry: {
+            urgency_multiplier: 1.7,
+          },
+        },
+      })
+    );
+
+    expect(submitDrillReview).toHaveBeenCalledTimes(1);
+    expect((submitDrillReview as Mock).mock.calls[0][6]).toBe(1.7);
+  });
+
+  it('clamps telemetry urgency multiplier before FSRS scheduling', async () => {
+    await _capture.handler!(
+      makeContext({
+        validated: {
+          telemetry: {
+            urgency_multiplier: 3,
+          },
+        },
+      })
+    );
+
+    expect((submitDrillReview as Mock).mock.calls[0][6]).toBe(2);
+  });
+
   // ── 5. Returns FSRS schedule data when available ─────────────────────
   it('returns nextReview with FSRS schedule data', async () => {
     const result = await _capture.handler!(makeContext());
@@ -282,19 +315,13 @@ describe('POST /api/drills/submit-review', () => {
     expect(result.data.nextReview).toBeNull();
   });
 
-  // ── 7. Calls scheduleConceptReview for correct answers ───────────────
-  it('calls scheduleConceptReview for correct answers', async () => {
+  // ── 7. Avoids duplicate legacy scheduling ───────────────────────────
+  it('does not call legacy scheduleConceptReview for correct answers', async () => {
     (submitDrillReview as Mock).mockResolvedValue({ isCorrect: true, fsrsSchedule: null });
 
     await _capture.handler!(makeContext());
 
-    expect(scheduleConceptReview).toHaveBeenCalledTimes(1);
-    expect(scheduleConceptReview).toHaveBeenCalledWith(
-      expect.anything(), // prisma
-      MOCK_USER.id,
-      `${MOCK_QUESTION.system}|${MOCK_QUESTION.conditionId}`,
-      true
-    );
+    expect(scheduleConceptReview).not.toHaveBeenCalled();
   });
 
   // ── 8. Calls ensureDueVariant only for incorrect answers ─────────────
@@ -375,16 +402,16 @@ describe('POST /api/drills/submit-review', () => {
     expect(safePrismaDisconnect).not.toHaveBeenCalled();
   });
 
-  // ── 13. Handles scheduleConceptReview failure gracefully ─────────────
-  it('handles scheduleConceptReview failure gracefully (non-fatal)', async () => {
+  // ── 13. Legacy scheduleConceptReview remains unused ─────────────────
+  it('does not depend on legacy scheduleConceptReview availability', async () => {
     (submitDrillReview as Mock).mockResolvedValue({ isCorrect: true, fsrsSchedule: null });
     (scheduleConceptReview as Mock).mockRejectedValue(new Error('SRS service down'));
 
     const result = await _capture.handler!(makeContext());
 
-    // Should still return success — scheduleConceptReview is non-fatal
     expect(result.data).toBeDefined();
     expect(result.data.isRapidGuess).toBe(false);
+    expect(scheduleConceptReview).not.toHaveBeenCalled();
   });
 
   // ── Drill feedback ──────────────────────────────────────────────────

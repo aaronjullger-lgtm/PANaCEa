@@ -70,10 +70,9 @@ test.describe('API Security (auth, validation, CORS)', () => {
 
   test('API response includes CORS headers when Origin is sent', async ({ request }) => {
     const response = await request.get(`${BASE_URL}/api/health`, {
-      headers: { Origin: 'https://example.com' },
+      headers: { Origin: 'http://localhost:5173' },
     });
-    // Allow 200/503/500; we only care about CORS header presence
-    expect([200, 503, 500]).toContain(response.status());
+    expect(response.status()).toBe(200);
     const headers = response.headers();
     // Common CORS response headers (at least one of these is typically set by the app)
     const hasCors =
@@ -87,12 +86,11 @@ test.describe('API Security (auth, validation, CORS)', () => {
     const response = await request.fetch(`${BASE_URL}/api/health`, {
       method: 'OPTIONS',
       headers: {
-        Origin: 'https://example.com',
+        Origin: 'http://localhost:5173',
         'Access-Control-Request-Method': 'GET',
       },
     });
-    // OPTIONS may return 200, 204, or 405 depending on server
-    expect([200, 204, 405]).toContain(response.status());
+    expect(response.status()).toBe(204);
     const headers = response.headers();
     const hasCors =
       headers['access-control-allow-origin'] !== undefined ||

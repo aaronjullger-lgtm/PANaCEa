@@ -557,6 +557,7 @@ export function withRateLimit(options: {
   requestsPerMinute: number;
   keyPrefix?: string;
   endpointType?: 'api' | 'auth' | 'admin';
+  failClosedOnLimiterError?: boolean;
 }): Middleware<AuthenticatedContext> {
   return async (context, next) => {
     // Determine identifier (user ID if authenticated, otherwise IP)
@@ -573,10 +574,35 @@ export function withRateLimit(options: {
 
     const config = limitConfig[options.endpointType || 'api'];
 
-    // Check rate limit using Cloudflare KV
-    const isRateLimited = await checkRateLimit(context.env, key, config.requests, config.window);
+    // Check rate limit using Cloudflare KV. AI routes fail closed when KV is
+    // bound but unavailable so expensive generation cannot silently bypass
+    // controls during an infrastructure fault.
+    const rateLimitStatus = await checkRateLimit(
+      context.env,
+      key,
+      config.requests,
+      config.window,
+      {
+        failClosedOnError: options.failClosedOnLimiterError ?? options.keyPrefix === 'ai',
+      }
+    );
 
-    if (isRateLimited) {
+    if (rateLimitStatus === 'unavailable') {
+      logger.error('Rate limiter unavailable', undefined, {
+        identifier,
+        key,
+        endpointType: options.endpointType,
+      });
+
+      return {
+        status: 503,
+        code: ErrorCode.SERVICE_UNAVAILABLE,
+        error: 'Rate limiter unavailable. Please try again shortly.',
+        headers: { 'Retry-After': '60' },
+      };
+    }
+
+    if (rateLimitStatus === 'limited') {
       logger.warn('Rate limit exceeded', {
         identifier,
         key,
@@ -595,6 +621,8 @@ export function withRateLimit(options: {
   };
 }
 
+type RateLimitStatus = 'allowed' | 'limited' | 'unavailable';
+
 /**
  * Check rate limit using Cloudflare KV
  */
@@ -602,32 +630,32 @@ async function checkRateLimit(
   env: any,
   key: string,
   maxRequests: number,
-  windowSeconds: number
-): Promise<boolean> {
+  windowSeconds: number,
+  options: { failClosedOnError: boolean }
+): Promise<RateLimitStatus> {
   try {
     // Cloudflare KV namespace (should be bound in wrangler.toml)
     const kv = env.RATE_LIMIT_KV;
 
     if (!kv) {
       // Fallback: Allow requests if KV not available (development)
-      return false;
+      return 'allowed';
     }
 
     // Get current count from KV
     const currentCount = (await kv.get(key, { type: 'json' })) || 0;
 
     if (currentCount >= maxRequests) {
-      return true; // Rate limit exceeded
+      return 'limited'; // Rate limit exceeded
     }
 
     // Increment count with expiration
     await kv.put(key, currentCount + 1, { expirationTtl: windowSeconds });
 
-    return false;
+    return 'allowed';
   } catch (error) {
     logger.error('Rate limit check failed', error);
-    // Fail open - allow request if rate limiting fails
-    return false;
+    return options.failClosedOnError ? 'unavailable' : 'allowed';
   }
 }
 
@@ -802,7 +830,12 @@ export function aiEndpoint<T>(
     withErrorHandling(),
     withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     withAuth(),
-    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'api', keyPrefix: 'ai' }),
+    withRateLimit({
+      requestsPerMinute: rateLimit,
+      endpointType: 'api',
+      keyPrefix: 'ai',
+      failClosedOnLimiterError: true,
+    }),
     withValidation(schema, options),
     withLogging(),
     handler

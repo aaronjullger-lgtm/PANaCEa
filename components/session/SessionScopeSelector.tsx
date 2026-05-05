@@ -13,7 +13,7 @@
  *   "You're on Internal Medicine rotation. Session weighted 75% IM, 25% PANCE baseline."
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,6 +30,7 @@ import { InlineSpinner } from '@/components/loading';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { MIN_SESSION_SIZE, MAX_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,8 @@ interface SessionConfig {
 interface SessionScopeSelectorProps {
   onStart: (config: SessionConfig) => void;
   onCancel: () => void;
+  initialMode?: SessionMode;
+  lockMode?: boolean;
 }
 
 interface SystemOption {
@@ -186,6 +189,8 @@ const SESSION_SIZES = [
 export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   onStart,
   onCancel,
+  initialMode = 'adaptive',
+  lockMode = false,
 }) => {
   const { getToken } = useAuth();
   const {
@@ -200,8 +205,14 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   const prefersReducedMotion = useReducedMotion();
 
   // State
-  const [step, setStep] = useState<'mode' | 'system' | 'subcategory' | 'condition' | 'size'>('mode');
-  const [selectedMode, setSelectedMode] = useState<SessionMode>('adaptive');
+  const initialStep =
+    initialMode === 'adaptive'
+      ? lockMode
+        ? 'size'
+        : 'mode'
+      : 'system';
+  const [step, setStep] = useState<'mode' | 'system' | 'subcategory' | 'condition' | 'size'>(initialStep);
+  const [selectedMode, setSelectedMode] = useState<SessionMode>(initialMode);
   const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [selectedCondition, setSelectedCondition] = useState<{ id: string; name: string } | null>(null);
@@ -212,6 +223,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   const [loadingConditions, setLoadingConditions] = useState(false);
   const [systemsError, setSystemsError] = useState<string | null>(null);
   const [conditionsError, setConditionsError] = useState<string | null>(null);
+  const lockedModeSystemsRequestedRef = useRef(false);
 
   // Auto-scale session size based on urgency
   useEffect(() => {
@@ -242,7 +254,7 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       });
 
       if (res.ok) {
-        const data = await res.json();
+        const data = unwrapApiEnvelope<unknown>(await res.json());
         const parsed = parseSystemOptions(data);
         if (parsed.length > 0) {
           setSystems(parsed);
@@ -255,13 +267,14 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
         headers: { Authorization: `Bearer ${token}` },
       });
       if (fallback.ok) {
-        const fallbackData = await fallback.json();
+        const fallbackData = unwrapApiEnvelope<unknown>(await fallback.json());
         setSystems(parseSystemOptions(fallbackData));
         return;
       }
 
+      const fallbackError = await fallback.json().catch(() => ({}));
       setSystems([]);
-      setSystemsError('No systems are available right now.');
+      setSystemsError(getApiEnvelopeError(fallbackError, 'No systems are available right now.'));
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load systems:', err);
       setSystems([]);
@@ -270,6 +283,20 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       setLoadingSystems(false);
     }
   }, [getToken]);
+
+  useEffect(() => {
+    if (
+      lockMode &&
+      step === 'system' &&
+      selectedMode !== 'adaptive' &&
+      systems.length === 0 &&
+      !loadingSystems &&
+      !lockedModeSystemsRequestedRef.current
+    ) {
+      lockedModeSystemsRequestedRef.current = true;
+      void loadSystems();
+    }
+  }, [loadSystems, loadingSystems, lockMode, selectedMode, step, systems.length]);
 
   // Fetch conditions when a subcategory is selected
   const loadConditions = useCallback(async (system: string, subcategory?: string) => {
@@ -291,11 +318,14 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
       });
 
       if (res.ok) {
-        const data = await res.json();
+        const data = unwrapApiEnvelope<unknown>(await res.json());
         setConditions(parseConditionOptions(data));
       } else {
+        const errorPayload = await res.json().catch(() => ({}));
         setConditions([]);
-        setConditionsError('No conditions are available for this scope yet.');
+        setConditionsError(
+          getApiEnvelopeError(errorPayload, 'No conditions are available for this scope yet.')
+        );
       }
     } catch (err) {
       console.error('[SessionScopeSelector] Failed to load conditions:', err);
@@ -384,6 +414,10 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
   const handleBack = () => {
     switch (step) {
       case 'system':
+        if (lockMode) {
+          onCancel();
+          return;
+        }
         setStep('mode');
         setSelectedMode('adaptive');
         break;
@@ -396,10 +430,16 @@ export const SessionScopeSelector: React.FC<SessionScopeSelectorProps> = ({
         setSelectedCondition(null);
         break;
       case 'size':
-        if (selectedMode === 'adaptive') setStep('mode');
-        else if (selectedMode === 'condition' && selectedCondition) setStep('condition');
+        if (selectedMode === 'adaptive') {
+          if (lockMode) {
+            onCancel();
+          } else {
+            setStep('mode');
+          }
+        } else if (selectedMode === 'condition' && selectedCondition) setStep('condition');
         else if (selectedMode === 'subcategory' && selectedSubcategory) setStep('subcategory');
         else if (selectedSystem) setStep('system');
+        else if (lockMode) onCancel();
         else setStep('mode');
         break;
     }

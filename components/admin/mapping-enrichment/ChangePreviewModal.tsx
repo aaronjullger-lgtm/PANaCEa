@@ -88,17 +88,13 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
       const result = (await response.json()) as { data?: PreviewResult };
       setPreviewResult(result.data ?? null);
 
-      // Log audit event for preview (single-event, batch encoded in metadata)
+      // Log audit event for preview. Detailed persistent audit rows are written
+      // server-side by /api/mapping-enrichment/preview.
       const firstSuggestion = selectedSuggestions[0];
       await logAuditEvent({
         action: 'PREVIEW',
         taxonomyCode: firstSuggestion?.taxonomyCode ?? '',
         systemCode: firstSuggestion?.suggestedSystemCode ?? '',
-        metadata: {
-          previewId: 'generated',
-          batchTaxonomyCodes: selectedSuggestions.map(s => s.taxonomyCode),
-          batchSystemCodes: selectedSuggestions.map(s => s.suggestedSystemCode),
-        },
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

@@ -11,6 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { queryKeys } from '@/lib/queryKeys';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // Re-export the type so consumers don't need a second import
 export interface UserGoal {
@@ -63,11 +64,12 @@ async function authedFetch<T>(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: 'Unknown error' })) as { error?: string };
-    throw new Error(body.error || `HTTP ${res.status}`);
+    const body = await res.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(getApiEnvelopeError(body, `HTTP ${res.status}`));
   }
 
-  return res.json() as Promise<T>;
+  const json = await res.json();
+  return unwrapApiEnvelope<T>(json);
 }
 
 // ─── Queries ────────────────────────────────────────────────────────────────
@@ -101,11 +103,11 @@ export function useCreateGoal() {
 
   return useMutation({
     mutationFn: (goalData: Partial<UserGoal>) =>
-      authedFetch<UserGoal>(getToken, '/api/user/goals', {
+      authedFetch<{ goal: UserGoal }>(getToken, '/api/user/goals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(goalData),
-      }),
+      }).then((result) => result.goal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.goals() });
     },
@@ -118,11 +120,11 @@ export function useUpdateGoal() {
 
   return useMutation({
     mutationFn: ({ goalId, updates }: { goalId: string; updates: Partial<UserGoal> }) =>
-      authedFetch<UserGoal>(getToken, `/api/user/goals/${goalId}`, {
+      authedFetch<{ goal: UserGoal }>(getToken, `/api/user/goals/${goalId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
-      }),
+      }).then((result) => result.goal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.goals() });
     },

@@ -9,6 +9,11 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
+import {
+  buildLegacyStudyModeEndpointMetadata,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 
 const SystemDrillSchema = z.object({
   body: z.object({
@@ -26,9 +31,9 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
   try {
     const { system, difficulty, subcategory } = validated.body;
 
-    // Build where clause for question query
-    // Note: question/options/explanation are required fields — no null checks needed
-    const where: any = { system };
+    // Compatibility endpoint: keep older callers working, but apply the same
+    // production serving gate used by canonical study sessions.
+    const where: any = withProductionQuestionSafety({ system });
 
     if (difficulty) {
       where.difficulty = difficulty;
@@ -38,10 +43,26 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       where.subcategory = subcategory;
     }
 
-    // Get total count for random selection
-    const totalCount = await prisma.question.count({ where });
+    const candidates = await prisma.question.findMany({
+      where,
+      select: {
+        id: true,
+        question: true,
+        vignette: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        conditionId: true,
+        system: true,
+        category: true,
+        topic: true,
+        difficulty: true,
+      },
+      orderBy: [{ contentHealthScore: 'desc' }, { updatedAt: 'desc' }],
+      take: 50,
+    });
 
-    if (totalCount === 0) {
+    if (candidates.length === 0) {
       logger.info('No questions found for system', {
         system,
         subcategory,
@@ -58,31 +79,40 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       };
     }
 
-    // Select random question using skip
-    const randomSkip = Math.floor(Math.random() * totalCount);
+    const usable = candidates
+      .map((question: any) => {
+        const opts = normalizeOptions(question.options);
+        const correctIdx =
+          typeof question.correctAnswer === 'string'
+            ? resolveCorrectAnswerIndex(question.correctAnswer, opts)
+            : null;
 
-    const question = await prisma.question.findFirst({
-      where,
-      skip: randomSkip,
-      select: {
-        id: true,
-        question: true,
-        vignette: true,
-        options: true,
-        correctAnswer: true,
-        explanation: true,
-        conditionId: true,
-        system: true,
-        category: true,
-        topic: true,
-        difficulty: true,
-      },
-    });
+        if (correctIdx === null) {
+          logger.warn('Skipping system-drill question with unresolvable correct answer', {
+            userId: auth.userId,
+            questionId: question.id,
+          });
+          return null;
+        }
 
-    if (!question) {
-      logger.error('Failed to retrieve question', { userId: auth.userId });
-      throw new Error('Failed to retrieve question');
+        return {
+          ...question,
+          options: opts,
+          rationale: question.explanation,
+          correctAnswerIndex: correctIdx,
+        };
+      })
+      .filter(Boolean);
+
+    if (usable.length === 0) {
+      logger.error('No production-safe system drill questions were scorable', {
+        userId: auth.userId,
+        system,
+      });
+      throw new Error('Question scoring data is incomplete');
     }
+
+    const question = usable[Math.floor(Math.random() * usable.length)];
 
     logger.info('System drill question retrieved', {
       userId: auth.userId,
@@ -90,26 +120,13 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       system: question.system,
     });
 
-    // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array for client
-    const rawOpts = question.options;
-    const opts: string[] = Array.isArray(rawOpts)
-      ? (rawOpts as string[])
-      : rawOpts && typeof rawOpts === 'object'
-        ? Object.values(rawOpts as Record<string, string>)
-        : [];
-
-    // Derive correctAnswerIndex from letter key (A=0, B=1, ...) or string match
-    const correctIdx =
-      typeof question.correctAnswer === 'string' && /^[A-E]$/.test(question.correctAnswer)
-        ? question.correctAnswer.charCodeAt(0) - 65
-        : opts.findIndex((o) => o === question.correctAnswer);
-
     return {
       data: {
         ...question,
-        options: opts,
-        rationale: question.explanation,
-        correctAnswerIndex: Math.max(0, correctIdx),
+        metadata: buildLegacyStudyModeEndpointMetadata({
+          replacement: '/api/study/session/generate',
+          canonicalRequest: { mode: 'system', system, size: 20, sessionLane: 'drill' },
+        }),
       },
     };
   } catch (error) {
@@ -122,3 +139,15 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
     await safePrismaDisconnect(prisma);
   }
 });
+
+function normalizeOptions(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((option) => String(option ?? '').trim()).filter(Boolean);
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>)
+      .map((option) => String(option ?? '').trim())
+      .filter(Boolean);
+  }
+  return [];
+}

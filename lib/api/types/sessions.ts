@@ -33,7 +33,7 @@ export interface SessionMetadata {
   mode: string;
   blueprintStage?: string;
   learnerPhase?: string;
-  source: 'reservoir' | 'on_demand' | 'mixed';
+  source: 'reservoir' | 'on_demand' | 'mixed' | 'pregenerated_fallback';
   /**
    * Optional adaptive-selection metadata for debugging and analytics.
    * Kept optional so reservoir and legacy paths remain backward compatible.

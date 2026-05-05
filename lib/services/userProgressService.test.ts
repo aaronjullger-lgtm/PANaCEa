@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FSRSState, Rating, type FSRSCard } from '../fsrs';
-import { updateUserProgressWithHistory } from './userProgressService';
+import {
+  resolveUserProgressConditionDomain,
+  updateUserProgressWithHistory,
+  UserProgressConditionDomainError,
+} from './userProgressService';
 
 function makeCard(overrides: Partial<FSRSCard> = {}): FSRSCard {
   return {
@@ -96,5 +100,55 @@ describe('updateUserProgressWithHistory', () => {
     });
 
     expect(prisma.userProgress.upsert.mock.calls[0][0].create.nextReviewAt).toEqual(clamped);
+  });
+
+  it('identifies MedicalContent-backed condition IDs as valid progress targets', async () => {
+    const prisma = {
+      medicalContent: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'mc-1' }),
+      },
+      condition: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'cond-1' }),
+      },
+    };
+
+    await expect(resolveUserProgressConditionDomain(prisma, 'mc-1')).resolves.toBe('medical_content');
+    expect(prisma.condition.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('classifies legacy Condition-only IDs so callers can fail closed before FK writes', async () => {
+    const prisma = {
+      medicalContent: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      condition: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'cond-1' }),
+      },
+    };
+
+    await expect(resolveUserProgressConditionDomain(prisma, 'cond-1')).resolves.toBe('condition_only');
+  });
+
+  it('does not create UserProgress when conditionId is a Condition-only ID', async () => {
+    const prisma = {
+      ...makePrisma(),
+      medicalContent: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      condition: {
+        findUnique: vi.fn().mockResolvedValue({ id: 'cond-1' }),
+      },
+    };
+
+    await expect(
+      updateUserProgressWithHistory(prisma, {
+        userId: 'user-db-1',
+        conditionId: 'cond-1',
+        fsrsCard: makeCard({ scheduled_days: 4, stability: 4 }),
+        rating: Rating.Good,
+        accuracy: 1,
+      })
+    ).rejects.toBeInstanceOf(UserProgressConditionDomainError);
+    expect(prisma.userProgress.upsert).not.toHaveBeenCalled();
   });
 });

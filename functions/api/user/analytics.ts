@@ -7,6 +7,11 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
+import {
+  getStudyHistoryAnalytics,
+  type StudyHistoryAnalytics,
+} from '../../../lib/services/studyHistoryService';
 
 const AnalyticsSchema = z.object({
   query: z.object({
@@ -59,6 +64,7 @@ interface UserAnalytics {
     avgEasiness: number;
     avgInterval: number;
   };
+  studyHistory: StudyHistoryAnalytics;
 }
 
 export const onRequestGet = authenticatedEndpoint(AnalyticsSchema, async (context) => {
@@ -68,8 +74,9 @@ export const onRequestGet = authenticatedEndpoint(AnalyticsSchema, async (contex
 
   try {
     const timeRange = validated.query?.range || '30d';
-    const analytics = await buildUserAnalytics(prisma, auth.userId, timeRange);
-    logger.info('Fetched user analytics', { userId: auth.userId, range: timeRange });
+    const userId = await resolveOrCreateUserId(prisma, auth.userId);
+    const analytics = await buildUserAnalytics(prisma, userId, timeRange);
+    logger.info('Fetched user analytics', { userId: userId.substring(0, 10), range: timeRange });
     return { data: analytics };
   } catch (error) {
     logger.error('Error fetching analytics', {
@@ -136,7 +143,16 @@ async function buildUserAnalytics(
   );
   const weakAreas = identifyWeakAreas(systemPerformance, conditionMastery);
   const recentActivity = calculateRecentActivity(attempts);
-  const srsStats = await getSRSStats(prisma, userId);
+  const [srsStats, studyHistory] = await Promise.all([
+    getSRSStats(prisma, userId),
+    getStudyHistoryAnalytics(prisma, userId, {
+      range: timeRange === '7d' || timeRange === '30d' || timeRange === '90d' || timeRange === 'all'
+        ? timeRange
+        : '30d',
+      limit: 500,
+      horizonDays: 7,
+    }),
+  ]);
 
   return {
     overall: {
@@ -155,6 +171,7 @@ async function buildUserAnalytics(
     weakAreas,
     recentActivity,
     srsStats,
+    studyHistory,
   };
 }
 
@@ -384,34 +401,51 @@ function calculateRecentActivity(
 }
 
 /**
- * Legacy SRS stats from SRSItem (SM-2). FSRS-based stats (UserProgress, due counts)
- * are available via GET /api/user/stats and stability-trend; this block remains
- * for backward compatibility until full migration to FSRS-only analytics.
+ * Compatibility SRS summary backed by canonical UserProgress FSRS rows.
+ * Field names stay stable for older clients, but no SRSItem data is read.
  */
 async function getSRSStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   userId: string
 ): Promise<UserAnalytics['srsStats']> {
   const now = new Date();
-  const srsItems = await prisma.sRSItem.findMany({ where: { userId } });
-  const totalItems = srsItems.length;
-  const dueToday = srsItems.filter(
-    (item: (typeof srsItems)[0]) => new Date(item.dueDate) <= now
+  const progressRows = await prisma.userProgress.findMany({
+    where: { userId },
+    select: {
+      nextReviewAt: true,
+      fsrsDifficulty: true,
+      fsrsStability: true,
+    },
+  });
+  const totalItems = progressRows.length;
+  const dueToday = progressRows.filter(
+    (item: (typeof progressRows)[0]) => item.nextReviewAt != null && item.nextReviewAt <= now
   ).length;
-  const overdue = srsItems.filter((item: (typeof srsItems)[0]) => {
-    const dueDate = new Date(item.dueDate);
+  const overdue = progressRows.filter((item: (typeof progressRows)[0]) => {
+    if (!item.nextReviewAt) return false;
+    const dueDate = new Date(item.nextReviewAt);
     dueDate.setDate(dueDate.getDate() + 1);
     return dueDate < now;
   }).length;
+  const rowsWithDifficulty = progressRows.filter(
+    (item: (typeof progressRows)[0]) => item.fsrsDifficulty != null
+  );
+  const rowsWithStability = progressRows.filter(
+    (item: (typeof progressRows)[0]) => item.fsrsStability != null
+  );
   const avgEasiness =
-    srsItems.length > 0
-      ? srsItems.reduce((sum: number, item: (typeof srsItems)[0]) => sum + item.easiness, 0) /
-        srsItems.length
-      : 2.5;
+    rowsWithDifficulty.length > 0
+      ? rowsWithDifficulty.reduce(
+          (sum: number, item: (typeof progressRows)[0]) => sum + (item.fsrsDifficulty ?? 0),
+          0
+        ) / rowsWithDifficulty.length
+      : 0;
   const avgInterval =
-    srsItems.length > 0
-      ? srsItems.reduce((sum: number, item: (typeof srsItems)[0]) => sum + item.interval, 0) /
-        srsItems.length
-      : 1;
+    rowsWithStability.length > 0
+      ? rowsWithStability.reduce(
+          (sum: number, item: (typeof progressRows)[0]) => sum + (item.fsrsStability ?? 0),
+          0
+        ) / rowsWithStability.length
+      : 0;
   return { totalItems, dueToday, overdue, avgEasiness, avgInterval };
 }

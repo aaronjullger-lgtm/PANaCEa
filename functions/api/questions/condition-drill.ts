@@ -9,14 +9,23 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
+import {
+  buildLegacyStudyModeEndpointMetadata,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 
 const ConditionDrillSchema = z.object({
   body: z.object({
+    conditionId: z.string().optional(),
     system: z.string().optional(),
     subcategory: z.string().optional(),
     difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
     count: z.number().int().min(1).max(20).default(1),
-  }),
+  }).refine(
+    (body) => Boolean(body.conditionId || body.system || body.subcategory),
+    'conditionId, system, or subcategory is required'
+  ),
 });
 
 export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (context) => {
@@ -25,12 +34,17 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { system, subcategory, difficulty, count } = validated.body;
+    const { conditionId, system, subcategory, difficulty, count } = validated.body;
 
-    // Build where clause for question query
-    const where: any = {};
+    // Compatibility endpoint: direct condition drill now uses the same
+    // production serving gate as canonical generated study sessions.
+    const where: any = withProductionQuestionSafety({});
 
     // Apply filters if provided
+    if (conditionId) {
+      where.conditionId = conditionId;
+    }
+
     if (system) {
       where.system = system;
     }
@@ -43,11 +57,28 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
       where.difficulty = difficulty;
     }
 
-    // Get total count for random selection
-    const totalCount = await prisma.question.count({ where });
+    const candidates = await prisma.question.findMany({
+      where,
+      select: {
+        id: true,
+        question: true,
+        vignette: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        conditionId: true,
+        system: true,
+        category: true,
+        topic: true,
+        difficulty: true,
+      },
+      orderBy: [{ contentHealthScore: 'desc' }, { updatedAt: 'desc' }],
+      take: Math.max(count * 5, 25),
+    });
 
-    if (totalCount === 0) {
+    if (candidates.length === 0) {
       logger.info('No questions found for filters', {
+        conditionId,
         system,
         subcategory,
         difficulty,
@@ -58,59 +89,38 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
         data: {
           success: false,
           error: 'No questions found for the specified filters',
-          filters: { system, subcategory, difficulty },
+          filters: { conditionId, system, subcategory, difficulty },
         },
         status: 404,
       };
     }
 
-    // Fetch multiple random questions
-    const questions = [];
-    const requestedCount = Math.min(count, totalCount);
-
-    for (let i = 0; i < requestedCount; i++) {
-      const randomSkip = Math.floor(Math.random() * totalCount);
-
-      const question = await prisma.question.findFirst({
-        where,
-        skip: randomSkip,
-        select: {
-          id: true,
-          question: true,
-          vignette: true,
-          options: true,
-          correctAnswer: true,
-          explanation: true,
-          conditionId: true,
-          system: true,
-          category: true,
-          topic: true,
-          difficulty: true,
-        },
-      });
-
-      if (question) {
-        // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array for client
-        const rawOpts = question.options;
-        const opts: string[] = Array.isArray(rawOpts)
-          ? (rawOpts as string[])
-          : rawOpts && typeof rawOpts === 'object'
-            ? Object.values(rawOpts as Record<string, string>)
-            : [];
-
+    const questions = shuffleArray(candidates)
+      .map((question: any) => {
+        const opts = normalizeOptions(question.options);
         const correctIdx =
-          typeof question.correctAnswer === 'string' && /^[A-E]$/.test(question.correctAnswer)
-            ? question.correctAnswer.charCodeAt(0) - 65
-            : opts.findIndex((o) => o === question.correctAnswer);
+          typeof question.correctAnswer === 'string'
+            ? resolveCorrectAnswerIndex(question.correctAnswer, opts)
+            : null;
 
-        questions.push({
+        if (correctIdx === null) {
+          logger.warn('Skipping condition-drill question with unresolvable correct answer', {
+            userId: auth.userId,
+            questionId: question.id,
+          });
+          return null;
+        }
+
+        return {
           ...question,
           options: opts,
           rationale: question.explanation,
-          correctAnswerIndex: Math.max(0, correctIdx),
-        });
+          correctAnswerIndex: correctIdx,
+        };
       }
-    }
+      )
+      .filter(Boolean)
+      .slice(0, count);
 
     if (questions.length === 0) {
       logger.error('Failed to retrieve questions', { userId: auth.userId });
@@ -120,6 +130,7 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
     logger.info('Condition drill questions retrieved', {
       userId: auth.userId,
       count: questions.length,
+      conditionId,
       system,
       subcategory,
       difficulty,
@@ -129,7 +140,18 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
       data: {
         success: true,
         questions,
-        totalAvailable: totalCount,
+        totalAvailable: candidates.length,
+        metadata: buildLegacyStudyModeEndpointMetadata({
+          replacement: '/api/study/session/generate',
+          canonicalRequest: {
+            mode: conditionId ? 'condition' : system ? 'system' : 'adaptive',
+            conditionId,
+            system,
+            subcategory,
+            size: Math.max(count, 5),
+            sessionLane: 'drill',
+          },
+        }),
       },
     };
   } catch (error) {
@@ -142,3 +164,24 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
     await safePrismaDisconnect(prisma);
   }
 });
+
+function normalizeOptions(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((option) => String(option ?? '').trim()).filter(Boolean);
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>)
+      .map((option) => String(option ?? '').trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function shuffleArray<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}

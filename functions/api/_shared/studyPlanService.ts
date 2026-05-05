@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS: StudyPlanSettings = {
 };
 
 interface PersistedPlanTask {
+  [key: string]: unknown;
   id: string;
   kind: StudyPlanTaskKind;
   status: StudyPlanTaskStatus;
@@ -47,9 +48,11 @@ interface PersistedPlanTask {
   reason: string;
   systems: string[];
   conditionIds: string[];
+  reviewCardIds?: string[];
   estimatedMinutes: number;
   targetQuestions: number;
   launchSettings: SessionSettings;
+  route: string;
   startedAt?: string | null;
   completedAt?: string | null;
   skippedAt?: string | null;
@@ -139,8 +142,164 @@ function coercePlannerSettings(
   };
 }
 
-function safeTaskArray(value: unknown): PersistedPlanTask[] {
-  return Array.isArray(value) ? (value as PersistedPlanTask[]) : [];
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+}
+
+function positiveInt(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : fallback;
+}
+
+function normalizeTaskStatus(value: unknown): StudyPlanTaskStatus {
+  if (value === 'active' || value === 'in_progress') return 'in_progress';
+  if (
+    value === 'completed' ||
+    value === 'skipped' ||
+    value === 'rescheduled' ||
+    value === 'pending'
+  ) {
+    return value;
+  }
+  return 'pending';
+}
+
+function normalizeTaskKind(value: unknown): StudyPlanTaskKind {
+  if (
+    value === 'targeted' ||
+    value === 'review' ||
+    value === 'content' ||
+    value === 'rest' ||
+    value === 'main'
+  ) {
+    return value;
+  }
+  return 'main';
+}
+
+function normalizeLaunchSettingsForTask(
+  kind: StudyPlanTaskKind,
+  rawSettings: SessionSettings,
+  targetQuestions: number,
+  systems: string[],
+  conditionIds: string[]
+): SessionSettings {
+  const mode =
+    kind === 'targeted'
+      ? 'targeted'
+      : kind === 'review'
+        ? 'review'
+        : (rawSettings.mode ?? 'core_adaptive');
+  const focus =
+    kind === 'targeted'
+      ? 'topic'
+      : kind === 'review'
+        ? 'review'
+        : (rawSettings.focus ?? 'all');
+  const count = rawSettings.questionCount ?? rawSettings.count ?? targetQuestions;
+
+  return {
+    ...rawSettings,
+    mode,
+    focus,
+    count,
+    questionCount: rawSettings.questionCount ?? count,
+    systems: rawSettings.systems?.length ? rawSettings.systems : systems,
+    conditionId: rawSettings.conditionId ?? conditionIds[0],
+  };
+}
+
+function canonicalTaskMode(
+  kind: StudyPlanTaskKind,
+  rawMode: unknown,
+  launchSettings: SessionSettings
+): string {
+  if (kind === 'targeted') return 'targeted';
+  if (kind === 'review') return 'review';
+  return typeof rawMode === 'string' && rawMode.trim()
+    ? rawMode
+    : launchSettings.mode ?? 'core_adaptive';
+}
+
+function normalizePersistedPlanTask(
+  raw: unknown,
+  index: number,
+  planDate?: Date
+): PersistedPlanTask | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const task = raw as Record<string, unknown>;
+  const kind = normalizeTaskKind(task.kind);
+  const directSystems = stringArray(task.systems);
+  const legacySystems = stringArray(task.systemFilter);
+  const systems = directSystems.length > 0 ? directSystems : legacySystems;
+  const conditionIds = stringArray(task.conditionIds);
+  const reviewCardIds = stringArray(task.reviewCardIds);
+  const targetQuestions = positiveInt(task.targetQuestions ?? task.count, 20);
+  const rawLaunchSettings =
+    task.launchSettings && typeof task.launchSettings === 'object' && !Array.isArray(task.launchSettings)
+      ? (task.launchSettings as SessionSettings)
+      : launchSettingsForTask(kind, targetQuestions, systems);
+  const launchSettings = normalizeLaunchSettingsForTask(
+    kind,
+    rawLaunchSettings,
+    targetQuestions,
+    systems,
+    conditionIds
+  );
+  const mode = canonicalTaskMode(kind, task.mode, launchSettings);
+  const id =
+    typeof task.id === 'string' && task.id.trim().length > 0
+      ? task.id
+      : buildTaskId(planDate ?? new Date(), kind, systems.length > 0 ? systems : [`task-${index + 1}`]);
+  const route = routeForTask({ id, kind, launchSettings, conditionIds, planDate });
+
+  return {
+    ...task,
+    id,
+    kind,
+    status: normalizeTaskStatus(task.status),
+    title:
+      typeof task.title === 'string' && task.title.trim().length > 0
+        ? task.title
+        : buildTaskTitle(kind, systems),
+    description:
+      typeof task.description === 'string' && task.description.trim().length > 0
+        ? task.description
+        : buildTaskDescription(kind, systems),
+    reason:
+      typeof task.reason === 'string' && task.reason.trim().length > 0
+        ? task.reason
+        : 'Recommended by your study plan.',
+    systems,
+    conditionIds,
+    reviewCardIds,
+    mode,
+    estimatedMinutes: positiveInt(task.estimatedMinutes, 20),
+    targetQuestions: positiveInt(
+      targetQuestions ?? launchSettings.questionCount ?? launchSettings.count,
+      20
+    ),
+    launchSettings,
+    route,
+    startedAt: typeof task.startedAt === 'string' ? task.startedAt : null,
+    completedAt: typeof task.completedAt === 'string' ? task.completedAt : null,
+    skippedAt: typeof task.skippedAt === 'string' ? task.skippedAt : null,
+    actualQuestionsAnswered:
+      typeof task.actualQuestionsAnswered === 'number' ? task.actualQuestionsAnswered : null,
+    actualDurationMinutes:
+      typeof task.actualDurationMinutes === 'number' ? task.actualDurationMinutes : null,
+    actualAccuracy: typeof task.actualAccuracy === 'number' ? task.actualAccuracy : null,
+    linkedSessionId: typeof task.linkedSessionId === 'string' ? task.linkedSessionId : null,
+  };
+}
+
+function safeTaskArray(value: unknown, planDate?: Date): PersistedPlanTask[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((task, index) => normalizePersistedPlanTask(task, index, planDate))
+    .filter((task): task is PersistedPlanTask => task !== null);
 }
 
 function computeOverview(days: StudyPlanDay[]): StudyPlanOverview {
@@ -233,7 +392,17 @@ function launchSettingsForTask(
   targetQuestions: number,
   systems: string[]
 ): SessionSettings {
-  if (kind === 'review' || kind === 'targeted') {
+  if (kind === 'targeted') {
+    return {
+      mode: 'targeted',
+      focus: 'topic',
+      count: targetQuestions,
+      questionCount: targetQuestions,
+      systems,
+    };
+  }
+
+  if (kind === 'review') {
     return {
       mode: 'review',
       focus: 'review',
@@ -252,6 +421,41 @@ function launchSettingsForTask(
   };
 }
 
+function routeForTask(task: {
+  id: string;
+  kind: StudyPlanTaskKind;
+  launchSettings: SessionSettings;
+  conditionIds?: string[];
+  planDate?: Date;
+}): string {
+  const conditionIds = task.conditionIds ?? [];
+  const systems = task.launchSettings.systems ?? [];
+  const params = new URLSearchParams({
+    source: 'study-plan',
+    taskId: task.id,
+    mode:
+      (task.kind === 'review' || task.kind === 'targeted') && conditionIds.length > 0
+        ? 'condition'
+        : systems.length === 1
+          ? 'system'
+        : 'adaptive',
+    count: String(task.launchSettings.questionCount ?? task.launchSettings.count ?? 20),
+  });
+
+  if (systems.length > 0) {
+    params.set('systems', systems.join(','));
+  }
+  if (conditionIds.length > 0) {
+    params.set('conditions', conditionIds.join(','));
+    params.set('conditionId', conditionIds[0] ?? '');
+  }
+  if (task.planDate) {
+    params.set('planDate', toDateKey(task.planDate));
+  }
+
+  return `/study/main-session?${params.toString()}`;
+}
+
 function createTask(
   planDate: Date,
   kind: StudyPlanTaskKind,
@@ -261,6 +465,7 @@ function createTask(
   reason: string
 ): PersistedPlanTask {
   const id = buildTaskId(planDate, kind, systems);
+  const launchSettings = launchSettingsForTask(kind, targetQuestions, systems);
   return {
     id,
     kind,
@@ -272,7 +477,8 @@ function createTask(
     conditionIds: [],
     estimatedMinutes,
     targetQuestions,
-    launchSettings: launchSettingsForTask(kind, targetQuestions, systems),
+    launchSettings,
+    route: routeForTask({ id, kind, launchSettings, conditionIds: [], planDate }),
     startedAt: null,
     completedAt: null,
     skippedAt: null,
@@ -302,12 +508,30 @@ function mergeTaskProgress(
       actualDurationMinutes: previous.actualDurationMinutes ?? null,
       actualAccuracy: previous.actualAccuracy ?? null,
       linkedSessionId: previous.linkedSessionId ?? null,
+      reviewCardIds: task.reviewCardIds,
     };
   });
 }
 
 function toStudyPlanDay(row: PersistedStudyPlanRow): StudyPlanDay {
-  const tasks = safeTaskArray(row.recommendedSessions);
+  const tasks = safeTaskArray(row.recommendedSessions, row.planDate).map((task) => {
+    const launchSettings =
+      task.launchSettings ??
+      launchSettingsForTask(task.kind, task.targetQuestions ?? 20, task.systems ?? []);
+    return {
+      ...task,
+      launchSettings,
+      route:
+        (task as Partial<PersistedPlanTask>).route ??
+        routeForTask({
+          id: task.id,
+          kind: task.kind,
+          launchSettings,
+          conditionIds: task.conditionIds,
+          planDate: row.planDate,
+        }),
+    };
+  });
   const totalTaskQuestions = tasks.reduce(
     (sum, task) => sum + (task.actualQuestionsAnswered ?? 0),
     0
@@ -380,7 +604,7 @@ async function resolvePlannerContext(
   prisma: any,
   userId: string
 ): Promise<ResolvedPlannerContext> {
-  const [user, preferences] = await Promise.all([
+  const [user, preferences, activeGoals] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -402,6 +626,16 @@ async function resolvePlannerContext(
         updatedAt: true,
       },
     }),
+    prisma.userGoal?.findMany({
+      where: { userId, status: 'active' },
+      orderBy: [{ targetDate: 'asc' }, { createdAt: 'asc' }],
+      take: 5,
+      select: {
+        title: true,
+        targetDate: true,
+        targetSystem: true,
+      },
+    }) ?? Promise.resolve([]),
   ]);
 
   const customSettings =
@@ -413,6 +647,10 @@ async function resolvePlannerContext(
   const plannerSettings = coercePlannerSettings(
     (customSettings.studyPlanning as Record<string, unknown> | undefined) ?? {}
   );
+  const goalFocusAreas = (activeGoals as Array<{ targetSystem?: string | null }>)
+    .map((goal) => goal.targetSystem)
+    .filter((system): system is string => typeof system === 'string' && system.trim().length > 0);
+  const firstGoal = (activeGoals as Array<{ title: string; targetDate?: Date | null }>)[0];
   const targetExamDate = user?.rotationExamDate ?? user?.eorTestDate ?? user?.examDate ?? null;
   const target: StudyPlanTarget = targetExamDate
     ? user?.currentRotation
@@ -428,12 +666,24 @@ async function resolvePlannerContext(
           examDate: targetExamDate.toISOString(),
           currentRotation: null,
         }
+    : firstGoal
+      ? {
+          kind: 'custom',
+          label: firstGoal.title,
+          examDate: firstGoal.targetDate?.toISOString() ?? null,
+          currentRotation: user?.currentRotation ?? null,
+        }
     : {
         kind: 'none',
         label: 'No active exam target',
         examDate: null,
         currentRotation: user?.currentRotation ?? null,
       };
+  const configuredFocusAreas =
+    plannerSettings.focusAreas ??
+    preferences?.preferredSystems ??
+    DEFAULT_SETTINGS.focusAreas;
+  const focusAreas = Array.from(new Set([...configuredFocusAreas, ...goalFocusAreas]));
 
   return {
     target,
@@ -450,10 +700,7 @@ async function resolvePlannerContext(
         (preferences?.reminderDays?.length
           ? preferences.reminderDays
           : DEFAULT_SETTINGS.preferredDays),
-      focusAreas:
-        plannerSettings.focusAreas ??
-        preferences?.preferredSystems ??
-        DEFAULT_SETTINGS.focusAreas,
+      focusAreas,
       excludeAreas: plannerSettings.excludeAreas ?? DEFAULT_SETTINGS.excludeAreas,
       targetRetention:
         plannerSettings.targetRetention ?? DEFAULT_SETTINGS.targetRetention,
@@ -692,7 +939,7 @@ function buildPersistedPlanRowInput(
 ) {
   const mergedTasks = mergeTaskProgress(
     tasks,
-    existingRow ? safeTaskArray(existingRow.recommendedSessions) : []
+    existingRow ? safeTaskArray(existingRow.recommendedSessions, planDate) : []
   );
   const targetQuestionsCount = mergedTasks.reduce(
     (sum, task) => sum + task.targetQuestions,
@@ -720,6 +967,24 @@ function buildPersistedPlanRowInput(
   };
 }
 
+function isPlanRowStale(
+  row: PersistedStudyPlanRow,
+  context: Pick<ResolvedPlannerContext, 'userPreferencesUpdatedAt' | 'userProfileUpdatedAt'>,
+  latestReviewAt: Date | null
+): boolean {
+  const staleAgainstPrefs =
+    context.userPreferencesUpdatedAt &&
+    row.updatedAt < context.userPreferencesUpdatedAt;
+  const staleAgainstProfile =
+    context.userProfileUpdatedAt && row.updatedAt < context.userProfileUpdatedAt;
+  const staleAgainstReviews =
+    latestReviewAt &&
+    row.status === 'pending' &&
+    row.updatedAt < latestReviewAt;
+
+  return Boolean(staleAgainstPrefs || staleAgainstProfile || staleAgainstReviews);
+}
+
 export async function ensureStudyPlanWindow(
   prisma: any,
   userId: string,
@@ -733,18 +998,6 @@ export async function ensureStudyPlanWindow(
   const requestedDays = Math.max(1, Math.min(options?.days ?? DEFAULT_WINDOW_DAYS, 14));
   const context = await resolvePlannerContext(prisma, userId);
 
-  if (context.target.kind === 'none') {
-    return {
-      state: 'needs-target',
-      target: context.target,
-      settings: context.settings,
-      days: [],
-      today: null,
-      overview: computeOverview([]),
-      generatedAt: null,
-    };
-  }
-
   const existingRows = (await prisma.dailyStudyPlan.findMany({
     where: {
       userId,
@@ -755,18 +1008,51 @@ export async function ensureStudyPlanWindow(
     },
     orderBy: { planDate: 'asc' },
   })) as PersistedStudyPlanRow[];
+  const existingRowsHaveTasks = existingRows.some(
+    (row) => safeTaskArray(row.recommendedSessions, row.planDate).length > 0
+  );
+
+  if (context.target.kind === 'none') {
+    const days = existingRows.map(toStudyPlanDay);
+    const todayKey = toDateKey(startDate);
+    return {
+      state: existingRowsHaveTasks ? 'ready' : 'needs-target',
+      target: context.target,
+      settings: context.settings,
+      days: existingRowsHaveTasks ? days : [],
+      today: existingRowsHaveTasks
+        ? days.find((day) => day.planDate === todayKey) ?? null
+        : null,
+      overview: existingRowsHaveTasks ? computeOverview(days) : computeOverview([]),
+      generatedAt:
+        existingRowsHaveTasks && existingRows.length > 0
+          ? existingRows.reduce((latest, row) =>
+              row.updatedAt > latest ? row.updatedAt : latest
+            , existingRows[0].updatedAt).toISOString()
+          : null,
+    };
+  }
+
+  let latestReviewAt: Date | null = null;
+  try {
+    const latestReview = await prisma.reviewLog.findFirst({
+      where: {
+        userId,
+        review_type: 'real',
+        sessionType: { in: ['MAIN', 'DRILL'] },
+      },
+      orderBy: { reviewedAt: 'desc' },
+      select: { reviewedAt: true },
+    });
+    latestReviewAt = latestReview?.reviewedAt ?? null;
+  } catch {
+    latestReviewAt = null;
+  }
 
   const shouldRegenerate =
     options?.forceRegenerate ||
     existingRows.length < requestedDays ||
-    existingRows.some((row) => {
-      const staleAgainstPrefs =
-        context.userPreferencesUpdatedAt &&
-        row.updatedAt < context.userPreferencesUpdatedAt;
-      const staleAgainstProfile =
-        context.userProfileUpdatedAt && row.updatedAt < context.userProfileUpdatedAt;
-      return staleAgainstPrefs || staleAgainstProfile;
-    });
+    existingRows.some((row) => isPlanRowStale(row, context, latestReviewAt));
 
   if (shouldRegenerate) {
     const { flattenedTopics, allocator } = await computePlannerSignals(
@@ -794,6 +1080,14 @@ export async function ensureStudyPlanWindow(
       if (
         existingRow &&
         (existingRow.status === 'completed' || existingRow.status === 'in_progress')
+      ) {
+        continue;
+      }
+      if (
+        existingRow &&
+        safeTaskArray(existingRow.recommendedSessions, existingRow.planDate).length > 0 &&
+        !options?.forceRegenerate &&
+        !isPlanRowStale(existingRow, context, latestReviewAt)
       ) {
         continue;
       }
@@ -877,7 +1171,7 @@ export async function updateStudyPlanProgress(
     throw new Error('Study plan day not found');
   }
 
-  const tasks = safeTaskArray(existingRow.recommendedSessions);
+  const tasks = safeTaskArray(existingRow.recommendedSessions, planDate);
   const targetTask = tasks.find((task) => task.id === input.taskId);
   if (!targetTask) {
     throw new Error('Study plan task not found');

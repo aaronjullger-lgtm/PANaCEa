@@ -63,6 +63,10 @@ export interface OfflinePearlAction {
 export interface OfflineReview {
   id: string;
   questionId: string;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
+  medicalContentId?: string | null;
   selectedAnswer: string | number;
   timeSpentMs: number;
   timeToFirstClick?: number;
@@ -200,6 +204,7 @@ async function parseSyncErrorMessage(response: Response): Promise<string> {
 class SyncManager {
   private listeners: Map<SyncEventType, Set<SyncEventCallback>> = new Map();
   private isSyncing = false;
+  private syncAllPromise: Promise<{ answers: number; pearls: number; reviews: number }> | null = null;
   private syncRetryTimeout: ReturnType<typeof setTimeout> | null = null;
   /** Tracks consecutive sync failures for true exponential backoff (Finding 7 fix). */
   private consecutiveFailures = 0;
@@ -301,6 +306,14 @@ class SyncManager {
     return typeof navigator !== 'undefined' ? navigator.onLine : true;
   }
 
+  private hasFreshPendingItems(): boolean {
+    return (
+      this.getOfflineAnswers().some((a) => isPendingItem(a) && a.syncAttempts === 0) ||
+      this.getOfflinePearlActions().some((p) => isPendingItem(p) && p.syncAttempts === 0) ||
+      this.getOfflineReviews().some((r) => isPendingItem(r) && r.syncAttempts === 0)
+    );
+  }
+
   // ===========================================================================
   // ANSWER MANAGEMENT
   // ===========================================================================
@@ -324,20 +337,16 @@ class SyncManager {
     // Dual-write to IndexedDB for Background Sync support
     this.writeToIndexedDB('answers', offlineAnswer);
 
-    // Try immediate sync if online, but only when no sync is already in flight.
-    // The !isSyncing guard prevents a concurrent syncAnswers() from racing with
-    // a syncAll() that is mid-flight. If syncAll() is running, the newly queued
-    // item stays in localStorage and will be picked up on the next sync run.
+    // Try immediate sync through syncAll() so session completion can await any
+    // in-flight write before reading summary or study-plan progress.
     if (this.isOnline()) {
-      if (!this.isSyncing) {
-        this.syncAnswers().catch((err) => {
-          const message = err instanceof Error ? err.message : 'Immediate answer sync failed';
-          this.setLastSyncError(message);
-          this.emit('sync-error', this.getStatus());
-          this.scheduleRetry();
-          syncLog.error('Immediate sync failed', { error: err });
-        });
-      }
+      this.syncAll().catch((err) => {
+        const message = err instanceof Error ? err.message : 'Immediate answer sync failed';
+        this.setLastSyncError(message);
+        this.emit('sync-error', this.getStatus());
+        this.scheduleRetry();
+        syncLog.error('Immediate sync failed', { error: err });
+      });
     } else {
       // Register Background Sync so the SW retries when connectivity returns
       this.registerBackgroundSync('sync-answers');
@@ -385,11 +394,16 @@ class SyncManager {
 
     // Debug logging removed for production
 
-    // Try immediate sync if online
+    // Try immediate sync through syncAll() so callers can await the active
+    // drain instead of racing a category-specific write.
     if (this.isOnline()) {
-      this.syncPearlActions().catch((err) =>
-        syncLog.error('Immediate sync failed (pearls)', { error: err })
-      );
+      this.syncAll().catch((err) => {
+        const message = err instanceof Error ? err.message : 'Immediate pearl sync failed';
+        this.setLastSyncError(message);
+        this.emit('sync-error', this.getStatus());
+        this.scheduleRetry();
+        syncLog.error('Immediate sync failed (pearls)', { error: err });
+      });
     }
 
     return id;
@@ -438,20 +452,16 @@ class SyncManager {
     // Dual-write to IndexedDB for Background Sync support
     this.writeToIndexedDB('reviews', offlineReview);
 
-    // Try immediate sync if online, but only when no sync is already in flight.
-    // The !isSyncing guard prevents a concurrent syncReviews() from racing with
-    // a syncAll() that is mid-flight. If syncAll() is running, the newly queued
-    // item stays in localStorage and will be picked up on the next sync run.
+    // Try immediate sync through syncAll() so session completion can await any
+    // in-flight review write before reading summary or study-plan progress.
     if (this.isOnline()) {
-      if (!this.isSyncing) {
-        this.syncReviews().catch((err) => {
-          const message = err instanceof Error ? err.message : 'Immediate review sync failed';
-          this.setLastSyncError(message);
-          this.emit('sync-error', this.getStatus());
-          this.scheduleRetry();
-          syncLog.error('Immediate sync failed (reviews)', { error: err });
-        });
-      }
+      this.syncAll().catch((err) => {
+        const message = err instanceof Error ? err.message : 'Immediate review sync failed';
+        this.setLastSyncError(message);
+        this.emit('sync-error', this.getStatus());
+        this.scheduleRetry();
+        syncLog.error('Immediate sync failed (reviews)', { error: err });
+      });
     } else {
       // Register Background Sync so the SW retries when connectivity returns
       this.registerBackgroundSync('sync-reviews');
@@ -480,6 +490,12 @@ class SyncManager {
   // ===========================================================================
 
   public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
+    if (this.syncAllPromise) {
+      syncLog.debug('Awaiting sync already in progress');
+      const result = await this.syncAllPromise;
+      return this.hasFreshPendingItems() ? this.syncAll(token) : result;
+    }
+
     if (this.isSyncing) {
       syncLog.debug('Sync already in progress');
       return { answers: 0, pearls: 0, reviews: 0 };
@@ -489,55 +505,61 @@ class SyncManager {
       syncLog.debug('Offline, skipping sync');
       return { answers: 0, pearls: 0, reviews: 0 };
     }
-    
+    this.syncAllPromise = (async () => {
+      this.isSyncing = true;
+      this.emit('sync-start', this.getStatus());
 
-    this.isSyncing = true;
-    this.emit('sync-start', this.getStatus());
+      try {
+        const answersResult = await this.syncAnswers(token);
+        const pearlsResult = await this.syncPearlActions(token);
+        const reviewsResult = await this.syncReviews(token);
+
+        this.setLastSyncTime(Date.now());
+        this.clearLastSyncError();
+
+        // Only reset consecutiveFailures if all pending items synced successfully.
+        // If some items failed (partial sync), increment the counter so backoff
+        // increases on the next retry — this covers per-item failures inside
+        // syncAnswers/syncReviews/syncPearlActions that don't throw at syncAll level.
+        // Sprint S1: use isPendingItem to exclude dead-lettered items from partial-failure detection.
+        const hadPartialFailure =
+          this.getOfflineAnswers().some((a) => isPendingItem(a) && a.syncAttempts > 0) ||
+          this.getOfflineReviews().some((r) => isPendingItem(r) && r.syncAttempts > 0) ||
+          this.getOfflinePearlActions().some((p) => isPendingItem(p) && p.syncAttempts > 0);
+        if (hadPartialFailure) {
+          this.consecutiveFailures++;
+        } else {
+          this.consecutiveFailures = 0;
+        }
+
+        this.isSyncing = false;
+        this.emit('sync-complete', this.getStatus());
+
+        return {
+          answers: answersResult,
+          pearls: pearlsResult,
+          reviews: reviewsResult,
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
+        this.setLastSyncError(errorMessage);
+        this.consecutiveFailures++;
+        this.isSyncing = false;
+        this.emit('sync-error', this.getStatus());
+
+        // Schedule retry
+        this.scheduleRetry();
+
+        throw error;
+      } finally {
+        this.isSyncing = false;
+      }
+    })();
 
     try {
-      const answersResult = await this.syncAnswers(token);
-      const pearlsResult = await this.syncPearlActions(token);
-      const reviewsResult = await this.syncReviews(token);
-
-      this.setLastSyncTime(Date.now());
-      this.clearLastSyncError();
-
-      // Only reset consecutiveFailures if all pending items synced successfully.
-      // If some items failed (partial sync), increment the counter so backoff
-      // increases on the next retry — this covers per-item failures inside
-      // syncAnswers/syncReviews/syncPearlActions that don't throw at syncAll level.
-      // Sprint S1: use isPendingItem to exclude dead-lettered items from partial-failure detection.
-      const hadPartialFailure =
-        this.getOfflineAnswers().some((a) => isPendingItem(a) && a.syncAttempts > 0) ||
-        this.getOfflineReviews().some((r) => isPendingItem(r) && r.syncAttempts > 0) ||
-        this.getOfflinePearlActions().some((p) => isPendingItem(p) && p.syncAttempts > 0);
-      if (hadPartialFailure) {
-        this.consecutiveFailures++;
-      } else {
-        this.consecutiveFailures = 0;
-      }
-
-      this.isSyncing = false;
-      this.emit('sync-complete', this.getStatus());
-
-      return {
-        answers: answersResult,
-        pearls: pearlsResult,
-        reviews: reviewsResult,
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
-      this.setLastSyncError(errorMessage);
-      this.consecutiveFailures++;
-      this.isSyncing = false;
-      this.emit('sync-error', this.getStatus());
-
-      // Schedule retry
-      this.scheduleRetry();
-
-      throw error;
+      return await this.syncAllPromise;
     } finally {
-      this.isSyncing = false;
+      this.syncAllPromise = null;
     }
   }
 
@@ -703,6 +725,10 @@ class SyncManager {
     // items that already landed instead of creating duplicate FSRS rows.
     const batch = pending.map((r) => ({
       questionId: r.questionId,
+      canonicalQuestionId: r.canonicalQuestionId ?? undefined,
+      sourceQuestionId: r.sourceQuestionId,
+      questionSource: r.questionSource,
+      medicalContentId: r.medicalContentId ?? undefined,
       selectedAnswer: r.selectedAnswer,
       timeSpentMs: r.timeSpentMs,
       timeToFirstClick: r.timeToFirstClick,

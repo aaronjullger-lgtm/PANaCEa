@@ -18,7 +18,6 @@ import {
   type SessionType as PrismaSessionType,
 } from '@prisma/client';
 import { calculateParTime } from '../utils/questionComplexity';
-import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
@@ -42,6 +41,7 @@ import { computeDesirableDifficultyBonus } from '../confidence/desirableDifficul
 import { detectInterference, type SessionReviewEntry } from '../confidence/interferenceDetector';
 import { detectConfidenceTrend } from '../confidence/trendDetector';
 import { modulateDifficultyDelta } from '../confidence/difficultyModulator';
+import { resolveCorrectAnswerIndex as resolveAnswerIndexFromValue } from '../answerLetterMap';
 // Wave 1 behavioral signal services
 import { computeLapseSeverity } from './lapseSeverityService';
 import { computeRtTrajectory } from './rtTrajectoryService';
@@ -69,6 +69,7 @@ import {
 } from './wilsonMasteryService';
 // Sprint 3.5 — hypercorrection detection (extracted pure function)
 import { detectHypercorrection } from '../scheduling/hypercorrectionDetector';
+import { upsertCanonicalQuestionMirror } from '../../functions/api/_shared/canonical-question-mirror';
 
 type DrillReviewPrismaClient = PrismaClient | Prisma.TransactionClient;
 
@@ -97,6 +98,7 @@ export interface QuestionData {
   answer?: string;
   correct_option?: string;
   correctChoice?: string;
+  correctAnswerIndex?: number;
   correctIndex?: number;
   options?: Array<{ value?: string; text?: string; label?: string } | string>;
   choices?: Array<{ value?: string; text?: string; label?: string } | string>;
@@ -155,33 +157,148 @@ export function findSelectedOption(
   return null;
 }
 
+function getOptionLabels(qData: QuestionData): string[] {
+  const pool = Array.isArray(qData.options) ? qData.options : qData.choices;
+  if (!Array.isArray(pool)) return [];
+  return pool
+    .map((candidate) => {
+      if (typeof candidate === 'string') return candidate;
+      if (candidate && typeof candidate === 'object') {
+        return candidate.value ?? candidate.text ?? candidate.label ?? null;
+      }
+      return null;
+    })
+    .filter((label): label is string => typeof label === 'string' && label.trim().length > 0);
+}
+
+function resolveCorrectAnswerIndexFromData(qData: QuestionData): number | null {
+  const options = getOptionLabels(qData);
+  const explicitIndex =
+    typeof qData.correctAnswerIndex === 'number'
+      ? qData.correctAnswerIndex
+      : typeof qData.correctIndex === 'number'
+        ? qData.correctIndex
+        : null;
+
+  if (
+    explicitIndex !== null &&
+    Number.isInteger(explicitIndex) &&
+    explicitIndex >= 0 &&
+    explicitIndex < options.length
+  ) {
+    return explicitIndex;
+  }
+
+  const rawAnswer =
+    qData.correctAnswer ?? qData.answer ?? qData.correct_option ?? qData.correctChoice ?? null;
+  if (typeof rawAnswer !== 'string') return null;
+
+  return resolveAnswerIndexFromValue(rawAnswer, options);
+}
+
+function normalizeAnswerForCompare(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 /** Resolve correct answer from question data */
 export function resolveCorrectAnswer(qData: QuestionData): string | null {
+  const options = getOptionLabels(qData);
+  const correctIndex = resolveCorrectAnswerIndexFromData(qData);
+  if (correctIndex !== null) {
+    return options[correctIndex] ?? null;
+  }
+
   let correctAnswer: string | null =
     qData.correctAnswer ?? qData.answer ?? qData.correct_option ?? qData.correctChoice ?? null;
 
-  if (correctAnswer === null && typeof qData.correctIndex === 'number') {
-    const pool = Array.isArray(qData.options) ? qData.options : qData.choices;
-    if (Array.isArray(pool) && pool[qData.correctIndex]) {
-      const candidate = pool[qData.correctIndex];
-      if (typeof candidate === 'string') {
-        correctAnswer = candidate;
-      } else if (typeof candidate === 'object' && candidate !== null) {
-        correctAnswer =
-          (candidate as { value?: string; text?: string; label?: string }).value ??
-          (candidate as { value?: string; text?: string; label?: string }).text ??
-          (candidate as { value?: string; text?: string; label?: string }).label ??
-          null;
-      }
-    }
+  return correctAnswer;
+}
+
+export function isSelectedAnswerCorrect(qData: QuestionData, selectedAnswer: string): boolean {
+  const options = getOptionLabels(qData);
+  const correctIndex = resolveCorrectAnswerIndexFromData(qData);
+  const selectedIndex = resolveAnswerIndexFromValue(selectedAnswer, options);
+  if (correctIndex !== null && selectedIndex !== null) {
+    return correctIndex === selectedIndex;
   }
 
-  return correctAnswer;
+  const correctAnswer = resolveCorrectAnswer(qData);
+  return correctAnswer !== null
+    ? normalizeAnswerForCompare(selectedAnswer) === normalizeAnswerForCompare(correctAnswer)
+    : false;
+}
+
+async function ensureQuestionAttemptQuestionTarget(
+  prisma: DrillReviewPrismaClient,
+  question: {
+    id: string;
+    questionData: unknown;
+    conditionId: string | null;
+    medicalContentId?: string | null;
+    system?: string | null;
+    difficulty?: string | null;
+  },
+  logger?: DrillReviewLogger
+): Promise<boolean> {
+  const questionModel = (prisma as any).question;
+  if (!questionModel?.findUnique || !questionModel?.upsert) return true;
+
+  const existing = await questionModel.findUnique({
+    where: { id: question.id },
+    select: { id: true, lifecycleStatus: true, qaStatus: true },
+  });
+  if (existing?.lifecycleStatus === 'ACTIVE' && existing?.qaStatus === 'APPROVED') return true;
+
+  try {
+    const canonicalQuestionId = await upsertCanonicalQuestionMirror(
+      { question: questionModel },
+      {
+        id: question.id,
+        questionData: question.questionData,
+        conditionId: question.conditionId,
+        medicalContentId: question.medicalContentId,
+        system: question.system,
+        difficulty: question.difficulty,
+      },
+      {
+        source: 'pre_generated_identity_mirror',
+        humanReviewed: true,
+      }
+    );
+    if (!canonicalQuestionId) {
+      const qData = (question.questionData as QuestionData) || {};
+      logger?.warn?.('QuestionAttempt target question missing; attempt FK may reject submission', {
+        questionId: question.id,
+        optionCount: getOptionLabels(qData).length,
+        hasCorrectAnswer: Boolean(resolveCorrectAnswer(qData)),
+        hasPrompt: Boolean(String(qData.question ?? qData.stem ?? qData.text ?? qData.vignette ?? '').trim()),
+      });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/unique|constraint|duplicate/i.test(message)) {
+      return true;
+    }
+
+    if (!/unique|constraint|duplicate/i.test(message)) {
+      logger?.warn?.('Failed to create Question identity mirror for attempt FK', {
+        questionId: question.id,
+        error: message,
+      });
+    }
+    return false;
+  }
 }
 
 /** Input validated by API route */
 export interface SubmitDrillReviewInput {
   questionId: string;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
+  medicalContentId?: string | null;
   selectedAnswer: string | number;
   timeSpentMs: number;
   timeToFirstClick?: number;
@@ -270,6 +387,12 @@ export interface DrillReviewLogger {
 const SERVER_MVRT_THRESHOLD_MS = 2000;
 const DEFAULT_PROGRESS_CONTEXT = ProgressContext.READINESS;
 
+function getProgressContextForSessionType(
+  sessionType: SubmitDrillReviewInput['sessionType']
+): ProgressContext {
+  return sessionType === 'targeted' ? ProgressContext.TARGETED : DEFAULT_PROGRESS_CONTEXT;
+}
+
 function buildStableAttemptId(userId: string, questionId: string, idempotencyKey?: string): string {
   if (!idempotencyKey) {
     return `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -277,6 +400,231 @@ function buildStableAttemptId(userId: string, questionId: string, idempotencyKey
 
   const safeKey = idempotencyKey.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 96);
   return `drill_review_${userId}_${questionId}_${safeKey}`;
+}
+
+async function linkStudySessionQuestionAttempt(
+  prisma: DrillReviewPrismaClient,
+  options: {
+    sessionId?: string | null;
+    attemptId?: string | null;
+    questionId: string;
+    canonicalQuestionId?: string | null;
+    sourceQuestionId?: string | null;
+    questionSource?: string | null;
+  },
+  logger?: DrillReviewLogger
+): Promise<void> {
+  if (!options.sessionId || !options.attemptId) return;
+
+  const delegate = (prisma as any).studySessionQuestion;
+  if (!delegate?.updateMany) return;
+
+  const canonicalIds = dedupeIds([options.canonicalQuestionId ?? options.questionId]);
+  const sourceIds = dedupeIds([options.sourceQuestionId ?? options.questionId]);
+  const clauses: Array<Record<string, unknown>> = [];
+
+  if (options.questionSource === 'pre_generated') {
+    for (const id of sourceIds) clauses.push({ preGeneratedQuestionId: id });
+  } else if (options.questionSource === 'question') {
+    for (const id of canonicalIds) clauses.push({ questionId: id });
+  } else if (options.canonicalQuestionId) {
+    for (const id of canonicalIds) clauses.push({ questionId: id });
+  } else if (options.sourceQuestionId) {
+    for (const id of sourceIds) clauses.push({ preGeneratedQuestionId: id });
+  }
+
+  if (clauses.length === 0) return;
+
+  try {
+    await delegate.updateMany({
+      where: {
+        sessionId: options.sessionId,
+        OR: clauses,
+      },
+      data: {
+        attemptId: options.attemptId,
+        answeredAt: new Date(),
+      },
+    });
+  } catch (error) {
+    logger?.warn?.('Failed to link QuestionAttempt to StudySessionQuestion', {
+      sessionId: options.sessionId,
+      attemptId: options.attemptId,
+      questionSource: options.questionSource,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function recordStudyPlanAttemptProgress(
+  prisma: DrillReviewPrismaClient,
+  options: {
+    userId: string;
+    planDate?: string | null;
+    taskId?: string | null;
+    source?: string | null;
+    sessionId?: string | null;
+    attemptId?: string | null;
+    isCorrect: boolean;
+  },
+  logger?: DrillReviewLogger
+): Promise<void> {
+  if (
+    options.source !== 'study-plan' ||
+    !options.planDate ||
+    !options.taskId ||
+    !options.attemptId
+  ) {
+    return;
+  }
+
+  const delegate = (prisma as any).dailyStudyPlan;
+  if (!delegate?.findUnique || !delegate?.update) return;
+
+  const planDate = parseStudyPlanDate(options.planDate);
+  if (!planDate) {
+    logger?.warn?.('Skipping study-plan attempt progress because planDate is invalid', {
+      planDate: options.planDate,
+      taskId: options.taskId,
+    });
+    return;
+  }
+
+  try {
+    const row = await delegate.findUnique({
+      where: {
+        userId_planDate: {
+          userId: options.userId,
+          planDate,
+        },
+      },
+    });
+    if (!row || !Array.isArray(row.recommendedSessions)) return;
+
+    const tasks = row.recommendedSessions.map((task: unknown) =>
+      task && typeof task === 'object' ? { ...(task as Record<string, unknown>) } : task
+    );
+    const taskIndex = tasks.findIndex(
+      (task: unknown) =>
+        task && typeof task === 'object' && (task as Record<string, unknown>).id === options.taskId
+    );
+    if (taskIndex < 0) return;
+
+    const task = tasks[taskIndex] as Record<string, unknown>;
+    const linkedAttemptIds = Array.isArray(task.linkedAttemptIds)
+      ? task.linkedAttemptIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : [];
+    if (linkedAttemptIds.includes(options.attemptId)) return;
+
+    const previousAnswered =
+      typeof task.actualQuestionsAnswered === 'number' && Number.isFinite(task.actualQuestionsAnswered)
+        ? Math.max(0, Math.round(task.actualQuestionsAnswered))
+        : 0;
+    const previousAccuracy =
+      typeof task.actualAccuracy === 'number' && Number.isFinite(task.actualAccuracy)
+        ? Math.max(0, Math.min(1, task.actualAccuracy))
+        : null;
+    const nextAnswered = previousAnswered + 1;
+    const nextAccuracy =
+      previousAccuracy === null
+        ? (options.isCorrect ? 1 : 0)
+        : ((previousAccuracy * previousAnswered) + (options.isCorrect ? 1 : 0)) / nextAnswered;
+    const now = new Date().toISOString();
+
+    tasks[taskIndex] = {
+      ...task,
+      status:
+        task.status === 'completed' || task.status === 'skipped' || task.status === 'rescheduled'
+          ? task.status
+          : 'in_progress',
+      startedAt: typeof task.startedAt === 'string' ? task.startedAt : now,
+      linkedSessionId:
+        typeof task.linkedSessionId === 'string'
+          ? task.linkedSessionId
+          : options.sessionId ?? undefined,
+      linkedAttemptIds: [...linkedAttemptIds, options.attemptId].slice(-200),
+      actualQuestionsAnswered: nextAnswered,
+      actualAccuracy: nextAccuracy,
+    };
+
+    const totals = summarizeStudyPlanTasks(tasks);
+    await delegate.update({
+      where: { id: row.id },
+      data: {
+        recommendedSessions: tasks,
+        status: totals.status,
+        actualQuestionsAnswered: totals.questionsAnswered,
+        actualDurationMinutes: totals.durationMinutes,
+        actualAccuracy: totals.accuracy,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    logger?.warn?.('Failed to record study-plan attempt progress', {
+      taskId: options.taskId,
+      sessionId: options.sessionId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+function dedupeIds(values: Array<string | null | undefined>): string[] {
+  return Array.from(
+    new Set(values.filter((value): value is string => typeof value === 'string' && value.length > 0))
+  );
+}
+
+function parseStudyPlanDate(value: string): Date | null {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function summarizeStudyPlanTasks(tasks: unknown[]): {
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  questionsAnswered: number;
+  durationMinutes: number | null;
+  accuracy: number | null;
+} {
+  const taskObjects = tasks.filter((task): task is Record<string, unknown> =>
+    Boolean(task) && typeof task === 'object'
+  );
+  const statuses = taskObjects.map((task) => task.status);
+  const status =
+    taskObjects.length > 0 && statuses.every((value) => value === 'completed')
+      ? 'completed'
+      : taskObjects.length > 0 && statuses.every((value) => value === 'skipped')
+        ? 'skipped'
+        : statuses.some((value) => value === 'in_progress' || value === 'completed' || value === 'skipped')
+          ? 'in_progress'
+          : 'pending';
+
+  let questionsAnswered = 0;
+  let durationMinutes = 0;
+  let accuracyWeight = 0;
+  let weightedAccuracy = 0;
+
+  for (const task of taskObjects) {
+    const answered =
+      typeof task.actualQuestionsAnswered === 'number' && Number.isFinite(task.actualQuestionsAnswered)
+        ? Math.max(0, Math.round(task.actualQuestionsAnswered))
+        : 0;
+    questionsAnswered += answered;
+
+    if (typeof task.actualDurationMinutes === 'number' && Number.isFinite(task.actualDurationMinutes)) {
+      durationMinutes += Math.max(0, Math.round(task.actualDurationMinutes));
+    }
+    if (typeof task.actualAccuracy === 'number' && Number.isFinite(task.actualAccuracy) && answered > 0) {
+      weightedAccuracy += Math.max(0, Math.min(1, task.actualAccuracy)) * answered;
+      accuracyWeight += answered;
+    }
+  }
+
+  return {
+    status,
+    questionsAnswered,
+    durationMinutes: durationMinutes > 0 ? durationMinutes : null,
+    accuracy: accuracyWeight > 0 ? weightedAccuracy / accuracyWeight : null,
+  };
 }
 
 // ─── Per-Card RT Baseline (CRPL z-score enrichment — tier1augment.md) ──────
@@ -379,6 +727,9 @@ export async function submitDrillReview(
     conditionId: string | null;
     medicalContentId?: string | null;
     system?: string | null;
+    canonicalQuestionId?: string | null;
+    sourceQuestionId?: string;
+    questionSource?: 'question' | 'pre_generated' | 'generated' | string;
   },
   logger?: DrillReviewLogger,
   /** When set (EOR mode), next-review date is clamped to this date. */
@@ -388,6 +739,10 @@ export async function submitDrillReview(
 ): Promise<SubmitDrillReviewResult> {
   const {
     questionId,
+    canonicalQuestionId,
+    sourceQuestionId,
+    questionSource,
+    medicalContentId,
     selectedAnswer,
     timeSpentMs,
     timeToFirstClick,
@@ -399,6 +754,54 @@ export async function submitDrillReview(
     idempotencyKey,
     telemetry,
   } = input;
+  const progressContext = getProgressContextForSessionType(sessionType);
+  const telemetrySessionId =
+    typeof telemetry?.session_id === 'string' && telemetry.session_id.trim().length > 0
+      ? telemetry.session_id
+      : undefined;
+  const telemetryStudyPlanTaskId =
+    typeof telemetry?.study_plan_task_id === 'string' && telemetry.study_plan_task_id.trim().length > 0
+      ? telemetry.study_plan_task_id
+      : null;
+  const telemetryStudyPlanDate =
+    typeof telemetry?.study_plan_date === 'string' && telemetry.study_plan_date.trim().length > 0
+      ? telemetry.study_plan_date
+      : null;
+  const telemetryStudyPlanSource =
+    typeof telemetry?.study_plan_source === 'string' && telemetry.study_plan_source.trim().length > 0
+      ? telemetry.study_plan_source
+      : null;
+  const learningEventIdentity = {
+    canonicalQuestionId: canonicalQuestionId ?? question.canonicalQuestionId ?? null,
+    sourceQuestionId: sourceQuestionId ?? question.sourceQuestionId ?? question.id,
+    questionSource: questionSource ?? question.questionSource ?? 'pre_generated',
+    medicalContentId: medicalContentId ?? question.medicalContentId ?? null,
+    sessionId: telemetrySessionId ?? null,
+    studyPlanTaskId: telemetryStudyPlanTaskId,
+    studyPlanDate: telemetryStudyPlanDate,
+    studyPlanSource: telemetryStudyPlanSource,
+    sessionType: sessionType ?? 'main',
+    progressContext,
+  };
+
+  const resolveProgressConditionId = async (): Promise<string | null> => {
+    if (question.medicalContentId) return question.medicalContentId;
+    if (!question.conditionId) return null;
+
+    const medicalContent = await prisma.medicalContent.findFirst({
+      where: { conditionId: question.conditionId },
+      select: { id: true },
+    });
+
+    if (medicalContent?.id) return medicalContent.id;
+
+    logger?.warn?.('Unable to resolve MedicalContent.id for UserProgress write', {
+      userId,
+      questionId,
+      conditionId: question.conditionId,
+    });
+    return null;
+  };
 
   // ── A/B Test: resolve active experiments for this user (non-blocking) ──
   let abAssignments: ABAssignmentMap = {};
@@ -422,19 +825,7 @@ export async function submitDrillReview(
 
   const qData = (question.questionData as QuestionData) || {};
   const correctAnswer = resolveCorrectAnswer(qData);
-
-  const isCorrect =
-    correctAnswer !== null
-      ? normalizedSelectedAnswer === correctAnswer
-      : (qData.options || qData.choices || []).some((opt: unknown) => {
-          if (typeof opt === 'string') return opt === normalizedSelectedAnswer;
-          if (typeof opt === 'object' && opt !== null) {
-            const optObj = opt as { value?: string; text?: string; label?: string };
-            const val = optObj.value ?? optObj.text ?? optObj.label;
-            return val === normalizedSelectedAnswer;
-          }
-          return false;
-        });
+  const isCorrect = isSelectedAnswerCorrect(qData, normalizedSelectedAnswer);
 
   // ── Wave 1: Record outcome for session accuracy slope tracking ──
   recordAccuracyOutcome(userId, isCorrect);
@@ -763,22 +1154,6 @@ export async function submitDrillReview(
   }
 
   try {
-    await updateReviewOutcome(
-      userId,
-      questionId,
-      {
-        quality,
-        timeToAnswer: numericTime,
-        baselineTime: parTimeMs,
-      },
-      prisma as any
-    );
-  } catch (reviewOutcomeErr) {
-    // Non-fatal: log but don't block the review pipeline
-    logger?.warn?.('updateReviewOutcome failed', { questionId, error: String(reviewOutcomeErr) });
-  }
-
-  try {
     await applyAttemptToUserStatistics(prisma as any, userId, {
       system: question.system || (qData as any).system || undefined,
       isCorrect,
@@ -796,6 +1171,7 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
+  let questionFkIdForRelations: string | undefined;
 
   try {
     // Check for existing attempt within last 5 minutes to avoid duplicates
@@ -814,64 +1190,104 @@ export async function submitDrillReview(
     let finalAttemptId = attemptId;
     if (existingAttempt) {
       finalAttemptId = existingAttempt.id;
+      questionFkIdForRelations = question.id;
       // Skip creation, we'll reuse the existing attempt
     } else {
-      await prisma.questionAttempt.create({
-        data: {
-          id: finalAttemptId,
-          userId,
+      const targetReady = await ensureQuestionAttemptQuestionTarget(prisma, question, logger);
+      if (targetReady) {
+        await prisma.questionAttempt.create({
+          data: {
+            id: finalAttemptId,
+            userId,
+            questionId,
+            conditionId: question.conditionId ?? undefined,
+            medicalContentId: question.medicalContentId ?? undefined,
+            system: question.system ?? undefined,
+            // Match the FSRS gate logic: undefined/missing sessionType is treated as main
+            isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
+            selectedAnswer: normalizedSelectedAnswer,
+            wasCorrect: isCorrect,
+            durationMs: effectiveDurationMs,
+            implicitConfidence,
+            telemetryJson: telemetry
+              ? {
+                  ...telemetry,
+                  server_computed: {
+                    par_time_ms: parTimeMs,
+                    circadian_par_time_ms: circadianAdjustedParTimeMs,
+                    latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
+                    implicit_rating: rating,
+                    implicit_confidence: implicitConfidence,
+                    grade_continuous: gradeContinuous,
+                    circadian_phase: circadianContext.circadianPhase,
+                    is_rapid_guess: isRapidGuess,
+                    learning_event: learningEventIdentity,
+                  },
+                }
+              : {
+                  duration_ms: numericTime,
+                  rapid_guess: isRapidGuess,
+                  question_type: 'unknown' as const,
+                  mvrt_threshold_ms: 2000,
+                  question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
+                  answer_submitted_at: new Date().toISOString(),
+                  answer_changes: answerSwitches ?? 0,
+                  hint_viewed: false,
+                  time_to_first_interaction_ms: timeToFirstClick ?? null,
+                  hint_view_duration_ms: null,
+                  server_computed: {
+                    par_time_ms: parTimeMs,
+                    circadian_par_time_ms: circadianAdjustedParTimeMs,
+                    latency_ratio: numericTime / circadianAdjustedParTimeMs,
+                    implicit_rating: rating,
+                    implicit_confidence: implicitConfidence,
+                    grade_continuous: gradeContinuous,
+                    circadian_phase: circadianContext.circadianPhase,
+                    is_rapid_guess: isRapidGuess,
+                    learning_event: learningEventIdentity,
+                  },
+                },
+          },
+        });
+        questionFkIdForRelations = question.id;
+      } else {
+        logger?.warn?.('Skipping QuestionAttempt write because no canonical FK target exists', {
           questionId,
-          conditionId: question.conditionId ?? undefined,
-          medicalContentId: question.medicalContentId ?? undefined,
-          system: question.system ?? undefined,
-          // Match the FSRS gate logic: undefined/missing sessionType is treated as main
-          isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
-          selectedAnswer: normalizedSelectedAnswer,
-          wasCorrect: isCorrect,
-          durationMs: effectiveDurationMs,
-          implicitConfidence,
-          telemetryJson: telemetry
-            ? {
-                ...telemetry,
-                server_computed: {
-                  par_time_ms: parTimeMs,
-                  circadian_par_time_ms: circadianAdjustedParTimeMs,
-                  latency_ratio: effectiveDurationMs / circadianAdjustedParTimeMs,
-                  implicit_rating: rating,
-                  implicit_confidence: implicitConfidence,
-                  grade_continuous: gradeContinuous,
-                  circadian_phase: circadianContext.circadianPhase,
-                  is_rapid_guess: isRapidGuess,
-                },
-              }
-            : {
-                duration_ms: numericTime,
-                rapid_guess: isRapidGuess,
-                question_type: 'unknown' as const,
-                mvrt_threshold_ms: 2000,
-                question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
-                answer_submitted_at: new Date().toISOString(),
-                answer_changes: answerSwitches ?? 0,
-                hint_viewed: false,
-                time_to_first_interaction_ms: timeToFirstClick ?? null,
-                hint_view_duration_ms: null,
-                server_computed: {
-                  par_time_ms: parTimeMs,
-                  circadian_par_time_ms: circadianAdjustedParTimeMs,
-                  latency_ratio: numericTime / circadianAdjustedParTimeMs,
-                  implicit_rating: rating,
-                  implicit_confidence: implicitConfidence,
-                  grade_continuous: gradeContinuous,
-                  circadian_phase: circadianContext.circadianPhase,
-                  is_rapid_guess: isRapidGuess,
-                },
-              },
-        },
-      });
+          sourceQuestionId: learningEventIdentity.sourceQuestionId,
+          questionSource: learningEventIdentity.questionSource,
+        });
+      }
     }
     // Ensure attemptId variable used later matches the final attempt ID
     attemptId = finalAttemptId;
     const weCreatedAttempt = !existingAttempt;
+    if (questionFkIdForRelations) {
+      await linkStudySessionQuestionAttempt(
+        prisma,
+        {
+          sessionId: telemetrySessionId,
+          attemptId,
+          questionId,
+          canonicalQuestionId: learningEventIdentity.canonicalQuestionId,
+          sourceQuestionId: learningEventIdentity.sourceQuestionId,
+          questionSource: questionSource ?? question.questionSource ?? null,
+        },
+        logger
+      );
+      await recordStudyPlanAttemptProgress(
+        prisma,
+        {
+          userId,
+          planDate: telemetryStudyPlanDate,
+          taskId: telemetryStudyPlanTaskId,
+          source: telemetryStudyPlanSource,
+          sessionId: telemetrySessionId,
+          attemptId,
+          isCorrect,
+        },
+        logger
+      );
+    }
     // Update peer validation statistics
     try {
       await prisma.preGeneratedQuestion.update({
@@ -949,6 +1365,7 @@ export async function submitDrillReview(
   ) => ({
     ...(telemetry ?? {}),
     server_computed: {
+      learning_event: learningEventIdentity,
       par_time_ms: parTimeMs,
       fatigue_adjusted_par_time_ms: fatigueAdjustedParTimeMs,
       user_speed_factor: userSpeedFactor,
@@ -999,7 +1416,7 @@ export async function submitDrillReview(
               userId_conditionId_progressContext: {
                 userId,
                 conditionId: question.conditionId,
-                progressContext: DEFAULT_PROGRESS_CONTEXT,
+                progressContext,
               },
             },
           });
@@ -1023,6 +1440,7 @@ export async function submitDrillReview(
             conditionId: question.conditionId,
             medicalContentId: question.medicalContentId ?? undefined,
             questionId,
+            questionFkId: questionFkIdForRelations,
             questionType: 'pre_generated',
             grade: Rating.Again, // Force grade to 1 (Again) for rapid guesses
             grade_continuous: 1.0,
@@ -1040,6 +1458,7 @@ export async function submitDrillReview(
             review_type: 'rapid_guess',
             elapsedDays: liveElapsedDays,
             wasCorrect: isCorrect,
+            sessionId: telemetrySessionId,
             sessionType: logSessionType,
             attemptId,
             system: question.system ?? undefined,
@@ -1082,7 +1501,7 @@ export async function submitDrillReview(
             userId_conditionId_progressContext: {
               userId,
               conditionId: question.conditionId,
-              progressContext: DEFAULT_PROGRESS_CONTEXT,
+              progressContext,
             },
           },
         });
@@ -1379,6 +1798,11 @@ export async function submitDrillReview(
           stability: Math.max(0.01, modifiedStability),
           difficulty: modulatedDifficulty,
         };
+        const recalculatedScheduledDays =
+          updatedCard.state === 2 && typeof (fsrs as any).calculateIntervalFromStability === 'function'
+            ? (fsrs as any).calculateIntervalFromStability(updatedCard.stability)
+            : updatedCard.scheduled_days;
+        updatedCard.scheduled_days = recalculatedScheduledDays;
 
         // ── Behavioral grade modulation (Phase 1 — Behavioral Analysis Audit) ──
         // Runs AFTER the full confidence pipeline and FSRS state update.
@@ -1464,6 +1888,7 @@ export async function submitDrillReview(
               conditionId: question.conditionId,
               medicalContentId: question.medicalContentId ?? undefined,
               questionId,
+              questionFkId: questionFkIdForRelations,
               questionType: 'pre_generated',
               grade: rating,
               grade_continuous: gradeContinuous,
@@ -1485,6 +1910,7 @@ export async function submitDrillReview(
               review_type: 'real',
               elapsedDays: currentCard.elapsed_days,
               wasCorrect: isCorrect,
+              sessionId: telemetrySessionId,
               sessionType: logSessionType,
               attemptId,
               system: question.system ?? undefined,
@@ -1645,13 +2071,20 @@ export async function submitDrillReview(
         );
 
         // Update UserProgress and sibling propagation for normal reviews only
+        const progressConditionId = await resolveProgressConditionId();
+        if (!progressConditionId) {
+          throw new Error(
+            `Cannot update UserProgress without MedicalContent.id for question ${questionId}`
+          );
+        }
         await updateUserProgressWithHistory(prisma, {
           userId,
-          conditionId: question.conditionId,
+          conditionId: progressConditionId,
           fsrsCard: updatedCard,
           rating,
           accuracy: isCorrect ? 1.0 : 0.0,
           nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
+          progressContext,
         });
 
         // ── UserTopicProgress sync (Improvement 5) ──
@@ -1670,7 +2103,7 @@ export async function submitDrillReview(
                 userId,
                 conditionId: question.conditionId,
                 taskType,
-                progressContext: DEFAULT_PROGRESS_CONTEXT,
+                progressContext,
               },
             },
             create: {
@@ -1678,7 +2111,7 @@ export async function submitDrillReview(
               userId,
               conditionId: question.conditionId,
               taskType,
-              progressContext: DEFAULT_PROGRESS_CONTEXT,
+              progressContext,
               stability: updatedCard.stability,
               difficulty: updatedCard.difficulty,
               state: updatedCard.state,
@@ -1715,14 +2148,14 @@ export async function submitDrillReview(
               userId_questionId_progressContext: {
                 userId,
                 questionId,
-                progressContext: DEFAULT_PROGRESS_CONTEXT,
+                progressContext,
               },
             },
             create: {
-              id: `${userId}_${questionId}`,
+              id: `${userId}_${questionId}_${progressContext}`,
               userId,
               questionId,
-              progressContext: DEFAULT_PROGRESS_CONTEXT,
+              progressContext,
               due: clampedNextDue,
               stability: updatedCard.stability,
               difficulty: updatedCard.difficulty,

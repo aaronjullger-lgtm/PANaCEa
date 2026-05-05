@@ -15,9 +15,14 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import { getFromCache, isKVAvailable, setInCache } from '../_shared/cache';
+import { upsertCanonicalQuestionMirror } from '../_shared/canonical-question-mirror';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
+import type { Prisma } from '@prisma/client';
 
 import { ANSWER_LETTERS } from '../../../lib/answerLetterMap';
 
@@ -44,6 +49,76 @@ function isUniqueConstraintError(error: unknown): boolean {
     'code' in error &&
     (error as { code?: string }).code === 'P2002'
   );
+}
+
+type QuestionAttemptTarget = {
+  questionId: string;
+  conditionId: string | null;
+  medicalContentId: string | null;
+};
+
+async function resolveQuestionAttemptTarget(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  questionId: string,
+  logger: ReturnType<typeof createEndpointLogger>
+): Promise<QuestionAttemptTarget | null> {
+  const existingQuestion = await prisma.question.findFirst({
+    where: withProductionQuestionSafety({ id: questionId }) as Prisma.QuestionWhereInput,
+    select: { id: true, conditionId: true, medicalContentId: true },
+  });
+  if (existingQuestion) {
+    return {
+      questionId: existingQuestion.id,
+      conditionId: existingQuestion.conditionId ?? null,
+      medicalContentId: existingQuestion.medicalContentId ?? null,
+    };
+  }
+
+  const preGenerated = await prisma.preGeneratedQuestion.findFirst({
+    where: withProductionPregeneratedSafety({ id: questionId }) as Prisma.PreGeneratedQuestionWhereInput,
+    select: {
+      id: true,
+      questionData: true,
+      conditionId: true,
+      medicalContentId: true,
+      system: true,
+      difficulty: true,
+      generatedAt: true,
+    },
+  });
+  if (!preGenerated) return null;
+
+  try {
+    const canonicalQuestionId = await upsertCanonicalQuestionMirror(prisma, {
+      id: preGenerated.id,
+      questionData: preGenerated.questionData,
+      system: preGenerated.system,
+      difficulty: preGenerated.difficulty,
+      conditionId: preGenerated.conditionId,
+      medicalContentId: preGenerated.medicalContentId,
+      generatedAt: preGenerated.generatedAt,
+    }, {
+      source: 'pre_generated_identity_mirror',
+      humanReviewed: true,
+    });
+    if (!canonicalQuestionId) {
+      logger.warn('Pre-generated question missing mirrorable scoring data', { questionId });
+      return null;
+    }
+    return {
+      questionId: canonicalQuestionId,
+      conditionId: preGenerated.conditionId ?? null,
+      medicalContentId: preGenerated.medicalContentId ?? null,
+    };
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) {
+      logger.warn('Failed to create Question identity mirror for attempt FK', {
+        questionId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return null;
+  }
 }
 
 export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context) => {
@@ -108,6 +183,18 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           ? (ANSWER_LETTERS[selectedAnswerRaw] ?? null)
           : selectedAnswerRaw;
 
+    const attemptTarget = await resolveQuestionAttemptTarget(prisma, questionId, logger);
+    if (!attemptTarget) {
+      return {
+        data: {
+          success: false,
+          error: 'Question identity could not be resolved',
+          code: 'QUESTION_IDENTITY_UNRESOLVED',
+        },
+        status: 400,
+      };
+    }
+
     type TransactionResult = {
       attemptId: string;
       stats: { totalQuestionsAnswered: number; correctAnswers: number; overallAccuracy: number };
@@ -154,11 +241,11 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         data: {
           id: attemptId,
           userId,
-          questionId,
+          questionId: attemptTarget.questionId,
           wasCorrect: correctness,
           system: system ?? null,
-          conditionId: conditionId ?? null,
-          medicalContentId: medicalContentId ?? null,
+          conditionId: attemptTarget.conditionId ?? conditionId ?? null,
+          medicalContentId: attemptTarget.medicalContentId ?? medicalContentId ?? null,
           questionType: questionType ?? null,
           mode: mode ?? null,
           isRankedAttempt,
@@ -177,7 +264,13 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       // 2. Update UserQuestionSeen
       const qType = questionType || 'question';
       const existingSeen = await tx.userQuestionSeen.findUnique({
-        where: { userId_questionId_questionType: { userId, questionId, questionType: qType } },
+        where: {
+          userId_questionId_questionType: {
+            userId,
+            questionId: attemptTarget.questionId,
+            questionType: qType,
+          },
+        },
         select: { avgTimeMs: true, timesShown: true },
       });
 
@@ -195,11 +288,17 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
       const now = new Date();
       await tx.userQuestionSeen.upsert({
-        where: { userId_questionId_questionType: { userId, questionId, questionType: qType } },
+        where: {
+          userId_questionId_questionType: {
+            userId,
+            questionId: attemptTarget.questionId,
+            questionType: qType,
+          },
+        },
         create: {
           id: crypto.randomUUID(),
           userId,
-          questionId,
+          questionId: attemptTarget.questionId,
           questionType: qType,
           firstSeenAt: now,
           lastSeenAt: now,
@@ -220,7 +319,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       // 3. Update question statistics (if exists)
       try {
         await tx.question.update({
-          where: { id: questionId },
+          where: { id: attemptTarget.questionId },
           data: {
             timesSeen: { increment: 1 },
             timesCorrect: correctness ? { increment: 1 } : undefined,
@@ -268,18 +367,6 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
     // Get detailed system stats
     const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
-
-    // SRS: Schedule concept review (legacy Leitner fallback)
-    if (typeof correctness === 'boolean' && (system || conditionId)) {
-      try {
-        const conceptKey = `${system || 'General'}|${conditionId || questionType || 'unknown'}`;
-        await scheduleConceptReview(prisma, userId, conceptKey, correctness);
-      } catch (srsErr) {
-        logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
-          error: srsErr instanceof Error ? srsErr.message : String(srsErr),
-        });
-      }
-    }
 
     // FSRS v6 + Rolling 360: Handled by drillReviewService via queueReview → /api/drills/submit-review.
     // This endpoint is stats-only — it does NOT write ReviewLog, UserProgress, Card, UserTopicProgress,

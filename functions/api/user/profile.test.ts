@@ -65,6 +65,7 @@ vi.mock('../_shared/secureLogger', () => ({
 // Force module load so capturedGetHandler / capturedPutHandler get set
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import './profile';
+import { profileUpdateSchema } from '../_shared/zodSchemas';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -376,6 +377,25 @@ describe('PUT /api/user/profile', () => {
         data: { firstName: 'Updated', school: 'Harvard' },
       })
     );
+  });
+
+  it('profile update validation rejects unsupported onboarding fields', () => {
+    const result = profileUpdateSchema.safeParse({
+      school: 'Duke University',
+      graduationDate: '2027-05-15',
+      currentRotation: 'Emergency Medicine',
+      yearInProgram: 'clinical',
+      eorTestDate: '2026-08-01',
+      rotationStartDate: '2026-07-01',
+      rotationEndDate: '2026-08-15',
+      hasCompletedOnboarding: true,
+      specialty: 'cardiology',
+    });
+
+    if (result.success) {
+      throw new Error('Expected unsupported profile field to fail validation');
+    }
+    expect(result.error?.issues.some((issue) => issue.code === 'unrecognized_keys')).toBe(true);
   });
 
   it('converts date strings in update data', async () => {

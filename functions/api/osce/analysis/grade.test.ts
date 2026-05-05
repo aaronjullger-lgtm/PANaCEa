@@ -3,6 +3,7 @@ import { onRequestPost } from './grade';
 import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv } from '../../_shared/env-validation';
 import { withRateLimit } from '../../_shared/rateLimiter';
+import { scheduleConceptReview } from '../../ai/learning/profile-crud';
 import { gateway } from '@/lib/ai/aiGateway';
 
 const mockPrisma = {
@@ -212,5 +213,51 @@ describe('POST /api/osce/analysis/grade', () => {
     expect(body.clinicalReasoningScore).toBe(82);
     expect(body.checklist).toHaveLength(1);
     expect(body.conceptGapCreated).toBe(false);
+  });
+
+  it('creates an OSCE concept gap without writing a legacy review schedule', async () => {
+    mockPrisma.patientEncounterSession.findFirst.mockResolvedValue(completedSession);
+    mockPrisma.osceResult.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: 'result_2' });
+    mockPrisma.osceResult.create.mockResolvedValue({ id: 'result_2' });
+    mockPrisma.conceptGap.findFirst.mockResolvedValue(null);
+    mockPrisma.conceptGap.create.mockResolvedValue({ id: 'gap_1' });
+
+    (gateway.grade as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        data: {
+          score: 52,
+          checklist: [
+            { item: 'Ask onset and severity', status: 'FAIL', feedback: 'Missed key history' },
+          ],
+          redFlagsMissed: ['Missed aspirin administration'],
+          clinicalReasoningScore: 45,
+          billingCodeSuggestion: 'I20.0',
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          empathy: { score: 4, feedback: 'Supportive' },
+          professionalism: { score: 5, feedback: 'Appropriate tone' },
+          pacing: { score: 4, feedback: 'Well-paced' },
+        },
+      });
+
+    const response = await onRequestPost(baseContext as any);
+    expect(response.status).toBe(200);
+    const body = await response.json();
+
+    expect(body.conceptGapCreated).toBe(true);
+    expect(mockPrisma.conceptGap.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user_1',
+        system: 'cardiovascular',
+        sourceType: 'osce',
+        sourceId: 'result_2',
+      }),
+    });
+    expect(scheduleConceptReview).not.toHaveBeenCalled();
   });
 });

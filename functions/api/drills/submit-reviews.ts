@@ -1,14 +1,20 @@
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../_shared/middleware';
+import { handleCorsPreflightSecure } from '../_shared/cors';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
-import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
-import { DrillSubmitReviewSchema, buildBatchIdemKey, IDEM_TTL_SECONDS } from './submit-review';
+import {
+  DrillSubmitReviewSchema,
+  buildBatchIdemKey,
+  getTelemetryUrgencyMultiplier,
+  IDEM_TTL_SECONDS,
+} from './submit-review';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { setInCache, isKVAvailable } from '../_shared/cache';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import { markConsumed } from '../../../lib/services/reservoir';
 import {
   beginSubmissionIdempotency,
   completeSubmissionIdempotency,
@@ -18,12 +24,8 @@ import { z } from 'zod';
 
 const BatchDrillSubmitReviewSchema = z.array(DrillSubmitReviewSchema);
 
-export const onRequestOptions = async (context: any) => {
-  return authenticatedEndpoint(BatchDrillSubmitReviewSchema, async () => ({
-    data: { message: 'Method not allowed' },
-    status: 405,
-  }))(context);
-};
+export const onRequestOptions = async (context: any) =>
+  handleCorsPreflightSecure(context.request, context.env);
 
 export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema, async (context) => {
   const { env, auth, validated } = context;
@@ -60,6 +62,10 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
     for (const review of validated) {
       const {
         questionId,
+        canonicalQuestionId,
+        sourceQuestionId,
+        questionSource,
+        medicalContentId,
         selectedAnswer,
         timeSpentMs,
         timeToFirstClick,
@@ -113,6 +119,9 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         const { question, source } = await resolveReviewQuestion(prisma, {
           userId: user.id,
           questionId,
+          canonicalQuestionId,
+          sourceQuestionId,
+          questionSource,
           selectedAnswer: normalizedSelectedAnswer,
         });
 
@@ -127,6 +136,10 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
           user.id,
           {
             questionId,
+            canonicalQuestionId,
+            sourceQuestionId,
+            questionSource,
+            medicalContentId,
             selectedAnswer,
             timeSpentMs,
             timeToFirstClick,
@@ -140,20 +153,26 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
           },
           question,
           { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
-          eorRotationEnd
+          eorRotationEnd,
+          getTelemetryUrgencyMultiplier(telemetry)
         );
 
-        // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
-        if (typeof result.isCorrect === 'boolean') {
+        // Canonical review scheduling is owned by submitDrillReview/drillReviewService.
+        // Keep this endpoint free of legacy concept-scheduler side effects so one
+        // submitted answer cannot write competing review schedules.
+        if (typeof telemetry?.session_id === 'string' && telemetry.session_id.length > 0) {
           try {
-            const conceptKey = `${question.system || 'General'}|${question.conditionId || questionId}`;
-            await scheduleConceptReview(prisma, user.id, conceptKey, result.isCorrect);
-          } catch (error_) {
-            logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
+            await markConsumed(prisma, telemetry.session_id, [questionId]);
+          } catch (consumeError) {
+            logger.warn('Reservoir consume failed (non-fatal)', {
               questionId,
-              error: error_ instanceof Error ? error_.message : String(error_),
+              sessionId: telemetry.session_id,
+              error: consumeError instanceof Error ? consumeError.message : String(consumeError),
             });
           }
+        }
+
+        if (typeof result.isCorrect === 'boolean') {
           // When incorrect: ensure a due variant exists (sibling or generate+store) so Due session never waits
           if (result.isCorrect === false) {
             ensureDueVariant(

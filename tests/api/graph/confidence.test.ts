@@ -122,8 +122,11 @@ describe('POST /api/graph/confidence', () => {
     const response = await onRequestPost(mockContext as any);
     expect(response.status).toBe(500);
     const data = await response.json();
-    // Unified envelope: { success: false, error: 'INTERNAL_ERROR', message: '...', ... }
+    // Unified endpoint failure envelope: { success: false, error: { code, message } }
     expect(data.success).toBe(false);
-    expect(data.error).toBe('INTERNAL_ERROR');
+    expect(data.error).toMatchObject({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to compute confidence scores',
+    });
   });
 });

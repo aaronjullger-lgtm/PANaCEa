@@ -1,4 +1,4 @@
-import { PrismaClient, type MappingAuditLogAction } from '@prisma/client';
+import type { MappingAuditAction, PrismaClient } from '@prisma/client';
 
 /**
  * Parameters for logging a mapping audit event.
@@ -11,13 +11,11 @@ export interface AuditEventParams {
   /** Previous system code, if any (null for unmapped) */
   previousSystemCode?: string | null;
   /** Action type */
-  action: MappingAuditLogAction;
+  action: MappingAuditAction;
   /** User ID (optional, will be filled by server) */
   userId?: string;
   /** Rationale for the change */
   rationale?: string;
-  /** Additional metadata */
-  metadata?: Record<string, any>;
 }
 
 /**
@@ -37,7 +35,6 @@ export async function logAuditEventServer(
         action: params.action,
         userId: params.userId ?? null,
         rationale: params.rationale ?? null,
-        metadata: params.metadata ?? {},
       },
     });
   } catch (error) {
@@ -49,13 +46,13 @@ export async function logAuditEventServer(
 /**
  * Client‑side stub that sends an audit event to the server via API.
  * Used by frontend components that cannot access Prisma directly.
- * Currently a no‑op; in a production setting you would call an API endpoint.
+ * Currently a no-op; in a production setting you would call an API endpoint.
  */
 export async function logAuditEvent(params: Omit<AuditEventParams, 'userId'>): Promise<void> {
   // In a real implementation, you would call:
   //   fetch('/api/audit/mapping', { method: 'POST', body: JSON.stringify(params) })
   // For now, we simply log to console in development.
-  if (process.env.NODE_ENV === 'development') {
+  if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) {
     console.debug('[MappingAudit]', params);
   }
   // No‑op in production – server‑side logging is sufficient.
@@ -67,7 +64,7 @@ export async function logAuditEvent(params: Omit<AuditEventParams, 'userId'>): P
 export interface AuditLogQuery {
   taxonomyCode?: string;
   systemCode?: string;
-  action?: MappingAuditLogAction;
+  action?: MappingAuditAction;
   userId?: string;
   startDate?: Date;
   endDate?: Date;

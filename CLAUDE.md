@@ -394,17 +394,13 @@ npm run orchestrate:full     # Full automation pipeline
    - `20260418000100_drop_redundant_indexes` (removed `MC_buzzwords_gin_idx`, `idx_user_question_seen_user_last`, `idx_ubm_user_created`, `Drug_drugClass_idx`)
    - `20260418000200_question_embedding_ivfflat_to_hnsw` (re-tunes to repo standard m=24, ef_construction=200)
 
-### Recently Completed (2026-04-13 Integration Session)
-- ✅ KB content loading — SmartConditionView already has comprehensive error/loading/retry states
-- ✅ Skill descriptions — already well-optimized with trigger phrases
-- ✅ 12 new services (Sprints 13-25) written and tested (263+ tests)
-- ✅ 8 services wired into production: CRAG+reranker→RAG, bandit→selector, clustering→dashboard, self-refine→generate-rag, FIRe→drillReviewService, error patterns, daily load, item metrics
-- ✅ 5 new API endpoints: error-patterns, daily-load, learner-profile, knowledge-graph, compute-item-metrics
-- ✅ 5 new dashboard widgets: DailyLoadWidget, ErrorPatternWidget, LearnerInsightsCard, KnowledgeGraphWidget
-- ✅ Dashboard personalization: 3 new WidgetIds registered across PANCE_PREP + CLINICAL_ROTATION configs
-- ✅ Landing page redesign: HeroSection, FeaturesGrid, HowItWorks, SocialProof, FinalCTA
-- ✅ Code review: confidence overflow fix, aria-expanded accessibility, auth policy review (5/5 pass)
-- ✅ Test suite: 205/213 files pass, 3200+/3219 tests pass, 0 new regressions
+### Recently Completed (2026-05 Integration Session)
+- ✅ `/study` now routes through `CommandCenterHub -> CommandCenterWorkspace -> AdaptiveDashboardPage`.
+- ✅ Legacy dashboard entrypoints and unmounted analytics widgets were removed after import census.
+- ✅ The adaptive dashboard uses normalized signals, mode profiles, registry scoring, suppression, visual budget enforcement, semantic medical visuals, and a fixed shell with adaptive slots.
+- ✅ SRS review writes are owned by `drillReviewService`; legacy `/api/srs/*` routes remain compatibility adapters only.
+- ✅ Todoist OAuth/linking was removed; CSV export remains the supported Todoist-compatible path.
+- ✅ Production readiness status is tracked in `UPDATED_PRODUCTION_READINESS_SCORECARD.md`, `NEXT_IMPLEMENTATION_PLAN.md`, and the current integration reports.
 
 ---
 

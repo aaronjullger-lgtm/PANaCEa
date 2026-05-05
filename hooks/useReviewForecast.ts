@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { getBrowserTimezone } from '@/lib/time/userTz';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface ForecastDay {
   date: string;
@@ -55,13 +56,13 @@ export function useReviewForecast() {
         });
 
         if (!response.ok) {
-          throw new Error(`Review forecast fetch failed: ${response.status}`);
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(
+            getApiEnvelopeError(errorPayload, `Review forecast fetch failed: ${response.status}`)
+          );
         }
 
-        const json = await response.json();
-        if (json?.data) {
-          setData(json.data);
-        }
+        setData(unwrapApiEnvelope<ReviewForecastData>(await response.json()));
       } catch (err) {
         console.warn('[useReviewForecast] Failed:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');

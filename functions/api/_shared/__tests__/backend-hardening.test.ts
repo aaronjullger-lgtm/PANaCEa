@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { authenticatedEndpoint, publicEndpoint } from '../middleware';
+import { aiEndpoint, authenticatedEndpoint, publicEndpoint } from '../middleware';
 import { ErrorCode } from '../error-catalog';
 
 vi.mock('@clerk/backend', () => ({
@@ -114,6 +114,58 @@ describe('backend hardening middleware', () => {
       error: { code: ErrorCode.RATE_LIMITED },
       success: false,
     });
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it('fails closed for AI endpoints when the distributed limiter is unavailable', async () => {
+    (verifyToken as any).mockResolvedValue({ sub: 'clerk_user_1' });
+    const kv = {
+      get: vi.fn().mockRejectedValue(new Error('kv unavailable')),
+      put: vi.fn(),
+    };
+    const handler = vi.fn(async () => ({ data: { reached: true } }));
+    const endpoint = aiEndpoint(z.object({}), handler);
+
+    const response = await endpoint(
+      context(
+        new Request('https://example.test/api/questions/generate', {
+          method: 'GET',
+          headers: { Authorization: 'Bearer session-token' },
+        }),
+        { RATE_LIMIT_KV: kv }
+      ) as never
+    );
+
+    const body = await json(response);
+    expect(response.status).toBe(503);
+    expect(body).toMatchObject({
+      ok: false,
+      error: { code: ErrorCode.SERVICE_UNAVAILABLE },
+      success: false,
+    });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('keeps non-AI authenticated endpoints fail-open on limiter faults for local compatibility', async () => {
+    (verifyToken as any).mockResolvedValue({ sub: 'clerk_user_1' });
+    const kv = {
+      get: vi.fn().mockRejectedValue(new Error('kv unavailable')),
+      put: vi.fn(),
+    };
+    const handler = vi.fn(async () => ({ data: { reached: true } }));
+    const endpoint = authenticatedEndpoint(z.object({}), handler);
+
+    const response = await endpoint(
+      context(
+        new Request('https://example.test/api/private', {
+          method: 'GET',
+          headers: { Authorization: 'Bearer session-token' },
+        }),
+        { RATE_LIMIT_KV: kv }
+      ) as never
+    );
+
+    expect(response.status).toBe(200);
     expect(handler).toHaveBeenCalledOnce();
   });
 

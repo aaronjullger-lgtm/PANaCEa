@@ -89,7 +89,9 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
-      // Log preview action for each taxonomy
+      // Log preview action for each taxonomy. The audit table stores the
+      // taxonomy/system/action/rationale tuple; batch metadata is intentionally
+      // not accepted until a schema migration adds it.
       for (const change of mappingChanges) {
         await logAuditEventServer(prisma, {
           taxonomyCode: change.taxonomyCode,
@@ -98,7 +100,6 @@ export const onRequestPost = authenticatedEndpoint(
           action: 'PREVIEW',
           userId: user.id,
           rationale: 'Preview of mapping impact',
-          metadata: { previewId: 'generated' },
         });
       }
 

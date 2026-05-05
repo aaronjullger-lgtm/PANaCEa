@@ -12,7 +12,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import type { PerformanceRecord, Question } from '../types';
-import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
 import { createDebouncedFunction } from '../lib/utils/debounce';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 import { logger } from "@/lib/simple-logger";
@@ -71,6 +70,29 @@ interface UseUserStatsResult extends UserStatsState {
 
 interface SavedQuestionWithType extends Question {
   type: 'missed' | 'flagged';
+}
+
+type SyncDataPayload = {
+  performanceRecords?: PerformanceRecord[];
+  srsItems?: unknown[];
+  savedQuestions?: SavedQuestionWithType[];
+};
+
+type SyncResponsePayload = {
+  success?: boolean;
+  sessionId?: string;
+  data?: SyncDataPayload | { success?: boolean; data?: SyncDataPayload };
+};
+
+function unwrapSyncResponse(result: SyncResponsePayload): { success: boolean; data: SyncDataPayload | null } {
+  const maybeEnvelope = result.data as { success?: boolean; data?: SyncDataPayload } | SyncDataPayload | undefined;
+  const nested =
+    maybeEnvelope && 'data' in maybeEnvelope && maybeEnvelope.data
+      ? maybeEnvelope
+      : null;
+  const data = (nested?.data ?? maybeEnvelope ?? null) as SyncDataPayload | null;
+  const success = Boolean(result.success ?? nested?.success ?? data);
+  return { success, data };
 }
 
 function safeParse<T>(raw: string | null, fallback: T): T {
@@ -236,9 +258,6 @@ export function useUserStats(): UseUserStatsResult {
       // Create Set for O(1) lookup instead of O(n) array.includes()
       const missedQuestionIds = new Set(currentMissedQuestions.map(getQuestionKey));
 
-      // Get SRS items from srsService
-      const srsItems = getAllSRSItems(user.clerkId);
-
       // Use circuit breaker to prevent cascading failures
       const circuitBreaker = getSyncCircuitBreaker();
       const response = await circuitBreaker.execute(() =>
@@ -251,7 +270,6 @@ export function useUserStats(): UseUserStatsResult {
           body: JSON.stringify({
             userId: user.clerkId,
             performanceRecords: currentPerformanceData,
-            srsItems,
             savedQuestions: [...currentMissedQuestions, ...currentFlaggedQuestions].map((q) => {
               const questionId = getQuestionKey(q);
               return {
@@ -292,19 +310,12 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error(`Sync failed: server returned ${contentType || 'non-JSON'}`);
       }
 
-      const result = (await response.json()) as {
-        success?: boolean;
-        sessionId?: string;
-        data?: {
-          performanceRecords?: PerformanceRecord[];
-          srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0];
-          savedQuestions?: SavedQuestionWithType[];
-        };
-      };
+      const result = (await response.json()) as SyncResponsePayload;
+      const syncPayload = unwrapSyncResponse(result);
 
       // Process server response and update local state with merged data
-      if (result.success && result.data) {
-        const d = result.data;
+      if (syncPayload.success && syncPayload.data) {
+        const d = syncPayload.data;
         
         // Merge performance records by ID, keeping newer records
         if (d.performanceRecords?.length) {
@@ -319,10 +330,6 @@ export function useUserStats(): UseUserStatsResult {
             });
             return Array.from(merged.values());
           });
-        }
-        
-        if (d.srsItems?.length) {
-          loadSRSItemsFromCloud(d.srsItems);
         }
         
         // Merge saved questions with timestamp-based conflict resolution
@@ -434,17 +441,11 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error(`Sync failed: server returned ${contentType || 'non-JSON'}`);
       }
 
-      const result = (await response.json()) as {
-        success?: boolean;
-        data?: {
-          performanceRecords?: PerformanceRecord[];
-          srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0];
-          savedQuestions?: SavedQuestionWithType[];
-        };
-      };
+      const result = (await response.json()) as SyncResponsePayload;
+      const syncPayload = unwrapSyncResponse(result);
 
-      if (result.success && result.data) {
-        const d = result.data;
+      if (syncPayload.success && syncPayload.data) {
+        const d = syncPayload.data;
         const syncErrors: string[] = [];
 
         // Merge performance records by ID, keeping newer records
@@ -463,12 +464,6 @@ export function useUserStats(): UseUserStatsResult {
             });
           }
         } catch (e) { syncErrors.push(`performanceRecords: ${e instanceof Error ? e.message : String(e)}`); }
-
-        try {
-          if (d.srsItems?.length) {
-            loadSRSItemsFromCloud(d.srsItems);
-          }
-        } catch (e) { syncErrors.push(`srsItems: ${e instanceof Error ? e.message : String(e)}`); }
 
         if (syncErrors.length > 0) {
           userStatsLogger.warn('Partial sync errors during download', { syncErrors });

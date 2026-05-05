@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 // Validation schemas
 const GoalListSchema = z.object({
@@ -47,8 +48,7 @@ const GoalCreateSchema = z.object({
   }),
 });
 
-const GoalUpdateSchema = z.object({
-  body: z.object({
+const GoalUpdateBodySchema = z.object({
     title: z.string().min(1).max(200).optional(),
     description: z.string().max(1000).optional(),
     currentValue: z.number().int().min(0).max(10000).optional(),
@@ -61,7 +61,12 @@ const GoalUpdateSchema = z.object({
     targetDate: z.string().datetime().optional(),
     motivationNotes: z.string().max(500).optional(),
     rewardMessage: z.string().max(200).optional(),
-  }),
+}).refine((body) => Object.keys(body).length > 0, {
+  message: 'At least one goal update field is required',
+});
+
+const GoalUpdateSchema = z.object({
+  body: GoalUpdateBodySchema,
 });
 
 const EmptySchema = z.object({});
@@ -79,13 +84,15 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       logger.addContext({ userId: auth.userId });
 
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+
       // Parse query params
       const status = validated.status;
       const goalType = validated.goalType;
       const limit = validated.limit ?? 50;
 
       // Build where clause
-      const where: any = { userId: auth.userId };
+      const where: any = { userId: user.id };
       if (status) where.status = status;
       if (goalType) where.goalType = goalType;
 
@@ -99,7 +106,7 @@ export const onRequestGet = authenticatedEndpoint(
         take: Math.min(limit, 100),
       });
 
-      logger.info('Goals fetched', { count: goals.length, status, goalType });
+      logger.info('Goals fetched', { userId: user.id, count: goals.length, status, goalType });
 
       return {
         data: {
@@ -145,9 +152,11 @@ export const onRequestPost = authenticatedEndpoint(GoalCreateSchema, async (cont
       rewardMessage,
     } = validated.body;
 
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+
     // DoS guard: cap total goals per user
     const existingCount = await prisma.userGoal.count({
-      where: { userId: auth.userId },
+      where: { userId: user.id },
     });
     if (existingCount >= 100) {
       return {
@@ -159,7 +168,7 @@ export const onRequestPost = authenticatedEndpoint(GoalCreateSchema, async (cont
     // Create goal
     const goal = await prisma.userGoal.create({
       data: {
-        userId: auth.userId,
+        userId: user.id,
         title,
         description,
         goalType,
@@ -177,7 +186,7 @@ export const onRequestPost = authenticatedEndpoint(GoalCreateSchema, async (cont
       },
     });
 
-    logger.info('Goal created', { goalId: goal.id, goalType, title });
+    logger.info('Goal created', { userId: user.id, goalId: goal.id, goalType, title });
 
     return {
       data: {
@@ -208,6 +217,8 @@ export const onRequestPatch = authenticatedEndpoint(GoalUpdateSchema, async (con
   try {
     logger.addContext({ userId: auth.userId });
 
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+
     // Get goal ID from path
     const url = new URL(context.request.url);
     const pathParts = url.pathname.split('/');
@@ -236,7 +247,7 @@ export const onRequestPatch = authenticatedEndpoint(GoalUpdateSchema, async (con
       };
     }
 
-    if (existingGoal.userId !== auth.userId) {
+    if (existingGoal.userId !== user.id) {
       logger.warn('Unauthorized goal access attempt', { goalId, attemptedBy: auth.userId });
       return {
         data: { success: false, error: 'Unauthorized' },
@@ -299,7 +310,7 @@ export const onRequestPatch = authenticatedEndpoint(GoalUpdateSchema, async (con
       data: updateData,
     });
 
-    logger.info('Goal updated', { goalId, updates: Object.keys(updates) });
+    logger.info('Goal updated', { userId: user.id, goalId, updates: Object.keys(updates) });
 
     return {
       data: {
@@ -329,6 +340,8 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
   try {
     logger.addContext({ userId: auth.userId });
 
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+
     // Get goal ID from path
     const url = new URL(context.request.url);
     const pathParts = url.pathname.split('/');
@@ -355,7 +368,7 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
       };
     }
 
-    if (existingGoal.userId !== auth.userId) {
+    if (existingGoal.userId !== user.id) {
       logger.warn('Unauthorized goal deletion attempt', { goalId, attemptedBy: auth.userId });
       return {
         data: { success: false, error: 'Unauthorized' },
@@ -368,7 +381,7 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
       where: { id: goalId },
     });
 
-    logger.info('Goal deleted', { goalId });
+    logger.info('Goal deleted', { userId: user.id, goalId });
 
     return {
       data: {

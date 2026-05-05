@@ -10,10 +10,12 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 
-const PoolStatusSchema = z.object({
-  query: z.object({}),
-});
+const PoolStatusSchema = z.object({});
 
 const POOL_LOW_THRESHOLD = 20; // fallback global threshold
 const BASE_THRESHOLD_MULTIPLIER = 200;
@@ -53,11 +55,11 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
     const [groupedCounts, totalInPool, mainQuestionCount, seenQuestions] = await Promise.all([
       prisma.preGeneratedQuestion.groupBy({
         by: ['system'],
-        where: { system: { in: SYSTEMS } },
+        where: withProductionPregeneratedSafety({ system: { in: SYSTEMS } }),
         _count: { id: true },
       }),
-      prisma.preGeneratedQuestion.count(),
-      prisma.question.count(),
+      prisma.preGeneratedQuestion.count({ where: withProductionPregeneratedSafety({}) }),
+      prisma.question.count({ where: withProductionQuestionSafety({}) }),
       prisma.userQuestionSeen.findMany({
         where: { userId: user.id },
         select: { questionId: true },
@@ -86,6 +88,7 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
         where: {
           id: { in: seenIds },
           system: { in: SYSTEMS },
+          validationStatus: 'approved',
         },
         select: { id: true, system: true },
       });
@@ -141,4 +144,4 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query', requestsPerMinute: 120 });

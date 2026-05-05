@@ -151,8 +151,6 @@ describe('computeCurrentStreak — "all" mode', () => {
 
   it('streak=2 when active today and yesterday', () => {
     const result = computeCurrentStreak(makeInput({
-      activityDates: [MON, SUN],  // SUN = 2024-01-07 would be after MON... wait
-      // Let me use: today=TUE, activity=TUE+MON
       today: TUE,
       activityDates: [TUE, MON],
     }));

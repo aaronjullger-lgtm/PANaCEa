@@ -2,18 +2,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
 import { logger } from '../../logger';
-import { gateway, GatewayError, type GatewayContext } from '../../ai/aiGateway';
 
 const LOG_SCOPE = 'SessionService';
 const MAX_RECENT_SEEN_IDS = 5_000;
 import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
 import { resolveCorrectAnswerIndex } from '../../answerLetterMap';
-import { withTimeout } from '../../timeout';
 import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
 import {
   NCCPA_2025_BLUEPRINT_PERCENT,
-  PANCE_TASK_CATEGORY_PERCENT,
   getSystemAbbreviation,
   normalizeSystemName,
   calculateSimulationTargetDistribution,
@@ -24,19 +21,10 @@ import {
   calculateOrderDistribution,
   selectQuestionOrder,
 } from '../../nccpa-question-weighting';
-
-/** Pick a random task category per NCCPA Blueprint weights (Sprint 5). */
-function pickRandomTask(): string {
-  const tasks = Object.keys(PANCE_TASK_CATEGORY_PERCENT) as (keyof typeof PANCE_TASK_CATEGORY_PERCENT)[];
-  const weights = tasks.map((t) => PANCE_TASK_CATEGORY_PERCENT[t] || 0);
-  const total = weights.reduce((s, w) => s + w, 0);
-  let r = Math.random() * total;
-  for (let i = 0; i < tasks.length; i++) {
-    r -= weights[i];
-    if (r <= 0) return tasks[i].replace(/_/g, ' ');
-  }
-  return 'diagnosis';
-}
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../questionServingSafety';
 
 // Interfaces moved from session.ts to be used in the service
 export interface SessionQuestionRequest {
@@ -167,7 +155,7 @@ export class SessionService {
           take: MAX_RECENT_SEEN_IDS,
         }),
         this.prisma.preGeneratedQuestion.count({
-          where: { usedAt: null },
+          where: withProductionPregeneratedSafety({ usedAt: null }),
         }),
       ]);
     } catch (error) {
@@ -259,14 +247,7 @@ export class SessionService {
         eorDeadline,
         questionOrder: preferredOrder,
       }),
-      mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
-        count: Math.max(0, Math.min(count - 5, 10)), // Reserve some for pool
-        system,
-        conditionId,
-        panceLevelOnly,
-        eorMode,
-        eorDeadline,
-      }) : Promise.resolve([]),
+      Promise.resolve([]),
       this.fetchFromMain(userId, seenIds, {
         count: Math.max(0, Math.min(count - 10, 10)), // Reserve for pool and seeds
         system,
@@ -308,26 +289,17 @@ export class SessionService {
       }
     }
 
-    // Sprint 7: If still short and Gemini available, generate new questions (with userId for FSRS hint)
+    // Legacy /api/questions/session must fail closed to persisted, submit-safe
+    // question identities. Mid-session generated and seed-expanded questions are
+    // not served here because they do not carry a canonical persisted identity
+    // that the review submission pipeline can reliably resolve.
     if (allQuestions.length < count && this.env.GEMINI_API_KEY) {
-      try {
-        const needed = count - allQuestions.length;
-        const generated = await this.generateNewQuestions({
-          count: needed,
-          system,
-          conditionId,
-          userId,
-        });
-        for (const q of generated) {
-          if (allQuestions.length >= count) break;
-          if (!usedIds.has(q.id)) {
-            allQuestions.push(q);
-            usedIds.add(q.id);
-          }
-        }
-      } catch (err) {
-        logger.error(`[${LOG_SCOPE}] generateNewQuestions fallback failed`, { error: err });
-      }
+      logger.warn(`[${LOG_SCOPE}] Session shortfall left unfilled because learner hot-path generation is disabled`, {
+        requested: count,
+        available: allQuestions.length,
+        system,
+        conditionId,
+      });
     }
 
     // Trim to exact count
@@ -394,13 +366,7 @@ export class SessionService {
           eorDeadline,
           questionOrder: systemOrder,
         }),
-        mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
-          count: Math.max(0, Math.min(targetCount - 2, 8)), // Reserve some for pool
-          system: systemAbbrev,
-          panceLevelOnly,
-          eorMode,
-          eorDeadline,
-        }) : Promise.resolve([]),
+        Promise.resolve([]),
         this.fetchFromMain(userId, seenIds, {
           count: Math.max(0, Math.min(targetCount - 5, 5)), // Reserve for pool and seeds
           system: systemAbbrev,
@@ -565,7 +531,7 @@ export class SessionService {
   ): Promise<{ questions: EnrichedQuestion[] }> {
     const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline, questionOrder, taskCategory } = options;
 
-    const where: Prisma.PreGeneratedQuestionWhereInput = {};
+    const where = withProductionPregeneratedSafety({}) as Prisma.PreGeneratedQuestionWhereInput;
     if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
@@ -754,7 +720,7 @@ export class SessionService {
   ): Promise<EnrichedQuestion[]> {
     const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
-    const where: Prisma.QuestionWhereInput = {};
+    const where = withProductionQuestionSafety({}) as Prisma.QuestionWhereInput;
     if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
@@ -850,240 +816,6 @@ export class SessionService {
     }
 
     return questions;
-  }
-
-  /**
-   * Generate new questions on-demand when pool is exhausted mid-session.
-   * Caps at MAX_SESSION_GENERATION to bound latency. Each question gets an
-   * independent timeout so one slow generation doesn't block the rest.
-   */
-  private static readonly MAX_SESSION_GENERATION = 5;
-
-  private async generateNewQuestions(options: {
-    count: number;
-    system?: string;
-    conditionId?: string;
-    difficulty?: string;
-    userId?: string;
-  }): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty, userId } = options;
-    const cappedCount = Math.min(count, (this.constructor as typeof SessionService).MAX_SESSION_GENERATION);
-
-    const where: Prisma.MedicalContentWhereInput = { status: 'published' };
-    if (system) where.system = system;
-    if (conditionId) where.conditionId = conditionId;
-
-    const contentRecords = await this.prisma.medicalContent.findMany({
-      where,
-      take: cappedCount,
-      orderBy: { updatedAt: 'desc' },
-    });
-
-    if (contentRecords.length === 0) {
-      return [];
-    }
-
-    const questions: EnrichedQuestion[] = [];
-    const generationStartMs = Date.now();
-
-    for (const content of contentRecords) {
-      if (questions.length >= cappedCount) break;
-
-      try {
-        const fsrsHint = await this.getFSRSDifficultyHint(userId, content.conditionId);
-        const generated = await this.generateQuestionFromContent(content, difficulty, fsrsHint);
-        if (generated) {
-          questions.push(generated);
-
-          // Save to pool for future sessions (non-blocking)
-          this.prisma.preGeneratedQuestion.create({
-            data: {
-              id: generated.id,
-              questionType: 'mcq',
-              system: generated.system,
-              conditionId: content.conditionId,
-              medicalContentId: content.id,
-              difficulty: generated.difficulty,
-              questionData: {
-                question: generated.question,
-                vignette: generated.vignette,
-                options: generated.options,
-                correctAnswerIndex: generated.correctAnswerIndex,
-                rationale: generated.rationale,
-                condition: generated.condition,
-                pearls: generated.pearls,
-              },
-            },
-          }).catch((err: unknown) => {
-            logger.warn(`[${LOG_SCOPE}] Non-blocking pool save failed`, { error: err });
-          });
-        }
-      } catch (error) {
-        logger.error(`[${LOG_SCOPE}] Failed to generate question`, { error });
-      }
-    }
-
-    const generationTimeMs = Date.now() - generationStartMs;
-    logger.info(`[${LOG_SCOPE}] Mid-session generation completed`, {
-      requested: count,
-      capped: cappedCount,
-      generated: questions.length,
-      generationTimeMs,
-    });
-
-    return questions;
-  }
-
-  /** FSRS-driven difficulty hint (Sprint 6): low stability → classic; high stability → atypical */
-  private async getFSRSDifficultyHint(
-    userId: string | undefined,
-    conditionId: string | undefined
-  ): Promise<string> {
-    if (!userId || !conditionId) return '';
-    try {
-      const up = await this.prisma.userProgress.findFirst({
-        where: { userId, conditionId },
-        select: { fsrsStability: true, fsrsCard: true },
-      });
-      if (!up) return '';
-      // Prefer fsrsCard.stability (authoritative JSON) with fsrsStability scalar fallback
-      const cardStability = (up.fsrsCard as { stability?: number })?.stability;
-      const stability =
-        typeof cardStability === 'number'
-          ? cardStability
-          : typeof up.fsrsStability === 'number'
-            ? up.fsrsStability
-            : undefined;
-      if (typeof stability !== 'number') return '';
-      if (stability < 2) return 'Use classic presentation, straightforward case (low mastery).';
-      if (stability > 10) return 'Use atypical presentation, multiple comorbidities, or rare side effect (high mastery).';
-      return '';
-    } catch (err) {
-      console.debug('[sessionService] difficulty hint generation failed', err);
-      return '';
-    }
-  }
-
-  private async generateQuestionFromContent(
-    content: any,
-    difficulty?: string,
-    fsrsHint?: string
-  ): Promise<EnrichedQuestion | null> {
-    // Sprint 7: route through AI gateway (task='generation', tier='balanced'
-    // — gemini-2.5-flash, matches prior mid-session speed-over-depth choice).
-    const gatewayCtx: GatewayContext = {
-      env: { GEMINI_API_KEY: (this.env.GEMINI_API_KEY as string) ?? '' },
-    };
-
-    // Pass findings-only context for vignette-building; withhold diagnosis/overview from vignette
-    const findingsContext = [
-      content.symptoms ? `Symptoms/Clinical Presentation: ${String(content.symptoms).slice(0, 400)}` : '',
-      content.physicalExam ? `Physical Exam Findings: ${String(content.physicalExam).slice(0, 300)}` : '',
-      content.diagnostics ? `Lab/Imaging Patterns: ${String(content.diagnostics).slice(0, 400)}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const prompt = `Generate a PANCE-style multiple choice question based on these clinical findings. Use them to build a vignette that presents RAW PATIENT DATA ONLY.
-
-${findingsContext || 'Use typical findings for a common condition in this system.'}
-
-Context for answer accuracy (do NOT include in vignette text): Treatment: ${String(content.treatment || 'N/A').slice(0, 300)}
-Clinical Pearls: ${JSON.stringify(content.clinical_pearls || [])}
-
-Difficulty: ${difficulty || 'medium'}
-${fsrsHint ? `FSRS HINT: ${fsrsHint}` : ''}
-
-CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals). Example: "A 45-year-old male with fatigue. Labs: Hgb 9.2 g/dL, MCV 72 fL, ferritin 10 ng/mL" — NOT "A patient with iron deficiency anemia."
-
-KAPLAN-LEVEL RULES:
-- Third-order / "Double Jump" (STRICT): Prefer a stem that requires a chain (Vignette → Diagnosis → Complication/next step → Answer). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible. Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S).
-- Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient. No obviously wrong options.
-- Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why wrong for this step.
-- Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action.
-- Pertinent negatives: Include at least 2 pertinent negatives that rule out top differentials (e.g. "No JVD rules out tamponade; no pain on inspiration rules out pleuritis").
-    - Pharmacological contraindications: For therapeutics questions, include a comorbid condition that contraindicates first-line when appropriate (e.g. HTN + gout → avoid thiazides; otitis + penicillin allergy → use macrolide).
-- Task: This question should test ${pickRandomTask()} (per NCCPA task distribution).
-- Red flag (optional): Occasionally include a subtle red flag that changes management (e.g. back pain + urinary incontinence → cauda equina). Do not make it obvious.
-
-STANDARDIZED RATIONALE (5-section object, NCCPA-style): The "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette findings → diagnosis → answer), whyIncorrectA/B/C/D/E (why a student might choose it; why wrong for THIS patient; when it WOULD be correct for another scenario), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or brief description).
-
-Return ONLY valid JSON (PANCE uses 5 options):
-{
-  "question": "Clinical vignette ending with a question (prefer third-order: mechanism, next step, or complication management)",
-  "options": ["Option A", "Option B", "Option C", "Option D", "Option E"],
-  "correctAnswerIndex": 0,
-  "rationale": {
-    "bottomLine": "The diagnosis is X, and the treatment is Y.",
-    "whyCorrect": "Walk through vignette steps: findings → diagnosis → answer.",
-    "whyIncorrectA": "Option A (Name): Incorrect because... Correct for [different scenario].",
-    "whyIncorrectB": "Option B (Name): Incorrect because... Correct for [different scenario].",
-    "whyIncorrectC": "Option C (Name): Incorrect because... Correct for [different scenario].",
-    "whyIncorrectD": "Option D (Name): Incorrect because... Correct for [different scenario].",
-    "whyIncorrectE": "Option E (Name): Incorrect because... Correct for [different scenario].",
-    "clinicalPearl": "Remember: [pattern] = [condition] until proven otherwise.",
-    "highYieldImageOrTable": "N/A"
-  },
-  "pearls": ["Pearl 1", "Pearl 2", "Pearl 3"]
-}`;
-
-    try {
-      const gatewayResult = await withTimeout(
-        gateway.callText(gatewayCtx, {
-          mode: 'text',
-          task: 'generation',
-          tier: 'balanced', // mid-session: speed > depth
-          endpoint: 'lib/services/session/sessionService#generateQuestionFromContent',
-          userPrompt: prompt,
-          temperature: 0.7,
-        }),
-        8000,
-        'Gemini generateContent timed out (8s mid-session)'
-      );
-
-      if (gatewayResult.blocked) {
-        logger.warn(`[${LOG_SCOPE}] Mid-session generation blocked by safety filter`);
-        return null;
-      }
-
-      const text = gatewayResult.text ?? '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return null;
-
-      const data = JSON.parse(jsonMatch[0]);
-      const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-      // Accept rationale as object (structured) or string (legacy fallback)
-      const rationale =
-        typeof data.rationale === 'object' && data.rationale !== null && 'whyCorrect' in data.rationale
-          ? data.rationale
-          : (data.rationale as string) || '';
-
-      return {
-        id,
-        question: data.question,
-        options: data.options,
-        correctAnswerIndex: data.correctAnswerIndex,
-        rationale,
-        system: content.system,
-        subcategory: content.subcategory,
-        conditionId: content.conditionId,
-        condition: content.condition,
-        medicalContentId: content.id,
-        pearls: data.pearls || [],
-        difficulty: difficulty || 'medium',
-        source: 'generated',
-      };
-    } catch (error) {
-      if (error instanceof GatewayError) {
-        logger.error(`[${LOG_SCOPE}] AI gateway error [${error.code}]`, {
-          message: error.message,
-        });
-      } else {
-        logger.error(`[${LOG_SCOPE}] AI generation failed`, { error });
-      }
-      return null;
-    }
   }
 
   private async enrichWithMedicalContent(

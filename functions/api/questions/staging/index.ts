@@ -18,6 +18,12 @@ export const onRequestPost = adminEndpoint(StagingQuestionSchema, async ({ env, 
   try {
     const question = await saveToStaging(prisma, validated.questionData);
     return { status: 200, data: { success: true, stagingQuestion: question } };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith('Invalid staging question payload:')) {
+      return { status: 400, error: message };
+    }
+    throw error;
   } finally {
     await safePrismaDisconnect(prisma);
   }

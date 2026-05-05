@@ -13,14 +13,13 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
+import { getEmbedding } from '@/lib/gemini';
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
 const RRF_K = 60;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-const EMBED_MODEL = 'text-embedding-005';
-const EMBED_DIMS = 768;
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -87,29 +86,6 @@ export function classifyQuery(query: string): QueryComplexity {
   }
 
   return query.length > 80 ? 'complex' : 'simple';
-}
-
-// ─── Embedding ─────────────────────────────────────────────────────────────
-
-async function getEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) {
-    throw new Error(`Embedding API error ${res.status}`);
-  }
-  const data: { embedding?: { values?: number[] } } = await res.json();
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
-    throw new Error(`Invalid embedding dimensions: ${values?.length ?? 0}`);
-  }
-  return values;
 }
 
 // ─── Core Hybrid Search ────────────────────────────────────────────────────

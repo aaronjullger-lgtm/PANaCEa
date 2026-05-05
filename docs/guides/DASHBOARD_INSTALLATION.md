@@ -1,4 +1,10 @@
-# Dashboard Implementation - Installation Complete ✓
+# Dashboard Implementation - Historical Notes
+
+This document describes the earlier dashboard implementation. The current signed-in
+study dashboard is the adaptive command center mounted through
+`components/navigation/CommandCenterHub.tsx` →
+`components/navigation/command-center/CommandCenterWorkspace.tsx` →
+`components/dashboard/adaptive/page/DashboardPage.tsx`.
 
 ## Installed Dependencies
 
@@ -14,18 +20,15 @@ All required dependencies have been successfully installed:
 
 ```
 components/
-├── dashboard/
-│   ├── DashboardPage.tsx          # Main dashboard component
-│   ├── AlgorithmStatusWidget.tsx  # Refactored AI status widget
-│   ├── NeuralLinkLog.tsx          # Original sci-fi terminal widget
-│   ├── RetentionWidget.tsx        # Existing retention widget
-│   ├── charts/
-│   │   ├── DecayCurve.tsx         # Memory decay visualization
-│   │   └── StabilityPyramid.tsx   # Knowledge stability chart
-│   └── index.ts                   # Export file
-└── layout/
-    ├── Sidebar.tsx                # Professional navigation sidebar
-    └── MainLayout.tsx             # Layout wrapper component
+├── navigation/
+│   └── command-center/
+│       └── CommandCenterWorkspace.tsx # Active /study adapter
+└── dashboard/
+    └── adaptive/
+        ├── page/DashboardPage.tsx     # Adaptive dashboard shell
+        ├── engine/                    # Signal normalization + resolver
+        ├── widgets/                   # Registry-driven widgets
+        └── visuals/                   # Semantic medical visuals
 
 config/
 ├── navigation.ts                  # Navigation structure
@@ -38,15 +41,12 @@ functions/api/stats/
 
 ## Features Implemented
 
-### 1. Dashboard Page (`DashboardPage.tsx`)
+### 1. Adaptive Dashboard Page
 
-- **Header**: Dynamic greeting, personalized to user
-- **Quick Stats**: Day Streak, Cards Learned, PANCE Predictor
-- **Priority Action**: Smart Review card with due count
-- **Charts**: Decay Curve + Stability Pyramid
-- **Daily Practice**: Medical Wordle + Rapid Recall links
-- **Data Fetching**: SWR with automatic revalidation
-- **Error Handling**: Retry mechanism, skeleton loaders
+- **Fixed shell**: goal context, Today command, evidence stack, secondary widgets, below-fold analytics
+- **Adaptive content**: registry-driven widgets selected by eligibility, score, suppression, and visual budget
+- **Today command**: one dominant primary action
+- **Trust mechanisms**: attribution drawer, confidence bands, low-data safeguards, and partial-failure states
 
 ### 2. Navigation System
 
@@ -70,14 +70,11 @@ functions/api/stats/
 
 ## Usage
 
-### Import the Dashboard
+### Active Dashboard Wiring
 
-```tsx
-import { DashboardPage } from './components/dashboard';
-
-// In your App.tsx or routing component:
-<DashboardPage onNavigate={(path) => handleNavigation(path)} />;
-```
+Do not import a standalone dashboard page for `/study`. The active route should
+continue to use `CommandCenterHub`, which delegates to `CommandCenterWorkspace`
+and renders the adaptive dashboard.
 
 ### Use the Sidebar
 

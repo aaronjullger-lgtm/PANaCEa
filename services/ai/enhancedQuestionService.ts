@@ -220,7 +220,8 @@ ${content.clinical_pearls.join('\n')}
 export async function generateEnhancedQuestion(
   settings: SessionSettings,
   growthAreas: string[],
-  enabledSystems?: Set<string>
+  enabledSystems?: Set<string>,
+  authToken?: string | null
 ): Promise<Question | null> {
   try {
     // Determine system based on PANCE distribution
@@ -260,15 +261,20 @@ export async function generateEnhancedQuestion(
     };
 
     // Generate question via API with enhanced context
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
     const response = await fetch('/api/questions/generate-enhanced', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         context: buildEnhancedContext(context),
         conditionId: condition.id,
         conditionName: condition.name,
         system: targetSystem,
         task,
+        difficulty: 'same',
       }),
     });
 
@@ -276,7 +282,26 @@ export async function generateEnhancedQuestion(
       throw new Error(`Generation API error: ${response.status}`);
     }
 
-    const data = (await response.json()) as {
+    const json = (await response.json()) as {
+      data?: {
+        submissionReady?: boolean;
+        requiresApproval?: boolean;
+        stagingQuestionId?: string;
+        message?: string;
+        question?: {
+          id?: string;
+          vignette?: string;
+          question?: string;
+          options?: string[];
+          correctAnswerIndex?: number;
+          rationale?: string;
+          pearls?: string[];
+        };
+      };
+      submissionReady?: boolean;
+      requiresApproval?: boolean;
+      stagingQuestionId?: string;
+      message?: string;
       question?: {
         id?: string;
         vignette?: string;
@@ -287,6 +312,15 @@ export async function generateEnhancedQuestion(
         pearls?: string[];
       };
     };
+    const data = json.data ?? json;
+
+    if (data.requiresApproval || data.submissionReady === false) {
+      console.warn('[EnhancedQuestionService] Generated question held for review', {
+        stagingQuestionId: data.stagingQuestionId,
+        message: data.message,
+      });
+      return null;
+    }
 
     if (data.question) {
       // Record this question in distribution tracker

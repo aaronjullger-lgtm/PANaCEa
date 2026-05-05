@@ -10,6 +10,7 @@ import {
   enrichTelemetryWithSessionPosition,
   type BehavioralPayload,
 } from '@/components/quiz/Tracker';
+import { getQuestionIdentity } from '@/lib/study/questionIdentity';
 import type { Question } from '@/types';
 
 const LOG_SCOPE = 'useQuizSubmit';
@@ -186,7 +187,8 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
 
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
     const timeToAnswer = Date.now() - cfg.questionStartTime;
-    const questionId = currentQuestion.id || `temp-${cfg.questionNumber}`;
+    const questionIdentity = getQuestionIdentity(currentQuestion);
+    const questionId = questionIdentity.sourceQuestionId || currentQuestion.id || `temp-${cfg.questionNumber}`;
 
     cfg.recordWellnessAttempt(isCorrect, timeToAnswer);
 
@@ -248,7 +250,11 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
     if (cfg.userId && currentQuestion.id) {
       try {
         syncManager.queueReview({
-          questionId: currentQuestion.id,
+          questionId,
+          canonicalQuestionId: questionIdentity.canonicalQuestionId,
+          sourceQuestionId: questionIdentity.sourceQuestionId,
+          questionSource: questionIdentity.questionSource,
+          medicalContentId: currentQuestion.medicalContentId ?? null,
           selectedAnswer:
             (currentQuestion.options as string[])[selectedAnswerIndex] ??
             String(selectedAnswerIndex),
@@ -262,7 +268,9 @@ export function useQuizSubmit(cfg: UseQuizSubmitConfig): UseQuizSubmitReturn {
               ? 'rapid_recall'
               : cfg.sessionMode === 'cram_mode' || cfg.sessionMode === 'cram'
                 ? 'cram'
-                : 'main',
+                : cfg.sessionMode === 'targeted'
+                  ? 'targeted'
+                  : 'main',
           telemetry: telemetryWithPosition,
         });
       } catch (err) {

@@ -8,7 +8,7 @@ describe('resolveReviewQuestion', () => {
   it('returns pre-generated question when available', async () => {
     const prisma = {
       preGeneratedQuestion: {
-        findUnique: vi.fn().mockResolvedValue({
+        findFirst: vi.fn().mockResolvedValue({
           id: 'pg-1',
           questionData: { question: 'Q' },
           conditionId: 'cond-1',
@@ -18,7 +18,7 @@ describe('resolveReviewQuestion', () => {
           questionType: 'mcq',
         }),
       },
-      question: { findUnique: vi.fn() },
+      question: { findFirst: vi.fn() },
       questionAttempt: { findFirst: vi.fn() },
     };
 
@@ -30,14 +30,14 @@ describe('resolveReviewQuestion', () => {
 
     expect(result.source).toBe('pre_generated');
     expect(result.question?.id).toBe('pg-1');
-    expect(prisma.question.findUnique).not.toHaveBeenCalled();
+    expect(prisma.question.findFirst).not.toHaveBeenCalled();
   });
 
   it('returns normalized main Question when pre-generated is missing', async () => {
     const prisma = {
-      preGeneratedQuestion: { findUnique: vi.fn().mockResolvedValue(null) },
+      preGeneratedQuestion: { findFirst: vi.fn().mockResolvedValue(null) },
       question: {
-        findUnique: vi.fn().mockResolvedValue({
+        findFirst: vi.fn().mockResolvedValue({
           id: 'q-1',
           vignette: 'Vignette',
           question: 'Question',
@@ -67,8 +67,8 @@ describe('resolveReviewQuestion', () => {
 
   it('falls back to latest question attempt for ephemeral ids', async () => {
     const prisma = {
-      preGeneratedQuestion: { findUnique: vi.fn().mockResolvedValue(null) },
-      question: { findUnique: vi.fn().mockResolvedValue(null) },
+      preGeneratedQuestion: { findFirst: vi.fn().mockResolvedValue(null) },
+      question: { findFirst: vi.fn().mockResolvedValue(null) },
       questionAttempt: {
         findFirst: vi.fn().mockResolvedValue({
           wasCorrect: false,
@@ -97,8 +97,8 @@ describe('resolveReviewQuestion', () => {
 
   it('returns missing when no source can be resolved', async () => {
     const prisma = {
-      preGeneratedQuestion: { findUnique: vi.fn().mockResolvedValue(null) },
-      question: { findUnique: vi.fn().mockResolvedValue(null) },
+      preGeneratedQuestion: { findFirst: vi.fn().mockResolvedValue(null) },
+      question: { findFirst: vi.fn().mockResolvedValue(null) },
       questionAttempt: { findFirst: vi.fn().mockResolvedValue(null) },
     };
 
@@ -110,5 +110,34 @@ describe('resolveReviewQuestion', () => {
 
     expect(result.source).toBe('missing');
     expect(result.question).toBeNull();
+  });
+
+  it('queries only production-safe persisted question rows', async () => {
+    const prisma = {
+      preGeneratedQuestion: { findFirst: vi.fn().mockResolvedValue(null) },
+      question: { findFirst: vi.fn().mockResolvedValue(null) },
+      questionAttempt: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+
+    await resolveReviewQuestion(prisma as any, {
+      userId: 'u-5',
+      questionId: 'unsafe',
+      selectedAnswer: 'A',
+    });
+
+    expect(prisma.preGeneratedQuestion.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'unsafe', validationStatus: 'approved' }),
+      })
+    );
+    expect(prisma.question.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: 'unsafe',
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+        }),
+      })
+    );
   });
 });

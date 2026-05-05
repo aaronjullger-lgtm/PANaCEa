@@ -24,10 +24,13 @@ import {
   AlertTriangle,
   BarChart3,
   Beaker,
+  BookOpen,
   Calculator,
   Clock,
+  GraduationCap,
   MoreHorizontal,
 } from 'lucide-react';
+import type { StudyModePreference } from '@/lib/study/studyModeScaffolding';
 
 export interface QuizToolbarProps {
   questionNumber: number;
@@ -56,6 +59,8 @@ export interface QuizToolbarProps {
   replenishmentError: string | null;
   onRetryReplenish: () => void;
   currentQuestion: { id?: string } | null;
+  studyMode: StudyModePreference;
+  onStudyModeChange: (mode: StudyModePreference) => void;
 }
 
 const QuizToolbar: React.FC<QuizToolbarProps> = ({
@@ -85,6 +90,8 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
   replenishmentError,
   onRetryReplenish,
   currentQuestion,
+  studyMode,
+  onStudyModeChange,
 }) => {
   const [showOverflowMenu, setShowOverflowMenu] = React.useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
@@ -172,6 +179,43 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 flex-shrink-0">
+          <div
+            className="hidden items-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-1 sm:flex"
+            role="group"
+            aria-label="Study mode"
+          >
+            <button
+              type="button"
+              onClick={() => onStudyModeChange('guided')}
+              title="Guided mode"
+              aria-label="Guided mode"
+              aria-pressed={studyMode === 'guided'}
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
+                studyMode === 'guided'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <GraduationCap className="h-4 w-4" aria-hidden="true" />
+              Guided
+            </button>
+            <button
+              type="button"
+              onClick={() => onStudyModeChange('direct')}
+              title="Direct answer mode"
+              aria-label="Direct answer mode"
+              aria-pressed={studyMode === 'direct'}
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${
+                studyMode === 'direct'
+                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Direct
+            </button>
+          </div>
+
           {/* Session Stats Toggle — hidden on mobile (available in overflow) */}
           <button
             onClick={onToggleStatsOverlay}
@@ -265,6 +309,31 @@ const QuizToolbar: React.FC<QuizToolbarProps> = ({
                 </button>
                 {/* Divider between mobile-only and always-visible items */}
                 <div className="md:hidden border-t border-[var(--color-border)] my-1" />
+                <button
+                  role="menuitemradio"
+                  aria-checked={studyMode === 'guided'}
+                  onClick={() => {
+                    onStudyModeChange('guided');
+                    setShowOverflowMenu(false);
+                  }}
+                  className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <GraduationCap className="w-4 h-4" aria-hidden="true" />
+                  Guided mode
+                </button>
+                <button
+                  role="menuitemradio"
+                  aria-checked={studyMode === 'direct'}
+                  onClick={() => {
+                    onStudyModeChange('direct');
+                    setShowOverflowMenu(false);
+                  }}
+                  className="sm:hidden w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" aria-hidden="true" />
+                  Direct mode
+                </button>
+                <div className="sm:hidden border-t border-[var(--color-border)] my-1" />
                 {/* Report Issue */}
                 <button
                   role="menuitem"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Content Refinery"
+  short_description: "Work on clinical content, generation, refinery, media, and reservoir flows"
+  default_prompt: "Handle this PANaCEa content/refinery task by tracing the source data, validators, staging gates, and serving path."

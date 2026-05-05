@@ -432,6 +432,11 @@ export async function computeFSRSUpdate(
     stability: Math.max(0.01, modifiedStability),
     difficulty: modulatedDifficulty,
   };
+  const recalculatedScheduledDays =
+    updatedCard.state === 2 && typeof (fsrs as any).calculateIntervalFromStability === 'function'
+      ? (fsrs as any).calculateIntervalFromStability(updatedCard.stability)
+      : updatedCard.scheduled_days;
+  updatedCard.scheduled_days = recalculatedScheduledDays;
 
   // Apply interference interval multiplier to push similar items apart
   // This increases the scheduled_days without affecting the underlying stability,

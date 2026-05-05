@@ -9,7 +9,6 @@
  */
 
 import type { Question, SessionSettings } from '@/types';
-import { getQuestionBatch } from './questionService';
 import { resetMomentum } from '@/services/session';
 
 // Session analytics from API
@@ -206,7 +205,12 @@ export async function fetchSessionQuestions(
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const payload = await response.json();
+      const data = (
+        payload && typeof payload === 'object' && 'data' in payload
+          ? (payload as { data: SessionResponse }).data
+          : payload
+      ) as SessionResponse;
 
       // Update pool status cache
       lastPoolStatus = data.poolStatus;
@@ -252,92 +256,31 @@ export async function fetchSessionQuestions(
     }
   }
 
-  console.error('[SessionService] All API fetch attempts failed, using fallback:', lastError);
-  if (settings.simulationStrict) {
-    return {
-      questions: [],
-      analytics: {
-        questionsServed: 0,
-        fromPool: 0,
-        fromMain: 0,
-        generated: 0,
-        fromSeeds: 0,
-        avgDifficulty: 0,
-        systemDistribution: {},
-      },
-      poolStatus: {
-        available: 0,
-        needsGeneration: false,
-      },
-      emptyState: {
-        code: 'SESSION_SERVICE_UNAVAILABLE',
-        message: 'Simulation is temporarily unavailable. Please try again shortly.',
-      },
-    };
-  }
-  return fallbackQuestionFetch(settings, count, token);
-}
-
-/**
- * Fallback to local generation when API fails.
- * Pass token when available so pool/API calls in getQuestionBatch are authenticated.
- */
-async function fallbackQuestionFetch(
-  settings: SessionSettings,
-  count: number,
-  token?: string | null
-): Promise<SessionResponse> {
-  const getToken = token !== undefined && token !== null ? async () => token : undefined;
-  try {
-    // Use statically imported question service as fallback; pass getToken so fetchFromPool gets auth
-    const questions = await getQuestionBatch(settings, [], count, getToken);
-
-    return {
-      questions,
-      analytics: {
-        questionsServed: questions.length,
-        fromPool: 0,
-        fromMain: 0,
-        generated: questions.length,
-        fromSeeds: 0,
-        avgDifficulty: 2,
-        systemDistribution: {},
-      },
-      poolStatus: {
-        available: 0,
-        needsGeneration: true,
-      },
-      emptyState:
-        questions.length === 0
-          ? {
-              code: 'SESSION_FALLBACK_EMPTY',
-              message: 'No questions matched this session configuration. Try a broader focus or try again later.',
-            }
-          : undefined,
-    };
-  } catch (fallbackError) {
-    console.error('[SessionService] Fallback also failed:', fallbackError);
-    return {
-      questions: [],
-      analytics: {
-        questionsServed: 0,
-        fromPool: 0,
-        fromMain: 0,
-        generated: 0,
-        fromSeeds: 0,
-        avgDifficulty: 0,
-        systemDistribution: {},
-      },
-      poolStatus: {
-        available: 0,
-        needsGeneration: true,
-      },
-      emptyState: {
-        code: 'SESSION_FALLBACK_UNAVAILABLE',
-        message: 'Question service is temporarily unavailable. Please try again shortly.',
-      },
-    };
-  }
+  console.error('[SessionService] All API fetch attempts failed:', lastError);
+  return {
+    questions: [],
+    analytics: {
+      questionsServed: 0,
+      fromPool: 0,
+      fromMain: 0,
+      generated: 0,
+      fromSeeds: 0,
+      avgDifficulty: 0,
+      systemDistribution: {},
+    },
+    poolStatus: {
+      available: 0,
+      needsGeneration: false,
+    },
+    emptyState: {
+      code: settings.simulationStrict
+        ? 'SESSION_SERVICE_UNAVAILABLE'
+        : 'SESSION_CANONICAL_SOURCE_UNAVAILABLE',
+      message: settings.simulationStrict
+        ? 'Simulation is temporarily unavailable. Please try again shortly.'
+        : 'Question service is temporarily unavailable. Please try again shortly.',
+    },
+  };
 }
 
 /**
@@ -463,23 +406,10 @@ export async function prefetchQuestions(
  */
 export async function checkAndReplenishPool(token?: string | null): Promise<void> {
   if (!lastPoolStatus?.needsGeneration) return;
-
-  try {
-    const response = await fetch('/api/questions/generate-batch', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ count: 20 }),
-    });
-
-    if (response.ok) {
-      console.log('[SessionService] Triggered background pool replenishment');
-    }
-  } catch (error) {
-    console.warn('[SessionService] Failed to trigger pool replenishment:', error);
-  }
+  console.info(
+    '[SessionService] Pool refill is handled by reviewed reservoir/admin jobs; client hot-path generation suppressed.',
+    { authenticated: Boolean(token) }
+  );
 }
 
 export default {

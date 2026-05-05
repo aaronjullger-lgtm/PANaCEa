@@ -27,6 +27,7 @@ import {
   isKVAvailable,
   CACHE_CONFIG,
 } from '../_shared/cache';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import type { StudyPathConstraints, ProgressResponse, StudyPlan } from '@/types';
 
 // ============================================================================
@@ -34,6 +35,7 @@ import type { StudyPathConstraints, ProgressResponse, StudyPlan } from '@/types'
 // ============================================================================
 
 const StudyPathConstraintsSchema = z.object({
+  planId: z.string().min(1).max(128).optional(),
   dailyMinutesLimit: z.coerce.number().int().positive().optional(),
   examDate: z
     .string()
@@ -121,6 +123,48 @@ function computeProgressProjections({
   return projections;
 }
 
+function toDate(value: Date | string | null | undefined): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === 'string') {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date();
+}
+
+function normalizeStudyPlanDates(plan: StudyPlan): StudyPlan {
+  return {
+    ...plan,
+    generatedAt: toDate(plan.generatedAt),
+    validUntil: toDate(plan.validUntil),
+    sessions: (plan.sessions ?? []).map((session) => ({
+      ...session,
+      date: toDate(session.date),
+      topics: session.topics ?? [],
+    })),
+    metadata: {
+      blueprintCoverage: {},
+      projectedRetentionIncrease: 0,
+      fatigueRisk: 'LOW',
+      gapsProcessed: 0,
+      constraintsUsed: {},
+      ...(plan.metadata ?? {}),
+    },
+  };
+}
+
+function selectCachedPlan(cached: any, planId?: string): StudyPlan | null {
+  if (!cached) return null;
+  const primary = cached.plan ? normalizeStudyPlanDates(cached.plan) : null;
+  const alternatives = Array.isArray(cached.alternatives)
+    ? cached.alternatives.map((plan: StudyPlan) => normalizeStudyPlanDates(plan))
+    : [];
+
+  if (!planId) return primary;
+  if (primary?.id === planId) return primary;
+  return alternatives.find((plan) => plan.id === planId) ?? null;
+}
+
 // ============================================================================
 // Request Handler
 // ============================================================================
@@ -152,6 +196,8 @@ export const onRequestGet = authenticatedEndpoint(
           maxSessionsPerDay: validated.maxSessionsPerDay,
         }),
       };
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+      const userId = user.id;
 
       // 2. Check cache for a plan (same key as recommendation endpoint)
       let plan: StudyPlan | null = null;
@@ -162,22 +208,20 @@ export const onRequestGet = authenticatedEndpoint(
           cacheKey,
           CACHE_CONFIG.PREFIX.STUDY_PATH
         );
-        if (cached?.plan) {
-          plan = cached.plan;
-        }
+        plan = selectCachedPlan(cached, validated.planId);
       }
 
       // 3. If no cached plan, generate one (same pipeline as recommendation endpoint)
       if (!plan) {
         // Compute core analysis
-        const gaps = await analyzePerformanceGaps(prisma, auth.userId, {
+        const gaps = await analyzePerformanceGaps(prisma, userId, {
           rollingWindowSize: 200,
           includeSubcategories: false,
         });
 
         const scheduled = await scheduleReviews(
           prisma,
-          auth.userId,
+          userId,
           gaps.map((g) => ({
             taxonomyCode: g.taxonomyCode,
             subcategory: g.subcategory,
@@ -199,7 +243,7 @@ export const onRequestGet = authenticatedEndpoint(
             subcategory: s.subcategory,
           })),
           prisma,
-          auth.userId,
+          userId,
           {
             distributionSource: 'recent',
             recentReviewWindow: 100,
@@ -209,7 +253,7 @@ export const onRequestGet = authenticatedEndpoint(
 
         // Build Path Generator input
         const pathGeneratorInput = {
-          userId: auth.userId,
+          userId,
           constraints,
           gaps: gaps.map((g) => ({
             taxonomyCode: g.taxonomyCode,
@@ -236,13 +280,13 @@ export const onRequestGet = authenticatedEndpoint(
         };
 
         // Generate study plan
-        const pathGeneratorOutput = await generateStudyPlan(pathGeneratorInput);
-        plan = pathGeneratorOutput.plan;
+        const pathGeneratorOutput = await generateStudyPlan(prisma, pathGeneratorInput);
+        plan = normalizeStudyPlanDates(pathGeneratorOutput.plan);
 
         // Cache the whole recommendation (optional)
         if (isKVAvailable(env.CACHE)) {
           const cacheKey = getStudyPathCacheKey(auth.userId, constraints);
-          const confidenceInput = await fetchConfidenceData(prisma, auth.userId);
+          const confidenceInput = await fetchConfidenceData(prisma, userId);
           const confidenceOutput = await computeConfidence(prisma, confidenceInput);
           const recommendation = {
             plan,
@@ -263,7 +307,7 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       // 4. Compute baseline metrics (average current accuracy across all gaps)
-      const gaps = await analyzePerformanceGaps(prisma, auth.userId, {
+      const gaps = await analyzePerformanceGaps(prisma, userId, {
         rollingWindowSize: 200,
         includeSubcategories: false,
       });

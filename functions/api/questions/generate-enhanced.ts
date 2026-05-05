@@ -601,11 +601,11 @@ CRITICAL RULES:
         },
       });
     } catch (stagingError) {
-      // Non-critical - log but don't fail
-      logger.warn('Failed to store staging question', {
+      logger.error('Generated question could not be staged for review', {
         error: stagingError instanceof Error ? stagingError.message : String(stagingError),
         userId: auth.userId,
       });
+      throw new Error('Generated question could not be staged for review');
     }
 
     // 2. Promote to Question table (live) — ONLY if CoVe verification passed.
@@ -618,7 +618,40 @@ CRITICAL RULES:
         verificationConfidence,
         coveAttempts: attempt,
       });
-    } else
+      return {
+        status: 202,
+        data: {
+          success: false,
+          submissionReady: false,
+          requiresApproval: true,
+          stagingQuestionId: stagingId,
+          message: 'Question generated but held for review because verification did not pass.',
+          verification: {
+            verified: false,
+            confidence: verificationConfidence,
+            attempts: attempt,
+            verificationId: verificationResult?.verificationId ?? null,
+            recommendation:
+              verificationResult?.recommendation ??
+              (quickVerifyResult?.passed ? 'accept' : 'review'),
+            flags:
+              verificationResult?.flags?.map((f) => ({
+                severity: f.severity,
+                code: f.code,
+                message: f.message,
+              })) ??
+              quickVerifyResult?.criticalIssues?.map((issue) => ({
+                severity: 'warning' as const,
+                code: 'QUICK_VERIFY_ISSUE',
+                message: issue,
+              })) ??
+              [],
+            summary: verificationResult?.summary ?? null,
+          },
+        },
+      };
+    }
+
     try {
       await prisma.question.create({
         data: {
@@ -634,6 +667,11 @@ CRITICAL RULES:
           difficulty,
           source: 'enhanced-generation',
           updatedAt: now,
+          generatedAt: now,
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+          humanReviewed: false,
+          verificationScore: verificationConfidence,
           tags: {
             conditionId,
             conditionName,
@@ -658,11 +696,11 @@ CRITICAL RULES:
         });
       }
     } catch (dbError) {
-      // Non-critical - log but don't fail
-      logger.warn('Failed to store question', {
+      logger.error('Verified question could not be persisted', {
         error: dbError instanceof Error ? dbError.message : String(dbError),
         userId: auth.userId,
       });
+      throw new Error('Verified question could not be persisted');
     }
 
     logger.info('Enhanced question generated', {

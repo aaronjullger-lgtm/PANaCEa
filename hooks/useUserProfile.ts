@@ -31,7 +31,6 @@ export interface UserProfileData {
   examDate: string | null;
   graduationDate: string | null;
   school: string | null;
-  specialty: string | null;
   currentRotation: string | null;
   yearInProgram: string | null;
   eorTestDate: string | null;
@@ -49,7 +48,6 @@ export interface UserProfileUpdateInput {
   examDate?: string | null;
   graduationDate?: string | null;
   school?: string | null;
-  specialty?: string | null;
   currentRotation?: string | null;
   yearInProgram?: string | null;
   eorTestDate?: string | null;
@@ -78,6 +76,14 @@ export interface ProfileErrorResponse {
   error: string;
 }
 
+type ProfileEnvelope<T> = T | { data?: T };
+
+function unwrapProfileResponse<T extends { success?: boolean; profile?: UserProfileData }>(
+  response: ProfileEnvelope<T>
+): T {
+  return ((response as { data?: T }).data ?? response) as T;
+}
+
 // =============================================================================
 // Standalone fetch functions (for use outside React)
 // =============================================================================
@@ -102,7 +108,7 @@ export async function fetchUserProfile(
     throw new Error(body.error || `Profile fetch failed: ${res.status}`);
   }
 
-  const data = (await res.json()) as ProfileGetResponse;
+  const data = unwrapProfileResponse((await res.json()) as ProfileEnvelope<ProfileGetResponse>);
   if (!data.success || !data.profile) {
     throw new Error('Invalid profile response');
   }
@@ -138,7 +144,7 @@ export async function updateUserProfile(
     throw new Error(body.error || `Profile update failed: ${res.status}`);
   }
 
-  const data = (await res.json()) as ProfilePutResponse;
+  const data = unwrapProfileResponse((await res.json()) as ProfileEnvelope<ProfilePutResponse>);
   if (!data.success || !data.profile) {
     throw new Error('Invalid profile response');
   }

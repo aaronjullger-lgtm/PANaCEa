@@ -24,7 +24,7 @@ import {
   fetchNextVariantCard,
   submitVariantReview,
   type VariantNextResponse,
-} from '@/lib/services/srsService';
+} from '@/lib/services/srsReviewClient';
 import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { toast } from '@/lib/toast';
 
@@ -38,9 +38,11 @@ const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'] as const;
 interface ReviewQuestion {
   questionId: string;
   srsItemId: string | null;
+  cardId?: string | null;
   topicProgressId?: string;
   variantId?: string;
   isVariant: boolean;
+  progressContext?: 'READINESS' | 'TARGETED' | string | null;
   /** Optional vignette / case stem to display above the question. */
   vignette: string;
   stem: string;
@@ -87,9 +89,11 @@ function parseQuestion(raw: VariantNextResponse): ReviewQuestion | null {
   return {
     questionId,
     srsItemId: raw.srsItemId,
+    cardId: raw.cardId ?? null,
     topicProgressId: raw.topicProgressId,
     variantId: raw.isVariant ? questionId : undefined,
     isVariant: raw.isVariant,
+    progressContext: raw.progressContext ?? null,
     vignette,
     stem,
     options,
@@ -119,6 +123,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Behavioral signal tracking
   const displayTimeRef = useRef<number>(0);
@@ -139,6 +144,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
     setQuestion(null);
     setSelectedIndex(null);
     setSubmitted(false);
+    setSubmitError(null);
     resetBehavior();
 
     try {
@@ -184,6 +190,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
 
   const handleSelectOption = useCallback((index: number) => {
     if (submitted || submitting) return;
+    setSubmitError(null);
 
     // Record first click
     if (firstClickTimeRef.current === null) {
@@ -227,15 +234,22 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
           topicProgressId: question.topicProgressId,
           questionId: question.questionId,
           variantId: question.variantId,
+          progressContext: question.progressContext,
           rating,
           isCorrect,
+          userAnswer: question.options[selectedIndex],
           timeSpent: Math.round(totalDwellTimeMs),
         },
         srsAuth()
       );
 
+      if (!result?.success) {
+        throw new Error('Review was not saved. Check your connection and try again.');
+      }
+
       setSubmitted(true);
       setSubmitting(false);
+      setSubmitError(null);
 
       if (result?.nextReviewDate) {
         const nextStr = formatNextReview(result.nextReviewDate);
@@ -246,6 +260,12 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
     } catch (srsErr) {
       console.warn('[SrsFlashcardView] FSRS submit failed', srsErr);
       setSubmitting(false);
+      const message =
+        srsErr instanceof Error
+          ? srsErr.message
+          : 'Review was not saved. Check your connection and try again.';
+      setSubmitError(message);
+      toast.error(message);
     }
   }, [selectedIndex, question, submitting, submitted, srsAuth]);
 
@@ -384,6 +404,15 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
       </div>
 
       {/* Submit / Next */}
+      {submitError && !submitted && (
+        <div
+          role="alert"
+          className="rounded-lg border border-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 px-4 py-3 text-sm text-[var(--color-data-provisional)]"
+          data-testid="srs-review-submit-error"
+        >
+          {submitError}
+        </div>
+      )}
       {!submitted ? (
         <button
           type="button"

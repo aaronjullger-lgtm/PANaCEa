@@ -22,6 +22,7 @@ const mockGetEorRotationEnd = vi.fn();
 const mockScheduleConceptReview = vi.fn();
 const mockEnsureDueVariant = vi.fn();
 const mockGetRelativeDrillPerformance = vi.fn();
+const mockMarkConsumed = vi.fn();
 const idemStore = new Map<string, { id: string; status: string; response?: Record<string, unknown> }>();
 
 vi.mock('../functions/api/_shared/submission-idempotency', () => ({
@@ -122,6 +123,9 @@ vi.mock('../functions/api/drills/_shared/reviewQuestionResolver', () => ({
 vi.mock('../lib/services/drillAnalyticsService', () => ({
   getRelativeDrillPerformance: (...args: unknown[]) => mockGetRelativeDrillPerformance(...args),
 }));
+vi.mock('../lib/services/reservoir', () => ({
+  markConsumed: (...args: unknown[]) => mockMarkConsumed(...args),
+}));
 
 // Handlers must be imported after mocks so their module-level imports resolve
 // against the mocked modules.
@@ -130,10 +134,18 @@ vi.mock('../lib/services/drillAnalyticsService', () => ({
 // but `authenticatedEndpoint` is mocked to return the bare handler which we
 // invoke with a synthetic context and receive a plain `{ data, status? }` object.
 // The type shim is confined to this test file.
-import { onRequestPost as onRequestPostSingleReal } from '../functions/api/drills/submit-review';
-import { onRequestPost as onRequestPostBatchReal } from '../functions/api/drills/submit-reviews';
+import {
+  onRequestOptions as onRequestOptionsSingleReal,
+  onRequestPost as onRequestPostSingleReal,
+} from '../functions/api/drills/submit-review';
+import {
+  onRequestOptions as onRequestOptionsBatchReal,
+  onRequestPost as onRequestPostBatchReal,
+} from '../functions/api/drills/submit-reviews';
 
 type RawHandlerResult = { data?: unknown; status?: number; error?: string };
+const onRequestOptionsSingle = onRequestOptionsSingleReal as unknown as (ctx: unknown) => Promise<Response>;
+const onRequestOptionsBatch = onRequestOptionsBatchReal as unknown as (ctx: unknown) => Promise<Response>;
 const onRequestPostSingle = onRequestPostSingleReal as unknown as (ctx: unknown) => Promise<RawHandlerResult>;
 const onRequestPostBatch = onRequestPostBatchReal as unknown as (ctx: unknown) => Promise<RawHandlerResult>;
 
@@ -216,6 +228,7 @@ beforeEach(() => {
   mockScheduleConceptReview.mockReset();
   mockEnsureDueVariant.mockReset();
   mockGetRelativeDrillPerformance.mockReset();
+  mockMarkConsumed.mockReset();
 
   mockResolveReviewQuestion.mockResolvedValue(FAKE_RESOLVED_QUESTION);
   mockGetEorRotationEnd.mockReturnValue(null);
@@ -223,6 +236,42 @@ beforeEach(() => {
   mockScheduleConceptReview.mockResolvedValue(undefined);
   mockEnsureDueVariant.mockResolvedValue(undefined);
   mockGetRelativeDrillPerformance.mockResolvedValue(null);
+  mockMarkConsumed.mockResolvedValue(1);
+});
+
+// ── CORS preflight ──────────────────────────────────────────────
+
+describe('drill review submit CORS preflight', () => {
+  function makeOptionsContext(path: string) {
+    return {
+      request: new Request(`https://studypanacea.com${path}`, {
+        method: 'OPTIONS',
+        headers: {
+          Origin: 'http://localhost:5173',
+          'Access-Control-Request-Method': 'POST',
+        },
+      }),
+      env: {},
+    } as any;
+  }
+
+  it('allows singular submit-review OPTIONS without auth or body validation', async () => {
+    const response = await onRequestOptionsSingle(makeOptionsContext('/api/drills/submit-review'));
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+    expect(response.headers.get('Access-Control-Allow-Methods')).toContain('OPTIONS');
+    expect(mockSubmitDrillReview).not.toHaveBeenCalled();
+  });
+
+  it('allows batch submit-reviews OPTIONS without auth or body validation', async () => {
+    const response = await onRequestOptionsBatch(makeOptionsContext('/api/drills/submit-reviews'));
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+    expect(response.headers.get('Access-Control-Allow-Methods')).toContain('OPTIONS');
+    expect(mockSubmitDrillReview).not.toHaveBeenCalled();
+  });
 });
 
 // ── Singular endpoint ───────────────────────────────────────────
@@ -308,6 +357,42 @@ describe('submit-reviews batch — idempotency', () => {
     expect((res.data as Array<{ success: boolean }>).every((r) => r.success)).toBe(true);
     const idemKeys = [...store.keys()].filter((k) => k.startsWith('idem:submit-reviews:'));
     expect(idemKeys).toHaveLength(2);
+  });
+
+  it('passes per-item urgency multiplier into the batch FSRS writer', async () => {
+    const { kv } = makeKvMock();
+    await onRequestPostBatch(
+      makeBatchContext(kv, [
+        {
+          ...BASE_VALIDATED,
+          questionId: 'q-urgent',
+          telemetry: { urgency_multiplier: 1.8 },
+        },
+      ])
+    );
+
+    expect(mockSubmitDrillReview).toHaveBeenCalledTimes(1);
+    expect(mockSubmitDrillReview.mock.calls[0][6]).toBe(1.8);
+  });
+
+  it('marks successfully submitted batch reservoir items consumed when telemetry carries a session id', async () => {
+    const { kv } = makeKvMock();
+    await onRequestPostBatch(
+      makeBatchContext(kv, [
+        {
+          ...BASE_VALIDATED,
+          questionId: 'q-reservoir',
+          telemetry: { session_id: 'session-reservoir-1' },
+        },
+      ])
+    );
+
+    expect(mockSubmitDrillReview).toHaveBeenCalledTimes(1);
+    expect(mockMarkConsumed).toHaveBeenCalledWith(
+      expect.anything(),
+      'session-reservoir-1',
+      ['q-reservoir']
+    );
   });
 
   it('short-circuits individual items on retry of the same batch', async () => {

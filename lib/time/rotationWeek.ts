@@ -3,7 +3,7 @@
  * is the student on?"
  *
  * Why this exists:
- *   The previous inlined formula in DashboardPage.tsx computed
+ *   The previous inlined dashboard formula computed
  *   `Math.floor(diffMs / (7 * 86400000)) + 1`, which is off by one hour
  *   every DST transition. A student who started a rotation on
  *   2026-03-01 in Los Angeles would silently flip from "Week 4" to

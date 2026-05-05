@@ -8,6 +8,11 @@
 
 export interface Question {
   id?: string; // Unique identifier for SRS tracking
+  /** Canonical Question.id when available; null/undefined for source-only questions. */
+  questionId?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
   /** Optional vignette text for long-form stems */
   vignette?: string;
   /** Legacy alias for question text used by older generated content */
@@ -27,6 +32,8 @@ export interface Question {
   subcategory?: string;
   /** Stable id from CONDITION_REGISTRY */
   conditionId: string;
+  /** Canonical MedicalContent.id when available. */
+  medicalContentId?: string | null;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
   /** Question difficulty level */
@@ -106,6 +113,7 @@ export interface SessionSettings {
     | 'session'
     | 'review'
     | 'exam'
+    | 'targeted'
     | 'rapid_recall'
     | 'cram_mode'
     | 'cram'
@@ -130,6 +138,7 @@ export interface SessionSettings {
   subcategoryName?: string;
 
   /** Optional: when present, Gemini should target this specific condition ID or name */
+  conditionId?: string;
   conditionName?: string;
 
   /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
@@ -139,9 +148,20 @@ export interface SessionSettings {
   questionCount?: number;
   /** Optional study stage / blueprint stage metadata used by adaptive parents */
   stage?: string;
+  /** Optional learner-facing blueprint label used by adaptive sessions */
+  blueprintLabel?: string;
+  /** Optional exam type labels that influenced adaptive session generation */
+  examTypes?: string[];
 
   /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
   interleaveMode?: 'interleaved' | 'focused';
+
+  /** Optional study-plan launch attribution for answer telemetry and plan sync */
+  studyPlanTaskId?: string;
+  studyPlanDate?: string;
+  studyPlanSource?: string;
+  /** Optional exam urgency multiplier used to tighten FSRS intervals near deadlines */
+  urgencyMultiplier?: number;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)

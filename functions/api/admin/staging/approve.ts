@@ -1,6 +1,7 @@
 /**
  * POST /api/admin/staging/approve
- * Approve: move StagingQuestion -> PreGeneratedQuestion (live pool) and delete staging entry.
+ * Approve: mirror StagingQuestion -> PreGeneratedQuestion (live pool) and
+ * retain the staging row as approved for provenance.
  * Body: { id: string }
  */
 
@@ -34,46 +35,24 @@ export const onRequestPost = adminEndpoint(ApproveBodySchema, async (context) =>
       return { status: 400, error: 'Already approved' };
     }
 
-    if (staging.status === 'graded') {
-      await promoteToLive(prisma, stagingId);
-    } else {
-      await prisma.preGeneratedQuestion.create({
-        data: {
-          id: crypto.randomUUID(),
-          questionType: 'mcq',
-          system: staging.system,
-          conditionId: null,
-          difficulty: staging.difficulty,
-          questionData: {
-            vignette: staging.vignette,
-            question: staging.question,
-            options: staging.options,
-            correctAnswer: staging.correctAnswer,
-            explanation: staging.explanation,
-            tags: staging.tags,
-          },
-          quality: 10,
-        },
-      });
-    }
-    await prisma.stagingQuestion.delete({
-      where: { id: stagingId },
+    await promoteToLive(prisma, stagingId, {
+      allowPendingHumanReview: staging.status === 'pending',
+      reviewedBy: context.auth.userId,
     });
 
-    log.info('Staging approved and removed', { stagingId });
+    log.info('Staging approved and mirrored to live pool', { stagingId });
     auditLog('admin_staging_approve', {
       userId: context.auth.userId,
       stagingId,
       system: staging.system,
     });
-    return { data: { success: true, message: 'Approved and moved to live pool' } };
+    return { data: { success: true, message: 'Approved and mirrored to live pool' } };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes('has not passed adequacy check')) {
       return {
         status: 400,
-        error:
-          'Run adequacy check first (status must be graded) or approve from pending with force',
+        error: 'Run adequacy check first or approve a pending question through human review.',
       };
     }
     log.error('Staging approve error', e);

@@ -10,6 +10,9 @@ export const sectionHeadingClass = textClass.sectionTitle;
 export const sectionSubtitleClass = textClass.sectionSubtitle;
 export const bodySupportClass = textClass.bodySupport;
 
+export const tableRowClass =
+  'grid items-center border-b border-[var(--color-border)] px-4 text-sm text-[var(--color-text-primary)]';
+
 export const sectionHeaderRowClass =
   'flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between';
 

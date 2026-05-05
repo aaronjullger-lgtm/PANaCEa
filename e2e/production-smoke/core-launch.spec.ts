@@ -11,6 +11,7 @@ const clerkEmail = process.env.E2E_CLERK_TEST_EMAIL;
 const clerkPassword = process.env.E2E_CLERK_TEST_PASSWORD;
 const hasAuthCredentials = Boolean(clerkEmail && clerkPassword);
 const hiddenPrivateBetaRoutes = [
+  '/daily-challenges',
   '/live-collaboration',
   '/explorer',
   '/clinical-eye',
@@ -121,19 +122,17 @@ function taskLaunchUrl(task: any): string {
 }
 
 test.describe('production smoke: public runtime', () => {
-  test('GET /api/health returns Cloudflare diagnostics', async ({ request }) => {
+  test('GET /api/health returns public liveness', async ({ request }) => {
     const response = await request.get('/api/health');
     expect(response.status()).toBe(200);
 
     const body = await response.json();
     expect(body).toMatchObject({
       endpoint: '/api/health',
-      status: 'healthy',
-      diagnostics: {
-        runtime: 'cloudflare-pages',
-      },
+      status: 'ok',
     });
     expect(body.checks?.functionDeployed?.status).toBe('pass');
+    expect(body).not.toHaveProperty('diagnostics');
   });
 
   test('app shell loads at /study', async ({ page }) => {
@@ -170,6 +169,16 @@ test.describe.serial('production smoke: authenticated core study loop', () => {
       expect(hiddenRouteResponse?.status()).toBeLessThan(500);
       await expect(page.locator('body')).toContainText(/not part of the beta yet/i);
     }
+
+    for (const route of ['/medical-database', '/clinical-profile'] as const) {
+      const routeResponse = await page.goto(route, { waitUntil: 'domcontentloaded' });
+      expect(routeResponse?.status()).toBeLessThan(500);
+      await expect(page.locator('body')).not.toContainText(/not part of the beta yet/i);
+    }
+
+    const adminResponse = await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+    expect(adminResponse?.status()).toBeLessThan(500);
+    await expect(page.locator('body')).toContainText(/admin|access|authorized|dashboard/i);
 
     await page.goto('/study', { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => window.dispatchEvent(new Event('panacea:open-command-palette')));

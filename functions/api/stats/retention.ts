@@ -10,14 +10,11 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { buildRetrievabilityCurve } from '../../../lib/fsrs-retrievability';
 
-/** Type for SRS item from Prisma query */
-interface SRSItemRecord {
+/** Type for canonical UserProgress rows used by retention stats. */
+interface FSRSProgressRecord {
   id: string;
-  interval: number;
-  dueDate: Date;
-  lastReviewed: Date | null;
-  easiness: number;
-  repetition: number;
+  nextReviewAt: Date | null;
+  lastReviewAt: Date | null;
   fsrsStability: number | null;
 }
 
@@ -44,35 +41,34 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
     const userId = user.id;
     const now = new Date();
 
-    const srsItems = await prisma.sRSItem.findMany({
+    const progressRows = await prisma.userProgress.findMany({
       where: { userId },
       select: {
         id: true,
-        interval: true,
-        dueDate: true,
-        lastReviewed: true,
-        easiness: true,
-        repetition: true,
+        nextReviewAt: true,
+        lastReviewAt: true,
         fsrsStability: true,
       },
     });
 
-    const dueCount = srsItems.filter((item: SRSItemRecord) => item.dueDate <= now).length;
+    const dueCount = progressRows.filter(
+      (item: FSRSProgressRecord) => item.nextReviewAt != null && item.nextReviewAt <= now
+    ).length;
 
     // Provenance: only items with real FSRS stability + at least one real review
     // count toward the retention curve. Everything else is fabricated precision.
-    const reviewedItems = srsItems.filter(
-      (item: SRSItemRecord) =>
+    const reviewedItems = progressRows.filter(
+      (item: FSRSProgressRecord) =>
         item.fsrsStability != null &&
         item.fsrsStability > 0 &&
-        item.lastReviewed != null
+        item.lastReviewAt != null
     );
 
     // Short-circuit when there is no real data: don't fabricate a curve.
     if (reviewedItems.length === 0) {
       logger.info('Retention stats: insufficient data', {
         userId: auth.userId,
-        totalCards: srsItems.length,
+        totalCards: progressRows.length,
         reviewedCount: 0,
       });
 
@@ -81,7 +77,7 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
           success: true,
           data: {
             dueCount,
-            totalCards: srsItems.length,
+            totalCards: progressRows.length,
             decayCurveData: [],
             stabilityBuckets: [],
             // Empty strings hide the Algorithm Status widget via the
@@ -100,7 +96,7 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
 
     const avgStability =
       reviewedItems.reduce(
-        (sum: number, item: SRSItemRecord) => sum + (item.fsrsStability ?? 0),
+        (sum: number, item: FSRSProgressRecord) => sum + (item.fsrsStability ?? 0),
         0
       ) / reviewedItems.length;
 
@@ -116,25 +112,25 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
       { bucket: '21d+', count: 0, color: 'var(--color-data-pass)' },
     ];
 
-    // Bucket only reviewed items — unreviewed items have no real interval.
-    reviewedItems.forEach((item: SRSItemRecord) => {
-      const interval = item.interval;
+    // Bucket only reviewed items — unreviewed items have no real stability.
+    reviewedItems.forEach((item: FSRSProgressRecord) => {
+      const stability = item.fsrsStability ?? 0;
       const bucket0 = stabilityBuckets[0];
       const bucket1 = stabilityBuckets[1];
       const bucket2 = stabilityBuckets[2];
       const bucket3 = stabilityBuckets[3];
       const bucket4 = stabilityBuckets[4];
-      if (interval < 1 && bucket0) bucket0.count++;
-      else if (interval < 3 && bucket1) bucket1.count++;
-      else if (interval < 7 && bucket2) bucket2.count++;
-      else if (interval < 21 && bucket3) bucket3.count++;
+      if (stability < 1 && bucket0) bucket0.count++;
+      else if (stability < 3 && bucket1) bucket1.count++;
+      else if (stability < 7 && bucket2) bucket2.count++;
+      else if (stability < 21 && bucket3) bucket3.count++;
       else if (bucket4) bucket4.count++;
     });
 
     logger.info('Fetched retention stats', {
       userId: auth.userId,
       dueCount,
-      totalCards: srsItems.length,
+      totalCards: progressRows.length,
       reviewedCount: reviewedItems.length,
     });
 
@@ -143,7 +139,7 @@ export const onRequestGet = authenticatedEndpoint(RetentionStatsSchema, async (c
         success: true,
         data: {
           dueCount,
-          totalCards: srsItems.length,
+          totalCards: progressRows.length,
           decayCurveData,
           stabilityBuckets,
           // Tuning metadata is not yet wired to a real optimizer run.

@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useCallback, useEffect, useState } from 'react';
 import { API_ENDPOINTS, getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type {
   StudyPlanCurrentData,
   StudyPlanDay,
@@ -44,13 +45,11 @@ async function authedJsonFetch<T>(
   });
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null;
-    throw new Error(body?.error || `Request failed (${response.status})`);
+    const body = await response.json().catch(() => null);
+    throw new Error(getApiEnvelopeError(body, `Request failed (${response.status})`));
   }
 
-  return (await response.json()) as T;
+  return unwrapApiEnvelope<T>(await response.json());
 }
 
 export function useStudyPlan(
@@ -74,12 +73,12 @@ export function useStudyPlan(
     setIsLoading(true);
     setError(null);
     try {
-      const response = await authedJsonFetch<{ data: StudyPlanCurrentData }>(
+      const response = await authedJsonFetch<StudyPlanCurrentData>(
         getToken,
         `${getApiEndpoint(API_ENDPOINTS.STUDY_PLAN_CURRENT)}?days=${days}`,
         { method: 'GET', headers: {} }
       );
-      setData(response.data);
+      setData(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load study plan');
     } finally {
@@ -96,7 +95,7 @@ export function useStudyPlan(
       setIsSaving(true);
       setError(null);
       try {
-        const response = await authedJsonFetch<{ data: StudyPlanCurrentData }>(
+        const response = await authedJsonFetch<StudyPlanCurrentData>(
           getToken,
           getApiEndpoint(API_ENDPOINTS.STUDY_PLAN_CURRENT),
           {
@@ -108,8 +107,8 @@ export function useStudyPlan(
             }),
           }
         );
-        setData(response.data);
-        return response.data;
+        setData(response);
+        return response;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save study plan settings');
         return null;
@@ -123,7 +122,7 @@ export function useStudyPlan(
   const markTaskProgress = useCallback(
     async (input: StudyPlanProgressInput) => {
       try {
-        const response = await authedJsonFetch<{ data: StudyPlanDay }>(
+        const response = await authedJsonFetch<StudyPlanDay>(
           getToken,
           getApiEndpoint(API_ENDPOINTS.STUDY_PLAN_PROGRESS),
           {
@@ -135,19 +134,19 @@ export function useStudyPlan(
         setData((current) => {
           if (!current) return current;
           const nextDays = current.days.map((day) =>
-            day.planDate === response.data.planDate ? response.data : day
+            day.planDate === response.planDate ? response : day
           );
           return {
             ...current,
             days: nextDays,
             today:
-              current.today?.planDate === response.data.planDate
-                ? response.data
+              current.today?.planDate === response.planDate
+                ? response
                 : current.today,
           };
         });
 
-        return response.data;
+        return response;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to update task progress');
         return null;

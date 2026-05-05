@@ -8,6 +8,11 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
+import {
+  buildLegacyStudyModeEndpointMetadata,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 
 // Zod schema for pharmacology drill request
 const PharmacologyDrillSchema = z.object({
@@ -27,13 +32,13 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
 
     // Build where clause for pharmacology questions
     // Question schema: topic, tags, relatedDrugs, explanation (not rationale)
-    const where: Record<string, unknown> = {
+    const where: Record<string, unknown> = withProductionQuestionSafety({
       OR: [
         { topic: 'Pharmacology' },
         { topic: 'Pharmacotherapy' },
         { tags: { hasSome: ['pharmacology', 'medications', 'drugs'] } },
       ],
-    };
+    });
 
     if (drugClass) {
       const drugLower = drugClass.toLowerCase();
@@ -52,27 +57,8 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
       where.difficulty = difficulty;
     }
 
-    // Get total count for random selection
-    const totalCount = await prisma.question.count({ where });
-
-    if (totalCount === 0) {
-      logger.info('No pharmacology questions found', { drugClass, userId: auth.userId });
-
-      return {
-        data: {
-          error: 'No pharmacology questions found',
-          drugClass,
-        },
-        status: 404,
-      };
-    }
-
-    // Select random question using skip
-    const randomSkip = Math.floor(Math.random() * totalCount);
-
-    const question = await prisma.question.findFirst({
+    const candidates = await prisma.question.findMany({
       where,
-      skip: randomSkip,
       select: {
         id: true,
         vignette: true,
@@ -91,19 +77,55 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
           select: { name: true, subcategory: true },
         },
       },
+      orderBy: [{ contentHealthScore: 'desc' }, { updatedAt: 'desc' }],
+      take: 50,
     });
 
-    if (!question) {
-      logger.error('Failed to retrieve pharmacology question', { userId: auth.userId });
-      throw new Error('Failed to retrieve pharmacology question');
+    if (candidates.length === 0) {
+      logger.info('No pharmacology questions found', { drugClass, userId: auth.userId });
+
+      return {
+        data: {
+          error: 'No pharmacology questions found',
+          drugClass,
+        },
+        status: 404,
+      };
     }
 
-    // Derive correctAnswerIndex from options + correctAnswer for client compatibility
-    const opts = Array.isArray(question.options) ? question.options : [];
-    const correctIdx =
-      typeof question.correctAnswer === 'string'
-        ? opts.findIndex((o: unknown) => String(o) === question.correctAnswer)
-        : -1;
+    const usable = candidates
+      .map((question: any) => {
+        const opts = normalizeOptions(question.options);
+        const correctIdx =
+          typeof question.correctAnswer === 'string'
+            ? resolveCorrectAnswerIndex(question.correctAnswer, opts)
+            : null;
+
+        if (correctIdx === null) {
+          logger.warn('Skipping pharmacology question with unresolvable correct answer', {
+            userId: auth.userId,
+            questionId: question.id,
+          });
+          return null;
+        }
+
+        return {
+          ...question,
+          options: opts,
+          correctAnswerIndex: correctIdx,
+        };
+      })
+      .filter(Boolean);
+
+    if (usable.length === 0) {
+      logger.error('No production-safe pharmacology questions were scorable', {
+        userId: auth.userId,
+        drugClass,
+      });
+      throw new Error('Question scoring data is incomplete');
+    }
+
+    const question = usable[Math.floor(Math.random() * usable.length)];
 
     logger.info('Pharmacology question retrieved', {
       userId: auth.userId,
@@ -117,7 +139,11 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
         rationale: question.explanation,
         condition: question.Condition?.name ?? null,
         subcategory: question.Condition?.subcategory ?? question.category,
-        correctAnswerIndex: Math.max(0, correctIdx),
+        metadata: buildLegacyStudyModeEndpointMetadata({
+          replacement: '/api/study/session/generate',
+          note:
+            'Pharmacology is retained as a compatibility route while the production mode stays gated behind readiness.',
+        }),
       },
     };
   } catch (error) {
@@ -130,3 +156,15 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
     await safePrismaDisconnect(prisma);
   }
 });
+
+function normalizeOptions(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((option) => String(option ?? '').trim()).filter(Boolean);
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw as Record<string, unknown>)
+      .map((option) => String(option ?? '').trim())
+      .filter(Boolean);
+  }
+  return [];
+}

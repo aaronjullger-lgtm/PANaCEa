@@ -64,9 +64,10 @@ describe('IncidentBanner', () => {
     });
 
     const banner = screen.getByRole('status');
-    expect(banner.textContent).toMatch(/PANaCEa is experiencing issues/i);
-    expect(banner.textContent).toMatch(/database/i);
-    expect(banner.textContent).toMatch(/connection refused/i);
+    expect(banner.textContent).toMatch(/Some features are temporarily unavailable/i);
+    expect(banner.textContent).toMatch(/Your progress is safe/i);
+    expect(banner.textContent).not.toMatch(/database/i);
+    expect(banner.textContent).not.toMatch(/connection refused/i);
   });
 
   it('shows an offline banner when fetch rejects', async () => {
@@ -77,7 +78,8 @@ describe('IncidentBanner', () => {
     await waitFor(() => {
       const banner = screen.queryByRole('status');
       expect(banner).not.toBeNull();
-      expect(banner!.textContent).toMatch(/Can't reach PANaCEa servers/i);
+      expect(banner!.textContent).toMatch(/Sync paused/i);
+      expect(banner!.textContent).toMatch(/saved locally/i);
     });
   });
 

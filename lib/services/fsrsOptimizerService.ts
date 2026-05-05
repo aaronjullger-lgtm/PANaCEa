@@ -50,8 +50,8 @@ interface ReviewDatum {
 
 // ── Constants ──
 
-const MIN_REVIEWS_FOR_OPTIMIZATION = 16;
-const MIN_REVIEWS_FOR_FULL_OPTIMIZATION = 100;
+const MIN_REVIEWS_FOR_OPTIMIZATION = 1000;
+const MIN_REVIEWS_FOR_FULL_OPTIMIZATION = 1000;
 const LEARNING_RATE = 0.01;
 const MAX_ITERATIONS = 50;
 const CONVERGENCE_THRESHOLD = 1e-6;
@@ -70,7 +70,9 @@ const OPTIMIZABLE_INDICES_V6 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
 const OPTIMIZABLE_INDICES_V7 = [...OPTIMIZABLE_INDICES_V6, 21, 22, 23, 24, 25, 26, 27, 28];
 // Back-compat: default export name preserved for any external callers.
 const OPTIMIZABLE_INDICES = OPTIMIZABLE_INDICES_V6;
-// Pretrain: only optimize initial stability per rating (w0–w3) when 16–99 reviews
+// Pretrain indices are retained for backwards-compatible tests and future
+// cold-start experiments, but production optimization waits for the full
+// 1000-review threshold before changing user parameters.
 const PRETRAIN_INDICES = [0, 1, 2, 3];
 // Parameter bounds to prevent divergence
 const PARAM_BOUNDS: Array<[number, number]> = [
@@ -287,7 +289,9 @@ export async function optimizeForUser(
     return null;
   }
 
-  // Use pretrain (w0–w3 only) for 16–99 reviews, full optimization for 100+
+  // Production optimization runs only after MIN_REVIEWS_FOR_OPTIMIZATION.
+  // If these thresholds diverge in the future, fall back to w0-w3 pretraining
+  // below the full threshold without exposing partially-fit weights earlier.
   const indices = reviewData.length < MIN_REVIEWS_FOR_FULL_OPTIMIZATION
     ? PRETRAIN_INDICES
     : OPTIMIZABLE_INDICES;

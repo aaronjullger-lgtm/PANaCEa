@@ -40,6 +40,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { ImageGallery } from './SmartImage';
 import { LastReviewedBadge } from './LastReviewedBadge';
 import { parseListField, parseTextField } from '@/lib/utils/normalization';
+import { buildMainSessionLaunchPath } from '@/lib/study/mainSessionLaunch';
 
 type TabId = 'highyield' | 'presentation' | 'diagnostics' | 'management';
 
@@ -1367,7 +1368,19 @@ function ConditionStudyWorkspace({
         </SectionCard>
         <SectionCard title="Related questions" icon={BookOpen} tone="action">
           <a
-            href={`/study?mode=smart-review&tag=${encodeURIComponent(data.condition)}`}
+            href={buildMainSessionLaunchPath(
+              {
+                mode: 'targeted',
+                focus: 'topic',
+                count: 10,
+                questionCount: 10,
+                systems: data.system ? [data.system] : undefined,
+                conditionId: data.conditionId || data.id,
+                conditionName: data.condition,
+                topic: data.condition,
+              },
+              { source: 'knowledge' }
+            )}
             className="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent)]"
           >
             Practice related questions

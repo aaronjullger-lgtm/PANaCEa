@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveCorrectAnswerIndex } from '../../../lib/answerLetterMap';
 
 const SubmitSchema = z.object({
   answerIndex: z.number().int().min(0).max(10),
@@ -32,30 +33,40 @@ function getUtcDateStart(d: Date): Date {
   return t;
 }
 
-function normalizeCorrectIndexFromAny(data: Record<string, unknown>): number {
-  const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5 };
+function asStringOptions(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((option) => String(option ?? ''));
+}
 
-  const maybeLetter =
-    (typeof data?.correctAnswer === 'string' ? data.correctAnswer : undefined) ??
-    (typeof data?.correct_answer === 'string' ? data.correct_answer : undefined);
-  if (maybeLetter) {
-    const l = maybeLetter.toUpperCase().trim().charAt(0);
-    if (l in letterToIndex) return letterToIndex[l]!;
+function normalizeCorrectIndexFromAny(data: Record<string, unknown>): number | null {
+  const options = asStringOptions(data.options ?? data.answers ?? data.choices);
+  const rawAnswer =
+    data.correctAnswer ?? data.correct_answer ?? data.answer ?? data.correct_option ?? data.correctChoice;
+
+  if (typeof rawAnswer === 'string' || typeof rawAnswer === 'number') {
+    const resolved = resolveCorrectAnswerIndex(String(rawAnswer), options);
+    if (resolved !== null) return resolved;
   }
 
-  if (typeof data?.correctAnswerIndex === 'number') return data.correctAnswerIndex;
-  if (typeof data?.correctIndex === 'number') return data.correctIndex;
-
-  // Fallback: if main table correctAnswer is actual text, we can't map reliably here; default 0
   if (
-    typeof data?.correctAnswer === 'string' &&
-    !(data.correctAnswer.trim().charAt(0).toUpperCase() in letterToIndex)
+    typeof data.correctAnswerIndex === 'number' &&
+    Number.isInteger(data.correctAnswerIndex) &&
+    data.correctAnswerIndex >= 0 &&
+    (options.length === 0 || data.correctAnswerIndex < options.length)
   ) {
-    return 0;
+    return data.correctAnswerIndex;
   }
 
-  // Default
-  return 0;
+  if (
+    typeof data.correctIndex === 'number' &&
+    Number.isInteger(data.correctIndex) &&
+    data.correctIndex >= 0 &&
+    (options.length === 0 || data.correctIndex < options.length)
+  ) {
+    return data.correctIndex;
+  }
+
+  return null;
 }
 
 export const onRequestOptions = withCors();
@@ -93,16 +104,27 @@ export const onRequestPost = authenticatedEndpoint(
         select: { id: true, questionData: true },
       });
 
-      let correctIndex = 0;
+      let correctIndex: number | null = null;
       if (pre) {
         correctIndex = normalizeCorrectIndexFromAny(pre.questionData as Record<string, unknown>);
       } else {
         const main = await prisma.question.findUnique({
           where: { id: attempt.questionId },
-          select: { id: true, correctAnswer: true },
+          select: { id: true, correctAnswer: true, options: true },
         });
         if (!main) return { status: 404, error: 'Question not found.' };
-        correctIndex = normalizeCorrectIndexFromAny({ correctAnswer: main.correctAnswer });
+        correctIndex = normalizeCorrectIndexFromAny({
+          correctAnswer: main.correctAnswer,
+          options: main.options,
+        });
+      }
+
+      if (correctIndex === null) {
+        log.error('Targeted daily question has incomplete scoring data', {
+          userId: auth.userId,
+          questionId: attempt.questionId,
+        });
+        return { status: 422, error: 'Question scoring data is incomplete.' };
       }
 
       const isCorrect = validated.answerIndex === correctIndex;

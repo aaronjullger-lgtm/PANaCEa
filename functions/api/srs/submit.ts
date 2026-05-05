@@ -1,50 +1,84 @@
 /**
- * SRS Submit Review API
  * POST /api/srs/submit
  *
- * Submit SRS review with FSRS v5 scheduling updates
+ * Compatibility adapter for the legacy due-review UI.
+ *
+ * Authoritative FSRS writes live in `drillReviewService` through the same path
+ * used by `/api/drills/submit-review`. This endpoint keeps the older payload
+ * and response shape while preventing a second divergent scheduler pipeline.
  */
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import {
-  FSRS,
-  Rating,
-  createReviewSnapshot,
-  topicProgressToCard,
-  FSRSState,
-  FSRSCard,
-} from '../../../lib/fsrs';
-import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
-import { getTaskTypeFromContent } from '../../../lib/taskTypes';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import { submitDrillReview, resolveCorrectAnswer, type QuestionData } from '../../../lib/services/drillReviewService';
+import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
-import {
-  analyzeBehaviorGemini,
-  type BehaviorTelemetryInput,
-} from '../_shared/analyzeBehaviorGemini';
-import { buildCircadianContext, applyCircadianModifier } from '../../../lib/circadian';
-import { applyHonestRating } from '../../../lib/srs/ghostGrader';
+import { resolveReviewQuestion, PLACEHOLDER_CORRECT_ANSWER } from '../drills/_shared/reviewQuestionResolver';
+import { markConsumed } from '../../../lib/services/reservoir';
 
 const SRSSubmitSchema = z.object({
   body: z.object({
     srsItemId: z.string().uuid().optional(),
     topicProgressId: z.string().uuid().optional(),
-    questionId: z.string().uuid(),
-    rating: z.number().int().min(1).max(4), // FSRS Rating: 1=Again, 3=Good (Hard/Easy deprecated)
+    questionId: z.string().min(1),
+    rating: z.number().int().min(1).max(4),
     gradeContinuous: z.number().min(1).max(4).optional(),
     isCorrect: z.boolean(),
     userAnswer: z.string().optional(),
-    timeSpent: z.number().optional(),
+    timeSpent: z.number().int().min(0).max(3600000).optional(),
     variantId: z.string().uuid().optional(),
-    /** For Ghost Grader: use behavior to infer true difficulty */
     attemptId: z.string().optional(),
     telemetry: z.record(z.string(), z.unknown()).optional(),
-    /** Exam urgency multiplier (0.5–2.0) from blueprint resolver */
     urgencyMultiplier: z.number().min(0).max(3).optional(),
+    progressContext: z.preprocess(
+      (value) => (typeof value === 'string' ? value.toUpperCase() : value),
+      z.enum(['READINESS', 'TARGETED']).optional()
+    ),
   }),
 });
+
+type SrsSubmitBody = z.infer<typeof SRSSubmitSchema>['body'];
+
+function getOptionLabels(questionData: QuestionData): string[] {
+  const rawOptions = Array.isArray(questionData.options)
+    ? questionData.options
+    : Array.isArray(questionData.choices)
+      ? questionData.choices
+      : [];
+
+  return rawOptions
+    .map((candidate) => {
+      if (typeof candidate === 'string') return candidate;
+      if (candidate && typeof candidate === 'object') {
+        return candidate.value ?? candidate.text ?? candidate.label ?? null;
+      }
+      return null;
+    })
+    .filter((label): label is string => typeof label === 'string' && label.trim().length > 0);
+}
+
+export function synthesizeLegacySrsSelectedAnswer(
+  questionData: QuestionData,
+  body: Pick<SrsSubmitBody, 'isCorrect' | 'userAnswer'>
+): string | null {
+  const providedAnswer = body.userAnswer?.trim();
+  if (providedAnswer) return providedAnswer;
+
+  const correctAnswer = resolveCorrectAnswer(questionData);
+  if (body.isCorrect) {
+    return correctAnswer;
+  }
+
+  const incorrectOption = getOptionLabels(questionData).find((option) => {
+    if (!correctAnswer) return true;
+    return option.trim().toLowerCase() !== correctAnswer.trim().toLowerCase();
+  });
+
+  return incorrectOption ?? (correctAnswer ? PLACEHOLDER_CORRECT_ANSWER : null);
+}
 
 export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (context) => {
   const { env, auth, validated } = context;
@@ -52,104 +86,51 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
+    if (!env.DATABASE_URL) {
+      logger.error('Database not configured');
+      return { status: 500, error: 'Database not configured' };
+    }
+
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const {
-      srsItemId,
-      topicProgressId,
-      questionId,
-      rating,
-      gradeContinuous,
-      isCorrect,
-      variantId,
-      attemptId,
-      telemetry,
-      urgencyMultiplier,
-    } = validated.body;
-
-    // Normalize deprecated ratings: Hard (2) → Again (1), Easy (4) → Good (3)
-    const normalizedRating = rating === 2 ? 1 : rating === 4 ? 3 : rating;
-
-    let effectiveRating = gradeContinuous !== undefined ? gradeContinuous : normalizedRating;
-    // If effectiveRating is a discrete rating (integer) and deprecated, normalize
-    if (effectiveRating === 2) effectiveRating = 1;
-    if (effectiveRating === 4) effectiveRating = 3;
-    let implicitDifficulty: number | null = null;
-
-    if (telemetry != null || attemptId != null) {
-      try {
-        let wasCorrect = isCorrect;
-        let selectedAnswer: string | undefined;
-        let effectiveTelemetry: BehaviorTelemetryInput | undefined = telemetry as
-          | BehaviorTelemetryInput
-          | undefined;
-        if (attemptId && env.DATABASE_URL) {
-          const prismaForAttempt = createEdgePrismaClient(env.DATABASE_URL);
-          const attempt = await prismaForAttempt.questionAttempt.findFirst({
-            where: { id: attemptId },
-            select: { wasCorrect: true, selectedAnswer: true, telemetryJson: true },
-          });
-          if (attempt) {
-            wasCorrect = attempt.wasCorrect;
-            selectedAnswer = attempt.selectedAnswer ?? undefined;
-            if (attempt.telemetryJson && typeof attempt.telemetryJson === 'object')
-              effectiveTelemetry = (effectiveTelemetry ??
-                attempt.telemetryJson) as BehaviorTelemetryInput;
-          }
-          await safePrismaDisconnect(prismaForAttempt);
-        }
-        if (effectiveTelemetry != null) {
-          const behavior = await analyzeBehaviorGemini(env, {
-            rating,
-            wasCorrect,
-            selectedAnswer,
-            telemetry: effectiveTelemetry,
-          });
-          effectiveRating = behavior.impliedRating;
-          implicitDifficulty = 1 - behavior.confidence;
-        }
-      } catch (e) {
-        logger.warn('Ghost Grader failed (using user rating)', {
-          error: e instanceof Error ? e.message : String(e),
-        });
-      }
-    }
-
-    // Get user's database ID and EOR context for time-blocked scheduling
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: {
-        id: true,
-        yearInProgram: true,
-        currentRotation: true,
-        eorTestDate: true,
-        rotationEndDate: true,
-      },
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+      id: true,
+      yearInProgram: true,
+      currentRotation: true,
+      eorTestDate: true,
+      rotationEndDate: true,
     });
 
-    if (!user) {
-      logger.warn('User not found in database', { clerkId: auth.userId.substring(0, 10) });
-      return {
-        data: { error: 'User not found' },
-        status: 404,
-      };
+    const body = validated.body;
+    const reviewSessionType = body.progressContext === 'TARGETED' ? 'targeted' : 'main';
+    const preResolvedSelectedAnswer = body.userAnswer?.trim() || (body.isCorrect ? PLACEHOLDER_CORRECT_ANSWER : '__selected_answer__');
+    const { question } = await resolveReviewQuestion(prisma, {
+      userId: user.id,
+      questionId: body.questionId,
+      selectedAnswer: preResolvedSelectedAnswer,
+    });
+
+    if (!question) {
+      return { status: 404, error: 'Question not found' };
     }
 
-    const dbUserId = user.id;
+    const selectedAnswer = synthesizeLegacySrsSelectedAnswer(
+      (question.questionData as QuestionData) ?? {},
+      body
+    );
 
-    // Build circadian context (matches drillReviewService pipeline)
-    const circadianContext = buildCircadianContext();
-
-    // Apply Ghost Grader to the effective rating (binary: Again/Good only)
-    const telemetryData = telemetry as Record<string, unknown> | undefined;
-    effectiveRating = applyHonestRating({
-      userRating: effectiveRating <= 1.5 ? Rating.Again : effectiveRating >= 2.5 ? Rating.Good : Rating.Again,
-      isCorrect,
-      oscillations: (telemetryData?.hover_oscillations as number | undefined) ?? 0,
-      vignetteRegressions: (telemetryData?.vignette_regressions as number | undefined) ?? 0,
-      selectionDriftMs: (telemetryData?.selection_drift_ms as number | null) ?? null,
-      tremorScore: (telemetryData?.tremor_score as number | undefined) ?? 0,
-    }) === Rating.Again ? 1 : effectiveRating;
+    if (!selectedAnswer) {
+      logger.warn('Legacy SRS submit could not resolve selected answer', {
+        questionId: body.questionId,
+        hasUserAnswer: Boolean(body.userAnswer),
+        isCorrect: body.isCorrect,
+      });
+      return {
+        status: 422,
+        error: 'Could not resolve submitted answer for review.',
+        code: 'UNPROCESSABLE_ENTITY',
+      };
+    }
 
     const eorRotationEnd = getEorRotationEnd({
       yearInProgram: user.yearInProgram,
@@ -157,302 +138,79 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       eorTestDate: user.eorTestDate?.toISOString() ?? null,
       rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
     });
-    const fsrs = new FSRS();
-    const now = new Date();
 
-    let nextReviewDate: Date = new Date(); // Default to now, will be updated by FSRS
-    let reviewState: any;
-    let conditionId: string | null = null;
-    let taskType: string | null = null;
-    let topicProgress = null;
+    const telemetrySessionId =
+      typeof body.telemetry?.session_id === 'string' && body.telemetry.session_id.trim().length > 0
+        ? body.telemetry.session_id
+        : undefined;
 
-    // Determine condition and task type
-    if (topicProgressId) {
-      topicProgress = await prisma.userTopicProgress.findUnique({
-        where: { id: topicProgressId },
-      });
-      if (topicProgress) {
-        conditionId = topicProgress.conditionId;
-        taskType = topicProgress.taskType;
-      }
-    } else if (questionId) {
-      const question = await prisma.question.findUnique({ where: { id: questionId } });
-      if (question) {
-        conditionId = question.conditionId;
-        taskType = getTaskTypeFromContent(question.question);
+    const result = await submitDrillReview(
+      prisma,
+      user.id,
+      {
+        questionId: body.questionId,
+        selectedAnswer,
+        timeSpentMs: body.timeSpent ?? 0,
+        telemetry: body.telemetry as any,
+        sessionType: reviewSessionType,
+        idempotencyKey: body.attemptId,
+      },
+      question,
+      { info: logger.info.bind(logger), warn: logger.warn.bind(logger), error: logger.error.bind(logger) },
+      eorRotationEnd,
+      body.urgencyMultiplier
+    );
 
-        if (conditionId && taskType) {
-          topicProgress = await prisma.userTopicProgress.findUnique({
-            where: {
-              userId_conditionId_taskType_progressContext: {
-                userId: dbUserId,
-                conditionId: conditionId,
-                taskType: taskType,
-                progressContext: 'READINESS',
-              },
-            },
-          });
-        }
-      }
-    }
-
-    const ratingForFsrs = effectiveRating;
-
-    // Update UserTopicProgress (Primary driver for Variants)
-    if (topicProgress) {
-      const card = topicProgressToCard(topicProgress);
-      const scheduled = fsrs.next(card, now, ratingForFsrs);
-      reviewState = scheduled.card;
-      const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
-      nextReviewDate = clampedDue;
-
-      let stability = reviewState.stability;
-      // Circadian modifier (matches drillReviewService pipeline)
-      stability = applyCircadianModifier(stability, circadianContext);
-      if (implicitDifficulty != null && implicitDifficulty > 0.5) {
-        stability = Math.max(0.1, stability * (1 - implicitDifficulty));
-      }
-      // Exam urgency: tighten intervals when exam is close
-      if (urgencyMultiplier && urgencyMultiplier > 1.0) {
-        const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
-        stability = Math.max(0.01, stability / urgencyDampener);
-      }
-
-      await prisma.userTopicProgress.update({
-        where: { id: topicProgress.id },
-        data: {
-          stability,
-          difficulty: reviewState.difficulty,
-          state: reviewState.state,
-          reps: reviewState.reps,
-          lapses: reviewState.lapses,
-          lastReviewDate: now,
-          nextReviewDate: nextReviewDate,
-          implicitDifficulty: implicitDifficulty ?? undefined,
-        },
-      });
-    } else if (conditionId && taskType) {
-      const emptyCard = fsrs.createEmptyCard();
-      const scheduled = fsrs.next(emptyCard, now, ratingForFsrs);
-      reviewState = scheduled.card;
-      const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
-      nextReviewDate = clampedDue;
-
-      let stability = reviewState.stability;
-      // Circadian modifier (matches drillReviewService pipeline)
-      stability = applyCircadianModifier(stability, circadianContext);
-      if (implicitDifficulty != null && implicitDifficulty > 0.5) {
-        stability = Math.max(0.1, stability * (1 - implicitDifficulty));
-      }
-      // Exam urgency: tighten intervals when exam is close
-      if (urgencyMultiplier && urgencyMultiplier > 1.0) {
-        const urgencyDampener = 1 + (urgencyMultiplier - 1) * 0.3;
-        stability = Math.max(0.01, stability / urgencyDampener);
-      }
-
-      await prisma.userTopicProgress.create({
-        data: {
-          userId: dbUserId,
-          conditionId: conditionId,
-          taskType: taskType,
-          stability,
-          difficulty: reviewState.difficulty,
-          state: reviewState.state,
-          reps: reviewState.reps,
-          lapses: reviewState.lapses,
-          lastReviewDate: now,
-          nextReviewDate: nextReviewDate,
-          implicitDifficulty: implicitDifficulty ?? undefined,
-        },
-      });
-    }
-
-    // Sync to UserProgress (condition-level source of truth for FSRS)
-    if (conditionId && reviewState) {
+    if (telemetrySessionId) {
       try {
-        const dbUser = await prisma.user.findUnique({
-          where: { clerkId: auth.userId },
-          select: { id: true },
-        });
-        if (dbUser) {
-          await prisma.userProgress.upsert({
-            where: { userId_conditionId_progressContext: { userId: dbUser.id, conditionId, progressContext: 'READINESS' } },
-            create: {
-              id: `${dbUser.id}_${conditionId}`,
-              userId: dbUser.id,
-              conditionId,
-              fsrsCard: {
-                stability: reviewState.stability,
-                difficulty: reviewState.difficulty,
-                state: reviewState.state,
-                elapsed_days: 0,
-                scheduled_days: reviewState.scheduled_days ?? 0,
-                reps: reviewState.reps,
-                lapses: reviewState.lapses,
-                last_review: now.toISOString(),
-              },
-              // Dual-write scalar FSRS fields for readers that query these directly.
-              fsrsStability: reviewState.stability,
-              fsrsDifficulty: reviewState.difficulty,
-              fsrsState: reviewState.state,
-              fsrsReps: reviewState.reps,
-              totalAttempts: 1,
-              correctCount: isCorrect ? 1 : 0,
-              accuracy: isCorrect ? 1.0 : 0.0,
-              lastReviewAt: now,
-              nextReviewAt: nextReviewDate,
-              updatedAt: now,
-            },
-            update: {
-              fsrsCard: {
-                stability: reviewState.stability,
-                difficulty: reviewState.difficulty,
-                state: reviewState.state,
-                elapsed_days: 0,
-                scheduled_days: reviewState.scheduled_days ?? 0,
-                reps: reviewState.reps,
-                lapses: reviewState.lapses,
-                last_review: now.toISOString(),
-              },
-              // Dual-write scalar FSRS fields for readers that query these directly.
-              fsrsStability: reviewState.stability,
-              fsrsDifficulty: reviewState.difficulty,
-              fsrsState: reviewState.state,
-              fsrsReps: reviewState.reps,
-              totalAttempts: { increment: 1 },
-              correctCount: isCorrect ? { increment: 1 } : undefined,
-              lastReviewAt: now,
-              nextReviewAt: nextReviewDate,
-              updatedAt: now,
-            },
-          });
-        }
-      } catch (e) {
-        // Non-fatal: UserTopicProgress is already updated
-        logger.warn('UserProgress sync from srs/submit failed', {
-          error: e instanceof Error ? e.message : String(e),
+        await markConsumed(prisma, telemetrySessionId, [body.questionId]);
+      } catch (consumeError) {
+        logger.warn('Legacy SRS reservoir consume failed (non-fatal)', {
+          questionId: body.questionId,
+          sessionId: telemetrySessionId,
+          error: consumeError instanceof Error ? consumeError.message : String(consumeError),
         });
       }
     }
 
-    // Update SRSItem (DEPRECATED — Legacy per-question tracking)
-    // TODO: Remove once all frontend callers stop sending srsItemId.
-    // UserProgress + UserTopicProgress are the authoritative FSRS stores.
-    if (srsItemId) {
-      logger.info('SRSItem legacy write (deprecated)', { srsItemId: srsItemId.substring(0, 10) });
-      const item = await prisma.sRSItem.findUnique({ where: { id: srsItemId } });
-      if (item) {
-        const card: FSRSCard = {
-          stability: item.fsrsStability || 0,
-          difficulty: item.fsrsDifficulty || 0,
-          state: (item.fsrsState as FSRSState) || FSRSState.New,
-          reps: item.repetition,
-          lapses: 0,
-          last_review: item.lastReviewed,
-          elapsed_days: (now.getTime() - item.lastReviewed.getTime()) / 86400000,
-          scheduled_days: 0,
-        };
-
-        const scheduled = fsrs.next(card, now, ratingForFsrs);
-
-        const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
-
-        await prisma.sRSItem.update({
-          where: { id: srsItemId },
-          data: {
-            lastReviewed: now,
-            dueDate: clampedDue,
-            repetition: scheduled.card.reps,
-            fsrsStability: scheduled.card.stability,
-            fsrsDifficulty: scheduled.card.difficulty,
-            fsrsState: scheduled.card.state,
-          },
-        });
-      }
-    }
-
-    // Variant pre-generation: when a question is answered incorrectly, ensure a sibling variant
-    // exists in PreGeneratedQuestion so the Due session can serve a different question for the
-    // same concept without waiting for generation at review time.
-    // Replaces the old VariantQueueService → QuestionVariant path; now unified under PreGeneratedQuestion.
-    if (!isCorrect && conditionId) {
-      // Look up the source question to pass its data to the generator
-      const preGenSource = await prisma.preGeneratedQuestion.findUnique({
-        where: { id: questionId },
-        select: {
-          id: true,
-          conditionId: true,
-          system: true,
-          difficulty: true,
-          questionType: true,
-          questionData: true,
-        },
-      });
-      const sourceForVariant = preGenSource ?? (await prisma.question.findUnique({
-        where: { id: questionId },
-        select: {
-          id: true,
-          conditionId: true,
-          system: true,
-          difficulty: true,
-          taskType: true,
-          vignette: true,
-          question: true,
-          options: true,
-          correctAnswer: true,
-          explanation: true,
-        },
-      }).then((q) =>
-        q
-          ? {
-              id: q.id,
-              conditionId: q.conditionId,
-              system: q.system,
-              difficulty: q.difficulty ?? 'medium',
-              questionType: q.taskType ?? 'mcq',
-              questionData: {
-                question: [q.vignette, q.question].filter(Boolean).join('\n\n') || q.question,
-                vignette: q.vignette,
-                options: q.options,
-                correctAnswer: q.correctAnswer,
-                explanation: q.explanation,
-              },
-            }
-          : null
-      ));
-
-      if (sourceForVariant) {
+    // Canonical review scheduling is owned by submitDrillReview/drillReviewService.
+    // This compatibility route must not write a second concept schedule.
+    if (typeof result.isCorrect === 'boolean') {
+      if (result.isCorrect === false && question.conditionId) {
         ensureDueVariant(
           prisma,
           {
-            id: sourceForVariant.id,
-            conditionId: sourceForVariant.conditionId,
-            system: sourceForVariant.system,
-            difficulty: sourceForVariant.difficulty ?? 'medium',
-            questionType: sourceForVariant.questionType ?? 'mcq',
-            questionData: sourceForVariant.questionData,
+            id: question.id,
+            conditionId: question.conditionId,
+            system: question.system ?? null,
+            difficulty: question.difficulty ?? 'medium',
+            questionType: question.questionType ?? 'mcq',
+            questionData: question.questionData,
           },
           env.GEMINI_API_KEY as string | undefined,
           { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
-          dbUserId
-        ).catch((err: unknown) => {
-          logger.warn('srs/submit ensureDueVariant failed (non-fatal)', {
-            questionId,
-            error: err instanceof Error ? err.message : String(err),
+          user.id
+        ).catch((error: unknown) => {
+          logger.warn('Legacy SRS ensureDueVariant failed (non-fatal)', {
+            questionId: body.questionId,
+            error: error instanceof Error ? error.message : String(error),
           });
         });
       }
     }
 
-    logger.info('SRS review submitted', {
-      userId: dbUserId.substring(0, 10),
-      questionId: questionId.substring(0, 10),
-      rating,
-      isCorrect,
-    });
+    const nextReviewDate = result.fsrsSchedule?.nextDueDate;
+    const triggerVisualRegeneration =
+      result.isCorrect === false && (question.conditionId != null || body.questionId != null);
 
-    // Pillar 4: When user rates "Again" (1), suggest re-generation with exaggerated mnemonic (frontend calls POST /api/srs/generate-visual with style: "exaggerated").
-    const triggerVisualRegeneration = rating === 1 && (conditionId != null || questionId != null);
+    logger.info('Legacy SRS submit delegated to drillReviewService', {
+      userId: user.id.substring(0, 10),
+      questionId: body.questionId.substring(0, 10),
+      sourceQuestionId: question.sourceQuestionId,
+      questionSource: question.questionSource,
+      progressContext: body.progressContext ?? 'READINESS',
+      fsrsUpdated: Boolean(result.fsrsSchedule),
+    });
 
     return {
       data: {
@@ -460,16 +218,16 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
         nextReviewDate,
         ...(triggerVisualRegeneration && {
           triggerVisualRegeneration: true,
-          questionId: questionId ?? undefined,
-          conditionId: conditionId ?? undefined,
-          topicProgressId: topicProgress?.id ?? undefined,
+          questionId: body.questionId,
+          conditionId: question.conditionId ?? undefined,
+          topicProgressId: body.topicProgressId,
           visualRegenerationHint:
             'Call POST /api/srs/generate-visual with front/back (or question text) and style: "exaggerated" for cartoon mnemonic; display with Flip animation.',
         }),
       },
     };
   } catch (error) {
-    logger.error('SRS submit error', {
+    logger.error('SRS submit compatibility adapter error', {
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId.substring(0, 10),
     });

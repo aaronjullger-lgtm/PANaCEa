@@ -11,7 +11,8 @@
     "components/session/CalibrationFeedbackBadge.tsx",
     "components/session/SessionPacer.tsx",
     "components/session/AnswerFeedback.tsx",
-    "components/dashboard/DashboardPage.tsx",
+    "components/dashboard/adaptive/page/DashboardPage.tsx",
+    "components/dashboard/adaptive/engine/resolveDashboardWidgets.ts",
     "components/dashboard/TrainingMenu.tsx"
   ],
   "exclude": ["node_modules"]

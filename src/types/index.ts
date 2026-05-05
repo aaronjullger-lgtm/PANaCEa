@@ -40,7 +40,11 @@ export interface Question {
   /** Unique identifier for tracking */
   id?: string;
   /** Legacy API identifier used by older sync endpoints. */
-  questionId?: string;
+  questionId?: string | null;
+  /** Canonical Question.id when available; null/undefined for source-only questions. */
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
   /** Optional vignette text for long-form stems */
   vignette?: string;
   /** Legacy alias for question text used by older generated content */
@@ -61,6 +65,8 @@ export interface Question {
   subcategory?: string;
   /** Stable id from CONDITION_REGISTRY */
   conditionId: string;
+  /** Canonical MedicalContent.id when available. */
+  medicalContentId?: string | null;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
   /** Question difficulty level */
@@ -151,6 +157,7 @@ export interface SessionSettings {
     | 'session'
     | 'review'
     | 'exam'
+    | 'targeted'
     | 'rapid_recall'
     | 'cram_mode'
     | 'cram'
@@ -174,17 +181,29 @@ export interface SessionSettings {
   /** Core PANCE Simulation only: strict NCCPA blueprint, no weak-area bias, PANCE-level difficulty */
   simulationStrict?: boolean;
 
-  /** Optional: when present, Gemini should target this specific condition */
-  conditionName?: string;
   subcategoryName?: string;
+  /** Optional stable condition identifier for condition-targeted sessions */
+  conditionId?: string;
+  /** Optional learner-facing condition label for condition-targeted sessions */
+  conditionName?: string;
   /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
   timeLimit?: number;
   /** Question count (legacy field name, kept for compatibility with 'count') */
   questionCount?: number;
   /** Optional study stage / blueprint stage metadata used by adaptive parents */
   stage?: string;
+  /** Optional learner-facing blueprint label used by adaptive sessions */
+  blueprintLabel?: string;
+  /** Optional exam type labels that influenced adaptive session generation */
+  examTypes?: string[];
   /** Interleaving mode: 'interleaved' mixes systems, 'focused' drills one system */
   interleaveMode?: 'interleaved' | 'focused';
+  /** Optional study-plan launch attribution for answer telemetry and plan sync */
+  studyPlanTaskId?: string;
+  studyPlanDate?: string;
+  studyPlanSource?: string;
+  /** Optional exam urgency multiplier used to tighten FSRS intervals near deadlines */
+  urgencyMultiplier?: number;
 }
 
 // ============================================================================

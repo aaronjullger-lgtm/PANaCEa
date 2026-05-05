@@ -36,13 +36,13 @@ When the user rates a card **Hard (1)** in `POST /api/srs/submit`, the response 
 ## Frontend display
 
 - **Canonical:** Main session = `QuizView` (MC only). Due items are loaded via focus "Due" and `/api/questions/due-siblings` and shown as MC variants in the same view; Ghost Grader and optimistic UI are wired there.
-- **Legacy / hidden:** `SrsFlashcardView` (view `srs_flashcards`) is no longer linked from the app nav. It used **Study Tools → Resources → SRS Flashcards**; that entry point has been removed so the product has a single FSRS path (QuizView MC). The component and `/api/srs/next`, `/api/srs/submit`, `/api/srs/generate-visual` remain in code for possible future use. `SrsFlashcardView` uses `fetchNextVariantCard()` and `submitVariantReview()`; on `triggerVisualRegeneration` it would call `requestMnemonicImage()` and show the image with a flip animation.
+- **Legacy / hidden:** `SrsFlashcardView` (view `srs_flashcards`) is no longer linked from the app nav. It used **Study Tools → Resources → SRS Flashcards**; that entry point has been removed so the product has a single FSRS path (QuizView MC). The component and `/api/srs/next`, `/api/srs/submit`, `/api/srs/generate-visual` remain in code for possible future use. `SrsFlashcardView` uses the API-backed `fetchNextVariantCard()` and `submitVariantReview()` helpers from `lib/services/srsReviewClient.ts`; it no longer has localStorage SRS fallback helpers.
 - **Flashcard component:** When a mnemonic image is available (from generate-visual or cached), show it on the card (e.g. front or back). Add a **Flip** animation (e.g. CSS transform rotateY or Framer Motion) so the user can flip between front text and back image.
 - **Flow:** On submit with rating 1, if `data.triggerVisualRegeneration` is true, call generate-visual with the card’s front/back and `style: "exaggerated"`, store or display the returned image, and optionally replace the card’s visual for the next review.
 
 ## Auth (Bearer token)
 
-When the backend requires Bearer auth for `/api/srs/next`, `/api/srs/submit`, or `/api/srs/generate-visual`, pass `getToken` (e.g. from `useAuth()` from Clerk) so the service sends `Authorization: Bearer <token>`. See `lib/services/srsService.ts`: `fetchNextVariantCard(options?)`, `submitVariantReview(payload, options?)`, and `requestMnemonicImage(front, back, { ..., getToken })`. `SrsFlashcardView` uses `useAuth()` and passes `getToken` into all three.
+When the backend requires Bearer auth for `/api/srs/next` or `/api/srs/submit`, pass `getToken` (e.g. from `useAuth()` from Clerk) so the service sends `Authorization: Bearer <token>`. See `lib/services/srsReviewClient.ts`: `fetchNextVariantCard(options?)` and `submitVariantReview(payload, options?)`. `SrsFlashcardView` uses `useAuth()` and passes `getToken` into both helpers.
 
 ## References
 

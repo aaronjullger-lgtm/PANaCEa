@@ -10,34 +10,25 @@ import { test, expect } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 test.describe('API Health (Cloudflare Functions)', () => {
-  test('GET /api/health returns diagnostics (200, 503, or 500)', async ({ request }) => {
+  test('GET /api/health returns public liveness only', async ({ request }) => {
     const response = await request.get(`${BASE_URL}/api/health`);
-    // 200 = healthy, 503 = degraded, 500 = error (e.g. DB/stack failure)
-    expect([200, 503, 500]).toContain(response.status());
+    expect(response.status()).toBe(200);
 
     const body = await response.json();
     expect(body).toHaveProperty('timestamp');
     expect(body).toHaveProperty('endpoint', '/api/health');
-    expect(body).toHaveProperty('status');
+    expect(body.status).toBe('ok');
     expect(body).toHaveProperty('checks');
+    expect(body).not.toHaveProperty('diagnostics');
 
-    // Expected checks from health.ts
     expect(body.checks).toHaveProperty('functionDeployed');
     expect(body.checks.functionDeployed).toMatchObject({
       status: 'pass',
       message: expect.stringContaining('Cloudflare'),
     });
-
-    expect(body.checks).toHaveProperty('environment');
-    expect(body.checks).toHaveProperty('database');
-
-    // Content check (Condition Library): when present, systemsCount is a number
-    if (body.checks.content) {
-      expect(body.checks.content).toHaveProperty('status');
-      if (typeof body.checks.content.systemsCount === 'number') {
-        expect(body.checks.content.systemsCount).toBeGreaterThanOrEqual(0);
-      }
-    }
+    expect(body.checks).not.toHaveProperty('environment');
+    expect(body.checks).not.toHaveProperty('database');
+    expect(body.checks).not.toHaveProperty('content');
   });
 
   test('GET /api/health returns valid JSON', async ({ request }) => {

@@ -1,18 +1,18 @@
 /**
  * POST /api/srs/sync
- * Sync SRS items from localStorage to database for authenticated users
+ * Legacy SRSItem sync compatibility route.
  *
  * @deprecated SRSItem is legacy (SM-2). The authoritative FSRS stores are
  * UserProgress (condition-level) and UserTopicProgress (condition+taskType).
- * This endpoint is kept for backward compatibility with the offline-first
- * localStorage sync pipeline. New features should NOT add SRSItem writes.
+ * This endpoint is kept only so old clients do not hard-fail. It no longer
+ * writes SRSItem rows; authoritative scheduling is handled by drillReviewService
+ * through UserProgress/UserTopicProgress and ReviewLog.
  *
  * Security: Authenticated endpoint with Zod validation
  * Sprint: Security Hardening Sprint 3 - Middleware Pattern
  */
 
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { SRSSyncSchema } from '../_shared/schemas';
 import { logger } from '../_shared/secureLogger';
 
@@ -20,130 +20,27 @@ import { logger } from '../_shared/secureLogger';
 
 // POST handler with authentication + validation
 export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const { auth, validated } = context;
+  const total = validated.items.length;
+  const now = new Date();
 
-  try {
-    // Look up user by clerkId to get internal database ID
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
+  logger.warn('Legacy SRSItem sync ignored', {
+    userId: auth.userId,
+    total,
+    canonicalPath: '/api/srs/submit',
+  });
 
-    if (!user) {
-      logger.warn('SRS sync: User not found in database', { clerkId: auth.userId });
-      return {
-        status: 404,
-        error: 'User not found. Please refresh and try again.',
-      };
-    }
-
-    const userId = user.id;
-    const { items } = validated;
-    const now = new Date();
-
-    let synced = 0;
-    let skipped = 0;
-
-    // Sync each item
-    for (const item of items) {
-      try {
-        // Check if item already exists
-        const existing = await prisma.sRSItem.findFirst({
-          where: {
-            userId,
-            questionId: item.questionId,
-          },
-        });
-
-        if (existing) {
-          // Update only if local version is newer
-          const localUpdated = new Date(item.lastReviewed);
-          if (localUpdated > existing.updatedAt) {
-            await prisma.sRSItem.update({
-              where: { id: existing.id },
-              data: {
-                interval: item.interval,
-                repetition: item.repetition,
-                easiness: item.easiness,
-                dueDate: new Date(item.dueDate),
-                lastReviewed: new Date(item.lastReviewed),
-                quality: item.quality,
-                difficulty:
-                  item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
-                stabilityScore: item.stabilityScore,
-                fsrsStability: item.fsrsStability,
-                fsrsDifficulty: item.fsrsDifficulty,
-                fsrsState: item.fsrsState,
-                fsrsLastReview: item.fsrsLastReview ? new Date(item.fsrsLastReview) : null,
-                updatedAt: now,
-              },
-            });
-            synced++;
-          } else {
-            skipped++;
-          }
-        } else {
-          // Create new item
-          await prisma.sRSItem.create({
-            data: {
-              id: crypto.randomUUID(),
-              userId,
-              questionId: item.questionId,
-              interval: item.interval,
-              repetition: item.repetition,
-              easiness: item.easiness,
-              dueDate: new Date(item.dueDate),
-              lastReviewed: new Date(item.lastReviewed),
-              quality: item.quality,
-              difficulty:
-                item.difficulty !== undefined && item.difficulty !== null
-                  ? parseFloat(String(item.difficulty))
-                  : 0,
-              stabilityScore: item.stabilityScore,
-              fsrsStability: item.fsrsStability,
-              fsrsDifficulty: item.fsrsDifficulty,
-              fsrsState: item.fsrsState,
-              fsrsLastReview: item.fsrsLastReview ? new Date(item.fsrsLastReview) : null,
-              createdAt: now,
-              updatedAt: now,
-            },
-          });
-          synced++;
-        }
-      } catch (itemError) {
-        logger.error('SRS sync: Error syncing individual item', itemError, {
-          questionId: item.questionId,
-          userId: auth.userId,
-        });
-        // Continue with other items
-      }
-    }
-
-    logger.info('SRS sync completed', {
-      userId: auth.userId,
-      synced,
-      skipped,
-      total: items.length,
-    });
-
-    return {
-      status: 200,
-      data: {
-        success: true,
-        synced,
-        skipped,
-        total: items.length,
-        timestamp: now.toISOString(),
-      },
-    };
-  } catch (error) {
-    logger.error('SRS sync failed', error, { userId: auth.userId });
-    return {
-      status: 500,
-      error: 'Sync failed',
-    };
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
+  return {
+    status: 200,
+    data: {
+      success: true,
+      deprecated: true,
+      synced: 0,
+      skipped: total,
+      total,
+      timestamp: now.toISOString(),
+      message:
+        'Legacy SRSItem sync is deprecated. Canonical FSRS updates are written by review submissions.',
+    },
+  };
 });

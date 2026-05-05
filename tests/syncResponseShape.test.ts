@@ -2,6 +2,8 @@
  * Critical-path: Sync API response shape
  * Client (useUserStats) expects GET /api/sync to return:
  * { success: true, data: { performanceRecords?, srsItems?, savedQuestions? } }
+ * `srsItems` remains an empty compatibility array; canonical FSRS state is no
+ * longer synced through the legacy SRSItem table.
  * Middleware sends result.data as body, so client receives that shape.
  */
 

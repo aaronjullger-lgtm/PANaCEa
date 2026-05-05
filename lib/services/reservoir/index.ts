@@ -28,6 +28,8 @@ export {
 export {
   reserveFromReservoir,
   markConsumed,
+  releaseReservation,
+  failReservation,
   bulkInsertReservoirItems,
   getQueueDepth,
   needsRefill,

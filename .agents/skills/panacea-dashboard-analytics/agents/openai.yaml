@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Dashboard Analytics"
+  short_description: "Keep learning dashboards and analytics metrics trustworthy"
+  default_prompt: "Work on this PANaCEa dashboard or metric by tracing its backend calculation, data contract, UI state, and validation."

@@ -35,6 +35,7 @@ import {
   type QuestionMetadata,
   type ScoredArm,
 } from './contextualBanditService';
+import { withProductionQuestionSafety } from './questionServingSafety';
 
 const LOG_SCOPE = 'ConceptQuestionSelector';
 
@@ -90,6 +91,7 @@ export interface SelectedQuestion {
   topic: string | null;
   difficulty: string | null;
   conditionId: string | null;
+  medicalContentId: string | null;
   source: 'due_review' | 'new_card';
 }
 
@@ -251,6 +253,70 @@ interface ScopeFilter {
   gatedSystems: string[];
 }
 
+interface ResolvedConditionScope {
+  progressConditionIds: string[];
+  questionConditionIds: string[];
+  medicalContentIds: string[];
+  conditionToMedicalContentId: Map<string, string>;
+  medicalContentToConditionId: Map<string, string | null>;
+}
+
+async function resolveConditionScope(
+  prisma: PrismaClient,
+  conditionIds: string[]
+): Promise<ResolvedConditionScope> {
+  const uniqueIds = [...new Set(conditionIds.filter(Boolean))];
+  const result: ResolvedConditionScope = {
+    progressConditionIds: [],
+    questionConditionIds: [],
+    medicalContentIds: [],
+    conditionToMedicalContentId: new Map(),
+    medicalContentToConditionId: new Map(),
+  };
+
+  if (uniqueIds.length === 0) return result;
+
+  const rows = await prisma.medicalContent.findMany({
+    where: {
+      OR: [
+        { id: { in: uniqueIds } },
+        { conditionId: { in: uniqueIds } },
+      ],
+    },
+    select: {
+      id: true,
+      conditionId: true,
+    },
+  });
+
+  for (const row of rows) {
+    result.progressConditionIds.push(row.id);
+    result.medicalContentIds.push(row.id);
+    result.medicalContentToConditionId.set(row.id, row.conditionId ?? null);
+    if (row.conditionId) {
+      result.questionConditionIds.push(row.conditionId);
+      if (!result.conditionToMedicalContentId.has(row.conditionId)) {
+        result.conditionToMedicalContentId.set(row.conditionId, row.id);
+      }
+    }
+  }
+
+  for (const id of uniqueIds) {
+    if (!result.progressConditionIds.includes(id)) {
+      result.progressConditionIds.push(id);
+    }
+    if (!result.medicalContentIds.includes(id) && !result.questionConditionIds.includes(id)) {
+      result.questionConditionIds.push(id);
+    }
+  }
+
+  result.progressConditionIds = [...new Set(result.progressConditionIds)];
+  result.questionConditionIds = [...new Set(result.questionConditionIds)];
+  result.medicalContentIds = [...new Set(result.medicalContentIds)];
+
+  return result;
+}
+
 async function fetchDueReviews(
   prisma: PrismaClient,
   userId: string,
@@ -271,7 +337,12 @@ async function fetchDueReviews(
   }
 
   if (scope.conditionId && mode === 'condition') {
-    progressWhere.conditionId = scope.conditionId;
+    const scopedConditionDomain = await resolveConditionScope(prisma, [scope.conditionId]);
+    progressWhere.conditionId = {
+      in: scopedConditionDomain.progressConditionIds.length > 0
+        ? scopedConditionDomain.progressConditionIds
+        : [scope.conditionId],
+    };
   }
 
   // Exclude gated systems (didactic students)
@@ -303,9 +374,20 @@ async function fetchDueReviews(
 
   // For each due concept, find a question
   const conditionIds = dueProgress.map(p => p.conditionId);
-  const questionWhere: any = {
-    conditionId: { in: conditionIds },
-  };
+  const dueConditionDomain = await resolveConditionScope(prisma, conditionIds);
+  const questionScopeOr: Array<Record<string, unknown>> = [];
+  if (dueConditionDomain.questionConditionIds.length > 0) {
+    questionScopeOr.push({ conditionId: { in: dueConditionDomain.questionConditionIds } });
+  }
+  if (dueConditionDomain.medicalContentIds.length > 0) {
+    questionScopeOr.push({ medicalContentId: { in: dueConditionDomain.medicalContentIds } });
+  }
+  if (questionScopeOr.length === 0) {
+    questionScopeOr.push({ conditionId: { in: conditionIds } });
+  }
+  const questionWhere: any = withProductionQuestionSafety(
+    questionScopeOr.length === 1 ? questionScopeOr[0]! : { OR: questionScopeOr }
+  );
 
   if (scope.subcategory && mode === 'subcategory') {
     questionWhere.subcategory = scope.subcategory;
@@ -325,16 +407,25 @@ async function fetchDueReviews(
       topic: true,
       difficulty: true,
       conditionId: true,
+      medicalContentId: true,
     },
   });
 
   // Group questions by conditionId, pick one per condition
   const byCondition = new Map<string, typeof questions>();
   for (const q of questions) {
-    if (!q.conditionId) continue;
-    const existing = byCondition.get(q.conditionId) ?? [];
-    existing.push(q);
-    byCondition.set(q.conditionId, existing);
+    const conditionKeys = new Set(
+      [
+        q.medicalContentId,
+        q.conditionId ? dueConditionDomain.conditionToMedicalContentId.get(q.conditionId) : undefined,
+        q.conditionId,
+      ].filter((key): key is string => typeof key === 'string' && key.length > 0)
+    );
+    for (const key of conditionKeys) {
+      const existing = byCondition.get(key) ?? [];
+      existing.push(q);
+      byCondition.set(key, existing);
+    }
   }
 
   const result: SelectedQuestion[] = [];
@@ -342,11 +433,19 @@ async function fetchDueReviews(
 
   // Batch pre-fetch least-seen questions for all conditions (3 queries instead of 3×N)
   const leastSeenMap = await batchGetLeastSeenQuestions(
-    prisma, userId, conditionIds
+    prisma,
+    userId,
+    dueConditionDomain.questionConditionIds.length > 0
+      ? dueConditionDomain.questionConditionIds
+      : conditionIds
   ).catch(() => new Map<string, string | null>());
 
   for (const progress of dueProgress) {
-    const leastSeenId = leastSeenMap.get(progress.conditionId) ?? null;
+    const mappedQuestionConditionId =
+      dueConditionDomain.medicalContentToConditionId.get(progress.conditionId) ?? progress.conditionId;
+    const leastSeenId = mappedQuestionConditionId
+      ? leastSeenMap.get(mappedQuestionConditionId) ?? null
+      : null;
     const candidates = byCondition.get(progress.conditionId) ?? [];
 
     // If leastSeenId points to a Question we already fetched, use it
@@ -411,8 +510,12 @@ async function fetchNewCards(
 
   if (mode === 'condition' && options.conditionId) {
     // Condition-scoped: all questions for this condition
+    const scopedConditionDomain = await resolveConditionScope(prisma, [options.conditionId]);
     return fetchScopedNew(prisma, count, attemptedSet, {
-      conditionId: options.conditionId,
+      conditionIds: scopedConditionDomain.questionConditionIds.length > 0
+        ? scopedConditionDomain.questionConditionIds
+        : [options.conditionId],
+      medicalContentIds: scopedConditionDomain.medicalContentIds,
     });
   }
 
@@ -442,12 +545,28 @@ async function fetchScopedNew(
   prisma: PrismaClient,
   count: number,
   attemptedSet: Set<string>,
-  filter: { system?: string; subcategory?: string; conditionId?: string }
+  filter: {
+    system?: string;
+    subcategory?: string;
+    conditionId?: string;
+    conditionIds?: string[];
+    medicalContentIds?: string[];
+  }
 ): Promise<SelectedQuestion[]> {
-  const where: any = {};
+  const where: any = withProductionQuestionSafety({});
   if (filter.system) where.system = filter.system;
   if (filter.subcategory) where.subcategory = filter.subcategory;
-  if (filter.conditionId) where.conditionId = filter.conditionId;
+  const conditionOr: Array<Record<string, unknown>> = [];
+  if (filter.conditionIds?.length) conditionOr.push({ conditionId: { in: filter.conditionIds } });
+  if (filter.medicalContentIds?.length) {
+    conditionOr.push({ medicalContentId: { in: filter.medicalContentIds } });
+  }
+  if (filter.conditionId) conditionOr.push({ conditionId: filter.conditionId });
+  if (conditionOr.length === 1) {
+    Object.assign(where, conditionOr[0]);
+  } else if (conditionOr.length > 1) {
+    where.OR = conditionOr;
+  }
 
   // Fetch more than needed to filter out attempted questions
   const candidates = await prisma.question.findMany({
@@ -547,7 +666,7 @@ async function fetchAdaptiveNew(
     if (targetCount <= 0) continue;
 
     const candidates = await prisma.question.findMany({
-      where: { system: sys },
+      where: withProductionQuestionSafety({ system: sys }),
       select: QUESTION_SELECT,
       take: targetCount * 3,
     });
@@ -681,6 +800,7 @@ const QUESTION_SELECT = {
   topic: true,
   difficulty: true,
   conditionId: true,
+  medicalContentId: true,
 } as const;
 
 function normalizeQuestion(
@@ -735,6 +855,7 @@ function normalizeQuestion(
     topic: raw.topic ?? null,
     difficulty: raw.difficulty ?? null,
     conditionId: raw.conditionId ?? null,
+    medicalContentId: raw.medicalContentId ?? null,
     source,
   };
 }

@@ -12,6 +12,7 @@ import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveBlueprint, checkRotationTransition } from '../../../lib/services/learnerStageBlueprint';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 // GET has no body — use empty schema
 const ResolveBlueprintSchema = z.object({});
@@ -27,18 +28,15 @@ export const onRequestGet = authenticatedEndpoint(
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
       // Fetch user profile fields needed for blueprint resolution
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: {
-          id: true,
-          trainingPhase: true,
-          lifecycleRole: true,
-          currentRotation: true,
-          rotationEndDate: true,
-          eorTestDate: true,
-          examDate: true,
-          yearInProgram: true,
-        },
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+        id: true,
+        trainingPhase: true,
+        lifecycleRole: true,
+        currentRotation: true,
+        rotationEndDate: true,
+        eorTestDate: true,
+        examDate: true,
+        yearInProgram: true,
       });
 
       const blueprint = await resolveBlueprint(prisma, user);

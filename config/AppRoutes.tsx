@@ -61,6 +61,7 @@ import { AuthenticatedRoute } from '../components/auth/AuthenticatedRoute';
 import { ProductTour } from '../components/onboarding/ProductTour';
 import { WithGeminiErrorBoundary, ErrorBoundary } from '../components/error/ErrorBoundary';
 import { isPrivateBetaRouteVisible } from '@/lib/modes/privateBetaVisibility';
+import { parseMainSessionLaunch } from '@/lib/study/mainSessionLaunch';
 import type {
   Question as QuizQuestion,
   PerformanceRecord,
@@ -110,56 +111,6 @@ const privateBetaElement = (path: string, element: React.ReactElement) =>
       <PrivateBetaUnavailable />
     </AuthenticatedRoute>
   );
-
-function splitLaunchList(value: string | null): string[] {
-  if (!value) return [];
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function parseMainSessionLaunch(search: string): {
-  scope: {
-    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
-    size: number;
-    system?: string;
-    systems?: string[];
-    subcategory?: string;
-    conditionId?: string;
-  };
-  taskId: string | null;
-  source: string | null;
-} {
-  const params = new URLSearchParams(search);
-  const systems = splitLaunchList(params.get('systems'));
-  const conditions = splitLaunchList(params.get('conditions'));
-  const conditionId = params.get('conditionId') ?? conditions[0] ?? undefined;
-  const sizeParam = Number(params.get('size') ?? params.get('count') ?? '20');
-  const size = Number.isFinite(sizeParam) ? Math.min(100, Math.max(5, Math.round(sizeParam))) : 20;
-  const requestedMode = params.get('mode');
-  const mode =
-    conditionId || requestedMode === 'condition'
-      ? 'condition'
-      : requestedMode === 'system' || systems.length === 1
-        ? 'system'
-        : requestedMode === 'subcategory'
-          ? 'subcategory'
-          : 'adaptive';
-
-  return {
-    scope: {
-      mode,
-      size,
-      system: systems[0],
-      systems: systems.length > 0 ? systems : undefined,
-      subcategory: params.get('topic') ?? params.get('subcategory') ?? undefined,
-      conditionId,
-    },
-    taskId: params.get('taskId'),
-    source: params.get('source'),
-  };
-}
 
 export interface AppRoutesProps {
   // View state
@@ -369,6 +320,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     () => parseMainSessionLaunch(location.search),
     [location.search]
   );
+  const isReviewMainSession =
+    mainSessionLaunch.settings?.mode === 'review' ||
+    mainSessionLaunch.settings?.focus === 'review';
 
   // Scroll to top on route change (replaces ScrollRestoration which requires data router)
   useEffect(() => {
@@ -414,7 +368,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       />
       <Route
         path="/daily-challenges"
-        element={
+        element={privateBetaElement(
+          '/daily-challenges',
           <AuthenticatedRoute>
             <AppLayout contentMaxWidth="88rem">
               <Suspense fallback={<Loader message="Loading daily challenges..." />}>
@@ -424,7 +379,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
               </Suspense>
             </AppLayout>
           </AuthenticatedRoute>
-        }
+        )}
       />
       {/* ── Migrated view-state routes (self-contained, no heavy session state) ── */}
       <Route
@@ -481,23 +436,29 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             <AppLayout contentMaxWidth="64rem">
               <Suspense fallback={<Loader message="Loading study session…" />}>
                 <ErrorBoundary variant="page">
-                  <CoreAdaptiveSession
-                    onExit={() => navigate(ROUTES.STUDY)}
-                    initialScope={mainSessionLaunch.scope}
-                    studyPlanTaskId={mainSessionLaunch.taskId}
-                    studyPlanSource={mainSessionLaunch.source}
-                    addPerformanceRecord={addPerformanceRecord}
-                    addMissedQuestion={addMissedQuestion}
-                    updateReviewQuestion={updateReviewQuestion}
-                    updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                    performanceData={performanceData}
-                    fontSizeAdjustment={fontSizeAdjustment}
-                    setFontSizeAdjustment={setFontSizeAdjustment}
-                    flaggedQuestions={flaggedQuestions}
-                    addFlaggedQuestion={addFlaggedQuestion}
-                    removeFlaggedQuestion={removeFlaggedQuestion}
-                    updateQuestionNote={updateQuestionNote}
-                  />
+                  {isReviewMainSession ? (
+                    <SrsFlashcardView onExit={() => navigate(ROUTES.STUDY)} />
+                  ) : (
+                    <CoreAdaptiveSession
+                      onExit={() => navigate(ROUTES.STUDY)}
+                      initialScope={mainSessionLaunch.scope}
+                      initialSessionSettings={mainSessionLaunch.settings}
+                      studyPlanTaskId={mainSessionLaunch.taskId}
+                      studyPlanSource={mainSessionLaunch.source}
+                      studyPlanDate={mainSessionLaunch.planDate}
+                      addPerformanceRecord={addPerformanceRecord}
+                      addMissedQuestion={addMissedQuestion}
+                      updateReviewQuestion={updateReviewQuestion}
+                      updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                      performanceData={performanceData}
+                      fontSizeAdjustment={fontSizeAdjustment}
+                      setFontSizeAdjustment={setFontSizeAdjustment}
+                      flaggedQuestions={flaggedQuestions}
+                      addFlaggedQuestion={addFlaggedQuestion}
+                      removeFlaggedQuestion={removeFlaggedQuestion}
+                      updateQuestionNote={updateQuestionNote}
+                    />
+                  )}
                 </ErrorBoundary>
               </Suspense>
             </AppLayout>

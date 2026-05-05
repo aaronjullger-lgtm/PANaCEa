@@ -8,6 +8,7 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
+import { withProductionPregeneratedSafety } from '../../../lib/services/questionServingSafety';
 
 const QuestionFetchSchema = z.object({
   system: z.string().optional(),
@@ -44,13 +45,9 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
     type HistoryItem = (typeof history)[0];
     const seenQuestionIds = history.map((h: HistoryItem) => h.questionId);
 
-    // Build query
-    // Phase 2: Feature-flagged approval gate (env.REQUIRE_APPROVED_QUESTIONS)
-    const where: any = {
-      validationStatus: env?.REQUIRE_APPROVED_QUESTIONS === 'true'
-        ? 'approved'
-        : { not: 'rejected' },
-    };
+    // Learner-facing fetches fail closed to validated content. Admin and
+    // authoring surfaces have separate routes for pending/rejected drafts.
+    const where: any = withProductionPregeneratedSafety({});
     if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (questionType) where.questionType = questionType;

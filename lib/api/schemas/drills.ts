@@ -39,6 +39,14 @@ export const DeviceInfoSchema = z.object({
   user_agent_short: z.string().optional(),
 });
 
+/** Option selection chronometry captured during an answer. */
+export const OptionInteractionTelemetrySchema = z.object({
+  option_id: z.string(),
+  selected_at_ms: z.number().int().min(0),
+  deselected_at_ms: z.number().int().min(0).nullable(),
+  dwell_ms: z.number().int().min(0).nullable(),
+});
+
 /**
  * Full telemetry payload captured per question attempt.
  * Includes CRPL (Cognitive Rhythm Perception Layer) signals and Ghost Grader metrics.
@@ -68,6 +76,11 @@ export const DrillTelemetrySchema = z
 
     // Session context
     session_id: z.string().optional(),
+    study_plan_task_id: z.string().optional(),
+    study_plan_date: z.string().optional(),
+    study_plan_source: z.string().optional(),
+    urgency_multiplier: z.number().min(0.5).max(2).optional(),
+    question_number: z.number().int().min(1).optional(),
     device_info: DeviceInfoSchema.optional(),
 
     // Ghost Grader: micro-kinetic signals
@@ -77,7 +90,19 @@ export const DrillTelemetrySchema = z
     tremor_score: z.number().min(0).max(1).optional(),
     cursor_entropy: z.number().min(0).optional(),
     elimination_velocity: z.number().min(0).optional(),
+    input_method: z.enum(['mouse', 'touch']).optional(),
     trajectory_metrics: z.record(z.string(), z.unknown()).optional(),
+    typing_metrics: z.record(z.string(), z.unknown()).optional(),
+    hesitation_count: z.number().int().min(0).optional(),
+    option_interactions: z.array(OptionInteractionTelemetrySchema).optional(),
+    unique_options_considered: z.number().int().min(0).optional(),
+    explanation_engagement: z.record(z.string(), z.unknown()).optional(),
+    study_mode: z.enum(['direct', 'guided']).optional(),
+    guided_scaffold: z.object({
+      level: z.string(),
+      hints_viewed: z.number().int().min(0),
+      reflection_length: z.number().int().min(0),
+    }).optional(),
   })
   .strict();
 
@@ -93,6 +118,10 @@ export const DrillTelemetrySchema = z
  */
 export const DrillSubmitReviewRequestSchema = z.object({
   questionId: z.string().min(1),
+  canonicalQuestionId: z.string().min(1).nullable().optional(),
+  sourceQuestionId: z.string().min(1).optional(),
+  questionSource: z.enum(['question', 'pre_generated', 'staging', 'seed', 'generated']).optional(),
+  medicalContentId: z.string().min(1).nullable().optional(),
   selectedAnswer: z.union([z.string(), z.number()]),
   timeSpentMs: z.number().int().min(0).max(3600000),
   timeToFirstClick: z.number().int().min(0).optional(),

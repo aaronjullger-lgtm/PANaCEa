@@ -11,8 +11,9 @@
  *   COMPONENT_APPROVE_THRESHOLD = 0.85 (from questionQualityService)
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
+  autoApproveHighQuality,
   determineValidationStatus,
   determineStatusFromComponents,
   AUTO_APPROVE_THRESHOLD,
@@ -210,5 +211,66 @@ describe('determineStatusFromComponents', () => {
         determineStatusFromComponents(components as QualityComponents, composite, flags)
       );
     }
+  });
+});
+
+describe('autoApproveHighQuality', () => {
+  it('approves only candidates whose optional mirror callback succeeds', async () => {
+    const prisma = {
+      preGeneratedQuestion: {
+        count: vi.fn().mockResolvedValue(1),
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'mirrorable', questionData: {}, system: 'Pulmonary', difficulty: 'medium' },
+          { id: 'bad-key', questionData: {}, system: 'Pulmonary', difficulty: 'medium' },
+        ]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+    };
+
+    const result = await autoApproveHighQuality(prisma, {
+      onApprove: (question) => question.id === 'mirrorable',
+    });
+
+    expect(result).toEqual({ approved: 1, alreadyApproved: 1, skipped: 1 });
+    expect(prisma.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          validationStatus: 'pending',
+          flagCount: { lt: MAX_FLAG_COUNT },
+        }),
+        select: expect.objectContaining({
+          questionData: true,
+          medicalContentId: true,
+        }),
+      })
+    );
+    expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledTimes(1);
+    expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'mirrorable' },
+        data: expect.objectContaining({
+          validationStatus: 'approved',
+          validatedBy: 'auto-approve-gate',
+        }),
+      })
+    );
+  });
+
+  it('keeps dry runs read-only', async () => {
+    const prisma = {
+      preGeneratedQuestion: {
+        count: vi.fn()
+          .mockResolvedValueOnce(3)
+          .mockResolvedValueOnce(2),
+        findMany: vi.fn(),
+        update: vi.fn(),
+      },
+    };
+
+    const result = await autoApproveHighQuality(prisma, { dryRun: true });
+
+    expect(result).toEqual({ approved: 2, alreadyApproved: 3, skipped: 0 });
+    expect(prisma.preGeneratedQuestion.findMany).not.toHaveBeenCalled();
+    expect(prisma.preGeneratedQuestion.update).not.toHaveBeenCalled();
   });
 });

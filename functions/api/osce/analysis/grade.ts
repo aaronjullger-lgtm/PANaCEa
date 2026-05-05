@@ -22,7 +22,6 @@ import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { IDSchema } from '../../_shared/schemas';
-import { scheduleConceptReview } from '../../ai/learning/profile-crud';
 import {
   gateway,
   GatewayError,
@@ -551,20 +550,6 @@ Output your grading as a single JSON object only.`;
         userId: session.User?.id,
         sessionId,
       });
-      if (user?.id) {
-        try {
-          const system = resolveSystem(
-            caseRecord.targetSystem,
-            caseRecord.chiefComplaint,
-            caseRecord.correctDiagnosis
-          );
-          await scheduleConceptReview(prisma, user.id, `${system}|osce`, false);
-        } catch (srsErr) {
-          log.warn('SRS scheduleConceptReview failed (non-fatal)', {
-            error: srsErr instanceof Error ? srsErr.message : String(srsErr),
-          });
-        }
-      }
     }
     log.info('OSCE grading completed', { sessionId, score: payload.score });
     return {

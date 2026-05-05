@@ -29,6 +29,7 @@ import {
   WorkspaceSurface,
 } from '@/components/workspace';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import type { RecommendationResponse, StudyPlan } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
 import { ROUTES } from '@/config/routes';
@@ -43,6 +44,7 @@ function createStudyPathFetcher(getToken: () => Promise<string | null>) {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    const json = await response.json().catch(() => null);
     if (!response.ok) {
       const safeMessages: Record<number, string> = {
         401: 'Your session has expired. Please sign in again.',
@@ -51,10 +53,10 @@ function createStudyPathFetcher(getToken: () => Promise<string | null>) {
         429: 'Too many requests. Please wait a moment and try again.',
       };
       throw new Error(
-        safeMessages[response.status] ?? 'Unable to load your study plan. Please try again.'
+        getApiEnvelopeError(json, safeMessages[response.status] ?? 'Unable to load your study plan. Please try again.')
       );
     }
-    return (await response.json()) as RecommendationResponse;
+    return unwrapApiEnvelope<RecommendationResponse>(json);
   };
 }
 
@@ -156,7 +158,7 @@ const StudyPathDashboard = () => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ planId: plan.id }),
+        body: JSON.stringify({ planId: plan.id, plan }),
       });
 
       if (!response.ok) {

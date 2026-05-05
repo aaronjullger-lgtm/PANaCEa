@@ -2,7 +2,7 @@
  * AI Content Enrichment API - Admin-only endpoint to fill missing MedicalContent fields
  *
  * POST /api/admin/enrich-condition
- * Uses Gemini AI to generate missing content and determine display priority
+ * Uses the shared AI gateway to generate missing content and determine display priority.
  */
 
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { adminEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
+import { gateway, GatewayError, toGatewayContext } from '../../../lib/ai/aiGateway';
 
 // All enrichable fields
 const ENRICHABLE_FIELDS = [
@@ -51,6 +52,20 @@ interface EnrichResult {
   error?: string;
 }
 
+const DisplayPrioritySchema = z.object({
+  primary: z.string().min(1),
+  secondary: z.string().min(1).optional(),
+  tertiary: z.string().min(1).optional(),
+  reasoning: z.string().min(1),
+});
+
+const EnrichmentResponseSchema = z.object({
+  fields: z.record(z.string(), z.unknown()),
+  display_priority: DisplayPrioritySchema.nullable().optional(),
+});
+
+type EnrichmentResponse = z.infer<typeof EnrichmentResponseSchema>;
+
 function isFieldEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === 'string') {
@@ -62,38 +77,6 @@ function isFieldEmpty(value: unknown): boolean {
   if (Array.isArray(value)) return value.length === 0;
   if (typeof value === 'object') return Object.keys(value).length === 0;
   return false;
-}
-
-async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error('No content in Gemini response');
-  }
-  return text;
 }
 
 function buildEnrichmentPrompt(
@@ -258,7 +241,10 @@ export const onRequestPost = adminEndpoint(EnrichConditionSchema, async (context
     // Check for API key
     if (!env.GEMINI_API_KEY) {
       logger.error('GEMINI_API_KEY not configured', { userId: user.id });
-      throw new Error('GEMINI_API_KEY not configured');
+      return {
+        data: { error: 'AI service not configured' },
+        status: 500,
+      };
     }
 
     // Build and send prompt
@@ -270,27 +256,56 @@ export const onRequestPost = adminEndpoint(EnrichConditionSchema, async (context
       missingFields
     );
 
-    const aiResponse = await callGeminiAPI(prompt, env.GEMINI_API_KEY);
-
-    // Parse AI response
-    let parsed: { fields: Record<string, unknown>; display_priority: DisplayPriority };
+    let parsed: EnrichmentResponse;
     try {
-      // Clean response (remove markdown code blocks if present)
-      const cleaned = aiResponse.replace(/```json\n?|```/g, '').trim();
-      parsed = JSON.parse(cleaned);
-    } catch (parseErr) {
-      logger.error('Failed to parse AI response', {
+      const result = await gateway.callStructured(toGatewayContext(context), {
+        mode: 'structured',
+        task: 'enrichment',
+        tier: 'balanced',
+        endpoint: '/api/admin/enrich-condition',
+        userPrompt: prompt,
+        temperature: 0.1,
+        maxOutputTokens: 8192,
+        schema: EnrichmentResponseSchema,
+        schemaDescription:
+          'Object with fields containing requested MedicalContent field values and optional display_priority metadata.',
+      });
+      parsed = result.data;
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        logger.error('Gateway enrichment failed', {
+          userId: user.id,
+          conditionId,
+          code: err.code,
+          retryable: err.retryable,
+          requestId: err.requestId,
+          traceId: err.traceId,
+        });
+
+        const status =
+          err.code === 'RATE_LIMITED'
+            ? 429
+            : err.code === 'BAD_REQUEST'
+              ? 400
+              : err.code === 'MISSING_API_KEY' || err.code === 'UNAUTHORIZED'
+                ? 500
+                : 502;
+
+        return {
+          data: { error: `Content enrichment failed: ${err.code}` },
+          status,
+        };
+      }
+
+      logger.error('Content enrichment gateway call failed', {
         userId: user.id,
         conditionId,
-        error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+        error: err instanceof Error ? err.message : String(err),
       });
 
       return {
-        data: {
-          error: 'Failed to parse AI response',
-          rawResponse: aiResponse.substring(0, 500),
-        },
-        status: 500,
+        data: { error: 'Content enrichment failed' },
+        status: 502,
       };
     }
 

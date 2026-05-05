@@ -54,9 +54,17 @@ export const DDxCompareDrill = productionDeferred('Differential comparison');
 export const MiniLabDrillSession = productionDeferred('Mini lab drill');
 export const PharmDrillSession = productionDeferred('Pharmacology drill');
 export const FirstLineDrillSession = productionDeferred('First-line drill');
-export const ConditionDrillSession = productionDeferred('Condition drill');
+export const ConditionDrillSession = lazy(() =>
+  import('../components/session/StudyModeAdaptiveSession').then((m) => ({
+    default: m.ConditionDrillSession,
+  }))
+);
 export const GuidelineDrillSession = productionDeferred('Guideline drill');
-export const SystemDrillSession = productionDeferred('System drill');
+export const SystemDrillSession = lazy(() =>
+  import('../components/session/StudyModeAdaptiveSession').then((m) => ({
+    default: m.SystemDrillSession,
+  }))
+);
 export const PharmacologyDrillSession = productionDeferred('Pharmacology drill');
 export const SubcategoryDrillSession = productionDeferred('Subcategory drill');
 export const VentilatorDrillSession = productionDeferred('Ventilator drill');
@@ -96,7 +104,7 @@ export const OnboardingYourPlan = lazy(() =>
     default: m.OnboardingYourPlan,
   }))
 );
-export const MediaApproval = productionDeferred('Media approval');
+export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
 export const CoreAdaptiveSession = lazy(() => import('../components/session/CoreAdaptiveSession'));
 // StudyGroupDashboard removed — social API not implemented
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
@@ -112,11 +120,13 @@ export const StudyPathDashboard = lazy(() =>
 );
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));
-export const DailyChallengesHub = productionDeferred('Daily challenges');
-export const MedicalDatabaseWorkspacePage = productionDeferred('Medical database workspace');
+export const DailyChallengesHub = lazy(() =>
+  import('../components/pages/DailyChallengesHub').then((m) => ({ default: m.DailyChallengesHub }))
+);
+export const MedicalDatabaseWorkspacePage = lazy(() => import('../pages/MedicalDatabaseWorkspacePage'));
 export const ExplorerWorkspacePage = productionDeferred('Explorer workspace');
 export const LiveCollaborationWorkspacePage = productionDeferred('Live collaboration workspace');
-export const SimulationPage = productionDeferred('Simulation');
+export const SimulationPage = lazy(() => import('../pages/SimulationPage'));
 export const CommandCenterPage = productionDeferred('Command center workspace');
 export const ClinicalReferenceLibrary = lazy(
   () => import('../components/library/ClinicalReferenceLibrary')
@@ -144,21 +154,33 @@ export const SrsFlashcardView = lazy(() =>
   import('../components/session/SrsFlashcardView').then((m) => ({ default: m.SrsFlashcardView }))
 );
 export const CustomStudyMode = productionDeferred('Custom study mode');
-export const QuestionCurationPanel = productionDeferred('Question curation');
-export const ClinicalProfileDashboard = productionDeferred('Clinical profile dashboard');
-export const AdminDashboard = productionDeferred('Admin dashboard');
-export const TaxonomiesPage = productionDeferred('Taxonomies');
-export const SystemMappingsPage = productionDeferred('System mappings');
-export const QuestionGeneratorPage = productionDeferred('Question generator');
-export const RefineryPage = productionDeferred('Refinery');
+export const QuestionCurationPanel = lazy(() => import('../components/admin/QuestionCurationPanel'));
+export const ClinicalProfileDashboard = lazy(
+  () => import('../components/dashboard/ClinicalProfile/ClinicalProfileDashboard')
+);
+export const AdminDashboard = lazy(() =>
+  import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
+export const TaxonomiesPage = lazy(() =>
+  import('../pages/admin/TaxonomiesPage').then((m) => ({ default: m.TaxonomiesPage }))
+);
+export const SystemMappingsPage = lazy(() =>
+  import('../pages/admin/SystemMappingsPage').then((m) => ({ default: m.SystemMappingsPage }))
+);
+export const QuestionGeneratorPage = lazy(() =>
+  import('../pages/admin/QuestionGeneratorPage').then((m) => ({ default: m.QuestionGeneratorPage }))
+);
+export const RefineryPage = lazy(() =>
+  import('../pages/admin/RefineryPage').then((m) => ({ default: m.RefineryPage }))
+);
 export const MyPearlsPanel = lazy(() => import('../components/pearls/MyPearlsPanel'));
-export const ClinicalEyePage = productionDeferred('Clinical eye');
-export const VisualizerPage = productionDeferred('Visualizer');
+export const ClinicalEyePage = lazy(() => import('../pages/ClinicalEyePage'));
+export const VisualizerPage = lazy(() => import('../pages/VisualizerPage'));
 export const CrossSystemExplorer = productionDeferred('Cross-system explorer');
 export const MedicalDatabaseSearch = productionDeferred('External medical database search');
 export const LiveStudySession = productionDeferred('Live study session');
-export const LectureConverterPage = productionDeferred('Lecture converter');
-export const TechniqueCheckPage = productionDeferred('Technique check');
+export const LectureConverterPage = lazy(() => import('../pages/LectureConverterPage'));
+export const TechniqueCheckPage = lazy(() => import('../pages/TechniqueCheckPage'));
 export const CalibrationDashboard = productionDeferred('Calibration dashboard');
 export const AnalyticsDashboard = productionDeferred('Advanced analytics');
 export const DatabaseAnalyticsDashboard = productionDeferred('Database analytics');

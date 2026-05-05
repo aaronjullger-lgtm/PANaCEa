@@ -16,6 +16,7 @@ import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { auditLog } from '../_shared/auditLog';
+import { upsertCanonicalQuestionMirror } from '../_shared/canonical-question-mirror';
 import { autoApproveHighQuality, getReviewQueueStats } from '../../../lib/services/questionReviewGate';
 
 // Query schema for GET requests
@@ -72,7 +73,15 @@ export const onRequestGet = adminAuthenticatedEndpoint(
 
       if (validated.action === 'auto-approve') {
         const dryRun = validated.dryRun === 'true';
-        const result = await autoApproveHighQuality(prisma, { dryRun });
+        const result = await autoApproveHighQuality(prisma, {
+          dryRun,
+          onApprove: dryRun
+            ? undefined
+            : async (question) => Boolean(await upsertCanonicalQuestionMirror(prisma, question, {
+                source: 'auto_approved_pre_generated',
+                humanReviewed: false,
+              })),
+        });
         logger.info('Auto-approve executed', { userId: adminUserId, dryRun, ...result });
         return {
           data: {
@@ -80,7 +89,7 @@ export const onRequestGet = adminAuthenticatedEndpoint(
             data: result,
             message: dryRun
               ? `Would auto-approve ${result.approved} questions (${result.alreadyApproved} already approved)`
-              : `Auto-approved ${result.approved} questions (${result.alreadyApproved} were already approved)`,
+              : `Auto-approved ${result.approved} questions (${result.alreadyApproved} were already approved, ${result.skipped} skipped)`,
           },
         };
       }
@@ -204,7 +213,16 @@ export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async 
     // Check if question exists
     const existingQuestion = await prisma.preGeneratedQuestion.findUnique({
       where: { id: validation.questionId },
-      select: { id: true, validationStatus: true },
+      select: {
+        id: true,
+        validationStatus: true,
+        questionData: true,
+        system: true,
+        difficulty: true,
+        conditionId: true,
+        medicalContentId: true,
+        generatedAt: true,
+      },
     });
 
     if (!existingQuestion) {
@@ -220,6 +238,30 @@ export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async 
         },
         status: 404,
       };
+    }
+
+    if (validation.validationStatus === 'approved') {
+      const canonicalQuestionId = await upsertCanonicalQuestionMirror(prisma, {
+        id: existingQuestion.id,
+        questionData: existingQuestion.questionData,
+        system: existingQuestion.system,
+        difficulty: existingQuestion.difficulty,
+        conditionId: existingQuestion.conditionId,
+        medicalContentId: existingQuestion.medicalContentId,
+        generatedAt: existingQuestion.generatedAt,
+      }, {
+        source: 'admin_review_pre_generated',
+        humanReviewed: true,
+      });
+      if (!canonicalQuestionId) {
+        return {
+          data: {
+            success: false,
+            error: 'Question cannot be approved until it has text, answer options, a resolvable answer key, and canonical mirror data.',
+          },
+          status: 400,
+        };
+      }
     }
 
     // Update validation status

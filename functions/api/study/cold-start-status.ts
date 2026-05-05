@@ -12,6 +12,7 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { getColdStartStatus } from '../../../lib/services/coldStartCalibrationService';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import { z } from 'zod';
 
 const EmptySchema = z.object({});
@@ -24,10 +25,7 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
       const status = await getColdStartStatus(prisma, user.id);
       return ok(status);
     } catch (err: unknown) {

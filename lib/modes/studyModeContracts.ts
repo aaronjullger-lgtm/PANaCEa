@@ -154,8 +154,8 @@ const modeStartApis: Partial<Record<TrainingModeId, StudyModeApiCall | null>> = 
   mini_lab: api('GET', '/api/drills/lab-cases', 'Load lab interpretation cases.', 'query filters', 'lab cases'),
   first_line_treatment: api('GET', '/api/first-line', 'Load first-line treatment questions.', 'query category', 'treatment items'),
   pharmacology: api('GET', '/api/questions/pharmacology-drill', 'Load pharmacology drill questions.', 'query filters', 'Question[]'),
-  condition_drill: api('GET', '/api/questions/condition-drill', 'Load condition-specific questions.', 'conditionId/system query', 'Question[]'),
-  system_drill: api('GET', '/api/questions/system-drill', 'Load system-specific questions.', 'system query', 'Question[]'),
+  condition_drill: api('POST', '/api/study/session/generate', 'Generate a condition-scoped CoreAdaptiveSession block.', '{ mode: condition, conditionId, size }', '{ sessionId, questions[] }'),
+  system_drill: api('POST', '/api/study/session/generate', 'Generate a system-scoped CoreAdaptiveSession block.', '{ mode: system, system/systems, size }', '{ sessionId, questions[] }'),
   subcategory_drill: api('GET', '/api/questions', 'Load subcategory question batch.', 'subcategory query', 'Question[]'),
   fluid_electrolyte: api('GET', '/api/drills/fluids', 'Load fluid/electrolyte scenarios.', 'query filters', 'fluid cases'),
   antibiotic_mode: api('GET', '/api/drills/antibiotics', 'Load bug-drug drill cases.', 'query filters', 'antibiotic cases'),
@@ -719,4 +719,3 @@ export function validateStudyModeContracts(
 
   return errors;
 }
-

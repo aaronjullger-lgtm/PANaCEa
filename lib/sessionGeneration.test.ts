@@ -18,6 +18,7 @@ import {
   deriveStoredSessionFocus,
   buildSessionModeLabel,
   buildSessionSettingsFromSnapshot,
+  buildStudySessionQuestionRecords,
   normalizeSessionQuestion,
 } from './sessionGeneration';
 import type { SessionLaunchMode } from './sessionGeneration';
@@ -246,6 +247,32 @@ describe('normalizeSessionQuestion', () => {
     expect(result.pearls.every((p: string) => p.trim().length > 0)).toBe(true);
   });
 
+  it('preserves pre-generated source identity separately from canonical identity', () => {
+    const result = normalizeSessionQuestion({
+      id: 'pg-1',
+      question: 'Q?',
+      options: ['A', 'B'],
+      correctAnswer: 'B',
+      conditionId: null,
+      medicalContentId: 'mc-1',
+      condition: 'Condition',
+      topic: 'Topic',
+      rationale: 'R',
+      sourceQuestionId: 'pg-1',
+      canonicalQuestionId: null,
+      questionSource: 'pre_generated',
+      source: 'new_card',
+    } as any);
+
+    expect(result.id).toBe('pg-1');
+    expect(result.questionId).toBeNull();
+    expect(result.canonicalQuestionId).toBeNull();
+    expect(result.sourceQuestionId).toBe('pg-1');
+    expect(result.questionSource).toBe('pre_generated');
+    expect(result.medicalContentId).toBe('mc-1');
+    expect(result.conditionId).toBe('mc-1');
+  });
+
   it('normalizes difficulty to valid value or undefined', () => {
     const easy = normalizeSessionQuestion({
       question: 'Q?', options: ['A'], correctAnswerIndex: 0,
@@ -258,5 +285,84 @@ describe('normalizeSessionQuestion', () => {
       conditionId: 'c', condition: 'C', topic: 'T', rationale: 'R', difficulty: 'INVALID',
     } as any);
     expect(['easy', 'medium', 'hard', undefined]).toContain(invalid.difficulty);
+  });
+});
+
+// ─── buildStudySessionQuestionRecords ────────────────────────────────────────
+
+describe('buildStudySessionQuestionRecords', () => {
+  it('maps canonical Question rows to ordered session-question links', () => {
+    const question = normalizeSessionQuestion({
+      id: 'q-1',
+      question: 'Q?',
+      options: ['A', 'B'],
+      correctAnswer: 'A',
+      conditionId: 'mc-1',
+      questionSource: 'question',
+      canonicalQuestionId: 'q-1',
+      sourceQuestionId: 'q-1',
+      source: 'new_card',
+    } as any);
+
+    expect(buildStudySessionQuestionRecords('ses-1', [question])).toEqual([
+      expect.objectContaining({
+        sessionId: 'ses-1',
+        questionId: 'q-1',
+        preGeneratedQuestionId: null,
+        sequenceIndex: 0,
+        source: 'question',
+        metadata: expect.objectContaining({
+          canonicalQuestionId: 'q-1',
+          sourceQuestionId: 'q-1',
+          questionSource: 'question',
+          conditionId: 'mc-1',
+        }),
+      }),
+    ]);
+  });
+
+  it('maps pre-generated rows to preGeneratedQuestionId without pretending they are canonical Questions', () => {
+    const question = normalizeSessionQuestion({
+      id: 'pg-1',
+      question: 'Q?',
+      options: ['A', 'B'],
+      correctAnswer: 'B',
+      conditionId: null,
+      medicalContentId: 'mc-1',
+      questionSource: 'pre_generated',
+      sourceQuestionId: 'pg-1',
+      canonicalQuestionId: null,
+      source: 'new_card',
+    } as any);
+
+    expect(buildStudySessionQuestionRecords('ses-1', [question])).toEqual([
+      expect.objectContaining({
+        sessionId: 'ses-1',
+        questionId: null,
+        preGeneratedQuestionId: 'pg-1',
+        sequenceIndex: 0,
+        source: 'pre_generated',
+        metadata: expect.objectContaining({
+          sourceQuestionId: 'pg-1',
+          questionSource: 'pre_generated',
+          medicalContentId: 'mc-1',
+        }),
+      }),
+    ]);
+  });
+
+  it('drops ephemeral rows that cannot satisfy either source FK', () => {
+    const question = normalizeSessionQuestion({
+      id: 'generated-temp-1',
+      question: 'Q?',
+      options: ['A', 'B'],
+      correctAnswer: 'A',
+      conditionId: 'mc-1',
+      questionSource: 'generated',
+      sourceQuestionId: 'generated-temp-1',
+      canonicalQuestionId: null,
+    } as any);
+
+    expect(buildStudySessionQuestionRecords('ses-1', [question])).toEqual([]);
   });
 });

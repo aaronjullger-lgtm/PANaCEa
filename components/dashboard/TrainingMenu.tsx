@@ -45,8 +45,8 @@ import {
 } from '@/config/training-modes';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useResolvedBlueprint } from '@/hooks/useResolvedBlueprint';
-import { getDashboardConfig } from '@/lib/services/dashboardPersonalization';
-import { filterPrivateBetaModes } from '@/lib/modes/privateBetaVisibility';
+import { getDashboardConfig, shouldShowMode } from '@/lib/services/dashboardPersonalization';
+import { filterPrivateBetaModes, isPrivateBetaModeVisible } from '@/lib/modes/privateBetaVisibility';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -139,17 +139,14 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const coreMode = MODE_REGISTRY.find((mode) => mode.id === 'core_adaptive');
 
   // Filter out the core mode and condition_drill (accessed via Condition Page) for the Bento grid
-  // Then further filter by learner-stage visible modes
+  // Then further filter by learner-stage eligibility plus production readiness.
   const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill', 'core_adaptive'];
   const drillModes = useMemo(() => {
     const allModes = MODE_REGISTRY.filter((mode) => !HIDDEN_DRILL_MODES.includes(mode.id));
-    // When searching, show all modes so the user can discover hidden ones
+    // Search still fails closed through private-beta/mode-readiness visibility.
     if (searchQuery.trim()) return filterPrivateBetaModes(allModes);
-    // Otherwise, filter to stage-appropriate modes + always show coming-soon for discovery
-    return filterPrivateBetaModes(
-      allModes.filter((mode) => dashboardConfig.visibleModes.includes(mode.id) || mode.isComingSoon)
-    );
-  }, [dashboardConfig.visibleModes, searchQuery]);
+    return filterPrivateBetaModes(allModes.filter((mode) => shouldShowMode(stage, mode.id)));
+  }, [stage, searchQuery]);
 
   // Category-based sections for clearer navigation (using TrainingCategory)
   const CATEGORY_SECTIONS: Array<{
@@ -725,6 +722,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         {/* Daily Challenges Hub Card */}
         {!searchQuery &&
+          (isPrivateBetaModeVisible('grand_rounds') ||
+            isPrivateBetaModeVisible('diagnostic_puzzle') ||
+            isPrivateBetaModeVisible('medical_wordle')) &&
           (() => {
             const grandRoundsMode = MODE_REGISTRY.find((m) => m.id === 'grand_rounds');
             if (!grandRoundsMode) return null;

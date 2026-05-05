@@ -14,6 +14,7 @@ import {
   getColdStartStatus,
   generateCalibrationSession,
 } from '../../../../lib/services/coldStartCalibrationService';
+import { resolveOrCreateUserRecord } from '../../_shared/user-resolver';
 
 const CalibrationSchema = z.object({
   body: z.object({
@@ -28,10 +29,7 @@ export const onRequestPost = authenticatedEndpoint(
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
       // Check if user actually needs calibration
       const status = await getColdStartStatus(prisma, user.id);

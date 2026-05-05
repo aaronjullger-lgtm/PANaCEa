@@ -34,6 +34,17 @@ const PREF_KEYS = {
   SYNCED_TO_DB: StorageKeys.SYNCED_TO_DB,
 } as const;
 
+type PreferencesResponse = {
+  preferences?: UserPreferencesPayload;
+  data?: {
+    preferences?: UserPreferencesPayload;
+  };
+};
+
+function unwrapPreferencesResponse(result: PreferencesResponse): UserPreferencesPayload | null {
+  return result.data?.preferences ?? result.preferences ?? null;
+}
+
 /**
  * Extract preferences from localStorage
  */
@@ -229,13 +240,13 @@ export async function syncPreferencesToDb(
       throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
+    const result = (await response.json()) as PreferencesResponse;
     if (import.meta.env.DEV) console.debug('[preferencesSync] Successfully synced to DB');
 
     // Mark as synced
     markAsSynced();
 
-    return result.preferences || null;
+    return unwrapPreferencesResponse(result);
   } catch (error: unknown) {
     console.error('[preferencesSync] Failed to sync to DB:', error);
     return null;
@@ -269,8 +280,8 @@ export async function fetchPreferencesFromDb(
       throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
-    return result.preferences || null;
+    const result = (await response.json()) as PreferencesResponse;
+    return unwrapPreferencesResponse(result);
   } catch (error: unknown) {
     console.error('[preferencesSync] Failed to fetch from DB:', error);
     return null;
@@ -307,8 +318,8 @@ export async function updatePreferencesInDb(
       throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
-    return result.preferences || null;
+    const result = (await response.json()) as PreferencesResponse;
+    return unwrapPreferencesResponse(result);
   } catch (error: unknown) {
     console.error('[preferencesSync] Failed to update in DB:', error);
     return null;

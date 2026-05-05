@@ -10,6 +10,30 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
  */
 const JSX_DEV_SHIM_PATH = path.resolve(__dirname, 'src/lib/jsx-dev-shim.ts');
 
+function hasUsableSentryUploadConfig(env: Record<string, string | undefined>): boolean {
+  const org = env.SENTRY_ORG?.trim();
+  const project = env.SENTRY_PROJECT?.trim();
+  const token = env.SENTRY_AUTH_TOKEN?.trim();
+  const placeholderValues = new Set([
+    '',
+    'your_sentry_org',
+    'your-org-slug',
+    'your_org',
+    'your-project',
+    'your_project',
+    'panacea-placeholder',
+  ]);
+
+  return Boolean(
+    org &&
+      project &&
+      token &&
+      !placeholderValues.has(org) &&
+      !placeholderValues.has(project) &&
+      !token.includes('xxxxx')
+  );
+}
+
 /**
  * Vite plugin to completely remove Prisma imports from browser bundles.
  * Uses transform to strip out Prisma imports before they reach Rollup.
@@ -123,7 +147,7 @@ export default defineConfig(({ mode }) => {
   const isDevelopment = mode === 'development';
   const isProduction = mode === 'production';
   const useMockMode = env.VITE_USE_MOCK === 'true';
-  const hasSentryConfig = Boolean(env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT);
+  const hasSentryConfig = hasUsableSentryUploadConfig(env);
   const shouldUploadSentry = isProduction && hasSentryConfig && env.SENTRY_UPLOAD === 'true';
 
   // Log mock mode status during build
@@ -404,6 +428,8 @@ export default defineConfig(({ mode }) => {
               // UI libraries that depend on React.forwardRef — load after vendor-react
               if (
                 id.includes('framer-motion') ||
+                id.includes('motion-dom') ||
+                id.includes('motion-utils') ||
                 id.includes('lucide-react') ||
                 id.includes('@radix-ui/') ||
                 id.includes('class-variance-authority') ||
@@ -412,8 +438,20 @@ export default defineConfig(({ mode }) => {
                 return 'vendor-ui';
               }
               // State management and utilities
-              if (id.includes('zustand') || id.includes('immer') || id.includes('date-fns')) {
+              if (
+                id.includes('zustand') ||
+                id.includes('immer') ||
+                id.includes('date-fns') ||
+                id.includes('@reduxjs/') ||
+                id.includes('redux') ||
+                id.includes('reselect') ||
+                id.includes('swr') ||
+                id.includes('use-sync-external-store')
+              ) {
                 return 'vendor-state';
+              }
+              if (id.includes('@tanstack/')) {
+                return 'vendor-query';
               }
               // React Router
               if (id.includes('react-router')) {
@@ -430,6 +468,41 @@ export default defineConfig(({ mode }) => {
               // Zod and validation
               if (id.includes('zod')) {
                 return 'vendor-validation';
+              }
+              if (id.includes('@google/generative-ai')) {
+                return 'vendor-ai';
+              }
+              if (id.includes('core-js')) {
+                return 'vendor-polyfills';
+              }
+              if (id.includes('lodash') || id.includes('es-toolkit')) {
+                return 'vendor-utils';
+              }
+              if (
+                id.includes('/d3-') ||
+                id.includes('/internmap/') ||
+                id.includes('/decimal.js-light/')
+              ) {
+                return 'vendor-charts';
+              }
+              if (
+                id.includes('/micromark') ||
+                id.includes('/mdast-util') ||
+                id.includes('/hast-util') ||
+                id.includes('/property-information/') ||
+                id.includes('/vfile') ||
+                id.includes('/unified/') ||
+                id.includes('/unist-util') ||
+                id.includes('/comma-separated-tokens/') ||
+                id.includes('/space-separated-tokens/') ||
+                id.includes('/decode-named-character-reference/') ||
+                id.includes('/html-url-attributes/') ||
+                id.includes('/devlop/')
+              ) {
+                return undefined;
+              }
+              if (id.includes('/workbox-window/')) {
+                return 'vendor-pwa';
               }
               // Heavy libraries used ONLY by specific lazy-loaded routes.
               // Returning undefined lets Rollup co-locate them with their

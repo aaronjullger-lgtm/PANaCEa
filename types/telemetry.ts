@@ -381,6 +381,9 @@ export interface TelemetryData {
   /** Client-side session identifier for grouping */
   session_id?: string;
 
+  /** Exam/rotation urgency multiplier used by FSRS interval clamping */
+  urgency_multiplier?: number;
+
   /** Device/viewport info for context */
   device_info?: DeviceInfo;
 

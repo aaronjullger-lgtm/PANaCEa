@@ -21,6 +21,7 @@ export const ROUTES = {
   STUDY_KNOWLEDGE: '/study/knowledge',
   STUDY_UTILITIES: '/study/utilities',
   STUDY_PATH: '/study/path',
+  STUDY_MAIN_SESSION: '/study/main-session',
   DAILY_CHALLENGES: '/daily-challenges',
   MENU: '/menu',
   /** Core Adaptive FSRS study session */

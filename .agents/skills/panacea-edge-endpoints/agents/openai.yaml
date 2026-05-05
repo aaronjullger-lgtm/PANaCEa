@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Edge Endpoints"
+  short_description: "Build and review Cloudflare Pages API endpoints safely"
+  default_prompt: "Implement or review this PANaCEa API endpoint using the production Cloudflare Functions patterns, auth, Prisma cleanup, validation, and tests."

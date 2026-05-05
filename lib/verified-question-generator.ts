@@ -90,9 +90,6 @@ export interface VerifiedQuestionOptions {
 /** Default maximum generation attempts */
 const DEFAULT_MAX_ATTEMPTS = 3;
 
-/** Verification confidence threshold for auto-accept */
-const AUTO_ACCEPT_CONFIDENCE = 0.85;
-
 // ============================================================================
 // Main Function
 // ============================================================================
@@ -123,10 +120,6 @@ export async function fetchVerifiedQuestion(
 
   let attempts = 0;
   let lastQuestion: Question | null = null;
-  let lastVerification: CoVeResult | undefined;
-  let lastQuickVerification:
-    | { passed: boolean; confidence: number; criticalIssues: string[] }
-    | undefined;
 
   const startTime = performance.now();
 
@@ -162,9 +155,8 @@ export async function fetchVerifiedQuestion(
       if (verificationMode === 'full') {
         // Full CoVe pipeline
         const verification = await runCoVePipeline(question, context, geminiApiWrapper, coveConfig);
-        lastVerification = verification;
 
-        if (verification.passed || verification.overallConfidence >= AUTO_ACCEPT_CONFIDENCE) {
+        if (verification.passed) {
           onProgress?.('Verification complete!', 100);
 
           return {
@@ -184,9 +176,8 @@ export async function fetchVerifiedQuestion(
       } else {
         // Quick verification
         const quickResult = await quickVerify(question, context, geminiApiWrapper);
-        lastQuickVerification = quickResult;
 
-        if (quickResult.passed || quickResult.confidence >= AUTO_ACCEPT_CONFIDENCE) {
+        if (quickResult.passed) {
           onProgress?.('Verification complete!', 100);
 
           return {
@@ -208,24 +199,16 @@ export async function fetchVerifiedQuestion(
     }
   }
 
-  // All attempts exhausted - return last question with verification results
+  // All attempts exhausted. Fail closed so learner-facing sessions never serve
+  // an unpersisted or clinically unverified question as if it were canonical.
   verifiedQuestionLogger.warn(
-    `Max attempts (${maxAttempts}) reached, returning best available question`
+    `Max attempts (${maxAttempts}) reached without verified question`
   );
 
   if (!lastQuestion) {
     throw new Error('Failed to generate a question after multiple attempts');
   }
-
-  return {
-    question: lastQuestion,
-    verification: lastVerification,
-    quickVerification: lastQuickVerification,
-    verified: false,
-    verificationMode,
-    verificationTimeMs: performance.now() - startTime,
-    attempts,
-  };
+  throw new Error('Generated question failed verification and was not served');
 }
 
 // ============================================================================

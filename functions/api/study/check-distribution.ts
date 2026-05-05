@@ -16,6 +16,7 @@ import {
   analyzeDistribution,
   buildSessionConstraints,
 } from '../../../lib/services/antiGamingDistribution';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 const CheckDistributionSchema = z.object({
   body: z.object({
@@ -42,10 +43,7 @@ export const onRequestPost = authenticatedEndpoint(
       }
 
       // Look up internal user ID from Clerk ID
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
 
       // Analyze distribution
       const analysis = await analyzeDistribution(prisma, user.id, weights);

@@ -17,6 +17,30 @@ import { logger } from '../logger';
 
 const LOG_SCOPE = 'UserProgress';
 
+export type UserProgressConditionDomain =
+  | 'medical_content'
+  | 'condition_only'
+  | 'missing'
+  | 'unknown';
+
+export class UserProgressConditionDomainError extends Error {
+  readonly code = 'USER_PROGRESS_CONDITION_DOMAIN_MISMATCH';
+
+  constructor(
+    message: string,
+    readonly details: {
+      userId: string;
+      conditionId: string;
+      progressContext: 'READINESS' | 'TARGETED';
+      domain: UserProgressConditionDomain;
+      causeCode?: string;
+    }
+  ) {
+    super(message);
+    this.name = 'UserProgressConditionDomainError';
+  }
+}
+
 export interface UpdateUserProgressInput {
   userId: string;
   conditionId: string;
@@ -27,6 +51,61 @@ export interface UpdateUserProgressInput {
   accuracy: number; // 0-1 float
   /** When set (e.g. EOR time-block), use this instead of deriving from fsrsCard.scheduled_days. Caller (e.g. drillReviewService) is responsible for EOR clamping via applyEorClampIfNeeded when in EOR context. */
   nextReviewAt?: Date;
+}
+
+type ProgressDomainPrismaLike = {
+  medicalContent?: {
+    findUnique?: (args: { where: { id: string }; select: { id: true } }) => Promise<{ id: string } | null>;
+    findFirst?: (args: { where: { id: string }; select: { id: true } }) => Promise<{ id: string } | null>;
+  };
+  condition?: {
+    findUnique?: (args: { where: { id: string }; select: { id: true } }) => Promise<{ id: string } | null>;
+  };
+};
+
+export async function resolveUserProgressConditionDomain(
+  prisma: ProgressDomainPrismaLike,
+  conditionId: string
+): Promise<UserProgressConditionDomain> {
+  const medicalContent = prisma.medicalContent;
+  if (!medicalContent?.findUnique && !medicalContent?.findFirst) {
+    return 'unknown';
+  }
+
+  const medicalContentRow = medicalContent.findUnique
+    ? await medicalContent.findUnique({ where: { id: conditionId }, select: { id: true } })
+    : await medicalContent.findFirst!({ where: { id: conditionId }, select: { id: true } });
+  if (medicalContentRow) return 'medical_content';
+
+  if (prisma.condition?.findUnique) {
+    const conditionRow = await prisma.condition.findUnique({
+      where: { id: conditionId },
+      select: { id: true },
+    });
+    if (conditionRow) return 'condition_only';
+  }
+
+  return 'missing';
+}
+
+async function assertUserProgressConditionDomain(
+  prisma: ProgressDomainPrismaLike,
+  input: Pick<UpdateUserProgressInput, 'userId' | 'conditionId'> & {
+    progressContext: 'READINESS' | 'TARGETED';
+  }
+): Promise<void> {
+  const domain = await resolveUserProgressConditionDomain(prisma, input.conditionId);
+  if (domain === 'medical_content' || domain === 'unknown') return;
+
+  throw new UserProgressConditionDomainError(
+    `UserProgress.conditionId must reference MedicalContent.id before FSRS progress can be created; received ${domain} id "${input.conditionId}".`,
+    {
+      userId: input.userId,
+      conditionId: input.conditionId,
+      progressContext: input.progressContext,
+      domain,
+    }
+  );
 }
 
 /**
@@ -108,6 +187,10 @@ export async function updateUserProgressWithHistory(
     where: { userId_conditionId_progressContext: { userId, conditionId, progressContext } },
   });
 
+  if (!existing) {
+    await assertUserProgressConditionDomain(prisma, { userId, conditionId, progressContext });
+  }
+
   let reviewHistory: any[] =
     existing && Array.isArray(existing.reviewHistory) ? [...existing.reviewHistory] : [];
   const oneYearAgo = new Date();
@@ -179,19 +262,26 @@ export async function updateUserProgressWithHistory(
     });
   } catch (error: any) {
     // Check if it's a foreign key constraint error
-    if (error.code === 'P2003' || error.code === 'P2002') {
-      // Log the error but don't throw - this allows the review to continue
-      // even if UserProgress can't be created due to missing user/condition
-      logger.warn(
-        `[${LOG_SCOPE}] Failed to create/update UserProgress`,
+    if (error.code === 'P2003') {
+      throw new UserProgressConditionDomainError(
+        `UserProgress.conditionId failed the MedicalContent FK; received "${conditionId}".`,
         {
           userId,
           conditionId,
           progressContext,
-          errorCode: error.code,
-          message: error.message,
+          domain: 'missing',
+          causeCode: error.code,
         }
       );
+    }
+    if (error.code === 'P2002') {
+      logger.warn(`[${LOG_SCOPE}] Concurrent UserProgress write lost unique race`, {
+        userId,
+        conditionId,
+        progressContext,
+        errorCode: error.code,
+        message: error.message,
+      });
       return;
     }
     // Re-throw other errors

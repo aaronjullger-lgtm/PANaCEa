@@ -5,7 +5,10 @@
  * Computes distribution deviations and generates recommendations for rebalancing.
  */
 
-import { createEdgePrismaClient } from '../../functions/api/_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+} from '../../functions/api/_shared/prisma-edge';
 import {
   NCCPA_2025_BLUEPRINT,
   NCCPA_2025_BLUEPRINT_PERCENT,
@@ -78,6 +81,13 @@ export interface ComplianceSummary {
  */
 const DEVIATION_TOLERANCE = 0.5; // 0.5%
 
+function requireDatabaseUrl(databaseUrl: string | undefined, serviceName: string): string {
+  if (!databaseUrl || databaseUrl.trim().length === 0) {
+    throw new Error(`${serviceName} requires an injected DATABASE_URL`);
+  }
+  return databaseUrl;
+}
+
 /**
  * Fetch active NCCPA blueprint weights from database, fallback to static constants.
  */
@@ -102,9 +112,11 @@ async function getBlueprintWeights(
  * Compute compliance analysis for MedicalContent.
  */
 export async function analyzeMedicalContentCompliance(
-  databaseUrl?: string
+  databaseUrl: string
 ): Promise<ComplianceSummary> {
-  const prisma = createEdgePrismaClient(databaseUrl || process.env.DATABASE_URL!);
+  const prisma = createEdgePrismaClient(
+    requireDatabaseUrl(databaseUrl, 'analyzeMedicalContentCompliance')
+  );
   try {
     // Step 1: Get raw counts per system from MedicalContent
     const rawCounts = await prisma.medicalContent.groupBy({
@@ -216,7 +228,7 @@ export async function analyzeMedicalContentCompliance(
       recommendations,
     };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
 
@@ -305,27 +317,31 @@ export function computeMissingItems(
  * Similar structure but different source tables.
  */
 export async function analyzeQuestionPoolCompliance(
-  databaseUrl?: string
+  databaseUrl: string
 ): Promise<ComplianceSummary> {
-  const prisma = createEdgePrismaClient(databaseUrl || process.env.DATABASE_URL!);
+  const prisma = createEdgePrismaClient(
+    requireDatabaseUrl(databaseUrl, 'analyzeQuestionPoolCompliance')
+  );
   try {
-    // Count questions by system (using Question table)
-    const rawCounts = await prisma.question.groupBy({
-      by: ['system'],
-      _count: true,
-      where: {
-        status: { in: ['active', 'published'] },
-      },
-    });
+    const questionCounts = (await (prisma as any).$queryRaw`
+      SELECT "system", COUNT(*)::text AS "count"
+      FROM "Question"
+      WHERE "lifecycleStatus" = 'ACTIVE'
+        AND "qaStatus" = 'APPROVED'
+      GROUP BY "system"
+    `) as Array<{ system: string | null; count: string | number | bigint }>;
 
     // Normalize and aggregate as above
     const systemMap = new Map<string, number>();
     let total = 0;
-    for (const row of rawCounts) {
+    for (const row of questionCounts) {
+      if (!row.system) continue;
+      const count = Number(row.count);
+      if (!Number.isFinite(count) || count <= 0) continue;
       const canonical = normalizeSystemName(row.system);
       const current = systemMap.get(canonical) || 0;
-      systemMap.set(canonical, current + row._count);
-      total += row._count;
+      systemMap.set(canonical, current + count);
+      total += count;
     }
 
     const allSystems = getAllSystems();
@@ -393,6 +409,6 @@ export async function analyzeQuestionPoolCompliance(
       recommendations,
     };
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

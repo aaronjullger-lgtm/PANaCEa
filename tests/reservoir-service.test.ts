@@ -6,6 +6,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RESERVOIR_POLICY, deriveScope } from '../lib/services/reservoir/reservoirPolicy';
+import {
+  bulkInsertReservoirItems,
+  failReservation,
+  type InsertReservoirItemInput,
+} from '../lib/services/reservoir/reservoirService';
 
 // We test the needsRefill logic and maintenance logic in isolation
 describe('needsRefill logic', () => {
@@ -150,5 +155,82 @@ describe('scope derivation consistency', () => {
     expect(scope).toBe('condition:abc-123');
     expect(scope.startsWith('condition:')).toBe(true);
     expect(scope.split(':')[1]).toBe('abc-123');
+  });
+});
+
+describe('bulkInsertReservoirItems', () => {
+  function makeItem(overrides: Partial<InsertReservoirItemInput> = {}): InsertReservoirItemInput {
+    return {
+      userId: 'user-1',
+      questionId: 'question-1',
+      questionSource: 'pool',
+      scope: 'adaptive',
+      priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
+      system: 'CV',
+      difficulty: 'medium',
+      questionOrder: null,
+      taskCategory: null,
+      isReview: false,
+      ...overrides,
+    };
+  }
+
+  it('returns the actual inserted row count from ON CONFLICT-aware raw execute', async () => {
+    const prisma = {
+      studentReservoirItem: {
+        count: vi.fn().mockResolvedValue(0),
+      },
+      $executeRawUnsafe: vi.fn().mockResolvedValue(1),
+    };
+
+    const result = await bulkInsertReservoirItems(prisma as any, [
+      makeItem({ questionId: 'question-1' }),
+      makeItem({ questionId: 'question-2' }),
+      makeItem({ questionId: 'question-3' }),
+    ]);
+
+    expect(result).toBe(1);
+    expect(prisma.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not report inserted rows when every row conflicts', async () => {
+    const prisma = {
+      studentReservoirItem: {
+        count: vi.fn().mockResolvedValue(0),
+      },
+      $executeRawUnsafe: vi.fn().mockResolvedValue(0),
+    };
+
+    const result = await bulkInsertReservoirItems(prisma as any, [
+      makeItem({ questionId: 'question-1' }),
+      makeItem({ questionId: 'question-2' }),
+    ]);
+
+    expect(result).toBe(0);
+  });
+});
+
+describe('failReservation', () => {
+  it('marks unusable reserved items as failed instead of returning them to the queue', async () => {
+    const prisma = {
+      studentReservoirItem: {
+        updateMany: vi.fn().mockResolvedValue({ count: 2 }),
+      },
+    };
+
+    const result = await failReservation(prisma as any, 'session-1', ['bad-1', 'bad-2']);
+
+    expect(result).toBe(2);
+    expect(prisma.studentReservoirItem.updateMany).toHaveBeenCalledWith({
+      where: {
+        reservedBy: 'session-1',
+        status: 'reserved',
+        questionId: { in: ['bad-1', 'bad-2'] },
+      },
+      data: {
+        status: 'failed',
+        reservedAt: null,
+      },
+    });
   });
 });

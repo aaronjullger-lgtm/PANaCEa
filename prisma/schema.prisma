@@ -333,11 +333,13 @@ model Card {
   updatedAt       DateTime
   ItemDifficulty  ItemDifficulty?
   Question        Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  StudyPlanItem   StudyPlanItem[]
   User            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, progressContext])
   @@index([questionId])
   @@index([userId, due])
+  @@index([userId, progressContext, state, due])
   @@index([userId, state])
   @@index([userId, progressContext, due])
 }
@@ -421,6 +423,110 @@ model CohortMember {
   @@index([userId])
 }
 
+/// Canonical curriculum/course catalog. Prisma models stay singular for the
+/// generated client; physical tables are plural through @@map.
+model Course {
+  id            String                 @id @default(cuid())
+  code          String                 @unique
+  title         String
+  phase         CoursePhase
+  description   String?
+  semester      Int?
+  rotationWeeks Int?
+  isRequired    Boolean                @default(false)
+  isActive      Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  CourseTopics  CourseStudyTopic[]
+  Enrollments   UserCourseEnrollment[]
+  StudyPlan     StudyPlan[]
+
+  @@index([phase])
+  @@index([isActive])
+  @@index([title])
+  @@map("courses")
+}
+
+/// Normalized topic/concept taxonomy for study modes, curriculum coverage,
+/// question generation prompts, and analytics rollups.
+model StudyTopic {
+  id                  String                @id @default(cuid())
+  slug                String                @unique
+  name                String
+  system              String?
+  subcategory         String?
+  parentId            String?
+  description         String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  ParentTopic         StudyTopic?           @relation("StudyTopicHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  ChildTopics         StudyTopic[]          @relation("StudyTopicHierarchy")
+  CourseTopics        CourseStudyTopic[]
+  TopicConditions     StudyTopicCondition[]
+  QuestionTopics      QuestionStudyTopic[]
+  StudyPlanItem       StudyPlanItem[]
+
+  @@index([system])
+  @@index([system, subcategory])
+  @@index([parentId])
+  @@map("study_topics")
+}
+
+model CourseStudyTopic {
+  id           String     @id @default(cuid())
+  courseId     String
+  topicId      String
+  displayOrder Int        @default(0)
+  weight       Float      @default(1.0)
+  isRequired   Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  Course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  StudyTopic   StudyTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, topicId])
+  @@index([courseId, displayOrder])
+  @@index([topicId])
+  @@map("course_study_topics")
+}
+
+model StudyTopicCondition {
+  id               String     @id @default(cuid())
+  topicId          String
+  conditionId      String
+  relationshipType String     @default("core")
+  weight           Float      @default(1.0)
+  createdAt        DateTime   @default(now())
+  Condition        Condition  @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  StudyTopic       StudyTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([topicId, weight])
+  @@map("study_topic_conditions")
+}
+
+model UserCourseEnrollment {
+  id                   String                 @id @default(cuid())
+  userId               String
+  courseId             String
+  status               CourseEnrollmentStatus @default(ACTIVE)
+  startedAt            DateTime               @default(now())
+  completedAt          DateTime?
+  targetExamDate       DateTime?
+  retentionTarget      Float?
+  personalizationFlags Json?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  Course               Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  User                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId, status])
+  @@index([targetExamDate])
+  @@index([userId, status])
+  @@map("user_course_enrollments")
+}
+
 model ConceptGap {
   id         String   @id
   userId     String
@@ -480,6 +586,8 @@ model Condition {
   SavedQuestion                                               SavedQuestion[]
   ScoringSystem                                               ScoringSystem[]
   ScoringSystemConditionLink                                  ScoringSystemConditionLink[]
+  StudyPlanItem                                               StudyPlanItem[]
+  StudyTopicCondition                                         StudyTopicCondition[]
   TreatmentConditionLink                                      TreatmentConditionLink[]
   VitalSignConditionLink                                      VitalSignConditionLink[]
   WeaknessPattern                                             WeaknessPattern[]
@@ -1114,6 +1222,7 @@ model EducationalResource {
   geminiCacheName      String?
   geminiCacheExpiresAt DateTime?
   adobeDataPath        String?
+  QuestionExplanationCitation QuestionExplanationCitation[]
 
   @@index([approvalStatus])
   @@index([approvedAt])
@@ -1677,6 +1786,7 @@ model MedicalContent {
   PreGeneratedQuestion                                            PreGeneratedQuestion[]
   ProcedureConditionLink                                          ProcedureConditionLink[]
   Question                                                        Question[]
+  QuestionExplanationCitation                                     QuestionExplanationCitation[]
   QuestionSeed                                                    QuestionSeed[]
   ReviewLog                                                       ReviewLog[]
   SavedQuestion                                                   SavedQuestion[]
@@ -1746,6 +1856,7 @@ model ContentChunk {
   embedding        Unsupported("vector")
   tokenCount       Int?
   MedicalContent   MedicalContent        @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  QuestionExplanationCitation QuestionExplanationCitation[]
 
   @@unique([medicalContentId, field, chunkIndex])
   @@index([medicalContentId])
@@ -2360,6 +2471,7 @@ model PreGeneratedQuestion {
   MedicalContent       MedicalContent?         @relation(fields: [medicalContentId], references: [id])
   QuestionEmbedding    QuestionEmbedding?
   StudentReservoirItem StudentReservoirItem[]
+  StudySessionQuestion StudySessionQuestion[]
 
   @@index([conditionId])
   @@index([difficulty])
@@ -2487,8 +2599,13 @@ model Question {
   Condition          Condition?              @relation(fields: [conditionId], references: [id])
   MediaAsset         MediaAsset?             @relation(fields: [mediaAssetId], references: [id])
   MedicalContent     MedicalContent?         @relation(fields: [medicalContentId], references: [id])
+  QuestionAnswerChoice QuestionAnswerChoice[]
   QuestionAttempt    QuestionAttempt[]
+  QuestionExplanation QuestionExplanation[]
+  QuestionStudyTopic QuestionStudyTopic[]
   ReviewLog          ReviewLog[]
+  StudyPlanItem      StudyPlanItem[]
+  StudySessionQuestion StudySessionQuestion[]
 
   @@index([category])
   @@index([cognitiveLevel])
@@ -2505,6 +2622,83 @@ model Question {
   @@index([contentHealthScore])
   @@index([conditionFamily, hierarchyLevel])
   @@index([lifecycleStatus, contentHealthScore])
+}
+
+model QuestionAnswerChoice {
+  id           String   @id @default(cuid())
+  questionId   String
+  choiceKey    String
+  choiceText   String   @db.Text
+  isCorrect    Boolean  @default(false)
+  rationale    String?  @db.Text
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, choiceKey])
+  @@index([questionId, displayOrder])
+  @@index([isCorrect])
+  @@map("question_answer_choices")
+}
+
+model QuestionExplanation {
+  id              String                  @id @default(cuid())
+  questionId      String
+  explanationType QuestionExplanationType @default(CORRECT_RATIONALE)
+  title           String?
+  body            String                  @db.Text
+  sourceCitation  String?
+  version         Int                     @default(1)
+  isActive        Boolean                 @default(true)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  Question        Question                @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  Citations       QuestionExplanationCitation[]
+
+  @@unique([questionId, explanationType, version])
+  @@index([explanationType])
+  @@index([questionId, isActive])
+  @@map("question_explanations")
+}
+
+model QuestionExplanationCitation {
+  id                    String               @id @default(cuid())
+  questionExplanationId String
+  medicalContentId      String?
+  contentChunkId        String?
+  educationalResourceId String?
+  textbookChunkId       String?
+  citationText          String?
+  rank                  Int                  @default(0)
+  createdAt             DateTime             @default(now())
+  ContentChunk          ContentChunk?        @relation(fields: [contentChunkId], references: [id], onDelete: Cascade)
+  EducationalResource   EducationalResource? @relation(fields: [educationalResourceId], references: [id], onDelete: Cascade)
+  MedicalContent        MedicalContent?      @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  QuestionExplanation   QuestionExplanation  @relation(fields: [questionExplanationId], references: [id], onDelete: Cascade)
+  TextbookChunk         TextbookChunk?        @relation(fields: [textbookChunkId], references: [id], onDelete: Cascade)
+
+  @@index([contentChunkId])
+  @@index([educationalResourceId])
+  @@index([medicalContentId])
+  @@index([questionExplanationId, rank])
+  @@index([textbookChunkId])
+  @@map("question_explanation_citations")
+}
+
+model QuestionStudyTopic {
+  id         String                 @id @default(cuid())
+  questionId String
+  topicId    String
+  role       StudyTopicQuestionRole @default(PRIMARY)
+  createdAt  DateTime               @default(now())
+  Question   Question               @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  StudyTopic StudyTopic             @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, topicId, role])
+  @@index([questionId])
+  @@index([topicId, role])
+  @@map("question_study_topics")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -2534,6 +2728,8 @@ model QuestionAttempt {
   Condition          Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
   MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
   Question           Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  ReviewLog          ReviewLog[]
+  StudySessionQuestion StudySessionQuestion?
   User               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([conditionId, createdAt])
@@ -2601,7 +2797,7 @@ model QuestionHistory {
 
 model QuestionSeed {
   id               String          @id
-  conditionId      String
+  conditionId      String?
   questionType     String
   system           String?
   corePathology    String
@@ -2617,7 +2813,7 @@ model QuestionSeed {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
   medicalContentId String?
-  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
 
   @@index([conditionId])
@@ -2714,11 +2910,15 @@ model ReviewLog {
   implicit_confidence       Float?
   blueprintExamType         String?
   blueprintStage            String?
+  CalibrationOutcome        CalibrationLog[] @relation("CalibrationOutcomeReview")
+  CalibrationPrediction     CalibrationLog[] @relation("CalibrationPredictionReview")
   Condition                 Condition?      @relation(fields: [conditionId], references: [id])
   MedicalContent            MedicalContent? @relation(fields: [medicalContentId], references: [id])
   Question                  Question?       @relation(fields: [questionFkId], references: [id])
+  QuestionAttempt           QuestionAttempt? @relation(fields: [attemptId], references: [id], onDelete: SetNull)
   User                      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([attemptId])
   @@index([conditionId, reviewedAt])
   @@index([medicalContentId])
   @@index([questionFkId])
@@ -2727,9 +2927,11 @@ model ReviewLog {
   @@index([userId, grade, reviewedAt])
   @@index([userId, questionId, reviewedAt(sort: Desc)], map: "ReviewLog_user_question_reviewed_desc_idx")
   @@index([userId, review_type, reviewedAt])
+  @@index([userId, sessionType, review_type, reviewedAt(sort: Desc)])
   @@index([userId, reviewedAt])
   @@index([userId, state, reviewedAt])
   @@index([userId, system, reviewedAt])
+  @@index([userId, system, sessionType, reviewedAt(sort: Desc)])
 }
 
 /// Shadow/offline calibration telemetry for FSRS scheduling evaluation.
@@ -2769,12 +2971,16 @@ model CalibrationLog {
   sessionType              SessionType @default(MAIN)
   fsrsVersion              String      @default("6.0")
   createdAt                DateTime    @default(now())
+  OutcomeReviewLog         ReviewLog?  @relation("CalibrationOutcomeReview", fields: [outcomeReviewLogId], references: [id], onDelete: SetNull)
+  PredictionReviewLog      ReviewLog?  @relation("CalibrationPredictionReview", fields: [reviewLogId], references: [id], onDelete: SetNull)
   User                     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([userId, questionId])
   @@index([conditionId, createdAt])
   @@index([hypercorrectionEligible, createdAt])
+  @@index([outcomeReviewLogId])
+  @@index([reviewLogId])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -3135,11 +3341,15 @@ model StudySession {
   blueprintExamTypes     String[]          @default([])
   blueprintLabel         String?
   thinkingTimeMs         Int?
+  studyPlanItemId        String?
   SessionAnalytics       SessionAnalytics?
   Reflection             Reflection?
+  StudyPlanItem          StudyPlanItem?     @relation(fields: [studyPlanItemId], references: [id], onDelete: SetNull)
+  StudySessionQuestion   StudySessionQuestion[]
   User                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([startedAt])
+  @@index([studyPlanItemId])
   @@index([userId])
   @@index([userId, startedAt])
 }
@@ -3176,6 +3386,7 @@ model TextbookChunk {
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @default(now())
   searchVector Unsupported("tsvector")?
+  QuestionExplanationCitation QuestionExplanationCitation[]
 
   @@index([bookTitle])
   @@index([source])
@@ -3304,6 +3515,7 @@ model User {
   Reflection                Reflection[]
   SessionAnalytics          SessionAnalytics[]
   SubmissionIdempotency     SubmissionIdempotency[]
+  StudyPlan                 StudyPlan[]
   StudyGroupMember          StudyGroupMember[]
   StudyRecommendation       StudyRecommendation[]
   StudySession              StudySession[]
@@ -3324,6 +3536,7 @@ model User {
   UserStatistics            UserStatistics?
   UserStatisticsSnapshot    UserStatisticsSnapshot[]
   UserTopicProgress         UserTopicProgress[]
+  UserCourseEnrollment      UserCourseEnrollment[]
   UserWordleState           UserWordleState[]
   UserDiagnosticPuzzleState UserDiagnosticPuzzleState[]
   VisualizerGeneration      VisualizerGeneration[]
@@ -3718,6 +3931,7 @@ model UserProgress {
   @@index([userId, conditionId])
   @@index([userId, nextReviewAt])
   @@index([userId, progressContext, nextReviewAt])
+  @@index([userId, progressContext, system, nextReviewAt])
   @@index([userId, system, nextReviewAt], map: "UserProgress_user_system_next_review_idx")
 }
 
@@ -4198,6 +4412,67 @@ model Alias {
   @@index([alias]) // for search
 }
 
+enum CoursePhase {
+  DIDACTIC
+  CLINICAL
+  PANCE_PREP
+  CME
+}
+
+enum CourseEnrollmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  DROPPED
+}
+
+enum StudyTopicQuestionRole {
+  PRIMARY
+  SECONDARY
+  PREREQUISITE
+  REMEDIATION
+}
+
+enum QuestionExplanationType {
+  CORRECT_RATIONALE
+  INCORRECT_RATIONALE
+  TEACHING_POINT
+  PEARL
+  SOURCE_NOTE
+}
+
+enum StudyPlanType {
+  DAILY
+  WEEKLY
+  EXAM_REVIEW
+  ROTATION_REVIEW
+  CUSTOM
+}
+
+enum StudyPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  SKIPPED
+  ARCHIVED
+}
+
+enum StudyPlanItemType {
+  QUESTION_BLOCK
+  REVIEW_BLOCK
+  CONTENT_REVIEW
+  PRACTICE_CASE
+  REST
+}
+
+enum StudyPlanItemStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  SKIPPED
+  RESCHEDULED
+}
+
 enum CircadianPhase {
   PEAK
   TROUGH
@@ -4268,10 +4543,100 @@ model UserStudyPhenotype {
   @@index([burnoutRisk])
 }
 
+model StudyPlan {
+  id                   String          @id @default(cuid())
+  userId               String
+  courseId             String?
+  name                 String
+  planType             StudyPlanType   @default(DAILY)
+  planDate             DateTime        @db.Date
+  startsOn             DateTime?       @db.Date
+  endsOn               DateTime?       @db.Date
+  status               StudyPlanStatus @default(DRAFT)
+  targetQuestionsCount Int             @default(0)
+  estimatedTimeMinutes Int             @default(0)
+  personalizationSnapshot Json?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  Course               Course?         @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  DailyStudyPlan       DailyStudyPlan?
+  Items                StudyPlanItem[]
+  User                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, planType, planDate])
+  @@index([courseId])
+  @@index([userId, planDate])
+  @@index([userId, status, planDate])
+  @@map("study_plans")
+}
+
+model StudyPlanItem {
+  id               String              @id @default(cuid())
+  studyPlanId      String
+  taskKey          String
+  topicId          String?
+  conditionId      String?
+  questionId       String?
+  cardId           String?
+  mode             String
+  itemType         StudyPlanItemType   @default(QUESTION_BLOCK)
+  targetCount      Int                 @default(0)
+  estimatedMinutes Int                 @default(0)
+  priority         Int                 @default(5)
+  rationale        String?
+  status           StudyPlanItemStatus @default(PENDING)
+  dueAt            DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  Card             Card?               @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  Condition        Condition?          @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  Question         Question?           @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  StudyPlan        StudyPlan           @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+  StudySessions    StudySession[]
+  StudyTopic       StudyTopic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@unique([studyPlanId, taskKey])
+  @@index([cardId])
+  @@index([conditionId])
+  @@index([questionId])
+  @@index([status, dueAt])
+  @@index([studyPlanId, priority])
+  @@index([topicId])
+  @@map("study_plan_items")
+}
+
+model StudySessionQuestion {
+  id                     String                @id @default(cuid())
+  sessionId              String
+  questionId             String?
+  preGeneratedQuestionId String?
+  sequenceIndex          Int
+  servedAt               DateTime              @default(now())
+  answeredAt             DateTime?
+  attemptId              String?               @unique
+  source                 String?
+  metadata               Json?
+  PreGeneratedQuestion   PreGeneratedQuestion? @relation(fields: [preGeneratedQuestionId], references: [id], onDelete: Cascade)
+  Question               Question?             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  QuestionAttempt        QuestionAttempt?      @relation(fields: [attemptId], references: [id], onDelete: SetNull)
+  StudySession           StudySession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, preGeneratedQuestionId])
+  @@unique([sessionId, questionId])
+  @@index([attemptId])
+  @@index([preGeneratedQuestionId])
+  @@index([questionId])
+  @@index([sessionId, sequenceIndex])
+  @@map("study_session_questions")
+}
+
 model DailyStudyPlan {
-  id       String   @id @default(cuid())
-  userId   String
-  planDate DateTime @db.Date
+  id          String   @id @default(cuid())
+  userId      String
+  planDate    DateTime @db.Date
+  studyPlanId String?  @unique
 
   // Recommended sessions
   recommendedSessions Json // [{mode: "quiz", count: 20, systemFilter: ["Cardiology"], reason: "due-today"}, ...]
@@ -4296,9 +4661,11 @@ model DailyStudyPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudyPlan StudyPlan? @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
+  User      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, planDate])
+  @@index([studyPlanId])
   @@index([userId, planDate])
   @@index([userId, status, planDate], map: "DailyStudyPlan_user_status_plan_date_idx")
   @@index([userId, status])

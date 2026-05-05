@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import { withProductionQuestionSafety } from '../../../lib/services/questionServingSafety';
+import type { Prisma } from '@prisma/client';
 
 /**
  * GET /api/questions/:questionId/context
@@ -22,14 +25,16 @@ const ContextSchema = z.object({
 
 export const onRequestGet = authenticatedEndpoint(ContextSchema, async (context) => {
   const { env, auth } = context;
-  // @ts-expect-error — Cloudflare Pages Function provides params via filesystem routing
-  const questionId = (context.params?.questionId ?? '').toString();
+  const routeParams = (context as { params?: { questionId?: string } }).params;
+  const questionId = (routeParams?.questionId ?? '').toString();
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+
     // Get the question and its condition
-    const question = await prisma.question.findUnique({
-      where: { id: questionId },
+    const question = await prisma.question.findFirst({
+      where: withProductionQuestionSafety({ id: questionId }) as Prisma.QuestionWhereInput,
       select: {
         id: true,
         system: true,
@@ -59,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(ContextSchema, async (context)
     if (conditionId) {
       const reviewLogs = await prisma.reviewLog.findMany({
         where: {
-          userId: auth.userId,
+          userId: user.id,
           conditionId: conditionId,
         },
         select: {
@@ -127,7 +132,7 @@ export const onRequestGet = authenticatedEndpoint(ContextSchema, async (context)
     const relatedPerformance = conditionId
       ? await prisma.reviewLog.findMany({
           where: {
-            userId: auth.userId,
+            userId: user.id,
             conditionId: { in: relatedConditions.map((c) => c.id) },
           },
           distinct: ['conditionId'],

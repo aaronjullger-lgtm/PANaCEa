@@ -19,6 +19,11 @@ import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { BookOpen, Flag, MessageCircle, PenLine } from 'lucide-react';
 import type { Question, ErrorTag } from '@/types';
 import type { CausalChain, CausalChainDisplayLevel } from '@/types/causalChain';
+import { GuidedFeedbackScaffold } from '@/components/session/StudyModeCoach';
+import type {
+  StudyGuidanceLevel,
+  StudyModePreference,
+} from '@/lib/study/studyModeScaffolding';
 
 export interface AnswerFeedbackProps {
   currentQuestion: Question;
@@ -41,6 +46,10 @@ export interface AnswerFeedbackProps {
   causalChain?: CausalChain | null;
   /** Display level for the causal chain, driven by expertise-adaptive scaffolding. */
   causalChainDisplayLevel?: CausalChainDisplayLevel;
+  studyMode?: StudyModePreference;
+  guidanceLevel?: StudyGuidanceLevel;
+  learnerReflection?: string;
+  hintsViewed?: number;
 }
 
 const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
@@ -62,6 +71,10 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
   onOpenReference,
   causalChain,
   causalChainDisplayLevel,
+  studyMode = 'direct',
+  guidanceLevel = 'developing',
+  learnerReflection = '',
+  hintsViewed = 0,
 }) => {
   if (isExamSimulator) return null;
 
@@ -75,6 +88,16 @@ const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
           <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
             <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
           </div>
+        )}
+
+        {studyMode === 'guided' && (
+          <GuidedFeedbackScaffold
+            question={currentQuestion}
+            selectedAnswerIndex={selectedAnswerIndex}
+            guidanceLevel={guidanceLevel}
+            learnerReflection={learnerReflection}
+            hintsViewed={hintsViewed}
+          />
         )}
 
         {/* Core PANCE: rationale – structured (5-section) or legacy, via ExplanationPanel */}

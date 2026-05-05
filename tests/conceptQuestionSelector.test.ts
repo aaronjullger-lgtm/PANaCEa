@@ -4,8 +4,12 @@
  * Tests the pure bandit reranking integration — no database.
  */
 
-import { describe, it, expect } from 'vitest';
-import { banditRerankQuestions, type SelectedQuestion } from '../lib/services/conceptQuestionSelector';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  banditRerankQuestions,
+  selectSessionQuestions,
+  type SelectedQuestion,
+} from '../lib/services/conceptQuestionSelector';
 import { initBanditState, updateBanditState, type BanditState, type BanditReward } from '../lib/services/contextualBanditService';
 
 // ─── Fixtures ────────────────────────────────────────────────────────
@@ -141,5 +145,178 @@ describe('banditRerankQuestions', () => {
     });
 
     expect(result).toHaveLength(2);
+  });
+});
+
+describe('selectSessionQuestions serving safety', () => {
+  it('adds active approved filters to scoped new-card queries', async () => {
+    const prisma: any = {
+      userProgress: { findMany: vi.fn().mockResolvedValue([]) },
+      questionAttempt: { findMany: vi.fn().mockResolvedValue([]) },
+      medicalContent: { findMany: vi.fn().mockResolvedValue([]) },
+      question: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'q-safe',
+            question: 'Q?',
+            vignette: null,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+            explanation: 'Because A.',
+            system: 'Pulmonary',
+            category: null,
+            topic: 'Pneumonia',
+            difficulty: 'medium',
+            conditionId: 'cond-1',
+            medicalContentId: 'mc-1',
+          },
+        ]),
+      },
+    };
+
+    await selectSessionQuestions(prisma, {
+      userId: 'user-1',
+      mode: 'system',
+      size: 5,
+      blueprintWeights: { Pulmonary: 1 },
+      system: 'Pulmonary',
+      blueprintStage: 'pance_prep' as any,
+      urgencyMultiplier: 1,
+    });
+
+    expect(prisma.question.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          system: 'Pulmonary',
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+        }),
+      })
+    );
+  });
+
+  it('adds active approved filters when hydrating due review questions', async () => {
+    const prisma: any = {
+      userProgress: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            conditionId: 'cond-1',
+            system: 'Pulmonary',
+            fsrsStability: 2,
+            nextReviewAt: new Date(Date.now() - 86_400_000),
+          },
+        ]),
+      },
+      questionAttempt: { findMany: vi.fn().mockResolvedValue([]) },
+      medicalContent: { findMany: vi.fn().mockResolvedValue([]) },
+      question: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'q-review',
+            question: 'Q?',
+            vignette: null,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+            explanation: 'Because A.',
+            system: 'Pulmonary',
+            category: null,
+            topic: 'Pneumonia',
+            difficulty: 'medium',
+            conditionId: 'cond-1',
+            medicalContentId: null,
+          },
+        ]),
+      },
+      userQuestionSeen: { groupBy: vi.fn().mockResolvedValue([]) },
+    };
+
+    await selectSessionQuestions(prisma, {
+      userId: 'user-1',
+      mode: 'review',
+      size: 5,
+      blueprintWeights: { Pulmonary: 1 },
+      blueprintStage: 'pance_prep' as any,
+      urgencyMultiplier: 1,
+    });
+
+    expect(prisma.question.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          conditionId: { in: ['cond-1'] },
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+        }),
+      })
+    );
+  });
+
+  it('maps UserProgress MedicalContent ids to condition-scoped question pools', async () => {
+    const prisma: any = {
+      userProgress: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            conditionId: 'mc-1',
+            system: 'Pulmonary',
+            fsrsStability: 2,
+            nextReviewAt: new Date(Date.now() - 86_400_000),
+          },
+        ]),
+      },
+      questionAttempt: { findMany: vi.fn().mockResolvedValue([]) },
+      medicalContent: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: 'mc-1', conditionId: 'cond-1' },
+        ]),
+      },
+      question: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'q-review',
+            question: 'Q?',
+            vignette: null,
+            options: ['A', 'B'],
+            correctAnswer: 'A',
+            explanation: 'Because A.',
+            system: 'Pulmonary',
+            category: null,
+            topic: 'Pneumonia',
+            difficulty: 'medium',
+            conditionId: 'cond-1',
+            medicalContentId: null,
+          },
+        ]),
+      },
+      preGeneratedQuestion: { findMany: vi.fn().mockResolvedValue([]) },
+      userQuestionSeen: { findMany: vi.fn().mockResolvedValue([]), groupBy: vi.fn().mockResolvedValue([]) },
+    };
+
+    const result = await selectSessionQuestions(prisma, {
+      userId: 'user-1',
+      mode: 'review',
+      size: 5,
+      blueprintWeights: { Pulmonary: 1 },
+      blueprintStage: 'pance_prep' as any,
+      urgencyMultiplier: 1,
+    });
+
+    expect(prisma.question.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { conditionId: { in: ['cond-1'] } },
+            { medicalContentId: { in: ['mc-1'] } },
+          ]),
+          lifecycleStatus: 'ACTIVE',
+          qaStatus: 'APPROVED',
+        }),
+      })
+    );
+    expect(result.questions[0]).toEqual(
+      expect.objectContaining({
+        id: 'q-review',
+        conditionId: 'cond-1',
+      })
+    );
   });
 });

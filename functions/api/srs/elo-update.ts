@@ -19,6 +19,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import {
   eloUpdate,
   DEFAULT_ABILITY,
@@ -42,11 +43,11 @@ export const onRequestOptions = withCors();
 export const onRequestPost = authenticatedEndpoint(
   EloUpdateSchema,
   async (context: AuthenticatedContext & ValidatedContext<EloUpdateBody>) => {
-    const { userId } = context.auth;
     const { itemId, domain, isCorrect } = context.validated.body;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL as string);
 
     try {
+      const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
       // Upsert student ability and item difficulty (race-safe)
       const [studentAbility, itemDifficulty] = await Promise.all([
         prisma.studentAbility.upsert({

@@ -116,9 +116,12 @@ export function computeExpiry(isReview: boolean): Date {
  */
 export function deriveScope(
   mode: string,
-  options: { system?: string; conditionId?: string; userId?: string }
+  options: { system?: string; subcategory?: string; conditionId?: string; userId?: string }
 ): string {
   if (mode === 'system' && options.system) return `system:${options.system}`;
+  if (mode === 'subcategory' && options.system && options.subcategory) {
+    return `subcategory:${options.system}:${encodeURIComponent(options.subcategory)}`;
+  }
   if (mode === 'condition' && options.conditionId) return `condition:${options.conditionId}`;
   if (mode === 'confusion-remediation' && options.userId) return `confusion-remediation:${options.userId}`;
   return 'adaptive';

@@ -265,13 +265,15 @@ describe('analyzeExperiment', () => {
   it('does not detect significance with overlapping groups', () => {
     const conversions: ABConversionRecord[] = [];
 
-    // Both groups drawn from the same distribution
+    // Both groups use the same bounded, overlapping distribution. Avoid Math.random
+    // here so this non-significance assertion does not become a probabilistic flake.
     for (let i = 0; i < 30; i++) {
+      const value = 5 + (i % 10) * 0.2;
       conversions.push(
-        makeConversion('exp-ns', 'control', 'metric', 5 + Math.random() * 2)
+        makeConversion('exp-ns', 'control', 'metric', value)
       );
       conversions.push(
-        makeConversion('exp-ns', 'treatment', 'metric', 5 + Math.random() * 2)
+        makeConversion('exp-ns', 'treatment', 'metric', value)
       );
     }
 

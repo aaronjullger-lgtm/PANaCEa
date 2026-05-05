@@ -16,6 +16,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import {
   orderSessionCards,
   DEFAULT_ABILITY,
@@ -38,11 +39,11 @@ export const onRequestOptions = withCors();
 export const onRequestPost = authenticatedEndpoint(
   SessionOrderSchema,
   async (context: AuthenticatedContext & ValidatedContext<SessionOrderBody>) => {
-    const { userId } = context.auth;
     const { cardIds, domain, sessionHistory = [] } = context.validated.body;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL as string);
 
     try {
+      const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
       // Get student ability for this domain
       const studentAbility = await prisma.studentAbility.findUnique({
         where: { userId_domain: { userId, domain } },

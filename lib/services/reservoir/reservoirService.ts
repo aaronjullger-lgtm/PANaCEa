@@ -125,6 +125,58 @@ export async function markConsumed(
   return result.count;
 }
 
+/**
+ * Release a partial reservation when session generation falls back before the
+ * reserved questions are served. This prevents the warm queue from being
+ * stranded until the abandoned-reservation sweep runs.
+ */
+export async function releaseReservation(
+  prisma: PrismaClientLike,
+  sessionId: string,
+  questionIds?: string[]
+): Promise<number> {
+  const result = await prisma.studentReservoirItem.updateMany({
+    where: {
+      reservedBy: sessionId,
+      status: 'reserved',
+      ...(questionIds && questionIds.length > 0 ? { questionId: { in: questionIds } } : {}),
+    },
+    data: {
+      status: 'queued',
+      reservedAt: null,
+      reservedBy: null,
+    },
+  });
+
+  return result.count;
+}
+
+/**
+ * Mark reserved items as failed when they were selected for a session but could
+ * not be hydrated into safe, learner-servable questions. Failed items are kept
+ * out of the queue so the next session cannot repeatedly reserve the same bad
+ * row; maintenance later deletes terminal rows after the retention window.
+ */
+export async function failReservation(
+  prisma: PrismaClientLike,
+  sessionId: string,
+  questionIds?: string[]
+): Promise<number> {
+  const result = await prisma.studentReservoirItem.updateMany({
+    where: {
+      reservedBy: sessionId,
+      status: 'reserved',
+      ...(questionIds && questionIds.length > 0 ? { questionId: { in: questionIds } } : {}),
+    },
+    data: {
+      status: 'failed',
+      reservedAt: null,
+    },
+  });
+
+  return result.count;
+}
+
 // ─── Bulk Insert ────────────────────────────────────────────────────────────
 
 export interface InsertReservoirItemInput {
@@ -135,6 +187,8 @@ export interface InsertReservoirItemInput {
   priority: number;
   system: string | null;
   difficulty: string | null;
+  /** In-memory metadata used by refill ranking/boosting; not persisted yet. */
+  conditionId?: string | null;
   questionOrder: string | null;
   taskCategory: string | null;
   isReview: boolean;
@@ -180,8 +234,8 @@ export async function bulkInsertReservoirItems(
       ON CONFLICT ("userId", "questionId") DO NOTHING
     `;
     try {
-      await prisma.$executeRawUnsafe(sql);
-      inserted += batch.length; // Approximate — ON CONFLICT skips are not counted
+      const affectedRows = await prisma.$executeRawUnsafe(sql);
+      inserted += Number.isFinite(Number(affectedRows)) ? Number(affectedRows) : 0;
     } catch (err: any) {
       // Log but don't fail the whole batch
       logger.error('Reservoir batch insert error', { scope: LOG_SCOPE, error: err.message });

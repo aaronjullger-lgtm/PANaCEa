@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Offline Sync"
+  short_description: "Protect queued answers, PWA behavior, retries, and session recovery"
+  default_prompt: "Debug or improve this PANaCEa offline/sync path by tracing queueing, retry, idempotency, recovery, and cache behavior."

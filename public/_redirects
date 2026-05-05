@@ -1,2 +1,5 @@
 # Pass-through: serve static assets with correct MIME types
 /assets/*  /assets/:splat  200
+
+# React Router SPA fallback for direct links and refreshes
+/*  /index.html  200

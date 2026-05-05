@@ -14,7 +14,7 @@
  */
 
 import { z } from 'zod';
-import { aiEndpoint } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint } from '../_shared/middleware';
 import { ok, fail, ErrorCode } from '../_shared/endpoint';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
@@ -38,11 +38,11 @@ const GenerateDeepSchema = z.object({
   }),
 });
 
-// Migrated to `aiEndpoint` (Sprint 9 rate-limit advisory):
+// Admin-only authoring preview:
 // - Deep-context question generation hits Gemini + a 1M-token cache. The
-//   authenticated stack's 300 rpm default is a loaded-footgun here; aiEndpoint's
-//   25 rpm bucket (keyPrefix 'ai') is the correct shape for this hot path.
-export const onRequestPost = aiEndpoint(GenerateDeepSchema, async (context) => {
+//   endpoint returns non-submittable preview content, never learner-servable
+//   questions. Learner routes must use persisted, reviewed session generation.
+export const onRequestPost = adminAuthenticatedEndpoint(GenerateDeepSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/generate-deep');
 
@@ -198,11 +198,27 @@ Output valid JSON only, no markdown:
       userId: auth.userId?.substring(0, 10),
     });
 
-    return ok({ questions });
+    return ok({
+      questions: questions.map((question, index) => ({
+        ...question,
+        id: `deep-preview-${Date.now()}-${index}`,
+        submissionReady: false,
+        requiresApproval: true,
+        metadata: {
+          source: 'generate-deep-preview',
+          persistence: 'admin_preview_only',
+          adminPreviewOnly: true,
+          submissionReady: false,
+          requiresApproval: true,
+          condition,
+          category: category ?? null,
+        },
+      })),
+    });
   } catch (error) {
     logger.error('generate-deep error', {
       error: error instanceof Error ? error.message : String(error),
     });
     throw new Error('Failed to generate deep questions');
   }
-});
+}, { requestsPerMinute: 25 });

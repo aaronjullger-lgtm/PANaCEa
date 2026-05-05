@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa View Composition"
+  short_description: "Wire pages, routes, lazy views, navigation, and app shell behavior"
+  default_prompt: "Add or debug this PANaCEa view by using the config-driven route/lazy-component/navigation patterns and verifying app-shell behavior."

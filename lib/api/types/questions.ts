@@ -48,6 +48,10 @@ export interface QuestionAttemptResult {
  */
 export interface QuestionDTO {
   id: string;
+  questionId?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
   question: string;
   vignette?: string | null;
   options: string[];
@@ -59,6 +63,7 @@ export interface QuestionDTO {
   topic?: string;
   difficulty?: string | null;
   conditionId?: string | null;
+  medicalContentId?: string | null;
   /** How this question was sourced for the session. */
-  source?: 'due_review' | 'new_card' | 'reservoir' | 'on_demand';
+  source?: 'due_review' | 'new_card' | 'reservoir' | 'on_demand' | 'pre_generated' | 'question';
 }

@@ -174,7 +174,7 @@ function makeReviews(count: number, correctRate = 0.75): OptimizationReview[] {
 }
 
 describe('optimizeFSRSParameters — initialW plumbing', () => {
-  // Need 500+ reviews for the L-BFGS path to actually run (below threshold,
+  // Need 1000+ reviews for the L-BFGS path to actually run (below threshold,
   // the function short-circuits to return seed params unchanged).
   const REVIEW_COUNT = 600;
 

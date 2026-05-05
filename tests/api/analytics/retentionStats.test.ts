@@ -61,30 +61,27 @@ import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-ed
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-interface SRSItemFixture {
+interface ProgressFixture {
   id: string;
-  interval: number;
-  dueDate: Date;
-  lastReviewed: Date | null;
-  easiness: number;
-  repetition: number;
+  nextReviewAt: Date | null;
+  lastReviewAt: Date | null;
   fsrsStability: number | null;
 }
 
 interface FakePrismaOptions {
   userFound?: boolean;
-  srsItems?: SRSItemFixture[];
+  progressRows?: ProgressFixture[];
 }
 
 function makeFakePrisma(opts: FakePrismaOptions = {}) {
-  const { userFound = true, srsItems = [] } = opts;
+  const { userFound = true, progressRows = [] } = opts;
 
   return {
     user: {
       findUnique: vi.fn().mockResolvedValue(userFound ? { id: INTERNAL_ID } : null),
     },
-    sRSItem: {
-      findMany: vi.fn().mockResolvedValue(srsItems),
+    userProgress: {
+      findMany: vi.fn().mockResolvedValue(progressRows),
     },
   };
 }
@@ -104,29 +101,23 @@ async function parseBody(result: any): Promise<{ status: number; body: any }> {
   return { status: result.status ?? 200, body: result.data ?? result };
 }
 
-function makeReviewedItem(overrides: Partial<SRSItemFixture> = {}): SRSItemFixture {
+function makeReviewedItem(overrides: Partial<ProgressFixture> = {}): ProgressFixture {
   const now = new Date();
   return {
     id: `item-${Math.random().toString(36).slice(2, 9)}`,
-    interval: 10,
-    dueDate: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-    lastReviewed: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-    easiness: 2.5,
-    repetition: 3,
+    nextReviewAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+    lastReviewAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
     fsrsStability: 10,
     ...overrides,
   };
 }
 
-function makeUnreviewedItem(overrides: Partial<SRSItemFixture> = {}): SRSItemFixture {
+function makeUnreviewedItem(overrides: Partial<ProgressFixture> = {}): ProgressFixture {
   const now = new Date();
   return {
     id: `item-${Math.random().toString(36).slice(2, 9)}`,
-    interval: 0,
-    dueDate: now,
-    lastReviewed: null,
-    easiness: 2.5,
-    repetition: 0,
+    nextReviewAt: now,
+    lastReviewAt: null,
     fsrsStability: null,
     ...overrides,
   };
@@ -142,7 +133,7 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
   it('returns meta.status=insufficient_data and empty curve when no items are reviewed', async () => {
     const prisma = makeFakePrisma({
       userFound: true,
-      srsItems: [makeUnreviewedItem(), makeUnreviewedItem()],
+      progressRows: [makeUnreviewedItem(), makeUnreviewedItem()],
     });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
@@ -163,8 +154,8 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
     expect(body?.data?.totalCards).toBe(2);
   });
 
-  it('returns the same insufficient_data shape when the user has zero SRS items at all', async () => {
-    const prisma = makeFakePrisma({ userFound: true, srsItems: [] });
+  it('returns the same insufficient_data shape when the user has zero FSRS progress rows at all', async () => {
+    const prisma = makeFakePrisma({ userFound: true, progressRows: [] });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
     const { onRequestGet } = await import('../../../functions/api/stats/retention');
@@ -186,7 +177,7 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
     //   Ebbinghaus: exp(-10/10) * 100 ≈ 36.79%  ← must NOT be this
     const prisma = makeFakePrisma({
       userFound: true,
-      srsItems: [makeReviewedItem({ fsrsStability: 10, interval: 10 })],
+      progressRows: [makeReviewedItem({ fsrsStability: 10 })],
     });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
@@ -223,7 +214,7 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
   it('returns exactly 31 curve points covering days 0..30', async () => {
     const prisma = makeFakePrisma({
       userFound: true,
-      srsItems: [makeReviewedItem({ fsrsStability: 20 })],
+      progressRows: [makeReviewedItem({ fsrsStability: 20 })],
     });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
@@ -243,20 +234,20 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
 
   it('counts only reviewed items in stabilityBuckets (unreviewed items must not inflate buckets)', async () => {
     const reviewed = [
-      makeReviewedItem({ fsrsStability: 2, interval: 0.5 }),   // <1d
-      makeReviewedItem({ fsrsStability: 5, interval: 2 }),     // 1-3d
-      makeReviewedItem({ fsrsStability: 8, interval: 5 }),     // 3-7d
-      makeReviewedItem({ fsrsStability: 15, interval: 14 }),   // 7-21d
-      makeReviewedItem({ fsrsStability: 40, interval: 30 }),   // 21d+
+      makeReviewedItem({ fsrsStability: 0.5 }), // <1d
+      makeReviewedItem({ fsrsStability: 2 }), // 1-3d
+      makeReviewedItem({ fsrsStability: 5 }), // 3-7d
+      makeReviewedItem({ fsrsStability: 14 }), // 7-21d
+      makeReviewedItem({ fsrsStability: 30 }), // 21d+
     ];
     const unreviewed = [
-      makeUnreviewedItem({ interval: 0 }),
-      makeUnreviewedItem({ interval: 0 }),
-      makeUnreviewedItem({ interval: 0 }),
+      makeUnreviewedItem({ fsrsStability: null }),
+      makeUnreviewedItem({ fsrsStability: null }),
+      makeUnreviewedItem({ fsrsStability: null }),
     ];
     const prisma = makeFakePrisma({
       userFound: true,
-      srsItems: [...reviewed, ...unreviewed],
+      progressRows: [...reviewed, ...unreviewed],
     });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
@@ -296,15 +287,15 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
     expect(typeof body?.error).toBe('string');
     expect(body.error.length).toBeGreaterThan(0);
 
-    // Critical: we must NOT have queried the SRSItem table when the user
-    // couldn't be resolved. No silent zeros.
-    expect(prisma.sRSItem.findMany).not.toHaveBeenCalled();
+    // Critical: we must NOT have queried progress when the user couldn't be
+    // resolved. No silent zeros.
+    expect(prisma.userProgress.findMany).not.toHaveBeenCalled();
   });
 
   it('emits empty tuning metadata even when reviewed data exists (optimizer not yet wired)', async () => {
     const prisma = makeFakePrisma({
       userFound: true,
-      srsItems: [makeReviewedItem({ fsrsStability: 10 })],
+      progressRows: [makeReviewedItem({ fsrsStability: 10 })],
     });
     (createEdgePrismaClient as Mock).mockReturnValue(prisma);
 
@@ -313,7 +304,7 @@ describe('GET /api/stats/retention — dashboard-trust reconciliation', () => {
     const { body } = await parseBody(result);
 
     // These fields stay blank until a real optimizer run populates them.
-    // Blank values are load-bearing: DashboardPage hides the Algorithm Status
+    // Blank values are load-bearing: legacy algorithm-status surfaces hide when missing
     // widget via `safeData.lastTuned && ...` when lastTuned is empty.
     expect(body?.data?.lastTuned).toBe('');
     expect(body?.data?.tuningReason).toBe('');

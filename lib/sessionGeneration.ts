@@ -18,6 +18,10 @@ export type SessionLaunchMode = 'mainSession' | 'review' | 'drill';
 
 export interface NormalizedSessionQuestion {
   id: string;
+  questionId?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
   vignette?: string | null;
   question: string;
   options: string[];
@@ -30,6 +34,7 @@ export interface NormalizedSessionQuestion {
   category?: string;
   subcategory?: string;
   conditionId: string;
+  medicalContentId?: string | null;
   condition: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   pearls: string[];
@@ -60,6 +65,15 @@ export interface PersistedStudySessionRecord {
   sessionType?: string;
 }
 
+export interface PersistedStudySessionQuestionRecord {
+  sessionId: string;
+  questionId: string | null;
+  preGeneratedQuestionId: string | null;
+  sequenceIndex: number;
+  source: string;
+  metadata: Record<string, unknown>;
+}
+
 export interface SessionRunnerSettings {
   mode: 'standard' | 'review';
   focus: 'all' | 'growth' | 'review' | 'topic';
@@ -72,6 +86,10 @@ export interface SessionRunnerSettings {
 
 type SessionQuestionInput = {
   id?: string | null;
+  questionId?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: string | null;
   vignette?: string | null;
   question?: string | null;
   options?: unknown;
@@ -86,6 +104,7 @@ type SessionQuestionInput = {
   conditionId?: string | null;
   condition?: string | { name?: string | null; system?: string | null } | null;
   difficulty?: string | null;
+  medicalContentId?: string | null;
   pearls?: string[] | null;
   source?: string | null;
   fromStaging?: boolean | null;
@@ -137,13 +156,29 @@ export function normalizeSessionQuestion(input: SessionQuestionInput): Normalize
   const options = normalizeOptions(input.options);
   const correctAnswerIndex = deriveCorrectAnswerIndex(input.correctAnswerIndex, input.correctAnswer, options);
   const normalizedCorrectAnswer = normalizeNullableString(input.correctAnswer);
+  const questionSource = normalizeQuestionSource(input.questionSource, input.source, input.fromStaging);
+  const sourceQuestionId =
+    normalizeNullableString(input.sourceQuestionId) ??
+    normalizeNullableString(input.id) ??
+    normalizeNullableString(input.questionId);
+  const canonicalQuestionId =
+    normalizeNullableString(input.canonicalQuestionId) ??
+    (questionSource === 'question'
+      ? normalizeNullableString(input.questionId) ?? normalizeNullableString(input.id)
+      : null);
+  const medicalContentId = normalizeNullableString(input.medicalContentId);
   const conditionId =
     normalizeNullableString(input.conditionId) ??
+    medicalContentId ??
     slugifyIdentifier(conditionName ?? topic ?? system ?? input.id ?? 'unknown');
   const rationale = normalizeRationale(input.rationale, input.explanation);
 
   return {
-    id: normalizeNullableString(input.id) ?? '',
+    id: normalizeNullableString(input.id) ?? sourceQuestionId ?? '',
+    questionId: canonicalQuestionId,
+    canonicalQuestionId,
+    sourceQuestionId,
+    questionSource,
     vignette: normalizeNullableString(input.vignette),
     question:
       normalizeNullableString(input.question) ??
@@ -165,12 +200,35 @@ export function normalizeSessionQuestion(input: SessionQuestionInput): Normalize
       normalizeNullableString(input.category) ??
       undefined,
     conditionId,
+    medicalContentId,
     condition: conditionName ?? topic,
     difficulty: normalizeDifficulty(input.difficulty),
     pearls: Array.isArray(input.pearls) ? input.pearls.filter(isNonEmptyString) : [],
     source: normalizeNullableString(input.source) ?? undefined,
     fromStaging: input.fromStaging === true ? true : undefined,
   };
+}
+
+function normalizeQuestionSource(
+  questionSource: string | null | undefined,
+  source: string | null | undefined,
+  fromStaging: boolean | null | undefined
+): NormalizedSessionQuestion['questionSource'] {
+  if (
+    questionSource === 'question' ||
+    questionSource === 'pre_generated' ||
+    questionSource === 'staging' ||
+    questionSource === 'seed' ||
+    questionSource === 'generated'
+  ) {
+    return questionSource;
+  }
+
+  if (fromStaging) return 'staging';
+  if (source === 'pre_generated') return 'pre_generated';
+  if (source === 'staging') return 'staging';
+  if (source === 'generated') return 'generated';
+  return 'question';
 }
 
 export function normalizeSessionGenerateResult(
@@ -244,6 +302,44 @@ export function buildGeneratedStudySessionRecord(input: {
     blueprintLabel: normalizeNullableString(input.request.blueprintLabel) ?? undefined,
     sessionType: normalizeNullableString(input.request.sessionLane) ?? undefined,
   };
+}
+
+export function buildStudySessionQuestionRecords(
+  sessionId: string,
+  questions: NormalizedSessionQuestion[]
+): PersistedStudySessionQuestionRecord[] {
+  return questions
+    .map((question, sequenceIndex) => {
+      const questionSource = question.questionSource ?? 'question';
+      const sourceQuestionId =
+        normalizeNullableString(question.sourceQuestionId) ??
+        normalizeNullableString(question.id);
+      const canonicalQuestionId =
+        normalizeNullableString(question.canonicalQuestionId) ??
+        normalizeNullableString(question.questionId);
+      const questionId = canonicalQuestionId;
+      const preGeneratedQuestionId = questionSource === 'pre_generated' ? sourceQuestionId : null;
+
+      return {
+        sessionId,
+        questionId,
+        preGeneratedQuestionId,
+        sequenceIndex,
+        source: questionSource,
+        metadata: compactRecord({
+          sourceQuestionId,
+          canonicalQuestionId,
+          questionSource,
+          selectionSource: question.source,
+          conditionId: question.conditionId,
+          medicalContentId: question.medicalContentId,
+          system: question.system,
+          category: question.category,
+          topic: question.topic,
+        }),
+      };
+    })
+    .filter((record) => record.questionId !== null || record.preGeneratedQuestionId !== null);
 }
 
 export function buildSessionSettingsFromSnapshot(
@@ -489,6 +585,16 @@ function normalizeStoredFocus(
 
 function normalizeCount(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+function compactRecord(record: Record<string, unknown>): Record<string, unknown> {
+  const compacted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (value !== undefined && value !== null && value !== '') {
+      compacted[key] = value;
+    }
+  }
+  return compacted;
 }
 
 function slugifyIdentifier(value: string): string {

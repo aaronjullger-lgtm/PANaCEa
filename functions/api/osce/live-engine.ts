@@ -190,9 +190,18 @@ export const onRequestGet = aiEndpoint(
       }
 
       const wsBase = 'wss://generativelanguage.googleapis.com/ws';
-      const wsUrl = token
-        ? `${wsBase}/${GEMINI_WS_PATH}?access_token=${encodeURIComponent(token)}`
-        : `${wsBase}/${GEMINI_WS_PATH}?key=${env.GEMINI_API_KEY}`;
+      if (!token) {
+        logger.error('Ephemeral Live API token creation failed; refusing to expose server API key', {
+          sessionId: validated.sessionId,
+        });
+        return new Response(
+          JSON.stringify({
+            error: 'Unable to create a temporary Live API session token. Please retry.',
+          }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      const wsUrl = `${wsBase}/${GEMINI_WS_PATH}?access_token=${encodeURIComponent(token)}`;
 
       logger.info('Live engine config requested', { sessionId: validated.sessionId });
 

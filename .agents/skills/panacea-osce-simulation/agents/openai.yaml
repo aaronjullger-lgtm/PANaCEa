@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa OSCE Simulation"
+  short_description: "Build and review OSCE, SOAP grading, and virtual patient flows"
+  default_prompt: "Work on this PANaCEa OSCE/simulation task by tracing station flow, rubric scoring, AI prompts, persistence, and validation."

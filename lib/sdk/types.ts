@@ -193,11 +193,17 @@ export interface SRSDueResult {
 }
 
 export interface SRSSubmitPayload {
+  srsItemId?: string | null;
+  topicProgressId?: string;
   questionId: string;
-  selectedAnswer: string;
-  responseTimeMs: number;
-  confidence?: number;
-  sessionId?: string;
+  variantId?: string;
+  rating: number;
+  isCorrect: boolean;
+  userAnswer?: string;
+  timeSpent?: number;
+  progressContext?: 'READINESS' | 'TARGETED' | string | null;
+  telemetry?: Record<string, unknown>;
+  urgencyMultiplier?: number;
   [key: string]: unknown;
 }
 

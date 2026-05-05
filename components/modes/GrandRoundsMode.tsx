@@ -27,6 +27,7 @@ import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { DrillLoadingState, InlineButtonSpinner } from '@/components/loading';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -212,12 +213,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {
-          const errData = (await response.json().catch(() => ({}))) as { error?: string };
+          const errData = await response.json().catch(() => ({}));
           throw new Error(
-            errData?.error || `HTTP ${response.status}: Failed to fetch targeted daily`
+            getApiEnvelopeError(errData, `HTTP ${response.status}: Failed to fetch targeted daily`)
           );
         }
-        const data = (await response.json()) as
+        const data = unwrapApiEnvelope<
           | {
               status: 'completed';
               stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
@@ -233,7 +234,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 difficulty: string;
                 tags?: string[];
               };
-            };
+            }
+        >(await response.json());
 
         if (data.status === 'completed') {
           setCompletedStats({
@@ -278,12 +280,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to fetch challenge`);
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(getApiEnvelopeError(errData, `HTTP ${response.status}: Failed to fetch challenge`));
       }
 
-      const data = (await response.json()) as
+      const data = unwrapApiEnvelope<
         | { status: 'completed'; stats: unknown; challengeId?: string }
-        | { status: 'active'; challengeId: string; questions: unknown[] };
+        | { status: 'active'; challengeId: string; questions: unknown[] }
+      >(await response.json());
 
       if (data.status === 'completed') {
         setCompletedStats(data.stats as CompletedStats);
@@ -335,11 +339,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok || cancelled) {
-          if (!cancelled) setLeaderboardError('Failed to load leaderboard');
+          const errorPayload = await res.json().catch(() => ({}));
+          if (!cancelled) setLeaderboardError(getApiEnvelopeError(errorPayload, 'Failed to load leaderboard'));
           return;
         }
-        const json = (await res.json()) as { data?: { leaderboard?: unknown[] } };
-        const list = json?.data?.leaderboard ?? [];
+        const json = unwrapApiEnvelope<{ leaderboard?: unknown[] }>(await res.json());
+        const list = json?.leaderboard ?? [];
         if (!cancelled) setLeaderboard((Array.isArray(list) ? list : []) as LeaderboardEntry[]);
       } catch (lbErr) {
         console.warn('[GrandRounds] leaderboard fetch failed', lbErr);
@@ -423,14 +428,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             body: JSON.stringify({ answerIndex, timeSpentMs }),
           });
           if (!response.ok) {
-            const errData = (await response.json().catch(() => ({}))) as { error?: string };
-            throw new Error(errData?.error || 'Failed to submit targeted daily');
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(getApiEnvelopeError(errData, 'Failed to submit targeted daily'));
           }
 
-          const result = (await response.json()) as {
+          const result = unwrapApiEnvelope<{
             success: boolean;
             stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
-          };
+          }>(await response.json());
           if (!result.success) throw new Error('Submission failed');
 
           hapticSuccess();
@@ -466,11 +471,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         });
 
         if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errorData.error || 'Failed to submit challenge');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(getApiEnvelopeError(errorData, 'Failed to submit challenge'));
         }
 
-        const result = (await response.json()) as SubmissionResult;
+        const result = unwrapApiEnvelope<SubmissionResult>(await response.json());
 
         if (result.success) {
           hapticSuccess();
@@ -516,11 +521,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        setReviewError('Failed to load review');
+        const errorPayload = await res.json().catch(() => ({}));
+        setReviewError(getApiEnvelopeError(errorPayload, 'Failed to load review'));
         return;
       }
-      const json = (await res.json()) as { data?: { review?: unknown[] } };
-      const list = json?.data?.review ?? [];
+      const json = unwrapApiEnvelope<{ review?: unknown[] }>(await res.json());
+      const list = json?.review ?? [];
       setReviewData((Array.isArray(list) ? list : []) as ReviewEntry[]);
       setShowReview(true);
     } catch (reviewErr) {

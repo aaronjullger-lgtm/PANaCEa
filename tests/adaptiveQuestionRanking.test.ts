@@ -173,7 +173,7 @@ describe('adaptiveQuestionRanking', () => {
     });
 
     const allocation = allocateAdaptiveSystemCounts({
-      totalCount: 10,
+      totalCount: 9,
       systems: ['Cardiovascular', 'Pulmonary'],
       blueprintWeights: { Cardiovascular: 0.11, Pulmonary: 0.09 },
       snapshot,

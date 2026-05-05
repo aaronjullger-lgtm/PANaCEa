@@ -217,19 +217,19 @@ export async function ensureDueVariant(
       return;
     }
 
-    const correctAnswerStr = variant.correctAnswer ?? variant.options[0];
-    const correctAnswerIndex = variant.options.indexOf(correctAnswerStr ?? '');
+    const correctAnswerStr =
+      typeof variant.correctAnswer === 'string' ? variant.correctAnswer.trim() : '';
+    const correctAnswerIndex = variant.options.findIndex(
+      (option) => option.trim().toLowerCase() === correctAnswerStr.toLowerCase()
+    );
     if (correctAnswerIndex === -1) {
-      // correctAnswer returned by the variant generator is not present in the options array.
-      // This means the generator produced inconsistent output — log it but still store at index 0
-      // so the variant is usable. The question-flag mechanism can surface it for review.
-      log?.warn('Due variant: correctAnswer not found in generated options, defaulting to index 0', {
+      log?.warn('Due variant: correctAnswer not found in generated options — skipping write', {
         conditionId,
         correctAnswerStr,
         optionCount: variant.options.length,
       });
+      return;
     }
-    const finalIndex = Math.max(0, correctAnswerIndex);
 
     // Dedup: skip if the generated variant is near-identical to an existing sibling.
     // Uses semantic hash (djb2 on first 200 normalised chars) checked against the
@@ -264,7 +264,7 @@ export async function ensureDueVariant(
           question: variant.question,
           options: variant.options,
           correctAnswer: correctAnswerStr,
-          correctAnswerIndex: finalIndex,
+          correctAnswerIndex,
           rationale: variant.explanation ?? explanation,
         },
       },

@@ -1,6 +1,35 @@
 import type { Question } from '@/types';
+import { resolveCorrectAnswerIndex as resolveAnswerIndexFromValue } from '../answerLetterMap';
 
 const DERIVED_QUESTION_ID_PREFIX = 'localq_';
+
+export type QuestionSource = 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
+
+export interface QuestionIdentity {
+  canonicalQuestionId: string | null;
+  sourceQuestionId: string;
+  questionSource: QuestionSource;
+}
+
+export type LearningEventSessionType =
+  | 'main'
+  | 'drill'
+  | 'targeted'
+  | 'cram'
+  | 'rapid_recall'
+  | 'eor'
+  | 'panre';
+
+export type LearningEventProgressContext = 'READINESS' | 'TARGETED';
+
+export interface LearningEventContext {
+  userId: string;
+  sessionId: string | null;
+  planDate: string | null;
+  taskId: string | null;
+  sessionType: LearningEventSessionType;
+  progressContext: LearningEventProgressContext;
+}
 
 type StudyQuestionCondition =
   | string
@@ -15,12 +44,18 @@ type StudyQuestionCondition =
 export interface StudyQuestionLike {
   id?: string | null;
   questionId?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId?: string | null;
+  questionSource?: QuestionSource | string | null;
   question?: string | null;
   stem?: string | null;
   vignette?: string | null;
   options?: unknown;
   answers?: unknown;
-  correctAnswer?: string | null;
+  correctAnswer?: string | number | null;
+  answer?: string | number | null;
+  correct_option?: string | number | null;
+  correctChoice?: string | number | null;
   correctAnswerIndex?: number | null;
   correctIndex?: number | null;
   explanation?: string | null;
@@ -31,6 +66,7 @@ export interface StudyQuestionLike {
   system?: string | null;
   difficulty?: string | null;
   conditionId?: string | null;
+  medicalContentId?: string | null;
   condition?: StudyQuestionCondition;
   source?: string | null;
 }
@@ -90,26 +126,14 @@ export function resolveCorrectAnswerIndex(question: StudyQuestionLike): number {
     return numericIndex;
   }
 
-  const correctAnswer = typeof question.correctAnswer === 'string' ? question.correctAnswer.trim() : '';
-  if (!correctAnswer) return 0;
+  const rawAnswer =
+    question.correctAnswer ?? question.answer ?? question.correct_option ?? question.correctChoice ?? null;
+  const correctAnswer =
+    typeof rawAnswer === 'number' ? String(rawAnswer) : typeof rawAnswer === 'string' ? rawAnswer.trim() : '';
+  if (!correctAnswer) return -1;
 
-  const exactMatch = options.findIndex(
-    (option) => option.trim().toLowerCase() === correctAnswer.toLowerCase()
-  );
-  if (exactMatch >= 0) return exactMatch;
-
-  if (/^[A-E]$/i.test(correctAnswer)) {
-    const letterIndex = correctAnswer.toUpperCase().charCodeAt(0) - 65;
-    if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
-  }
-
-  if (/^\d+$/.test(correctAnswer)) {
-    const parsed = Number.parseInt(correctAnswer, 10);
-    if (parsed >= 0 && parsed < options.length) return parsed;
-    if (parsed > 0 && parsed - 1 < options.length) return parsed - 1;
-  }
-
-  return 0;
+  const resolved = resolveAnswerIndexFromValue(correctAnswer, options);
+  return resolved ?? -1;
 }
 
 function buildQuestionFingerprint(question: StudyQuestionLike): string {
@@ -145,6 +169,22 @@ export function getStableQuestionId(question: StudyQuestionLike): string {
 }
 
 export function getServerQuestionId(question: StudyQuestionLike): string | null {
+  if (
+    typeof question.canonicalQuestionId === 'string' &&
+    question.canonicalQuestionId.trim().length > 0
+  ) {
+    return question.canonicalQuestionId.trim();
+  }
+
+  if (
+    question.questionSource === 'pre_generated' ||
+    question.questionSource === 'staging' ||
+    question.questionSource === 'seed' ||
+    question.questionSource === 'generated'
+  ) {
+    return null;
+  }
+
   if (typeof question.questionId === 'string' && question.questionId.trim().length > 0) {
     return question.questionId.trim();
   }
@@ -156,13 +196,44 @@ export function getServerQuestionId(question: StudyQuestionLike): string | null 
   return null;
 }
 
+export function getQuestionIdentity(question: StudyQuestionLike): QuestionIdentity {
+  const sourceQuestionId =
+    typeof question.sourceQuestionId === 'string' && question.sourceQuestionId.trim().length > 0
+      ? question.sourceQuestionId.trim()
+      : getStableQuestionId(question);
+  const explicitSource = question.questionSource;
+  const questionSource: QuestionSource =
+    explicitSource === 'question' ||
+    explicitSource === 'pre_generated' ||
+    explicitSource === 'staging' ||
+    explicitSource === 'seed' ||
+    explicitSource === 'generated'
+      ? explicitSource
+      : isDerivedQuestionId(sourceQuestionId)
+        ? 'generated'
+        : 'question';
+  const explicitCanonicalId =
+    typeof question.canonicalQuestionId === 'string' && question.canonicalQuestionId.trim().length > 0
+      ? question.canonicalQuestionId.trim()
+      : null;
+
+  return {
+    canonicalQuestionId:
+      explicitCanonicalId ?? (questionSource === 'question' ? getServerQuestionId(question) : null),
+    sourceQuestionId,
+    questionSource,
+  };
+}
+
 export function normalizeStudyQuestion<T extends StudyQuestionLike>(question: T): Question & T {
   const prompt = getQuestionPrompt(question);
   const options = getQuestionOptions(question);
   const canonicalId = getServerQuestionId(question);
   const stableId = canonicalId ?? getStableQuestionId(question);
   const conditionName = resolveConditionName(question.condition) ?? String(question.topic ?? '').trim();
-  const conditionId = String(question.conditionId ?? resolveConditionId(question.condition) ?? '').trim();
+  const conditionId = String(
+    question.conditionId ?? question.medicalContentId ?? resolveConditionId(question.condition) ?? ''
+  ).trim();
   const system = (question.system ?? resolveConditionSystem(question.condition) ?? undefined) as Question['system'];
   const correctAnswerIndex = resolveCorrectAnswerIndex(question);
   const rationale =

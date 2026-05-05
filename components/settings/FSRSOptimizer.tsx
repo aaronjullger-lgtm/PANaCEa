@@ -33,7 +33,8 @@ export const FSRSOptimizer: React.FC = () => {
   // Load optimization status on mount
   React.useEffect(() => {
     if (userId) {
-      getOptimizationStatus(userId)
+      getToken()
+        .then((token) => getOptimizationStatus(userId, token))
         .then((status) => {
           if (status.isOptimized && status.lastOptimized) {
             setLastOptimized(new Date(status.lastOptimized));
@@ -43,7 +44,7 @@ export const FSRSOptimizer: React.FC = () => {
         })
         .catch(() => setError('Could not load optimization status.'));
     }
-  }, [userId]);
+  }, [userId, getToken]);
 
   const handleOptimize = async () => {
     if (!userId) return;
@@ -60,7 +61,7 @@ export const FSRSOptimizer: React.FC = () => {
       });
 
       // Run optimization with progress tracking
-      const optimizationResult = await optimizeFSRSParameters(userId, setProgress);
+      const optimizationResult = await optimizeFSRSParameters(userId, setProgress, token);
 
       // Save to database
       await saveOptimizedParameters(userId, optimizationResult.parameters);
@@ -107,7 +108,7 @@ export const FSRSOptimizer: React.FC = () => {
       {/* Optimize Button */}
       <button
         onClick={handleOptimize}
-        disabled={isOptimizing}
+        disabled={isOptimizing || !canOptimize}
         className="w-full flex items-center justify-center gap-2 px-4 py-3 
                  bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed
                  text-[var(--color-btn-primary-text)] font-medium rounded-lg transition-all
@@ -203,7 +204,7 @@ export const FSRSOptimizer: React.FC = () => {
         <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg space-y-2">
           <p className="text-xs text-[var(--color-accent)]">
             {canOptimize
-              ? 'Requires 500+ valid reviews for personalization. Optimization takes 10-30 seconds.'
+              ? 'Requires 1000+ real reviews for personalization. Optimization takes 10-30 seconds.'
               : `Need ${reviewsNeeded} more reviews for personalization.`}
           </p>
           <p className="text-xs text-[var(--color-text-secondary)]">

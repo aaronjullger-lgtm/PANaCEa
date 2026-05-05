@@ -12,6 +12,7 @@ import {
 import ChartContainer from '../shared/ChartContainer';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '../../lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '../../lib/utils/apiEnvelope';
 import { toast } from 'sonner';
 import FSRSInsightCard from './FSRSInsightCard';
 
@@ -48,9 +49,10 @@ async function fetchSrsSummary(token: string): Promise<SRSAnalyticsSummary> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
-    throw new Error(`SRS summary request failed: ${res.status}`);
+    const errorPayload = await res.json().catch(() => null);
+    throw new Error(getApiEnvelopeError(errorPayload, `SRS summary request failed: ${res.status}`));
   }
-  return res.json();
+  return unwrapApiEnvelope<SRSAnalyticsSummary>(await res.json());
 }
 
 const SrsDashboard = () => {

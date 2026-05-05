@@ -717,10 +717,14 @@ export class FSRS {
    * FSRS v6 formula: I = (S / factor) * (R^(1/decay) - 1)
    * where factor = w[19] and decay = -w[20] (from this.decayFactor).
    */
-  private next_interval(s: number): number {
+  public calculateIntervalFromStability(s: number): number {
     const { decay, factor } = this.decayFactor; // decay = -w[20], factor = w[19]
     const new_interval = (s / factor) * (Math.pow(this.p.request_retention, 1 / decay) - 1);
     return Math.min(Math.max(new_interval, 1), this.p.maximum_interval);
+  }
+
+  private next_interval(s: number): number {
+    return this.calculateIntervalFromStability(s);
   }
 
   /**

@@ -21,6 +21,7 @@ import { filterPrivateBetaModes } from '@/lib/modes/privateBetaVisibility';
 import { safeFetchJson } from '@/lib/utils/safeFetch';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { useFocusTrap } from '@/lib/utils/accessibilityUtils';
+import { ROUTES } from '@/config/routes';
 
 const MAX_RECENT = MAX_RECENT_MODES;
 
@@ -220,10 +221,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
       // Search medical content (server-side, database)
       try {
-        const apiResults = await fetchServerResults(debouncedQuery);
+        const apiResults = onNavigatePath ? await fetchServerResults(debouncedQuery) : [];
 
         apiResults.forEach((result) => {
           const category = result.type === 'condition' ? 'condition' : 'drug';
+          const tab = result.type === 'drug' ? 'pharmacopeia' : 'conditions';
+          const path = `${ROUTES.STUDY_KNOWLEDGE}?tab=${encodeURIComponent(tab)}&q=${encodeURIComponent(result.title)}&type=${encodeURIComponent(result.type)}&id=${encodeURIComponent(result.id)}`;
 
           searchResults.push({
             id: `${result.type}-${result.id}`,
@@ -231,8 +234,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             subtitle: result.snippet,
             category,
             action: () => {
-              // Navigate to condition/drug detail with structured ID
-              onNavigate(`${result.type}:${result.id}`);
+              onNavigatePath?.(path);
               onClose();
             },
           });

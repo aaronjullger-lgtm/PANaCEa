@@ -238,27 +238,6 @@ export interface AdminDashboardResponse {
 // ============================================================================
 
 /**
- * Todoist integration response
- */
-export interface TodoistIntegrationResponse {
-  connected: boolean;
-  projectId?: string;
-  lastSync?: string;
-  syncEnabled: boolean;
-  taskCount?: number;
-}
-
-/**
- * Todoist export request
- */
-export interface TodoistExportRequest {
-  includeStudyPlan: boolean;
-  includeMissedQuestions: boolean;
-  includeUpcomingReviews: boolean;
-  exportFormat: 'oauth' | 'csv';
-}
-
-/**
  * Export result response
  */
 export interface ExportResultResponse {

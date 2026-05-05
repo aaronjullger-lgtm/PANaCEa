@@ -62,6 +62,8 @@ export function QuestionGeneratorPage() {
   const [questionType, setQuestionType] = useState('vignette');
   const [count, setCount] = useState(1);
   const [previewIndex, setPreviewIndex] = useState(0);
+  const [savingQuestionIndex, setSavingQuestionIndex] = useState<number | null>(null);
+  const [savedQuestionIndexes, setSavedQuestionIndexes] = useState<Set<number>>(new Set());
 
   const fetchTaxonomies = useCallback(async () => {
     try {
@@ -77,7 +79,9 @@ export function QuestionGeneratorPage() {
         }
       }
     } catch (err) {
-      // ignore
+      setError(err instanceof Error ? err.message : 'Failed to load taxonomies');
+    } finally {
+      setLoading(false);
     }
   }, [getToken, selectedTaxonomy]);
 
@@ -141,6 +145,7 @@ export function QuestionGeneratorPage() {
       const result = await response.json();
       setGeneratedQuestions(result.data?.questions || []);
       setPreviewIndex(0);
+      setSavedQuestionIndexes(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -148,14 +153,56 @@ export function QuestionGeneratorPage() {
     }
   };
 
-  const handleSaveQuestion = async (question: GeneratedQuestion) => {
-    // TODO: integrate with Question/MedicalContent storage
-    toast.info('Question saving is not yet available. This feature is coming soon.');
+  const handleSaveQuestion = async (question: GeneratedQuestion, index: number) => {
+    setSavingQuestionIndex(index);
+    try {
+      const token = await getToken();
+      const metadata = {
+        ...(question.metadata ?? {}),
+        taxonomyCode: question.metadata?.taxonomyCode ?? selectedTaxonomy,
+        subcategory: (question.metadata?.subcategory ?? selectedSubcategory) || undefined,
+        source: question.metadata?.source ?? 'admin_question_generator',
+        savedByUserId: user?.id ?? undefined,
+      };
+      const response = await fetch('/api/questions/staging', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          questionData: {
+            ...question,
+            system: question.system || selectedTaxonomy,
+            subcategory: metadata.subcategory,
+            metadata,
+            tags: [
+              selectedTaxonomy,
+              metadata.subcategory,
+              metadata.conditionName,
+            ].filter(Boolean),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to save question to staging');
+      }
+
+      setSavedQuestionIndexes((prev) => new Set(prev).add(index));
+      toast.success('Question saved to staging for review.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save question');
+    } finally {
+      setSavingQuestionIndex(null);
+    }
   };
 
   const handleRegenerate = () => {
     setGeneratedQuestions([]);
     setError(null);
+    setSavedQuestionIndexes(new Set());
   };
 
   const getTaxonomyName = (code: string) => {
@@ -414,10 +461,16 @@ export function QuestionGeneratorPage() {
                       <h3 className="text-xl font-bold mt-2">Question</h3>
                     </div>
                     <button
-                      onClick={() => handleSaveQuestion(q)}
+                      onClick={() => handleSaveQuestion(q, idx)}
+                      disabled={savingQuestionIndex === idx || savedQuestionIndexes.has(idx)}
                       className="px-4 py-2 bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] rounded-lg flex items-center gap-2 hover:bg-[var(--color-data-pass)]"
                     >
-                      <Save className="w-4 h-4" /> Save as Draft
+                      {savingQuestionIndex === idx ? (
+                        <InlineSpinner size="sm" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {savedQuestionIndexes.has(idx) ? 'Saved' : 'Save as Draft'}
                     </button>
                   </div>
 
@@ -472,10 +525,11 @@ export function QuestionGeneratorPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <button
-                        onClick={() => handleSaveQuestion(q)}
+                        onClick={() => handleSaveQuestion(q, idx)}
+                        disabled={savingQuestionIndex === idx || savedQuestionIndexes.has(idx)}
                         className="text-[var(--color-accent)] hover:underline"
                       >
-                        Save
+                        {savedQuestionIndexes.has(idx) ? 'Saved' : 'Save'}
                       </button>
                       <button
                         onClick={() => toast.info('Edit functionality is coming soon.')}

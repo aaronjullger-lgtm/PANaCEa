@@ -86,6 +86,8 @@ const SyncSavedQuestionSchema = z.object({
 const PostSyncSchema = z.object({
   userId: z.string().min(1).max(100),
   performanceRecords: z.array(SyncPerformanceRecordSchema).max(1000).optional(),
+  // Deprecated compatibility input. Accepted so old clients do not fail schema
+  // validation, but ignored because SRSItem is no longer authoritative.
   srsItems: z.array(SyncSRSItemSchema).max(1000).optional(),
   savedQuestions: z.array(SyncSavedQuestionSchema).max(500).optional(),
   // Map of questionId:type -> deletion timestamp (ISO string)
@@ -174,19 +176,6 @@ function chunk<T>(array: T[], size: number): T[][] {
 }
 
 /**
- * Get timestamp from SRS item, preferring updatedAt then falling back to lastReviewed
- */
-function getSRSItemTimestamp(item: any): Date {
-  if (item.updatedAt && typeof item.updatedAt === 'string') {
-    return new Date(item.updatedAt);
-  }
-  if (item.lastReviewed && typeof item.lastReviewed === 'string') {
-    return new Date(item.lastReviewed);
-  }
-  return new Date();
-}
-
-/**
  * Get timestamp from saved question
  */
 function getSavedQuestionTimestamp(item: any): Date {
@@ -197,69 +186,6 @@ function getSavedQuestionTimestamp(item: any): Date {
     return new Date(item.createdAt);
   }
   return new Date();
-}
-
-/**
- * 3-way merge for SRS items using timestamp-based conflict resolution
- * Returns items to keep (respecting local deletions and preferring newer versions)
- */
-function mergeSRSItems(
-  localItems: any[],
-  cloudItems: any[],
-  localDeletions: Record<string, string> = {}
-): { toKeep: any[]; toDelete: string[] } {
-  const toDelete: string[] = [];
-  const toKeep: any[] = [];
-  const cloudMap = new Map(cloudItems.map(item => [item.questionId, item]));
-  const localMap = new Map(localItems.map(item => [item.questionId, item]));
-
-  // Process all local items
-  for (const localItem of localItems) {
-    const key = localItem.questionId;
-    const cloudItem = cloudMap.get(key);
-    const deletionTime = localDeletions[key];
-
-    if (!cloudItem) {
-      // Local only - keep it
-      toKeep.push(localItem);
-    } else {
-      // Both exist - compare timestamps
-      const localTime = getSRSItemTimestamp(localItem);
-      const cloudTime = getSRSItemTimestamp(cloudItem);
-
-      if (localTime >= cloudTime) {
-        // Local is newer or equal - keep local
-        toKeep.push(localItem);
-      } else {
-        // Cloud is newer - keep cloud
-        toKeep.push(cloudItem);
-      }
-    }
-  }
-
-  // Process cloud items not in local
-  for (const cloudItem of cloudItems) {
-    const key = cloudItem.questionId;
-    if (!localMap.has(key)) {
-      const deletionTime = localDeletions[key];
-      if (deletionTime) {
-        // Item was deleted locally
-        const deletionDate = new Date(deletionTime);
-        const cloudTime = getSRSItemTimestamp(cloudItem);
-
-        if (cloudTime > deletionDate) {
-          // Cloud version is newer than deletion - restore it
-          toKeep.push(cloudItem);
-        }
-        // Otherwise, respect the deletion (don't keep it)
-      } else {
-        // Cloud only and not deleted - keep it
-        toKeep.push(cloudItem);
-      }
-    }
-  }
-
-  return { toKeep, toDelete };
 }
 
 /**
@@ -364,7 +290,7 @@ export const onRequestGet = authenticatedEndpoint(
       const internalUserId = await resolveOrCreateUserId(prisma, context.auth.userId);
 
       // Fetch all user data in parallel (bounded + column-limited for performance)
-      const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      const [performanceRecords, savedQuestions] = await Promise.all([
         prisma.performanceRecord.findMany({
           where: { userId: internalUserId },
           select: {
@@ -376,10 +302,6 @@ export const onRequestGet = authenticatedEndpoint(
           take: 2000,
           orderBy: { timestamp: 'desc' },
         }),
-        prisma.sRSItem.findMany({
-          where: { userId: internalUserId },
-          take: 2000,
-        }),
         prisma.savedQuestion.findMany({
           where: { userId: internalUserId },
           take: 500,
@@ -388,7 +310,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       log.info('Sync data retrieved', {
         performanceRecords: performanceRecords.length,
-        srsItems: srsItems.length,
+        srsItems: 0,
         savedQuestions: savedQuestions.length,
       });
 
@@ -401,7 +323,7 @@ export const onRequestGet = authenticatedEndpoint(
             ...r,
             timestamp: Number(r.timestamp),
           })),
-          srsItems,
+          srsItems: [],
           savedQuestions,
         },
       };
@@ -490,83 +412,14 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       }
     }
 
-    // 2. SRSItems - 3-way merge using timestamp-based conflict resolution
-    // Preserves in-flight changes and respects local deletions
     if (payload.srsItems?.length) {
-      const questionIds = payload.srsItems.map((item) => item.questionId);
-
-      // Fetch existing cloud items for these question IDs
-      const cloudItems = await withRetry(
-        () =>
-          prisma!.sRSItem.findMany({
-            where: {
-              userId: internalUserId,
-              questionId: { in: questionIds },
-            },
-          }),
-        'srsItems fetchExisting',
-        log
-      );
-
-      // 3-way merge: local, cloud, and deletion tracking
-      const { toKeep } = mergeSRSItems(payload.srsItems, cloudItems, payload.localDeletions);
-
-      // FIX (Audit 8/F4): Wrap delete+insert in a $transaction to prevent data loss.
-      // Previously, deleteMany and createMany were separate operations — if createMany
-      // failed after deleteMany succeeded (Accelerate timeout, connection drop, Edge CPU
-      // limit), the user's entire SRS deck for these question IDs was permanently deleted.
-      // Now both ops are atomic: either both succeed or both roll back.
-      const now = new Date();
-      const itemsToInsert = toKeep.map((item) => ({
-        id: crypto.randomUUID(),
-        userId: internalUserId,
-        questionId: item.questionId,
-        interval: item.interval,
-        repetition: item.repetition,
-        easiness: item.easiness,
-        dueDate: new Date(item.dueDate),
-        lastReviewed: new Date(item.lastReviewed),
-        quality: item.quality,
-        difficulty:
-          item.difficulty !== undefined && item.difficulty !== null
-            ? Number.parseFloat(String(item.difficulty))
-            : 0,
-        stabilityScore: item.stabilityScore ?? 0,
-        createdAt: now,
-        updatedAt: now,
-      }));
-
-      const batches = chunk(itemsToInsert, BATCH_SIZE);
-      await withRetry(
-        () =>
-          prisma!.$transaction(async (tx) => {
-            // Delete existing SRS items for these question IDs
-            await tx.sRSItem.deleteMany({
-              where: {
-                userId: internalUserId,
-                questionId: { in: questionIds },
-              },
-            });
-            // Re-insert merged items in batches within the same transaction
-            for (const batch of batches) {
-              await tx.sRSItem.createMany({
-                data: batch,
-                skipDuplicates: true,
-              });
-            }
-          }),
-        'srsItems delete+insert (atomic)',
-        log
-      );
-
-      log.info('SRSItems merged', {
-        cloudItems: cloudItems.length,
+      log.warn('Deprecated SRSItems ignored during sync', {
         localItems: payload.srsItems.length,
-        keptItems: toKeep.length,
+        canonicalPath: '/api/srs/submit',
       });
     }
 
-    // 3. SavedQuestions - 3-way merge with timestamp-based conflict resolution
+    // 2. SavedQuestions - 3-way merge with timestamp-based conflict resolution
     if (payload.savedQuestions?.length) {
       // Build question IDs to fetch from cloud
       const questionIds = payload.savedQuestions
@@ -669,13 +522,10 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     }
 
     // Fetch updated data with retry
-    const [performanceRecords, srsItems, savedQuestions] = await withRetry(
+    const [performanceRecords, savedQuestions] = await withRetry(
       () =>
         Promise.all([
           prisma!.performanceRecord.findMany({
-            where: { userId: internalUserId },
-          }),
-          prisma!.sRSItem.findMany({
             where: { userId: internalUserId },
           }),
           prisma!.savedQuestion.findMany({
@@ -688,7 +538,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
     log.info('Sync completed', {
       performanceRecords: performanceRecords.length,
-      srsItems: srsItems.length,
+      srsItems: 0,
       savedQuestions: savedQuestions.length,
     });
 
@@ -702,7 +552,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
             ...r,
             timestamp: Number(r.timestamp),
           })),
-          srsItems,
+          srsItems: [],
           savedQuestions,
         },
       },

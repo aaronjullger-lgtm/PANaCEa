@@ -1,15 +1,16 @@
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../_shared/middleware';
+import { handleCorsPreflightSecure } from '../_shared/cors';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { attachLogMeta, getRequestId } from '../_shared/requestLogger';
 import { createSpan } from '../_shared/structuredLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { createPipelineTracer } from '../../../lib/observability/pipelineTracer';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
-import { scheduleConceptReview } from '../ai/learning/profile-crud';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { getRelativeDrillPerformance } from '../../../lib/services/drillAnalyticsService';
+import { markConsumed } from '../../../lib/services/reservoir';
 import { setInCache, isKVAvailable } from '../_shared/cache';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import {
@@ -45,6 +46,13 @@ export function buildBatchIdemKey(clerkId: string, idempotencyKey: string): stri
 
 export { IDEM_TTL_SECONDS };
 
+export function getTelemetryUrgencyMultiplier(telemetry: unknown): number | undefined {
+  if (!telemetry || typeof telemetry !== 'object') return undefined;
+  const value = (telemetry as { urgency_multiplier?: unknown }).urgency_multiplier;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  return Math.min(2, Math.max(0.5, value));
+}
+
 // Request schema — single source of truth lives in the shared library.
 // To change the /api/drills/submit-review contract, edit lib/api/schemas/drills.ts.
 import { DrillSubmitReviewRequestSchema } from '../../../lib/api/schemas/drills';
@@ -54,6 +62,8 @@ export const DrillSubmitReviewSchema = DrillSubmitReviewRequestSchema;
 // Browser OPTIONS requests never include Authorization headers,
 // so wrapping in authenticatedEndpoint silently broke all cross-origin
 // drill submissions (staging, preview deploys, etc.).
+export const onRequestOptions = async (context: any) =>
+  handleCorsPreflightSecure(context.request, context.env);
 
 export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, async (context) => {
   const { env, auth, validated } = context;
@@ -67,6 +77,10 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
     const {
       questionId,
+      canonicalQuestionId,
+      sourceQuestionId,
+      questionSource,
+      medicalContentId,
       selectedAnswer,
       timeSpentMs,
       timeToFirstClick,
@@ -138,6 +152,9 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
     const { question } = await resolveReviewQuestion(prisma, {
       userId: user.id,
       questionId,
+      canonicalQuestionId,
+      sourceQuestionId,
+      questionSource,
       selectedAnswer: normalizedSelectedAnswer,
     });
 
@@ -152,6 +169,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       eorTestDate: user.eorTestDate?.toISOString() ?? null,
       rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
     });
+    const urgencyMultiplier = getTelemetryUrgencyMultiplier(telemetry);
 
     // Enrich tracer context with internal userId and session_id from telemetry.
     // session_id groups multiple submissions in one study session — lets you filter logs
@@ -172,6 +190,10 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       user.id,
       {
         questionId,
+        canonicalQuestionId,
+        sourceQuestionId,
+        questionSource,
+        medicalContentId,
         selectedAnswer,
         timeSpentMs,
         timeToFirstClick,
@@ -186,13 +208,25 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       question,
       { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
       eorRotationEnd,
-      undefined // urgencyMultiplier
+      urgencyMultiplier
     );
     const { durationMs: pipelineMs } = pipelineSpan.end({
       userId: user.id,
       questionId,
       sessionType: sessionType ?? 'drill',
     });
+
+    if (typeof telemetry?.session_id === 'string' && telemetry.session_id.length > 0) {
+      try {
+        await markConsumed(prisma, telemetry.session_id, [questionId]);
+      } catch (consumeError) {
+        logger.warn('Reservoir consume failed (non-fatal)', {
+          questionId,
+          sessionId: telemetry.session_id,
+          error: consumeError instanceof Error ? consumeError.message : String(consumeError),
+        });
+      }
+    }
 
     // Attach the full pipeline trace summary for structured log indexing
     const traceSummary = tracer.getSummary();
@@ -213,16 +247,10 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       traceTotalMs: traceSummary.totalDurationMs,
     });
 
-    // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
+    // Canonical review scheduling is owned by submitDrillReview/drillReviewService.
+    // Keep this endpoint free of legacy concept-scheduler side effects so one
+    // submitted answer cannot write competing review schedules.
     if (typeof result.isCorrect === 'boolean') {
-      try {
-        const conceptKey = `${question.system || 'General'}|${question.conditionId || questionId}`;
-        await scheduleConceptReview(prisma, user.id, conceptKey, result.isCorrect);
-      } catch (error_) {
-        logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
-          error: error_ instanceof Error ? error_.message : String(error_),
-        });
-      }
       // When incorrect: ensure a due variant exists (sibling or generate+store) so Due session never waits
       if (result.isCorrect === false) {
         ensureDueVariant(

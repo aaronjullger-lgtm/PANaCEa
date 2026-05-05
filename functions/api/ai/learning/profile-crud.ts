@@ -322,6 +322,11 @@ export async function generateTutorContext(
  * Schedule a concept review. Fail → +1 day, Pass → +3 days.
  * Uses StudyRecommendation as the "StudyQueue" for review items.
  * Deduplicates: at most one pending review per concept per day.
+ *
+ * @deprecated Do not call this from answer submission or FSRS review paths.
+ * Canonical review scheduling is owned by drillReviewService. This legacy
+ * helper remains only for old intelligence-recommendation surfaces until those
+ * recommendations are migrated or deleted.
  */
 export async function scheduleConceptReview(
   prisma: EdgePrismaClient,

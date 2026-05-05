@@ -53,7 +53,7 @@ interface FSRSDecayVisualizationProps {
  * actually grading the student. Now delegates to the shared `fsrsRetrievability`
  * helper that sources FACTOR/DECAY from lib/fsrs.ts defaultParameters
  * (ts-fsrs v6 defaults: w[19]=0.1597, w[20]=2.2700), matching retention.ts,
- * RetentionForecastCard, and the actual scheduler.
+ * retention stats endpoint, dashboard visuals, and the actual scheduler.
  *
  * Argument order preserved for minimal diff at call sites.
  */

@@ -24,28 +24,36 @@
 
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
+import type { Question as QuizQuestion, PerformanceRecord, ErrorTag, SessionSettings } from '@/types';
 import { DEFAULT_SESSION_SIZE } from '@/lib/constants/sessionDefaults';
 import { SessionScopeSelector } from '@/components/session/SessionScopeSelector';
 import { DrillLoadingState } from '@/components/loading';
 import { createApiClient } from '@/lib/sdk';
+import { syncManager } from '@/lib/services/sync/syncManager';
 
 const QuizView = lazy(() => import('@/components/session/QuizView'));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface CoreAdaptiveSessionProps {
+export interface CoreAdaptiveSessionScope {
+  mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
+  size: number;
+  system?: string;
+  systems?: string[];
+  subcategory?: string;
+  conditionId?: string;
+  conditionName?: string;
+}
+
+export interface CoreAdaptiveSessionProps {
   onExit: () => void;
-  initialScope?: {
-    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
-    size: number;
-    system?: string;
-    systems?: string[];
-    subcategory?: string;
-    conditionId?: string;
-  } | null;
+  initialScope?: CoreAdaptiveSessionScope | null;
+  initialSessionSettings?: SessionSettings | null;
+  initialSelectorMode?: CoreAdaptiveSessionScope['mode'];
+  lockSelectorMode?: boolean;
   studyPlanTaskId?: string | null;
   studyPlanSource?: string | null;
+  studyPlanDate?: string | null;
   // Shared quiz props passed from DrillViewRouter
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: QuizQuestion) => void;
@@ -70,6 +78,100 @@ interface BlueprintState {
   urgencyMultiplier: number;
   isLoaded: boolean;
   error: string | null;
+}
+
+export function buildCoreAdaptiveSessionSettings({
+  blueprint,
+  sessionScope,
+  studyPlanSource,
+  studyPlanTaskId,
+  studyPlanDate,
+  launchSettings,
+}: {
+  blueprint: Pick<BlueprintState, 'weights' | 'gatedSystems' | 'label' | 'examTypes' | 'stage' | 'urgencyMultiplier'>;
+  sessionScope: CoreAdaptiveSessionScope | null;
+  studyPlanSource?: string | null;
+  studyPlanTaskId?: string | null;
+  studyPlanDate?: string | null;
+  launchSettings?: SessionSettings | null;
+}): SessionSettings {
+  const blueprintSystems = Object.keys(blueprint.weights).filter(
+    s => !blueprint.gatedSystems.includes(s)
+  );
+  const scopedSystems =
+    sessionScope?.systems && sessionScope.systems.length > 0
+      ? sessionScope.systems
+      : sessionScope?.system
+        ? [sessionScope.system]
+        : blueprintSystems;
+  const hasFocusedScope =
+    sessionScope?.mode === 'system' ||
+    sessionScope?.mode === 'subcategory' ||
+    sessionScope?.mode === 'condition';
+
+  const isDedicatedFocusedMode = studyPlanSource === 'mode-library' && hasFocusedScope;
+  const isStudyPlanConditionTarget = sessionScope?.mode === 'condition' && studyPlanSource === 'study-plan';
+
+  const baseSettings: SessionSettings = {
+    mode: isDedicatedFocusedMode || isStudyPlanConditionTarget ? ('targeted' as const) : ('standard' as const),
+    focus: hasFocusedScope ? ('topic' as const) : ('all' as const),
+    topic: sessionScope?.conditionName ?? sessionScope?.conditionId ?? sessionScope?.subcategory ?? sessionScope?.system,
+    systems: scopedSystems,
+    difficulty: 'adaptive' as const,
+    count: sessionScope?.size ?? DEFAULT_SESSION_SIZE,
+    conditionId: sessionScope?.conditionId,
+    conditionName: sessionScope?.conditionName,
+    subcategoryName: sessionScope?.subcategory,
+    blueprintLabel: blueprint.label,
+    examTypes: blueprint.examTypes,
+    stage: blueprint.stage,
+    interleaveMode: scopedSystems.length > 1 ? ('interleaved' as const) : ('focused' as const),
+    studyPlanTaskId: studyPlanSource === 'study-plan' ? studyPlanTaskId ?? undefined : undefined,
+    studyPlanDate: studyPlanSource === 'study-plan' ? studyPlanDate ?? undefined : undefined,
+    studyPlanSource: studyPlanSource === 'study-plan' ? studyPlanSource : undefined,
+    urgencyMultiplier: blueprint.urgencyMultiplier,
+  };
+
+  if (!launchSettings) return baseSettings;
+
+  const count = launchSettings.count ?? launchSettings.questionCount ?? baseSettings.count;
+  return {
+    ...baseSettings,
+    ...launchSettings,
+    count,
+    questionCount: launchSettings.questionCount ?? count,
+    systems: launchSettings.systems?.length ? launchSettings.systems : baseSettings.systems,
+    conditionId: launchSettings.conditionId ?? baseSettings.conditionId,
+    conditionName: launchSettings.conditionName ?? baseSettings.conditionName,
+    subcategoryName: launchSettings.subcategoryName ?? baseSettings.subcategoryName,
+    topic: launchSettings.topic ?? baseSettings.topic,
+    blueprintLabel: baseSettings.blueprintLabel,
+    examTypes: baseSettings.examTypes,
+    stage: baseSettings.stage,
+    studyPlanTaskId: baseSettings.studyPlanTaskId,
+    studyPlanDate: baseSettings.studyPlanDate,
+    studyPlanSource: baseSettings.studyPlanSource,
+    urgencyMultiplier: baseSettings.urgencyMultiplier,
+  };
+}
+
+export async function flushQueuedReviewsForSessionSummary({
+  getToken,
+  syncAll = (token?: string | null) => syncManager.syncAll(token),
+  logger = console,
+}: {
+  getToken: () => Promise<string | null>;
+  syncAll?: (token?: string | null) => Promise<unknown>;
+  logger?: Pick<Console, 'warn'>;
+}): Promise<boolean> {
+  try {
+    const token = await getToken();
+    await syncAll(token);
+    return true;
+  } catch (error) {
+    logger.warn('[CoreAdaptiveSession] Pending review sync did not finish before summary', error);
+    return false;
+  }
 }
 
 interface DistributionState {
@@ -124,9 +226,46 @@ interface SessionSummaryResponse {
   blueprintLabel?: string | null;
   correctAnswers?: number;
   totalQuestions?: number;
+  plannedQuestions?: number;
+  persistedAnswers?: number;
+  reviewSyncComplete?: boolean;
   sessionBreakdown?: Record<string, SessionBreakdownEntry>;
   recommendations?: string[];
   rollingHealth?: SessionRollingHealth | null;
+}
+
+export function buildStudyPlanCompletionPayloadFromSummary({
+  summary,
+  reviewSyncFlushed,
+  planDate,
+  taskId,
+  sessionId,
+}: {
+  summary: Pick<SessionSummaryResponse, 'persistedAnswers' | 'totalQuestions' | 'correctAnswers'>;
+  reviewSyncFlushed: boolean;
+  planDate: string;
+  taskId: string;
+  sessionId: string;
+}) {
+  const questionsAnswered =
+    typeof summary.persistedAnswers === 'number'
+      ? summary.persistedAnswers
+      : summary.totalQuestions ?? 0;
+
+  if (questionsAnswered <= 0 || !reviewSyncFlushed) {
+    return null;
+  }
+
+  return {
+    action: 'complete' as const,
+    planDate,
+    taskId,
+    actualQuestionsAnswered: questionsAnswered,
+    actualAccuracy:
+      questionsAnswered > 0 ? (summary.correctAnswers ?? 0) / questionsAnswered : undefined,
+    actualDurationMinutes: Math.max(1, Math.round((questionsAnswered * 90) / 60)),
+    linkedSessionId: sessionId,
+  };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -134,8 +273,12 @@ interface SessionSummaryResponse {
 const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   onExit,
   initialScope = null,
+  initialSessionSettings = null,
+  initialSelectorMode,
+  lockSelectorMode = false,
   studyPlanTaskId = null,
   studyPlanSource = null,
+  studyPlanDate = null,
   addPerformanceRecord,
   addMissedQuestion,
   updateReviewQuestion,
@@ -175,14 +318,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
 
   // Session scope state (set by SessionScopeSelector)
   const [showScopeSelector, setShowScopeSelector] = useState(() => !initialScope);
-  const [sessionScope, setSessionScope] = useState<{
-    mode: 'adaptive' | 'system' | 'subcategory' | 'condition';
-    size: number;
-    system?: string;
-    systems?: string[];
-    subcategory?: string;
-    conditionId?: string;
-  } | null>(initialScope);
+  const [sessionScope, setSessionScope] = useState<CoreAdaptiveSessionScope | null>(initialScope);
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -298,8 +434,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   // ── Session end: fetch summary, then exit ──
   const [sessionSummary, setSessionSummary] = useState<SessionSummaryResponse | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [planSyncWarning, setPlanSyncWarning] = useState<string | null>(null);
 
   const handleSessionEnd = useCallback(async () => {
+    setPlanSyncWarning(null);
     if (!sessionId) {
       onExit();
       return;
@@ -310,6 +448,10 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       if (!token) { onExit(); return; }
 
       const api = createApiClient(getToken);
+      const reviewSyncFlushed = await flushQueuedReviewsForSessionSummary({ getToken });
+      if (!reviewSyncFlushed) {
+        setPlanSyncWarning('Session saved. Some answers may finish syncing shortly.');
+      }
       const summaryResult = await api.postResult<SessionSummaryResponse>(
         '/api/study/session-summary',
         { sessionId },
@@ -318,16 +460,44 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
       if (summaryResult.ok) {
         const summary = summaryResult.data;
         if (studyPlanTaskId && studyPlanSource === 'study-plan') {
-          void api.postResult('/api/users/me/daily-plan', {
-            action: 'complete',
+          const planDate = studyPlanDate ?? new Date().toISOString().slice(0, 10);
+          const completionPayload = buildStudyPlanCompletionPayloadFromSummary({
+            summary,
+            reviewSyncFlushed,
+            planDate,
             taskId: studyPlanTaskId,
-            questionsAnswered: summary.totalQuestions ?? questions.length,
-            accuracy:
-              summary.totalQuestions && summary.totalQuestions > 0
-                ? (summary.correctAnswers ?? 0) / summary.totalQuestions
-                : undefined,
-            durationMinutes: Math.max(1, Math.round(((summary.totalQuestions ?? questions.length) * 90) / 60)),
+            sessionId,
           });
+
+          if (!completionPayload) {
+            setPlanSyncWarning("Session saved. Today's plan will update after answer sync finishes.");
+          } else {
+            try {
+              const progressResult = await api.postResult('/api/study-plan/progress', {
+                ...completionPayload,
+              });
+
+              if (!progressResult.ok) {
+                const compatibilityResult = await api.postResult('/api/users/me/daily-plan', {
+                  action: 'complete',
+                  planDate: completionPayload.planDate,
+                  taskId: completionPayload.taskId,
+                  questionsAnswered: completionPayload.actualQuestionsAnswered,
+                  accuracy: completionPayload.actualAccuracy,
+                  durationMinutes: completionPayload.actualDurationMinutes,
+                  linkedSessionId: completionPayload.linkedSessionId,
+                });
+
+                if (!compatibilityResult.ok) {
+                  console.warn('[CoreAdaptiveSession] Failed to mark study-plan task complete');
+                  setPlanSyncWarning("Session saved. Today's plan may take a moment to reflect completion.");
+                }
+              }
+            } catch (progressError) {
+              console.warn('[CoreAdaptiveSession] Failed to mark study-plan task complete', progressError);
+              setPlanSyncWarning("Session saved. Today's plan may take a moment to reflect completion.");
+            }
+          }
         }
         setSessionSummary(summary);
         setShowSummary(true);
@@ -338,7 +508,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
     }
 
     onExit(); // Fallback: exit if summary fails
-  }, [sessionId, getToken, onExit, studyPlanTaskId, studyPlanSource, questions.length]);
+  }, [sessionId, getToken, onExit, studyPlanDate, studyPlanTaskId, studyPlanSource, questions.length]);
 
   // ── Distribution health helpers ──
   const distributionBadge = useMemo(() => {
@@ -359,18 +529,16 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   }, [blueprint.urgencyMultiplier]);
 
   // ── Session settings for QuizView ──
-  const sessionSettings = useMemo(() => ({
-    mode: 'standard' as const,
-    focus: 'due' as const,
-    systems: Object.keys(blueprint.weights).filter(
-      s => !blueprint.gatedSystems.includes(s)
-    ),
-    difficulty: 'adaptive' as const,
-    count: sessionScope?.size ?? DEFAULT_SESSION_SIZE,
-    blueprintLabel: blueprint.label,
-    examTypes: blueprint.examTypes,
-    stage: blueprint.stage,
-  }), [blueprint, sessionScope?.size]);
+  const sessionSettings = useMemo(() => {
+    return buildCoreAdaptiveSessionSettings({
+      blueprint,
+      sessionScope,
+      studyPlanSource,
+      studyPlanTaskId,
+      studyPlanDate,
+      launchSettings: initialSessionSettings,
+    });
+  }, [blueprint, sessionScope, studyPlanDate, studyPlanSource, studyPlanTaskId, initialSessionSettings]);
 
   // ── Render ──
 
@@ -378,6 +546,8 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
   if (showScopeSelector && !sessionScope) {
     return (
       <SessionScopeSelector
+        initialMode={initialSelectorMode}
+        lockMode={lockSelectorMode}
         onStart={(config) => {
           setSessionScope(config);
           setShowScopeSelector(false);
@@ -474,6 +644,12 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             </div>
             <div className="text-sm text-[var(--color-text-muted)]">correct</div>
           </div>
+
+          {planSyncWarning && (
+            <div className="mb-4 rounded-lg border border-[var(--color-data-provisional)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">
+              {planSyncWarning}
+            </div>
+          )}
 
           {/* System breakdown */}
           {Object.keys(breakdown).length > 0 && (
@@ -599,6 +775,7 @@ const CoreAdaptiveSession: React.FC<CoreAdaptiveSessionProps> = ({
             onShowMenu={onExit}
             modeLabel={blueprint.label}
             sessionId={sessionId}
+            queueStrategy="finite"
             addPerformanceRecord={addPerformanceRecord}
             addMissedQuestion={addMissedQuestion}
             updateReviewQuestion={updateReviewQuestion}

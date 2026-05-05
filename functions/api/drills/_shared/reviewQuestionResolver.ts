@@ -1,4 +1,8 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../../lib/services/questionServingSafety';
 
 type ReviewQuestion = {
   id: string;
@@ -8,6 +12,9 @@ type ReviewQuestion = {
   system?: string | null;
   difficulty?: string | null;
   questionType?: string | null;
+  canonicalQuestionId?: string | null;
+  sourceQuestionId: string;
+  questionSource: 'question' | 'pre_generated' | 'generated';
 };
 
 type ResolveReviewQuestionResult = {
@@ -34,30 +41,54 @@ export async function resolveReviewQuestion(
   params: {
     userId: string;
     questionId: string;
+    canonicalQuestionId?: string | null;
+    sourceQuestionId?: string | null;
+    questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated' | string | null;
     selectedAnswer: string;
   }
 ): Promise<ResolveReviewQuestionResult> {
   const { userId, questionId, selectedAnswer } = params;
+  const sourceQuestionId =
+    typeof params.sourceQuestionId === 'string' && params.sourceQuestionId.trim()
+      ? params.sourceQuestionId.trim()
+      : questionId;
+  const canonicalQuestionId =
+    typeof params.canonicalQuestionId === 'string' && params.canonicalQuestionId.trim()
+      ? params.canonicalQuestionId.trim()
+      : params.questionSource === 'question'
+        ? questionId
+        : null;
+  const preferCanonicalQuestion = params.questionSource === 'question' && canonicalQuestionId;
 
-  const preGenerated = await prisma.preGeneratedQuestion.findUnique({
-    where: { id: questionId },
-    select: {
-      id: true,
-      questionData: true,
-      conditionId: true,
-      medicalContentId: true,
-      system: true,
-      difficulty: true,
-      questionType: true,
-    },
-  } as Prisma.PreGeneratedQuestionFindUniqueArgs);
+  const preGenerated = preferCanonicalQuestion
+    ? null
+    : await prisma.preGeneratedQuestion.findFirst({
+        where: withProductionPregeneratedSafety({ id: sourceQuestionId }),
+        select: {
+          id: true,
+          questionData: true,
+          conditionId: true,
+          medicalContentId: true,
+          system: true,
+          difficulty: true,
+          questionType: true,
+        },
+      } as Prisma.PreGeneratedQuestionFindFirstArgs);
 
   if (preGenerated) {
-    return { question: preGenerated, source: 'pre_generated' };
+    return {
+      question: {
+        ...preGenerated,
+        canonicalQuestionId: null,
+        sourceQuestionId: preGenerated.id,
+        questionSource: 'pre_generated',
+      },
+      source: 'pre_generated',
+    };
   }
 
-  const mainQuestion = await prisma.question.findUnique({
-    where: { id: questionId },
+  const mainQuestion = await prisma.question.findFirst({
+    where: withProductionQuestionSafety({ id: canonicalQuestionId ?? questionId }),
     select: {
       id: true,
       vignette: true,
@@ -71,7 +102,7 @@ export async function resolveReviewQuestion(
       difficulty: true,
       taskType: true,
     },
-  } as Prisma.QuestionFindUniqueArgs);
+  } as Prisma.QuestionFindFirstArgs);
 
   if (mainQuestion) {
     return {
@@ -82,6 +113,9 @@ export async function resolveReviewQuestion(
         system: mainQuestion.system,
         difficulty: mainQuestion.difficulty,
         questionType: mainQuestion.taskType ?? 'mcq',
+        canonicalQuestionId: mainQuestion.id,
+        sourceQuestionId: mainQuestion.id,
+        questionSource: 'question',
         questionData: {
           vignette: mainQuestion.vignette,
           question: mainQuestion.question,
@@ -95,7 +129,7 @@ export async function resolveReviewQuestion(
   }
 
   const recentAttempt = await prisma.questionAttempt.findFirst({
-    where: { userId, questionId },
+    where: { userId, questionId: sourceQuestionId },
     orderBy: { createdAt: 'desc' },
     select: {
       wasCorrect: true,
@@ -119,6 +153,9 @@ export async function resolveReviewQuestion(
         system: recentAttempt.system,
         difficulty: null,
         questionType: 'mcq',
+        canonicalQuestionId: null,
+        sourceQuestionId,
+        questionSource: 'generated',
         questionData: {
           question: '',
           options: [incorrectOption, PLACEHOLDER_CORRECT_ANSWER],

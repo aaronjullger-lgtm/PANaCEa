@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import { FSRS, Rating } from '../lib/fsrs';
-import { submitDrillReview } from '../lib/services/drillReviewService';
+import {
+  isSelectedAnswerCorrect,
+  resolveCorrectAnswer,
+  submitDrillReview,
+} from '../lib/services/drillReviewService';
 import type { SubmitDrillReviewInput } from '../lib/services/drillReviewService';
 import { buildCircadianContext } from '../lib/circadian';
 import { deriveContinuousRating } from '../lib/implicit-metrics';
@@ -9,19 +13,26 @@ import { applyHonestRating, applyHonestRatingWithDetail } from '../lib/srs/ghost
 import { propagateRecallToSiblings } from '../lib/services/semanticSiblingService';
 import { updateUserProgressWithHistory } from '../lib/services/userProgressService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from '../lib/services/userStatisticsService';
-import { updateReviewOutcome } from '../lib/services/srsService';
+import { applyDailyStudyPlanAction } from '../lib/services/studyPlanService';
+import { normalizeDashboardSignals } from '../components/dashboard/adaptive/engine/normalizeSignals';
+import type { DashboardAnalyticsModel } from '../lib/dashboard/realStudyAnalytics';
+import type { TodayPlanData } from '../hooks/useTodayPlan';
+import type { PerformanceRecord } from '../types';
 
 // Mock all external dependencies
 vi.mock('@prisma/client', () => ({
-  ProgressContext: { READINESS: 'READINESS', PANCE_PREP: 'PANCE_PREP', CLINICAL_ROTATION: 'CLINICAL_ROTATION' },
+  Prisma: { JsonNull: null },
+  ProgressContext: { READINESS: 'READINESS', TARGETED: 'TARGETED' },
   PrismaClient: vi.fn(function() {
     const self: any = {
-      questionAttempt: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
+      questionAttempt: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
       reviewLog: { create: vi.fn(), findMany: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
       confusionPair: { upsert: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
       preGeneratedQuestion: { update: vi.fn() },
+      studySessionQuestion: { updateMany: vi.fn() },
+      dailyStudyPlan: { findUnique: vi.fn(), update: vi.fn() },
       card: { upsert: vi.fn() },
       userTopicProgress: { upsert: vi.fn() },
       // Sprint 2: added for ported UserQuestionSeen + Question stats
@@ -37,6 +48,32 @@ vi.mock('@prisma/client', () => ({
     return self;
   }),
 }));
+
+describe('drillReviewService answer resolution', () => {
+  it('resolves correctAnswerIndex and correctIndex without falling back to any selected option', () => {
+    const data = {
+      options: ['Alpha', 'Beta', 'Gamma'],
+      correctAnswerIndex: 1,
+    };
+
+    expect(resolveCorrectAnswer(data)).toBe('Beta');
+    expect(isSelectedAnswerCorrect(data, 'Beta')).toBe(true);
+    expect(isSelectedAnswerCorrect(data, 'B')).toBe(true);
+    expect(isSelectedAnswerCorrect(data, '1')).toBe(true);
+    expect(isSelectedAnswerCorrect(data, 'Alpha')).toBe(false);
+  });
+
+  it('fails closed when no correct answer can be resolved', () => {
+    expect(
+      isSelectedAnswerCorrect(
+        {
+          options: ['Alpha', 'Beta', 'Gamma'],
+        },
+        'Alpha'
+      )
+    ).toBe(false);
+  });
+});
 
 // Track current FSRS instance for tests
 let currentFsrsInstance: any;
@@ -102,10 +139,6 @@ vi.mock('../lib/services/userProgressService', () => ({
 vi.mock('../lib/services/userStatisticsService', () => ({
   applyAttemptToUserStatistics: vi.fn(),
   updateTimingAggregates: vi.fn(),
-}));
-
-vi.mock('../lib/services/srsService', () => ({
-  updateReviewOutcome: vi.fn(),
 }));
 
 vi.mock('../lib/taskTypes', () => ({
@@ -282,6 +315,7 @@ describe('submitDrillReview', () => {
           duration_ms: 25000,
           time_to_first_interaction_ms: 5000,
           rapid_guess: false,
+          session_id: 'study-session-123',
         },
       };
 
@@ -351,15 +385,373 @@ describe('submitDrillReview', () => {
             stability: 12.5,
             difficulty: 0.3,
             retrievability: 0.85, // computed
+            sessionId: 'study-session-123',
+            questionFkId: questionId,
+            telemetry: expect.objectContaining({
+              server_computed: expect.objectContaining({
+                learning_event: expect.objectContaining({
+                  sourceQuestionId: questionId,
+                  questionSource: 'pre_generated',
+                  sessionId: 'study-session-123',
+                  sessionType: 'targeted',
+                  progressContext: 'TARGETED',
+                }),
+              }),
+            }),
           }),
         })
       );
 
-      // FSRS scheduling produces a schedule for main sessions with conditionId
+      // FSRS scheduling produces a schedule for targeted sessions with conditionId
       expect(result.fsrsSchedule).toBeDefined();
+      expect(updateUserProgressWithHistory).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          progressContext: 'TARGETED',
+        })
+      );
+      expect(prisma.card.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId_questionId_progressContext: {
+              userId,
+              questionId,
+              progressContext: 'TARGETED',
+            },
+          },
+          create: expect.objectContaining({
+            id: `${userId}_${questionId}_TARGETED`,
+            progressContext: 'TARGETED',
+          }),
+        })
+      );
 
       // Verify QuestionAttempt creation
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
+    });
+
+    it('proves the linked learning pipeline from review write through plan completion and dashboard signal', async () => {
+      const sessionId = 'study-session-pipeline';
+      const taskId = '2026-05-01-targeted-review';
+      const canonicalQuestionId = 'q_pipeline';
+      const sourceQuestionId = 'pgq_pipeline';
+      const input: SubmitDrillReviewInput = {
+        questionId: canonicalQuestionId,
+        selectedAnswer: 'Correct Answer',
+        timeSpentMs: 25000,
+        timeToFirstClick: 5000,
+        answerSwitches: 0,
+        sessionType: 'targeted',
+        idempotencyKey: 'pipeline-proof',
+        telemetry: {
+          duration_ms: 25000,
+          time_to_first_interaction_ms: 5000,
+          rapid_guess: false,
+          session_id: sessionId,
+          study_plan_task_id: taskId,
+          study_plan_date: '2026-05-01',
+          study_plan_source: 'study-plan',
+        },
+      };
+      const question = {
+        id: canonicalQuestionId,
+        canonicalQuestionId,
+        sourceQuestionId,
+        questionSource: 'pre_generated',
+        conditionId,
+        medicalContentId,
+        system: 'CV',
+        questionData: {
+          options: [
+            { value: 'Correct Answer', text: 'Correct' },
+            { value: 'Wrong Answer', text: 'Wrong' },
+          ],
+          correctAnswer: 'Correct Answer',
+          stem: 'Pipeline proof question',
+        },
+      };
+      const fsrsCard = {
+        stability: 12.5,
+        difficulty: 0.3,
+        state: 2,
+        elapsed_days: 5.0,
+        scheduled_days: 10.0,
+        reps: 3,
+        lapses: 0,
+        last_review: new Date(Date.now() - 5 * 86400000),
+      };
+      (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard });
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_pipeline' });
+      (prisma.reviewLog.create as Mock).mockResolvedValue({ id: 'review_pipeline' });
+      const fsrsInstance = {
+        next: vi.fn().mockReturnValue({
+          card: {
+            ...fsrsCard,
+            stability: 15,
+            difficulty: 0.28,
+            scheduled_days: 10,
+            reps: 4,
+            last_review: new Date(),
+          },
+        }),
+        calculateRetrievability: vi.fn().mockReturnValue(0.85),
+      };
+      vi.mocked(FSRS).mockImplementation(function() { return fsrsInstance; });
+      (prisma.dailyStudyPlan.findUnique as Mock).mockResolvedValue({
+        id: 'plan-1',
+        planDate: new Date('2026-05-01T00:00:00Z'),
+        status: 'in_progress',
+        targetQuestionsCount: 12,
+        actualQuestionsAnswered: 0,
+        actualDurationMinutes: null,
+        actualAccuracy: null,
+        completedAt: null,
+        recommendedSessions: [
+          {
+            id: taskId,
+            kind: 'targeted',
+            status: 'in_progress',
+            title: 'Due review block',
+            targetQuestions: 12,
+            estimatedMinutes: 18,
+            reason: 'Protect due reviews.',
+            conditionIds: [conditionId],
+            route: '/study/main-session',
+            actualQuestionsAnswered: 0,
+            actualAccuracy: null,
+            linkedAttemptIds: [],
+          },
+        ],
+      });
+      (prisma.dailyStudyPlan.update as Mock).mockResolvedValue({});
+
+      const reviewResult = await submitDrillReview(prisma, userId, input, question);
+
+      expect(reviewResult.success).toBe(true);
+      expect(prisma.questionAttempt.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            questionId: canonicalQuestionId,
+            telemetryJson: expect.objectContaining({
+              server_computed: expect.objectContaining({
+                learning_event: expect.objectContaining({
+                  canonicalQuestionId,
+                  sourceQuestionId,
+                  questionSource: 'pre_generated',
+                  sessionId,
+                  studyPlanTaskId: taskId,
+                  studyPlanDate: '2026-05-01',
+                  studyPlanSource: 'study-plan',
+                  progressContext: 'TARGETED',
+                }),
+              }),
+            }),
+          }),
+        })
+      );
+      expect(prisma.studySessionQuestion.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            sessionId,
+            OR: [{ preGeneratedQuestionId: sourceQuestionId }],
+          },
+          data: expect.objectContaining({
+            attemptId: 'drill_review_user_123_q_pipeline_pipeline-proof',
+            answeredAt: expect.any(Date),
+          }),
+        })
+      );
+      expect(prisma.dailyStudyPlan.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'plan-1' },
+          data: expect.objectContaining({
+            status: 'in_progress',
+            actualQuestionsAnswered: 1,
+            actualAccuracy: 1,
+            recommendedSessions: [
+              expect.objectContaining({
+                id: taskId,
+                status: 'in_progress',
+                actualQuestionsAnswered: 1,
+                actualAccuracy: 1,
+                linkedSessionId: sessionId,
+                linkedAttemptIds: ['drill_review_user_123_q_pipeline_pipeline-proof'],
+              }),
+            ],
+          }),
+        })
+      );
+      expect(prisma.reviewLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sessionId,
+            questionFkId: canonicalQuestionId,
+            telemetry: expect.objectContaining({
+              server_computed: expect.objectContaining({
+                learning_event: expect.objectContaining({
+                  canonicalQuestionId,
+                  sourceQuestionId,
+                  sessionId,
+                  studyPlanTaskId: taskId,
+                  studyPlanDate: '2026-05-01',
+                }),
+              }),
+            }),
+          }),
+        })
+      );
+      expect(updateUserProgressWithHistory).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ conditionId: medicalContentId, progressContext: 'TARGETED' })
+      );
+      expect(prisma.card.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            userId_questionId_progressContext: {
+              userId,
+              questionId: canonicalQuestionId,
+              progressContext: 'TARGETED',
+            },
+          },
+        })
+      );
+
+      const planDate = new Date('2026-05-01T00:00:00Z');
+      const plan = {
+        id: 'plan-1',
+        planDate,
+        status: 'pending',
+        targetQuestionsCount: 12,
+        actualQuestionsAnswered: 0,
+        completedAt: null,
+        recommendedSessions: [
+          {
+            id: taskId,
+            kind: 'targeted',
+            mode: 'targeted',
+            title: 'Due review block',
+            count: 12,
+            targetQuestions: 12,
+            estimatedMinutes: 18,
+            reason: 'Protect due reviews.',
+            priority: 'high',
+            status: 'pending',
+            conditionIds: [conditionId],
+            route: '/study/main-session',
+            launchParams: { source: 'study-plan', taskId, planDate: '2026-05-01' },
+          },
+        ],
+      };
+      const planPrisma = {
+        dailyStudyPlan: {
+          update: vi.fn(async (args) => ({
+            ...plan,
+            ...args.data,
+          })),
+        },
+      };
+
+      const completedPlan = await applyDailyStudyPlanAction(planPrisma as any, plan, {
+        action: 'complete',
+        taskId,
+        questionsAnswered: 1,
+        durationMinutes: 1,
+        accuracy: 1,
+        linkedSessionId: sessionId,
+      });
+
+      expect(completedPlan.recommendedSessions[0].linkedSessionId).toBe(sessionId);
+      expect(completedPlan.recommendedSessions[0].status).toBe('completed');
+
+      const todayPlan: TodayPlanData = {
+        recommendedMainCount: 0,
+        recommendedTargetedCount: 12,
+        mainSystems: ['CV'],
+        targetedConditions: [conditionId],
+        readinessPriority: 70,
+        retentionPriority: 82,
+        recommendedSplit: 'targeted_heavy',
+        reasonSummary: 'Due review is linked to the session result.',
+        generatedAt: '2026-05-01T12:00:00Z',
+        planId: plan.id,
+        planDate: '2026-05-01',
+        tasks: completedPlan.recommendedSessions,
+      };
+      const dashboardAnalytics: DashboardAnalyticsModel = {
+        overview: {
+          attemptsLast7Days: 1,
+          accuracyLast7Days: 100,
+          accuracyDelta: null,
+          totalAttempts: 25,
+          questionsSeen: 1,
+          currentStreak: 1,
+          activeDays: 1,
+          studyMinutesLast7Days: 1,
+          avgSessionQuestions: 1,
+          dueToday: 1,
+          overdueReviews: 0,
+          totalActiveReviews: 1,
+        },
+        trend: [],
+        heatmap: [],
+        weakSystems: [],
+        recentSessions: [
+          {
+            id: sessionId,
+            startedAt: '2026-05-01T12:00:00Z',
+            dateLabel: 'Today',
+            timeLabel: '12:00 PM',
+            modeLabel: 'Targeted',
+            totalQuestions: 1,
+            accuracy: 100,
+            durationMinutes: 1,
+            completionLabel: 'Complete',
+          },
+        ],
+        reviewForecast: {
+          overdue: 0,
+          today: 1,
+          totalActive: 1,
+          dueConditionIds: [conditionId],
+          forecast: [{ date: '2026-05-01', count: 1 }],
+        },
+        blueprintGaps: null,
+        weakConditions: [],
+        conditionStats: [{ conditionId, total: 1, correct: 1, accuracy: 100 }],
+        confusionPairs: [],
+        recommendations: [],
+        warnings: [],
+        hasMeaningfulData: true,
+      };
+      const performanceData: PerformanceRecord[] = [
+        {
+          timestamp: new Date('2026-05-01T12:01:00Z').getTime(),
+          system: 'CV',
+          subcategory: null,
+          conditionId,
+          condition: 'Pipeline condition',
+          topic: 'CV',
+          isCorrect: true,
+          focus: 'topic',
+          timeSpentMs: 25000,
+        },
+      ];
+
+      const ctx = normalizeDashboardSignals({
+        performanceData,
+        growthAreas: ['CV'],
+        dueCount: 1,
+        examLabel: 'PANCE',
+        profile: { yearInProgram: 'Preparing for PANCE', hasCompletedOnboarding: true },
+        todayPlan,
+        dashboardAnalytics,
+        now: new Date('2026-05-01T12:00:00Z'),
+      });
+
+      expect(ctx.reviewCoverage.coverageSource).toBe('plan_tasks');
+      expect(ctx.reviewCoverage.coveredDanger).toBe(1);
+      expect(ctx.today.reviewCount).toBe(1);
     });
   
     describe('Peer validation statistics', () => {
@@ -515,7 +907,8 @@ describe('submitDrillReview', () => {
         questionId,
         selectedAnswer: 'Answer',
         timeSpentMs: 300,
-        telemetry: { duration_ms: 300, rapid_guess: true },
+        sessionType: 'targeted',
+        telemetry: { duration_ms: 300, rapid_guess: true, session_id: 'study-session-rapid' },
       };
       const question = { id: questionId, conditionId, questionData: {} };
       // Set up mocks for the questionAttempt duplicate-check + reviewLog write
@@ -539,6 +932,13 @@ describe('submitDrillReview', () => {
               server_computed: expect.objectContaining({
                 is_rapid_guess: true,
                 implicit_rating: 1, // Rating.Again
+                learning_event: expect.objectContaining({
+                  sourceQuestionId: questionId,
+                  questionSource: 'pre_generated',
+                  sessionId: 'study-session-rapid',
+                  sessionType: 'targeted',
+                  progressContext: 'TARGETED',
+                }),
               }),
             }),
           }),
@@ -547,6 +947,15 @@ describe('submitDrillReview', () => {
 
       // Verify FSRS state update was NOT called for rapid guess
       expect(updateUserProgressWithHistory).not.toHaveBeenCalled();
+      expect(prisma.reviewLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            review_type: 'rapid_guess',
+            sessionId: 'study-session-rapid',
+            questionFkId: questionId,
+          }),
+        })
+      );
 
       expect(prisma.questionAttempt.create).toHaveBeenCalledWith(
         expect.objectContaining({

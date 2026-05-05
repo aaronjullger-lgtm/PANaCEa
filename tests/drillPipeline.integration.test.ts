@@ -76,10 +76,6 @@ vi.mock('../lib/services/userStatisticsService', () => ({
   updateTimingAggregates: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock('../lib/services/srsService', () => ({
-  updateReviewOutcome: vi.fn(),
-}));
-
 vi.mock('../lib/services/rolling360Service', () => ({
   getRolling360Service: vi.fn(() => ({
     updateRolling360OnSubmit: vi.fn(() => Promise.resolve()),

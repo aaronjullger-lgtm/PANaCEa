@@ -15,6 +15,7 @@ import {
 } from './_shared/prisma-edge';
 import { authenticatedEndpoint } from './_shared/middleware';
 import { createEndpointLogger } from './_shared/secureLogger';
+import { withProductionQuestionSafety } from '../../lib/services/questionServingSafety';
 
 // ============================================================================
 // SCHEMAS
@@ -37,30 +38,18 @@ const GetQuestionsSchema = z.object({
 export const onRequestGet = authenticatedEndpoint(GetQuestionsSchema, async (context) => {
   const log = createEndpointLogger('GET /api/questions', context.auth.userId);
   let prisma: EdgePrismaClient | null = null;
-
-  // Parse query parameters manually since validation happens on body
-  const url = new URL(context.request.url);
-  const category = url.searchParams.get('category');
-  const difficulty = url.searchParams.get('difficulty');
-  const limitStr = url.searchParams.get('limit');
-  const limit = limitStr ? parseInt(limitStr, 10) : 20;
-
-  // Validate category is present
-  if (!category) {
-    log.warn('Missing category parameter');
-    return { status: 400, error: 'Category parameter is required' };
-  }
+  const { category, difficulty, limit } = context.validated;
 
   try {
     prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     // Build where clause
     // For drill questions, we use tags to filter by category
-    const where: any = {
+    const where: any = withProductionQuestionSafety({
       tags: {
         array_contains: category,
       },
-    };
+    });
 
     if (difficulty) {
       where.difficulty = difficulty;
@@ -101,7 +90,7 @@ export const onRequestGet = authenticatedEndpoint(GetQuestionsSchema, async (con
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+}, { source: 'query', requestsPerMinute: 120 });
 
 /**
  * OPTIONS handler for CORS preflight

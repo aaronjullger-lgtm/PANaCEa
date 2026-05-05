@@ -12,6 +12,7 @@ import {
 import { useAuth, useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 import { InlineSpinner } from '@/components/loading';
 import type { ProgressResponse } from '@/types';
 
@@ -26,11 +27,11 @@ function createProgressFetcher(getToken: () => Promise<string | null>) {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new Error('Unable to load progress projection. Please try again.');
+      throw new Error(getApiEnvelopeError(data, 'Unable to load progress projection. Please try again.'));
     }
-    const data = await res.json();
-    return data as ProgressResponse;
+    return unwrapApiEnvelope<ProgressResponse>(data);
   };
 }
 

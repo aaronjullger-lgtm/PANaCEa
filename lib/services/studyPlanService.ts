@@ -1,7 +1,12 @@
 import { getDailyStudyAllocation, type DailyStudyAllocation } from './dailyStudyAllocatorService';
+import type { SessionSettings } from '@/types';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from './questionServingSafety';
 
-export type StudyPlanTaskStatus = 'pending' | 'active' | 'completed' | 'skipped' | 'rescheduled';
-export type StudyPlanTaskKind = 'main' | 'targeted' | 'content';
+export type StudyPlanTaskStatus = 'pending' | 'active' | 'in_progress' | 'completed' | 'skipped' | 'rescheduled';
+export type StudyPlanTaskKind = 'main' | 'targeted' | 'review' | 'content' | 'rest';
 
 export interface StudyPlanTask {
   id: string;
@@ -13,13 +18,22 @@ export interface StudyPlanTask {
   reason: string;
   priority: 'high' | 'medium' | 'low';
   status: StudyPlanTaskStatus;
+  systems?: string[];
   systemFilter?: string[];
   conditionIds?: string[];
+  reviewCardIds?: string[];
+  targetQuestions?: number;
+  launchSettings?: SessionSettings;
   route: string;
   launchParams: Record<string, string>;
+  startedAt?: string;
   completedAt?: string;
   skippedAt?: string;
   rescheduledFor?: string;
+  actualQuestionsAnswered?: number | null;
+  actualDurationMinutes?: number | null;
+  actualAccuracy?: number | null;
+  linkedSessionId?: string | null;
 }
 
 export interface CompleteStudyPlanTaskInput {
@@ -28,6 +42,7 @@ export interface CompleteStudyPlanTaskInput {
   accuracy?: number;
   durationMinutes?: number;
   questionsAnswered?: number;
+  linkedSessionId?: string;
   rescheduleDate?: Date;
 }
 
@@ -44,7 +59,25 @@ interface StudyPlanPrisma {
       sessionLength?: number | null;
     } | null>;
   };
+  userGoal?: {
+    findMany(args: Record<string, unknown>): Promise<Array<{
+      targetSystem?: string | null;
+    }>>;
+  };
   questionAttempt: {
+    count(args: Record<string, unknown>): Promise<number>;
+  };
+  medicalContent?: {
+    findMany(args: Record<string, unknown>): Promise<Array<{
+      id: string;
+      conditionId?: string | null;
+      system?: string | null;
+    }>>;
+  };
+  question?: {
+    count(args: Record<string, unknown>): Promise<number>;
+  };
+  preGeneratedQuestion?: {
     count(args: Record<string, unknown>): Promise<number>;
   };
   dailyStudyPlan: {
@@ -98,26 +131,44 @@ function routeForTask(
   route: string;
   launchParams: Record<string, string>;
 } {
+  const conditions = task.conditionIds ?? [];
+  const systems = task.systemFilter ?? [];
+  const routeMode =
+    conditions.length > 0
+      ? 'condition'
+      : systems.length === 1
+        ? 'system'
+        : 'adaptive';
   const launchParams: Record<string, string> = {
     source: 'study-plan',
-    mode: task.kind === 'targeted' ? 'condition' : 'adaptive',
+    mode: routeMode,
   };
   if (task.id) launchParams.taskId = task.id;
-
-  if (task.kind === 'targeted') {
-    const conditions = task.conditionIds ?? [];
-    if (conditions.length > 0) {
-      launchParams.conditions = conditions.join(',');
-      launchParams.conditionId = conditions[0] ?? '';
-    }
-    const query = new URLSearchParams(launchParams).toString();
-    return { route: `/study/main-session?${query}`, launchParams };
+  if (task.id && /^\d{4}-\d{2}-\d{2}/.test(task.id)) {
+    launchParams.planDate = task.id.slice(0, 10);
   }
 
-  const systems = task.systemFilter ?? [];
+  if (conditions.length > 0) {
+    launchParams.conditions = conditions.join(',');
+    launchParams.conditionId = conditions[0] ?? '';
+  }
   if (systems.length > 0) launchParams.systems = systems.join(',');
   const query = new URLSearchParams(launchParams).toString();
   return { route: `/study/main-session?${query}`, launchParams };
+}
+
+function canonicalTaskMode(
+  kind: StudyPlanTaskKind,
+  taskMode: unknown,
+  launchSettings: SessionSettings | undefined
+): string {
+  if (kind === 'targeted') return 'targeted';
+  if (kind === 'review') return 'review';
+  if (typeof taskMode === 'string' && taskMode.trim()) return taskMode;
+  if (typeof launchSettings?.mode === 'string' && launchSettings.mode.trim()) {
+    return launchSettings.mode;
+  }
+  return 'core_adaptive';
 }
 
 function getDaysToExam(examDate: Date | string | null | undefined, planDate: Date): number | null {
@@ -132,12 +183,14 @@ export function buildStudyPlanTasks({
   dailyGoal,
   sessionLength,
   daysToExam,
+  goalSystems = [],
 }: {
   allocation: DailyStudyAllocation;
   planDate: Date;
   dailyGoal?: number | null;
   sessionLength?: number | null;
   daysToExam?: number | null;
+  goalSystems?: string[];
 }): StudyPlanTask[] {
   const date = dateKey(planDate);
   const availableMinutes = clampCount(sessionLength, 45) || 45;
@@ -148,7 +201,11 @@ export function buildStudyPlanTasks({
   const targetedMinutes = Math.max(10, availableMinutes - mainMinutes);
   const examUrgency = daysToExam != null && daysToExam >= 0 && daysToExam <= 14;
 
-  const mainSystems = allocation.mainSystems.length > 0 ? allocation.mainSystems : ['Cardiovascular', 'Pulmonary', 'Gastrointestinal'];
+  const mainSystems = Array.from(new Set([
+    ...(allocation.mainSystems.length > 0 ? allocation.mainSystems : goalSystems),
+    ...(allocation.mainSystems.length > 0 ? goalSystems : []),
+  ])).slice(0, 5);
+  const fallbackMainSystems = mainSystems.length > 0 ? mainSystems : ['Cardiovascular', 'Pulmonary', 'Gastrointestinal'];
   const tasks: StudyPlanTask[] = [];
 
   if (mainCount > 0) {
@@ -164,7 +221,7 @@ export function buildStudyPlanTasks({
         : 'Start with a broad blueprint-weighted block to establish baseline coverage.',
       priority: (examUrgency || allocation.readinessPriority >= allocation.retentionPriority ? 'high' : 'medium') as 'high' | 'medium',
       status: 'pending' as const,
-      systemFilter: mainSystems.slice(0, 3),
+      systemFilter: fallbackMainSystems.slice(0, 3),
     };
     tasks.push({ ...draft, ...routeForTask(draft) });
   }
@@ -174,7 +231,7 @@ export function buildStudyPlanTasks({
     const draft = {
       id: `${date}-targeted-review`,
       kind: 'targeted' as const,
-      mode: 'rapid_recall',
+      mode: 'targeted',
       title: 'Due review block',
       count: targetedCount,
       estimatedMinutes: targetedMinutes,
@@ -197,7 +254,7 @@ export function buildStudyPlanTasks({
       reason: 'No due reviews or attempt history yet. Start with a short adaptive block.',
       priority: 'medium' as const,
       status: 'pending' as const,
-      systemFilter: mainSystems.slice(0, 3),
+      systemFilter: fallbackMainSystems.slice(0, 3),
     };
     tasks.push({ ...draft, ...routeForTask(draft) });
   }
@@ -210,19 +267,35 @@ export function sanitizeStudyPlanTasks(raw: unknown): StudyPlanTask[] {
   return raw
     .filter((task): task is Record<string, unknown> => Boolean(task) && typeof task === 'object')
     .map((task, index) => {
-      const kind = task.kind === 'targeted' || task.kind === 'content' ? task.kind : 'main';
-      const statusValues: StudyPlanTaskStatus[] = ['pending', 'active', 'completed', 'skipped', 'rescheduled'];
+      const kind =
+        task.kind === 'targeted' ||
+        task.kind === 'review' ||
+        task.kind === 'content' ||
+        task.kind === 'rest'
+          ? task.kind
+          : 'main';
+      const statusValues: StudyPlanTaskStatus[] = ['pending', 'active', 'in_progress', 'completed', 'skipped', 'rescheduled'];
       const status = statusValues.includes(task.status as StudyPlanTaskStatus)
         ? (task.status as StudyPlanTaskStatus)
         : 'pending';
+      const systems = Array.isArray(task.systems)
+        ? task.systems.filter((item): item is string => typeof item === 'string')
+        : undefined;
       const systemFilter = Array.isArray(task.systemFilter)
         ? task.systemFilter.filter((item): item is string => typeof item === 'string')
-        : undefined;
+        : systems;
       const conditionIds = Array.isArray(task.conditionIds)
         ? task.conditionIds.filter((item): item is string => typeof item === 'string')
         : undefined;
+      const reviewCardIds = Array.isArray(task.reviewCardIds)
+        ? task.reviewCardIds.filter((item): item is string => typeof item === 'string')
+        : undefined;
       const id = typeof task.id === 'string' ? task.id : `task-${index + 1}`;
-      const mode = typeof task.mode === 'string' ? task.mode : kind === 'targeted' ? 'condition' : 'core_adaptive';
+      const launchSettings =
+        task.launchSettings && typeof task.launchSettings === 'object' && !Array.isArray(task.launchSettings)
+          ? (task.launchSettings as SessionSettings)
+          : undefined;
+      const mode = canonicalTaskMode(kind, task.mode, launchSettings);
       const routed = routeForTask({ id, kind, mode, systemFilter, conditionIds });
       const providedLaunchParams = task.launchParams && typeof task.launchParams === 'object'
         ? Object.fromEntries(
@@ -230,32 +303,171 @@ export function sanitizeStudyPlanTasks(raw: unknown): StudyPlanTask[] {
           )
         : {};
       const launchParams = {
-        ...routed.launchParams,
         ...providedLaunchParams,
+        ...routed.launchParams,
         taskId: id,
         source: 'study-plan',
       };
       const route = `/study/main-session?${new URLSearchParams(launchParams).toString()}`;
 
       return {
+        ...task,
         id,
         kind,
         mode,
         title: typeof task.title === 'string' ? task.title : kind === 'targeted' ? 'Due review block' : 'Readiness question block',
-        count: clampCount(task.count, 10),
+        count: clampCount(task.count ?? task.targetQuestions ?? launchSettings?.questionCount ?? launchSettings?.count, 10),
         estimatedMinutes: clampCount(task.estimatedMinutes, 20),
         reason: typeof task.reason === 'string' ? task.reason : 'Recommended by your study plan.',
         priority: task.priority === 'high' || task.priority === 'low' ? task.priority : 'medium',
         status,
+        systems,
         systemFilter,
         conditionIds,
+        reviewCardIds,
+        targetQuestions: clampCount(task.targetQuestions ?? task.count ?? launchSettings?.questionCount ?? launchSettings?.count, 10),
+        launchSettings,
         route,
         launchParams,
+        startedAt: typeof task.startedAt === 'string' ? task.startedAt : undefined,
         completedAt: typeof task.completedAt === 'string' ? task.completedAt : undefined,
         skippedAt: typeof task.skippedAt === 'string' ? task.skippedAt : undefined,
         rescheduledFor: typeof task.rescheduledFor === 'string' ? task.rescheduledFor : undefined,
+        actualQuestionsAnswered: typeof task.actualQuestionsAnswered === 'number' ? task.actualQuestionsAnswered : undefined,
+        actualDurationMinutes: typeof task.actualDurationMinutes === 'number' ? task.actualDurationMinutes : undefined,
+        actualAccuracy: typeof task.actualAccuracy === 'number' ? task.actualAccuracy : undefined,
+        linkedSessionId: typeof task.linkedSessionId === 'string' ? task.linkedSessionId : undefined,
       };
     });
+}
+
+async function hasApprovedQuestionPoolForConditions(
+  prisma: StudyPlanPrisma,
+  conditionIds: string[]
+): Promise<boolean> {
+  if (conditionIds.length === 0) return false;
+  if (!prisma.question?.count && !prisma.preGeneratedQuestion?.count) {
+    return true;
+  }
+
+  try {
+    const medicalRows = prisma.medicalContent?.findMany
+      ? await prisma.medicalContent.findMany({
+          where: {
+            OR: [
+              { id: { in: conditionIds } },
+              { conditionId: { in: conditionIds } },
+            ],
+          },
+          select: { id: true, conditionId: true, system: true },
+        })
+      : [];
+    const medicalContentIds = new Set(medicalRows.map((row) => row.id));
+    const conditionDomainIds = new Set(
+      medicalRows.map((row) => row.conditionId).filter((id): id is string => Boolean(id))
+    );
+
+    for (const id of conditionIds) {
+      if (!medicalContentIds.has(id) && !conditionDomainIds.has(id)) {
+        conditionDomainIds.add(id);
+      }
+    }
+
+    const scopeOr: Array<Record<string, unknown>> = [];
+    if (conditionDomainIds.size > 0) {
+      scopeOr.push({ conditionId: { in: [...conditionDomainIds] } });
+    }
+    if (medicalContentIds.size > 0) {
+      scopeOr.push({ medicalContentId: { in: [...medicalContentIds] } });
+    }
+    if (scopeOr.length === 0) return false;
+
+    const where = scopeOr.length === 1 ? scopeOr[0]! : { OR: scopeOr };
+    const [questionCount, preGeneratedCount] = await Promise.all([
+      prisma.question?.count
+        ? prisma.question.count({ where: withProductionQuestionSafety(where) })
+        : Promise.resolve(0),
+      prisma.preGeneratedQuestion?.count
+        ? prisma.preGeneratedQuestion.count({ where: withProductionPregeneratedSafety(where) })
+        : Promise.resolve(0),
+    ]);
+
+    return questionCount + preGeneratedCount > 0;
+  } catch {
+    return true;
+  }
+}
+
+export async function ensureStudyPlanTasksLaunchable(
+  prisma: StudyPlanPrisma,
+  tasks: StudyPlanTask[]
+): Promise<StudyPlanTask[]> {
+  const nextTasks: StudyPlanTask[] = [];
+
+  for (const task of tasks) {
+    const isConditionTask = task.kind === 'targeted' || task.kind === 'review';
+    const conditionIds = task.conditionIds ?? [];
+    const canStillLaunch = ['pending', 'active', 'in_progress', 'rescheduled'].includes(task.status);
+    if (!canStillLaunch || !isConditionTask || conditionIds.length === 0) {
+      nextTasks.push(task);
+      continue;
+    }
+
+    const hasPool = await hasApprovedQuestionPoolForConditions(prisma, conditionIds);
+    if (hasPool) {
+      nextTasks.push(task);
+      continue;
+    }
+
+    const fallbackDraft = {
+      ...task,
+      kind: 'main' as const,
+      mode: 'core_adaptive',
+      title: `${task.title} fallback`,
+      reason: `${task.reason} No approved targeted question pool is available yet, so this block launches as blueprint-weighted readiness work.`,
+      conditionIds: undefined,
+      reviewCardIds: undefined,
+      systemFilter: task.systemFilter?.length ? task.systemFilter : task.systems,
+    };
+    nextTasks.push({
+      ...fallbackDraft,
+      ...routeForTask(fallbackDraft),
+    });
+  }
+
+  return nextTasks;
+}
+
+function studyPlanTasksChanged(current: StudyPlanTask[], next: StudyPlanTask[]): boolean {
+  return JSON.stringify(current) !== JSON.stringify(next);
+}
+
+async function repairStoredPlanLaunchability(prisma: StudyPlanPrisma, plan: any) {
+  const currentTasks = sanitizeStudyPlanTasks(plan.recommendedSessions);
+  if (currentTasks.length === 0) return plan;
+
+  const nextTasks = await ensureStudyPlanTasksLaunchable(prisma, currentTasks);
+  if (!studyPlanTasksChanged(currentTasks, nextTasks)) return plan;
+
+  const recommendedModes = Array.from(new Set(nextTasks.map((task) => task.mode)));
+  const targetQuestionsCount = nextTasks.reduce((sum, task) => sum + task.count, 0);
+  const estimatedTimeMinutes = nextTasks.reduce((sum, task) => sum + task.estimatedMinutes, 0);
+  const taskSystemFocus = Array.from(new Set(
+    nextTasks.flatMap((task) => task.systemFilter ?? task.systems ?? [])
+  )).slice(0, 5);
+  const previousFocus = Array.isArray(plan.targetSystemFocus) ? plan.targetSystemFocus : [];
+
+  return prisma.dailyStudyPlan.update({
+    where: { id: plan.id },
+    data: {
+      recommendedSessions: nextTasks,
+      recommendedModes,
+      targetQuestionsCount,
+      estimatedTimeMinutes,
+      targetSystemFocus: taskSystemFocus.length > 0 ? taskSystemFocus : previousFocus,
+      updatedAt: new Date(),
+    },
+  });
 }
 
 function derivePlanStatus(tasks: StudyPlanTask[], previousStatus: string): string {
@@ -277,24 +489,11 @@ function formatReason(allocation: DailyStudyAllocation, daysToExam: number | nul
 }
 
 async function syncPlanProgressFromAttempts(prisma: StudyPlanPrisma, plan: any) {
-  if (!plan?.id || plan.status === 'completed' || plan.status === 'skipped') return plan;
-  const planDate = normalizePlanDate(plan.planDate);
-  const nextDate = addDays(planDate, 1);
-  const answeredToday = await prisma.questionAttempt.count({
-    where: { userId: plan.userId, createdAt: { gte: planDate, lt: nextDate } },
-  });
-  if (answeredToday <= (plan.actualQuestionsAnswered ?? 0)) return plan;
-  const target = clampCount(plan.targetQuestionsCount, 0);
-  const nextStatus = target > 0 && answeredToday >= target ? 'completed' : 'active';
-  return prisma.dailyStudyPlan.update({
-    where: { id: plan.id },
-    data: {
-      actualQuestionsAnswered: answeredToday,
-      status: nextStatus,
-      completedAt: nextStatus === 'completed' ? new Date() : plan.completedAt,
-      updatedAt: new Date(),
-    },
-  });
+  // Do not infer plan completion from all attempts on the same calendar date.
+  // Study-plan progress is linked by task/session via /api/study-plan/progress
+  // or explicit daily-plan compatibility actions.
+  void prisma;
+  return plan;
 }
 
 export async function getOrCreateDailyStudyPlan(
@@ -306,30 +505,48 @@ export async function getOrCreateDailyStudyPlan(
   const existing = await prisma.dailyStudyPlan.findUnique({
     where: { userId_planDate: { userId, planDate } },
   });
-  if (existing && existing.status !== 'pending') {
-    return syncPlanProgressFromAttempts(prisma, existing);
+  const existingTasks = existing ? sanitizeStudyPlanTasks(existing.recommendedSessions) : [];
+  if (existing && (existing.status !== 'pending' || existingTasks.length > 0)) {
+    const repaired = await repairStoredPlanLaunchability(prisma, existing);
+    return syncPlanProgressFromAttempts(prisma, repaired);
   }
 
-  const [allocation, user, prefs] = await Promise.all([
+  const [allocation, user, prefs, goals] = await Promise.all([
     getDailyStudyAllocation(prisma as any, userId),
     prisma.user.findUnique({ where: { id: userId }, select: { id: true, examDate: true } }),
     prisma.userPreferences?.findUnique({
       where: { userId },
       select: { dailyGoal: true, sessionLength: true },
     }) ?? Promise.resolve(null),
+    prisma.userGoal?.findMany({
+      where: { userId, status: 'active' },
+      orderBy: [{ targetDate: 'asc' }, { createdAt: 'asc' }],
+      take: 5,
+      select: { targetSystem: true },
+    }) ?? Promise.resolve([]),
   ]);
+  const goalSystems = Array.from(new Set(
+    (goals as Array<{ targetSystem?: string | null }>)
+      .map((goal) => goal.targetSystem)
+      .filter((system): system is string => typeof system === 'string' && system.trim().length > 0)
+  ));
   const daysToExam = getDaysToExam(user?.examDate, planDate);
-  const tasks = buildStudyPlanTasks({
+  const draftTasks = buildStudyPlanTasks({
     allocation,
     planDate,
     dailyGoal: prefs?.dailyGoal,
     sessionLength: prefs?.sessionLength,
     daysToExam,
+    goalSystems,
   });
+  const tasks = await ensureStudyPlanTasksLaunchable(prisma, draftTasks);
   const targetQuestionsCount = tasks.reduce((sum, task) => sum + task.count, 0);
   const estimatedTimeMinutes = tasks.reduce((sum, task) => sum + task.estimatedMinutes, 0);
   const recommendedModes = Array.from(new Set(tasks.map((task) => task.mode)));
-  const targetSystemFocus = Array.from(new Set(tasks.flatMap((task) => task.systemFilter ?? []))).slice(0, 5);
+  const targetSystemFocus = Array.from(new Set([
+    ...tasks.flatMap((task) => task.systemFilter ?? []),
+    ...goalSystems,
+  ])).slice(0, 5);
 
   const plan = await prisma.dailyStudyPlan.upsert({
     where: { userId_planDate: { userId, planDate } },
@@ -383,7 +600,22 @@ export async function applyDailyStudyPlanAction(
         const rescheduledFor = dateKey(input.rescheduleDate ?? addDays(new Date(plan.planDate), 1));
         return { ...task, status: 'rescheduled', rescheduledFor };
       }
-      return { ...task, status: 'completed', completedAt: now.toISOString() };
+      return {
+        ...task,
+        status: 'completed',
+        completedAt: now.toISOString(),
+        linkedSessionId: input.linkedSessionId ?? task.linkedSessionId,
+        actualQuestionsAnswered:
+          input.questionsAnswered != null
+            ? questionsAnswered
+            : task.actualQuestionsAnswered ?? task.count,
+        actualDurationMinutes:
+          input.durationMinutes != null
+            ? clampCount(input.durationMinutes, 0)
+            : task.actualDurationMinutes,
+        actualAccuracy:
+          input.accuracy != null ? clampPercentDecimal(input.accuracy) : task.actualAccuracy,
+      };
     });
     if (!matched) {
       throw new Error('Task not found on this daily plan');
@@ -395,13 +627,26 @@ export async function applyDailyStudyPlanAction(
   }
 
   const nextStatus = derivePlanStatus(nextTasks, plan.status);
-  const task = taskId ? nextTasks.find((item) => item.id === taskId) : null;
-  const additionalQuestions = action === 'complete'
-    ? questionsAnswered || task?.count || Math.max(0, plan.targetQuestionsCount - (plan.actualQuestionsAnswered ?? 0))
-    : 0;
+  const completedQuestionTotal = nextTasks.reduce(
+    (sum, task) => sum + clampCount(task.actualQuestionsAnswered, 0),
+    0
+  );
+  const completedDurationTotal = nextTasks.reduce(
+    (sum, task) => sum + clampCount(task.actualDurationMinutes, 0),
+    0
+  );
+  let weightedAccuracy = 0;
+  let accuracyWeight = 0;
+  for (const task of nextTasks) {
+    const answered = clampCount(task.actualQuestionsAnswered, 0);
+    if (answered > 0 && typeof task.actualAccuracy === 'number') {
+      weightedAccuracy += task.actualAccuracy * answered;
+      accuracyWeight += answered;
+    }
+  }
   const nextAnswered = Math.min(
     clampCount(plan.targetQuestionsCount, 0),
-    clampCount(plan.actualQuestionsAnswered, 0) + additionalQuestions
+    completedQuestionTotal
   );
 
   return prisma.dailyStudyPlan.update({
@@ -410,8 +655,8 @@ export async function applyDailyStudyPlanAction(
       recommendedSessions: nextTasks,
       status: nextStatus,
       actualQuestionsAnswered: nextAnswered,
-      actualAccuracy: clampPercentDecimal(input.accuracy),
-      actualDurationMinutes: input.durationMinutes == null ? undefined : clampCount(input.durationMinutes, 0),
+      actualAccuracy: accuracyWeight > 0 ? weightedAccuracy / accuracyWeight : clampPercentDecimal(input.accuracy),
+      actualDurationMinutes: completedDurationTotal || (input.durationMinutes == null ? undefined : clampCount(input.durationMinutes, 0)),
       completedAt: nextStatus === 'completed' ? now : plan.completedAt,
       updatedAt: now,
     },

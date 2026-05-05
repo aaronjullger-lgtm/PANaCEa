@@ -24,7 +24,11 @@ vi.mock('../lib/services/mainSessionQuestionSelector', () => ({
   ALLOWED_VALIDATION_STATUSES: ['approved', 'pending'],
 }));
 
-import { executeRefill, type RefillJobPayload } from '../lib/services/reservoir/refillWorker';
+import {
+  executeRefill,
+  parseReservoirScope,
+  type RefillJobPayload,
+} from '../lib/services/reservoir/refillWorker';
 
 function makeMockPrisma(o: Record<string, any> = {}): any {
   return {
@@ -33,6 +37,7 @@ function makeMockPrisma(o: Record<string, any> = {}): any {
     userProgress: { findMany: vi.fn().mockResolvedValue([]) },
     preGeneratedQuestion: { findMany: vi.fn().mockResolvedValue([]) },
     question: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn().mockResolvedValue(null) },
+    medicalContent: { findMany: vi.fn().mockResolvedValue([]) },
     ...o,
   };
 }
@@ -49,7 +54,43 @@ function makeDue(cid: string, o: Record<string, any> = {}) {
   return { conditionId: cid, system: 'Cardiovascular', fsrsDifficulty: 5, nextReviewAt: new Date(Date.now() - 2 * 86400_000), ...o };
 }
 
+function conditionQueryIds(where: any): string[] {
+  const ids: string[] = [];
+  const add = (value: unknown) => {
+    if (typeof value === 'string') ids.push(value);
+    if (value && typeof value === 'object' && Array.isArray((value as any).in)) {
+      ids.push(...(value as any).in.map(String));
+    }
+  };
+
+  add(where?.conditionId);
+  add(where?.medicalContentId);
+  for (const clause of where?.OR ?? []) {
+    add(clause.conditionId);
+    add(clause.medicalContentId);
+  }
+  return ids;
+}
+
+function queryMatchesCondition(where: any, id: string): boolean {
+  return conditionQueryIds(where).includes(id);
+}
+
 describe('refillWorker', () => {
+  describe('scope parsing', () => {
+    it('parses condition and encoded subcategory scopes', () => {
+      expect(parseReservoirScope('condition:cond-123')).toEqual({
+        kind: 'condition',
+        conditionId: 'cond-123',
+      });
+      expect(parseReservoirScope('subcategory:CV:valve%20disease')).toEqual({
+        kind: 'subcategory',
+        system: 'CV',
+        subcategory: 'valve disease',
+      });
+    });
+  });
+
   describe('executeRefill basic flow', () => {
     it('returns zero counts when deficit is 0', async () => {
       const r = await executeRefill(makeMockPrisma(), makePayload({ deficit: 0 }));
@@ -86,6 +127,53 @@ describe('refillWorker', () => {
       expect(r.reviewsQueued).toBe(1);
     });
 
+    it('finds review questions when UserProgress stores a MedicalContent id', async () => {
+      const p = makeMockPrisma({
+        medicalContent: {
+          findMany: vi.fn().mockResolvedValue([{ id: 'mc-cv', conditionId: 'cond-cv' }]),
+        },
+        userProgress: { findMany: vi.fn().mockResolvedValue([makeDue('mc-cv')]) },
+        preGeneratedQuestion: {
+          findMany: vi.fn().mockImplementation((a: any) =>
+            queryMatchesCondition(a.where, 'mc-cv')
+              ? Promise.resolve([makeQ('q-med-review', { conditionId: 'cond-cv', medicalContentId: 'mc-cv' })])
+              : Promise.resolve([])
+          ),
+        },
+      });
+
+      const r = await executeRefill(p, makePayload());
+
+      expect(r.reviewsQueued).toBe(1);
+      expect(p.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { conditionId: { in: ['mc-cv', 'cond-cv'] } },
+              { medicalContentId: { in: ['mc-cv'] } },
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('does not queue standard Question rows for due reviews because reservoir FK targets PreGeneratedQuestion', async () => {
+      const p = makeMockPrisma({
+        userProgress: { findMany: vi.fn().mockResolvedValue([makeDue('cond-cv')]) },
+        preGeneratedQuestion: { findMany: vi.fn().mockResolvedValue([]) },
+        question: {
+          findMany: vi.fn().mockResolvedValue([
+            { id: 'q-standard-1', system: 'Cardiovascular', conditionId: 'cond-cv', difficulty: 'medium' },
+          ]),
+        },
+      });
+
+      const r = await executeRefill(p, makePayload());
+
+      expect(r.reviewsQueued).toBe(0);
+      expect(p.question.findMany).not.toHaveBeenCalled();
+    });
+
     it('sets OVERDUE_REVIEW priority for reviews over 1 day old', async () => {
       const p = makeMockPrisma({
         userProgress: { findMany: vi.fn().mockResolvedValue([makeDue('c1', { nextReviewAt: new Date(Date.now() - 2 * 86400_000) })]) },
@@ -112,7 +200,10 @@ describe('refillWorker', () => {
     it('respects deficit limit for reviews', async () => {
       const p = makeMockPrisma({
         userProgress: { findMany: vi.fn().mockResolvedValue(Array.from({ length: 20 }, (_, i) => makeDue('c' + i))) },
-        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => Promise.resolve([makeQ('q-' + a.where.conditionId, { conditionId: a.where.conditionId })])) },
+        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => {
+          const id = conditionQueryIds(a.where)[0] ?? 'any';
+          return Promise.resolve([makeQ('q-' + id, { conditionId: id })]);
+        }) },
       });
       expect((await executeRefill(p, makePayload({ deficit: 5 }))).reviewsQueued).toBeLessThanOrEqual(4);
     });
@@ -153,6 +244,87 @@ describe('refillWorker', () => {
         preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => a.where.system === 'CV' ? Promise.resolve([makeQ('q1', { system: 'CV' })]) : Promise.resolve([])) },
       });
       expect((await executeRefill(p, makePayload({ deficit: 5, scope: 'system:CV' }))).poolQueued).toBeGreaterThan(0);
+    });
+
+    it('applies condition filter for condition: scope instead of filling from the global pool', async () => {
+      const p = makeMockPrisma({
+        preGeneratedQuestion: {
+          findMany: vi.fn().mockImplementation((a: any) =>
+            queryMatchesCondition(a.where, 'cond-123')
+              ? Promise.resolve([makeQ('q1', { conditionId: 'cond-123' })])
+              : Promise.resolve([])
+          ),
+        },
+      });
+
+      expect(
+        (await executeRefill(p, makePayload({ deficit: 5, scope: 'condition:cond-123' }))).poolQueued
+      ).toBeGreaterThan(0);
+      expect(p.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            conditionId: { in: ['cond-123'] },
+          }),
+        })
+      );
+    });
+
+    it('uses MedicalContent ids when refilling a condition-scoped pool from a study-plan target', async () => {
+      const p = makeMockPrisma({
+        medicalContent: {
+          findMany: vi.fn().mockResolvedValue([{ id: 'mc-123', conditionId: 'cond-123' }]),
+        },
+        preGeneratedQuestion: {
+          findMany: vi.fn().mockImplementation((a: any) =>
+            queryMatchesCondition(a.where, 'mc-123')
+              ? Promise.resolve([makeQ('q-mc', { conditionId: 'cond-123', medicalContentId: 'mc-123' })])
+              : Promise.resolve([])
+          ),
+        },
+      });
+
+      const result = await executeRefill(
+        p,
+        makePayload({ deficit: 5, scope: 'condition:mc-123' })
+      );
+
+      expect(result.poolQueued).toBeGreaterThan(0);
+      expect(p.userProgress.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            conditionId: { in: ['mc-123'] },
+          }),
+        })
+      );
+      expect(p.preGeneratedQuestion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { conditionId: { in: ['mc-123', 'cond-123'] } },
+              { medicalContentId: { in: ['mc-123'] } },
+            ]),
+          }),
+        })
+      );
+    });
+
+    it('does not queue standard Question rows for scoped reservoir fills because reservoir FK targets PreGeneratedQuestion', async () => {
+      const p = makeMockPrisma({
+        preGeneratedQuestion: { findMany: vi.fn().mockResolvedValue([]) },
+        question: {
+          findMany: vi.fn().mockResolvedValue([
+            { id: 'q-main-1', system: 'CV', conditionId: 'cond-123', difficulty: 'medium' },
+          ]),
+        },
+      });
+
+      const result = await executeRefill(
+        p,
+        makePayload({ deficit: 5, scope: 'condition:cond-123' })
+      );
+
+      expect(result.poolQueued).toBe(0);
+      expect(p.question.findMany).not.toHaveBeenCalled();
     });
 
     it('skips flagCount >= 3', async () => {
@@ -261,7 +433,10 @@ describe('refillWorker', () => {
           makeDue('cp', { system: 'Pulmonary', nextReviewAt: new Date(Date.now() - 86400_000) }),
           makeDue('cc', { system: 'Cardiovascular', nextReviewAt: new Date(Date.now() - 86400_000) }),
         ]) },
-        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => Promise.resolve([makeQ('q-' + a.where.conditionId, { conditionId: a.where.conditionId })])) },
+        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => {
+          const id = conditionQueryIds(a.where)[0] ?? 'any';
+          return Promise.resolve([makeQ('q-' + id, { conditionId: id })]);
+        }) },
       });
       expect((await executeRefill(p, makePayload({ deficit: 10, scope: 'system:CV' }))).reviewsQueued).toBeGreaterThan(0);
     });
@@ -272,7 +447,10 @@ describe('refillWorker', () => {
           makeDue('c1', { nextReviewAt: new Date(Date.now() - 5 * 86400_000) }),
           makeDue('c2', { nextReviewAt: new Date(Date.now() - 86400_000) }),
         ]) },
-        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => Promise.resolve([makeQ('q-' + a.where.conditionId, { conditionId: a.where.conditionId })])) },
+        preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => {
+          const id = conditionQueryIds(a.where)[0] ?? 'any';
+          return Promise.resolve([makeQ('q-' + id, { conditionId: id })]);
+        }) },
       });
       expect((await executeRefill(p, makePayload({ scope: 'adaptive' }))).reviewsQueued).toBe(2);
     });
@@ -295,7 +473,7 @@ describe('refillWorker', () => {
       const p = makeMockPrisma({
         userProgress: { findMany: vi.fn().mockResolvedValue([makeDue('c1'), makeDue('c2'), makeDue('c3')]) },
         preGeneratedQuestion: { findMany: vi.fn().mockImplementation((a: any) => {
-          const c = a.where?.conditionId;
+          const c = conditionQueryIds(a.where)[0];
           if (c) return Promise.resolve([makeQ('qr-' + c, { conditionId: c })]);
           return Promise.resolve([makeQ('p1'), makeQ('p2'), makeQ('p3'), makeQ('p4'), makeQ('p5')]);
         }) },

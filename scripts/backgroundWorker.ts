@@ -21,6 +21,7 @@ import { config } from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { getNextJob, completeJob, failJob, type JobType } from '../lib/services/queue/jobQueue';
 import { generateSingleQuestion } from '../lib/questionGenerator';
+import { executeRefill, type RefillJobPayload } from '../lib/services/reservoir/refillWorker';
 import * as fs from 'fs';
 import * as path from 'path';
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
@@ -114,6 +115,20 @@ async function processJob(job: any): Promise<void> {
  * Generate pre-made questions for instant delivery
  */
 async function processQuestionGeneration(job: any): Promise<void> {
+  if (job.payload?.isReservoirRefill === true) {
+    const result = await executeRefill(prisma, job.payload as RefillJobPayload);
+    console.log('[Worker] Reservoir refill completed', {
+      jobId: job.id,
+      userId: job.payload.userId,
+      scope: job.payload.scope,
+      inserted: result.totalInserted,
+      reviewsQueued: result.reviewsQueued,
+      poolQueued: result.poolQueued,
+      errors: result.errors.length,
+    });
+    return;
+  }
+
   const { system, difficulty, count } = job.payload;
 
   console.log(`[Worker] Generating ${count} questions for ${system || 'all systems'}`);

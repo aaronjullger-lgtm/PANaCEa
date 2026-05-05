@@ -161,7 +161,7 @@ export const onRequestPost = authenticatedEndpoint(
           endedAt: new Date(),
           correctAnswers,
           accuracy,
-          totalQuestions: Math.max(session.totalQuestions ?? 0, totalReviews),
+          totalQuestions: totalReviews,
           updatedAt: new Date(),
         },
       });
@@ -177,7 +177,10 @@ export const onRequestPost = authenticatedEndpoint(
         data: {
           sessionId,
           blueprintLabel: session.blueprintLabel,
-          totalQuestions: Math.max(session.totalQuestions ?? 0, totalReviews),
+          totalQuestions: totalReviews,
+          plannedQuestions: session.totalQuestions ?? 0,
+          persistedAnswers: totalReviews,
+          reviewSyncComplete: totalReviews > 0,
           correctAnswers,
           sessionBreakdown,
           rollingHealth: rollingHealth

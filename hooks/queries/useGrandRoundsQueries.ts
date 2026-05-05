@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { queryKeys } from '@/lib/queryKeys';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -91,11 +92,11 @@ async function authedFetch<T>(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as { error?: string };
-    throw new Error(body.error || `HTTP ${res.status}`);
+    const body = await res.json().catch(() => ({}));
+    throw new Error(getApiEnvelopeError(body, `HTTP ${res.status}`));
   }
 
-  return res.json() as Promise<T>;
+  return unwrapApiEnvelope<T>(await res.json());
 }
 
 // ─── Queries ────────────────────────────────────────────────────────────────
@@ -149,11 +150,11 @@ export function useGrandRoundsLeaderboard(enabled = true) {
   return useQuery<LeaderboardEntry[]>({
     queryKey: queryKeys.grandRounds.leaderboard(),
     queryFn: async () => {
-      const json = await authedFetch<{ data?: { leaderboard?: unknown[] } }>(
+      const json = await authedFetch<{ leaderboard?: unknown[] }>(
         getToken,
         '/api/grand-rounds/leaderboard?limit=20',
       );
-      const list = json?.data?.leaderboard ?? [];
+      const list = json?.leaderboard ?? [];
       return (Array.isArray(list) ? list : []) as LeaderboardEntry[];
     },
     enabled: !!isSignedIn && enabled,
@@ -171,11 +172,11 @@ export function useGrandRoundsReview(challengeId: string | null, enabled = true)
     queryKey: queryKeys.grandRounds.review(challengeId ?? ''),
     queryFn: async () => {
       if (!challengeId) return [];
-      const json = await authedFetch<{ data?: { review?: unknown[] } }>(
+      const json = await authedFetch<{ review?: unknown[] }>(
         getToken,
         `/api/grand-rounds/review?challengeId=${encodeURIComponent(challengeId)}`,
       );
-      const list = json?.data?.review ?? [];
+      const list = json?.review ?? [];
       return (Array.isArray(list) ? list : []) as ReviewEntry[];
     },
     enabled: !!isSignedIn && enabled && !!challengeId,

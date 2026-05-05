@@ -20,7 +20,7 @@ import { handleCorsPreflightSecure } from './_shared/cors';
 type RateLimitTier = 'ai' | 'auth' | 'admin' | 'default';
 
 const RATE_LIMIT_TIERS: Record<RateLimitTier, { limit: number; windowSeconds: number }> = {
-  ai: { limit: 10, windowSeconds: 60 },    // Gemini, vision, embeddings, agents
+  ai: { limit: 10, windowSeconds: 60 },    // Gemini, generation, vision, embeddings, agents
   auth: { limit: 20, windowSeconds: 60 },  // Authentication endpoints
   admin: { limit: 30, windowSeconds: 60 }, // Admin operations
   default: { limit: 60, windowSeconds: 60 }, // General API traffic
@@ -28,6 +28,7 @@ const RATE_LIMIT_TIERS: Record<RateLimitTier, { limit: number; windowSeconds: nu
 
 // Path prefixes mapped to tiers
 const PATH_TIER_MAP: Array<[string, RateLimitTier]> = [
+  ['/api/ai/', 'ai'],
   ['/api/gemini/', 'ai'],
   ['/api/vision/', 'ai'],
   ['/api/embeddings/', 'ai'],
@@ -36,6 +37,38 @@ const PATH_TIER_MAP: Array<[string, RateLimitTier]> = [
   ['/api/smart-scribe/', 'ai'],
   ['/api/tutor/', 'ai'],
   ['/api/sim-lab/', 'ai'],
+  ['/api/questions/generate', 'ai'],
+  ['/api/questions/explain-rag', 'ai'],
+  ['/api/questions/due-siblings', 'ai'],
+  ['/api/questions/pool', 'ai'],
+  ['/api/clinical-eye/', 'ai'],
+  ['/api/ddx/', 'ai'],
+  ['/api/drills/contrastive/generate', 'ai'],
+  ['/api/drills/elaboration/grade', 'ai'],
+  ['/api/drills/soap/grade', 'ai'],
+  ['/api/drills/teachback/grade', 'ai'],
+  ['/api/knowledge/', 'ai'],
+  ['/api/library/answer', 'ai'],
+  ['/api/library/search', 'ai'],
+  ['/api/library/semantic-search', 'ai'],
+  ['/api/lecture/', 'ai'],
+  ['/api/osce/live', 'ai'],
+  ['/api/osce/live-config', 'ai'],
+  ['/api/osce/live-engine', 'ai'],
+  ['/api/osce/state-machine', 'ai'],
+  ['/api/osce/analysis/grade', 'ai'],
+  ['/api/podcast/', 'ai'],
+  ['/api/scribe/', 'ai'],
+  ['/api/spark/', 'ai'],
+  ['/api/study/chat', 'ai'],
+  ['/api/technique-check/', 'ai'],
+  ['/api/veo/', 'ai'],
+  ['/api/visualizer/', 'ai'],
+  ['/api/admin/enrich-condition', 'ai'],
+  ['/api/admin/generate-question', 'ai'],
+  ['/api/admin/generate-draft', 'ai'],
+  ['/api/admin/staging/run-critic', 'ai'],
+  ['/api/admin/knowledge/ingest', 'ai'],
   ['/api/auth/', 'auth'],
   ['/api/admin/', 'admin'],
 ];
@@ -50,23 +83,26 @@ function getTierForPath(pathname: string): RateLimitTier {
 
 // ─── KV rate limiter ────────────────────────────────────────────────────────
 
-async function isRateLimited(
+type RateLimitResult = 'allowed' | 'limited' | 'unavailable';
+
+async function checkRateLimit(
   kv: CloudflareEnv['RATE_LIMIT_KV'] | undefined,
   key: string,
   maxRequests: number,
   windowSeconds: number,
-): Promise<boolean> {
-  if (!kv) return false; // fail-open if KV not bound (local dev)
+  options: { failClosedOnError: boolean },
+): Promise<RateLimitResult> {
+  if (!kv) return 'allowed'; // local/dev fallback when KV is intentionally absent
 
   try {
     const current = (await kv.get(key, { type: 'json' })) as number | null;
-    if (current !== null && current >= maxRequests) return true;
+    if (current !== null && current >= maxRequests) return 'limited';
     await kv.put(key, String((current ?? 0) + 1), {
       expirationTtl: windowSeconds,
     });
-    return false;
+    return 'allowed';
   } catch {
-    return false; // fail-open
+    return options.failClosedOnError ? 'unavailable' : 'allowed';
   }
 }
 
@@ -92,8 +128,28 @@ export async function onRequest(context: {
   const clientIp = request.headers.get('cf-connecting-ip') || 'unknown';
   const rateLimitKey = `gateway:${tier}:${clientIp}`;
 
-  const limited = await isRateLimited(kv(env), rateLimitKey, config.limit, config.windowSeconds);
-  if (limited) {
+  const rateLimitResult = await checkRateLimit(kv(env), rateLimitKey, config.limit, config.windowSeconds, {
+    failClosedOnError: tier === 'ai',
+  });
+  if (rateLimitResult === 'unavailable') {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'AI rate limiter unavailable. Please try again shortly.',
+        retryAfter: config.windowSeconds,
+      }),
+      {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(config.windowSeconds),
+          'X-RateLimit-Tier': tier,
+        },
+      },
+    );
+  }
+
+  if (rateLimitResult === 'limited') {
     return new Response(
       JSON.stringify({
         success: false,

@@ -12,38 +12,304 @@
  * surrounding functions don't receive the full AuthenticatedContext object.
  */
 import { gateway, GatewayError, type GatewayContext } from '../../../lib/ai/aiGateway';
+import { z } from 'zod';
+import { upsertCanonicalQuestionMirror } from './canonical-question-mirror';
 
 interface AdequacyCheckResult {
   isValid: boolean;
   hasCorrectAnswer: boolean;
   explanationLength: number;
   hasMedicalErrors: boolean;
+  accuracyCheckCompleted: boolean;
   score: number; // 0-1
   details: string;
 }
+
+const adequacyGatewayResponseSchema = z.object({
+  hasMedicalErrors: z.boolean(),
+  issues: z.array(z.string()).default([]),
+  severity: z.enum(['none', 'minor', 'major']).optional(),
+  score: z.number().min(0).max(1).optional(),
+});
+
+const criticGatewayResponseSchema = z.object({
+  score: z.number().min(0).max(100),
+  briefReason: z.string().optional(),
+});
+
+type StagingIdentity = {
+  taxonomyCode?: string;
+  subcategory?: string;
+  conditionId?: string;
+  medicalContentId?: string;
+  conditionName?: string;
+  questionOrder?: string;
+  taskCategory?: string;
+  source?: string;
+  generatorUserId?: string;
+  generatedAt?: string;
+  sourceMetadata?: Record<string, unknown>;
+};
 
 // Helper function to count words
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+function normalizeDifficulty(value: unknown): string {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    if (value < 0.4) return 'easy';
+    if (value > 0.75) return 'hard';
+    return 'medium';
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+
+  return 'medium';
+}
+
+function normalizeExplanation(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') {
+    const explanation = value as Record<string, unknown>;
+    return String(explanation.rationale ?? explanation.text ?? '');
+  }
+  return '';
+}
+
+function buildSourceMetadata(questionData: any): Record<string, unknown> {
+  const metadata = questionData?.metadata && typeof questionData.metadata === 'object'
+    ? { ...(questionData.metadata as Record<string, unknown>) }
+    : {};
+
+  [
+    'groundingSources',
+    'pubmedCitations',
+    'sourceSections',
+    'questionOrder',
+    'taskCategory',
+    'correctAnswerIndex',
+    'correctIndex',
+  ].forEach((key) => {
+    if (questionData?.[key] !== undefined) {
+      metadata[key] = questionData[key];
+    }
+  });
+
+  return metadata;
+}
+
+function normalizeTags(questionData: any): string[] {
+  const tags = new Set<string>();
+  const rawTags = questionData?.tags;
+
+  if (Array.isArray(rawTags)) {
+    rawTags.forEach((tag) => {
+      if (typeof tag === 'string' && tag.trim()) tags.add(tag.trim());
+    });
+  }
+
+  const metadata = questionData?.metadata ?? {};
+  const addTag = (key: string, value: unknown) => {
+    if (typeof value === 'string' && value.trim()) {
+      tags.add(`${key}:${value.trim()}`);
+    }
+  };
+
+  addTag('taxonomy', metadata.taxonomyCode ?? questionData?.system);
+  addTag('subcategory', metadata.subcategory ?? questionData?.subcategory);
+  addTag('condition', metadata.conditionId ?? questionData?.conditionId);
+  addTag('medicalContent', metadata.medicalContentId ?? questionData?.medicalContentId);
+  addTag('conditionName', metadata.conditionName ?? questionData?.conditionName);
+  addTag('questionOrder', metadata.questionOrder ?? questionData?.questionOrder);
+  addTag('taskCategory', metadata.taskCategory ?? questionData?.taskCategory);
+  addTag('source', metadata.source ?? 'admin_question_generator');
+  addTag('generatorUser', metadata.generatorUserId);
+  addTag('generatedAt', metadata.generatedAt);
+
+  const sourceMetadata = buildSourceMetadata(questionData);
+  if (Object.keys(sourceMetadata).length > 0) {
+    tags.add(`sourceMetadata:${encodeURIComponent(JSON.stringify(sourceMetadata))}`);
+  }
+
+  return [...tags];
+}
+
+function parseIdentityFromTags(tags: unknown): StagingIdentity {
+  const identity: StagingIdentity = {};
+  if (!tags) return identity;
+
+  const assign = (key: string, value: unknown) => {
+    if (typeof value !== 'string' || !value.trim()) return;
+    const normalizedValue = value.trim();
+    switch (key) {
+      case 'taxonomy':
+        identity.taxonomyCode = normalizedValue;
+        break;
+      case 'subcategory':
+        identity.subcategory = normalizedValue;
+        break;
+      case 'condition':
+        identity.conditionId = normalizedValue;
+        break;
+      case 'medicalContent':
+        identity.medicalContentId = normalizedValue;
+        break;
+      case 'conditionName':
+        identity.conditionName = normalizedValue;
+        break;
+      case 'questionOrder':
+        identity.questionOrder = normalizedValue;
+        break;
+      case 'taskCategory':
+        identity.taskCategory = normalizedValue;
+        break;
+      case 'source':
+        identity.source = normalizedValue;
+        break;
+      case 'generatorUser':
+        identity.generatorUserId = normalizedValue;
+        break;
+      case 'generatedAt':
+        identity.generatedAt = normalizedValue;
+        break;
+      case 'sourceMetadata':
+        try {
+          const parsed = JSON.parse(decodeURIComponent(normalizedValue));
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            identity.sourceMetadata = parsed as Record<string, unknown>;
+            if (typeof parsed.questionOrder === 'string') {
+              identity.questionOrder = parsed.questionOrder;
+            }
+            if (typeof parsed.taskCategory === 'string') {
+              identity.taskCategory = parsed.taskCategory;
+            }
+          }
+        } catch {
+          // Ignore malformed optional source metadata tags; core identity tags still apply.
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  if (Array.isArray(tags)) {
+    tags.forEach((tag) => {
+      if (typeof tag !== 'string') return;
+      const separator = tag.indexOf(':');
+      if (separator <= 0) return;
+      assign(tag.slice(0, separator), tag.slice(separator + 1));
+    });
+  } else if (typeof tags === 'object') {
+    Object.entries(tags as Record<string, unknown>).forEach(([key, value]) => assign(key, value));
+  }
+
+  return identity;
+}
+
+function normalizeOptionValues(options: unknown): string[] {
+  if (Array.isArray(options)) {
+    return options.map((option) => String(option ?? '').trim()).filter(Boolean);
+  }
+
+  if (options && typeof options === 'object') {
+    return Object.values(options as Record<string, unknown>)
+      .map((option) => String(option ?? '').trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function resolveCorrectAnswer(questionData: any): string {
+  if (typeof questionData?.correctAnswer === 'string' && questionData.correctAnswer.trim()) {
+    return questionData.correctAnswer.trim();
+  }
+
+  const options = normalizeOptionValues(questionData?.options);
+  const index = questionData?.correctAnswerIndex ?? questionData?.correctIndex;
+  if (typeof index === 'number' && index >= 0 && index < options.length) {
+    return String(options[index] ?? '').trim();
+  }
+
+  return String(questionData?.answer ?? questionData?.correct_option ?? '').trim();
+}
+
+function correctAnswerResolvesToOption(correctAnswer: unknown, options: unknown): boolean {
+  if (typeof correctAnswer !== 'string' || !correctAnswer.trim()) return false;
+  const optionValues = normalizeOptionValues(options);
+  if (optionValues.length === 0) return false;
+
+  const normalized = correctAnswer.trim().toLowerCase();
+  const exactOptionMatch = optionValues.some((option) => option.toLowerCase() === normalized);
+  if (exactOptionMatch) return true;
+
+  const letterMatch = normalized.match(/^[a-z]$/);
+  if (letterMatch) {
+    const index = normalized.charCodeAt(0) - 97;
+    return index >= 0 && index < optionValues.length;
+  }
+
+  return false;
+}
+
+export function getStagingQuestionValidationErrors(questionData: unknown): string[] {
+  const data = questionData && typeof questionData === 'object'
+    ? (questionData as Record<string, unknown>)
+    : null;
+  if (!data) return ['questionData must be an object'];
+
+  const question = String(data.question ?? data.stem ?? data.text ?? '').trim();
+  const options = normalizeOptionValues(data.options ?? data.choices ?? data.answers);
+  const correctAnswer = resolveCorrectAnswer(data);
+  const explanation = normalizeExplanation(data.explanation ?? data.rationale);
+  const errors: string[] = [];
+
+  if (!question) {
+    errors.push('question is required');
+  }
+
+  if (options.length < 2) {
+    errors.push('at least two answer options are required');
+  }
+
+  if (!correctAnswerResolvesToOption(correctAnswer, options)) {
+    errors.push('correctAnswer must resolve to one of the answer options');
+  }
+
+  if (!explanation.trim()) {
+    errors.push('explanation or rationale is required');
+  }
+
+  return errors;
+}
+
 /**
  * Save a generated question to staging (not shown to users immediately)
  */
 export async function saveToStaging(prisma: any, questionData: any) {
+  const validationErrors = getStagingQuestionValidationErrors(questionData);
+  if (validationErrors.length > 0) {
+    throw new Error(`Invalid staging question payload: ${validationErrors.join('; ')}`);
+  }
+
+  const tags = normalizeTags(questionData);
+  const questionText = String(questionData.question ?? questionData.stem ?? questionData.text ?? '').trim();
+  const explanation = normalizeExplanation(questionData.explanation ?? questionData.rationale);
   const question = await prisma.stagingQuestion.create({
     data: {
+      id: crypto.randomUUID(),
       vignette: questionData.vignette || '',
-      question: questionData.question,
-      options: questionData.options,
-      correctAnswer: questionData.correctAnswer,
-      explanation:
-        typeof questionData.explanation === 'string'
-          ? questionData.explanation
-          : questionData.explanation?.rationale || '',
+      question: questionText,
+      options: normalizeOptionValues(questionData.options ?? questionData.choices ?? questionData.answers),
+      correctAnswer: resolveCorrectAnswer(questionData),
+      explanation,
       system: questionData.system || 'General',
-      difficulty: questionData.difficulty || 'medium',
-      tags: questionData.tags || [],
+      difficulty: normalizeDifficulty(questionData.difficulty),
+      tags,
       status: 'pending',
     },
   });
@@ -68,7 +334,7 @@ export async function runAdequacyCheck(
   }
 
   // Basic validation checks
-  const hasCorrectAnswer = !!question.correctAnswer;
+  const hasCorrectAnswer = correctAnswerResolvesToOption(question.correctAnswer, question.options);
   const explanationLength = countWords(question.explanation || '');
   const explanationLongEnough = explanationLength >= 50;
 
@@ -76,6 +342,7 @@ export async function runAdequacyCheck(
   let hasMedicalErrors = false;
   let aiDetails = '';
   let score = 0;
+  let accuracyCheckCompleted = false;
 
   if (env.GEMINI_API_KEY) {
     try {
@@ -115,10 +382,18 @@ Respond with JSON only:
       } else {
         const sanitized = (result.text ?? '').replace(/```json|```/g, '').trim();
         const json = JSON.parse(sanitized);
+        const parsed = adequacyGatewayResponseSchema.safeParse(json);
 
-        hasMedicalErrors = json.hasMedicalErrors;
-        aiDetails = JSON.stringify(json.issues);
-        score = json.score || (hasMedicalErrors ? 0 : 1);
+        if (parsed.success) {
+          hasMedicalErrors = parsed.data.hasMedicalErrors;
+          aiDetails = JSON.stringify(parsed.data.issues);
+          score = parsed.data.score ?? (hasMedicalErrors ? 0 : 1);
+          accuracyCheckCompleted = true;
+        } else {
+          hasMedicalErrors = false;
+          aiDetails = 'Adequacy check returned invalid JSON shape';
+          score = 0.5;
+        }
       }
     } catch (error) {
       if (error instanceof GatewayError) {
@@ -131,15 +406,23 @@ Respond with JSON only:
       aiDetails = 'AI check failed';
       score = 0.5;
     }
+  } else {
+    aiDetails = 'AI check unavailable';
+    score = 0.5;
   }
 
-  const isValid = hasCorrectAnswer && explanationLongEnough && !hasMedicalErrors;
+  const isValid =
+    hasCorrectAnswer &&
+    explanationLongEnough &&
+    !hasMedicalErrors &&
+    accuracyCheckCompleted;
 
   const result: AdequacyCheckResult = {
     isValid,
     hasCorrectAnswer,
     explanationLength,
     hasMedicalErrors,
+    accuracyCheckCompleted,
     score,
     details: aiDetails,
   };
@@ -156,6 +439,7 @@ Respond with JSON only:
         hasCorrectAnswer,
         explanationLength,
         hasMedicalErrors,
+        accuracyCheckCompleted,
       },
     },
   });
@@ -166,7 +450,11 @@ Respond with JSON only:
 /**
  * Promote a staging question to live questions
  */
-export async function promoteToLive(prisma: any, stagingQuestionId: string) {
+export async function promoteToLive(
+  prisma: any,
+  stagingQuestionId: string,
+  options: { allowPendingHumanReview?: boolean; reviewedBy?: string | null } = {}
+) {
   const question = await prisma.stagingQuestion.findUnique({
     where: { id: stagingQuestionId },
   });
@@ -175,34 +463,130 @@ export async function promoteToLive(prisma: any, stagingQuestionId: string) {
     throw new Error('Staging question not found');
   }
 
-  if (question.status !== 'graded') {
+  if (question.status !== 'graded' && !(options.allowPendingHumanReview && question.status === 'pending')) {
     throw new Error('Question has not passed adequacy check');
   }
 
-  // Save to PreGeneratedQuestion (live questions pool)
-  const liveQuestion = await prisma.preGeneratedQuestion.create({
-    data: {
+  const validationErrors = getStagingQuestionValidationErrors(question);
+  if (validationErrors.length > 0) {
+    throw new Error(`Question cannot be promoted: ${validationErrors.join('; ')}`);
+  }
+
+  const identity = parseIdentityFromTags(question.tags);
+  const promotedAt = new Date();
+
+  // Save to PreGeneratedQuestion (live questions pool). Keep the staging id
+  // as the live pool id so generated content retains a stable source identity
+  // across staging, reservoir selection, session serving, and submission.
+  const liveQuestion = await prisma.preGeneratedQuestion.upsert({
+    where: { id: question.id },
+    create: {
+      id: question.id,
       questionType: 'mcq',
       system: question.system,
-      conditionId: null,
+      conditionId: identity.conditionId ?? null,
+      medicalContentId: identity.medicalContentId ?? null,
       difficulty: question.difficulty,
+      questionOrder: identity.questionOrder ?? null,
+      taskCategory: identity.taskCategory ?? null,
       questionData: {
         vignette: question.vignette,
         question: question.question,
         options: question.options,
         correctAnswer: question.correctAnswer,
         explanation: question.explanation,
+        system: question.system,
+        subcategory: identity.subcategory ?? null,
+        conditionId: identity.conditionId ?? null,
+        medicalContentId: identity.medicalContentId ?? null,
+        conditionName: identity.conditionName ?? null,
         tags: question.tags,
+        provenance: {
+          source: identity.source ?? 'staging',
+          stagingQuestionId: question.id,
+          taxonomyCode: identity.taxonomyCode ?? question.system,
+          subcategory: identity.subcategory ?? null,
+          conditionId: identity.conditionId ?? null,
+          medicalContentId: identity.medicalContentId ?? null,
+          conditionName: identity.conditionName ?? null,
+          sourceMetadata: identity.sourceMetadata ?? null,
+          generatorUserId: identity.generatorUserId ?? null,
+          generatedAt: identity.generatedAt ?? null,
+          promotedAt: promotedAt.toISOString(),
+          aiGrade: question.aiGrade ?? null,
+          humanReviewedBy: options.reviewedBy ?? null,
+        },
       },
       quality: 10,
+      validationStatus: 'approved',
+      validatedAt: promotedAt,
+    },
+    update: {
+      questionType: 'mcq',
+      system: question.system,
+      conditionId: identity.conditionId ?? null,
+      medicalContentId: identity.medicalContentId ?? null,
+      difficulty: question.difficulty,
+      questionOrder: identity.questionOrder ?? null,
+      taskCategory: identity.taskCategory ?? null,
+      questionData: {
+        vignette: question.vignette,
+        question: question.question,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+        system: question.system,
+        subcategory: identity.subcategory ?? null,
+        conditionId: identity.conditionId ?? null,
+        medicalContentId: identity.medicalContentId ?? null,
+        conditionName: identity.conditionName ?? null,
+        tags: question.tags,
+        provenance: {
+          source: identity.source ?? 'staging',
+          stagingQuestionId: question.id,
+          taxonomyCode: identity.taxonomyCode ?? question.system,
+          subcategory: identity.subcategory ?? null,
+          conditionId: identity.conditionId ?? null,
+          medicalContentId: identity.medicalContentId ?? null,
+          conditionName: identity.conditionName ?? null,
+          sourceMetadata: identity.sourceMetadata ?? null,
+          generatorUserId: identity.generatorUserId ?? null,
+          generatedAt: identity.generatedAt ?? null,
+          promotedAt: promotedAt.toISOString(),
+          aiGrade: question.aiGrade ?? null,
+          humanReviewedBy: options.reviewedBy ?? null,
+        },
+      },
+      quality: 10,
+      validationStatus: 'approved',
+      validatedAt: promotedAt,
     },
   });
+
+  const canonicalQuestionId = await upsertCanonicalQuestionMirror(prisma, {
+    id: liveQuestion.id,
+    questionData: liveQuestion.questionData,
+    system: liveQuestion.system,
+    difficulty: liveQuestion.difficulty,
+    conditionId: liveQuestion.conditionId,
+    medicalContentId: liveQuestion.medicalContentId,
+    generatedAt: liveQuestion.generatedAt,
+  }, {
+    source: 'staging_promoted_pre_generated',
+    humanReviewed: true,
+  });
+  if (!canonicalQuestionId) {
+    throw new Error('Question cannot be promoted: canonical Question mirror could not be created');
+  }
 
   // Update staging question status
   await prisma.stagingQuestion.update({
     where: { id: stagingQuestionId },
     data: {
       status: 'approved',
+      adminReview: options.allowPendingHumanReview
+        ? 'Approved by human reviewer without automated adequacy grade'
+        : undefined,
     },
   });
 
@@ -256,6 +640,16 @@ export async function processStagingQueue(prisma: any, env: any, limit: number =
         // Auto-promote to live
         await promoteToLive(prisma, question.id);
         results.push({ id: question.id, status: 'promoted', score: checkResult.score });
+      } else if (!checkResult.accuracyCheckCompleted) {
+        // Keep the question pending when the AI critic did not complete. This
+        // fail-closed path prevents unreviewed content from reaching learners
+        // without destroying work that can be checked later.
+        results.push({
+          id: question.id,
+          status: 'skipped_pending',
+          score: checkResult.score,
+          error: checkResult.details,
+        });
       } else if (checkResult.hasMedicalErrors) {
         // Flag for human review
         await flagForReview(prisma, question.id, 'Medical errors detected');
@@ -301,7 +695,8 @@ export async function getStagingStats(prisma: any) {
 
 /**
  * Process pending staging questions with Critic (Gemini Pro): score 0–100.
- * score > 90 → auto-promote to PreGeneratedQuestion; < 70 → delete; 70–90 → flag for human review.
+ * score > 90 → auto-promote to PreGeneratedQuestion; < 70 → mark rejected;
+ * 70–90 → flag for human review.
  */
 export async function processStagingQueueWithCritic(
   prisma: any,
@@ -352,9 +747,26 @@ Respond with JSON only: { "score": number 0-100, "briefReason": "string" }`;
 
       const sanitized = (result.text ?? '').replace(/```json|```/g, '').trim();
       const json = JSON.parse(sanitized);
-      const score = typeof json.score === 'number' ? Math.max(0, Math.min(100, json.score)) : 50;
+      const parsed = criticGatewayResponseSchema.safeParse(json);
+      if (!parsed.success) {
+        results.push({ id: question.id, status: 'error', error: 'Critic returned invalid JSON shape' });
+        continue;
+      }
+
+      const { score, briefReason } = parsed.data;
 
       if (score > 90) {
+        const validationErrors = getStagingQuestionValidationErrors(question);
+        if (validationErrors.length > 0) {
+          await flagForReview(
+            prisma,
+            question.id,
+            `Critic score ${score}, but promotion validation failed: ${validationErrors.join('; ')}`
+          );
+          results.push({ id: question.id, status: 'flagged_for_review', score });
+          continue;
+        }
+
         await prisma.stagingQuestion.update({
           where: { id: question.id },
           data: { status: 'graded' },
@@ -368,7 +780,7 @@ Respond with JSON only: { "score": number 0-100, "briefReason": "string" }`;
         await flagForReview(
           prisma,
           question.id,
-          `Critic score ${score}: ${json.briefReason || 'Review'}`
+          `Critic score ${score}: ${briefReason || 'Review'}`
         );
         results.push({ id: question.id, status: 'flagged_for_review', score });
       }

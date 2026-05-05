@@ -13,16 +13,35 @@ import type { SRSDueResult, SRSSubmitPayload } from './types';
 
 export interface SrsClient {
   getDueItems(): Promise<SRSDueResult>;
-  submitReview(payload: SRSSubmitPayload): Promise<{ success: boolean }>;
+  submitReview(payload: SRSSubmitPayload): Promise<{
+    success: boolean;
+    nextReviewDate?: string;
+    questionId?: string;
+    conditionId?: string;
+    topicProgressId?: string;
+  }>;
 }
 
 export function createSrsClient(api: ApiClient): SrsClient {
   return {
-    getDueItems() {
-      return api.get<SRSDueResult>('/api/srs/due');
+    async getDueItems() {
+      const result = await api.get<SRSDueResult>('/api/srs/due');
+      return {
+        ...result,
+        items: result.items.map((item) => ({
+          ...item,
+          dueDate: item.dueDate instanceof Date ? item.dueDate : new Date(item.dueDate as unknown as string),
+        })),
+      };
     },
     submitReview(payload) {
-      return api.post<{ success: boolean }>('/api/srs/submit', payload);
+      return api.post<{
+        success: boolean;
+        nextReviewDate?: string;
+        questionId?: string;
+        conditionId?: string;
+        topicProgressId?: string;
+      }>('/api/srs/submit', payload);
     },
   };
 }

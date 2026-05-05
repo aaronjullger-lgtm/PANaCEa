@@ -8,7 +8,8 @@ const mockPrisma: any = {
   user: { findUnique: vi.fn(), create: vi.fn() },
   questionAttempt: { create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
   userQuestionSeen: { findUnique: vi.fn(), upsert: vi.fn() },
-  question: { update: vi.fn() },
+  question: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), upsert: vi.fn(), update: vi.fn() },
+  preGeneratedQuestion: { findUnique: vi.fn(), findFirst: vi.fn() },
   $queryRaw: vi.fn(),
   $transaction: vi.fn(),
 };
@@ -49,6 +50,15 @@ vi.mock('../ai/learning/profile-crud', () => ({
 
 vi.mock('../../../lib/answerLetterMap', () => ({
   ANSWER_LETTERS: ['A', 'B', 'C', 'D', 'E'],
+  resolveCorrectAnswerIndex: vi.fn((answer: string, options: string[]) => {
+    const normalized = answer.trim();
+    const letterIndex = ['A', 'B', 'C', 'D', 'E'].indexOf(normalized.toUpperCase());
+    if (letterIndex >= 0 && letterIndex < options.length) return letterIndex;
+    const numeric = Number(normalized);
+    if (Number.isInteger(numeric) && numeric >= 0 && numeric < options.length) return numeric;
+    const textIndex = options.findIndex((option) => option === normalized);
+    return textIndex >= 0 ? textIndex : null;
+  }),
 }));
 
 vi.mock('../../../lib/api/schemas/questions', async () => {
@@ -118,6 +128,15 @@ function setupDefaultMocks(tx?: any) {
   const mockTx = tx ?? makeMockTx();
   mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-db-1' });
   mockPrisma.questionAttempt.findUnique.mockResolvedValue(null);
+  mockPrisma.question.findFirst.mockImplementation(async (args: any) => ({
+    id: args?.where?.id ?? 'q-1',
+    conditionId: null,
+    medicalContentId: null,
+  }));
+  mockPrisma.question.create.mockResolvedValue({});
+  mockPrisma.question.upsert.mockResolvedValue({});
+  mockPrisma.preGeneratedQuestion.findUnique.mockResolvedValue(null);
+  mockPrisma.preGeneratedQuestion.findFirst.mockResolvedValue(null);
   mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(mockTx));
   // getUserSystemStats after transaction
   mockPrisma.questionAttempt.findMany.mockResolvedValue([
@@ -151,6 +170,11 @@ describe('POST /api/questions/attempt', () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ id: 'user-db-1' });
       mockPrisma.user.create.mockResolvedValue({ id: 'user-db-1' });
+      mockPrisma.question.findFirst.mockResolvedValue({
+        id: 'q-1',
+        conditionId: null,
+        medicalContentId: null,
+      });
       mockPrisma.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(tx));
       mockPrisma.questionAttempt.findMany.mockResolvedValue([]);
 
@@ -253,6 +277,121 @@ describe('POST /api/questions/attempt', () => {
       expect(createCall.data.system).toBe('Pulmonary');
       expect(createCall.data.mode).toBe('drill');
       expect(createCall.data.id).toMatch(/^attempt-user-db-1-q-42-/);
+    });
+
+    it('requires direct canonical questions to pass production serving safety before stats writes', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+
+      await callEndpoint(makeContext({ questionId: 'q-approved-1' }));
+
+      expect(mockPrisma.question.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: 'q-approved-1',
+            lifecycleStatus: 'ACTIVE',
+            qaStatus: 'APPROVED',
+          }),
+        })
+      );
+      expect(tx.questionAttempt.create).toHaveBeenCalled();
+    });
+
+    it('creates a Question identity mirror before writing attempts for pre-generated-only IDs', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+      mockPrisma.question.findFirst.mockResolvedValue(null);
+      mockPrisma.preGeneratedQuestion.findFirst.mockResolvedValue({
+        id: 'pgq-1',
+        questionData: {
+          vignette: 'A patient has acute dyspnea.',
+          question: 'What is the best next test?',
+          options: ['D-dimer', 'CT pulmonary angiography', 'Peak flow', 'ECG'],
+          correctAnswer: 'B',
+          explanation: 'CTPA is preferred when PE suspicion is high.',
+        },
+        conditionId: 'cond-1',
+        medicalContentId: 'content-1',
+        system: 'Pulmonary',
+        difficulty: 'medium',
+      });
+
+      await callEndpoint(makeContext({ questionId: 'pgq-1', selectedAnswer: 1 }));
+
+      expect(mockPrisma.question.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            id: 'pgq-1',
+            question: 'What is the best next test?',
+            correctAnswer: 'CT pulmonary angiography',
+            source: 'pre_generated_identity_mirror',
+            conditionId: 'cond-1',
+            medicalContentId: 'content-1',
+          }),
+          update: expect.objectContaining({
+            question: 'What is the best next test?',
+            correctAnswer: 'CT pulmonary angiography',
+            source: 'pre_generated_identity_mirror',
+          }),
+        })
+      );
+      const createCall = tx.questionAttempt.create.mock.calls[0][0];
+      expect(createCall.data.questionId).toBe('pgq-1');
+      expect(createCall.data.conditionId).toBe('cond-1');
+      expect(createCall.data.medicalContentId).toBe('content-1');
+      expect(mockPrisma.preGeneratedQuestion.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: 'pgq-1',
+            validationStatus: 'approved',
+          }),
+        })
+      );
+    });
+
+    it('fails closed when a submitted question identity cannot be resolved', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+      mockPrisma.question.findFirst.mockResolvedValue(null);
+      mockPrisma.preGeneratedQuestion.findUnique.mockResolvedValue(null);
+
+      const { status, body } = await callEndpoint(makeContext({ questionId: 'missing-question' }));
+
+      expect(status).toBe(400);
+      expect(body).toEqual(
+        expect.objectContaining({
+          success: false,
+          code: 'QUESTION_IDENTITY_UNRESOLVED',
+        })
+      );
+      expect(tx.questionAttempt.create).not.toHaveBeenCalled();
+    });
+
+    it('fails closed for direct canonical IDs that are not active and approved', async () => {
+      const tx = makeMockTx();
+      setupDefaultMocks(tx);
+      mockPrisma.question.findFirst.mockResolvedValue(null);
+      mockPrisma.preGeneratedQuestion.findFirst.mockResolvedValue(null);
+
+      const { status, body } = await callEndpoint(makeContext({ questionId: 'draft-question' }));
+
+      expect(status).toBe(400);
+      expect(body).toEqual(
+        expect.objectContaining({
+          success: false,
+          code: 'QUESTION_IDENTITY_UNRESOLVED',
+        })
+      );
+      expect(mockPrisma.question.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: 'draft-question',
+            lifecycleStatus: 'ACTIVE',
+            qaStatus: 'APPROVED',
+          }),
+        })
+      );
+      expect(tx.questionAttempt.create).not.toHaveBeenCalled();
     });
 
     it('ignores client-supplied userId and writes attempt for authenticated user only', async () => {
@@ -401,42 +540,26 @@ describe('POST /api/questions/attempt', () => {
     });
   });
 
-  // ---- SRS scheduling ----
-  describe('SRS scheduling', () => {
-    it('calls scheduleConceptReview with correct conceptKey', async () => {
+  // ---- Scheduler ownership ----
+  describe('scheduler ownership', () => {
+    it('does not call the deprecated Leitner scheduler from the stats-only attempt endpoint', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
       await callEndpoint(makeContext({ system: 'Cardio', conditionId: 'cond-1', isCorrect: true }));
-      expect(scheduleConceptReview).toHaveBeenCalledWith(
-        mockPrisma,
-        'user-db-1',
-        'Cardio|cond-1',
-        true
-      );
+      expect(scheduleConceptReview).not.toHaveBeenCalled();
     });
 
-    it('uses questionType in conceptKey when conditionId is absent', async () => {
+    it('keeps stats writes intact when conditionId is absent', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
-      await callEndpoint(makeContext({ system: 'Neuro', conditionId: undefined, questionType: 'MCQ', isCorrect: false }));
-      expect(scheduleConceptReview).toHaveBeenCalledWith(
-        mockPrisma,
-        'user-db-1',
-        'Neuro|MCQ',
-        false
-      );
-    });
-
-    it('does not fail if scheduleConceptReview throws', async () => {
-      const tx = makeMockTx();
-      setupDefaultMocks(tx);
-      (scheduleConceptReview as any).mockRejectedValue(new Error('SRS boom'));
-      const { status, body } = await callEndpoint(makeContext({ isCorrect: true, system: 'Cardio' }));
+      const { status, body } = await callEndpoint(makeContext({ system: 'Neuro', conditionId: undefined, questionType: 'MCQ', isCorrect: false }));
       expect(status).toBe(200);
       expect(body.success).toBe(true);
+      expect(tx.questionAttempt.create).toHaveBeenCalled();
+      expect(scheduleConceptReview).not.toHaveBeenCalled();
     });
 
-    it('skips scheduleConceptReview when correctness is not boolean', async () => {
+    it('does not schedule even when correctness is omitted for stale offline answers', async () => {
       const tx = makeMockTx();
       setupDefaultMocks(tx);
       await callEndpoint(makeContext({ isCorrect: undefined, wasCorrect: undefined, system: 'Cardio' }));
@@ -448,6 +571,11 @@ describe('POST /api/questions/attempt', () => {
   describe('error handling', () => {
     it('throws on transaction failure', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-db-1' });
+      mockPrisma.question.findFirst.mockResolvedValue({
+        id: 'q-1',
+        conditionId: null,
+        medicalContentId: null,
+      });
       mockPrisma.$transaction.mockRejectedValue(new Error('DB down'));
       // The middleware wrapper will catch the thrown error as a 500
       // Since our mock middleware re-throws, we expect the promise to reject
@@ -463,6 +591,11 @@ describe('POST /api/questions/attempt', () => {
 
     it('calls safePrismaDisconnect in finally (error path)', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-db-1' });
+      mockPrisma.question.findFirst.mockResolvedValue({
+        id: 'q-1',
+        conditionId: null,
+        medicalContentId: null,
+      });
       mockPrisma.$transaction.mockRejectedValue(new Error('DB down'));
       try {
         await callEndpoint(makeContext());

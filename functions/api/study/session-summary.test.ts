@@ -103,6 +103,66 @@ describe('POST /api/study/session-summary', () => {
     );
   });
 
+  it('reports persisted answers separately from planned session size', async () => {
+    mockPrisma.studySession.findFirst.mockResolvedValue({
+      id: 'ses-1',
+      userId: 'user-db-1',
+      blueprintLabel: 'PANCE',
+      blueprintStage: 'pance_prep',
+      blueprintExamTypes: ['PANCE'],
+      totalQuestions: 20,
+      correctAnswers: 0,
+    });
+    mockPrisma.reviewLog.findMany.mockResolvedValue([
+      { system: 'Pulmonary', wasCorrect: true, grade: 3 },
+    ]);
+
+    const result = await _capture.handler!(makeContext());
+
+    expect(result.data.totalQuestions).toBe(1);
+    expect(result.data.plannedQuestions).toBe(20);
+    expect(result.data.persistedAnswers).toBe(1);
+    expect(result.data.reviewSyncComplete).toBe(true);
+    expect(mockPrisma.studySession.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          totalQuestions: 1,
+          correctAnswers: 1,
+          accuracy: 1,
+        }),
+      }),
+    );
+  });
+
+  it('does not inflate completed answers when no review logs have synced yet', async () => {
+    mockPrisma.studySession.findFirst.mockResolvedValue({
+      id: 'ses-1',
+      userId: 'user-db-1',
+      blueprintLabel: 'PANCE',
+      blueprintStage: 'pance_prep',
+      blueprintExamTypes: ['PANCE'],
+      totalQuestions: 20,
+      correctAnswers: 0,
+    });
+    mockPrisma.reviewLog.findMany.mockResolvedValue([]);
+
+    const result = await _capture.handler!(makeContext());
+
+    expect(result.data.totalQuestions).toBe(0);
+    expect(result.data.plannedQuestions).toBe(20);
+    expect(result.data.persistedAnswers).toBe(0);
+    expect(result.data.reviewSyncComplete).toBe(false);
+    expect(mockPrisma.studySession.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          totalQuestions: 0,
+          correctAnswers: 0,
+          accuracy: 0,
+        }),
+      }),
+    );
+  });
+
   it('prevents cross-user session access', async () => {
     mockPrisma.studySession.findFirst.mockResolvedValue(null);
 

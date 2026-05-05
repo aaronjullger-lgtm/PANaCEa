@@ -106,7 +106,13 @@ export interface UserStats {
  */
 export interface FSRSParams {
   weights: number[];
+  w?: number[];
   retention: number;
   optimizedAt?: string;
+  lastOptimizedAt?: string | null;
   reviewCount?: number;
+  sampleSize?: number;
+  improvementOverDefault?: number;
+  brierScore?: number | null;
+  defaultBrierScore?: number | null;
 }

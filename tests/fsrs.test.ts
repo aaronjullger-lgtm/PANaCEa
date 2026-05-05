@@ -313,6 +313,19 @@ describe('FSRS v5 Algorithm', () => {
       expect(result.card.scheduled_days).toBeGreaterThanOrEqual(1);
     });
 
+    it('should expose interval calculation for a post-modified Review stability', () => {
+      const modifiedStability = 18;
+      const interval = fsrs.calculateIntervalFromStability(modifiedStability);
+      const factor = defaultParameters.w[19]!;
+      const decay = -defaultParameters.w[20]!;
+      const expected = (modifiedStability / factor)
+        * (Math.pow(defaultParameters.request_retention, 1 / decay) - 1);
+
+      expect(interval).toBeGreaterThanOrEqual(1);
+      expect(interval).toBeLessThanOrEqual(defaultParameters.maximum_interval);
+      expect(interval).toBeCloseTo(expected, 5);
+    });
+
     it('should calculate due date correctly', () => {
       const card = fsrs.createEmptyCard();
       const now = new Date('2025-01-01T12:00:00Z');

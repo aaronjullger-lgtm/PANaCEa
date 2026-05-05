@@ -52,11 +52,11 @@ The `DrillShell.tsx` orchestrator wraps 35+ specialized drill components includi
 
 **What is underexploited:** Drill selection is manual. No system recommends which drill mode to use based on the learner's current weakness profile, confusion patterns, or FSRS card states.
 
-### 8. Dashboard Widget Ecosystem
+### 8. Adaptive Dashboard Registry
 
-Over 20 dashboard widgets exist: `CalibrationChart`, `RetentionForecastCard`, `BlueprintGapHeatmap`, `ConfusionPairCard`, `CircadianInsightCard`, `ExamCountdownCard`, `WellnessWidget`, `RecommendationFeed`, `SystemPerformanceWidget`, and more. The `UnifiedDashboard` supports dual views (Pilot vs Data Scientist).
+The active `/study` dashboard now renders through `CommandCenterWorkspace` and the adaptive registry under `components/dashboard/adaptive/`. The old all-widgets-at-once dashboard bench has been retired; new dashboard ideas should ship as registry entries that pass eligibility, scoring, suppression, slot resolution, and visual-budget checks.
 
-**What is underexploited:** Many widgets pull from limited data sources. The confidence pipeline's unused modules (trend detection, interference detection, desirable difficulty) could feed richer insights into these widgets.
+**What is underexploited:** The confidence pipeline's unused modules (trend detection, interference detection, desirable difficulty) could feed richer normalized signals, but they should adapt the plan and attribution rather than create extra always-visible analytics.
 
 ### 9. Cron + Background Job Infrastructure
 
@@ -210,13 +210,13 @@ A full OSCE simulation system exists with 15 endpoints, a state machine, orderab
 
 **Why it is valuable:** PA students rotate through 6-10 clinical rotations, each with its own EOR exam. Currently, learner phase and content focus require manual configuration. Automatic alignment eliminates friction and ensures students are always studying the most relevant content.
 
-**Builds on:** `nccpa-question-weighting.ts` (learner phases, system weights), `RotationFocusCard` (already exists, TODO says "wire to real user profile"), `EorCountdownCard.tsx`, `ExamCountdownCard.tsx`, `UserProfile` model (currentRotation, eorDate fields likely exist or planned), reservoir priority system, `daily-prescription.ts` cron.
+**Builds on:** `nccpa-question-weighting.ts` (learner phases, system weights), adaptive dashboard mode profiles, `ExamHorizonWidget`, `GoalContextWidget`, the `UserProfile` model (currentRotation, eorDate fields likely exist or planned), reservoir priority system, `daily-prescription.ts` cron.
 
 **SDK needed:** No.
 
 **Complexity:** Medium
 **Impact:** Very High
-**Prerequisites:** User profile must store rotation schedule with dates. Wire `RotationFocusCard` to real data (already listed as priority #3 in CLAUDE.md TODOs).
+**Prerequisites:** User profile must store rotation schedule with dates. Feed rotation deadlines into dashboard normalization and mode classification so EOR/didactic modes select the right widgets.
 
 ---
 
@@ -276,7 +276,7 @@ A full OSCE simulation system exists with 15 endpoints, a state machine, orderab
 
 **Why it is valuable:** Consistent study habits are the strongest predictor of PANCE success. The push infrastructure and circadian data already exist. Personalized, data-driven reminders are far more effective than generic "time to study" notifications.
 
-**Builds on:** `/api/push/subscribe` (push subscription endpoint), `push-reminders.ts` cron, `CircadianInsightCard.tsx` (time-of-day performance data), `UserProgress.nextReviewAt` (due dates), `daily-prescription.ts` (personalized study plans), PWA service worker (already registered via `vite-plugin-pwa`).
+**Builds on:** `/api/push/subscribe` (push subscription endpoint), `push-reminders.ts` cron, aggregate session-timing signals, `UserProgress.nextReviewAt` (due dates), `daily-prescription.ts` (personalized study plans), PWA service worker (already registered via `vite-plugin-pwa`). Reminder copy must avoid behavioral surveillance and should translate timing data into calmer plan adaptation.
 
 **SDK needed:** Web Push API (standard, already implied by push infrastructure). May want `web-push` npm package for VAPID key management.
 
@@ -358,7 +358,7 @@ A full OSCE simulation system exists with 15 endpoints, a state machine, orderab
 
 **Why it is valuable:** Medicine evolves. Showing students that "there's an active Phase 3 trial for a new biologic for Crohn's disease" builds clinical awareness beyond static textbook knowledge. Differentiates PANaCEa from static question banks.
 
-**Builds on:** `ExplanationPanel.tsx`, `MedicalContent` (condition context for queries), ClinicalTrials.gov MCP (already connected: `search_trials`, `get_trial_details`), `RecommendationFeed.tsx` (recommendation display).
+**Builds on:** `ExplanationPanel.tsx`, `MedicalContent` (condition context for queries), ClinicalTrials.gov MCP (already connected: `search_trials`, `get_trial_details`), and the adaptive dashboard registry for any student-facing dashboard surface.
 
 **SDK/Integration needed:** Already available via ClinicalTrials.gov MCP.
 
@@ -500,7 +500,7 @@ Wire `trendDetector.detectConfidenceTrend()` into `useSessionWellness.ts`. When 
 Read user's `currentRotation` and `eorDate` from profile. Map to learner phase in `nccpa-question-weighting.ts` (Didactic/Clinical/PANCE Prep). Adjust blueprint weights automatically. Wire into reservoir refill priority. **Effort: 2-3 days.**
 
 ### 6. Drill Mode Recommendations Based on Weakness Profile
-Use `UserStatistics.rushedSystems`, `overthinkingSystems`, confusion pair density, and FSRS card state distribution to recommend specific drill modes. E.g., high confusion in derm? Suggest `ContrastiveDrill` for derm conditions. Low recall in pharm? Suggest `RapidRecallDrill` for pharmacology. Display in `RecommendationFeed.tsx`. **Effort: 3-4 days.**
+Use `UserStatistics.rushedSystems`, `overthinkingSystems`, confusion pair density, and FSRS card state distribution to recommend specific drill modes. E.g., high confusion in derm? Suggest `ContrastiveDrill` for derm conditions. Low recall in pharm? Suggest `RapidRecallDrill` for pharmacology. Surface this as an adaptive widget or study-path recommendation only when it wins eligibility and scoring. **Effort: 3-4 days.**
 
 ### 7. Post-Session Behavioral Replay
 Build a read-only session replay from stored `QuestionAttempt.telemetryJson`. Show the question sequence with behavioral annotations (confidence signal, switch count, RT classification). Use `SessionPostMortem.tsx` as the base component. **Effort: 4-5 days.**

@@ -16,6 +16,8 @@
 
 // ─── Types ────────────────────────────────────────────────────────
 
+import { getEmbedding } from '../gemini';
+
 export type ContentType =
   | 'pathophysiology'
   | 'treatment'
@@ -49,8 +51,6 @@ export interface RetrieveOptions {
 
 // ─── Constants ────────────────────────────────────────────────────
 
-const EMBED_MODEL = 'text-embedding-005';
-const EMBED_DIMS = 768;
 const DEFAULT_LIMIT = 5;
 const DEFAULT_MIN_SIMILARITY = 0.30;
 const GROUNDING_THRESHOLD = 0.40;
@@ -60,25 +60,7 @@ const DEFAULT_MAX_CONTEXT_TOKENS = 3000;
 // ─── Embedding ────────────────────────────────────────────────────
 
 export async function embedQuery(query: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text: query }] },
-      outputDimensionality: EMBED_DIMS,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Embedding API error ${res.status}: ${err.slice(0, 200)}`);
-  }
-  const data = (await res.json()) as { embedding?: { values?: number[] } };
-  const values = data.embedding?.values;
-  if (!Array.isArray(values) || values.length !== EMBED_DIMS) {
-    throw new Error(`Invalid embedding: expected ${EMBED_DIMS} dims, got ${values?.length ?? 0}`);
-  }
-  return values;
+  return getEmbedding(query, apiKey);
 }
 
 // ─── Retrieval ────────────────────────────────────────────────────

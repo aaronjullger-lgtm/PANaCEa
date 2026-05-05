@@ -327,20 +327,13 @@ async function triggerBackgroundGeneration(
   count = 20,
   token?: string | null
 ): Promise<void> {
-  try {
-    const headers: HeadersInit = { 'Content-Type': 'application/json' };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    await fetch('/api/questions/generate-batch', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ system, category, difficulty, count }),
-    });
-    console.log('[QuestionService] Background generation triggered');
-  } catch (error) {
-    console.error('[QuestionService] Failed to trigger background generation:', error);
-  }
+  console.info('[QuestionService] Pool refill is handled by reviewed backend jobs.', {
+    system,
+    category,
+    difficulty,
+    requestedCount: count,
+    authenticated: Boolean(token),
+  });
 }
 
 /**
@@ -430,9 +423,11 @@ export async function getQuestion(
 
   let dbQuestion: Question | null = null;
 
+  let token: string | null = null;
+
   try {
     // Get auth token if available
-    const token = getToken ? await getToken() : null;
+    token = getToken ? await getToken() : null;
     console.time('[QuestionService] DB Fetch');
     // Try to get from pool (DB) first
     const { questions, poolStatus } = await fetchFromPool(
@@ -465,41 +460,26 @@ export async function getQuestion(
     return dbQuestion;
   }
 
-  // Fall back to Gemini generation with CoVe verification
-  console.log('[QuestionService] Pool empty or failed, using Gemini generation with CoVe');
-  console.time('[QuestionService] Gemini Gen + CoVe');
-  const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
-  const verifiedResult = await fetchVerifiedQuestion({
-    settings,
-    growthAreas,
-    verificationMode: 'quick', // Use quick mode for performance
-  });
-  const question = verifiedResult.question;
+  // Fall back to the server-side enhanced generation endpoint. It must verify
+  // and persist the question before returning, so answer submission can resolve
+  // the question ID through the canonical API pipeline.
+  console.log('[QuestionService] Pool empty or failed, using persisted enhanced generation');
+  console.time('[QuestionService] Enhanced generation');
+  token = getToken ? await getToken() : null;
+  const question = await generateEnhancedQuestion(settings, growthAreas, undefined, token);
+  console.timeEnd('[QuestionService] Enhanced generation');
 
-  // Log verification status
-  if (verifiedResult.verified) {
-    console.log(
-      `[QuestionService] Question verified (${verifiedResult.verificationMode}, confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
-    );
-  } else {
-    console.warn(
-      `[QuestionService] Question unverified after ${verifiedResult.attempts} attempts - serving best available`
-    );
+  if (!question) {
+    throw new Error('Unable to generate a persisted verified question.');
   }
-  console.timeEnd('[QuestionService] Gemini Gen + CoVe');
 
   // Pearl Harvester: Extract and save clinical pearls from the rationale
   if (question.rationale && question.conditionId) {
     const extractedPearls = extractPearlsFromRationale(rationaleToPearlText(question.rationale));
     if (extractedPearls.length > 0) {
-      const token = getToken ? await getToken() : null;
       savePearlsToDatabase(question.conditionId, extractedPearls, token);
     }
   }
-  
-  // Seed the generated question into the pool for future use
-  const token = getToken ? await getToken() : null;
-  seedGeneratedQuestion(question, token, system, poolDifficulty);
 
   return question;
 }
@@ -649,9 +629,11 @@ export async function getQuestionBatch(
   const rotationCount = do60_40 ? Math.max(1, Math.round(count * 0.6)) : 0;
   const backgroundCount = do60_40 ? count - rotationCount : 0;
 
+  let token: string | null = null;
+
   try {
     // Get auth token if available
-    const token = getToken ? await getToken() : null;
+    token = getToken ? await getToken() : null;
 
     if (do60_40 && backgroundCount > 0) {
       // Fetch 60% from current rotation systems, 40% from background PANCE; merge and shuffle
@@ -747,8 +729,8 @@ export async function getQuestionBatch(
       `[QuestionService] Pool had ${questions.length}, generating ${needed} more with CoVe`
     );
 
-    const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
     const generatedQuestions: Question[] = [];
+    const enabledSystems = systemsFilter?.length ? new Set(systemsFilter) : undefined;
 
     const generationTimeout = 5000; // 5 seconds per question
 
@@ -757,23 +739,14 @@ export async function getQuestionBatch(
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Generation timeout')), generationTimeout)
         );
-        const verifiedResult = await Promise.race([
-          fetchVerifiedQuestion({
-            settings,
-            growthAreas,
-            verificationMode: 'quick',
-          }),
+        const q = await Promise.race([
+          generateEnhancedQuestion(settings, growthAreas, enabledSystems, token),
           timeoutPromise,
         ]);
-        const q = verifiedResult.question;
-        generatedQuestions.push(q);
-
-        // Log verification status
-        if (verifiedResult.verified) {
-          console.log(
-            `[QuestionService] Batch question ${i + 1}/${needed} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
-          );
+        if (!q) {
+          break;
         }
+        generatedQuestions.push(q);
 
         // Pearl Harvester: Extract and save clinical pearls
         if (q.rationale && q.conditionId) {
@@ -782,10 +755,8 @@ export async function getQuestionBatch(
             savePearlsToDatabase(q.conditionId, extractedPearls, token);
           }
         }
-
-        seedGeneratedQuestion(q, token, system, poolDifficulty);
       } catch (error) {
-        console.error('[QuestionService] Failed to generate verified question:', error);
+        console.error('[QuestionService] Failed to generate persisted enhanced question:', error);
         break;
       }
     }
@@ -794,13 +765,14 @@ export async function getQuestionBatch(
   } catch (error) {
     console.warn('[QuestionService] Pool fetch failed, falling back to Gemini generation:', error);
 
-    // Pool failed (possibly 401) - fall back to generating questions via CoVe-verified Gemini
+    // Pool failed (possibly 401) - fall back only to server-persisted enhanced
+    // generation. If that cannot persist a canonical question, fail closed.
     try {
-      const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
       const generatedQuestions: Question[] = [];
+      const enabledSystems = systemsFilter?.length ? new Set(systemsFilter) : undefined;
 
       console.log(
-        `[QuestionService] Fallback: generating ${count} questions with CoVe verification`
+        `[QuestionService] Fallback: generating ${count} persisted enhanced questions`
       );
       const generationTimeout = 5000; // 5 seconds per question
       for (let i = 0; i < count; i++) {
@@ -808,32 +780,23 @@ export async function getQuestionBatch(
           const timeoutPromise = new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error('Generation timeout')), generationTimeout)
           );
-          const verifiedResult = await Promise.race([
-            fetchVerifiedQuestion({
-              settings,
-              growthAreas,
-              verificationMode: 'quick',
-            }),
+          const q = await Promise.race([
+            generateEnhancedQuestion(settings, growthAreas, enabledSystems, token),
             timeoutPromise,
           ]);
-          const q = verifiedResult.question;
-          generatedQuestions.push(q);
-
-          // Log verification status
-          if (verifiedResult.verified) {
-            console.log(
-              `[QuestionService] Fallback question ${i + 1}/${count} verified (confidence: ${verifiedResult.quickVerification?.confidence?.toFixed(2) ?? 'N/A'})`
-            );
+          if (!q) {
+            break;
           }
+          generatedQuestions.push(q);
         } catch (genError) {
-          console.error('[QuestionService] Failed to generate verified question:', genError);
+          console.error('[QuestionService] Failed to generate persisted enhanced question:', genError);
           break;
         }
       }
 
       if (generatedQuestions.length > 0) {
         console.log(
-          `[QuestionService] Generated ${generatedQuestions.length} CoVe-verified questions via fallback`
+          `[QuestionService] Generated ${generatedQuestions.length} persisted enhanced questions via fallback`
         );
         return generatedQuestions;
       }
@@ -847,84 +810,24 @@ export async function getQuestionBatch(
 }
 
 /**
- * Seed a Gemini-generated question back into the pool
- */
-async function seedGeneratedQuestion(
-  question: Question,
-  token: string | null,
-  system?: string,
-  difficulty?: string
-): Promise<void> {
-  if (!token) {
-    console.warn('[QuestionService] No token, skipping background seed.');
-    return;
-  }
-  // Don't block on this - fire and forget
-  (async () => {
-    try {
-      // Transform Question to match PoolPostSchema
-      const correctAnswerLetter = ['A', 'B', 'C', 'D', 'E'][question.correctAnswerIndex] || 'A';
-      const payload = {
-        question: {
-          id: question.id || crypto.randomUUID(),
-          question: question.question,
-          options: question.options,
-          correctAnswer: correctAnswerLetter,
-          explanation: question.rationale,
-          system: question.system || question.topic,
-          conditionId: question.conditionId,
-          medicalContentId: (question as Question & { medicalContentId?: string }).medicalContentId || undefined,
-          difficulty: question.difficulty || difficulty || 'medium',
-          vignette: question.vignette,
-          conditionName: question.condition,
-          subcategory: question.subcategory,
-          tags: question.tags || [],
-        },
-      };
-      // Remove undefined fields to avoid validation errors
-      if (payload.question.medicalContentId === undefined) {
-        delete payload.question.medicalContentId;
-      }
-      console.log('[QuestionService] Seeding question', payload.question.id, { token: token ? 'present' : 'missing' });
-      const response = await fetch('/api/questions/pool', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to seed question: ${response.status} ${errorText}`);
-      }
-    } catch (error) {
-      console.error('[QuestionService] Failed to seed question:', error);
-    }
-  })();
-}
-
-/**
  * Get an enhanced question using database content context
  * This provides richer, more accurate questions based on our extensive condition data
  */
 export async function getEnhancedQuestion(
   settings: SessionSettings,
   growthAreas: string[],
-  enabledSystems?: Set<string>
+  enabledSystems?: Set<string>,
+  getToken?: () => Promise<string | null>
 ): Promise<Question> {
-  try {
-    const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems);
+  const token = getToken ? await getToken() : null;
+  const question = await generateEnhancedQuestion(settings, growthAreas, enabledSystems, token);
 
-    if (question) {
-      console.log('[QuestionService] Served enhanced question');
-      return question;
-    }
-
-    // Fall back to regular question if enhanced generation fails
-    console.warn('[QuestionService] Enhanced generation failed, falling back to regular');
-    return getQuestion(settings, growthAreas);
-  } catch (error) {
-    console.error('[QuestionService] Enhanced question failed:', error);
-    return getQuestion(settings, growthAreas);
+  if (question) {
+    console.log('[QuestionService] Served enhanced question');
+    return question;
   }
+
+  throw new Error('Unable to generate a persisted verified enhanced question.');
 }
 
 /**

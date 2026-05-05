@@ -176,36 +176,18 @@ async function applyMediaAction(
 async function applyQuestionAction(
   prisma: EdgePrismaClient,
   id: string,
-  action: 'approve' | 'reject'
+  action: 'approve' | 'reject',
+  reviewedBy: string
 ): Promise<ActionResult> {
   const staging = await prisma.stagingQuestion.findUnique({ where: { id } });
   if (!staging) return { status: 404, error: 'Staging question not found' };
 
   if (action === 'approve') {
-    if (staging.status === 'graded') {
-      await promoteToLive(prisma, id);
-    } else {
-      await prisma.preGeneratedQuestion.create({
-        data: {
-          id: crypto.randomUUID(),
-          questionType: 'mcq',
-          system: staging.system,
-          conditionId: null,
-          difficulty: staging.difficulty,
-          questionData: {
-            vignette: staging.vignette,
-            question: staging.question,
-            options: staging.options,
-            correctAnswer: staging.correctAnswer,
-            explanation: staging.explanation,
-            tags: staging.tags,
-          },
-          quality: 10,
-        },
-      });
-    }
-    await prisma.stagingQuestion.delete({ where: { id } });
-    return { data: { success: true, message: 'Question approved and moved to live pool' } };
+    await promoteToLive(prisma, id, {
+      allowPendingHumanReview: staging.status === 'pending',
+      reviewedBy,
+    });
+    return { data: { success: true, message: 'Question approved and mirrored to live pool' } };
   }
 
   await discardStagingQuestion(prisma, id);
@@ -253,7 +235,7 @@ export const onRequestPost = refineryEndpoint(
         );
       }
       if (type === 'question') {
-        return await applyQuestionAction(prisma, id, action);
+        return await applyQuestionAction(prisma, id, action, userId);
       }
 
       return { status: 400, error: 'Invalid type' };

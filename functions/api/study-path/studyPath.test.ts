@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { onRequestGet } from './recommendation';
+import { onRequestGet as onProgressGet } from './progress';
 import type { CloudflareContext } from '../_shared/middleware';
 
 // Mock external services
@@ -53,6 +54,9 @@ vi.mock('../_shared/prisma-edge', () => ({
   })),
   safePrismaDisconnect: vi.fn(),
 }));
+vi.mock('../_shared/user-resolver', () => ({
+  resolveOrCreateUserRecord: vi.fn().mockResolvedValue({ id: 'user-db-1' }),
+}));
 
 // Import mocked modules
 import { analyzePerformanceGaps } from '@/services/optimizer/performanceGapAnalyzer';
@@ -61,6 +65,7 @@ import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalanc
 import { generateStudyPlan } from '@/services/optimizer/pathGenerator';
 import { computeConfidence, fetchConfidenceData } from '@/services/optimizer/confidenceScorer';
 import { getFromCache, setInCache, isKVAvailable, getStudyPathCacheKey } from '../_shared/cache';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 
 describe('Study Path Recommendation Endpoint', () => {
   const mockEnv = {
@@ -85,6 +90,7 @@ describe('Study Path Recommendation Endpoint', () => {
     vi.clearAllMocks();
     // Default mocks
     (isKVAvailable as any).mockReturnValue(false);
+    (resolveOrCreateUserRecord as any).mockResolvedValue({ id: 'user-db-1' });
     (getStudyPathCacheKey as any).mockReturnValue('cache-key');
     (analyzePerformanceGaps as any).mockResolvedValue([]);
     (scheduleReviews as any).mockResolvedValue([]);
@@ -92,7 +98,7 @@ describe('Study Path Recommendation Endpoint', () => {
     (generateStudyPlan as any).mockResolvedValue({
       plan: {
         id: 'plan-123',
-        userId: 'user123',
+        userId: 'user-db-1',
         generatedAt: new Date(),
         sessions: [],
         totalEstimatedMinutes: 0,
@@ -142,6 +148,11 @@ describe('Study Path Recommendation Endpoint', () => {
     expect(body.data).toHaveProperty('cached', false);
     expect(body.data).toHaveProperty('generatedAt');
     expect(body.data.plan).toHaveProperty('id', 'plan-123');
+    expect(resolveOrCreateUserRecord).toHaveBeenCalled();
+    expect(generateStudyPlan).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ userId: 'user-db-1' })
+    );
   });
 
   it('should return cached plan if available', async () => {
@@ -190,8 +201,250 @@ describe('Study Path Recommendation Endpoint', () => {
     const response = await onRequestGet(contextWithAuth);
     expect(response.status).toBe(500);
     const body = await response.json();
-    // Unified envelope: { success: false, error: 'INTERNAL_ERROR', message: '...' }
+    // Unified endpoint failure envelope: { success: false, error: { code, message } }
     expect(body.success).toBe(false);
-    expect(body.error).toBe('INTERNAL_ERROR');
+    expect(body.error).toMatchObject({
+      code: 'INTERNAL_ERROR',
+      message: 'Unable to generate study plan. Please try again.',
+    });
+  });
+});
+
+describe('Study Path Progress Endpoint', () => {
+  const mockEnv = {
+    DATABASE_URL: 'postgresql://test',
+    CACHE: {} as any,
+  };
+  const mockAuth = {
+    userId: 'clerk-user-123',
+  };
+  const mockValidated = {
+    dailyMinutesLimit: 60,
+    targetRetention: 0.9,
+  };
+  const mockContext: CloudflareContext = {
+    env: mockEnv,
+    request: new Request('http://localhost/api/study-path/progress?dailyMinutesLimit=60&targetRetention=0.9'),
+  } as any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (isKVAvailable as any).mockReturnValue(false);
+    (resolveOrCreateUserRecord as any).mockResolvedValue({ id: 'user-db-1' });
+    (getStudyPathCacheKey as any).mockReturnValue('cache-key');
+    (analyzePerformanceGaps as any).mockResolvedValue([
+      {
+        taxonomyCode: 'Cardiovascular',
+        subcategory: 'Valvular disease',
+        currentAccuracy: 0.7,
+        targetAccuracy: 0.85,
+        gap: 0.15,
+        reviewCount: 12,
+        lastReviewedAt: new Date('2026-05-01T00:00:00Z'),
+      },
+    ]);
+    (scheduleReviews as any).mockResolvedValue([
+      {
+        taxonomyCode: 'Cardiovascular',
+        subcategory: 'Valvular disease',
+        recommendedReviewDate: new Date('2026-05-03T00:00:00Z'),
+        urgencyScore: 0.8,
+        confidence: 'HIGH',
+      },
+    ]);
+    (balanceBlueprintPriorities as any).mockResolvedValue([
+      {
+        taxonomyCode: 'Cardiovascular',
+        subcategory: 'Valvular disease',
+        priorityScore: 0.7,
+        weightDeviation: 0.1,
+      },
+    ]);
+    (generateStudyPlan as any).mockResolvedValue({
+      plan: {
+        id: 'progress-plan',
+        userId: 'user-db-1',
+        generatedAt: new Date('2026-05-02T12:00:00Z'),
+        validUntil: new Date('2026-05-03T12:00:00Z'),
+        sessions: [
+          {
+            id: 'session-1',
+            date: new Date('2026-05-03T14:00:00Z'),
+            topics: [
+              {
+                taxonomyCode: 'Cardiovascular',
+                subcategory: 'Valvular disease',
+                recommendedAction: 'REVIEW',
+                estimatedMinutes: 30,
+                urgencyScore: 0.8,
+              },
+            ],
+          },
+        ],
+        totalEstimatedMinutes: 30,
+        confidence: 0.8,
+        metadata: {
+          blueprintCoverage: { Cardiovascular: 1 },
+          projectedRetentionIncrease: 0.1,
+          fatigueRisk: 'LOW',
+          gapsProcessed: 1,
+          constraintsUsed: {},
+        },
+      },
+      alternatives: [],
+      rationale: 'Test rationale',
+      canRegenerate: true,
+    });
+    (fetchConfidenceData as any).mockResolvedValue({
+      reviewCounts: {},
+      accuracyVariances: {},
+      daysSinceLastReview: {},
+    });
+    (computeConfidence as any).mockResolvedValue({
+      confidence: 0.9,
+      perTopicConfidence: {},
+      flags: [],
+      recommendations: [],
+    });
+  });
+
+  it('resolves the internal user and calls generateStudyPlan with prisma plus input', async () => {
+    const response = await onProgressGet({
+      ...mockContext,
+      auth: mockAuth,
+      validated: mockValidated,
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.currentPlanId).toBe('progress-plan');
+    expect(body.data.projections).toHaveLength(1);
+    expect(resolveOrCreateUserRecord).toHaveBeenCalledWith(
+      expect.anything(),
+      'clerk-user-123',
+      { id: true }
+    );
+    expect(analyzePerformanceGaps).toHaveBeenCalledWith(
+      expect.anything(),
+      'user-db-1',
+      expect.any(Object)
+    );
+    expect(generateStudyPlan).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ userId: 'user-db-1' })
+    );
+  });
+
+  it('normalizes cached plan dates from the unified envelope source', async () => {
+    (isKVAvailable as any).mockReturnValue(true);
+    (getFromCache as any).mockResolvedValue({
+      plan: {
+        id: 'cached-progress-plan',
+        userId: 'user-db-1',
+        generatedAt: '2026-05-02T12:00:00.000Z',
+        validUntil: '2026-05-03T12:00:00.000Z',
+        sessions: [
+          {
+            id: 'session-cached',
+            date: '2026-05-03T14:00:00.000Z',
+            topics: [
+              {
+                taxonomyCode: 'Pulmonary',
+                recommendedAction: 'REVIEW',
+                estimatedMinutes: 20,
+                urgencyScore: 0.6,
+              },
+            ],
+          },
+        ],
+        totalEstimatedMinutes: 20,
+        confidence: 0.8,
+        metadata: {
+          blueprintCoverage: { Pulmonary: 1 },
+          projectedRetentionIncrease: 0.05,
+          fatigueRisk: 'LOW',
+          gapsProcessed: 1,
+          constraintsUsed: {},
+        },
+      },
+    });
+
+    const response = await onProgressGet({
+      ...mockContext,
+      auth: mockAuth,
+      validated: mockValidated,
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.currentPlanId).toBe('cached-progress-plan');
+    expect(body.data.projections).toHaveLength(1);
+    expect(generateStudyPlan).not.toHaveBeenCalled();
+  });
+
+  it('uses requested cached alternative plan when planId is provided', async () => {
+    (isKVAvailable as any).mockReturnValue(true);
+    (getFromCache as any).mockResolvedValue({
+      plan: {
+        id: 'cached-primary-plan',
+        userId: 'user-db-1',
+        generatedAt: '2026-05-02T12:00:00.000Z',
+        validUntil: '2026-05-03T12:00:00.000Z',
+        sessions: [],
+        totalEstimatedMinutes: 0,
+        confidence: 0.8,
+        metadata: {
+          blueprintCoverage: {},
+          projectedRetentionIncrease: 0,
+          fatigueRisk: 'LOW',
+        },
+      },
+      alternatives: [
+        {
+          id: 'cached-alt-plan',
+          userId: 'user-db-1',
+          generatedAt: '2026-05-02T12:00:00.000Z',
+          validUntil: '2026-05-03T12:00:00.000Z',
+          sessions: [
+            {
+              id: 'session-alt',
+              date: '2026-05-04T14:00:00.000Z',
+              topics: [
+                {
+                  taxonomyCode: 'Renal',
+                  recommendedAction: 'REVIEW',
+                  estimatedMinutes: 25,
+                  urgencyScore: 0.7,
+                },
+              ],
+            },
+          ],
+          totalEstimatedMinutes: 25,
+          confidence: 0.75,
+          metadata: {
+            blueprintCoverage: { Renal: 1 },
+            projectedRetentionIncrease: 0.08,
+            fatigueRisk: 'LOW',
+            gapsProcessed: 1,
+            constraintsUsed: {},
+          },
+        },
+      ],
+    });
+
+    const response = await onProgressGet({
+      ...mockContext,
+      auth: mockAuth,
+      validated: { ...mockValidated, planId: 'cached-alt-plan' },
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    expect(body.data.currentPlanId).toBe('cached-alt-plan');
+    expect(body.data.projections).toHaveLength(1);
+    expect(generateStudyPlan).not.toHaveBeenCalled();
   });
 });

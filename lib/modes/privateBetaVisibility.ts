@@ -1,5 +1,5 @@
 import type { TrainingModeConfig, TrainingModeId } from '@/config/training-modes';
-import { getStudyModeContract } from './studyModeContracts';
+import { isModeDiscoverable } from './modeReadiness';
 
 const PRIVATE_BETA_ENABLED =
   ((import.meta as unknown as { env?: Record<string, string | undefined> }).env
@@ -11,7 +11,7 @@ const PRIVATE_BETA_ENABLED =
  * experimental tools stay addressable for development but hidden from beta
  * discovery and direct in-app launches.
  */
-export const PRIVATE_BETA_VISIBLE_MODE_IDS = new Set<TrainingModeId>([
+export const PRIVATE_BETA_CANDIDATE_MODE_IDS = new Set<TrainingModeId>([
   'core_adaptive',
   'system_drill',
   'condition_drill',
@@ -25,6 +25,7 @@ export const PRIVATE_BETA_VISIBLE_MODE_IDS = new Set<TrainingModeId>([
 ]);
 
 const PRIVATE_BETA_HIDDEN_ROUTES = new Set([
+  '/daily-challenges',
   '/live-collaboration',
   '/explorer',
   '/clinical-eye',
@@ -39,10 +40,8 @@ export function isPrivateBetaLaunchEnabled(): boolean {
 
 export function isPrivateBetaModeVisible(modeId: string): boolean {
   if (!PRIVATE_BETA_ENABLED) return true;
-  const contract = getStudyModeContract(modeId);
-  if (!contract) return true;
-  if (!PRIVATE_BETA_VISIBLE_MODE_IDS.has(modeId as TrainingModeId)) return false;
-  return contract?.productionStatus === 'fully_functional' && contract.blockingIssues.length === 0;
+  if (!PRIVATE_BETA_CANDIDATE_MODE_IDS.has(modeId as TrainingModeId)) return false;
+  return isModeDiscoverable(modeId);
 }
 
 export function filterPrivateBetaModes<T extends Pick<TrainingModeConfig, 'id' | 'isComingSoon'>>(

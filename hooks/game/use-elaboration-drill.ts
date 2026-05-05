@@ -15,6 +15,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useDrillFSRS } from '@/hooks/useDrillFSRS';
 import { useAuth } from '@clerk/clerk-react';
 import { logger } from '@/lib/logger';
+import { unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 const LOG_SCOPE = 'ElaborationDrill';
 
@@ -86,8 +87,8 @@ export function useElaborationDrill(): UseElaborationDrillReturn {
       });
 
       if (!res.ok) return null;
-      const json = await res.json();
-      return json.data?.fact ? json.data : null;
+      const fact = unwrapApiEnvelope<ElaborationFact | { fact: null }>(await res.json());
+      return fact && 'fact' in fact && fact.fact ? fact : null;
     } catch (err) {
       logger.error(`[${LOG_SCOPE}] Failed to fetch fact`, { error: err });
       return null;
@@ -133,8 +134,7 @@ export function useElaborationDrill(): UseElaborationDrillReturn {
       });
 
       if (!res.ok) throw new Error('Grading failed');
-      const json = await res.json();
-      const result: GradeResult = json.data;
+      const result = unwrapApiEnvelope<GradeResult>(await res.json());
 
       setGradeResult(result);
       setTotalAttempts((prev) => prev + 1);

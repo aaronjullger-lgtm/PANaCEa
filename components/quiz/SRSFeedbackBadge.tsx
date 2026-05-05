@@ -10,7 +10,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { CheckCircle, Calendar, Zap, TrendingUp, Award, Target, Brain } from 'lucide-react';
-import type { SRSScheduleResult } from '../../lib/services/srsService';
+import type { SRSScheduleResult } from '@/lib/api/types/review';
 
 interface SRSFeedbackBadgeProps {
   result: SRSScheduleResult;

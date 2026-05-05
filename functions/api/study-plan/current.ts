@@ -12,6 +12,7 @@ import {
   ensureStudyPlanWindow,
   updateStudyPlanSettings,
 } from '../_shared/studyPlanService';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import type { StudyPlanSettings } from '@/lib/api/types/studyPlan';
 
 const QuerySchema = z.object({
@@ -37,13 +38,7 @@ const UpdateSchema = z.object({
 });
 
 async function getInternalUserId(prisma: ReturnType<typeof createEdgePrismaClient>, clerkId: string) {
-  const user = await prisma.user.findUnique({
-    where: { clerkId },
-    select: { id: true },
-  });
-  if (!user) {
-    throw new Error('User not found');
-  }
+  const user = await resolveOrCreateUserRecord(prisma, clerkId, { id: true });
   return user.id;
 }
 

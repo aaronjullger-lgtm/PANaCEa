@@ -32,6 +32,7 @@ import {
   isKVAvailable,
   CACHE_CONFIG,
 } from '../_shared/cache';
+import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
 import type { StudyPathConstraints, RecommendationResponse } from '@/types';
 
 // ============================================================================
@@ -95,15 +96,18 @@ export const onRequestPost = authenticatedEndpoint(
         }
       }
 
+      const user = await resolveOrCreateUserRecord(prisma, auth.userId, { id: true });
+      const userId = user.id;
+
       // 3. Compute core analysis (Performance Gaps, Scheduled Reviews, Blueprint Balancing)
-      const gaps = await analyzePerformanceGaps(prisma, auth.userId, {
+      const gaps = await analyzePerformanceGaps(prisma, userId, {
         rollingWindowSize: 200,
         includeSubcategories: false,
       });
 
       const scheduled = await scheduleReviews(
         prisma,
-        auth.userId,
+        userId,
         gaps.map((g) => ({
           taxonomyCode: g.taxonomyCode,
           subcategory: g.subcategory,
@@ -125,7 +129,7 @@ export const onRequestPost = authenticatedEndpoint(
           subcategory: s.subcategory,
         })),
         prisma,
-        auth.userId,
+        userId,
         {
           distributionSource: 'recent',
           recentReviewWindow: 100,
@@ -135,7 +139,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       // 4. Build Path Generator input
       const pathGeneratorInput = {
-        userId: auth.userId,
+        userId,
         constraints: constraints ?? {},
         gaps: gaps.map((g) => ({
           taxonomyCode: g.taxonomyCode,
@@ -162,10 +166,10 @@ export const onRequestPost = authenticatedEndpoint(
       };
 
       // 5. Generate study plan
-      const pathGeneratorOutput = await generateStudyPlan(pathGeneratorInput);
+      const pathGeneratorOutput = await generateStudyPlan(prisma, pathGeneratorInput);
 
       // 6. Compute confidence
-      const confidenceInput = await fetchConfidenceData(prisma, auth.userId);
+      const confidenceInput = await fetchConfidenceData(prisma, userId);
       const confidenceOutput = await computeConfidence(prisma, confidenceInput);
 
       // 7. Assemble final response

@@ -17,6 +17,10 @@ import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
+import {
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 import type { Prisma } from '@prisma/client';
 
 const DueItemSchema = z.object({
@@ -99,17 +103,16 @@ function parsePreGenToQuestion(q: {
   }
 
   const resolvedIndex = resolveCorrectAnswerIndex(data, optionsArr);
-  // resolvedIndex=null means we genuinely cannot determine the answer.
-  // We use -1 as a sentinel so the frontend can surface this to the user
-  // rather than silently marking option 0 as correct.
-  const correctAnswerIndex = resolvedIndex ?? -1;
+  if (resolvedIndex === null) {
+    return null;
+  }
 
   return {
     id: q.id,
     question: (data.question || data.vignette || '') as string,
     vignette: data.vignette as string | undefined,
     options: optionsArr,
-    correctAnswerIndex,
+    correctAnswerIndex: resolvedIndex,
     /** Raw correctAnswer string preserved for client-side fallback validation */
     correctAnswer: typeof data.correctAnswer === 'string' ? data.correctAnswer : undefined,
     rationale: (data.rationale || data.explanation || '') as string,
@@ -119,6 +122,9 @@ function parsePreGenToQuestion(q: {
     condition: data.condition as string | undefined,
     difficulty: q.difficulty,
     source: 'pool' as const,
+    canonicalQuestionId: null,
+    sourceQuestionId: q.id,
+    questionSource: 'pre_generated' as const,
     metadata: {},
   };
 }
@@ -187,12 +193,14 @@ async function tryGenerateAndFetchSibling(
   userId?: string
 ): Promise<PreGenRow | null> {
   if (!apiKey) return null;
-  const where: Prisma.PreGeneratedQuestionWhereInput = {
+  const where = withProductionPregeneratedSafety({
     conditionId: item.conditionId,
     id: { not: item.originalQuestionId },
-  };
-  const preGenOriginal = await prisma.preGeneratedQuestion.findUnique({
-    where: { id: item.originalQuestionId },
+  }) as Prisma.PreGeneratedQuestionWhereInput;
+  const preGenOriginal = await prisma.preGeneratedQuestion.findFirst({
+    where: withProductionPregeneratedSafety({
+      id: item.originalQuestionId,
+    }) as Prisma.PreGeneratedQuestionWhereInput,
     select: {
       id: true,
       questionData: true,
@@ -218,8 +226,10 @@ async function tryGenerateAndFetchSibling(
       userId
     );
   } else {
-    const questionOriginal = await prisma.question.findUnique({
-      where: { id: item.originalQuestionId },
+    const questionOriginal = await prisma.question.findFirst({
+      where: withProductionQuestionSafety({
+        id: item.originalQuestionId,
+      }) as Prisma.QuestionWhereInput,
       select: {
         id: true,
         vignette: true,
@@ -282,10 +292,10 @@ export const onRequestPost = aiEndpoint(DueSiblingsPostSchema, async (context) =
     const servedPreGenIds: string[] = [];
 
     for (const item of validated.dueItems) {
-      const where: Prisma.PreGeneratedQuestionWhereInput = {
+      const where = withProductionPregeneratedSafety({
         conditionId: item.conditionId,
         id: { not: item.originalQuestionId },
-      };
+      }) as Prisma.PreGeneratedQuestionWhereInput;
 
       let candidates = await prisma.preGeneratedQuestion.findMany({
         where,
@@ -316,9 +326,10 @@ export const onRequestPost = aiEndpoint(DueSiblingsPostSchema, async (context) =
         );
       }
 
-      if (sibling) servedPreGenIds.push(sibling.id);
+      const parsedSibling = sibling ? parsePreGenToQuestion(sibling) : null;
+      if (sibling && parsedSibling) servedPreGenIds.push(sibling.id);
       results.push({
-        question: sibling ? parsePreGenToQuestion(sibling) : null,
+        question: parsedSibling,
         dueConceptKey: { conditionId: item.conditionId, taskType: item.taskType ?? null },
       });
     }

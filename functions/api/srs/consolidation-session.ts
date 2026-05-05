@@ -24,6 +24,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, type AuthenticatedContext, type ValidatedContext, withCors} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveOrCreateUserId } from '../_shared/user-resolver';
 import { computeConditionRetrievability } from '../../../lib/fsrs/retrievability';
 
 // ─── Inline types/constants (Edge can't import from lib/) ────────
@@ -77,11 +78,11 @@ export const onRequestOptions = withCors();
 export const onRequestPost = authenticatedEndpoint(
   ConsolidationSessionSchema,
   async (context: AuthenticatedContext & ValidatedContext<ConsolidationSessionBody>) => {
-    const userId = context.auth.userId;
     const { maxCards = DEFAULT_MAX_CARDS, maxMinutes = DEFAULT_MAX_MINUTES } = context.validated.body;
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL as string);
 
     try {
+      const userId = await resolveOrCreateUserId(prisma, context.auth.userId);
       // Step 1: Get user preferences for session duration override
       const prefs = await prisma.userPreferences.findUnique({
         where: { userId },

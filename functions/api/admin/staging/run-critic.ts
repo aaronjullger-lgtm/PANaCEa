@@ -1,7 +1,9 @@
 /**
  * POST /api/admin/staging/run-critic
- * Run Critic (Gemini 1.5 Pro) on pending staging questions and apply automation:
- * score > 90 → auto-promote to PreGeneratedQuestion & delete; < 70 → delete; 70–90 → flag for human review.
+ * Run Critic on pending staging questions and apply automation:
+ * score > 90 plus structural validation → mirror to PreGeneratedQuestion and
+ * retain approved staging provenance; < 70 → mark rejected; 70–90 → flag for
+ * human review.
  */
 
 import { z } from 'zod';

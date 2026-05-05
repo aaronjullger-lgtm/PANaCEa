@@ -235,7 +235,7 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           onRetry={() => setView('condition_drill')}
         >
           <Suspense fallback={<Loader />}>
-            <ConditionDrillSession onExit={exit} />
+            <ConditionDrillSession onExit={exit} {...sharedQuizProps} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

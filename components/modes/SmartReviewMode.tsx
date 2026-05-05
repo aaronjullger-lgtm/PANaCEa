@@ -17,11 +17,12 @@ import { createApiClient, createDrillsClient, ApiError } from '@/lib/sdk';
 import { SkeletonLoader, SkeletonText } from '@/components/loading';
 import SessionContext from '@/contexts/SessionContext';
 import type { SubmitReviewResponse } from '@/services/analytics';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 interface ReviewItem {
   id: string;
   questionId: string;
-  srsReason: 'OVERDUE' | 'WEAK_SPOT' | 'NEW';
+  srsReason: 'OVERDUE' | 'WEAK_SPOT' | 'NEW' | 'DUE';
   overdueDays: number;
   difficulty: number;
   interval: number;
@@ -72,20 +73,19 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) {
-        throw new Error(`Failed to load review items: ${response.status}`);
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(
+          getApiEnvelopeError(errorPayload, `Failed to load review items: ${response.status}`)
+        );
       }
-      const data = (await response.json()) as {
+      const data = unwrapApiEnvelope<{
         success?: boolean;
         items?: unknown[];
         error?: string;
-      };
+      }>(await response.json());
 
-      // Middleware unwraps { data: ... } at the HTTP layer so items lives at
-      // the top level here. The old check required `data.success`, which the
-      // server never set — so every student hit the "Brain Upgraded!" branch
-      // even when reviews were due. We now treat a missing success flag as a
-      // successful response (for forward-compat) and only fall into the
-      // complete branch when items is truly empty.
+      // Treat a missing success flag as success for forward compatibility and
+      // only show the complete state when the unwrapped queue is truly empty.
       if (data.error) {
         throw new Error(data.error);
       }

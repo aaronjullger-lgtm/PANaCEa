@@ -92,9 +92,7 @@ Scripts are grouped by domain. Use this when you need to run a one-off task or a
 | Script | Description |
 |--------|-------------|
 | `npm run migrate:pharm` | Migrate pharm to DB |
-| `npm run migrate:guidelines` | Migrate guidelines to DB |
 | `npm run migrate:media-manifest` | Migrate media manifest to DB |
-| `npm run migrate:buzzwords` | Migrate buzzwords to DB |
 | `npm run migrate:production` | Apply production migration |
 | `npm run migrate:related-systems` | Migrate related systems |
 

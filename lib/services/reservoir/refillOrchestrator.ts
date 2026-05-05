@@ -64,11 +64,11 @@ export async function requestRefill(
         jobType: RESERVOIR_REFILL_JOB,
         status: { in: ['pending', 'processing'] },
         createdAt: { gte: cooldownCutoff },
-        // Filter by payload userId — Prisma JSON path filtering
-        payload: {
-          path: ['userId'],
-          equals: userId,
-        },
+        AND: [
+          { payload: { path: ['userId'], equals: userId } },
+          { payload: { path: ['scope'], equals: scope } },
+          { payload: { path: ['isReservoirRefill'], equals: true } },
+        ],
       },
     });
 
@@ -131,15 +131,27 @@ export async function requestRefill(
 export async function triggerRefillsForLowUsers(
   prisma: PrismaClientLike
 ): Promise<{ checked: number; triggered: number; skipped: number }> {
-  // Find users with low reservoir depth
+  // Find active onboarded users with low reservoir depth. The LEFT JOIN keeps
+  // brand-new users with zero reservoir rows visible to maintenance.
   let lowUsers: any[];
   try {
     lowUsers = await prisma.$queryRawUnsafe(`
-      SELECT "userId", "scope", COUNT(*) as queued_count
-      FROM "StudentReservoirItem"
-      WHERE "status" = 'queued' AND "expiresAt" > NOW()
-      GROUP BY "userId", "scope"
-      HAVING COUNT(*) < $1
+      WITH queued AS (
+        SELECT "userId", "scope", COUNT(*) as queued_count
+        FROM "StudentReservoirItem"
+        WHERE "status" = 'queued' AND "expiresAt" > NOW()
+        GROUP BY "userId", "scope"
+      )
+      SELECT u."id" as "userId",
+             COALESCE(q."scope", 'adaptive') as "scope",
+             COALESCE(q.queued_count, 0) as queued_count
+      FROM "User" u
+      LEFT JOIN queued q ON q."userId" = u."id"
+      WHERE u."accountStatus" = 'active'
+        AND u."hasCompletedOnboarding" = true
+        AND COALESCE(q.queued_count, 0) < $1
+      ORDER BY queued_count ASC, u."createdAt" ASC
+      LIMIT 250
     `, RESERVOIR_POLICY.LOW_WATER_MARK);
   } catch (err) {
     console.warn('[RefillOrchestrator] failed to query low-water users', err);

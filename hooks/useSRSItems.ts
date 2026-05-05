@@ -1,25 +1,32 @@
 /**
- * React hook for managing SRS items with database integration.
- * Uses TanStack Query with IndexedDB persistence so due queue is available offline.
- * When offline, cached due items are shown; when back online, queue is flushed and cache refreshed.
+ * React hook for the legacy SRS route surface.
+ * The backend now serves this from canonical FSRS progress tables; legacy
+ * SRSItem uploads are not written back to the database.
  */
 
 import { useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
 
 export interface SRSItem {
   id: string;
-  questionId: string;
-  interval: number;
+  source?: 'card' | 'user_topic_progress' | 'user_progress' | 'legacy_srs_item';
+  questionId?: string | null;
+  conditionId?: string;
+  taskType?: string | null;
+  progressContext?: string;
+  interval?: number;
   dueDate: Date;
-  difficulty: number;
-  easiness: number;
-  repetition: number;
+  difficulty?: number | null;
+  easiness?: number;
+  repetition?: number;
   fsrsStability?: number | null;
   fsrsDifficulty?: number | null;
   fsrsState?: number | null;
+  stability?: number | null;
+  state?: number | null;
   overdueDays?: number;
   priority?: number;
 }
@@ -49,13 +56,16 @@ async function fetchDueFromApi(token: string | null): Promise<{ items: SRSItem[]
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch due items: ${response.status}`);
+    const errorPayload = await response.json().catch(() => ({}));
+    throw new Error(
+      getApiEnvelopeError(errorPayload, `Failed to fetch due items: ${response.status}`)
+    );
   }
 
-  const data = (await response.json()) as {
+  const data = unwrapApiEnvelope<{
     items?: Array<{ dueDate: string; [k: string]: unknown }>;
     totalDue?: number;
-  };
+  }>(await response.json());
   const rawItems = data.items ?? [];
   const items: SRSItem[] = rawItems.map((item: { dueDate: string; [k: string]: unknown }) => ({
     ...item,
@@ -116,33 +126,13 @@ export function useSRSItems(): UseSRSItemsResult {
     if (!isSignedIn || !user) return;
 
     try {
-      const localData = localStorage.getItem('panceai_srs_items');
-      if (localData) {
-        const localItems = JSON.parse(localData);
-        const itemsArray = Array.from(Object.values(localItems));
-
-        const token = await getToken();
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const response = await fetch('/api/srs/sync', {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ items: itemsArray }),
-        });
-
-        if (!response.ok) throw new Error(`Sync failed: ${response.status}`);
-
-        await refetch();
-      }
+      // Legacy localStorage SRSItem uploads are retired. Canonical FSRS writes
+      // happen at review submission time; this compatibility hook now refreshes
+      // the canonical due queue instead of creating deprecated scheduler rows.
+      await refetch();
     } catch (err) {
       console.error('[useSRSItems] Sync error:', err);
-      toast.error('SRS sync failed. Your progress is saved locally and will sync when reconnected.');
+      toast.error('Review queue refresh failed. Your latest submissions remain saved on the server.');
     }
   };
 

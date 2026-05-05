@@ -1,0 +1,4 @@
+interface:
+  display_name: "PANaCEa Session Pipeline"
+  short_description: "Trace student answer flows from UI through telemetry, persistence, and analytics"
+  default_prompt: "Debug or implement this PANaCEa session/drill flow by tracing the answer lifecycle, submit guards, telemetry, offline queueing, and persistence."

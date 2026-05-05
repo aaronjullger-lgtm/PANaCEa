@@ -24,6 +24,8 @@ import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { useViewTransition } from './hooks/useViewTransition';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
+import { ROUTES } from './config/routes';
+import { buildMainSessionLaunchPath } from './lib/study/mainSessionLaunch';
 
 import { useInitialLoadOptimization } from './services/initialLoadOptimizer';
 import type {
@@ -38,9 +40,6 @@ import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
 import { IncidentBanner } from './components/error/IncidentBanner';
-
-// Lazy-loaded command palette (~cmdk + dialog, deferred until ⌘K)
-const LazyCommandPalette = React.lazy(() => import('@/components/command/CommandPalette'));
 
 /** Session focus options for simulation / training menu — defined in AppRoutes, re-exported here for handler type safety */
 
@@ -159,8 +158,12 @@ const App: React.FC = () => {
     const params = new URLSearchParams(location.search);
     if (params.get('mode') === 'review') {
       setView('srs_review');
+      return;
     }
-  }, [location.pathname, location.search, setView]);
+    if (view === 'srs_review') {
+      setView('command_center');
+    }
+  }, [location.pathname, location.search, setView, view]);
 
   // Support ?modal=settings query param to open Settings modal (for nav links)
   useEffect(() => {
@@ -262,6 +265,38 @@ const App: React.FC = () => {
     const today = new Date().toISOString().split('T')[0] ?? '';
     return missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today).length;
   }, [missedQuestions]);
+  const [canonicalDueQuestionsCount, setCanonicalDueQuestionsCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isSignedIn || !authLoaded) {
+      setCanonicalDueQuestionsCount(null);
+      return;
+    }
+    let cancelled = false;
+    getToken()
+      .then((token) => {
+        if (!token || cancelled) return null;
+        return fetch('/api/srs/due?limit=1', {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
+        });
+      })
+      .then((response) => (response?.ok ? response.json() : null))
+      .then((payload: unknown) => {
+        if (cancelled || !payload || typeof payload !== 'object') return;
+        const envelope = payload as { data?: { totalDue?: unknown }; totalDue?: unknown };
+        const totalDue = envelope.data?.totalDue ?? envelope.totalDue;
+        if (typeof totalDue === 'number' && Number.isFinite(totalDue)) {
+          setCanonicalDueQuestionsCount(totalDue);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCanonicalDueQuestionsCount(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoaded, getToken, isSignedIn]);
+  const displayedDueQuestionsCount = canonicalDueQuestionsCount ?? dueQuestionsCount;
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
@@ -354,9 +389,14 @@ const App: React.FC = () => {
         setIsShortcutsModalOpen((prev) => !prev);
       }
     };
+    const handleOpenPalette = () => setIsCommandPaletteOpen(true);
 
     globalThis.addEventListener('keydown', handleGlobalKeyDown);
-    return () => globalThis.removeEventListener('keydown', handleGlobalKeyDown);
+    globalThis.addEventListener('panacea:open-command-palette', handleOpenPalette);
+    return () => {
+      globalThis.removeEventListener('keydown', handleGlobalKeyDown);
+      globalThis.removeEventListener('panacea:open-command-palette', handleOpenPalette);
+    };
   }, []);
 
   // ---- Safety net: flush pending sync data before browser closes ----
@@ -542,94 +582,10 @@ const App: React.FC = () => {
       try {
         setIsLoading(true);
         if (settings.focus === 'review' || settings.focus === 'due') {
-          const today = new Date().toISOString().split('T')[0] ?? '';
-          const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
-          if (due.length === 0) {
-            setError(
-              'No questions due for review right now. Check back later or start a general session.'
-            );
-            return;
-          }
-          const token = await getToken();
-          try {
-            const dueItems = due
-              .map((q) => ({
-                conditionId: q.conditionId ?? '',
-                taskType: q.taskType ?? null,
-                originalQuestionId: q.id ?? (q as { questionId?: string }).questionId ?? '',
-              }))
-              .filter((d) => d.conditionId);
-            if (dueItems.length === 0) {
-              setError(
-                'Due review requires concept data for each item. No variants can be loaded.'
-              );
-              setQuestionQueue([]);
-              return;
-            }
-            const res = token
-              ? await fetch('/api/questions/due-siblings', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ dueItems }),
-                })
-              : null;
-            const json: unknown = res?.ok ? await res.json().catch(() => null) : null;
-            const data = json as { data?: { results?: unknown } } | null;
-            const results = data?.data?.results as
-              | Array<{
-                  question: {
-                    id: string;
-                    question: string;
-                    vignette?: string;
-                    options: string[];
-                    correctAnswerIndex: number;
-                    rationale: string;
-                    system: string;
-                    conditionId?: string;
-                    condition?: string;
-                  } | null;
-                  dueConceptKey: { conditionId: string; taskType: string | null };
-                }>
-              | undefined;
-            // Variant-only: only add questions when we have a sibling/variant (never the original) to test retention, not recognition.
-            const queue: QuizQuestion[] = (results ?? [])
-              .filter(
-                (r): r is typeof r & { question: NonNullable<typeof r.question> } =>
-                  r.question != null
-              )
-              .map((r) => {
-                const key = r.dueConceptKey;
-                const q = r.question;
-                return {
-                  id: q.id,
-                  question: q.vignette ? `${q.vignette}\n\n${q.question}` : q.question,
-                  options: q.options,
-                  correctAnswerIndex: q.correctAnswerIndex,
-                  rationale: q.rationale,
-                  system: q.system,
-                  conditionId: key.conditionId,
-                  condition: q.condition ?? '',
-                  topic: q.system,
-                  dueConceptKey: key,
-                } as QuizQuestion;
-              });
-            if (queue.length === 0) {
-              setError(
-                'No variants available for your due concepts right now. Try a general session or come back later.'
-              );
-              setQuestionQueue([]);
-              return;
-            }
-            setQuestionQueue(queue);
-            setView('quiz');
-          } catch {
-            setError('Could not load due variants. Try again or start a general session.');
-            setQuestionQueue([]);
-            return;
-          }
+          setQuestionQueue([]);
+          setView('srs_review');
+          navigate(`${ROUTES.STUDY}?mode=review`);
+          return;
         } else if (settings.focus === 'reviewFlagged') {
           if (flaggedQuestions.length === 0) {
             setError(
@@ -668,6 +624,9 @@ const App: React.FC = () => {
                       system: string;
                       conditionId?: string;
                       condition?: string;
+                      canonicalQuestionId?: string | null;
+                      sourceQuestionId?: string | null;
+                      questionSource?: 'question' | 'pre_generated' | 'staging' | 'seed' | 'generated';
                     } | null;
                     dueConceptKey: { conditionId: string; taskType: string | null };
                   }>;
@@ -696,6 +655,9 @@ const App: React.FC = () => {
                     conditionId: key.conditionId,
                     condition: q.condition ?? '',
                     topic: q.system,
+                    canonicalQuestionId: q.canonicalQuestionId ?? null,
+                    sourceQuestionId: q.sourceQuestionId ?? q.id,
+                    questionSource: q.questionSource ?? 'pre_generated',
                     dueConceptKey: key,
                   } as QuizQuestion;
                 }
@@ -817,12 +779,13 @@ const App: React.FC = () => {
       if (focus === 'flagged') sessionFocus = 'reviewFlagged';
       else if (focus === 'due') sessionFocus = 'review';
       else if (focus === 'growth') sessionFocus = 'growth';
-      handleConfirmSession({
+      navigate(buildMainSessionLaunchPath({
+        mode: sessionFocus === 'review' ? 'review' : 'standard',
         focus: sessionFocus,
         count: INITIAL_QUEUE_SIZE,
-      });
+      }, { source: modeId === DRILL_MODE_SYSTEM ? 'mode-library' : 'training-menu' }));
     },
-    [handleConfirmSession]
+    [navigate]
   );
 
   const handleReviewMissed = useCallback(() => {
@@ -836,12 +799,12 @@ const App: React.FC = () => {
   const handleStartSession = useCallback(
     (settings?: SessionSettings) => {
       if (settings && typeof settings === 'object' && 'focus' in settings) {
-        handleConfirmSession(settings);
+        navigate(buildMainSessionLaunchPath(settings, { source: 'dashboard' }));
       } else {
         setIsModalOpen(true);
       }
     },
-    [handleConfirmSession]
+    [navigate]
   );
 
   const handleEndSession = useCallback(() => {
@@ -860,17 +823,27 @@ const App: React.FC = () => {
 
   const hasActiveSession = !!sessionSettings && questionQueue && questionQueue.length > 0;
 
-  const syncOnboardingCompleteToServer = useCallback(async () => {
+  const syncOnboardingCompleteToServer = useCallback(async (profile?: Partial<UserProfile>) => {
     try {
       const token = await getToken();
       if (!token) return;
+      const payload = {
+        school: profile?.school,
+        graduationDate: profile?.graduationDate,
+        currentRotation: profile?.currentRotation,
+        yearInProgram: profile?.yearInProgram,
+        eorTestDate: profile?.eorTestDate,
+        rotationStartDate: profile?.rotationStartDate,
+        rotationEndDate: profile?.rotationEndDate,
+        hasCompletedOnboarding: true,
+      };
       await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ hasCompletedOnboarding: true }),
+        body: JSON.stringify(payload),
       });
     } catch {
       // Non-blocking: localStorage already set; server sync best-effort
@@ -880,7 +853,7 @@ const App: React.FC = () => {
   const handleOnboardingComplete = useCallback(
     (profile: UserProfile) => {
       saveUserProfile(profile);
-      void syncOnboardingCompleteToServer();
+      void syncOnboardingCompleteToServer(profile);
       setOnboardingStep('baseline');
     },
     [syncOnboardingCompleteToServer]
@@ -1034,13 +1007,43 @@ const App: React.FC = () => {
   );
 
   const _handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
+    if (!isPrivateBetaModeVisible(modeId)) {
+      setError(
+        'This private beta is focused on the core study loop. Start a focused practice block from Study or Practice.'
+      );
+      setInitialDrillSystem(null);
+      setView('command_center');
+      navigate('/study');
+      return;
+    }
+
+    if (modeId === DRILL_MODE_SYSTEM) {
+      setInitialDrillSystem(system);
+      navigate(buildMainSessionLaunchPath(
+        {
+          mode: 'targeted',
+          focus: 'topic',
+          count: INITIAL_QUEUE_SIZE,
+          questionCount: INITIAL_QUEUE_SIZE,
+          systems: system ? [system] : undefined,
+          topic: system || undefined,
+        },
+        { source: 'mode-library' }
+      ));
+      return;
+    }
+
     setInitialDrillSystem(system);
+    const modeConfig = TRAINING_MODES.find((mode) => mode.id === modeId);
     const modeViewMap: Record<string, View> = {
       [DRILL_MODE_SYSTEM]: 'system_drill',
     };
     const targetView = modeViewMap[modeId];
     if (targetView) setView(targetView);
-  }, []);
+    if (modeConfig?.route?.startsWith('/')) {
+      navigate(modeConfig.route);
+    }
+  }, [navigate, setView]);
 
   // Navigate to simulation page - memoized
   const [simulationInitialFocus, setSimulationInitialFocus] = useState<SimulationFocus>('all');
@@ -1052,13 +1055,23 @@ const App: React.FC = () => {
       const pendingSystem = sessionStorage.getItem('panceai_pending_system_drill');
       if (pendingSystem) {
         sessionStorage.removeItem('panceai_pending_system_drill');
+        if (!isPrivateBetaModeVisible(DRILL_MODE_SYSTEM)) {
+          setInitialDrillSystem(null);
+          setError(
+            'This private beta is focused on the core study loop. Start a focused practice block from Study or Practice.'
+          );
+          setView('command_center');
+          navigate('/study');
+          return;
+        }
+
         setInitialDrillSystem(pendingSystem);
         setView('system_drill');
       }
     } catch {
       /* ignore storage errors */
     }
-  }, [setView]);
+  }, [navigate, setView]);
 
   const handleNavigateToSimulation = useCallback(
     (settings?: { initialFocus?: SimulationFocus }) => {
@@ -1084,8 +1097,8 @@ const App: React.FC = () => {
 
   // Navigate to study path dashboard - memoized
   const handleNavigateToStudyPathDashboard = useCallback(() => {
-    setView('study_path_dashboard');
-  }, []);
+    navigate(ROUTES.STUDY_PATH);
+  }, [navigate]);
 
   const pageTransition = useAccessibleTransition(springs.snappy);
 
@@ -1143,11 +1156,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* ⌘K Command Palette (lazy-loaded) */}
-        <React.Suspense fallback={null}>
-          <LazyCommandPalette />
-        </React.Suspense>
-
         {/* Loading Progress Bar */}
         <LoadingProgress isLoading={isLoading} />
 
@@ -1168,7 +1176,7 @@ const App: React.FC = () => {
           heatmapPerformance={heatmapPerformance}
           missedQuestions={missedQuestions}
           flaggedQuestions={flaggedQuestions}
-          dueQuestionsCount={dueQuestionsCount}
+          dueQuestionsCount={displayedDueQuestionsCount}
           growthAreas={growthAreas}
           isSyncing={isSyncing}
           isStatsLoading={isStatsLoading}

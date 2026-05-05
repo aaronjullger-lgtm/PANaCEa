@@ -44,6 +44,47 @@ type PrismaClientLike = {
   [key: string]: any;
 };
 
+type ParsedReservoirScope =
+  | { kind: 'adaptive' }
+  | { kind: 'system'; system: string }
+  | { kind: 'subcategory'; system: string; subcategory: string }
+  | { kind: 'condition'; conditionId: string }
+  | { kind: 'confusion-remediation'; userId: string };
+
+interface ResolvedReservoirConditionScope {
+  progressConditionIds: string[];
+  questionConditionIds: string[];
+  medicalContentIds: string[];
+}
+
+export function parseReservoirScope(scope: string): ParsedReservoirScope {
+  if (scope.startsWith('system:')) {
+    const system = scope.slice('system:'.length).trim();
+    return system ? { kind: 'system', system } : { kind: 'adaptive' };
+  }
+
+  if (scope.startsWith('subcategory:')) {
+    const [, rawSystem = '', rawSubcategory = ''] = scope.split(':');
+    const system = rawSystem.trim();
+    const subcategory = decodeURIComponent(rawSubcategory).trim();
+    return system && subcategory
+      ? { kind: 'subcategory', system, subcategory }
+      : { kind: 'adaptive' };
+  }
+
+  if (scope.startsWith('condition:')) {
+    const conditionId = scope.slice('condition:'.length).trim();
+    return conditionId ? { kind: 'condition', conditionId } : { kind: 'adaptive' };
+  }
+
+  if (scope.startsWith('confusion-remediation:')) {
+    const userId = scope.slice('confusion-remediation:'.length).trim();
+    return userId ? { kind: 'confusion-remediation', userId } : { kind: 'adaptive' };
+  }
+
+  return { kind: 'adaptive' };
+}
+
 // ─── Quality Gate ───────────────────────────────────────────────────────────
 
 interface QualityDecision {
@@ -94,12 +135,19 @@ export async function executeRefill(
   payload: RefillJobPayload
 ): Promise<RefillResult> {
   const { userId, scope, deficit } = payload;
+  const parsedScope = parseReservoirScope(scope);
+  const parsedConditionScope =
+    parsedScope.kind === 'condition'
+      ? await resolveReservoirConditionScope(prisma, parsedScope.conditionId)
+      : null;
 
   // Resolve primarySystem for TARGETED adjacency scoring.
   // Accept explicit payload.primarySystem, or infer from scope ('system:CV' → 'Cardiovascular').
   const rawPrimarySystem =
     payload.primarySystem ??
-    (scope.startsWith('system:') ? scope.split(':')[1] : undefined);
+    (parsedScope.kind === 'system' || parsedScope.kind === 'subcategory'
+      ? parsedScope.system
+      : undefined);
   const primarySystem = rawPrimarySystem ? normalizeSystemName(rawPrimarySystem) : undefined;
   const items: InsertReservoirItemInput[] = [];
   const errors: string[] = [];
@@ -131,6 +179,12 @@ export async function executeRefill(
       where: {
         userId,
         nextReviewAt: { lte: now },
+        ...(parsedConditionScope
+          ? { conditionId: { in: parsedConditionScope.progressConditionIds } }
+          : {}),
+        ...(parsedScope.kind === 'system' || parsedScope.kind === 'subcategory'
+          ? { system: parsedScope.system }
+          : {}),
       },
       // Fetch a larger batch so adjacency sorting has sufficient candidates.
       // Final slice applied after scoring.
@@ -188,7 +242,12 @@ export async function executeRefill(
 
       // Find a question for this condition
       const question = await findQuestionForCondition(
-        prisma, review.conditionId, userId, reservoirQuestionIds, seenMap
+        prisma,
+        review.conditionId,
+        userId,
+        reservoirQuestionIds,
+        seenMap,
+        parsedScope
       );
       if (!question) continue;
 
@@ -207,6 +266,7 @@ export async function executeRefill(
           : RESERVOIR_POLICY.PRIORITY.DUE_REVIEW,
         system: question.system || review.system,
         difficulty: question.difficulty,
+        conditionId: review.conditionId,
         questionOrder: question.questionOrder || null,
         taskCategory: question.taskCategory || null,
         isReview: true,
@@ -224,13 +284,17 @@ export async function executeRefill(
   let poolQueued = 0;
 
   try {
-    // Parse scope for system filter
-    const systemFilter = scope.startsWith('system:') ? scope.split(':')[1] : undefined;
+    const scopeSystemFilter =
+      parsedScope.kind === 'system' || parsedScope.kind === 'subcategory'
+        ? parsedScope.system
+        : undefined;
+    const scopeConditionFilter =
+      parsedConditionScope ?? undefined;
 
     // Sprint 3: When scope is global (main session), distribute new cards
     // proportionally to NCCPA blueprint weights so the reservoir reflects
     // true PANCE distribution. System-specific scopes still use direct filter.
-    const isGlobalScope = !systemFilter;
+    const isGlobalScope = parsedScope.kind === 'adaptive' || parsedScope.kind === 'confusion-remediation';
 
     // Calculate per-system quotas for blueprint-weighted filling
     let systemQuotas: Record<string, number> | null = null;
@@ -272,10 +336,18 @@ export async function executeRefill(
     }
 
     // Helper: fetch candidates for a single system (or all if no filter)
-    const fetchCandidatesForSystem = async (sysFilter?: string, limit: number = newTarget * 2) => {
+    const fetchCandidatesForSystem = async (
+      sysFilter?: string,
+      limit: number = newTarget * 2,
+      conditionScope?: ResolvedReservoirConditionScope
+    ) => {
+      const conditionWhere = conditionScope
+        ? buildPregeneratedConditionWhere(conditionScope)
+        : {};
       const poolQuestions = await prisma.preGeneratedQuestion.findMany({
         where: {
           ...(sysFilter ? { system: sysFilter } : {}),
+          ...conditionWhere,
           validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
           flagCount: { lt: 3 },
           id: { notIn: Array.from(reservoirQuestionIds) },
@@ -288,6 +360,8 @@ export async function executeRefill(
         select: {
           id: true,
           system: true,
+          conditionId: true,
+          medicalContentId: true,
           difficulty: true,
           questionOrder: true,
           taskCategory: true,
@@ -298,33 +372,7 @@ export async function executeRefill(
         },
       });
 
-      const standardQuestions = await prisma.question.findMany({
-        where: {
-          ...(sysFilter ? { system: sysFilter } : {}),
-          id: { notIn: Array.from(reservoirQuestionIds) },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: Math.ceil(limit / 2),
-        select: {
-          id: true,
-          system: true,
-          difficulty: true,
-        },
-      });
-
-      return [
-        ...poolQuestions.map((q: any) => ({ ...q, source: 'pool' as const })),
-        ...standardQuestions.map((q: any) => ({
-          ...q,
-          source: 'pool' as const,
-          questionOrder: null,
-          taskCategory: null,
-          flagCount: 0,
-          qualityScore: null,
-          validationStatus: 'approved',
-          timesServed: 0,
-        })),
-      ];
+      return poolQuestions.map((q: any) => ({ ...q, source: 'pool' as const }));
     };
 
     // Sort helper
@@ -367,6 +415,7 @@ export async function executeRefill(
             priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
             system: q.system,
             difficulty: q.difficulty,
+            conditionId: q.conditionId ?? null,
             questionOrder: q.questionOrder,
             taskCategory: q.taskCategory,
             isReview: false,
@@ -377,8 +426,13 @@ export async function executeRefill(
         }
       }
     } else {
-      // System-specific scope: original behavior
-      const allNewCandidates = await fetchCandidatesForSystem(systemFilter);
+      // Scoped session: preserve mode intent instead of filling from the
+      // global blueprint pool.
+      const allNewCandidates = await fetchCandidatesForSystem(
+        scopeSystemFilter,
+        newTarget * 2,
+        scopeConditionFilter
+      );
       sortCandidates(allNewCandidates);
 
       for (const q of allNewCandidates) {
@@ -396,6 +450,9 @@ export async function executeRefill(
           priority: RESERVOIR_POLICY.PRIORITY.NEW_STANDARD,
           system: q.system,
           difficulty: q.difficulty,
+          conditionId:
+            q.conditionId ??
+            (parsedScope.kind === 'condition' ? parsedScope.conditionId : null),
           questionOrder: q.questionOrder,
           taskCategory: q.taskCategory,
           isReview: false,
@@ -420,7 +477,7 @@ export async function executeRefill(
       // It needs { priority, conditionId } — we'll map priorities back after.
       const boostTargets = items.map(item => ({
         priority: item.priority,
-        conditionId: (item as any).conditionId ?? item.system ?? null,
+        conditionId: item.conditionId ?? item.system ?? null,
       }));
 
       const boostResult = await boostReservoirItems(prisma, userId, boostTargets);
@@ -473,18 +530,24 @@ async function findQuestionForCondition(
   conditionId: string,
   userId: string,
   excludeIds: Set<string>,
-  seenMap: Map<string, number>
+  seenMap: Map<string, number>,
+  scope: ParsedReservoirScope = { kind: 'adaptive' }
 ): Promise<any | null> {
+  const conditionScope = await resolveReservoirConditionScope(prisma, conditionId);
+  const conditionWhere = buildPregeneratedConditionWhere(conditionScope);
   // Check PreGeneratedQuestion first
   const preGenerated = await prisma.preGeneratedQuestion.findMany({
     where: {
-      conditionId,
+      ...conditionWhere,
+      ...(scope.kind === 'system' || scope.kind === 'subcategory' ? { system: scope.system } : {}),
       validationStatus: { in: ALLOWED_VALIDATION_STATUSES },
       flagCount: { lt: 3 },
     },
     select: {
       id: true,
       system: true,
+      conditionId: true,
+      medicalContentId: true,
       difficulty: true,
       questionOrder: true,
       taskCategory: true,
@@ -495,29 +558,7 @@ async function findQuestionForCondition(
     take: 10,
   });
 
-  // Check Question table
-  const standard = await prisma.question.findMany({
-    where: { conditionId },
-    select: {
-      id: true,
-      system: true,
-      difficulty: true,
-    },
-    take: 10,
-  });
-
-  // Merge candidates
-  const candidates = [
-    ...preGenerated,
-    ...standard.map((q: any) => ({
-      ...q,
-      questionOrder: null,
-      taskCategory: null,
-      flagCount: 0,
-      qualityScore: null,
-      validationStatus: 'approved',
-    })),
-  ].filter((q) => !excludeIds.has(q.id));
+  const candidates = preGenerated.filter((q: any) => !excludeIds.has(q.id));
 
   if (candidates.length === 0) return null;
 
@@ -529,4 +570,74 @@ async function findQuestionForCondition(
   });
 
   return candidates[0];
+}
+
+async function resolveReservoirConditionScope(
+  prisma: PrismaClientLike,
+  conditionId: string
+): Promise<ResolvedReservoirConditionScope> {
+  const fallback: ResolvedReservoirConditionScope = {
+    progressConditionIds: [conditionId],
+    questionConditionIds: [conditionId],
+    medicalContentIds: [],
+  };
+
+  if (!prisma.medicalContent?.findMany) {
+    return fallback;
+  }
+
+  try {
+    const rows = await prisma.medicalContent.findMany({
+      where: {
+        OR: [
+          { id: conditionId },
+          { conditionId },
+        ],
+      },
+      select: {
+        id: true,
+        conditionId: true,
+      },
+    });
+
+    for (const row of rows ?? []) {
+      if (row?.id) {
+        fallback.progressConditionIds.push(row.id);
+        fallback.medicalContentIds.push(row.id);
+      }
+      if (row?.conditionId) {
+        fallback.questionConditionIds.push(row.conditionId);
+      }
+    }
+  } catch {
+    return uniqueConditionScope(fallback);
+  }
+
+  return uniqueConditionScope(fallback);
+}
+
+function buildPregeneratedConditionWhere(
+  scope: ResolvedReservoirConditionScope
+): Record<string, unknown> {
+  const or: Array<Record<string, unknown>> = [];
+  if (scope.questionConditionIds.length > 0) {
+    or.push({ conditionId: { in: scope.questionConditionIds } });
+  }
+  if (scope.medicalContentIds.length > 0) {
+    or.push({ medicalContentId: { in: scope.medicalContentIds } });
+  }
+
+  if (or.length === 0) return {};
+  if (or.length === 1) return or[0]!;
+  return { OR: or };
+}
+
+function uniqueConditionScope(
+  scope: ResolvedReservoirConditionScope
+): ResolvedReservoirConditionScope {
+  return {
+    progressConditionIds: [...new Set(scope.progressConditionIds.filter(Boolean))],
+    questionConditionIds: [...new Set(scope.questionConditionIds.filter(Boolean))],
+    medicalContentIds: [...new Set(scope.medicalContentIds.filter(Boolean))],
+  };
 }

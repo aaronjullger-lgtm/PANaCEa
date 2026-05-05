@@ -5,7 +5,7 @@
  * Pure functions tested:
  *   getDashboardConfig  — returns stage-specific DashboardConfig
  *   shouldShowWidget    — checks pilotWidgets ∪ dataWidgets membership
- *   shouldShowMode      — checks visibleModes membership
+ *   shouldShowMode      — checks stage eligibility plus readiness-gated public visibility
  *
  * All 6 stages verified: didactic_early, didactic_late, clinical_rotation,
  *   pance_prep, panre, general
@@ -184,28 +184,33 @@ describe('shouldShowMode', () => {
     expect(shouldShowMode('didactic_early', 'pance_simulator')).toBe(false);
   });
 
-  it('returns true for pance_simulator in pance_prep', () => {
-    expect(shouldShowMode('pance_prep', 'pance_simulator')).toBe(true);
+  it('fails closed for pance_simulator until a real mounted slice is ready', () => {
+    expect(getDashboardConfig('pance_prep').visibleModes).toContain('pance_simulator');
+    expect(shouldShowMode('pance_prep', 'pance_simulator')).toBe(false);
   });
 
-  it('returns true for panre_la only in panre stage', () => {
-    expect(shouldShowMode('panre', 'panre_la')).toBe(true);
+  it('fails closed for panre_la even when panre-stage eligible', () => {
+    expect(getDashboardConfig('panre').visibleModes).toContain('panre_la');
+    expect(shouldShowMode('panre', 'panre_la')).toBe(false);
     for (const stage of ALL_STAGES.filter(s => s !== 'panre')) {
       expect(shouldShowMode(stage, 'panre_la')).toBe(false);
     }
   });
 
-  it('returns true for patient_encounter in clinical_rotation', () => {
-    expect(shouldShowMode('clinical_rotation', 'patient_encounter')).toBe(true);
+  it('fails closed for patient_encounter in clinical_rotation until production-ready', () => {
+    expect(getDashboardConfig('clinical_rotation').visibleModes).toContain('patient_encounter');
+    expect(shouldShowMode('clinical_rotation', 'patient_encounter')).toBe(false);
   });
 
   it('returns false for patient_encounter in didactic_early', () => {
     expect(shouldShowMode('didactic_early', 'patient_encounter')).toBe(false);
   });
 
-  it('grand_rounds is available in clinical_rotation and pance_prep', () => {
-    expect(shouldShowMode('clinical_rotation', 'grand_rounds')).toBe(true);
-    expect(shouldShowMode('pance_prep', 'grand_rounds')).toBe(true);
+  it('grand_rounds is stage-eligible but not publicly discoverable yet', () => {
+    expect(getDashboardConfig('clinical_rotation').visibleModes).toContain('grand_rounds');
+    expect(getDashboardConfig('pance_prep').visibleModes).toContain('grand_rounds');
+    expect(shouldShowMode('clinical_rotation', 'grand_rounds')).toBe(false);
+    expect(shouldShowMode('pance_prep', 'grand_rounds')).toBe(false);
   });
 
   it('grand_rounds is not available in panre', () => {

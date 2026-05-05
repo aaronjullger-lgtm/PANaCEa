@@ -6,12 +6,14 @@
  *
  * @see functions/api/study-plan/today.ts
  * @see lib/services/dailyStudyAllocatorService.ts
- * @see components/dashboard/TodayPlanCard.tsx
+ * @see components/dashboard/adaptive/widgets/command/TodayCommandWidget.tsx
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEnvelopeError, unwrapApiEnvelope } from '@/lib/utils/apiEnvelope';
+import type { SessionSettings } from '@/types';
 
 export type StudySplit = 'main_heavy' | 'balanced' | 'targeted_heavy';
 
@@ -43,8 +45,12 @@ export interface TodayPlanData {
     reason: string;
     priority: string;
     status: string;
+    systems?: string[];
     systemFilter?: string[];
     conditionIds?: string[];
+    reviewCardIds?: string[];
+    targetQuestions?: number;
+    launchSettings?: SessionSettings;
     route: string;
     launchParams: Record<string, string>;
   }>;
@@ -69,11 +75,13 @@ export function useTodayPlan() {
       });
 
       if (!response.ok) {
-        throw new Error(`Study plan fetch failed: ${response.status}`);
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(
+          getApiEnvelopeError(errorPayload, `Study plan fetch failed: ${response.status}`)
+        );
       }
 
-      const json: any = await response.json();
-      const payload = json?.data?.data ?? json?.data ?? json;
+      const payload = unwrapApiEnvelope<TodayPlanData>(await response.json());
       if (payload) setData(payload);
     } catch (err) {
       console.warn('[useTodayPlan] Failed:', err);

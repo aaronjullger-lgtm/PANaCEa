@@ -1,7 +1,7 @@
 /**
  * FSRS Optimizer Serverless Sidecar (Google Cloud Function)
  *
- * Fetches Main Session review history from ReviewLog, formats payload for the
+ * Fetches real MAIN/DRILL review history from ReviewLog, formats payload for the
  * Python fsrs-optimizer Cloud Function, and returns w[] + metadata for
  * persistence in PersonalizedFSRSParams.
  *
@@ -14,7 +14,7 @@ import { deriveDiscreteFSRSGrade } from './fsrs-optimizer-bridge';
 // Types
 // ============================================================================
 
-/** One review row as returned from ReviewLog (real + MAIN only). */
+/** One review row as returned from ReviewLog (real MAIN/DRILL only). */
 export interface ReviewLogRow {
   id: string;
   questionFkId: string | null;
@@ -75,7 +75,7 @@ export interface SidecarEnv {
 export interface ReviewLogClient {
   reviewLog: {
     findMany: (args: {
-      where: { userId: string; review_type: string; sessionType: string };
+      where: { userId: string; review_type: string; sessionType: string | { in: string[] } };
       orderBy: { reviewedAt: 'asc' };
       select: {
         id: true;
@@ -143,7 +143,7 @@ function toOptimizerPayload(rows: ReviewLogRow[]): FSRSOptimizerPayload {
 // ============================================================================
 
 /**
- * Fetch Main Session (real) review history from ReviewLog and call the
+ * Fetch real MAIN/DRILL review history from ReviewLog and call the
  * FSRS Optimizer Cloud Function. Returns result suitable for upserting
  * into PersonalizedFSRSParams.
  *
@@ -168,7 +168,7 @@ export async function triggerFSRSOptimization(
         where: {
           userId,
           review_type: 'real',
-          sessionType: 'MAIN',
+          sessionType: { in: ['MAIN', 'DRILL'] },
         },
         orderBy: { reviewedAt: 'asc' },
         select: {

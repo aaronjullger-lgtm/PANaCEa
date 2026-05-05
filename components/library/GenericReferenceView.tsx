@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { InlineSpinner } from '@/components/loading';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { buildMainSessionLaunchPath } from '@/lib/study/mainSessionLaunch';
 
 // ============================================================================
 // RESPONSIVE HOOK
@@ -569,16 +570,23 @@ export default function GenericReferenceView<T>({
                           {/* Practice This Topic CTA */}
                           {config.getDrillParams && (() => {
                             const params = config.getDrillParams!(item);
-                            if (!params) return null;
-                            const qs = new URLSearchParams();
-                            qs.set('mode', 'smart-review');
-                            if (params.system) qs.set('system', params.system);
-                            if (params.tag) qs.set('tag', params.tag);
+                            if (!params?.system) return null;
+                            const launchPath = buildMainSessionLaunchPath(
+                              {
+                                mode: 'targeted',
+                                focus: 'topic',
+                                count: 10,
+                                questionCount: 10,
+                                systems: [params.system],
+                                topic: params.tag,
+                              },
+                              { source: 'knowledge' }
+                            );
                             return (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/study?${qs.toString()}`);
+                                  navigate(launchPath);
                                 }}
                                 style={{
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',

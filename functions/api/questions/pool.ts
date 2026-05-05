@@ -5,10 +5,9 @@
  */
 
 import { z } from 'zod';
-import { Prisma } from '@prisma/client/edge';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { getSystemWeight, calculateTargetDistribution, getSystemAbbreviation } from '../../../lib/constants/blueprint';
-import { aiEndpoint } from '../_shared/middleware';
+import { aiEndpoint, authenticatedEndpoint } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
@@ -16,6 +15,7 @@ import {
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveOrCreateUserRecord } from '../_shared/user-resolver';
+import { buildCanonicalQuestionMirrorData, upsertCanonicalQuestionMirror } from '../_shared/canonical-question-mirror';
 import {
   getFromCache,
   setInCache,
@@ -24,15 +24,15 @@ import {
   isKVAvailable,
 } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
-import { loadConditionData } from '../_shared/condition-loader';
-import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
-import { toGatewayContext } from '../../../lib/ai/aiGateway';
 import {
-  ANSWER_LETTERS,
-  letterToIndex,
   indexToLetter,
   resolveCorrectAnswerIndex,
 } from '../../../lib/answerLetterMap';
+import {
+  PRODUCTION_PREGENERATED_SAFETY_FILTER,
+  withProductionPregeneratedSafety,
+  withProductionQuestionSafety,
+} from '../../../lib/services/questionServingSafety';
 
 /**
  * Compute a lightweight semantic fingerprint from question text for near-duplicate detection.
@@ -81,6 +81,7 @@ interface PreGeneratedQuestionRecord {
   conditionId: string | null;
   medicalContentId: string | null;
   difficulty: string | null;
+  validationStatus: string | null;
   questionData: QuestionDataJson;
   generatedAt: Date;
   usedAt: Date | null;
@@ -93,44 +94,11 @@ interface PreGeneratedQuestionDbRecord {
   conditionId: string | null;
   medicalContentId: string | null;
   difficulty: string | null;
+  validationStatus: string | null;
   questionData: unknown;
   generatedAt: Date;
   usedAt: Date | null;
 }
-
-interface QuestionContentJson {
-  overview?: string;
-  etiologyPathophysiology?: string;
-  etiology?: string;
-  clinicalPresentation?: string;
-  diagnostics?: { notes?: string } | string | null;
-  treatment?: string | string[];
-}
-
-function extractDiagnosticsNotes(diagnostics: QuestionContentJson['diagnostics']): string {
-  if (typeof diagnostics === 'string') return diagnostics;
-  if (diagnostics && typeof diagnostics === 'object' && 'notes' in diagnostics) {
-    return typeof diagnostics.notes === 'string' ? diagnostics.notes : '';
-  }
-  return '';
-}
-
-interface MedicalContentGenerationRecord {
-  id: string;
-  condition: string;
-  system: string;
-  subcategory: string | null;
-  content: QuestionContentJson | null;
-  classic_patient: string | null;
-  classic_triad: Prisma.JsonValue | null;
-  first_line_rx: string | null;
-  gold_standard_dx: string | null;
-  best_initial_test: string | null;
-}
-
-type PoolEnv = {
-  REQUIRE_APPROVED_QUESTIONS?: string;
-};
 
 interface PoolQuestionOutput {
   id: string;
@@ -139,6 +107,7 @@ interface PoolQuestionOutput {
   imageUrl?: string;
   options: string[];
   correctAnswer?: string;
+  correctAnswerIndex?: number;
   explanation?: string;
   system: string;
   difficulty: string;
@@ -173,6 +142,7 @@ function mapToPreGeneratedQuestion(r: {
   conditionId: string | null;
   medicalContentId: string | null;
   difficulty: string | null;
+  validationStatus: string | null;
   questionData: unknown;
   generatedAt: Date;
   usedAt: Date | null;
@@ -184,6 +154,7 @@ function mapToPreGeneratedQuestion(r: {
     conditionId: r.conditionId,
     medicalContentId: r.medicalContentId,
     difficulty: r.difficulty,
+    validationStatus: r.validationStatus,
     questionData: r.questionData as QuestionDataJson,
     generatedAt: r.generatedAt,
     usedAt: r.usedAt,
@@ -347,9 +318,7 @@ export const onRequestGet = aiEndpoint(
             prisma,
             userId,
             seenIds,
-            { count: targetCount, system: abbrev, category, difficulty },
-            undefined,
-            env as PoolEnv
+            { count: targetCount, system: abbrev, category, difficulty }
           );
           allBySystem.push(...result.questions);
           result.questions.forEach((q) => seenIds.add(q.id));
@@ -366,8 +335,7 @@ export const onRequestGet = aiEndpoint(
           userId,
           seenIds,
           poolOptions,
-          cachedPool,
-          env as PoolEnv
+          cachedPool
         );
       }
 
@@ -387,36 +355,15 @@ export const onRequestGet = aiEndpoint(
       const threshold = computeThreshold(system, systems);
       const needsGeneration = poolAvailable < threshold;
 
-      // If pool is low and we have capacity, generate a new question on the fly
-      if (needsGeneration && questions.length < count && env.GEMINI_API_KEY) {
-        const targetSystem = system ?? systems?.[0] ?? null;
-        const generated = await generateAndAddToPool(
-          prisma,
-          env,
-          targetSystem,
-          difficulty,
-          category,
-          userId
-        );
-        if (generated) {
-          questions.push(generated);
-          poolAvailable += 1; // increment since we added to pool
-          // Mark as seen for this user
-          await prisma.userQuestionSeen.create({
-            data: {
-              id: crypto.randomUUID(),
-              userId,
-              questionId: generated.id,
-              questionType: 'pre_generated',
-              firstSeenAt: new Date(),
-              lastSeenAt: new Date(),
-              timesShown: 1,
-              timesCorrect: 0,
-              timesIncorrect: 0,
-              updatedAt: new Date(),
-            },
-          });
-        }
+      // Learner-facing pool reads fail closed. Do not generate and immediately
+      // serve unreviewed clinical questions from this hot path; reservoir/admin
+      // generation owns pool refill and QA.
+      if (needsGeneration && questions.length < count) {
+        logger.info('Question pool below threshold; learner hot-path generation suppressed', {
+          userId: auth.userId,
+          requestedCount: count,
+          currentCount: questions.length,
+        });
       }
       // Cache the pool questions if available
       if (
@@ -489,13 +436,63 @@ export const onRequestGet = aiEndpoint(
   { source: 'query' }
 );
 
-export const onRequestPost = aiEndpoint(PoolPostSchema, async (context) => {
+export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/pool');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    const user = await resolveOrCreateUserRecord(prisma, auth.userId, {
+      id: true,
+      role: true,
+    });
+    if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
+      logger.warn('Rejected non-admin pool seed request', { userId: auth.userId });
+      return {
+        data: { error: 'Admin access required' },
+        status: 403,
+      };
+    }
+
     const q = validated.question;
+    const correctAnswerIndex = resolveCorrectAnswerIndex(q.correctAnswer, q.options);
+    if (correctAnswerIndex === null) {
+      return {
+        data: { error: 'correctAnswer must resolve to one of the provided options' },
+        status: 400,
+      };
+    }
+    const seededAt = new Date();
+    const seedQuestionData = {
+      vignette: q.vignette,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+      correctAnswerIndex,
+      explanation: q.explanation,
+      conditionName: q.conditionName,
+      system: q.system,
+      subcategory: q.subcategory,
+      tags: q.tags,
+    };
+    const canonicalSeedQuestion = buildCanonicalQuestionMirrorData({
+      id: q.id,
+      questionData: seedQuestionData,
+      system: q.system,
+      difficulty: q.difficulty || 'medium',
+      conditionId: q.conditionId,
+      medicalContentId: q.medicalContentId,
+      generatedAt: seededAt,
+    }, {
+      source: 'admin_seed_pre_generated',
+      humanReviewed: true,
+    });
+    if (!canonicalSeedQuestion) {
+      return {
+        data: { error: 'Seeded question must be mirrorable to the canonical Question table' },
+        status: 400,
+      };
+    }
 
     await prisma.preGeneratedQuestion.create({
       data: {
@@ -505,22 +502,29 @@ export const onRequestPost = aiEndpoint(PoolPostSchema, async (context) => {
         conditionId: q.conditionId,
         medicalContentId: q.medicalContentId,
         difficulty: q.difficulty || 'medium',
-        questionData: {
-          vignette: q.vignette,
-          question: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-          conditionName: q.conditionName,
-          system: q.system,
-          subcategory: q.subcategory,
-          tags: q.tags,
-        },
+        questionData: seedQuestionData,
         generatedAt: new Date(),
         usedAt: null,
+        quality: 10,
+        validationStatus: 'approved',
+        validatedAt: seededAt,
+        validatedBy: auth.userId,
         // Phase 4: populate dedup hash and taxonomy at creation
         semanticHash: computeSemanticHash(q.question),
       },
+    });
+
+    await upsertCanonicalQuestionMirror(prisma, {
+      id: q.id,
+      questionData: seedQuestionData,
+      system: q.system,
+      difficulty: q.difficulty || 'medium',
+      conditionId: q.conditionId,
+      medicalContentId: q.medicalContentId,
+      generatedAt: seededAt,
+    }, {
+      source: 'admin_seed_pre_generated',
+      humanReviewed: true,
     });
 
     logger.info('Question seeded to pool', { userId: auth.userId, questionId: q.id });
@@ -542,7 +546,7 @@ export const onRequestPost = aiEndpoint(PoolPostSchema, async (context) => {
   } finally {
     await safePrismaDisconnect(prisma);
   }
-}, { source: 'query' });
+}, { requestsPerMinute: 30 });
 
 // Helper functions preserved from original file
 async function getFromPreGeneratedPool(
@@ -557,7 +561,6 @@ async function getFromPreGeneratedPool(
     difficulty?: string | null;
   },
   cachedQuestions?: PreGeneratedQuestionRecord[] | null,
-  env?: PoolEnv
 ): Promise<{
   questions: PoolQuestionOutput[];
   remaining: number;
@@ -574,20 +577,16 @@ async function getFromPreGeneratedPool(
     ? Math.min(Math.max(count * 3, count + 12), 120)
     : Math.min(Math.max(count * 8, count + 40), 240);
 
-  if (cachedQuestions && cachedQuestions.length > 0) {
-    preGenQuestions = cachedQuestions;
-    remaining = cachedQuestions.length;
+  const approvedCachedQuestions = cachedQuestions?.filter(
+    (question) => question.validationStatus === PRODUCTION_PREGENERATED_SAFETY_FILTER.validationStatus
+  );
+  const usedTrustedCache = Boolean(approvedCachedQuestions && approvedCachedQuestions.length > 0);
+
+  if (approvedCachedQuestions && approvedCachedQuestions.length > 0) {
+    preGenQuestions = approvedCachedQuestions;
+    remaining = approvedCachedQuestions.length;
   } else {
-    const requireApprovedQuestions = env?.REQUIRE_APPROVED_QUESTIONS === 'true';
-    const where: Record<string, unknown> = {
-      // Phase 2: Require approved status (not just exclude rejected).
-      // When REQUIRE_APPROVED_QUESTIONS env var is set, only approved
-      // questions are served. Otherwise fall back to the legacy kill-switch
-      // to avoid supply shock during rollout.
-      validationStatus: requireApprovedQuestions
-        ? 'approved'
-        : { not: 'rejected' },
-    };
+    const where: Record<string, unknown> = withProductionPregeneratedSafety({});
     if (systems?.length) where.system = { in: systems };
     else if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
@@ -653,24 +652,30 @@ async function getFromPreGeneratedPool(
       continue;
     }
 
-    // Handle both correctAnswer (letter "A") and correctAnswerIndex (number 0) formats
-    let correctAnswer = data.correctAnswer;
-    if (!correctAnswer && typeof data.correctAnswerIndex === 'number') {
-      const letter = indexToLetter(data.correctAnswerIndex);
-      if (!letter) {
-        console.warn(`[Pool] Skipping question ${q.id} - invalid correctAnswerIndex: ${data.correctAnswerIndex}`);
-        continue;
-      }
-      correctAnswer = letter;
+    const rawCorrectAnswer =
+      typeof data.correctAnswer === 'string' ? data.correctAnswer.trim() : '';
+    const resolvedCorrectIndex =
+      rawCorrectAnswer.length > 0
+        ? resolveCorrectAnswerIndex(rawCorrectAnswer, optionsArr)
+        : typeof data.correctAnswerIndex === 'number' &&
+            data.correctAnswerIndex >= 0 &&
+            data.correctAnswerIndex < optionsArr.length
+          ? data.correctAnswerIndex
+          : typeof data.correctIndex === 'number' &&
+              data.correctIndex >= 0 &&
+              data.correctIndex < optionsArr.length
+            ? data.correctIndex
+            : null;
+
+    if (resolvedCorrectIndex === null) {
+      console.warn(`[Pool] Skipping question ${q.id} - unresolvable correct answer`);
+      continue;
     }
-    if (!correctAnswer && typeof data.correctIndex === 'number') {
-      const letter = indexToLetter(data.correctIndex);
-      if (!letter) {
-        console.warn(`[Pool] Skipping question ${q.id} - invalid correctIndex: ${data.correctIndex}`);
-        continue;
-      }
-      correctAnswer = letter;
-    }
+
+    const correctAnswer =
+      rawCorrectAnswer.length > 0
+        ? rawCorrectAnswer
+        : (indexToLetter(resolvedCorrectIndex) ?? optionsArr[resolvedCorrectIndex] ?? '');
 
     questions.push({
       id: q.id,
@@ -678,7 +683,8 @@ async function getFromPreGeneratedPool(
       question: data.question,
       imageUrl: data.imageUrl,
       options: optionsArr,
-      correctAnswer: correctAnswer || 'A',
+      correctAnswer,
+      correctAnswerIndex: resolvedCorrectIndex,
       explanation: data.explanation,
       system: q.system || 'General',
       difficulty: q.difficulty || 'medium',
@@ -711,7 +717,7 @@ async function getFromPreGeneratedPool(
     });
   }
 
-  return { questions, remaining, rawQuestions: cachedQuestions ? undefined : preGenQuestions };
+  return { questions, remaining, rawQuestions: usedTrustedCache ? undefined : preGenQuestions };
 }
 
 async function getFromMainTable(
@@ -735,7 +741,7 @@ async function getFromMainTable(
     ? Math.min(Math.max(count * 3, count + 10), 100)
     : Math.min(Math.max(count * 6, count + 30), 180);
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = withProductionQuestionSafety({});
   if (systems?.length) where.system = { in: systems };
   else if (system) where.system = system;
   if (difficulty) where.difficulty = difficulty;
@@ -831,228 +837,4 @@ async function getFromMainTable(
   }
 
   return result;
-}
-
-/**
- * Generate a new question for a given system and add it to the pre-generated pool.
- * Returns the generated question or null if generation fails.
- */
-async function generateAndAddToPool(
-  prisma: ReturnType<typeof createEdgePrismaClient>,
-  env: any,
-  system: string | null,
-  difficulty: string | null,
-  category: string | null,
-  userId: string
-): Promise<PoolQuestionOutput | null> {
-  const logger = createEndpointLogger('pool:generateAndAddToPool');
-  if (!env.GEMINI_API_KEY) {
-    logger.warn('GEMINI_API_KEY missing, skipping generation');
-    return null;
-  }
-
-  // Determine target system for generation
-  let targetSystem = system;
-  if (!targetSystem) {
-    // If no system specified, pick a random system from NCCPA blueprint weights
-    const systems = ['CV', 'PULM', 'GI', 'MSK', 'HEME', 'RENAL', 'ENDO', 'NEURO', 'PSYCH', 'DERM', 'OTHER'];
-    targetSystem = systems[Math.floor(Math.random() * systems.length)]!;
-  }
-
-  // Find a random condition for the target system
-  let conditionData: MedicalContentGenerationRecord | null = null;
-  try {
-    // Query medicalContent for a random condition matching the system
-    const conditions = await prisma.medicalContent.findMany({
-      where: { system: targetSystem ?? undefined },
-      select: {
-        id: true,
-        condition: true,
-        system: true,
-        subcategory: true,
-        content: true,
-        // PANCE-specific anchor fields — used to improve distractor quality
-        classic_patient: true,
-        classic_triad: true,
-        first_line_rx: true,
-        gold_standard_dx: true,
-        best_initial_test: true,
-      },
-      take: 50, // limit to avoid heavy queries
-    }) as MedicalContentGenerationRecord[];
-    if (conditions.length === 0) {
-      logger.warn(`No conditions found for system ${targetSystem}`);
-      return null;
-    }
-    const randomIndex = Math.floor(Math.random() * conditions.length);
-    const condition = conditions[randomIndex]!;
-    conditionData = {
-      id: condition.id,
-      condition: condition.condition,
-      system: condition.system,
-      subcategory: condition.subcategory,
-      content: condition.content,
-      classic_patient: condition.classic_patient ?? null,
-      classic_triad: condition.classic_triad ?? null,
-      first_line_rx: condition.first_line_rx ?? null,
-      gold_standard_dx: condition.gold_standard_dx ?? null,
-      best_initial_test: condition.best_initial_test ?? null,
-    };
-  } catch (error) {
-    logger.error('Failed to fetch random condition', { error: String(error) });
-    return null;
-  }
-
-  // Transform condition data for generation — include PANCE anchor fields when available
-  if (!conditionData) {
-    return null;
-  }
-
-  const classicTriadRaw = conditionData.classic_triad;
-  const classicTriadArr: string[] | undefined =
-    Array.isArray(classicTriadRaw)
-      ? (classicTriadRaw as string[])
-      : typeof classicTriadRaw === 'string'
-        ? [classicTriadRaw]
-        : undefined;
-
-  const content = (conditionData.content ?? {}) as QuestionContentJson;
-  const diagnosticsNotes = extractDiagnosticsNotes(content.diagnostics);
-
-  const transformedCondition: ConditionData = {
-    condition: conditionData.condition,
-    sections: {
-      overview: content.overview || '',
-      etiology: content.etiologyPathophysiology || content.etiology || '',
-      clinicalPresentation: content.clinicalPresentation || '',
-      diagnostics: diagnosticsNotes,
-      treatment: Array.isArray(content.treatment)
-        ? content.treatment.join('\n')
-        : content.treatment || '',
-    },
-    // Pass PANCE-specific anchors to guide distractor quality
-    panceAnchors: {
-      classicPatient: conditionData.classic_patient ?? undefined,
-      classicTriad: classicTriadArr,
-      firstLineRx: conditionData.first_line_rx ?? undefined,
-      goldStandardDx: conditionData.gold_standard_dx ?? undefined,
-      bestInitialTest: conditionData.best_initial_test ?? undefined,
-    },
-  };
-
-  // Generate question
-  try {
-    // Build a minimal GatewayContext from env. `generateAndAddToPool` is
-    // invoked from inside an authenticatedEndpoint handler, so env is the
-    // real Cloudflare env binding; auth/waitUntil aren't needed for the
-    // underlying gateway call (gateway.callText only reads env.GEMINI_API_KEY).
-    const generatedQ = await generateSingleQuestion(
-      toGatewayContext({ env }),
-      transformedCondition,
-      'mcq',
-      null // textbookContext (optional)
-    );
-    if (!generatedQ) {
-      logger.warn('Question generation returned null');
-      return null;
-    }
-
-    // Determine difficulty
-    const difficultyStr = (() => {
-      if (difficulty) return difficulty;
-      if (generatedQ.difficulty !== undefined) {
-        const num = generatedQ.difficulty;
-        if (num < 0.3) return 'easy';
-        if (num > 0.7) return 'hard';
-        return 'medium';
-      }
-      return 'medium';
-    })();
-
-    // Convert generated question to PreGeneratedQuestion format.
-    // Hard-require resolvable correctAnswer — silently defaulting to option A
-    // would persist mis-indexed questions to the pool for every user.
-    const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const options = Array.isArray(generatedQ.options) ? generatedQ.options : [];
-    if (options.length === 0) {
-      logger.warn('Generated pool question rejected — no options', {
-        conditionId: conditionData.id,
-      });
-      return null;
-    }
-    const correctAnswer =
-      typeof generatedQ.correctAnswer === 'string' && generatedQ.correctAnswer.trim().length > 0
-        ? generatedQ.correctAnswer
-        : '';
-    if (!correctAnswer) {
-      logger.warn('Generated pool question rejected — missing correctAnswer', {
-        conditionId: conditionData.id,
-      });
-      return null;
-    }
-    const correctAnswerIndex = resolveCorrectAnswerIndex(correctAnswer, options);
-    if (correctAnswerIndex === null) {
-      logger.warn(
-        'Generated pool question rejected — correctAnswer does not resolve to any option',
-        { conditionId: conditionData.id, correctAnswer },
-      );
-      return null;
-    }
-    const questionData: QuestionDataJson = {
-      vignette: generatedQ.question?.includes('Vignette') ? generatedQ.question : undefined,
-      question: generatedQ.question,
-      options: options,
-      correctAnswer: correctAnswer,
-      correctAnswerIndex,
-      explanation: generatedQ.explanation?.rationale || '',
-      conditionName: conditionData.condition,
-      system: conditionData.system,
-      subcategory: conditionData.subcategory || undefined,
-      tags: category ? [category] : undefined,
-    };
-
-    // Save to pre-generated pool
-    await prisma.preGeneratedQuestion.create({
-      data: {
-        id: generatedId,
-        conditionId: conditionData.id,
-        system: conditionData.system,
-        difficulty: difficultyStr,
-        questionData: questionData as unknown as Prisma.InputJsonValue,
-        generatedAt: new Date(),
-        usedAt: null,
-        questionType: category || 'general',
-        // Phase 4: populate dedup hash and task taxonomy at creation
-        taskCategory: category || 'general',
-        questionOrder: (generatedQ as any).questionOrder ?? 'third',
-        semanticHash: computeSemanticHash(questionData.question ?? ''),
-      },
-    });
-
-    logger.info('Generated and added question to pool', {
-      questionId: generatedId,
-      system: conditionData.system,
-    });
-
-    // Return as PoolQuestionOutput
-    return {
-      id: generatedId,
-      vignette: questionData.vignette,
-      question: questionData.question,
-      options: options,
-      correctAnswer: correctAnswer,
-      explanation: questionData.explanation,
-      system: conditionData.system,
-      difficulty: difficultyStr,
-      tags: questionData.tags,
-      conditionId: conditionData.id,
-      source: 'pool',
-      fromStaging: false,
-      contentSource: 'dynamic-generation',
-      contentSourceTitle: undefined,
-    };
-  } catch (error) {
-    logger.error('Failed to generate question', { error: String(error) });
-    return null;
-  }
 }

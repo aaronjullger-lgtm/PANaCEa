@@ -14,9 +14,14 @@ import { z } from 'zod';
 import { aiEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { ErrorCode } from '../_shared/error-catalog';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
+import {
+  markGeneratedQuestionPreviewOnly,
+  stageGeneratedQuestionPreview,
+} from '../_shared/generated-question-preview';
 import { toGatewayContext } from '../../../lib/ai/aiGateway';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { validateQuestionDrugs } from '@/lib/services/medical-apis/rxnorm';
@@ -229,6 +234,11 @@ export const onRequestPost = aiEndpoint(
     });
 
     if (cached) {
+      const previewQuestion = markGeneratedQuestionPreviewOnly(cached.question, {
+        cached: true,
+        fromCache: true,
+      });
+
       logger.info('Returning cached question', {
         similarity: cached.similarity,
         userId: auth.userId,
@@ -237,7 +247,7 @@ export const onRequestPost = aiEndpoint(
       return {
         data: {
           success: true,
-          question: cached.question,
+          question: previewQuestion,
           cached: true,
           similarity: cached.similarity,
         },
@@ -250,26 +260,18 @@ export const onRequestPost = aiEndpoint(
     try {
       const conditionData = await loadConditionData(prisma, queryText);
 
-      // SECURITY FIX 3: Explicit null check before proceeding
+      // Fail closed: do not manufacture placeholder clinical content when the
+      // source condition cannot be resolved.
       if (!conditionData) {
         logger.warn('Condition not found', { queryText, userId: auth.userId });
-
-        // Return fallback question
-        newQuestion = {
-          id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-          type: questionType,
-          system: system || null,
-          difficulty: difficulty || 'medium',
-          text: `Unable to find condition: ${queryText}. Please verify the condition name.`,
-          options:
-            questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
-          correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
-          explanation: 'Condition not found in database.',
-          generatedAt: new Date().toISOString(),
-          metadata: {
-            originalQuery: queryText,
-            cached: false,
-            conditionNotFound: true,
+        return {
+          status: 404,
+          code: ErrorCode.NOT_FOUND,
+          error: 'No approved clinical source was found for that topic.',
+          details: {
+            questionType,
+            system: system ?? null,
+            difficulty: difficulty ?? null,
           },
         };
       } else {
@@ -282,7 +284,7 @@ export const onRequestPost = aiEndpoint(
         );
         if (stagingQuestion) {
           // Convert staging question to the same shape as generated question
-          newQuestion = {
+          newQuestion = markGeneratedQuestionPreviewOnly({
             id: stagingQuestion.id,
             type: questionType,
             system: stagingQuestion.system,
@@ -298,8 +300,11 @@ export const onRequestPost = aiEndpoint(
               cached: false,
               fromStaging: true,
               stagingStatus: stagingQuestion.status,
+              stagingQuestionId: stagingQuestion.id,
+              submissionReady: false,
+              requiresApproval: true,
             },
-          };
+          });
           logger.info('Returning staging question', {
             stagingId: stagingQuestion.id,
             userId: auth.userId
@@ -335,18 +340,61 @@ export const onRequestPost = aiEndpoint(
 
           if (generatedQ) {
             const hasTextbookContext = Boolean(textbookContext);
-            newQuestion = {
+            const generatedMetadata = {
+              originalQuery: queryText,
+              cached: false,
+              contentSource: hasTextbookContext ? 'openstax' : undefined,
+              contentSourceTitle: hasTextbookContext ? textbookContext?.title : undefined,
+              conditionId: conditionData.conditionId ?? null,
+              medicalContentId: conditionData.id,
+              conditionName: conditionData.name,
+              source: 'learner_question_generate_endpoint',
+              submissionReady: false,
+              requiresApproval: true,
+            };
+            const generatedPreview = {
               ...generatedQ,
               system: system || conditionData.system,
               difficulty: difficulty || 'medium',
               generatedAt: new Date().toISOString(),
-              metadata: {
-                originalQuery: queryText,
-                cached: false,
-                contentSource: hasTextbookContext ? 'openstax' : undefined,
-                contentSourceTitle: hasTextbookContext ? textbookContext?.title : undefined,
-              },
+              metadata: generatedMetadata,
+              submissionReady: false,
+              requiresApproval: true,
             };
+
+            try {
+              newQuestion = await stageGeneratedQuestionPreview(prisma, {
+                question: generatedPreview,
+                system: system || conditionData.system,
+                subcategory: conditionData.subcategory ?? undefined,
+                metadata: {
+                  ...generatedMetadata,
+                  conditionId: conditionData.conditionId ?? null,
+                  medicalContentId: conditionData.id,
+                  conditionName: conditionData.name,
+                  taxonomyCode: system || conditionData.system,
+                  subcategory: conditionData.subcategory ?? undefined,
+                  generatedAt: new Date().toISOString(),
+                  generatorUserId: auth.userId,
+                  source: 'learner_question_generate_endpoint',
+                },
+              });
+            } catch (stagingError) {
+              logger.warn('Generated question was not staged for review', {
+                error: stagingError instanceof Error ? stagingError.message : String(stagingError),
+                userId: auth.userId,
+              });
+              return {
+                status: 502,
+                code: ErrorCode.DB_ERROR,
+                error: 'Generated question could not be staged for review.',
+                details: {
+                  questionType,
+                  system: system ?? conditionData.system ?? null,
+                  difficulty: difficulty ?? 'medium',
+                },
+              };
+            }
 
             // Extract and save clinical pearls from rationale
             try {
@@ -410,75 +458,52 @@ export const onRequestPost = aiEndpoint(
         }
       }
     } catch (generationError) {
-      // SECURITY FIX 4: Use secure logging (no sensitive data exposure)
-      logger.error('Question generation failed', {
-        error: generationError instanceof Error ? generationError.message : String(generationError),
+      logger.error('Question generation failed', generationError, {
         queryText,
         questionType,
         userId: auth.userId,
       });
     }
 
-    // Final fallback if generation failed
     if (!newQuestion) {
-      logger.warn('Using fallback question', { userId: auth.userId });
+      logger.warn('Question generation produced no learner-facing item', {
+        userId: auth.userId,
+        questionType,
+        system,
+      });
 
-      newQuestion = {
-        id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        type: questionType,
-        system: system || null,
-        difficulty: difficulty || 'medium',
-        text: `Unable to generate question for: ${queryText}. Please try again.`,
-        options:
-          questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
-        correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
-        explanation: 'Question generation temporarily unavailable.',
-        generatedAt: new Date().toISOString(),
-        metadata: {
-          originalQuery: queryText,
-          cached: false,
-          generationFailed: true,
+      return {
+        status: 502,
+        code: ErrorCode.GEMINI_ERROR,
+        error: 'Question generation failed. No learner-facing question was created.',
+        details: {
+          questionType,
+          system: system ?? null,
+          difficulty: difficulty ?? null,
         },
       };
     }
 
-    // FIX (Audit 4/F2+F8): Only cache successfully generated questions.
-    // Previously, fallback placeholder questions (generationFailed: true) were
-    // unconditionally cached. This poisoned the semantic cache — future requests
-    // with similar query text received the placeholder ("Unable to generate
-    // question for: X. Please try again.") instead of a fresh generation attempt.
-    // Now: skip caching entirely when generation failed, and return success: false
-    // so the client can filter out the placeholder before showing it to students.
-    const generationFailed = !!(newQuestion as any)?.metadata?.generationFailed;
-
-    if (!generationFailed) {
-      await cacheGeneratedQuestion(
-        prisma,
-        {
-          queryText,
-          questionType,
-          system,
-          difficulty,
-        },
-        newQuestion
-      );
-    } else {
-      logger.warn('Skipping cache for failed generation — placeholder will not be stored', {
-        userId: auth.userId,
+    await cacheGeneratedQuestion(
+      prisma,
+      {
         queryText,
-      });
-    }
+        questionType,
+        system,
+        difficulty,
+      },
+      newQuestion
+    );
 
     logger.info('Question generation completed', {
       userId: auth.userId,
       cached: false,
       questionId: newQuestion.id,
-      generationFailed,
     });
 
     return {
       data: {
-        success: !generationFailed,
+        success: true,
         question: newQuestion,
         cached: false,
       },

@@ -2,7 +2,7 @@
  * FSRS v6 Retrievability — shared pure-function helper
  *
  * Single source of truth for student-facing forgetting-curve math across the
- * app (retention.ts backend, RetentionForecastCard, DecayCurve, FSRSDecayVisualization).
+ * app (retention.ts backend, DecayCurve, FSRSDecayVisualization).
  *
  * Formula:  R(t) = (1 + FACTOR * t / S) ^ DECAY
  *

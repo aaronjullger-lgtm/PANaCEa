@@ -14,13 +14,13 @@ import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import {
-  runFullOptimization,
+  runFullOptimizationFromReviewLog,
   canOptimize,
   validateParameters,
   summarizeOptimization,
   type PersonalizedFSRSParams,
 } from '../../../lib/fsrs-optimizer';
-import { defaultParameters, isParamsOnCurrentScale, type ReviewSnapshot } from '../../../lib/fsrs';
+import { defaultParameters, isParamsOnCurrentScale } from '../../../lib/fsrs';
 import {
   triggerFSRSOptimization,
   shouldUseSidecar,
@@ -100,12 +100,12 @@ export const onRequestGet = authenticatedEndpoint(
         ? rawPersonalizedParams
         : null;
 
-      // Review count for optimization eligibility: Main Session (real) only.
+      // Review count for optimization eligibility: real MAIN + DRILL reviews only.
       const reviewCount = await prisma.reviewLog.count({
         where: {
           userId,
           review_type: 'real',
-          sessionType: 'MAIN',
+          sessionType: { in: ['MAIN', 'DRILL'] },
         },
       });
 
@@ -202,12 +202,13 @@ export const onRequestPost = authenticatedEndpoint(
       }
       const userId = user.id;
 
-      // Main Session (real) review history only
+      // Real MAIN + DRILL review history only. These are the only flows that
+      // update FSRS state and therefore the only rows safe for personalization.
       const reviewRows = await prisma.reviewLog.findMany({
         where: {
           userId,
           review_type: 'real',
-          sessionType: 'MAIN',
+          sessionType: { in: ['MAIN', 'DRILL'] },
         },
         orderBy: { reviewedAt: 'asc' },
         select: {
@@ -215,29 +216,23 @@ export const onRequestPost = authenticatedEndpoint(
           questionFkId: true,
           reviewedAt: true,
           grade: true,
+          effectiveGrade: true,
           state: true,
           responseTimeMs: true,
           stability: true,
           difficulty: true,
+          elapsedDays: true,
+          wasCorrect: true,
           system: true,
         },
       });
 
-      // Build snapshots and system codes
-      const allSnapshots: ReviewSnapshot[] = reviewRows.map((r) => ({
-        date: r.reviewedAt.toISOString(),
-        stability: r.stability,
-        difficulty: r.difficulty,
-        rating: r.grade as ReviewSnapshot['rating'],
-        state: r.state as ReviewSnapshot['state'],
-      }));
-      const systemCodes: Record<number, string> = {};
-      reviewRows.forEach((r, i) => {
-        if (includeSystemModifiers && r.system) systemCodes[i] = r.system;
-      });
+      const rowsForOptimization = includeSystemModifiers
+        ? reviewRows
+        : reviewRows.map((row) => ({ ...row, system: null }));
 
       // Check if we have enough data
-      const optimizationStatus = canOptimize(allSnapshots.length);
+      const optimizationStatus = canOptimize(reviewRows.length);
       if (!optimizationStatus.canOptimize) {
         return { status: 400, error: optimizationStatus.message };
       }
@@ -314,22 +309,14 @@ export const onRequestPost = authenticatedEndpoint(
           };
         } catch (sidecarError) {
           console.warn('[FSRS-Params] Sidecar failed, falling back to in-process:', sidecarError);
-          optimizedParams = await runFullOptimization(
-            userId,
-            allSnapshots,
-            includeSystemModifiers ? systemCodes : undefined
-          );
+          optimizedParams = runFullOptimizationFromReviewLog(userId, rowsForOptimization);
         }
       } else {
         // In-process TypeScript optimizer
         console.log(
-          `[FSRS-Params] Starting in-process optimization for user ${userId} with ${allSnapshots.length} snapshots`
+          `[FSRS-Params] Starting in-process optimization for user ${userId} with ${reviewRows.length} reviews`
         );
-        optimizedParams = await runFullOptimization(
-          userId,
-          allSnapshots,
-          includeSystemModifiers ? systemCodes : undefined
-        );
+        optimizedParams = runFullOptimizationFromReviewLog(userId, rowsForOptimization);
       }
 
       const optimizationTime = Date.now() - startTime;
