@@ -162,7 +162,7 @@ Completed 2026-05-05 13:06 EDT.
 | Secret/junk scan | Passed | Changed-file scan found expected env names/placeholders only. Local `.env`, `.env.production.local`, Wrangler state, and browser profile DB files are ignored and were not staged. |
 | Final verification | Passed | Targeted Vitest, typecheck, build, local Pages smoke, lint, full test suite, audit, and diff check completed. |
 | Commit | Completed | `68b59599` (`Harden production site seams`). |
-| Push | Pending | Main push will happen after this log follow-up is committed. |
+| Push | Succeeded | Pushed `main` to `origin` through `972035b9` at 2026-05-06 13:12 EDT. This documentation result commit is the final follow-up. |
 
 ### Production Seam Commands Run
 
