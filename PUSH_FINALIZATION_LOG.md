@@ -161,8 +161,8 @@ Completed 2026-05-05 13:06 EDT.
 | Local Pages smoke | Passed | Verified `/` stays marketing, `/study` and `/admin` show protected gates, `/api/questions/generate` returns JSON `405`, manifest colors are valid, and `sw.js` does not precache AI chunks. |
 | Secret/junk scan | Passed | Changed-file scan found expected env names/placeholders only. Local `.env`, `.env.production.local`, Wrangler state, and browser profile DB files are ignored and were not staged. |
 | Final verification | Passed | Targeted Vitest, typecheck, build, local Pages smoke, lint, full test suite, audit, and diff check completed. |
-| Commit | Pending | Commit hash will be recorded after commit creation. |
-| Push | Pending | Main push will happen after staged diff review. |
+| Commit | Completed | `68b59599` (`Harden production site seams`). |
+| Push | Pending | Main push will happen after this log follow-up is committed. |
 
 ### Production Seam Commands Run
 
