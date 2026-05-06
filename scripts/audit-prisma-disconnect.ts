@@ -38,8 +38,29 @@ async function findApiFiles(dir: string): Promise<string[]> {
   return files;
 }
 
+function isApiEndpoint(filePath: string, content: string): boolean {
+  const normalizedPath = filePath.split(path.sep).join('/');
+  if (normalizedPath.includes('/_shared/')) return false;
+  if (normalizedPath.endsWith('.test.ts')) return false;
+  if (normalizedPath.includes('.disabled') || normalizedPath.includes('.deprecated')) return false;
+
+  return /export\s+(const|async\s+function)\s+onRequest(Get|Post|Put|Delete|Patch|Options)?\b/.test(
+    content
+  );
+}
+
 async function auditFile(filePath: string): Promise<AuditResult> {
   const content = await fs.readFile(filePath, 'utf-8');
+
+  if (!isApiEndpoint(filePath, content)) {
+    return {
+      file: filePath,
+      usesPrisma: false,
+      hasDisconnect: false,
+      hasTryFinally: false,
+      status: 'PASS',
+    };
+  }
 
   const usesPrisma = /prisma\./.test(content);
 

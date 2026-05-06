@@ -308,6 +308,7 @@
   },
   "overrides": {
     "@hono/node-server": "1.19.14",
+    "ip-address": "10.2.0",
     "postcss": "$postcss",
     "serialize-javascript": "7.0.5"
   }

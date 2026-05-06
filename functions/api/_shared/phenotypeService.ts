@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client/edge';
-import { prisma } from './prisma-edge';
+import { prisma, type EdgePrismaClient } from './prisma-edge';
 import { blueprintCoverageService } from './blueprintCoverageService';
 
 /**
@@ -253,9 +253,10 @@ export async function assessBurnoutRisk(userId: string): Promise<{ risk: number;
  */
 export async function getExamReadinessBySystem(
   userId: string,
-  examType: string = 'PANCE'
+  examType: string = 'PANCE',
+  db: EdgePrismaClient = prisma
 ): Promise<{ system: string; readiness: number }[]> {
-  const phenotype = await prisma.userStudyPhenotype.findUnique({
+  const phenotype = await db.userStudyPhenotype.findUnique({
     where: { userId },
   });
 
@@ -264,7 +265,7 @@ export async function getExamReadinessBySystem(
   }
 
   // Get all systems
-  const systems = await prisma.condition.findMany({
+  const systems = await db.condition.findMany({
     distinct: ['system'],
     select: { system: true },
     where: { status: 'published' },

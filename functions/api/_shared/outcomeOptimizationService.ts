@@ -1,4 +1,4 @@
-import { prisma } from './prisma-edge';
+import { prisma, type EdgePrismaClient } from './prisma-edge';
 
 /**
  * Outcome-Based Content Optimization Service
@@ -23,14 +23,15 @@ export async function recordExamOutcome(
     passed: boolean;
     timeLimit?: number;
     timeUsed?: number;
-  }
+  },
+  db: EdgePrismaClient = prisma
 ): Promise<{ id: string }> {
   // Snapshot study data at time of exam
   const thirtyDaysBeforeExam = new Date(examData.examDate);
   thirtyDaysBeforeExam.setDate(thirtyDaysBeforeExam.getDate() - 30);
 
   // Get all review logs for this user in the 30 days before exam
-  const reviewLogs = await prisma.reviewLog.findMany({
+  const reviewLogs = await db.reviewLog.findMany({
     where: {
       userId,
       reviewedAt: {
@@ -63,7 +64,7 @@ export async function recordExamOutcome(
   });
 
   // Get study sessions info
-  const studySessions = await prisma.studySession.findMany({
+  const studySessions = await db.studySession.findMany({
     where: {
       userId,
       startedAt: {
@@ -79,7 +80,7 @@ export async function recordExamOutcome(
   const topModesUsed = getTopModes(studySessions.map(s => s.mode).filter(Boolean) as string[]);
 
   // Create the outcome record
-  const outcome = await prisma.examOutcome.create({
+  const outcome = await db.examOutcome.create({
     data: {
       userId,
       examType: examData.examType,

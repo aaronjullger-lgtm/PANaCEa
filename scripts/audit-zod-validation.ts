@@ -16,6 +16,7 @@
  *        - refineryEndpoint
  *        - cmsEndpoint
  *        - publicEndpoint
+ *        - cronEndpoint
  *      These wrappers guarantee Zod validation before the handler runs, even
  *      when the schema is an empty object or undefined (the wrapper still
  *      rejects non-JSON bodies and enforces the auth/rate-limit model).
@@ -26,8 +27,8 @@
  *
  * An endpoint is WARN if it has:
  *   - A recognized out-of-band security model (CRON_SECRET bearer check or
- *     Svix webhook signature verification) — these are correct by design and
- *     do NOT need Zod.
+ *     Svix webhook signature verification, or the Sentry raw-envelope tunnel)
+ *     — these are correct by design and do NOT need Zod.
  *   OR
  *   - Manual validation only (`if (!field) return 400` style) with no Zod.
  *
@@ -56,6 +57,7 @@ interface AuditResult {
   hasManualValidation: boolean;
   usesCronSecret: boolean;
   usesSvixWebhook: boolean;
+  usesSentryTunnel: boolean;
   status: Status;
   methods: string[];
   note?: string;
@@ -69,6 +71,7 @@ const VALIDATED_WRAPPERS = [
   'refineryEndpoint',
   'cmsEndpoint',
   'publicEndpoint',
+  'cronEndpoint',
 ];
 
 async function findApiFiles(dir: string): Promise<string[]> {
@@ -125,6 +128,14 @@ function detectZodParseNotJsonParse(content: string): boolean {
 async function auditFile(filePath: string): Promise<AuditResult | null> {
   const content = await fs.readFile(filePath, 'utf-8');
 
+  if (
+    /^\s*export\s*\{\s*onRequest(?:Post|Put|Patch|Delete)\s*\}\s*from\s*['"][^'"]+['"];?\s*$/m.test(
+      content
+    )
+  ) {
+    return null;
+  }
+
   const methods: string[] = [];
   if (/\bonRequestPost\b/.test(content)) methods.push('POST');
   if (/\bonRequestPut\b/.test(content)) methods.push('PUT');
@@ -154,6 +165,10 @@ async function auditFile(filePath: string): Promise<AuditResult | null> {
     /Authorization|Bearer/i.test(content);
   const usesSvixWebhook =
     /svix/i.test(content) && /verify\s*\(/.test(content);
+  const usesSentryTunnel =
+    /Sentry Tunnel/i.test(content) &&
+    /application\/x-sentry-envelope/.test(content) &&
+    /SENTRY_PROJECT_ID/.test(content);
 
   let status: Status = 'FAIL_NO_VALIDATION';
   let note: string | undefined;
@@ -174,6 +189,9 @@ async function auditFile(filePath: string): Promise<AuditResult | null> {
   } else if (usesSvixWebhook) {
     status = 'WARN_OUT_OF_BAND';
     note = 'Svix webhook signature (Zod not applicable)';
+  } else if (usesSentryTunnel) {
+    status = 'WARN_OUT_OF_BAND';
+    note = 'Sentry raw envelope tunnel (Zod not applicable)';
   } else if (hasManualValidation) {
     status = 'WARN_MANUAL_ONLY';
   }
@@ -189,6 +207,7 @@ async function auditFile(filePath: string): Promise<AuditResult | null> {
     hasManualValidation,
     usesCronSecret,
     usesSvixWebhook,
+    usesSentryTunnel,
     status,
     methods,
     note,

@@ -100,3 +100,49 @@ Completed 2026-05-05 13:06 EDT.
 - Commit hash: `f26b41b1` (`Consolidate production hardening and integration pass`), followed by `5fc643ec` (`Document push finalization`) before the first push. Final response records the last pushed documentation commit.
 - Commit message: `Consolidate production hardening and integration pass`
 - Push result: succeeded at 2026-05-05 13:09 EDT to `origin/codex/production-hardening-integration-finalization`.
+
+## Production Main Push Preparation - 2026-05-05 22:52 EDT
+
+| Check | Result | Notes |
+|---|---|---|
+| Cloudflare deploy failure triage | Fixed | Cloudflare failed at commit `93dd7453` because `.gitignore` ignored files containing `token`; force-tracked `components/dashboard/adaptive/model/visualTokens.ts` and `components/dashboard/adaptive/visuals/VisualTokenProvider.tsx` in commit `6c4c6e87`. |
+| Dependency audit | Fixed | `npm audit --omit=dev` reported `ip-address <=10.1.0` through `express-rate-limit`; added an `ip-address@10.2.0` override and refreshed `package-lock.json`. |
+| Prisma endpoint audit | Fixed | Narrowed `scripts/audit-prisma-disconnect.ts` to actual Pages endpoints and moved author/exam endpoints to `createEdgePrismaClient(context.env.DATABASE_URL)` with `safePrismaDisconnect` in `finally`. |
+| Fake production metrics | Fixed | Replaced placeholder author impact metrics (`0.72`, `0.64`) with `null` plus `source: "not_available"`. |
+| Zod mutation audit | Fixed | `cronEndpoint` is now recognized as the validated/CRON_SECRET-protected wrapper; pure re-export route files are skipped; Sentry tunnel is classified as a raw-envelope out-of-band endpoint. |
+| Secret/junk scan | Passed | Tracked secret scan found placeholders/test fixtures only. Local `.env`, `.env.production.local`, and browser profile DB files are ignored by `.gitignore` and were not staged. |
+| Production build | Passed | `npm run build` completed and Wrangler health smoke passed against `dist` when local Pages dev was started with the configured `nodejs_compat` flag. |
+| Browser smoke | Environment-blocked | `npm run test:smoke` requires an interactive Clerk login and local API backend; after installing Playwright Chromium it timed out waiting for manual login. |
+| Commit to branch | Pending | Commit hash will be recorded after staging and commit. |
+| Push to main | Pending | Will fast-forward/merge to `main` only after final staged checks pass. |
+
+### Additional Commands Run
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run env:check:backend` | Passed with warning | Backend contract OK; preview KV placeholders still require operator wiring. |
+| `npm audit --omit=dev` | Failed, then passed | Initial moderate `ip-address` advisory fixed via override; final audit reports 0 vulnerabilities. |
+| `npm ls express-rate-limit ip-address` | Passed | Confirms `express-rate-limit@8.3.2` now resolves to overridden `ip-address@10.2.0`. |
+| `npm run audit:prisma` | Passed | 315 endpoint files pass disconnect/finally policy. |
+| `npm run audit:all` | Passed with advisory output | No blocking Prisma/Zod issues; loading/component audits still emit non-blocking advisory backlog. |
+| `NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck` | Passed | Production TypeScript check completed with no errors. |
+| `npm run lint` | Passed with warnings | 0 errors, 422 existing raw-color warnings. |
+| `npm run build` | Passed | Production Vite/PWA build completed. |
+| `npm test` | Passed | 501 files passed; 9570 tests passed; 1 skipped. |
+| `npm run build:check-size` | Passed | Bundle size within budget. |
+| `npm run test:critical` | Passed | 6 FSRS/store files, 143 tests passed. |
+| `npm run test:smoke` | Environment-blocked | Playwright Chromium was installed, then setup timed out waiting for manual Clerk login. |
+| `BASE_URL=http://localhost:3000 npm run verify:health` | Passed | 2 API health tests passed against `wrangler pages dev dist` started with `--compatibility-flag=nodejs_compat`. |
+
+### Additional Fixes Made
+
+- Added `ip-address@10.2.0` to package overrides to close the production dependency advisory without waiting for `express-rate-limit` to update its pinned transitive dependency.
+- Updated author dashboard, exam outcome, and exam readiness endpoints to avoid module-level Prisma env access in request handlers.
+- Added optional Prisma client injection to `recordExamOutcome` and `getExamReadinessBySystem` so endpoint handlers can pass their request-scoped client.
+- Tightened audit scripts so release gates check the intended production endpoint surface and do not fail on helper/test modules or raw-envelope/webhook endpoints that are secured out of band.
+
+### Additional Remaining Risks
+
+- Preview Cloudflare KV namespace IDs in `wrangler.toml` remain placeholders and need operator wiring before preview deployments are treated as production-like.
+- The authenticated Playwright mode smoke still requires Clerk test credentials or a pre-created storage state; it cannot be fully automated from this local environment.
+- The prior documented data-model risks remain: canonical question/source identity migration, concept identity migration, generated-question approval/mirror atomicity, and review/progress/card transactional atomicity.
