@@ -114,7 +114,7 @@ Completed 2026-05-05 13:06 EDT.
 | Production build | Passed | `npm run build` completed and Wrangler health smoke passed against `dist` when local Pages dev was started with the configured `nodejs_compat` flag. |
 | Browser smoke | Environment-blocked | `npm run test:smoke` requires an interactive Clerk login and local API backend; after installing Playwright Chromium it timed out waiting for manual login. |
 | Commit to branch | Completed | `82cc303e` (`Harden production release gates`). |
-| Push to main | Pending | Will fast-forward/merge to `main` only after final staged checks pass. |
+| Push to main | Completed | Fast-forwarded local `main` to `abaf12eb` and pushed `main` to `origin` successfully. |
 
 ### Additional Commands Run
 
