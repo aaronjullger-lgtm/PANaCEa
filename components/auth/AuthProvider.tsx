@@ -86,13 +86,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // CRITICAL: Call all hooks BEFORE any conditional returns
   const themeContext = useThemeContext();
   
-  const isDevelopment = import.meta.env.DEV;
+  const isLocalDevServer = import.meta.env.DEV && import.meta.env.MODE !== 'production';
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isLocalhost =
     hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
 
   const publishableKey =
-    isDevelopment &&
+    isLocalDevServer &&
     isLocalhost &&
     BASE_CLERK_PUBLISHABLE_KEY.startsWith('pk_live_') &&
     DEV_CLERK_PUBLISHABLE_KEY
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return <SetupRequiredPage message={PRODUCTION_DEV_KEYS_ERROR} />;
   }
 
-  if (isDevelopment && isLocalhost && publishableKey.startsWith('pk_live_')) {
+  if (isLocalDevServer && isLocalhost && publishableKey.startsWith('pk_live_')) {
     throw new Error(
       `Clerk is configured with a production publishable key (pk_live_...) on localhost.\n\n` +
         `Fix options:\n` +

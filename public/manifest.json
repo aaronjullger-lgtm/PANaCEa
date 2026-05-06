@@ -1,12 +1,12 @@
 {
   "name": "PANaCEa",
   "short_name": "PANaCEa",
-  "description": "Master PA school with comprehensive medical database, performance tracking, and 15+ specialized training modes",
+  "description": "AI-powered PA study platform for adaptive PANCE, EOR, didactic, and PANRE preparation.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#E9ECF1",
   "theme_color": "#1F283A",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/Favicon.svg",
@@ -15,24 +15,17 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
   ],
-  "categories": ["education", "medical", "productivity"],
-  "screenshots": [
-    {
-      "src": "/screenshot-1.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    }
-  ]
+  "categories": ["education", "medical", "productivity"]
 }

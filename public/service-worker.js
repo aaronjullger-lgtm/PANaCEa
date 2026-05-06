@@ -19,10 +19,9 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico',
-  '/images/logo.svg',
-  '/images/logo-192.png',
-  '/images/logo-512.png',
+  '/Favicon.svg',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
 ];
 
 // API endpoints to cache for offline use

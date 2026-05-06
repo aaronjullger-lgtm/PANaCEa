@@ -146,3 +146,53 @@ Completed 2026-05-05 13:06 EDT.
 - Preview Cloudflare KV namespace IDs in `wrangler.toml` remain placeholders and need operator wiring before preview deployments are treated as production-like.
 - The authenticated Playwright mode smoke still requires Clerk test credentials or a pre-created storage state; it cannot be fully automated from this local environment.
 - The prior documented data-model risks remain: canonical question/source identity migration, concept identity migration, generated-question approval/mirror atomicity, and review/progress/card transactional atomicity.
+
+## Production Site Seam Fixes - 2026-05-06 13:10 EDT
+
+| Check | Result | Notes |
+|---|---|---|
+| Production issue triage | Completed | Audited `studypanacea.com` behavior against the intended private-beta route, API, PWA, and marketing-copy changes. |
+| Protected route handling | Fixed | Added a route-intent gate so `/study`, `/practice`, `/progress`, `/medical-database`, `/clinical-profile`, and `/admin` no longer present the public landing page while unauthenticated. |
+| Public landing AI chunk loading | Fixed | Deferred Gemini auth-provider registration until authenticated or guest context exists; local Pages smoke confirmed `/` does not request `geminiService` or `vendor-ai` chunks. |
+| API SPA fallback | Fixed | API middleware now converts unmatched SPA HTML fallbacks under `/api/*` into JSON `404` or `405` responses. `/api/questions/generate` GET returns JSON `API_METHOD_NOT_ALLOWED`. |
+| PWA manifest and precache | Fixed | VitePWA and `public/manifest.json` now share one canonical manifest, valid literal colors, existing icon paths, and service-worker precache excludes AI chunks. |
+| Fake-personalized landing copy | Fixed | Public hero preview is now explicitly sample/example language instead of implying personal data from recent misses. |
+| Secret log hygiene | Fixed | Removed Prisma Edge logging of the first 50 characters of `DATABASE_URL`; question-session diagnostics now log only whether the value exists. |
+| Local Pages smoke | Passed | Verified `/` stays marketing, `/study` and `/admin` show protected gates, `/api/questions/generate` returns JSON `405`, manifest colors are valid, and `sw.js` does not precache AI chunks. |
+| Secret/junk scan | Passed | Changed-file scan found expected env names/placeholders only. Local `.env`, `.env.production.local`, Wrangler state, and browser profile DB files are ignored and were not staged. |
+| Final verification | Passed | Targeted Vitest, typecheck, build, local Pages smoke, lint, full test suite, audit, and diff check completed. |
+| Commit | Pending | Commit hash will be recorded after commit creation. |
+| Push | Pending | Main push will happen after staged diff review. |
+
+### Production Seam Commands Run
+
+| Command | Result | Notes |
+|---|---|---|
+| `git status --short` | Completed | Confirmed the current production seam fix footprint before staging. |
+| `git diff --stat` | Completed | Reviewed changed file footprint. |
+| `git diff --check` | Passed | No whitespace errors. |
+| `npx vitest run functions/api/_middleware.test.ts lib/routing/protectedRouteIntent.test.ts` | Passed | 2 files, 15 tests passed. |
+| `NODE_OPTIONS="--max-old-space-size=4096" npm run typecheck` | Passed | Production TypeScript check completed with no errors. |
+| `npm run build` | Passed | Production Vite/PWA build completed. |
+| `npm run pages:serve -- --port 8792` plus Playwright smoke | Passed with non-blocking Wrangler warning | Direct route/API/PWA assertions passed. Wrangler still warns that `/* /index.html 200` in `_redirects` is ignored locally, but `/study` and `/admin` direct routes served correctly. |
+| `npm run lint` | Passed with warnings | 0 errors, 422 existing raw-color warnings. |
+| `npm test` | Passed | 502 files passed; 9581 tests passed; 1 skipped. |
+| `npm audit --omit=dev` | Passed | 0 vulnerabilities. |
+
+### Production Seam Fixes Made
+
+- Added `components/auth/ProtectedRouteGate.tsx` and `lib/routing/protectedRouteIntent.ts` so unauthenticated protected app URLs render a clear auth gate instead of the marketing page.
+- Updated `App.tsx` and `hooks/useAppNavigation.ts` so unauthenticated `/` remains public while authenticated root navigation still canonicalizes to `/study`.
+- Deferred public-route loading of `services/ai/geminiService` until an authenticated or guest session exists.
+- Added middleware fallback coercion for `/api/*` SPA HTML responses, with tests.
+- Aligned PWA manifest generation, static manifest, icon references, and service-worker asset lists.
+- Removed misleading personalized language from public landing preview copy.
+- Removed partial `DATABASE_URL` logging from Prisma Edge initialization and question-session diagnostics.
+- Updated local Wrangler scripts to use the production compatibility date and `nodejs_compat`.
+
+### Production Seam Remaining Risks
+
+- Authenticated live Cloudflare and Clerk smoke still requires a real test account or saved Clerk storage state; the local smoke verified unauthenticated public/protected behavior only.
+- The local Wrangler `_redirects` warning remains non-blocking because direct SPA routes served correctly in local smoke and the existing production site already serves direct app routes.
+- Existing design-token raw-color lint warnings remain as a separate backlog.
+- Prior data-model risks remain: canonical question/source identity migration, concept identity migration, generated-question approval/mirror atomicity, and review/progress/card transactional atomicity.

@@ -181,28 +181,44 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'prompt', // Prompt user before updating — prevents mid-session disruption
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['Favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+        manifestFilename: 'manifest.json',
         manifest: {
-          name: 'PANaCEa - PANCE Prep AI',
+          name: 'PANaCEa',
           short_name: 'PANaCEa',
-          description: 'AI-powered PANCE/PANRE preparation platform',
-          theme_color: 'var(--color-bg-primary)',
+          description:
+            'AI-powered PA study platform for adaptive PANCE, EOR, didactic, and PANRE preparation.',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          background_color: '#E9ECF1',
+          theme_color: '#1F283A',
+          categories: ['education', 'medical', 'productivity'],
           icons: [
             {
-              src: 'pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
+              src: '/Favicon.svg',
+              sizes: 'any',
+              type: 'image/svg+xml',
+              purpose: 'any maskable',
             },
             {
-              src: 'pwa-512x512.png',
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: '/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
+              purpose: 'any',
             },
           ],
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8MB — covers 6MB+ clinical training images; JS vendor is ~1.8MB after bundle splitting
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+          globIgnores: ['**/geminiService-*.js', '**/vendor-ai-*.js'],
           // PROMPT UPDATE STRATEGY - Let user decide when to update (prevents mid-session disruption)
           // skipWaiting and clientsClaim are handled by the SWUpdatePrompt component
           // when the user clicks "Update now"

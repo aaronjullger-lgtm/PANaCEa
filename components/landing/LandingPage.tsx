@@ -325,19 +325,19 @@ export function LandingPage() {
                   </div>
 
                   <div className="panacea-preview-section">
-                    <p className="panacea-card-label">Why this</p>
+                    <p className="panacea-card-label">Sample rationale</p>
                     <p className="mt-2 text-base leading-7 text-slate-200">
-                      Recent misses · pulmonary down 12% · high-yield PANCE topic
+                      Example pulmonary pattern · high-yield PANCE topic · plan-ready review set
                     </p>
                   </div>
 
                   <div className="panacea-preview-section panacea-preview-section--gain">
-                    <p className="panacea-card-label">Expected gain</p>
+                    <p className="panacea-card-label">Modeled lift range</p>
                     <div className="mt-3 flex flex-col gap-3 sm:[flex-direction:row] sm:items-end sm:justify-between">
                       <div className="panacea-preview-gain">+8–12%</div>
                       <p className="max-w-sm text-sm leading-6 text-slate-300">
-                        Pulmonary readiness, with lower diagnostic confusion across PE, pneumonia,
-                        ACS, and COPD exacerbation.
+                        A sample planning range shown only after enough learner signal exists in the
+                        signed-in dashboard.
                       </p>
                     </div>
                   </div>

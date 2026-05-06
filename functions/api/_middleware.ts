@@ -73,6 +73,13 @@ const PATH_TIER_MAP: Array<[string, RateLimitTier]> = [
   ['/api/admin/', 'admin'],
 ];
 
+const MUTATION_ONLY_FALLBACK_PREFIXES = [
+  '/api/ai/generate-mnemonic',
+  '/api/cron/',
+  '/api/library/answer',
+  '/api/questions/generate',
+];
+
 function getTierForPath(pathname: string): RateLimitTier {
   const lower = pathname.toLowerCase();
   for (const [prefix, tier] of PATH_TIER_MAP) {
@@ -168,7 +175,12 @@ export async function onRequest(context: {
   }
 
   // 3. Forward to endpoint handler
-  const response = await next();
+  let response = await next();
+
+  // Cloudflare Pages falls back to the SPA for unmatched /api/* GET routes.
+  // API clients should never receive index.html with a 200 from this gateway:
+  // convert that fallback into an explicit JSON contract instead.
+  response = coerceApiHtmlFallback(request, pathname, response);
 
   // 4. Inject security headers on response
   const headers = new Headers(response.headers);
@@ -197,4 +209,44 @@ export async function onRequest(context: {
 /** Helper to extract KV binding — typed to avoid `any` */
 function kv(env: CloudflareEnv): CloudflareEnv['RATE_LIMIT_KV'] | undefined {
   return env.RATE_LIMIT_KV;
+}
+
+function coerceApiHtmlFallback(request: Request, pathname: string, response: Response): Response {
+  const contentType = response.headers.get('Content-Type') ?? '';
+  const isHtmlFallback =
+    response.status === 200 &&
+    pathname.startsWith('/api/') &&
+    contentType.toLowerCase().includes('text/html');
+
+  if (!isHtmlFallback) return response;
+
+  const isKnownMutationOnly = MUTATION_ONLY_FALLBACK_PREFIXES.some((prefix) =>
+    pathname.toLowerCase().startsWith(prefix)
+  );
+  const status =
+    request.method === 'GET' || request.method === 'HEAD'
+      ? isKnownMutationOnly
+        ? 405
+        : 404
+      : 405;
+  const code = status === 404 ? 'API_ROUTE_NOT_FOUND' : 'API_METHOD_NOT_ALLOWED';
+  const message =
+    status === 404
+      ? 'API route not found or method unsupported.'
+      : 'Method not allowed for this API route.';
+
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: message,
+      code,
+    }),
+    {
+      status,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Fallback': 'spa-html-coerced',
+      },
+    },
+  );
 }

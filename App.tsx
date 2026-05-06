@@ -40,6 +40,8 @@ import { useProductTourShouldShow } from './components/onboarding/ProductTour';
 import { AppProviders } from './components/layout/AppProviders';
 import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
 import { IncidentBanner } from './components/error/IncidentBanner';
+import { ProtectedRouteGate } from './components/auth/ProtectedRouteGate';
+import { isProtectedAppPath } from './lib/routing/protectedRouteIntent';
 
 /** Session focus options for simulation / training menu — defined in AppRoutes, re-exported here for handler type safety */
 
@@ -97,9 +99,12 @@ const App: React.FC = () => {
     enterGuestMode,
   } = useEnhancedAuth();
 
-  // Register Clerk auth provider for Gemini API calls so all callGeminiText
-  // requests automatically include the Authorization header
+  // Register Clerk auth provider for Gemini API calls only after the app has an
+  // authenticated/guest execution context. This keeps public marketing routes
+  // from loading AI provider code before the user starts an AI-backed workflow.
   useEffect(() => {
+    if ((!authLoaded || !isSignedIn) && !isGuestMode) return undefined;
+
     let cancelled = false;
 
     void import('@/services/ai/geminiService').then(({ setGeminiAuthProvider }) => {
@@ -116,7 +121,7 @@ const App: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [getToken, isGuestMode]);
+  }, [authLoaded, getToken, isGuestMode, isSignedIn]);
 
   // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
   useFSRSOptimizationCheck();
@@ -127,7 +132,9 @@ const App: React.FC = () => {
   // Theme state for passing to child components
   const [theme, setTheme] = useTheme();
 
-  const { view, setView, showNotFound } = useAppNavigation();
+  const { view, setView, showNotFound } = useAppNavigation({
+    disableRootRedirect: !isSignedIn && !isGuestMode,
+  });
   const startViewTransition = useViewTransition();
 
   // One-time migration from legacy panacea_* keys to panceai_* (see storageRegistry)
@@ -1102,16 +1109,21 @@ const App: React.FC = () => {
 
   const pageTransition = useAccessibleTransition(springs.snappy);
 
-  // While Clerk is initializing, show the landing page immediately so FCP fires
-  // on real content rather than a blank spinner. Signed-in users will see a
-  // brief flash before transitioning to the dashboard (~1-3s) — acceptable
-  // trade-off vs. 15s blank screen for unauthenticated/cold-start users.
+  // While Clerk is initializing, keep public routes on marketing content but
+  // show protected routes as protected. That avoids making /study or /admin
+  // look like public landing pages when auth is slow or blocked.
   if (authIsLoading || (!authLoaded && !isGuestMode)) {
+    if (isProtectedAppPath(location.pathname)) {
+      return <ProtectedRouteGate pathname={location.pathname} authLoading />;
+    }
     return <LandingPage />;
   }
 
   // Show landing page for unauthenticated users (not in guest mode)
   if (!isSignedIn && !isGuestMode) {
+    if (isProtectedAppPath(location.pathname)) {
+      return <ProtectedRouteGate pathname={location.pathname} />;
+    }
     return <LandingPage />;
   }
 

@@ -57,7 +57,7 @@ export const onRequestGet = authenticatedEndpoint(
       yearInProgram: true,
       trainingPhase: true,
     } as const;
-    logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
+    logger.info('DATABASE_URL configured', { hasUrl: !!env.DATABASE_URL });
     if (!env.DATABASE_URL) {
       logger.error('DATABASE_URL not configured');
       return {
@@ -184,7 +184,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     yearInProgram: true,
     trainingPhase: true,
   } as const;
-  logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
+  logger.info('DATABASE_URL configured', { hasUrl: !!env.DATABASE_URL });
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
     return {

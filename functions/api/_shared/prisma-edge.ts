@@ -151,8 +151,6 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
       return cached;
     }
 
-    console.log('[Prisma Edge] Creating client with URL:', databaseUrl.substring(0, 50) + '...');
-
     // Prisma 7 with Accelerate: Use accelerateUrl in constructor
     // This is the new Prisma 7 approach for edge runtimes
     const PrismaClientAny = PrismaClient as any;

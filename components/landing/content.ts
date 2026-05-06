@@ -16,7 +16,7 @@ export const NAV_LINKS = [
 ] as const;
 
 export const HERO_SIGNALS = [
-  { label: 'Next move', value: 'Chosen from recent misses' },
+  { label: 'Example next move', value: 'Ranked by verified study signals' },
   { label: 'Recall timing', value: 'Reviews surface when useful' },
   { label: 'Blueprint gaps', value: 'Mapped to PANCE weight' },
 ] as const;

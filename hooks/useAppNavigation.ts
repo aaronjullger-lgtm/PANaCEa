@@ -13,11 +13,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { isValidRoute, getViewForPath } from '../lib/constants/routes';
 import type { View } from '../config/appViews';
 
-function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): View | 'redirect' | null {
+function pathToView(
+  path: string,
+  navigate: ReturnType<typeof useNavigate>,
+  options: { disableRootRedirect?: boolean } = {}
+): View | 'redirect' | null {
   // Canonical root redirect: "/" → "/study" so authenticated users always get a consistent URL
   if (path === '/') {
-    navigate('/study', { replace: true });
-    return 'redirect';
+    if (!options.disableRootRedirect) {
+      navigate('/study', { replace: true });
+      return 'redirect';
+    }
+
+    return 'command_center';
   }
 
   // Handle legacy redirects
@@ -47,9 +55,10 @@ interface UseAppNavigationReturn {
   showNotFound: boolean;
 }
 
-export function useAppNavigation(): UseAppNavigationReturn {
+export function useAppNavigation(options: { disableRootRedirect?: boolean } = {}): UseAppNavigationReturn {
   const navigate = useNavigate();
   const location = useLocation();
+  const disableRootRedirect = options.disableRootRedirect ?? false;
 
   const [view, setView] = useState<View>('command_center');
   const [showNotFound, setShowNotFound] = useState(false);
@@ -66,7 +75,7 @@ export function useAppNavigation(): UseAppNavigationReturn {
 
     setShowNotFound(false);
 
-    const resolvedView = pathToView(path, navigate);
+    const resolvedView = pathToView(path, navigate, { disableRootRedirect });
     if (resolvedView === 'redirect' || resolvedView === null) {
       // null means it's a React Router route, handled by <Route> components
       // Don't set view state for React Router routes
@@ -74,7 +83,7 @@ export function useAppNavigation(): UseAppNavigationReturn {
     }
 
     setView(resolvedView);
-  }, [location.pathname, navigate]);
+  }, [disableRootRedirect, location.pathname, navigate]);
 
   // Accessibility: focus main-content after navigation
   useEffect(() => {
