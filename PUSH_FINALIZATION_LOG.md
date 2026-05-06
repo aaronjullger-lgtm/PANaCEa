@@ -113,7 +113,7 @@ Completed 2026-05-05 13:06 EDT.
 | Secret/junk scan | Passed | Tracked secret scan found placeholders/test fixtures only. Local `.env`, `.env.production.local`, and browser profile DB files are ignored by `.gitignore` and were not staged. |
 | Production build | Passed | `npm run build` completed and Wrangler health smoke passed against `dist` when local Pages dev was started with the configured `nodejs_compat` flag. |
 | Browser smoke | Environment-blocked | `npm run test:smoke` requires an interactive Clerk login and local API backend; after installing Playwright Chromium it timed out waiting for manual login. |
-| Commit to branch | Pending | Commit hash will be recorded after staging and commit. |
+| Commit to branch | Completed | `82cc303e` (`Harden production release gates`). |
 | Push to main | Pending | Will fast-forward/merge to `main` only after final staged checks pass. |
 
 ### Additional Commands Run
