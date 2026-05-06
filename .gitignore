@@ -101,6 +101,8 @@ playwright/*.json
 # Allow design token source modules (not secrets)
 !lib/tokens/
 !lib/tokens/**
+!components/dashboard/adaptive/model/visualTokens.ts
+!components/dashboard/adaptive/visuals/VisualTokenProvider.tsx
 *auth_token*
 *access_token*
 *refresh_token*
